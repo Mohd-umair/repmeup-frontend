@@ -1,0 +1,93 @@
+// Inbox Filters Styles
+
+// Filter button animation
+.filter-button {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateX(4px);
+  }
+  
+  &.active {
+    animation: filterPulse 0.3s ease-out;
+  }
+}
+
+@keyframes filterPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Section header animation
+.filter-section {
+  h4 {
+    position: relative;
+    
+    i {
+      transition: transform 0.2s ease;
+    }
+    
+    &:hover i {
+      transform: scale(1.2) rotate(5deg);
+    }
+  }
+}
+
+// Clear all button effect
+.clear-filters {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: currentColor;
+    transition: width 0.2s ease;
+  }
+  
+  &:hover::before {
+    width: 100%;
+  }
+}
+
+// Checkmark animation
+.check-icon {
+  animation: checkPop 0.3s ease-out;
+}
+
+@keyframes checkPop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Coming soon section pulse
+.coming-soon {
+  animation: comingSoonPulse 2s ease-in-out infinite;
+}
+
+@keyframes comingSoonPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+

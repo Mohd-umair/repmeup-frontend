@@ -1,0 +1,159 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Team Management</h1>
+      <p class="text-gray-600 mt-1">Manage your team members and their permissions</p>
+    </div>
+    <button 
+      (click)="addAgent()"
+      class="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition flex items-center space-x-2"
+    >
+      <span>➕</span>
+      <span>Add Team Member</span>
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Total Agents</p>
+          <p class="text-2xl font-bold text-gray-900 mt-1">{{ agents.length }}</p>
+        </div>
+        <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+          <span class="text-xl">👥</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Active Now</p>
+          <p class="text-2xl font-bold text-gray-900 mt-1">{{ getActiveAgentsCount() }}</p>
+        </div>
+        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+          <span class="text-xl">✅</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Assigned Tasks</p>
+          <p class="text-2xl font-bold text-gray-900 mt-1">{{ getTotalTasks() }}</p>
+        </div>
+        <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+          <span class="text-xl">📋</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Resolved Today</p>
+          <p class="text-2xl font-bold text-gray-900 mt-1">{{ getTotalResolved() }}</p>
+        </div>
+        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+          <span class="text-xl">✔️</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agents Table -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Team Members</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolved Today</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr *ngFor="let agent of agents" class="hover:bg-gray-50 transition">
+            <!-- Agent Info -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {{ agent.avatar }}
+                </div>
+                <div>
+                  <div class="text-sm font-medium text-gray-900">{{ agent.name }}</div>
+                  <div class="text-sm text-gray-500">{{ agent.email }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Role -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getRoleColor(agent.role)">
+                {{ agent.role }}
+              </span>
+            </td>
+
+            <!-- Status -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center space-x-2">
+                <span [class]="'w-2 h-2 rounded-full ' + getStatusColor(agent.status)"></span>
+                <span class="text-sm text-gray-600">{{ agent.status }}</span>
+              </div>
+            </td>
+
+            <!-- Assigned Tasks -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-sm font-medium text-gray-900">{{ agent.assignedTasks }}</span>
+            </td>
+
+            <!-- Resolved Today -->
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="text-sm font-medium text-gray-900">{{ agent.resolvedToday }}</span>
+            </td>
+
+            <!-- Actions -->
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <div class="flex items-center space-x-2">
+                <button 
+                  (click)="editAgent(agent)"
+                  class="text-primary-600 hover:text-primary-900 font-medium"
+                >
+                  Edit
+                </button>
+                <span class="text-gray-300">|</span>
+                <button 
+                  (click)="deleteAgent(agent)"
+                  class="text-red-600 hover:text-red-900 font-medium"
+                >
+                  Remove
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Performance Chart -->
+  <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">Agent Performance</h2>
+    <div class="text-center py-12 text-gray-500">
+      <span class="text-4xl mb-2 block">📊</span>
+      <p>Performance charts will be displayed here</p>
+      <p class="text-sm mt-1">Integration with chart library pending</p>
+    </div>
+  </div>
+</div>

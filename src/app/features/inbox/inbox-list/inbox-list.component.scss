@@ -1,0 +1,47 @@
+// Inbox List Styles
+
+// Staggered animation for list items
+@for $i from 1 through 20 {
+  .list-item:nth-child(#{$i}) {
+    animation: slideIn 0.3s ease-out #{$i * 0.05}s both;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Hover lift effect
+.conversation-card {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// Badge animation
+.status-badge {
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Platform badge overlay
+.platform-badge {
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+

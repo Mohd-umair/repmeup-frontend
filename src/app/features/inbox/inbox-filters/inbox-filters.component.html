@@ -1,0 +1,122 @@
+<div class="p-6 space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+    <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide">Active Filters</h3>
+    <button 
+      (click)="clearFilters()"
+      class="text-sm text-primary-600 hover:text-primary-700 font-bold transition flex items-center"
+    >
+      <i class="fas fa-times-circle mr-1"></i>
+      Clear
+    </button>
+  </div>
+
+  <!-- Platform Filter -->
+  <div>
+    <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
+      <i class="fas fa-layer-group mr-2 text-blue-600"></i>
+      Platform
+    </h4>
+    <div class="space-y-2">
+      <button
+        *ngFor="let platform of platforms"
+        (click)="toggleFilter('platform', platform.value)"
+        [class]="isFilterActive('platform', platform.value) 
+          ? 'bg-gradient-to-r from-primary-50 to-purple-50 border-primary-500 text-primary-700 shadow-md' 
+          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+        class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl transition-all font-medium"
+      >
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">{{ platform.icon }}</span>
+          <span class="text-sm font-bold">{{ platform.label }}</span>
+        </div>
+        <i *ngIf="isFilterActive('platform', platform.value)" class="fas fa-check-circle text-primary-600"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Type Filter -->
+  <div>
+    <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
+      <i class="fas fa-comment-dots mr-2 text-purple-600"></i>
+      Type
+    </h4>
+    <div class="space-y-2">
+      <button
+        *ngFor="let type of types"
+        (click)="toggleFilter('type', type.value)"
+        [class]="isFilterActive('type', type.value) 
+          ? 'bg-gradient-to-r from-primary-50 to-purple-50 border-primary-500 text-primary-700 shadow-md' 
+          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+        class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl transition-all font-medium"
+      >
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">{{ type.icon }}</span>
+          <span class="text-sm font-bold">{{ type.label }}</span>
+        </div>
+        <i *ngIf="isFilterActive('type', type.value)" class="fas fa-check-circle text-primary-600"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sentiment Filter -->
+  <div>
+    <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
+      <i class="fas fa-smile mr-2 text-pink-600"></i>
+      Sentiment
+    </h4>
+    <div class="space-y-2">
+      <button
+        *ngFor="let sentiment of sentiments"
+        (click)="toggleFilter('sentiment', sentiment.value)"
+        [class]="isFilterActive('sentiment', sentiment.value) 
+          ? getSentimentActiveClass(sentiment.value)
+          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+        class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl transition-all font-medium"
+      >
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">{{ sentiment.icon }}</span>
+          <span class="text-sm font-bold">{{ sentiment.label }}</span>
+        </div>
+        <i *ngIf="isFilterActive('sentiment', sentiment.value)" class="fas fa-check-circle"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Filter -->
+  <div>
+    <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
+      <i class="fas fa-tasks mr-2 text-green-600"></i>
+      Status
+    </h4>
+    <div class="space-y-2">
+      <button
+        *ngFor="let status of statuses"
+        (click)="toggleFilter('status', status.value)"
+        [class]="isFilterActive('status', status.value) 
+          ? getStatusActiveClass(status.value)
+          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+        class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl transition-all font-medium"
+      >
+        <div class="flex items-center space-x-3">
+          <span class="text-xl">{{ status.icon }}</span>
+          <span class="text-sm font-bold">{{ status.label }}</span>
+        </div>
+        <i *ngIf="isFilterActive('status', status.value)" class="fas fa-check-circle"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Date Range (Future Enhancement) -->
+  <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-100">
+    <h4 class="text-sm font-bold text-gray-900 mb-2 flex items-center">
+      <i class="fas fa-calendar-alt mr-2 text-blue-600"></i>
+      Date Range
+    </h4>
+    <p class="text-xs text-gray-600 mb-3">Filter by date range (coming soon)</p>
+    <button class="w-full px-4 py-2 bg-white border-2 border-gray-200 rounded-lg text-sm font-medium text-gray-500 cursor-not-allowed">
+      <i class="fas fa-clock mr-2"></i>
+      Select Date Range
+    </button>
+  </div>
+</div>

@@ -1,0 +1,151 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div>
+    <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+    <p class="text-gray-600 mt-1">Welcome back! Here's your reputation overview.</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Total Interactions -->
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Total Interactions</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.total || 0 }}</p>
+          <p class="text-sm text-green-600 mt-2">↑ 12% from last month</p>
+        </div>
+        <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+          <span class="text-2xl">📊</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unread -->
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Unread</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.unread || 0 }}</p>
+          <p class="text-sm text-yellow-600 mt-2">Needs attention</p>
+        </div>
+        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+          <span class="text-2xl">📥</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Positive Sentiment -->
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Positive</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.positive || 0 }}</p>
+          <p class="text-sm text-green-600 mt-2">{{ getPercentage(stats?.positive || 0, stats?.total || 1) }}% of total</p>
+        </div>
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+          <span class="text-2xl">😊</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Negative Sentiment -->
+    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Negative</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats?.negative || 0 }}</p>
+          <p class="text-sm text-red-600 mt-2">{{ getPercentage(stats?.negative || 0, stats?.total || 1) }}% of total</p>
+        </div>
+        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+          <span class="text-2xl">😟</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two Column Layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Platform Distribution -->
+    <div class="lg:col-span-1 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Platform Distribution</h2>
+      <div class="space-y-4">
+        <div *ngFor="let platform of platformData" class="space-y-2">
+          <div class="flex items-center justify-between text-sm">
+            <span class="font-medium text-gray-700">{{ platform.name }}</span>
+            <span class="text-gray-600">{{ platform.value }}%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              [class]="platform.color + ' h-2 rounded-full'" 
+              [style.width.%]="platform.value"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="lg:col-span-2 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900">Recent Activity</h2>
+        <a routerLink="/inbox" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
+          View all →
+        </a>
+      </div>
+      
+      <div class="space-y-4">
+        <div *ngFor="let activity of recentActivity" class="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 transition">
+          <!-- Platform Icon -->
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+            <span class="text-lg">{{ getPlatformIcon(activity.platform) }}</span>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center space-x-2">
+              <span class="text-sm font-semibold text-gray-900">{{ activity.author }}</span>
+              <span class="text-xs text-gray-500">•</span>
+              <span class="text-xs text-gray-500">{{ activity.platform }}</span>
+              <span class="text-xs text-gray-500">•</span>
+              <span class="text-xs text-gray-500">{{ activity.type }}</span>
+              <span 
+                [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + getSentimentClass(activity.sentiment)"
+              >
+                {{ activity.sentiment }}
+              </span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">{{ activity.content }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ activity.time }}</p>
+          </div>
+
+          <!-- Action -->
+          <button class="flex-shrink-0 px-3 py-1 text-sm font-medium text-primary-600 hover:text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-50 transition">
+            Reply
+          </button>
+        </div>
+
+        <div *ngIf="recentActivity.length === 0" class="text-center py-8">
+          <span class="text-4xl mb-2 block">📭</span>
+          <p class="text-gray-500">No recent activity</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg shadow-sm p-6 text-white">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-bold mb-2">Connect Your Platforms</h2>
+        <p class="text-primary-100">Start managing your reputation across all channels</p>
+      </div>
+      <button 
+        routerLink="/settings" 
+        class="px-6 py-3 bg-white text-primary-600 font-medium rounded-lg hover:bg-gray-100 transition"
+      >
+        Connect Now
+      </button>
+    </div>
+  </div>
+</div>

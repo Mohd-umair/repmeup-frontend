@@ -1,0 +1,578 @@
+<!-- Navigation Header -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200 shadow-sm">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="flex items-center justify-between h-20">
+      <!-- Logo -->
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+          <span class="text-white font-bold text-xl">RM</span>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            RepMeUp
+          </h1>
+          <p class="text-xs text-gray-500 -mt-1">Reputation that works</p>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="hidden md:flex items-center space-x-8">
+        <a (click)="scrollToSection('features')" class="text-gray-700 hover:text-primary-600 font-medium cursor-pointer transition">Features</a>
+        <a (click)="scrollToSection('solutions')" class="text-gray-700 hover:text-primary-600 font-medium cursor-pointer transition">Solutions</a>
+        <a (click)="scrollToSection('testimonials')" class="text-gray-700 hover:text-primary-600 font-medium cursor-pointer transition">Testimonials</a>
+        <a (click)="scrollToSection('pricing')" class="text-gray-700 hover:text-primary-600 font-medium cursor-pointer transition">Pricing</a>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div class="flex items-center space-x-4">
+        <button 
+          (click)="navigateToLogin()"
+          class="hidden md:block px-4 py-2 text-gray-700 font-medium hover:text-primary-600 transition"
+        >
+          Sign In
+        </button>
+        <button 
+          (click)="navigateToRegister()"
+          class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:shadow-lg transition transform hover:scale-105"
+        >
+          Get Started Free
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="relative pt-32 pb-20 overflow-hidden bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+  <!-- Decorative Background Elements -->
+  <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-pink-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
+
+  <div class="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <!-- Left: Content -->
+      <div class="text-center lg:text-left">
+        <div class="inline-block mb-6">
+          <span class="px-4 py-2 bg-gradient-to-r from-blue-100 to-purple-100 text-primary-700 rounded-full text-sm font-bold">
+            🚀 Trusted by 10,000+ Businesses
+          </span>
+        </div>
+        
+        <h1 class="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
+          <span class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Your Reputation Shapes Trust.
+          </span>
+          <br>
+          <span class="text-gray-900">RepMeUp Makes It Stronger.</span>
+        </h1>
+        
+        <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+          Every business has people behind it. We protect and grow their reputation across all platforms. 
+          <strong class="text-gray-900">Build, monitor, and elevate</strong> your online presence with confidence.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+          <button 
+            (click)="navigateToRegister()"
+            class="px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl hover:shadow-2xl transition transform hover:scale-105 text-lg"
+          >
+            Start Free Trial
+            <i class="fas fa-arrow-right ml-2"></i>
+          </button>
+          <button 
+            (click)="scrollToSection('features')"
+            class="px-8 py-4 bg-white border-2 border-gray-300 text-gray-700 font-bold rounded-xl hover:border-primary-500 hover:text-primary-600 transition text-lg"
+          >
+            <i class="fas fa-play-circle mr-2"></i>
+            Watch Demo
+          </button>
+        </div>
+
+        <!-- Trust Indicators -->
+        <div class="mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-8">
+          <div class="text-center lg:text-left">
+            <p class="text-3xl font-bold text-gray-900">10K+</p>
+            <p class="text-sm text-gray-600">Active Users</p>
+          </div>
+          <div class="text-center lg:text-left">
+            <p class="text-3xl font-bold text-gray-900">50M+</p>
+            <p class="text-sm text-gray-600">Reviews Managed</p>
+          </div>
+          <div class="text-center lg:text-left">
+            <p class="text-3xl font-bold text-gray-900">99.9%</p>
+            <p class="text-sm text-gray-600">Uptime</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Visual -->
+      <div class="relative">
+        <div class="relative bg-white rounded-3xl shadow-2xl p-8 border-2 border-gray-100">
+          <!-- Dashboard Preview -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl"></div>
+                <div>
+                  <p class="font-bold text-gray-900">Unified Inbox</p>
+                  <p class="text-sm text-gray-500">All platforms in one place</p>
+                </div>
+              </div>
+              <div class="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-bold">
+                <i class="fas fa-check-circle mr-1"></i>
+                Connected
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4">
+              <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-100">
+                <p class="text-2xl font-bold text-gray-900">1,247</p>
+                <p class="text-xs text-gray-600">Total</p>
+              </div>
+              <div class="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 border-2 border-yellow-100">
+                <p class="text-2xl font-bold text-gray-900">23</p>
+                <p class="text-xs text-gray-600">Unread</p>
+              </div>
+              <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-4 border-2 border-green-100">
+                <p class="text-2xl font-bold text-gray-900">45</p>
+                <p class="text-xs text-gray-600">Today</p>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-bold text-gray-900">John Doe</p>
+                  <p class="text-xs text-gray-500">Great service! ⭐⭐⭐⭐⭐</p>
+                </div>
+                <span class="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">Positive</span>
+              </div>
+              <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                <div class="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg"></div>
+                <div class="flex-1">
+                  <p class="text-sm font-bold text-gray-900">Sarah Smith</p>
+                  <p class="text-xs text-gray-500">Quick response time!</p>
+                </div>
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold">Replied</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Floating Badge -->
+        <div class="absolute -bottom-6 -right-6 bg-white rounded-2xl shadow-xl p-4 border-2 border-gray-100">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-chart-line text-white text-xl"></i>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-900">+127% Growth</p>
+              <p class="text-xs text-gray-500">This Month</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+        Everything You Need to
+        <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Manage Reputation</span>
+      </h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Powerful tools to monitor, protect, and grow your online reputation across all platforms
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Feature 1: Monitor -->
+      <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 border-2 border-blue-100 hover:shadow-xl transition">
+        <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
+          <i class="fas fa-eye text-white text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-3">RepMeUp Monitor</h3>
+        <p class="text-gray-600 mb-4">Track reviews, mentions, and alerts across all platforms in real-time.</p>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Real-time alerts
+          </li>
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Multi-platform tracking
+          </li>
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Sentiment analysis
+          </li>
+        </ul>
+      </div>
+
+      <!-- Feature 2: Protect -->
+      <div class="bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl p-8 border-2 border-red-100 hover:shadow-xl transition">
+        <div class="w-16 h-16 bg-gradient-to-br from-red-600 to-pink-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
+          <i class="fas fa-shield-alt text-white text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-3">RepMeUp Protect</h3>
+        <p class="text-gray-600 mb-4">Crisis management, takedowns, and legal coordination when you need it most.</p>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Crisis response
+          </li>
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Content removal
+          </li>
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Legal support
+          </li>
+        </ul>
+      </div>
+
+      <!-- Feature 3: Grow -->
+      <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 border-2 border-green-100 hover:shadow-xl transition">
+        <div class="w-16 h-16 bg-gradient-to-br from-green-600 to-blue-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
+          <i class="fas fa-chart-line text-white text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-3">RepMeUp Grow</h3>
+        <p class="text-gray-600 mb-4">Build trust, increase visibility, and generate more positive reviews.</p>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Review generation
+          </li>
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Trust building
+          </li>
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            SEO optimization
+          </li>
+        </ul>
+      </div>
+
+      <!-- Feature 4: Business -->
+      <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border-2 border-purple-100 hover:shadow-xl transition">
+        <div class="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mb-6 shadow-lg">
+          <i class="fas fa-building text-white text-2xl"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-3">RepMeUp Business</h3>
+        <p class="text-gray-600 mb-4">Enterprise-grade solutions for companies, brands, and startups.</p>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Team management
+          </li>
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            Advanced analytics
+          </li>
+          <li class="flex items-center">
+            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+            API access
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Solutions Section -->
+<section id="solutions" class="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+        Built for <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Everyone</span>
+      </h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Whether you're an individual, founder, or enterprise, we have the right solution for you
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      <!-- For Individuals -->
+      <div class="bg-white rounded-3xl p-10 shadow-xl border-2 border-gray-100 hover:border-primary-500 transition">
+        <div class="flex items-center space-x-4 mb-6">
+          <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-user text-white text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900">For Individuals & Founders</h3>
+            <p class="text-gray-500">Your name. Your image. Always protected.</p>
+          </div>
+        </div>
+        <p class="text-gray-600 mb-6 leading-relaxed">
+          Protect your personal brand and professional reputation. Monitor what's being said about you online, 
+          respond to reviews, and build trust with your audience.
+        </p>
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
+            <span class="text-gray-700">Personal brand monitoring</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
+            <span class="text-gray-700">Review management</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
+            <span class="text-gray-700">Social media tracking</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
+            <span class="text-gray-700">AI-powered responses</span>
+          </li>
+        </ul>
+        <button 
+          (click)="navigateToRegister()"
+          class="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:shadow-lg transition"
+        >
+          Start Protecting Your Reputation
+        </button>
+      </div>
+
+      <!-- For Businesses -->
+      <div class="bg-white rounded-3xl p-10 shadow-xl border-2 border-gray-100 hover:border-primary-500 transition">
+        <div class="flex items-center space-x-4 mb-6">
+          <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center">
+            <i class="fas fa-building text-white text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-2xl font-bold text-gray-900">For Businesses & Brands</h3>
+            <p class="text-gray-500">Your reputation is your biggest asset. We help you grow it.</p>
+          </div>
+        </div>
+        <p class="text-gray-600 mb-6 leading-relaxed">
+          Enterprise-grade reputation management. Monitor, manage, and strengthen your digital reputation 
+          across all platforms with advanced analytics and team collaboration.
+        </p>
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
+            <span class="text-gray-700">Multi-platform monitoring</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
+            <span class="text-gray-700">Team collaboration</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
+            <span class="text-gray-700">Advanced analytics & ROI</span>
+          </li>
+          <li class="flex items-start">
+            <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
+            <span class="text-gray-700">Custom integrations & API</span>
+          </li>
+        </ul>
+        <button 
+          (click)="navigateToRegister()"
+          class="w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl hover:shadow-lg transition"
+        >
+          Scale Your Reputation Management
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="testimonials" class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+        Trusted by <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Industry Leaders</span>
+      </h2>
+      <p class="text-xl text-gray-600">See what our customers are saying</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      <!-- Testimonial 1 -->
+      <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 border-2 border-blue-100">
+        <div class="flex items-center mb-4">
+          <div class="flex text-yellow-400">
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-6 leading-relaxed">
+          "RepMeUp transformed how we manage our online reputation. The unified inbox saves us hours every day, 
+          and the AI responses are incredibly accurate."
+        </p>
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full"></div>
+          <div>
+            <p class="font-bold text-gray-900">Sarah Johnson</p>
+            <p class="text-sm text-gray-600">CEO, TechStart Inc.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonial 2 -->
+      <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 border-2 border-green-100">
+        <div class="flex items-center mb-4">
+          <div class="flex text-yellow-400">
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-6 leading-relaxed">
+          "As a founder, protecting my personal brand is crucial. RepMeUp gives me peace of mind knowing 
+          everything is monitored and managed professionally."
+        </p>
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-full"></div>
+          <div>
+            <p class="font-bold text-gray-900">Michael Chen</p>
+            <p class="text-sm text-gray-600">Founder, Growth Labs</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonial 3 -->
+      <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border-2 border-purple-100">
+        <div class="flex items-center mb-4">
+          <div class="flex text-yellow-400">
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+            <i class="fas fa-star"></i>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-6 leading-relaxed">
+          "The analytics dashboard is incredible. We can see exactly how our reputation management efforts 
+          are driving business growth. ROI is clear and measurable."
+        </p>
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full"></div>
+          <div>
+            <p class="font-bold text-gray-900">Emily Rodriguez</p>
+            <p class="text-sm text-gray-600">CMO, Retail Pro</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
+  <div class="absolute inset-0 bg-black/10"></div>
+  <div class="max-w-4xl mx-auto px-6 lg:px-8 text-center relative z-10">
+    <h2 class="text-4xl lg:text-5xl font-bold text-white mb-6">
+      Turn Reputation Into a Growth Engine
+    </h2>
+    <p class="text-xl text-white/90 mb-10 leading-relaxed">
+      Join thousands of businesses and individuals who trust RepMeUp to protect and grow their online reputation. 
+      Start your free trial today—no credit card required.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <button 
+        (click)="navigateToRegister()"
+        class="px-8 py-4 bg-white text-primary-600 font-bold rounded-xl hover:shadow-2xl transition transform hover:scale-105 text-lg"
+      >
+        Start Free Trial
+        <i class="fas fa-arrow-right ml-2"></i>
+      </button>
+      <button 
+        (click)="scrollToSection('features')"
+        class="px-8 py-4 bg-white/10 backdrop-blur-lg text-white border-2 border-white/30 font-bold rounded-xl hover:bg-white/20 transition text-lg"
+      >
+        Learn More
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-white py-16">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="grid md:grid-cols-4 gap-8 mb-12">
+      <!-- Brand -->
+      <div>
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold text-xl">RM</span>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold">RepMeUp</h3>
+            <p class="text-xs text-gray-400">Reputation that works</p>
+          </div>
+        </div>
+        <p class="text-gray-400 text-sm mb-4">
+          Every business has people behind it. We protect and grow their reputation.
+        </p>
+        <div class="flex space-x-4">
+          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary-600 transition">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary-600 transition">
+            <i class="fab fa-linkedin"></i>
+          </a>
+          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary-600 transition">
+            <i class="fab fa-facebook"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Product -->
+      <div>
+        <h4 class="font-bold mb-4">Product</h4>
+        <ul class="space-y-2 text-gray-400 text-sm">
+          <li><a href="#" class="hover:text-white transition">Features</a></li>
+          <li><a href="#" class="hover:text-white transition">Pricing</a></li>
+          <li><a href="#" class="hover:text-white transition">Integrations</a></li>
+          <li><a href="#" class="hover:text-white transition">API</a></li>
+        </ul>
+      </div>
+
+      <!-- Solutions -->
+      <div>
+        <h4 class="font-bold mb-4">Solutions</h4>
+        <ul class="space-y-2 text-gray-400 text-sm">
+          <li><a href="#" class="hover:text-white transition">For Individuals</a></li>
+          <li><a href="#" class="hover:text-white transition">For Businesses</a></li>
+          <li><a href="#" class="hover:text-white transition">For Agencies</a></li>
+          <li><a href="#" class="hover:text-white transition">Enterprise</a></li>
+        </ul>
+      </div>
+
+      <!-- Company -->
+      <div>
+        <h4 class="font-bold mb-4">Company</h4>
+        <ul class="space-y-2 text-gray-400 text-sm">
+          <li><a href="#" class="hover:text-white transition">About</a></li>
+          <li><a href="#" class="hover:text-white transition">Blog</a></li>
+          <li><a href="#" class="hover:text-white transition">Careers</a></li>
+          <li><a href="#" class="hover:text-white transition">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+      <p class="text-gray-400 text-sm">
+        © 2026 RepMeUp. All rights reserved.
+      </p>
+      <div class="flex space-x-6 mt-4 md:mt-0">
+        <a href="#" class="text-gray-400 hover:text-white text-sm transition">Privacy Policy</a>
+        <a href="#" class="text-gray-400 hover:text-white text-sm transition">Terms of Service</a>
+        <a href="#" class="text-gray-400 hover:text-white text-sm transition">Cookie Policy</a>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,561 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-6">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent">
+          AI Knowledge Base
+        </h1>
+        <p class="text-gray-600 mt-2 text-lg">Train your AI with company knowledge, FAQs, policies, and more</p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span class="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200 text-sm font-medium text-gray-700">
+          <i class="fas fa-database mr-2 text-primary-600"></i>
+          {{ knowledgeBase.length }} Entries
+        </span>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white rounded-2xl shadow-xl p-2">
+      <nav class="flex space-x-2">
+        <button
+          (click)="activeTab = 'list'"
+          [class]="activeTab === 'list' 
+            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+            : 'text-gray-600 hover:bg-gray-100'"
+          class="flex-1 inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+        >
+          <i class="fas fa-list mr-2"></i>
+          All Entries
+        </button>
+        <button
+          (click)="activeTab = 'manual'"
+          [class]="activeTab === 'manual' 
+            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+            : 'text-gray-600 hover:bg-gray-100'"
+          class="flex-1 inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+        >
+          <i class="fas fa-keyboard mr-2"></i>
+          Manual Entry
+        </button>
+        <button
+          (click)="activeTab = 'pdf'"
+          [class]="activeTab === 'pdf' 
+            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+            : 'text-gray-600 hover:bg-gray-100'"
+          class="flex-1 inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+        >
+          <i class="fas fa-file-pdf mr-2"></i>
+          PDF Upload
+        </button>
+        <button
+          (click)="activeTab = 'url'"
+          [class]="activeTab === 'url' 
+            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' 
+            : 'text-gray-600 hover:bg-gray-100'"
+          class="flex-1 inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+        >
+          <i class="fas fa-globe mr-2"></i>
+          Website URL
+        </button>
+      </nav>
+    </div>
+
+    <!-- List View -->
+    <div *ngIf="activeTab === 'list'" class="space-y-6">
+      <!-- Filters -->
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-search mr-1"></i> Search
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="applyFilters()"
+              placeholder="Search title or content..."
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-folder mr-1"></i> Category
+            </label>
+            <select
+              [(ngModel)]="filterCategory"
+              (ngModelChange)="applyFilters()"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            >
+              <option value="">All Categories</option>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-filter mr-1"></i> Source
+            </label>
+            <select
+              [(ngModel)]="filterSource"
+              (ngModelChange)="applyFilters()"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            >
+              <option value="">All Sources</option>
+              <option *ngFor="let source of sourceOptions" [value]="source.value">{{ source.label }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Knowledge Base List -->
+      <div class="grid grid-cols-1 gap-4">
+        <div *ngFor="let entry of filteredKnowledgeBase" class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-2">
+                  <h3 class="text-xl font-bold text-gray-900">{{ entry.title }}</h3>
+                  <span [class]="'px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ' + getSourceColor(entry.source)">
+                    <i [class]="'fas ' + getSourceIcon(entry.source)"></i>
+                    <span>{{ entry.source }}</span>
+                  </span>
+                  <span *ngIf="entry.category" class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                    {{ entry.category }}
+                  </span>
+                </div>
+                <p class="text-gray-600 text-sm line-clamp-2 mb-3">{{ entry.content }}</p>
+                <div class="flex flex-wrap gap-2">
+                  <span *ngFor="let tag of entry.tags" class="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium">
+                    #{{ tag }}
+                  </span>
+                </div>
+              </div>
+              <div class="flex flex-col items-end space-y-2 ml-4">
+                <div class="flex items-center space-x-2">
+                  <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-lg text-xs font-medium">
+                    <i class="fas fa-star mr-1"></i>
+                    Priority: {{ entry.priority }}
+                  </span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button
+                    (click)="toggleActive(entry)"
+                    [class]="entry.isActive ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 hover:bg-gray-500'"
+                    class="px-3 py-1 text-white rounded-lg text-xs font-medium transition"
+                  >
+                    <i [class]="entry.isActive ? 'fas fa-check' : 'fas fa-times'"></i>
+                    {{ entry.isActive ? 'Active' : 'Inactive' }}
+                  </button>
+                  <button
+                    (click)="deleteEntry(entry._id)"
+                    class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium transition"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-xs text-gray-500 pt-3 border-t border-gray-100">
+              <div class="flex items-center space-x-4">
+                <span><i class="fas fa-chart-line mr-1"></i> Used {{ entry.usageCount }} times</span>
+                <span><i class="fas fa-calendar mr-1"></i> {{ formatDate(entry.createdAt) }}</span>
+              </div>
+              <span><i class="fas fa-user mr-1"></i> {{ entry.createdBy?.firstName }} {{ entry.createdBy?.lastName }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredKnowledgeBase.length === 0" class="bg-white rounded-2xl shadow-lg p-12 text-center">
+          <i class="fas fa-database text-6xl text-gray-300 mb-4"></i>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No Knowledge Base Entries</h3>
+          <p class="text-gray-600 mb-6">Start training your AI by adding knowledge entries</p>
+          <button (click)="activeTab = 'manual'" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-xl transition">
+            <i class="fas fa-plus mr-2"></i>
+            Add First Entry
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual Entry Form -->
+    <div *ngIf="activeTab === 'manual'" class="bg-white rounded-2xl shadow-xl p-8">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Manual Entry</h2>
+        <p class="text-gray-600">Add knowledge manually by typing or pasting content</p>
+      </div>
+
+      <form [formGroup]="manualForm" (ngSubmit)="submitManual()" class="space-y-6">
+        <!-- Title -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <i class="fas fa-heading mr-1"></i> Title *
+          </label>
+          <input
+            type="text"
+            formControlName="title"
+            placeholder="e.g., Return Policy, Product Features, FAQ..."
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+          />
+        </div>
+
+        <!-- Content -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <i class="fas fa-align-left mr-1"></i> Content *
+          </label>
+          <textarea
+            formControlName="content"
+            rows="8"
+            placeholder="Enter your knowledge base content here. This will be used to train the AI model..."
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Grid for smaller fields -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Type -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-tag mr-1"></i> Type
+            </label>
+            <select formControlName="type" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+              <option *ngFor="let type of typeOptions" [value]="type.value">
+                {{ type.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-folder mr-1"></i> Category
+            </label>
+            <input
+              type="text"
+              formControlName="category"
+              placeholder="e.g., Support, Sales, Product..."
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <!-- Tags -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-tags mr-1"></i> Tags (comma separated)
+            </label>
+            <input
+              type="text"
+              formControlName="tags"
+              placeholder="e.g., refund, shipping, warranty..."
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <!-- Priority -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-star mr-1"></i> Priority (1-10)
+            </label>
+            <input
+              type="number"
+              formControlName="priority"
+              min="1"
+              max="10"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+        </div>
+
+        <!-- Advanced Options -->
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 space-y-4">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-cog mr-2"></i> Advanced AI Training Options
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Training Context -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-brain mr-1"></i> Training Context
+              </label>
+              <input
+                type="text"
+                formControlName="trainingContext"
+                placeholder="When should AI use this knowledge?"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white"
+              />
+            </div>
+
+            <!-- Training Weight -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-weight-hanging mr-1"></i> Training Weight (1-10)
+              </label>
+              <input
+                type="number"
+                formControlName="trainingWeight"
+                min="1"
+                max="10"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white"
+              />
+            </div>
+          </div>
+
+          <!-- Toggles -->
+          <div class="flex items-center space-x-6">
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" formControlName="isTrainingData" class="w-5 h-5 text-blue-600 rounded">
+              <span class="text-sm font-medium text-gray-700">Use for AI Training</span>
+            </label>
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input type="checkbox" formControlName="isActive" class="w-5 h-5 text-blue-600 rounded">
+              <span class="text-sm font-medium text-gray-700">Active</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            (click)="activeTab = 'list'"
+            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="manualForm.invalid || submitting"
+            class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-save mr-2'"></i>
+            {{ submitting ? 'Saving...' : 'Save Knowledge Entry' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- PDF Upload Form -->
+    <div *ngIf="activeTab === 'pdf'" class="bg-white rounded-2xl shadow-xl p-8">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Upload PDF Document</h2>
+        <p class="text-gray-600">Upload PDF files to automatically extract and train AI with the content</p>
+      </div>
+
+      <form [formGroup]="pdfForm" (ngSubmit)="submitPDF()" class="space-y-6">
+        <!-- File Upload Area -->
+        <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-500 transition">
+          <i class="fas fa-file-pdf text-6xl text-red-500 mb-4"></i>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Drop your PDF here or click to browse</h3>
+          <p class="text-sm text-gray-600 mb-4">Maximum file size: 10MB</p>
+          <input
+            type="file"
+            accept="application/pdf"
+            (change)="onFileSelected($event)"
+            class="hidden"
+            #fileInput
+          />
+          <button
+            type="button"
+            (click)="fileInput.click()"
+            class="px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-semibold hover:shadow-xl transition"
+          >
+            <i class="fas fa-upload mr-2"></i>
+            Select PDF File
+          </button>
+          <p *ngIf="selectedFile" class="mt-4 text-sm font-medium text-green-600">
+            <i class="fas fa-check-circle mr-1"></i>
+            Selected: {{ selectedFile.name }}
+          </p>
+        </div>
+
+        <!-- Optional Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-heading mr-1"></i> Title (optional)
+            </label>
+            <input
+              type="text"
+              formControlName="title"
+              placeholder="Leave empty to use filename"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-folder mr-1"></i> Category
+            </label>
+            <input
+              type="text"
+              formControlName="category"
+              placeholder="e.g., Documentation, Manual..."
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-tags mr-1"></i> Tags (comma separated)
+            </label>
+            <input
+              type="text"
+              formControlName="tags"
+              placeholder="e.g., manual, guide, documentation..."
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-star mr-1"></i> Priority (1-10)
+            </label>
+            <input
+              type="number"
+              formControlName="priority"
+              min="1"
+              max="10"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            (click)="activeTab = 'list'"
+            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="!selectedFile || submitting"
+            class="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-xl font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-upload mr-2'"></i>
+            {{ submitting ? 'Uploading...' : 'Upload & Extract' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- URL Scraping Form -->
+    <div *ngIf="activeTab === 'url'" class="bg-white rounded-2xl shadow-xl p-8">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Import from Website</h2>
+        <p class="text-gray-600">Enter a website URL to automatically scrape and extract content for AI training</p>
+      </div>
+
+      <form [formGroup]="urlForm" (ngSubmit)="submitURL()" class="space-y-6">
+        <!-- URL Input -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <i class="fas fa-globe mr-1"></i> Website URL *
+          </label>
+          <input
+            type="url"
+            formControlName="url"
+            placeholder="https://example.com/about"
+            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+          />
+          <p class="text-xs text-gray-500 mt-2">
+            <i class="fas fa-info-circle mr-1"></i>
+            We'll extract the main content from this page and use it for AI training
+          </p>
+        </div>
+
+        <!-- Optional Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-heading mr-1"></i> Title (optional)
+            </label>
+            <input
+              type="text"
+              formControlName="title"
+              placeholder="Leave empty to use page title"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-folder mr-1"></i> Category
+            </label>
+            <input
+              type="text"
+              formControlName="category"
+              placeholder="e.g., About, Services, Blog..."
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-tags mr-1"></i> Tags (comma separated)
+            </label>
+            <input
+              type="text"
+              formControlName="tags"
+              placeholder="e.g., company, services, info..."
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-star mr-1"></i> Priority (1-10)
+            </label>
+            <input
+              type="number"
+              formControlName="priority"
+              min="1"
+              max="10"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition"
+            />
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div class="flex items-start space-x-3">
+            <i class="fas fa-info-circle text-blue-600 text-lg mt-0.5"></i>
+            <div class="flex-1">
+              <h4 class="font-semibold text-blue-900 mb-1">How URL Scraping Works</h4>
+              <ul class="text-sm text-blue-800 space-y-1">
+                <li>• We fetch the webpage content</li>
+                <li>• Extract main text content (removing scripts, styles)</li>
+                <li>• Save metadata (description, keywords)</li>
+                <li>• Add to AI training knowledge base</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            (click)="activeTab = 'list'"
+            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="urlForm.invalid || submitting"
+            class="px-8 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl font-semibold hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-download mr-2'"></i>
+            {{ submitting ? 'Scraping...' : 'Scrape & Import' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
