@@ -305,12 +305,12 @@ export class KnowledgeBaseComponent implements OnInit {
    */
   getSourceColor(source: string): string {
     const colors: { [key: string]: string } = {
-      manual: 'bg-blue-100 text-blue-800',
-      pdf: 'bg-red-100 text-red-800',
-      url: 'bg-green-100 text-green-800',
-      import: 'bg-purple-100 text-purple-800'
+      manual: 'bg-rep-lime/20 text-rep-black border border-rep-lime/30',
+      pdf: 'bg-gray-100 text-gray-800 border border-gray-300',
+      url: 'bg-rep-lime/20 text-rep-black border border-rep-lime/30',
+      import: 'bg-gray-100 text-gray-800 border border-gray-300'
     };
-    return colors[source] || 'bg-gray-100 text-gray-800';
+    return colors[source] || 'bg-gray-100 text-gray-800 border border-gray-300';
   }
 
   /**

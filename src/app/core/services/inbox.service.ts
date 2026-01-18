@@ -81,6 +81,13 @@ export class InboxService {
   }
 
   /**
+   * Generate AI suggested reply for an interaction
+   */
+  suggestReply(id: string): Observable<IApiResponse<any>> {
+    return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/suggest-reply`, {});
+  }
+
+  /**
    * Assign interaction to agent
    */
   assignInteraction(id: string, userId: string, reason?: string): Observable<IApiResponse> {

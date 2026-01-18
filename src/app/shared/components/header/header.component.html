@@ -1,4 +1,4 @@
-<header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
+<header class="bg-rep-black border-b border-gray-800 h-16 flex items-center justify-between px-6">
   <!-- Search Bar -->
   <div class="flex-1 max-w-2xl">
     <div class="relative">
@@ -10,7 +10,7 @@
       <input
         type="text"
         placeholder="Search interactions, customers..."
-        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        class="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 text-rep-white rounded-lg focus:ring-2 focus:ring-rep-lime focus:border-rep-lime placeholder-gray-400"
       />
     </div>
   </div>
@@ -18,17 +18,17 @@
   <!-- Right Section -->
   <div class="flex items-center space-x-4 ml-6">
     <!-- Notifications -->
-    <button class="relative p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition">
+    <button class="relative p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition">
       <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
       </svg>
-      <span *ngIf="notifications > 0" class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+      <span *ngIf="notifications > 0" class="absolute top-1 right-1 w-5 h-5 bg-rep-lime text-rep-black text-xs font-bold rounded-full flex items-center justify-center">
         {{ notifications }}
       </span>
     </button>
 
     <!-- Help -->
-    <button class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition">
+    <button class="p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition">
       <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
       </svg>
@@ -38,14 +38,14 @@
     <div class="relative">
       <button 
         (click)="toggleUserMenu()"
-        class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition"
+        class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 transition"
       >
-        <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+        <div class="w-8 h-8 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-semibold text-sm">
           {{ getUserInitials() }}
         </div>
         <div class="text-left hidden md:block">
-          <p class="text-sm font-medium text-gray-900">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</p>
-          <p class="text-xs text-gray-500">{{ currentUser?.role }}</p>
+          <p class="text-sm font-medium text-rep-white">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</p>
+          <p class="text-xs text-gray-400">{{ currentUser?.role }}</p>
         </div>
         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -55,30 +55,30 @@
       <!-- Dropdown Menu -->
       <div 
         *ngIf="showUserMenu"
-        class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+        class="absolute right-0 mt-2 w-56 bg-rep-black rounded-lg shadow-lg border border-gray-800 py-1 z-50"
       >
-        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white">
           <div class="flex items-center space-x-2">
             <span>👤</span>
             <span>Profile</span>
           </div>
         </a>
-        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white">
           <div class="flex items-center space-x-2">
             <span>⚙️</span>
             <span>Settings</span>
           </div>
         </a>
-        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white">
           <div class="flex items-center space-x-2">
             <span>🏢</span>
             <span>Organization</span>
           </div>
         </a>
-        <hr class="my-1 border-gray-200">
+        <hr class="my-1 border-gray-800">
         <button 
           (click)="logout()" 
-          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+          class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-lime"
         >
           <div class="flex items-center space-x-2">
             <span>🚪</span>

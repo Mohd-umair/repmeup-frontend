@@ -73,11 +73,11 @@ export class DashboardComponent implements OnInit {
   getSentimentClass(sentiment: string): string {
     switch (sentiment) {
       case 'positive':
-        return 'bg-green-100 text-green-800';
+        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30';
       case 'negative':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
     }
   }
 

@@ -16,6 +16,9 @@ import { InboxContainerComponent } from './features/inbox/inbox-container/inbox-
 import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
+import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
+import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
+import { ContactComponent } from './features/contact/contact.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -25,6 +28,14 @@ const routes: Routes = [
   // Public routes
   { path: '', component: HomeComponent },
   { path: 'home', component: HomeComponent },
+  
+  // Legal pages (public)
+  { path: 'privacy-policy', component: PrivacyPolicyComponent },
+  { path: 'terms-conditions', component: TermsConditionsComponent },
+  { path: 'terms', redirectTo: 'terms-conditions', pathMatch: 'full' },
+  
+  // Contact page (public)
+  { path: 'contact', component: ContactComponent },
   
   // Auth routes (public)
   {

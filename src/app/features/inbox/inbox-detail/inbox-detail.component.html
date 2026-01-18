@@ -1,77 +1,74 @@
-<div class="h-full flex flex-col">
+<div class="h-full flex flex-col overflow-hidden">
   <!-- Empty State -->
   <div *ngIf="!interaction" class="flex-1 flex items-center justify-center p-8">
     <div class="text-center max-w-md">
-      <div class="w-32 h-32 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        <i class="fas fa-comment-dots text-5xl text-gray-400"></i>
+      <div class="w-32 h-32 bg-rep-lime/10 border border-rep-lime/30 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="fas fa-comment-dots text-5xl text-rep-lime"></i>
       </div>
-      <h3 class="text-2xl font-bold text-gray-900 mb-2">Select a conversation</h3>
+      <h3 class="text-2xl font-bold text-rep-black mb-2">Select a conversation</h3>
       <p class="text-gray-600">Choose a conversation from the list to view details and reply</p>
     </div>
   </div>
 
   <!-- Interaction Detail -->
-  <div *ngIf="interaction" class="flex-1 flex flex-col">
+  <div *ngIf="interaction" class="flex-1 flex flex-col overflow-hidden h-full">
     <!-- Enhanced Header -->
-    <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-white via-blue-50 to-purple-50">
-      <div class="flex items-start justify-between mb-4">
-        <div class="flex items-center space-x-4">
+    <div class="p-4 sm:p-6 border-b border-gray-200 bg-rep-white flex-shrink-0">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+        <div class="flex items-center space-x-4 min-w-0 flex-shrink">
           <!-- Avatar -->
-          <div class="relative">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+          <div class="relative flex-shrink-0">
+            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-rep-black rounded-2xl flex items-center justify-center text-rep-white font-bold text-xl sm:text-2xl shadow-lg">
               {{ interaction.author.name.charAt(0).toUpperCase() }}
             </div>
-            <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-md border-2 border-white">
-              <span class="text-sm">{{ getPlatformIcon(interaction.platform) }}</span>
+            <div class="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-rep-white rounded-lg flex items-center justify-center shadow-md border-2 border-rep-white">
+              <span class="text-xs sm:text-sm">{{ getPlatformIcon(interaction.platform) }}</span>
             </div>
           </div>
           
           <!-- User Info -->
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-1">{{ interaction.author.name }}</h2>
-            <p class="text-sm text-gray-600 flex items-center">
-              <i class="fas fa-at mr-1"></i>
-              {{ interaction.author.username || 'user' }}
+          <div class="min-w-0 flex-1">
+            <h2 class="text-lg sm:text-xl font-bold text-rep-black mb-1 truncate">{{ interaction.author.name }}</h2>
+            <p class="text-xs sm:text-sm text-gray-600 flex items-center truncate">
+              <i class="fas fa-at mr-1 flex-shrink-0"></i>
+              <span class="truncate">{{ interaction.author.username || 'user' }}</span>
             </p>
           </div>
         </div>
 
         <!-- Status Badges -->
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center flex-wrap gap-2 flex-shrink-0">
           <span 
-            [class]="'px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 shadow-md ' + getSentimentClass(interaction.sentiment)"
+            [class]="'px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-1 sm:space-x-2 shadow-md whitespace-nowrap ' + getSentimentClass(interaction.sentiment)"
           >
-            <span class="text-lg">{{ getSentimentIcon(interaction.sentiment) }}</span>
+            <span class="text-sm sm:text-base">{{ getSentimentIcon(interaction.sentiment) }}</span>
             <span>{{ interaction.sentiment || 'neutral' }}</span>
           </span>
           <span 
-            [class]="'px-4 py-2 rounded-xl text-sm font-bold shadow-md ' + getStatusColor(interaction.status)"
+            [class]="'px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md whitespace-nowrap ' + getStatusColor(interaction.status)"
           >
             {{ interaction.status }}
           </span>
-          <button class="w-10 h-10 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition flex items-center justify-center">
-            <i class="fas fa-ellipsis-v text-gray-600"></i>
-          </button>
         </div>
       </div>
 
       <!-- Metadata Bar -->
-      <div class="flex items-center space-x-6 text-sm bg-white rounded-xl p-4 shadow-sm">
-        <div class="flex items-center space-x-2 text-gray-700">
-          <i class="fas fa-layer-group text-blue-600"></i>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs sm:text-sm bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
+        <div class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
+          <i class="fas fa-layer-group flex-shrink-0"></i>
           <span class="font-semibold">Platform:</span>
-          <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-lg font-medium">{{ interaction.platform }}</span>
+          <span class="px-2 py-1 bg-rep-lime/20 text-rep-black border border-rep-lime/30 rounded-lg font-medium whitespace-nowrap">{{ interaction.platform }}</span>
         </div>
-        <span class="text-gray-300">|</span>
-        <div class="flex items-center space-x-2 text-gray-700">
-          <i class="fas fa-comment text-purple-600"></i>
+        <span class="text-gray-300 hidden sm:inline">|</span>
+        <div class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
+          <i class="fas fa-comment flex-shrink-0"></i>
           <span class="font-semibold">Type:</span>
-          <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-lg font-medium">{{ interaction.type }}</span>
+          <span class="px-2 py-1 bg-rep-lime/20 text-rep-black border border-rep-lime/30 rounded-lg font-medium whitespace-nowrap">{{ interaction.type }}</span>
         </div>
-        <span class="text-gray-300">|</span>
-        <div class="flex items-center space-x-2 text-gray-700">
-          <i class="fas fa-clock text-pink-600"></i>
-          <span class="font-semibold">{{ formatDate(interaction.platformCreatedAt) }}</span>
+        <span class="text-gray-300 hidden sm:inline">|</span>
+        <div class="flex items-center space-x-2 text-gray-700 min-w-0">
+          <i class="fas fa-clock flex-shrink-0"></i>
+          <span class="font-semibold truncate">{{ formatDate(interaction.platformCreatedAt) }}</span>
         </div>
       </div>
 
@@ -82,60 +79,102 @@
           [style.background-color]="label.color + '15'"
           [style.border-color]="label.color + '40'"
           [style.color]="label.color"
-          class="px-4 py-2 rounded-xl text-sm font-bold border-2 shadow-sm"
+          class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border-2 shadow-sm"
         >
           <i class="fas fa-tag mr-1"></i>
           {{ label.name }}
         </span>
-        <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-bold border-2 border-gray-200 transition">
-          <i class="fas fa-plus mr-1"></i>
-          Add Label
-        </button>
       </div>
     </div>
 
-    <!-- Conversation Thread -->
-    <div class="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
-      <div class="max-w-4xl mx-auto space-y-4">
-        <!-- Original Message -->
-        <div class="bg-white rounded-2xl p-6 shadow-lg border-2 border-gray-100 hover:shadow-xl transition">
-          <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold shadow-md flex-shrink-0">
-              {{ interaction.author.name.charAt(0).toUpperCase() }}
-            </div>
-            <div class="flex-1 min-w-0">
+    <!-- Conversation Thread with Reply Form at End -->
+    <div class="flex-1 overflow-y-auto p-3 sm:p-4 bg-gradient-to-b from-gray-50 to-gray-100" #conversationThread>
+      <div class="max-w-4xl mx-auto space-y-3 pb-4">
+        
+        <!-- Original Customer Message -->
+        <div class="flex justify-start">
+          <div class="max-w-[85%]">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
               <div class="flex items-center space-x-2 mb-2">
-                <span class="text-sm font-bold text-gray-900">{{ interaction.author.name }}</span>
-                <span class="text-xs text-gray-500">{{ formatDate(interaction.platformCreatedAt) }}</span>
-                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-semibold">
-                  Customer
-                </span>
+                <div class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm">
+                  {{ interaction.author.name.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <p class="font-bold text-xs sm:text-sm text-rep-black">{{ interaction.author.name }}</p>
+                  <p class="text-xs text-gray-500">{{ formatDate(interaction.platformCreatedAt) }}</p>
+                </div>
               </div>
-              <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ interaction.content }}</p>
+              <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ interaction.content }}</p>
+            </div>
+          </div>
+        </div>
 
-              <!-- AI Suggestion -->
-              <div *ngIf="interaction.aiSuggestion" class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl">
-                <div class="flex items-start space-x-3">
-                  <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-robot text-white"></i>
+        <!-- Replies Thread -->
+        <div *ngFor="let reply of interaction.replies" class="flex justify-end">
+          <div class="max-w-[85%]">
+            <div class="bg-rep-lime rounded-2xl shadow-md border-2 border-rep-lime/50 p-3 sm:p-4">
+              <div class="flex items-center justify-end space-x-2 mb-2">
+                <div class="text-right">
+                  <p class="font-bold text-xs sm:text-sm text-rep-black">
+                    {{ getUserFullName(reply.sentBy) }}
+                    <span *ngIf="reply.wasAutoGenerated" class="ml-1 text-xs bg-rep-black/10 px-2 py-0.5 rounded">
+                      <i class="fas fa-robot mr-1"></i>Auto
+                </span>
+                  </p>
+                  <p class="text-xs text-gray-700">{{ formatDate(reply.sentAt) }}</p>
+                </div>
+                <div class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-black rounded-lg flex items-center justify-center text-rep-lime font-bold text-xs sm:text-sm">
+                  {{ getInitials(getUserFirstName(reply.sentBy), getUserLastName(reply.sentBy)) }}
+                </div>
+              </div>
+              <p class="text-sm sm:text-base text-rep-black leading-relaxed whitespace-pre-wrap">{{ reply.content }}</p>
+              <div *ngIf="reply.status === 'failed'" class="mt-2 flex items-center text-xs text-red-600">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                <span>Failed to send to platform</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Suggestion (if any) -->
+        <div *ngIf="aiSuggestion" class="flex justify-center">
+          <div class="max-w-[90%]">
+            <div class="p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-xl animate-fadeIn">
+              <div class="flex items-start space-x-2 sm:space-x-3">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-robot text-white text-sm sm:text-base"></i>
                   </div>
-                  <div class="flex-1">
-                    <div class="flex items-center justify-between mb-2">
-                      <p class="text-sm font-bold text-blue-900 flex items-center">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-2 gap-2">
+                    <p class="text-xs sm:text-sm font-bold text-gray-900 flex items-center">
                         <i class="fas fa-sparkles mr-1"></i>
-                        AI Suggested Response
-                      </p>
-                      <div class="flex items-center space-x-2">
-                        <span class="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-lg">
-                          {{ (interaction.aiSuggestion.confidence * 100).toFixed(0) }}% Confidence
+                      <span class="hidden sm:inline">AI Suggested Response</span>
+                      <span class="sm:hidden">AI Suggestion</span>
+                    </p>
+                    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                      <span class="text-xs font-semibold text-blue-900 bg-blue-100 border border-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg">
+                        {{ (aiSuggestion.confidence * 100).toFixed(0) }}%
                         </span>
-                        <button class="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition">
+                      <button 
+                        (click)="useAISuggestion()"
+                        class="px-2 sm:px-3 py-1 bg-blue-500 text-white rounded-lg text-xs font-bold hover:bg-blue-600 transition"
+                      >
                           <i class="fas fa-check mr-1"></i>
-                          Use This
+                        <span class="hidden sm:inline">Use</span>
+                      </button>
+                      <button 
+                        (click)="clearAISuggestion()"
+                        class="px-1.5 sm:px-2 py-1 text-gray-600 hover:text-gray-800 transition"
+                        title="Dismiss"
+                      >
+                        <i class="fas fa-times"></i>
                         </button>
                       </div>
                     </div>
-                    <p class="text-sm text-blue-900 leading-relaxed">{{ interaction.aiSuggestion.content }}</p>
+                  <p class="text-xs sm:text-sm text-gray-800 leading-relaxed mb-2">{{ aiSuggestion.content }}</p>
+                  <div *ngIf="aiSuggestion.usedKnowledgeBase" class="flex items-center space-x-1 text-xs text-blue-600">
+                    <i class="fas fa-book"></i>
+                    <span>Using Knowledge Base</span>
                   </div>
                 </div>
               </div>
@@ -143,133 +182,102 @@
           </div>
         </div>
 
-        <!-- Replies -->
-        <div *ngFor="let reply of interaction.replies" class="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 shadow-lg border-2 border-green-100 ml-12 hover:shadow-xl transition">
-          <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold shadow-md flex-shrink-0">
-              <i class="fas fa-user"></i>
-            </div>
-            <div class="flex-1">
-              <div class="flex items-center space-x-2 mb-2">
-                <span class="text-sm font-bold text-gray-900">You</span>
-                <span class="text-xs text-gray-500">{{ formatDate(reply.sentAt) }}</span>
-                <span 
-                  *ngIf="reply.wasAutoGenerated" 
-                  class="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-lg flex items-center"
-                >
-                  <i class="fas fa-robot mr-1"></i>
-                  AI Generated
-                </span>
-                <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">
-                  Agent
-                </span>
-              </div>
-              <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ reply.content }}</p>
+        <!-- AI Suggestion Error -->
+        <div *ngIf="suggestionError" class="flex justify-center">
+          <div class="max-w-[90%]">
+            <div class="p-3 sm:p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+              <div class="flex items-start space-x-2 sm:space-x-3">
+                <i class="fas fa-exclamation-triangle text-red-600 mt-1 flex-shrink-0"></i>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs sm:text-sm font-semibold text-red-900 mb-1">Failed to Generate Suggestion</p>
+                  <p class="text-xs text-red-700">{{ suggestionError }}</p>
+                  <button 
+                    (click)="clearAISuggestion()"
+                    class="mt-2 px-3 py-1 bg-red-100 text-red-800 rounded-lg text-xs font-semibold hover:bg-red-200 transition"
+                  >
+                    Dismiss
+                  </button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Enhanced Reply Form -->
-    <div class="p-6 border-t-2 border-gray-200 bg-white">
-      <!-- Success Message -->
-      <div *ngIf="replySuccess" class="mb-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-xl">
-        <p class="text-sm font-bold text-green-800 flex items-center">
-          <i class="fas fa-check-circle mr-2 text-green-600"></i>
+        <!-- Reply Form at End of Thread -->
+        <div class="border-t-2 border-gray-300 bg-white rounded-2xl shadow-lg mt-4 p-3 sm:p-4">
+          <!-- Success/Error Messages -->
+          <div *ngIf="replySuccess" class="mb-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+            <p class="text-xs font-semibold text-green-800 flex items-center">
+              <i class="fas fa-check-circle mr-1"></i>
           Reply sent successfully!
         </p>
       </div>
 
       <form [formGroup]="replyForm" (ngSubmit)="submitReply()">
+            <!-- Compact Textarea with Action Buttons -->
+            <div class="flex items-start space-x-2">
         <!-- Textarea -->
-        <div class="mb-4">
-          <label class="block text-sm font-bold text-gray-700 mb-2">Your Reply</label>
           <textarea
             formControlName="content"
-            rows="5"
-            class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-500 focus:bg-white transition resize-none"
-            placeholder="Type your reply here... Use AI suggestions or templates to respond faster."
+                rows="2"
+                class="flex-1 px-3 py-2 text-sm bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime focus:bg-white transition resize-none"
+                placeholder="Type your reply..."
           ></textarea>
+
+              <!-- Send Button -->
+              <button 
+                type="submit"
+                [disabled]="replyForm.invalid || submittingReply"
+                class="px-3 sm:px-4 py-2 h-full bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-lg hover:shadow-rep-lime/50 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[70px] sm:min-w-[80px]"
+              >
+                <span *ngIf="!submittingReply">
+                  <i class="fas fa-paper-plane mr-1"></i>
+                  <span class="hidden sm:inline">Send</span>
+                </span>
+                <span *ngIf="submittingReply">
+                  <i class="fas fa-spinner fa-spin"></i>
+                </span>
+              </button>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-2">
+            <!-- Quick Action Buttons -->
+            <div class="flex items-center justify-between mt-2">
+              <div class="flex items-center gap-1">
             <button 
               type="button"
-              class="px-4 py-2.5 text-sm font-bold text-blue-700 bg-blue-100 hover:bg-blue-200 border-2 border-blue-200 rounded-xl transition flex items-center"
+                  (click)="generateAISuggestion()"
+                  [disabled]="generatingSuggestion || !interaction"
+                  class="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Generate AI Suggestion"
             >
-              <i class="fas fa-robot mr-2"></i>
-              AI Suggestion
+                  <i [class]="generatingSuggestion ? 'fas fa-spinner fa-spin' : 'fas fa-robot'"></i>
+                  <span class="ml-1 hidden sm:inline">AI</span>
             </button>
             <button 
               type="button"
-              class="px-4 py-2.5 text-sm font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 border-2 border-purple-200 rounded-xl transition flex items-center"
+                  class="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition flex items-center"
+                  title="Use Template"
             >
-              <i class="fas fa-file-alt mr-2"></i>
-              Templates
+                  <i class="fas fa-file-alt"></i>
+                  <span class="ml-1 hidden sm:inline">Template</span>
             </button>
             <button 
               type="button"
-              class="px-4 py-2.5 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 border-2 border-gray-200 rounded-xl transition flex items-center"
+                  class="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition flex items-center"
+                  title="Attach File"
             >
-              <i class="fas fa-paperclip mr-2"></i>
-              Attach
+                  <i class="fas fa-paperclip"></i>
             </button>
           </div>
 
-          <div class="flex items-center space-x-2">
-            <button 
-              type="button"
-              class="px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition"
-            >
-              <i class="fas fa-save mr-2"></i>
-              Save Draft
-            </button>
-            <button 
-              type="submit"
-              [disabled]="replyForm.invalid || submittingReply"
-              class="px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span *ngIf="!submittingReply" class="flex items-center">
-                <i class="fas fa-paper-plane mr-2"></i>
-                Send Reply
-              </span>
-              <span *ngIf="submittingReply" class="flex items-center">
-                <i class="fas fa-spinner fa-spin mr-2"></i>
-                Sending...
-              </span>
-            </button>
+              <!-- Reply Count -->
+              <div class="text-xs text-gray-500">
+                <span class="font-semibold">{{ interaction.replies?.length || 0 }}</span> replies
           </div>
         </div>
       </form>
-
-      <!-- Quick Actions -->
-      <div class="mt-6 pt-6 border-t-2 border-gray-100">
-        <p class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wide">Quick Actions</p>
-        <div class="flex flex-wrap items-center gap-2">
-          <button class="px-4 py-2 text-sm font-bold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition flex items-center">
-            <i class="fas fa-tags mr-2 text-blue-600"></i>
-            Add Label
-          </button>
-          <button class="px-4 py-2 text-sm font-bold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition flex items-center">
-            <i class="fas fa-user-plus mr-2 text-purple-600"></i>
-            Assign Agent
-          </button>
-          <button class="px-4 py-2 text-sm font-bold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition flex items-center">
-            <i class="fas fa-sticky-note mr-2 text-yellow-600"></i>
-            Add Internal Note
-          </button>
-          <button class="px-4 py-2 text-sm font-bold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition flex items-center">
-            <i class="fas fa-flag mr-2 text-red-600"></i>
-            Flag for Review
-          </button>
-          <button class="px-4 py-2 text-sm font-bold text-white bg-gradient-to-r from-green-500 to-blue-500 border-2 border-green-400 rounded-xl hover:shadow-lg transition flex items-center">
-            <i class="fas fa-check-double mr-2"></i>
-            Mark as Resolved
-          </button>
         </div>
+
       </div>
     </div>
   </div>

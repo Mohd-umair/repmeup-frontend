@@ -1,159 +1,401 @@
-<div class="space-y-6">
-  <!-- Page Header -->
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900">Team Management</h1>
-      <p class="text-gray-600 mt-1">Manage your team members and their permissions</p>
+<div class="min-h-screen bg-rep-black p-6">
+  <div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-rep-white">Team Management</h1>
+        <p class="text-gray-400 mt-1">Manage your team members and their permissions</p>
+      </div>
+      <button 
+        (click)="openAddModal()"
+        class="px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-lg hover:shadow-rep-lime/50 transition flex items-center space-x-2"
+      >
+        <i class="fas fa-plus mr-2"></i>
+        <span>Add Team Member</span>
+      </button>
     </div>
-    <button 
-      (click)="addAgent()"
-      class="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition flex items-center space-x-2"
-    >
-      <span>➕</span>
-      <span>Add Team Member</span>
-    </button>
-  </div>
 
-  <!-- Stats Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Total Agents</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ agents.length }}</p>
+    <!-- Error Message -->
+    <div *ngIf="error" class="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+      <div class="flex items-start space-x-3">
+        <i class="fas fa-exclamation-triangle text-red-600 mt-1"></i>
+        <div class="flex-1">
+          <p class="text-sm font-semibold text-red-900">{{ error }}</p>
         </div>
-        <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-          <span class="text-xl">👥</span>
+        <button (click)="error = null" class="text-red-600 hover:text-red-800">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="bg-rep-white rounded-xl shadow-sm p-6 border border-gray-800">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Total Agents</p>
+            <p class="text-2xl font-bold text-rep-black mt-1">{{ agents.length }}</p>
+          </div>
+          <div class="w-10 h-10 bg-rep-black/10 rounded-lg flex items-center justify-center">
+            <span class="text-xl">👥</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-rep-white rounded-xl shadow-sm p-6 border border-gray-800">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Active Now</p>
+            <p class="text-2xl font-bold text-rep-black mt-1">{{ getActiveAgentsCount() }}</p>
+          </div>
+          <div class="w-10 h-10 bg-rep-lime/20 rounded-lg flex items-center justify-center border border-rep-lime/30">
+            <span class="text-xl">✅</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-rep-white rounded-xl shadow-sm p-6 border border-gray-800">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Assigned Tasks</p>
+            <p class="text-2xl font-bold text-rep-black mt-1">{{ getTotalTasks() }}</p>
+          </div>
+          <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+            <span class="text-xl">📋</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-rep-white rounded-xl shadow-sm p-6 border border-gray-800">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Resolved Today</p>
+            <p class="text-2xl font-bold text-rep-black mt-1">{{ getTotalResolved() }}</p>
+          </div>
+          <div class="w-10 h-10 bg-rep-lime/20 rounded-lg flex items-center justify-center border border-rep-lime/30">
+            <span class="text-xl">✔️</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Active Now</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ getActiveAgentsCount() }}</p>
-        </div>
-        <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-          <span class="text-xl">✅</span>
-        </div>
+    <!-- Agents Table -->
+    <div class="bg-rep-white rounded-xl shadow-xl border border-gray-800 overflow-hidden">
+      <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+        <h2 class="text-lg font-bold text-rep-black flex items-center">
+          <i class="fas fa-users mr-2"></i>
+          Team Members
+        </h2>
       </div>
-    </div>
 
-    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Assigned Tasks</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ getTotalTasks() }}</p>
-        </div>
-        <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-          <span class="text-xl">📋</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Resolved Today</p>
-          <p class="text-2xl font-bold text-gray-900 mt-1">{{ getTotalResolved() }}</p>
-        </div>
-        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-          <span class="text-xl">✔️</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Agents Table -->
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <h2 class="text-lg font-semibold text-gray-900">Team Members</h2>
-    </div>
-
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead class="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resolved Today</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr *ngFor="let agent of agents" class="hover:bg-gray-50 transition">
-            <!-- Agent Info -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {{ agent.avatar }}
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Agent</th>
+              <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Role</th>
+              <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Assigned</th>
+              <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Resolved Today</th>
+              <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr *ngIf="loading">
+              <td colspan="6" class="px-6 py-12 text-center">
+                <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                <p class="text-gray-600 mt-2">Loading agents...</p>
+              </td>
+            </tr>
+            <tr *ngIf="!loading && agents.length === 0">
+              <td colspan="6" class="px-6 py-12 text-center">
+                <i class="fas fa-users text-4xl text-gray-400 mb-2"></i>
+                <p class="text-gray-600 font-medium">No team members found</p>
+                <p class="text-sm text-gray-500 mt-1">Add your first team member to get started</p>
+              </td>
+            </tr>
+            <tr *ngFor="let agent of agents" class="hover:bg-gray-50 transition">
+              <!-- Agent Info -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-semibold text-sm">
+                    {{ getInitials(agent.firstName, agent.lastName) }}
+                  </div>
+                  <div>
+                    <div class="text-sm font-medium text-rep-black">{{ agent.firstName }} {{ agent.lastName }}</div>
+                    <div class="text-sm text-gray-600">{{ agent.email }}</div>
+                  </div>
                 </div>
-                <div>
-                  <div class="text-sm font-medium text-gray-900">{{ agent.name }}</div>
-                  <div class="text-sm text-gray-500">{{ agent.email }}</div>
+              </td>
+
+              <!-- Role -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getRoleColor(agent.role)">
+                  {{ agent.role }}
+                </span>
+              </td>
+
+              <!-- Status -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center space-x-2">
+                  <span [class]="'w-2 h-2 rounded-full ' + getStatusColor(agent.isActive)"></span>
+                  <span class="text-sm text-gray-600">{{ getStatusText(agent.isActive) }}</span>
                 </div>
-              </div>
-            </td>
+              </td>
 
-            <!-- Role -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getRoleColor(agent.role)">
-                {{ agent.role }}
-              </span>
-            </td>
+              <!-- Assigned Tasks -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm font-medium text-rep-black">{{ agent.assignedTasks || 0 }}</span>
+              </td>
 
-            <!-- Status -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center space-x-2">
-                <span [class]="'w-2 h-2 rounded-full ' + getStatusColor(agent.status)"></span>
-                <span class="text-sm text-gray-600">{{ agent.status }}</span>
-              </div>
-            </td>
+              <!-- Resolved Today -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="text-sm font-medium text-rep-black">{{ agent.resolvedToday || 0 }}</span>
+              </td>
 
-            <!-- Assigned Tasks -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-sm font-medium text-gray-900">{{ agent.assignedTasks }}</span>
-            </td>
+              <!-- Actions -->
+              <td class="px-6 py-4 whitespace-nowrap text-sm">
+                <div class="flex items-center space-x-2">
+                  <button 
+                    (click)="openEditModal(agent)"
+                    class="text-rep-black hover:text-rep-lime font-medium transition"
+                  >
+                    <i class="fas fa-edit mr-1"></i>
+                    Edit
+                  </button>
+                  <span class="text-gray-300">|</span>
+                  <button 
+                    (click)="openDeleteModal(agent)"
+                    class="text-gray-600 hover:text-red-600 font-medium transition"
+                  >
+                    <i class="fas fa-trash mr-1"></i>
+                    Remove
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-            <!-- Resolved Today -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="text-sm font-medium text-gray-900">{{ agent.resolvedToday }}</span>
-            </td>
-
-            <!-- Actions -->
-            <td class="px-6 py-4 whitespace-nowrap text-sm">
-              <div class="flex items-center space-x-2">
-                <button 
-                  (click)="editAgent(agent)"
-                  class="text-primary-600 hover:text-primary-900 font-medium"
-                >
-                  Edit
-                </button>
-                <span class="text-gray-300">|</span>
-                <button 
-                  (click)="deleteAgent(agent)"
-                  class="text-red-600 hover:text-red-900 font-medium"
-                >
-                  Remove
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Performance Chart -->
+    <div class="bg-rep-white rounded-xl shadow-xl p-6 border border-gray-800">
+      <h2 class="text-lg font-bold text-rep-black mb-4 flex items-center">
+        <i class="fas fa-chart-bar mr-2"></i>
+        Agent Performance
+      </h2>
+      <div class="text-center py-12 text-gray-600">
+        <span class="text-4xl mb-2 block">📊</span>
+        <p class="font-medium">Performance charts will be displayed here</p>
+        <p class="text-sm mt-1">Integration with chart library pending</p>
+      </div>
     </div>
   </div>
 
-  <!-- Performance Chart -->
-  <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-    <h2 class="text-lg font-semibold text-gray-900 mb-4">Agent Performance</h2>
-    <div class="text-center py-12 text-gray-500">
-      <span class="text-4xl mb-2 block">📊</span>
-      <p>Performance charts will be displayed here</p>
-      <p class="text-sm mt-1">Integration with chart library pending</p>
+  <!-- Add Agent Modal -->
+  <div *ngIf="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-rep-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-rep-black">Add Team Member</h2>
+        <button (click)="closeAddModal()" class="text-gray-600 hover:text-gray-900">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <form [formGroup]="addAgentForm" (ngSubmit)="submitAddAgent()">
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
+              <input 
+                type="text" 
+                formControlName="firstName"
+                class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition"
+                placeholder="John"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
+              <input 
+                type="text" 
+                formControlName="lastName"
+                class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition"
+                placeholder="Doe"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+            <input 
+              type="email" 
+              formControlName="email"
+              class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition"
+              placeholder="john@example.com"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+            <input 
+              type="password" 
+              formControlName="password"
+              class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition"
+              placeholder="••••••••"
+            />
+            <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+            <select 
+              formControlName="role"
+              class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition"
+            >
+              <option value="agent">Agent</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+              <option value="viewer">Viewer</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 mt-6">
+          <button 
+            type="submit"
+            [disabled]="addAgentForm.invalid"
+            class="flex-1 px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-lg hover:shadow-rep-lime/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i class="fas fa-plus mr-2"></i>
+            Add Member
+          </button>
+          <button 
+            type="button"
+            (click)="closeAddModal()"
+            class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Agent Modal -->
+  <div *ngIf="showEditModal && selectedAgent" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-rep-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-rep-black">Edit Team Member</h2>
+        <button (click)="closeEditModal()" class="text-gray-600 hover:text-gray-900">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <form [formGroup]="editAgentForm" (ngSubmit)="submitEditAgent()">
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
+              <input 
+                type="text" 
+                formControlName="firstName"
+                class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
+              <input 
+                type="text" 
+                formControlName="lastName"
+                class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+            <select 
+              formControlName="role"
+              class="w-full px-4 py-2 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition"
+            >
+              <option value="agent">Agent</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+              <option value="viewer">Viewer</option>
+            </select>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <input 
+              type="checkbox" 
+              formControlName="isActive"
+              id="isActive"
+              class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
+            />
+            <label for="isActive" class="text-sm font-semibold text-gray-700">Active</label>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3 mt-6">
+          <button 
+            type="submit"
+            [disabled]="editAgentForm.invalid"
+            class="flex-1 px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-lg hover:shadow-rep-lime/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i class="fas fa-save mr-2"></i>
+            Save Changes
+          </button>
+          <button 
+            type="button"
+            (click)="closeEditModal()"
+            class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteModal && selectedAgent" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-rep-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-red-600">Confirm Deletion</h2>
+        <button (click)="closeDeleteModal()" class="text-gray-600 hover:text-gray-900">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <div class="mb-6">
+        <p class="text-gray-700 mb-2">Are you sure you want to remove this team member?</p>
+        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <p class="font-semibold text-rep-black">{{ selectedAgent.firstName }} {{ selectedAgent.lastName }}</p>
+          <p class="text-sm text-gray-600">{{ selectedAgent.email }}</p>
+          <p class="text-xs text-gray-500 mt-1">Role: {{ selectedAgent.role }}</p>
+        </div>
+        <p class="text-sm text-red-600 mt-3">
+          <i class="fas fa-exclamation-triangle mr-1"></i>
+          This action will deactivate the user and unassign all their tasks.
+        </p>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <button 
+          (click)="confirmDelete()"
+          class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition"
+        >
+          <i class="fas fa-trash mr-2"></i>
+          Delete
+        </button>
+        <button 
+          (click)="closeDeleteModal()"
+          class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
 </div>

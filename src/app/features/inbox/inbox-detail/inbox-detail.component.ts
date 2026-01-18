@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IInteraction } from '../../../core/models/interaction.model';
 import { InboxService } from '../../../core/services/inbox.service';
@@ -12,13 +12,29 @@ import { InboxService } from '../../../core/services/inbox.service';
   templateUrl: './inbox-detail.component.html',
   styleUrls: ['./inbox-detail.component.scss']
 })
-export class InboxDetailComponent {
+export class InboxDetailComponent implements OnChanges {
   @Input() interaction: IInteraction | null = null;
   @Output() interactionUpdate = new EventEmitter<void>();
 
   replyForm: FormGroup;
   submittingReply = false;
   replySuccess = false;
+  generatingSuggestion = false;
+  aiSuggestion: { content: string; confidence: number; usedKnowledgeBase: boolean } | null = null;
+  suggestionError: string | null = null;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Clear AI suggestion when interaction changes
+    if (changes['interaction'] && !changes['interaction'].firstChange) {
+      this.clearAISuggestion();
+      this.replyForm.reset();
+    }
+    
+    // Mark interaction as read when it's viewed
+    if (changes['interaction'] && this.interaction && this.interaction._id) {
+      this.markAsRead();
+    }
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -61,11 +77,11 @@ export class InboxDetailComponent {
   getSentimentClass(sentiment?: string): string {
     switch (sentiment) {
       case 'positive':
-        return 'bg-green-100 text-green-800';
+        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30';
       case 'negative':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
     }
   }
 
@@ -76,13 +92,13 @@ export class InboxDetailComponent {
   getStatusColor(status?: string): string {
     switch (status) {
       case 'unread':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
       case 'replied':
-        return 'bg-green-100 text-green-800';
+        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30';
       case 'resolved':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
     }
   }
 
@@ -105,6 +121,138 @@ export class InboxDetailComponent {
         return '😟';
       default:
         return '😐';
+    }
+  }
+
+  getInitials(firstName?: string, lastName?: string): string {
+    if (!firstName && !lastName) {
+      return 'A';
+    }
+    const first = firstName?.charAt(0) || '';
+    const last = lastName?.charAt(0) || '';
+    return (first + last).toUpperCase() || 'A';
+  }
+
+  /**
+   * Check if sentBy is a populated user object or just a string ID
+   */
+  isUserObject(sentBy: string | any): boolean {
+    return sentBy && typeof sentBy === 'object' && 'firstName' in sentBy;
+  }
+
+  /**
+   * Get user's first name from sentBy (handles both string ID and populated object)
+   */
+  getUserFirstName(sentBy: string | any): string {
+    if (this.isUserObject(sentBy)) {
+      return (sentBy as any).firstName || '';
+    }
+    return '';
+  }
+
+  /**
+   * Get user's last name from sentBy (handles both string ID and populated object)
+   */
+  getUserLastName(sentBy: string | any): string {
+    if (this.isUserObject(sentBy)) {
+      return (sentBy as any).lastName || '';
+    }
+    return '';
+  }
+
+  /**
+   * Get user's full name from sentBy (handles both string ID and populated object)
+   */
+  getUserFullName(sentBy: string | any): string {
+    if (this.isUserObject(sentBy)) {
+      const firstName = (sentBy as any).firstName || '';
+      const lastName = (sentBy as any).lastName || '';
+      return `${firstName} ${lastName}`.trim() || 'Agent';
+    }
+    return 'Agent';
+  }
+
+  /**
+   * Generate AI suggestion for reply
+   */
+  generateAISuggestion(): void {
+    if (!this.interaction || this.generatingSuggestion) {
+      return;
+    }
+
+    this.generatingSuggestion = true;
+    this.suggestionError = null;
+    this.aiSuggestion = null;
+
+    this.inboxService.suggestReply(this.interaction._id).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.aiSuggestion = {
+            content: response.data.suggestedReply,
+            confidence: response.data.confidence || 0,
+            usedKnowledgeBase: response.data.usedKnowledgeBase || false
+          };
+          
+          // Auto-fill the reply form with the suggestion
+          this.replyForm.patchValue({
+            content: this.aiSuggestion.content
+          });
+        } else {
+          this.suggestionError = 'Failed to generate AI suggestion. Please try again.';
+        }
+        this.generatingSuggestion = false;
+      },
+      error: (error) => {
+        console.error('Error generating AI suggestion:', error);
+        this.suggestionError = error.error?.error || error.error?.message || 'Failed to generate AI suggestion. Please try again.';
+        this.generatingSuggestion = false;
+      }
+    });
+  }
+
+  /**
+   * Use the AI suggestion in the reply form
+   */
+  useAISuggestion(): void {
+    if (this.aiSuggestion) {
+      this.replyForm.patchValue({
+        content: this.aiSuggestion.content
+      });
+    }
+  }
+
+  /**
+   * Clear AI suggestion
+   */
+  clearAISuggestion(): void {
+    this.aiSuggestion = null;
+    this.suggestionError = null;
+  }
+
+  /**
+   * Mark interaction as read when viewed
+   */
+  markAsRead(): void {
+    if (!this.interaction || !this.interaction._id) {
+      return;
+    }
+
+    // Only mark as read if it's currently unread
+    if (this.interaction.status === 'unread') {
+      // Call the backend to mark as read (this will also update the status)
+      this.inboxService.getInteraction(this.interaction._id).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            // Update the local interaction with the new status
+            this.interaction = response.data;
+            // Emit update to refresh the list
+            this.interactionUpdate.emit();
+          }
+        },
+        error: (error) => {
+          console.error('Error marking interaction as read:', error);
+        }
+      });
     }
   }
 }

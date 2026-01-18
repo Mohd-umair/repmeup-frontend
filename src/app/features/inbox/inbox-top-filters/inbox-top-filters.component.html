@@ -1,0 +1,78 @@
+<div class="bg-rep-white rounded-2xl shadow-xl p-4 border border-gray-800">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-sm font-bold text-rep-black uppercase tracking-wide flex items-center">
+      <i class="fas fa-filter mr-2"></i>
+      Quick Filters
+    </h3>
+    <button 
+      (click)="clearFilters()"
+      class="text-xs text-rep-black hover:text-rep-lime font-bold transition flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg"
+    >
+      <i class="fas fa-times-circle mr-1"></i>
+      Clear All
+    </button>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <!-- Type Filters -->
+    <div class="flex items-center space-x-2">
+      <span class="text-xs font-bold text-gray-600 uppercase">Type:</span>
+      <div class="flex items-center space-x-2">
+        <button
+          *ngFor="let type of types"
+          (click)="toggleFilter('type', type.value)"
+          [class]="isFilterActive('type', type.value) 
+            ? 'bg-rep-lime/20 border-rep-lime text-rep-black shadow-md' 
+            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+          class="flex items-center space-x-2 px-3 py-2 border-2 rounded-lg transition-all font-medium text-sm"
+        >
+          <span class="text-base">{{ type.icon }}</span>
+          <span>{{ type.label }}</span>
+          <i *ngIf="isFilterActive('type', type.value)" class="fas fa-check-circle text-xs"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="w-px h-8 bg-gray-200"></div>
+
+    <!-- Sentiment Filters -->
+    <div class="flex items-center space-x-2">
+      <span class="text-xs font-bold text-gray-600 uppercase">Sentiment:</span>
+      <div class="flex items-center space-x-2">
+        <button
+          *ngFor="let sentiment of sentiments"
+          (click)="toggleFilter('sentiment', sentiment.value)"
+          [class]="isFilterActive('sentiment', sentiment.value) 
+            ? getSentimentActiveClass(sentiment.value)
+            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+          class="flex items-center space-x-2 px-3 py-2 border-2 rounded-lg transition-all font-medium text-sm"
+        >
+          <span class="text-base">{{ sentiment.icon }}</span>
+          <span>{{ sentiment.label }}</span>
+          <i *ngIf="isFilterActive('sentiment', sentiment.value)" class="fas fa-check-circle text-xs"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="w-px h-8 bg-gray-200"></div>
+
+    <!-- Status Filters -->
+    <div class="flex items-center space-x-2">
+      <span class="text-xs font-bold text-gray-600 uppercase">Status:</span>
+      <div class="flex items-center space-x-2">
+        <button
+          *ngFor="let status of statuses"
+          (click)="toggleFilter('status', status.value)"
+          [class]="isFilterActive('status', status.value) 
+            ? getStatusActiveClass(status.value)
+            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
+          class="flex items-center space-x-2 px-3 py-2 border-2 rounded-lg transition-all font-medium text-sm"
+        >
+          <span class="text-base">{{ status.icon }}</span>
+          <span>{{ status.label }}</span>
+          <i *ngIf="isFilterActive('status', status.value)" class="fas fa-check-circle text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
