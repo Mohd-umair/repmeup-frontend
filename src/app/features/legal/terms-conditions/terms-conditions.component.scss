@@ -1,0 +1,43 @@
+.terms-conditions {
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #0B0B0B;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #D8FF00;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #D8FF00;
+    opacity: 0.8;
+  }
+
+  // Smooth scrolling
+  scroll-behavior: smooth;
+
+  // Section spacing
+  section {
+    scroll-margin-top: 2rem;
+  }
+
+  // List styling
+  ul {
+    line-height: 1.8;
+  }
+
+  // Link hover effects
+  a {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+

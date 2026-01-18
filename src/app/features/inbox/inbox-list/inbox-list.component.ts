@@ -1,4 +1,6 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
 
 /**
@@ -10,14 +12,44 @@ import { IInteraction, Platform } from '../../../core/models/interaction.model';
   templateUrl: './inbox-list.component.html',
   styleUrls: ['./inbox-list.component.scss']
 })
-export class InboxListComponent {
+export class InboxListComponent implements OnInit, OnDestroy {
   @Input() interactions: IInteraction[] = [];
   @Input() loading = false;
   @Input() selectedInteraction: IInteraction | null = null;
   @Output() interactionSelect = new EventEmitter<IInteraction>();
+  @Output() searchChange = new EventEmitter<string>();
+
+  searchTerm = '';
+  private searchSubject = new Subject<string>();
+
+  ngOnInit(): void {
+    // Set up debounced search
+    this.searchSubject.pipe(
+      debounceTime(400), // Wait 400ms after user stops typing
+      distinctUntilChanged() // Only emit if value has changed
+    ).subscribe(searchTerm => {
+      this.searchChange.emit(searchTerm);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.searchSubject.complete();
+  }
 
   selectInteraction(interaction: IInteraction): void {
     this.interactionSelect.emit(interaction);
+  }
+
+  onSearchInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm = input.value;
+    // Push to subject for debounced search
+    this.searchSubject.next(this.searchTerm);
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.searchSubject.next('');
   }
 
   isSelected(interaction: IInteraction): boolean {
@@ -27,11 +59,11 @@ export class InboxListComponent {
   getSentimentClass(sentiment?: string): string {
     switch (sentiment) {
       case 'positive':
-        return 'bg-green-100 text-green-800';
+        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30';
       case 'negative':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
     }
   }
 

@@ -19,6 +19,7 @@ interface MenuItem {
 })
 export class SidebarComponent {
   menuItems: MenuItem[] = [
+    { label: 'Home', icon: '🏠', route: '/' },
     { label: 'Dashboard', icon: '📊', route: '/app/dashboard' },
     { label: 'Inbox', icon: '📥', route: '/app/inbox', badge: 0 },
     { label: 'Knowledge Base', icon: '🧠', route: '/app/knowledge-base' },

@@ -16,11 +16,11 @@ export class InboxFiltersComponent {
   filters: IInboxFilters = {};
 
   platforms = [
-    { value: Platform.INSTAGRAM, label: 'Instagram', icon: '📷' },
-    { value: Platform.FACEBOOK, label: 'Facebook', icon: '👍' },
-    { value: Platform.YOUTUBE, label: 'YouTube', icon: '🎥' },
-    { value: Platform.GOOGLE, label: 'Google', icon: '🔍' },
-    { value: Platform.WHATSAPP, label: 'WhatsApp', icon: '💬' }
+    { value: Platform.INSTAGRAM, label: 'Instagram', icon: 'fab fa-instagram', color: 'text-pink-600' },
+    { value: Platform.FACEBOOK, label: 'Facebook', icon: 'fab fa-facebook-f', color: 'text-blue-600' },
+    { value: Platform.YOUTUBE, label: 'YouTube', icon: 'fab fa-youtube', color: 'text-red-600' },
+    { value: Platform.GOOGLE, label: 'Google', icon: 'fab fa-google', color: 'text-blue-500' },
+    { value: Platform.WHATSAPP, label: 'WhatsApp', icon: 'fab fa-whatsapp', color: 'text-green-500' }
   ];
 
   types = [
@@ -59,6 +59,11 @@ export class InboxFiltersComponent {
 
   clearFilters(): void {
     this.filters = {};
+    this.emitFilters();
+  }
+
+  clearPlatformFilters(): void {
+    delete this.filters.platform;
     this.emitFilters();
   }
 

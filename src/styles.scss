@@ -1,5 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
-@import '~@fortawesome/fontawesome-free/css/all.min.css';
+/* FontAwesome is imported in index.html to avoid PostCSS parsing issues */
 
 @tailwind base;
 @tailwind components;
@@ -43,4 +43,129 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* ==========================================
+   TOGGLE SWITCH STYLES - Complete Implementation
+   ========================================== */
+
+/* Screen reader only - hide visually but keep for accessibility */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border-width: 0 !important;
+}
+
+/* Base toggle switch track (the background slider) */
+input[type="checkbox"].peer + div {
+  position: relative !important;
+  display: inline-block !important;
+  transition: background-color 0.3s ease-in-out !important;
+  cursor: pointer !important;
+}
+
+/* Toggle switch thumb (the circle that moves) - Using ::after pseudo-element */
+input[type="checkbox"].peer + div::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0.25rem !important; /* 4px */
+  left: 0.25rem !important; /* 4px */
+  background-color: white !important;
+  border-radius: 9999px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Small toggle (w-16 h-8 with h-6 w-6 thumb) */
+input[type="checkbox"].peer + div.w-16 {
+  width: 4rem !important;
+  height: 2rem !important;
+}
+
+input[type="checkbox"].peer + div.w-16::after {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+input[type="checkbox"].peer:checked + div.w-16::after {
+  transform: translateX(2rem) !important; /* Move by 32px (2rem) */
+}
+
+/* Large toggle (w-20 h-10 with h-8 w-8 thumb) */
+input[type="checkbox"].peer + div.w-20 {
+  width: 5rem !important;
+  height: 2.5rem !important;
+}
+
+input[type="checkbox"].peer + div.w-20::after {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+input[type="checkbox"].peer:checked + div.w-20::after {
+  transform: translateX(2.5rem) !important; /* Move by 40px (2.5rem) */
+}
+
+/* Checked state - change background to rep-lime */
+input[type="checkbox"].peer:checked + div {
+  background-color: #D8FF00 !important; /* rep-lime color */
+}
+
+/* Unchecked state - gray background */
+input[type="checkbox"].peer:not(:checked) + div {
+  background-color: #D1D5DB !important; /* gray-300 */
+}
+
+/* Focus state - add ring */
+input[type="checkbox"].peer:focus + div {
+  box-shadow: 0 0 0 4px rgba(216, 255, 0, 0.2) !important;
+  outline: none !important;
+}
+
+/* Disabled state */
+input[type="checkbox"].peer:disabled + div {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+input[type="checkbox"].peer:disabled + div::after {
+  cursor: not-allowed !important;
+}
+
+/* Label container - make it clickable */
+label:has(input[type="checkbox"].peer) {
+  cursor: pointer !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* Hover effect on track */
+input[type="checkbox"].peer:not(:disabled) + div:hover {
+  opacity: 0.9 !important;
+}
+
+/* Active/pressed state */
+input[type="checkbox"].peer:not(:disabled):active + div::after {
+  width: 1.75rem !important; /* Slightly expand when pressed */
+}
+
+/* Smooth animations */
+input[type="checkbox"].peer + div,
+input[type="checkbox"].peer + div::after {
+  transition-property: all !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-duration: 300ms !important;
+}
+
+/* Override any conflicting Tailwind styles */
+input[type="checkbox"].peer {
+  position: absolute !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }

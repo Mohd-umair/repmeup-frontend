@@ -22,12 +22,16 @@ import { MainLayoutComponent } from './shared/components/main-layout/main-layout
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { InboxContainerComponent } from './features/inbox/inbox-container/inbox-container.component';
 import { InboxFiltersComponent } from './features/inbox/inbox-filters/inbox-filters.component';
+import { InboxTopFiltersComponent } from './features/inbox/inbox-top-filters/inbox-top-filters.component';
 import { InboxListComponent } from './features/inbox/inbox-list/inbox-list.component';
 import { InboxDetailComponent } from './features/inbox/inbox-detail/inbox-detail.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
 import { HomeComponent } from './features/home/home.component';
+import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
+import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
+import { ContactComponent } from './features/contact/contact.component';
 
 /**
  * App Module - Following SOLID principles
@@ -44,12 +48,16 @@ import { HomeComponent } from './features/home/home.component';
     MainLayoutComponent,
     InboxContainerComponent,
     InboxFiltersComponent,
+    InboxTopFiltersComponent,
     InboxListComponent,
     InboxDetailComponent,
     SettingsComponent,
     AgentsComponent,
     KnowledgeBaseComponent,
-    HomeComponent
+    HomeComponent,
+    PrivacyPolicyComponent,
+    TermsConditionsComponent,
+    ContactComponent
   ],
   imports: [
     BrowserModule,

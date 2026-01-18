@@ -6,6 +6,13 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // RepMeUp Brand Colors
+        rep: {
+          black: '#0B0B0B',      // Primary - 70-80% usage
+          white: '#FFFFFF',      // Secondary - 15-25% usage
+          lime: '#D8FF00',       // Accent - 5-10% MAX usage
+        },
+        // Keep primary/secondary for backward compatibility
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',
