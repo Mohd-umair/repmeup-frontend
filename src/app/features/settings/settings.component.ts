@@ -160,6 +160,24 @@ export class SettingsComponent implements OnInit {
           relativeTo: this.route,
           queryParams: {}
         });
+      } else if (params['connection'] === 'instagram') {
+        // Instagram-specific callback handling
+        if (params['status'] === 'success') {
+          const accounts = params['accounts'] || '1';
+          this.loadPlatformConnections();
+          setTimeout(() => {
+            alert(`Instagram connected successfully! ${accounts} account(s) connected.`);
+          }, 500);
+        } else if (params['status'] === 'error') {
+          const errorMessage = params['message'] || 'Connection failed';
+          alert(`Instagram connection failed: ${errorMessage}`);
+        }
+        
+        // Clean URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {}
+        });
       } else if (params['error']) {
         // Connection error
         alert(`Connection failed: ${params['error']}`);
@@ -304,6 +322,9 @@ export class SettingsComponent implements OnInit {
         this.platformService.connectGoogle('reviews');
       } else if (platform.id === 'youtube') {
         this.platformService.connectGoogle('youtube');
+      } else if (platform.id === 'instagram') {
+        // Instagram OAuth flow
+        this.platformService.connectInstagram();
       } else {
         // Other platforms - show coming soon
         platform.loading = false;
