@@ -41,6 +41,7 @@ export class SettingsComponent implements OnInit {
     enabled: false,
     enabledPlatforms: ['youtube', 'instagram', 'facebook', 'google'],
     enabledTypes: ['comment', 'review'],
+    sentimentFilter: 'all',
     replyToNegative: false,
     replyToComplaints: false,
     minConfidence: 0.75,

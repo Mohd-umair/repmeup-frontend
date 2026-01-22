@@ -7,6 +7,7 @@ export interface AutoReplySettings {
   enabled: boolean;
   enabledPlatforms: string[];
   enabledTypes: string[];
+  sentimentFilter?: 'all' | 'negative_only' | 'positive_only' | 'neutral_only' | 'positive_neutral';
   replyToNegative: boolean;
   replyToComplaints: boolean;
   minConfidence: number;

@@ -848,6 +848,119 @@
             </div>
           </div>
 
+          <!-- Sentiment Filter -->
+          <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+            <h3 class="text-lg font-bold text-rep-black mb-4">
+              <i class="fas fa-smile mr-2 text-purple-600"></i>
+              Sentiment Filter
+            </h3>
+            <p class="text-sm text-gray-600 mb-4">Choose which sentiment types should receive auto-replies</p>
+            <div class="space-y-3">
+              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+                     [class.border-purple-300]="autoReplySettings.sentimentFilter === 'all'"
+                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'all'"
+                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'all'">
+                <input 
+                  type="radio" 
+                  name="sentimentFilter" 
+                  value="all"
+                  [(ngModel)]="autoReplySettings.sentimentFilter"
+                  class="mt-1 w-5 h-5 text-purple-600"
+                >
+                <div class="flex-1">
+                  <span class="text-sm font-bold text-rep-black block mb-1">
+                    <i class="fas fa-circle text-gray-400 mr-2"></i>Reply to All Sentiments
+                  </span>
+                  <span class="text-xs text-gray-700">Auto-reply to positive, neutral, and negative comments (default)</span>
+                </div>
+              </label>
+              
+              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+                     [class.border-purple-300]="autoReplySettings.sentimentFilter === 'positive_neutral'"
+                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'positive_neutral'"
+                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'positive_neutral'">
+                <input 
+                  type="radio" 
+                  name="sentimentFilter" 
+                  value="positive_neutral"
+                  [(ngModel)]="autoReplySettings.sentimentFilter"
+                  class="mt-1 w-5 h-5 text-purple-600"
+                >
+                <div class="flex-1">
+                  <span class="text-sm font-bold text-rep-black block mb-1">
+                    <i class="fas fa-smile text-green-500 mr-2"></i>Positive & Neutral Only
+                  </span>
+                  <span class="text-xs text-gray-700">Skip negative comments (recommended for most brands)</span>
+                </div>
+              </label>
+              
+              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+                     [class.border-purple-300]="autoReplySettings.sentimentFilter === 'negative_only'"
+                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'negative_only'"
+                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'negative_only'">
+                <input 
+                  type="radio" 
+                  name="sentimentFilter" 
+                  value="negative_only"
+                  [(ngModel)]="autoReplySettings.sentimentFilter"
+                  class="mt-1 w-5 h-5 text-purple-600"
+                >
+                <div class="flex-1">
+                  <span class="text-sm font-bold text-rep-black block mb-1">
+                    <i class="fas fa-frown text-red-500 mr-2"></i>Negative Only
+                  </span>
+                  <span class="text-xs text-gray-700">Only auto-reply to negative comments for damage control</span>
+                </div>
+              </label>
+              
+              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+                     [class.border-purple-300]="autoReplySettings.sentimentFilter === 'positive_only'"
+                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'positive_only'"
+                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'positive_only'">
+                <input 
+                  type="radio" 
+                  name="sentimentFilter" 
+                  value="positive_only"
+                  [(ngModel)]="autoReplySettings.sentimentFilter"
+                  class="mt-1 w-5 h-5 text-purple-600"
+                >
+                <div class="flex-1">
+                  <span class="text-sm font-bold text-rep-black block mb-1">
+                    <i class="fas fa-laugh-beam text-green-500 mr-2"></i>Positive Only
+                  </span>
+                  <span class="text-xs text-gray-700">Only auto-reply to positive comments to engage fans</span>
+                </div>
+              </label>
+              
+              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+                     [class.border-purple-300]="autoReplySettings.sentimentFilter === 'neutral_only'"
+                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'neutral_only'"
+                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'neutral_only'">
+                <input 
+                  type="radio" 
+                  name="sentimentFilter" 
+                  value="neutral_only"
+                  [(ngModel)]="autoReplySettings.sentimentFilter"
+                  class="mt-1 w-5 h-5 text-purple-600"
+                >
+                <div class="flex-1">
+                  <span class="text-sm font-bold text-rep-black block mb-1">
+                    <i class="fas fa-meh text-gray-500 mr-2"></i>Neutral Only
+                  </span>
+                  <span class="text-xs text-gray-700">Only auto-reply to neutral comments and questions</span>
+                </div>
+              </label>
+            </div>
+            <div class="mt-4 p-3 bg-purple-100 border border-purple-300 rounded-lg">
+              <p class="text-xs text-purple-900 flex items-start">
+                <i class="fas fa-info-circle mr-2 mt-0.5"></i>
+                <span>
+                  <strong>Tip:</strong> Most brands use "Positive & Neutral Only" to avoid escalating negative situations with automated replies.
+                </span>
+              </p>
+            </div>
+          </div>
+
           <!-- Advanced Options -->
           <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
             <h3 class="text-lg font-bold text-rep-black mb-4">
