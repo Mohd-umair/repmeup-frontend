@@ -109,5 +109,26 @@ export class PlatformService {
       }
     });
   }
+
+  /**
+   * Initiate Instagram OAuth flow
+   * Redirects user to Instagram/Meta authorization page
+   */
+  connectInstagram(): void {
+    // Instagram uses Meta OAuth endpoint
+    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/instagram').subscribe({
+      next: (response) => {
+        if (response.success && response.authUrl) {
+          // Redirect to Instagram OAuth page
+          window.location.href = response.authUrl;
+        }
+      },
+      error: (error) => {
+        console.error('Error getting Instagram authorization URL:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to initiate Instagram connection. Please try again.';
+        alert(`Error: ${errorMessage}`);
+      }
+    });
+  }
 }
 

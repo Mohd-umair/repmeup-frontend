@@ -155,15 +155,28 @@
                 </div>
               </div>
             </div>
+            <div *ngIf="platforms[0].connected" class="flex space-x-2 mb-2">
+              <button
+                (click)="syncPlatform(platforms[0]); $event.stopPropagation()"
+                [disabled]="platforms[0]?.loading || loading"
+                type="button"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-2 px-4 rounded-xl font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+              >
+                <i [class]="platforms[0]?.loading ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-sync-alt mr-2'"></i>
+                {{ platforms[0]?.loading ? 'Syncing...' : 'Sync Now' }}
+              </button>
+            </div>
             <button
-              (click)="connectPlatform(platforms[0])"
+              (click)="connectPlatform(platforms[0]); $event.stopPropagation()"
+              [disabled]="platforms[0]?.loading || loading"
+              type="button"
               [class]="platforms[0].connected 
-                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300' 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200' 
                 : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
-              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer relative z-10"
             >
-              <i [class]="platforms[0].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2'"></i>
-              {{ platforms[0].connected ? 'Disconnect' : 'Connect Now' }}
+              <i [class]="platforms[0]?.loading ? 'fas fa-spinner fa-spin mr-2' : (platforms[0].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2')"></i>
+              {{ platforms[0]?.loading ? 'Connecting...' : (platforms[0].connected ? 'Disconnect' : 'Connect Now') }}
             </button>
           </div>
         </div>
