@@ -160,17 +160,75 @@ export class SettingsComponent implements OnInit {
           relativeTo: this.route,
           queryParams: {}
         });
+      } else if (params['connection'] === 'facebook') {
+        // Facebook-specific callback handling
+        if (params['status'] === 'success') {
+          const pages = params['pages'];
+          if (pages && parseInt(pages) > 0) {
+            alert(`Facebook connected successfully! ${pages} page(s) connected.`);
+          } else {
+            alert('Facebook connected, but no pages were saved. Please ensure you have Facebook Pages with appropriate permissions.');
+          }
+          // Reload connections
+          this.loadPlatformConnections();
+        } else if (params['status'] === 'error') {
+          const errorMessage = params['message'] || 'Unknown error occurred';
+          let fullMessage = `Facebook connection failed:\n\n${errorMessage}`;
+          
+          if (errorMessage.includes('No pages found')) {
+            fullMessage += '\n\nTroubleshooting:\n';
+            fullMessage += '1. Make sure you have a Facebook Page\n';
+            fullMessage += '2. Ensure you have Admin/Editor role on the Page\n';
+            fullMessage += '3. Grant all requested permissions during OAuth';
+          }
+          
+          alert(fullMessage);
+        }
       } else if (params['connection'] === 'instagram') {
         // Instagram-specific callback handling
         if (params['status'] === 'success') {
-          const accounts = params['accounts'] || '1';
-          this.loadPlatformConnections();
-          setTimeout(() => {
-            alert(`Instagram connected successfully! ${accounts} account(s) connected.`);
-          }, 500);
+          const accounts = parseInt(params['accounts'] || '0', 10);
+          
+          // If 0 accounts connected, treat as error
+          if (accounts === 0) {
+            const errorMessage = 'No Instagram Business accounts were saved. This usually means your Instagram account is not linked to a Facebook Page, or it\'s not a Business account.';
+            let fullMessage = `Instagram connection issue:\n\n${errorMessage}`;
+            fullMessage += '\n\n📋 To fix this:\n';
+            fullMessage += '1. Make sure your Instagram account is a Business account\n';
+            fullMessage += '2. Link your Instagram Business account to a Facebook Page\n';
+            fullMessage += '3. Ensure you have Admin/Editor role on the Facebook Page\n';
+            fullMessage += '4. Try connecting again';
+            
+            alert(fullMessage);
+          } else {
+            this.loadPlatformConnections();
+            setTimeout(() => {
+              alert(`Instagram connected successfully! ${accounts} account(s) connected.`);
+            }, 500);
+          }
         } else if (params['status'] === 'error') {
-          const errorMessage = params['message'] || 'Connection failed';
-          alert(`Instagram connection failed: ${errorMessage}`);
+          const errorMessage = decodeURIComponent(params['message'] || 'Connection failed');
+          const pagesCount = params['pages'] || '0';
+          
+          // Show more helpful error message
+          let fullMessage = `Instagram connection failed:\n\n${errorMessage}`;
+          
+          if (errorMessage.includes('No Instagram Business accounts found')) {
+            fullMessage += '\n\n📋 To fix this:\n';
+            fullMessage += '1. Make sure your Instagram account is a Business account\n';
+            fullMessage += '2. Link your Instagram Business account to a Facebook Page\n';
+            fullMessage += '3. Ensure you have Admin/Editor role on the Facebook Page\n\n';
+            fullMessage += 'Note: You\'ll see Facebook login when connecting Instagram - this is normal and required by Meta.';
+          } else if (errorMessage.includes('No Facebook pages found')) {
+            fullMessage += '\n\n📋 To fix this:\n';
+            fullMessage += '1. Create a Facebook Page\n';
+            fullMessage += '2. Link your Instagram Business account to the Page\n';
+            fullMessage += '3. Try connecting again';
+          } else if (errorMessage.includes('Failed to save')) {
+            fullMessage += '\n\nPlease check backend logs for details and try again.';
+          }
+          
+          alert(fullMessage);
         }
         
         // Clean URL
@@ -325,6 +383,9 @@ export class SettingsComponent implements OnInit {
       } else if (platform.id === 'instagram') {
         // Instagram OAuth flow
         this.platformService.connectInstagram();
+      } else if (platform.id === 'facebook') {
+        // Facebook OAuth flow
+        this.platformService.connectFacebook();
       } else {
         // Other platforms - show coming soon
         platform.loading = false;

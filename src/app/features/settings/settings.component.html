@@ -143,6 +143,10 @@
             <p class="text-gray-600 text-sm mb-4 leading-relaxed">
               Manage Instagram Business account comments and direct messages in real-time.
             </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-xs text-blue-800">
+              <p class="font-semibold mb-1"><i class="fas fa-info-circle mr-1"></i> Note:</p>
+              <p>Instagram Business accounts must be linked to a Facebook Page. You'll authorize with Facebook to access your Instagram account.</p>
+            </div>
             <div *ngIf="platforms[0].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
               <div class="space-y-2 text-xs">
                 <div class="flex items-center justify-between">
@@ -212,15 +216,28 @@
                 </div>
               </div>
             </div>
+            <div *ngIf="platforms[1].connected" class="flex space-x-2 mb-2">
+              <button
+                (click)="syncPlatform(platforms[1]); $event.stopPropagation()"
+                [disabled]="platforms[1].loading || loading"
+                type="button"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-2 px-4 rounded-xl font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+              >
+                <i [class]="platforms[1].loading ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-sync-alt mr-2'"></i>
+                {{ platforms[1].loading ? 'Syncing...' : 'Sync Now' }}
+              </button>
+            </div>
             <button
-              (click)="connectPlatform(platforms[1])"
+              (click)="connectPlatform(platforms[1]); $event.stopPropagation()"
+              [disabled]="platforms[1].loading || loading"
+              type="button"
               [class]="platforms[1].connected 
-                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300' 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200' 
                 : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
-              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer relative z-10"
             >
-              <i [class]="platforms[1].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2'"></i>
-              {{ platforms[1].connected ? 'Disconnect' : 'Connect Now' }}
+              <i [class]="platforms[1].loading ? 'fas fa-spinner fa-spin mr-2' : (platforms[1].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2')"></i>
+              {{ platforms[1].loading ? 'Connecting...' : (platforms[1].connected ? 'Disconnect' : 'Connect Now') }}
             </button>
           </div>
         </div>
