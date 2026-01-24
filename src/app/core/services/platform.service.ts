@@ -130,5 +130,27 @@ export class PlatformService {
       }
     });
   }
+
+  /**
+   * Initiate Facebook OAuth flow
+   * Redirects user to Facebook/Meta authorization page
+   */
+  connectFacebook(): void {
+    // Facebook uses Meta OAuth endpoint
+    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/facebook').subscribe({
+      next: (response) => {
+        if (response.success && response.authUrl) {
+          // Redirect to Facebook OAuth page
+          window.location.href = response.authUrl;
+        }
+      },
+      error: (error) => {
+        console.error('Error getting Facebook authorization URL:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to initiate Facebook connection. Please try again.';
+        alert(`Error: ${errorMessage}`);
+      }
+    });
+  }
 }
+
 
