@@ -84,6 +84,7 @@ export class InboxListComponent implements OnInit, OnDestroy {
       [Platform.FACEBOOK]: '👍',
       [Platform.YOUTUBE]: '🎥',
       [Platform.GOOGLE]: '🔍',
+      [Platform.LINKEDIN]: '💼',
       [Platform.WHATSAPP]: '💬',
       [Platform.WEBSITE]: '🌐'
     };

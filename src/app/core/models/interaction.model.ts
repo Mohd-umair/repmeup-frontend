@@ -40,6 +40,7 @@ export enum Platform {
   WHATSAPP = 'whatsapp',
   YOUTUBE = 'youtube',
   GOOGLE = 'google',
+  LINKEDIN = 'linkedin',
   WEBSITE = 'website'
 }
 
