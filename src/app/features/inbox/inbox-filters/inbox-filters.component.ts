@@ -20,6 +20,7 @@ export class InboxFiltersComponent {
     { value: Platform.FACEBOOK, label: 'Facebook', icon: 'fab fa-facebook-f', color: 'text-blue-600' },
     { value: Platform.YOUTUBE, label: 'YouTube', icon: 'fab fa-youtube', color: 'text-red-600' },
     { value: Platform.GOOGLE, label: 'Google', icon: 'fab fa-google', color: 'text-blue-500' },
+    { value: Platform.LINKEDIN, label: 'LinkedIn', icon: 'fab fa-linkedin', color: 'text-blue-700' },
     { value: Platform.WHATSAPP, label: 'WhatsApp', icon: 'fab fa-whatsapp', color: 'text-green-500' }
   ];
 

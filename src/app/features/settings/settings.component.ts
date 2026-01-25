@@ -39,7 +39,7 @@ export class SettingsComponent implements OnInit {
   // Auto-reply settings
   autoReplySettings: AutoReplySettings = {
     enabled: false,
-    enabledPlatforms: ['youtube', 'instagram', 'facebook', 'google'],
+    enabledPlatforms: ['youtube', 'instagram', 'facebook', 'google', 'linkedin'],
     enabledTypes: ['comment', 'review'],
     sentimentFilter: 'all',
     replyToNegative: false,
@@ -327,7 +327,8 @@ export class SettingsComponent implements OnInit {
             const platform = this.platforms.find(p => 
               p.id === connection.platform || 
               (connection.platform === 'google' && p.id === 'google') ||
-              (connection.platform === 'youtube' && p.id === 'youtube')
+              (connection.platform === 'youtube' && p.id === 'youtube') ||
+              (connection.platform === 'linkedin' && p.id === 'linkedin')
             );
 
             if (platform && connection.isActive && connection.status === 'connected') {
