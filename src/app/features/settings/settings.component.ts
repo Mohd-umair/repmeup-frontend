@@ -123,6 +123,17 @@ export class SettingsComponent implements OnInit {
       description: 'Monitor mentions, replies, and direct messages',
       connected: false,
       loading: false
+    },
+    {
+      id: 'linkedin',
+      name: 'LinkedIn',
+      icon: 'fab fa-linkedin',
+      brandColor: '#0A66C2',
+      gradientFrom: '#0A66C2',
+      gradientTo: '#004182',
+      description: 'Manage LinkedIn company page posts and comments',
+      connected: false,
+      loading: false
     }
   ];
 
@@ -226,6 +237,47 @@ export class SettingsComponent implements OnInit {
             fullMessage += '3. Try connecting again';
           } else if (errorMessage.includes('Failed to save')) {
             fullMessage += '\n\nPlease check backend logs for details and try again.';
+          }
+          
+          alert(fullMessage);
+        }
+        
+        // Clean URL
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {}
+        });
+      } else if (params['connection'] === 'linkedin') {
+        // LinkedIn-specific callback handling
+        if (params['status'] === 'success') {
+          const accounts = parseInt(params['accounts'] || '0', 10);
+          const organizations = parseInt(params['organizations'] || '0', 10);
+          
+          if (accounts === 0) {
+            const errorMessage = 'No LinkedIn organizations were saved. You need to be an administrator of a LinkedIn Company Page.';
+            let fullMessage = `LinkedIn connection issue:\n\n${errorMessage}`;
+            fullMessage += '\n\n📋 To fix this:\n';
+            fullMessage += '1. Create or get admin access to a LinkedIn Company Page\n';
+            fullMessage += '2. Ensure you have "Administrator" role on the page\n';
+            fullMessage += '3. Try connecting again';
+            
+            alert(fullMessage);
+          } else {
+            this.loadPlatformConnections();
+            setTimeout(() => {
+              alert(`LinkedIn connected successfully! ${accounts} organization(s) connected.`);
+            }, 500);
+          }
+        } else if (params['status'] === 'error') {
+          const errorMessage = decodeURIComponent(params['message'] || 'Connection failed');
+          
+          let fullMessage = `LinkedIn connection failed:\n\n${errorMessage}`;
+          
+          if (errorMessage.includes('organization') || errorMessage.includes('Company Page')) {
+            fullMessage += '\n\n📋 Requirements:\n';
+            fullMessage += '1. You must have a LinkedIn Company Page\n';
+            fullMessage += '2. You must be an Administrator of the page\n';
+            fullMessage += '3. Grant all requested permissions during OAuth';
           }
           
           alert(fullMessage);
@@ -386,6 +438,9 @@ export class SettingsComponent implements OnInit {
       } else if (platform.id === 'facebook') {
         // Facebook OAuth flow
         this.platformService.connectFacebook();
+      } else if (platform.id === 'linkedin') {
+        // LinkedIn OAuth flow
+        this.platformService.connectLinkedIn();
       } else {
         // Other platforms - show coming soon
         platform.loading = false;

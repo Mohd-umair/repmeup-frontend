@@ -400,6 +400,65 @@
           </div>
         </div>
 
+         <!-- LinkedIn -->
+         <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-2 bg-gradient-to-r from-blue-700 to-blue-900"></div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                  <i class="fab fa-linkedin text-3xl text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-rep-black">LinkedIn</h3>
+                  <p class="text-sm text-gray-600">Professional Network</p>
+                </div>
+              </div>
+              <span *ngIf="platforms[6].connected" class="w-3 h-3 bg-rep-lime rounded-full animate-pulse"></span>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+              Manage LinkedIn company page posts, comments, and professional engagement.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-xs text-blue-800">
+              <p class="font-semibold mb-1"><i class="fas fa-info-circle mr-1"></i> Note:</p>
+              <p>You must be an Administrator of a LinkedIn Company Page. Personal profiles alone cannot post as organizations.</p>
+            </div>
+            <div *ngIf="platforms[6].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-building mr-2"></i> Organization:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[6].connectedAccount }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[6].lastSync }}</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="platforms[6].connected" class="flex space-x-2 mb-2">
+              <button
+                (click)="syncPlatform(platforms[6]); $event.stopPropagation()"
+                [disabled]="platforms[6].loading || loading"
+                type="button"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-2 px-4 rounded-xl font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+              >
+                <i class="fas fa-sync-alt mr-2"></i>
+                {{ platforms[6]?.loading ? 'Syncing...' : 'Sync Now' }}
+              </button>
+            </div>
+            <button
+              (click)="connectPlatform(platforms[6])"
+              [class]="platforms[6].connected 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300' 
+                : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
+              [disabled]="platforms[6]?.loading || loading"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <i [class]="platforms[6].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2'"></i>
+              {{ platforms[6]?.loading ? 'Connecting...' : (platforms[6].connected ? 'Disconnect' : 'Connect Now') }}
+            </button>
+          </div>
+        </div>
         <!-- Twitter -->
         <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
           <div class="h-2 bg-gradient-to-r from-sky-500 to-blue-600"></div>
@@ -443,6 +502,8 @@
             </button>
           </div>
         </div>
+
+       
       </div>
 
       <!-- Help Card -->

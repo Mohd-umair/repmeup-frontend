@@ -151,6 +151,25 @@ export class PlatformService {
       }
     });
   }
+
+  /**
+   * Initiate LinkedIn OAuth flow
+   */
+  connectLinkedIn(): void {
+    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/linkedin').subscribe({
+      next: (response) => {
+        if (response.success && response.authUrl) {
+          // Redirect to LinkedIn OAuth page
+          window.location.href = response.authUrl;
+        }
+      },
+      error: (error) => {
+        console.error('Error getting LinkedIn authorization URL:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to initiate LinkedIn connection. Please try again.';
+        alert(`Error: ${errorMessage}`);
+      }
+    });
+  }
 }
 
 
