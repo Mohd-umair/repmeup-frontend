@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
   styleUrls: ['./privacy-policy.component.scss']
 })
 export class PrivacyPolicyComponent {
-  lastUpdated: string = 'January 6, 2026';
+  lastUpdated: string = 'January 26, 2026';
 }

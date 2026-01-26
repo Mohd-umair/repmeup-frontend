@@ -1,0 +1,22 @@
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  :host ::ng-deep .fixed {
+    left: 1rem;
+    right: 1rem;
+    
+    > div {
+      min-width: auto;
+      max-width: none;
+    }
+  }
+}
+

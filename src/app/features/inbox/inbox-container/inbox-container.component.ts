@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { InboxService } from '../../../core/services/inbox.service';
 import { PlatformService } from '../../../core/services/platform.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { IInteraction, IInboxFilters } from '../../../core/models/interaction.model';
-import { forkJoin, interval, Subscription } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { forkJoin, interval, Subscription, of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 
 /**
  * Inbox Container Component - Single Responsibility Principle
@@ -28,7 +29,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   constructor(
     private inboxService: InboxService,
-    private platformService: PlatformService
+    private platformService: PlatformService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -110,15 +112,27 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           if (connectedPlatforms.length === 0) {
             if (!silent) {
               this.syncing = false;
-              alert('No connected platforms to sync');
+              this.notificationService.warning('No Platforms Connected', 'Please connect at least one platform to sync interactions.');
             }
             resolve();
             return;
           }
 
-          // Sync all platforms in parallel
+          // Sync all platforms in parallel with error handling
           const syncObservables = connectedPlatforms.map((platform: any) =>
-            this.platformService.syncPlatform(platform._id)
+            this.platformService.syncPlatform(platform._id).pipe(
+              // Catch errors for individual platforms so one failure doesn't break all
+              catchError((error) => {
+                console.error(`Error syncing ${platform.platform}:`, error);
+                // Return a failed result instead of throwing
+                return of({
+                  success: false,
+                  platform: platform.platform,
+                  error: error.error?.error || error.message || 'Unknown error',
+                  data: { interactionsAdded: 0 }
+                });
+              })
+            )
           );
 
           forkJoin(syncObservables).subscribe({
@@ -132,7 +146,27 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
               if (!silent) {
                 this.syncing = false;
                 const successCount = results.filter((r: any) => r.success).length;
-                alert(`Successfully synced ${successCount} of ${connectedPlatforms.length} platforms`);
+                const failedCount = results.filter((r: any) => !r.success).length;
+                const totalInteractions = results.reduce((sum: number, r: any) => sum + (r.data?.interactionsAdded || 0), 0);
+                
+                if (failedCount === 0) {
+                  this.notificationService.success(
+                    'Sync Completed Successfully',
+                    `Synced ${successCount} platform(s) and found ${totalInteractions} new interactions.`
+                  );
+                } else {
+                  const failedPlatforms = results
+                    .filter((r: any) => !r.success)
+                    .map((r: any) => `${r.platform || 'Unknown'}: ${r.error || 'Failed'}`);
+                  
+                  this.notificationService.showWithDetails(
+                    'warning',
+                    'Partial Sync Success',
+                    `Synced ${successCount} of ${connectedPlatforms.length} platforms. Found ${totalInteractions} new interactions.`,
+                    failedPlatforms,
+                    10000
+                  );
+                }
               }
               resolve();
             },
@@ -140,7 +174,12 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
               console.error('Error syncing platforms:', error);
               if (!silent) {
                 this.syncing = false;
-                alert('Error syncing some platforms. Check console for details.');
+                const errorMessage = error.error?.error || error.message || 'Unknown error';
+                this.notificationService.error(
+                  'Sync Failed',
+                  `${errorMessage}. Check browser console for details.`,
+                  8000
+                );
               }
               reject(error);
             }
@@ -150,7 +189,10 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           console.error('Error fetching platforms:', error);
           if (!silent) {
             this.syncing = false;
-            alert('Error fetching platform connections');
+            this.notificationService.error(
+              'Failed to Fetch Platforms',
+              'Could not retrieve platform connections. Please try again.'
+            );
           }
           reject(error);
         }

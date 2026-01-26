@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { PlatformService, PlatformConnection } from '../../core/services/platform.service';
 import { OrganizationService, AutoReplySettings } from '../../core/services/organization.service';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 /**
  * Settings Component - Single Responsibility Principle
@@ -141,6 +142,7 @@ export class SettingsComponent implements OnInit {
     private platformService: PlatformService,
     private organizationService: OrganizationService,
     private authService: AuthService,
+    private notificationService: NotificationService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -163,7 +165,10 @@ export class SettingsComponent implements OnInit {
         
         // Show success message
         setTimeout(() => {
-          alert(`${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`);
+          this.notificationService.success(
+            'Platform Connected',
+            `${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`
+          );
         }, 500);
         
         // Clean URL
@@ -176,24 +181,41 @@ export class SettingsComponent implements OnInit {
         if (params['status'] === 'success') {
           const pages = params['pages'];
           if (pages && parseInt(pages) > 0) {
-            alert(`Facebook connected successfully! ${pages} page(s) connected.`);
+            this.notificationService.success(
+              'Facebook Connected',
+              `${pages} page(s) connected successfully.`
+            );
           } else {
-            alert('Facebook connected, but no pages were saved. Please ensure you have Facebook Pages with appropriate permissions.');
+            this.notificationService.warning(
+              'Facebook Connected with Issues',
+              'No pages were saved. Please ensure you have Facebook Pages with appropriate permissions.'
+            );
           }
           // Reload connections
           this.loadPlatformConnections();
         } else if (params['status'] === 'error') {
           const errorMessage = params['message'] || 'Unknown error occurred';
-          let fullMessage = `Facebook connection failed:\n\n${errorMessage}`;
           
           if (errorMessage.includes('No pages found')) {
-            fullMessage += '\n\nTroubleshooting:\n';
-            fullMessage += '1. Make sure you have a Facebook Page\n';
-            fullMessage += '2. Ensure you have Admin/Editor role on the Page\n';
-            fullMessage += '3. Grant all requested permissions during OAuth';
+            const details = [
+              '1. Make sure you have a Facebook Page',
+              '2. Ensure you have Admin/Editor role on the Page',
+              '3. Grant all requested permissions during OAuth'
+            ];
+            this.notificationService.showWithDetails(
+              'error',
+              'Facebook Connection Failed',
+              errorMessage,
+              details,
+              10000
+            );
+          } else {
+            this.notificationService.error(
+              'Facebook Connection Failed',
+              errorMessage,
+              8000
+            );
           }
-          
-          alert(fullMessage);
         }
       } else if (params['connection'] === 'instagram') {
         // Instagram-specific callback handling
@@ -202,44 +224,67 @@ export class SettingsComponent implements OnInit {
           
           // If 0 accounts connected, treat as error
           if (accounts === 0) {
-            const errorMessage = 'No Instagram Business accounts were saved. This usually means your Instagram account is not linked to a Facebook Page, or it\'s not a Business account.';
-            let fullMessage = `Instagram connection issue:\n\n${errorMessage}`;
-            fullMessage += '\n\n📋 To fix this:\n';
-            fullMessage += '1. Make sure your Instagram account is a Business account\n';
-            fullMessage += '2. Link your Instagram Business account to a Facebook Page\n';
-            fullMessage += '3. Ensure you have Admin/Editor role on the Facebook Page\n';
-            fullMessage += '4. Try connecting again';
-            
-            alert(fullMessage);
+            const details = [
+              '1. Make sure your Instagram account is a Business account',
+              '2. Link your Instagram Business account to a Facebook Page',
+              '3. Ensure you have Admin/Editor role on the Facebook Page',
+              '4. Try connecting again'
+            ];
+            this.notificationService.showWithDetails(
+              'error',
+              'Instagram Connection Issue',
+              'No Instagram Business accounts were saved. Your account must be a Business account linked to a Facebook Page.',
+              details,
+              12000
+            );
           } else {
             this.loadPlatformConnections();
             setTimeout(() => {
-              alert(`Instagram connected successfully! ${accounts} account(s) connected.`);
+              this.notificationService.success(
+                'Instagram Connected',
+                `${accounts} account(s) connected successfully!`
+              );
             }, 500);
           }
         } else if (params['status'] === 'error') {
           const errorMessage = decodeURIComponent(params['message'] || 'Connection failed');
-          const pagesCount = params['pages'] || '0';
           
-          // Show more helpful error message
-          let fullMessage = `Instagram connection failed:\n\n${errorMessage}`;
+          let details: string[] = [];
+          let message = errorMessage;
           
           if (errorMessage.includes('No Instagram Business accounts found')) {
-            fullMessage += '\n\n📋 To fix this:\n';
-            fullMessage += '1. Make sure your Instagram account is a Business account\n';
-            fullMessage += '2. Link your Instagram Business account to a Facebook Page\n';
-            fullMessage += '3. Ensure you have Admin/Editor role on the Facebook Page\n\n';
-            fullMessage += 'Note: You\'ll see Facebook login when connecting Instagram - this is normal and required by Meta.';
+            details = [
+              '1. Make sure your Instagram account is a Business account',
+              '2. Link your Instagram Business account to a Facebook Page',
+              '3. Ensure you have Admin/Editor role on the Facebook Page',
+              '',
+              'Note: You\'ll see Facebook login - this is normal and required by Meta.'
+            ];
           } else if (errorMessage.includes('No Facebook pages found')) {
-            fullMessage += '\n\n📋 To fix this:\n';
-            fullMessage += '1. Create a Facebook Page\n';
-            fullMessage += '2. Link your Instagram Business account to the Page\n';
-            fullMessage += '3. Try connecting again';
+            details = [
+              '1. Create a Facebook Page',
+              '2. Link your Instagram Business account to the Page',
+              '3. Try connecting again'
+            ];
           } else if (errorMessage.includes('Failed to save')) {
-            fullMessage += '\n\nPlease check backend logs for details and try again.';
+            message = `${errorMessage}. Please check backend logs for details and try again.`;
           }
           
-          alert(fullMessage);
+          if (details.length > 0) {
+            this.notificationService.showWithDetails(
+              'error',
+              'Instagram Connection Failed',
+              message,
+              details,
+              12000
+            );
+          } else {
+            this.notificationService.error(
+              'Instagram Connection Failed',
+              message,
+              8000
+            );
+          }
         }
         
         // Clean URL
@@ -254,33 +299,50 @@ export class SettingsComponent implements OnInit {
           const organizations = parseInt(params['organizations'] || '0', 10);
           
           if (accounts === 0) {
-            const errorMessage = 'No LinkedIn organizations were saved. You need to be an administrator of a LinkedIn Company Page.';
-            let fullMessage = `LinkedIn connection issue:\n\n${errorMessage}`;
-            fullMessage += '\n\n📋 To fix this:\n';
-            fullMessage += '1. Create or get admin access to a LinkedIn Company Page\n';
-            fullMessage += '2. Ensure you have "Administrator" role on the page\n';
-            fullMessage += '3. Try connecting again';
-            
-            alert(fullMessage);
+            const details = [
+              '1. Create or get admin access to a LinkedIn Company Page',
+              '2. Ensure you have "Administrator" role on the page',
+              '3. Try connecting again'
+            ];
+            this.notificationService.showWithDetails(
+              'error',
+              'LinkedIn Connection Issue',
+              'No LinkedIn organizations were saved. You need to be an administrator of a LinkedIn Company Page.',
+              details,
+              10000
+            );
           } else {
             this.loadPlatformConnections();
             setTimeout(() => {
-              alert(`LinkedIn connected successfully! ${accounts} organization(s) connected.`);
+              this.notificationService.success(
+                'LinkedIn Connected',
+                `${accounts} organization(s) connected successfully!`
+              );
             }, 500);
           }
         } else if (params['status'] === 'error') {
           const errorMessage = decodeURIComponent(params['message'] || 'Connection failed');
           
-          let fullMessage = `LinkedIn connection failed:\n\n${errorMessage}`;
-          
           if (errorMessage.includes('organization') || errorMessage.includes('Company Page')) {
-            fullMessage += '\n\n📋 Requirements:\n';
-            fullMessage += '1. You must have a LinkedIn Company Page\n';
-            fullMessage += '2. You must be an Administrator of the page\n';
-            fullMessage += '3. Grant all requested permissions during OAuth';
+            const details = [
+              '1. You must have a LinkedIn Company Page',
+              '2. You must be an Administrator of the page',
+              '3. Grant all requested permissions during OAuth'
+            ];
+            this.notificationService.showWithDetails(
+              'error',
+              'LinkedIn Connection Failed',
+              errorMessage,
+              details,
+              10000
+            );
+          } else {
+            this.notificationService.error(
+              'LinkedIn Connection Failed',
+              errorMessage,
+              8000
+            );
           }
-          
-          alert(fullMessage);
         }
         
         // Clean URL
@@ -290,7 +352,10 @@ export class SettingsComponent implements OnInit {
         });
       } else if (params['error']) {
         // Connection error
-        alert(`Connection failed: ${params['error']}`);
+        this.notificationService.error(
+          'Connection Failed',
+          params['error']
+        );
         
         // Clean URL
         this.router.navigate([], {
@@ -407,21 +472,33 @@ export class SettingsComponent implements OnInit {
                 this.loadPlatformConnections();
                 
                 // Show success message
-                alert(`${platform.name} has been disconnected successfully.`);
+                this.notificationService.success(
+                  'Platform Disconnected',
+                  `${platform.name} has been disconnected successfully.`
+                );
               } else {
-                alert('Failed to disconnect. Please try again.');
+                this.notificationService.error(
+                  'Disconnect Failed',
+                  'Failed to disconnect. Please try again.'
+                );
               }
               platform.loading = false;
             },
             error: (error) => {
               console.error('Error disconnecting platform:', error);
               const errorMessage = error.error?.error || error.error?.message || 'Failed to disconnect. Please try again.';
-              alert(`Error: ${errorMessage}`);
+              this.notificationService.error(
+                'Disconnect Error',
+                errorMessage
+              );
               platform.loading = false;
             }
           });
         } else {
-          alert('Connection ID not found. Please refresh the page and try again.');
+          this.notificationService.error(
+            'Connection Not Found',
+            'Connection ID not found. Please refresh the page and try again.'
+          );
         }
       }
     } else {
@@ -445,7 +522,10 @@ export class SettingsComponent implements OnInit {
       } else {
         // Other platforms - show coming soon
         platform.loading = false;
-        alert(`${platform.name} integration is coming soon!`);
+        this.notificationService.info(
+          'Coming Soon',
+          `${platform.name} integration is coming soon!`
+        );
       }
     }
   }
@@ -463,14 +543,21 @@ export class SettingsComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           platform.lastSync = 'Just now';
-          alert(`Sync completed! ${response.data?.interactionsAdded || 0} new interactions found.`);
+          this.notificationService.success(
+            'Sync Completed',
+            `Found ${response.data?.interactionsAdded || 0} new interactions.`
+          );
           this.loadPlatformConnections(); // Reload to get updated data
         }
         platform.loading = false;
       },
       error: (error) => {
         console.error('Error syncing platform:', error);
-        alert('Failed to sync. Please try again.');
+        const errorMessage = error.error?.error || error.message || 'Failed to sync. Please try again.';
+        this.notificationService.error(
+          'Sync Failed',
+          errorMessage
+        );
         platform.loading = false;
       }
     });
@@ -512,7 +599,10 @@ export class SettingsComponent implements OnInit {
    */
   saveAutoReplySettings(): void {
     if (!this.organizationId) {
-      alert('Organization ID not found. Please refresh the page.');
+      this.notificationService.error(
+        'Organization Not Found',
+        'Organization ID not found. Please refresh the page.'
+      );
       return;
     }
 
@@ -529,7 +619,10 @@ export class SettingsComponent implements OnInit {
     this.organizationService.updateAutoReplySettings(this.organizationId, this.autoReplySettings).subscribe({
       next: (response) => {
         if (response.success) {
-          alert('Auto-reply settings saved successfully!');
+          this.notificationService.success(
+            'Settings Saved',
+            'Auto-reply settings saved successfully!'
+          );
           
           // Update local settings with response
           if (response.data && response.data.autoReplySettings) {
@@ -544,7 +637,10 @@ export class SettingsComponent implements OnInit {
       error: (error) => {
         console.error('Error saving auto-reply settings:', error);
         const errorMessage = error.error?.error || error.error?.message || 'Failed to save settings. Please try again.';
-        alert(`Error: ${errorMessage}`);
+        this.notificationService.error(
+          'Save Failed',
+          errorMessage
+        );
         this.savingSettings = false;
       }
     });

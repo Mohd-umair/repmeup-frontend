@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { KnowledgeBaseService, IKnowledgeBase } from '../../core/services/knowledge-base.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 /**
  * Knowledge Base Component - Single Responsibility Principle
@@ -53,7 +54,8 @@ export class KnowledgeBaseComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private knowledgeBaseService: KnowledgeBaseService
+    private knowledgeBaseService: KnowledgeBaseService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -189,7 +191,10 @@ export class KnowledgeBaseComponent implements OnInit {
         });
       }
     } else {
-      alert('Please select a PDF file');
+      this.notificationService.warning(
+        'Invalid File',
+        'Please select a PDF file'
+      );
       event.target.value = '';
     }
   }
@@ -199,7 +204,10 @@ export class KnowledgeBaseComponent implements OnInit {
    */
   submitPDF(): void {
     if (!this.selectedFile) {
-      alert('Please select a PDF file');
+      this.notificationService.warning(
+        'No File Selected',
+        'Please select a PDF file'
+      );
       return;
     }
 
