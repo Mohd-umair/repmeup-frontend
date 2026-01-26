@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
+import { NotificationService } from './notification.service';
 
 /**
  * Platform Service - Single Responsibility Principle
@@ -53,7 +54,10 @@ export interface SyncResponse {
   providedIn: 'root'
 })
 export class PlatformService {
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private notificationService: NotificationService
+  ) {}
 
   /**
    * Get authorization URL for Google OAuth
@@ -105,7 +109,10 @@ export class PlatformService {
       },
       error: (error) => {
         console.error('Error getting authorization URL:', error);
-        alert('Failed to initiate Google connection. Please try again.');
+        this.notificationService.error(
+          'Connection Failed',
+          'Failed to initiate Google connection. Please try again.'
+        );
       }
     });
   }
@@ -126,7 +133,10 @@ export class PlatformService {
       error: (error) => {
         console.error('Error getting Instagram authorization URL:', error);
         const errorMessage = error.error?.error || error.error?.message || 'Failed to initiate Instagram connection. Please try again.';
-        alert(`Error: ${errorMessage}`);
+        this.notificationService.error(
+          'Connection Failed',
+          errorMessage
+        );
       }
     });
   }
@@ -147,7 +157,10 @@ export class PlatformService {
       error: (error) => {
         console.error('Error getting Facebook authorization URL:', error);
         const errorMessage = error.error?.error || error.error?.message || 'Failed to initiate Facebook connection. Please try again.';
-        alert(`Error: ${errorMessage}`);
+        this.notificationService.error(
+          'Connection Failed',
+          errorMessage
+        );
       }
     });
   }
@@ -166,7 +179,10 @@ export class PlatformService {
       error: (error) => {
         console.error('Error getting LinkedIn authorization URL:', error);
         const errorMessage = error.error?.error || error.error?.message || 'Failed to initiate LinkedIn connection. Please try again.';
-        alert(`Error: ${errorMessage}`);
+        this.notificationService.error(
+          'Connection Failed',
+          errorMessage
+        );
       }
     });
   }

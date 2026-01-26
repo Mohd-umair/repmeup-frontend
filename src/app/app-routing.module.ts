@@ -16,9 +16,11 @@ import { InboxContainerComponent } from './features/inbox/inbox-container/inbox-
 import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
+import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
+import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -36,6 +38,9 @@ const routes: Routes = [
   
   // Contact page (public)
   { path: 'contact', component: ContactComponent },
+  
+  // Data deletion status page (public)
+  { path: 'data-deletion-status', component: DataDeletionStatusComponent },
   
   // Auth routes (public)
   {
@@ -56,11 +61,10 @@ const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'inbox', component: InboxContainerComponent },
+      { path: 'analytics', component: AnalyticsComponent },
       { path: 'knowledge-base', component: KnowledgeBaseComponent },
       { path: 'settings', component: SettingsComponent },
       { path: 'agents', component: AgentsComponent }
-      // TODO: Add analytics route when component is ready
-      // { path: 'analytics', component: AnalyticsComponent }
     ]
   },
 

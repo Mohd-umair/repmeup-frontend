@@ -1,0 +1,434 @@
+<div class="min-h-screen bg-rep-black p-6">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-3xl font-bold text-rep-white">Analytics Dashboard</h1>
+        <p class="text-gray-400 mt-1">Track performance and insights across all platforms</p>
+      </div>
+      
+      <!-- Actions -->
+      <div class="flex items-center gap-3">
+        <button
+          (click)="refreshData()"
+          [disabled]="loading"
+          type="button"
+          class="px-4 py-2 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 transition disabled:opacity-50"
+        >
+          <i [class]="loading ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'"></i>
+          <span class="ml-2">Refresh</span>
+        </button>
+        
+        <div class="relative group">
+          <button
+            type="button"
+            class="px-4 py-2 bg-rep-lime text-rep-black rounded-xl hover:shadow-lg hover:shadow-rep-lime/50 transition font-semibold"
+          >
+            <i class="fas fa-download mr-2"></i>
+            Export
+          </button>
+          
+          <!-- Dropdown -->
+          <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl z-10">
+            <button
+              (click)="exportData('csv')"
+              type="button"
+              class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-t-xl text-gray-700"
+            >
+              <i class="fas fa-file-csv mr-2"></i> Export as CSV
+            </button>
+            <button
+              (click)="exportData('xlsx')"
+              type="button"
+              class="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700"
+            >
+              <i class="fas fa-file-excel mr-2"></i> Export as Excel
+            </button>
+            <button
+              (click)="exportData('pdf')"
+              type="button"
+              class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-b-xl text-gray-700"
+            >
+              <i class="fas fa-file-pdf mr-2"></i> Export as PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex items-center gap-4 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
+      <!-- Date Range -->
+      <div class="flex items-center gap-2">
+        <i class="fas fa-calendar text-rep-lime"></i>
+        <span class="text-gray-400 text-sm">Period:</span>
+        <div class="flex gap-2">
+          <button
+            *ngFor="let preset of dateRangePresets"
+            (click)="onDateRangeChange(preset.value)"
+            [class.bg-rep-lime]="selectedDateRange.preset === preset.value"
+            [class.text-rep-black]="selectedDateRange.preset === preset.value"
+            [class.bg-gray-800]="selectedDateRange.preset !== preset.value"
+            [class.text-gray-400]="selectedDateRange.preset !== preset.value"
+            type="button"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+          >
+            {{ preset.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Platform Filters -->
+      <div class="flex items-center gap-2 ml-auto">
+        <i class="fas fa-filter text-rep-lime"></i>
+        <span class="text-gray-400 text-sm">Platforms:</span>
+        <button
+          *ngFor="let platform of ['youtube', 'instagram', 'facebook', 'google', 'linkedin']"
+          (click)="togglePlatform(platform)"
+          [class.bg-rep-lime]="selectedPlatforms.includes(platform)"
+          [class.text-rep-black]="selectedPlatforms.includes(platform)"
+          [class.bg-gray-800]="!selectedPlatforms.includes(platform)"
+          [class.text-gray-400]="!selectedPlatforms.includes(platform)"
+          type="button"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+        >
+          <i [class]="getPlatformIcon(platform)"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && !dashboard" class="flex items-center justify-center h-64">
+    <div class="text-center">
+      <i class="fas fa-spinner fa-spin text-rep-lime text-4xl mb-4"></i>
+      <p class="text-gray-400">Loading analytics...</p>
+    </div>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="dashboard" class="space-y-6">
+    <!-- Metric Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div
+        *ngFor="let metric of getMetricCards()"
+        class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800 hover:border-rep-lime/30 transition"
+      >
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <p class="text-gray-400 text-sm mb-1">{{ metric.label }}</p>
+            <h3 class="text-3xl font-bold text-rep-white">{{ formatNumber(metric.value) }}</h3>
+          </div>
+          <div
+            class="w-12 h-12 rounded-xl flex items-center justify-center"
+            [style.background-color]="metric.color + '20'"
+          >
+            <i [class]="metric.icon + ' text-xl'" [style.color]="metric.color"></i>
+          </div>
+        </div>
+
+        <!-- Change Indicator -->
+        <div *ngIf="metric.change !== undefined" class="flex items-center gap-2">
+          <span
+            [class.text-green-500]="metric.changeType === 'increase'"
+            [class.text-red-500]="metric.changeType === 'decrease'"
+            class="text-sm font-medium"
+          >
+            <i
+              [class.fa-arrow-up]="metric.changeType === 'increase'"
+              [class.fa-arrow-down]="metric.changeType === 'decrease'"
+              class="fas mr-1"
+            ></i>
+            {{ formatPercentage(Math.abs(metric.change)) }}
+          </span>
+          <span class="text-gray-500 text-xs">vs previous period</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Tabs -->
+    <div class="flex gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-fit">
+      <button
+        (click)="setActiveView('overview')"
+        [class.bg-rep-lime]="activeView === 'overview'"
+        [class.text-rep-black]="activeView === 'overview'"
+        [class.text-gray-400]="activeView !== 'overview'"
+        type="button"
+        class="px-4 py-2 rounded-lg font-medium transition"
+      >
+        <i class="fas fa-chart-line mr-2"></i>
+        Overview
+      </button>
+      <button
+        (click)="setActiveView('platforms')"
+        [class.bg-rep-lime]="activeView === 'platforms'"
+        [class.text-rep-black]="activeView === 'platforms'"
+        [class.text-gray-400]="activeView !== 'platforms'"
+        type="button"
+        class="px-4 py-2 rounded-lg font-medium transition"
+      >
+        <i class="fas fa-layer-group mr-2"></i>
+        Platforms
+      </button>
+      <button
+        (click)="setActiveView('trends')"
+        [class.bg-rep-lime]="activeView === 'trends'"
+        [class.text-rep-black]="activeView === 'trends'"
+        [class.text-gray-400]="activeView !== 'trends'"
+        type="button"
+        class="px-4 py-2 rounded-lg font-medium transition"
+      >
+        <i class="fas fa-chart-area mr-2"></i>
+        Trends
+      </button>
+      <button
+        (click)="setActiveView('performance')"
+        [class.bg-rep-lime]="activeView === 'performance'"
+        [class.text-rep-black]="activeView === 'performance'"
+        [class.text-gray-400]="activeView !== 'performance'"
+        type="button"
+        class="px-4 py-2 rounded-lg font-medium transition"
+      >
+        <i class="fas fa-tachometer-alt mr-2"></i>
+        Performance
+      </button>
+    </div>
+
+    <!-- Overview View -->
+    <div *ngIf="activeView === 'overview'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Sentiment Breakdown -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h3 class="text-xl font-bold text-rep-white mb-4">
+          <i class="fas fa-smile text-rep-lime mr-2"></i>
+          Sentiment Analysis
+        </h3>
+        <div class="space-y-4">
+          <!-- Positive -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-green-500 font-medium">
+                <i class="fas fa-smile mr-2"></i>Positive
+              </span>
+              <span class="text-rep-white font-bold">
+                {{ dashboard.sentimentBreakdown.positive }}
+              </span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-2">
+              <div
+                class="bg-green-500 h-2 rounded-full transition-all"
+                [style.width.%]="(dashboard.sentimentBreakdown.positive / dashboard.sentimentBreakdown.total) * 100"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Neutral -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-yellow-500 font-medium">
+                <i class="fas fa-meh mr-2"></i>Neutral
+              </span>
+              <span class="text-rep-white font-bold">
+                {{ dashboard.sentimentBreakdown.neutral }}
+              </span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-2">
+              <div
+                class="bg-yellow-500 h-2 rounded-full transition-all"
+                [style.width.%]="(dashboard.sentimentBreakdown.neutral / dashboard.sentimentBreakdown.total) * 100"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Negative -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-red-500 font-medium">
+                <i class="fas fa-frown mr-2"></i>Negative
+              </span>
+              <span class="text-rep-white font-bold">
+                {{ dashboard.sentimentBreakdown.negative }}
+              </span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-2">
+              <div
+                class="bg-red-500 h-2 rounded-full transition-all"
+                [style.width.%]="(dashboard.sentimentBreakdown.negative / dashboard.sentimentBreakdown.total) * 100"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Response Time Breakdown -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h3 class="text-xl font-bold text-rep-white mb-4">
+          <i class="fas fa-clock text-rep-lime mr-2"></i>
+          Response Time Distribution
+        </h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-gray-400">Average</span>
+            <span class="text-rep-white font-bold">
+              {{ formatTime(dashboard.responseTimeMetrics.avg) }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-gray-400">Median</span>
+            <span class="text-rep-white font-bold">
+              {{ formatTime(dashboard.responseTimeMetrics.median) }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-green-500">Within 1 Hour</span>
+            <span class="text-rep-white font-bold">
+              {{ dashboard.responseTimeMetrics.within1Hour }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-yellow-500">Within 24 Hours</span>
+            <span class="text-rep-white font-bold">
+              {{ dashboard.responseTimeMetrics.within24Hours }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-red-500">Over 24 Hours</span>
+            <span class="text-rep-white font-bold">
+              {{ dashboard.responseTimeMetrics.over24Hours }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platforms View -->
+    <div *ngIf="activeView === 'platforms'">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          *ngFor="let platform of getPlatformMetrics()"
+          class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800 hover:border-rep-lime/30 transition"
+        >
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-12 h-12 rounded-xl flex items-center justify-center"
+              [style.background-color]="getPlatformColor(platform.platform) + '20'"
+            >
+              <i
+                [class]="getPlatformIcon(platform.platform) + ' text-2xl'"
+                [style.color]="getPlatformColor(platform.platform)"
+              ></i>
+            </div>
+            <h3 class="text-xl font-bold text-rep-white capitalize">{{ platform.platform }}</h3>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400 text-sm">Total Interactions</span>
+              <span class="text-rep-white font-bold">{{ formatNumber(platform.totalInteractions) }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400 text-sm">Responded</span>
+              <span class="text-green-500 font-bold">{{ formatNumber(platform.responded) }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400 text-sm">Pending</span>
+              <span class="text-yellow-500 font-bold">{{ formatNumber(platform.pending) }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400 text-sm">Avg Response</span>
+              <span class="text-rep-white font-bold">{{ formatTime(platform.avgResponseTime) }}</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-4 pt-4 border-t border-gray-800">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-gray-400 text-xs">Response Rate</span>
+              <span class="text-rep-lime text-xs font-bold">
+                {{ formatPercentage((platform.responded / platform.totalInteractions) * 100) }}
+              </span>
+            </div>
+            <div class="w-full bg-gray-800 rounded-full h-2">
+              <div
+                class="bg-rep-lime h-2 rounded-full transition-all"
+                [style.width.%]="(platform.responded / platform.totalInteractions) * 100"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trends View -->
+    <div *ngIf="activeView === 'trends'">
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h3 class="text-xl font-bold text-rep-white mb-4">
+          <i class="fas fa-chart-line text-rep-lime mr-2"></i>
+          Interaction Trends
+        </h3>
+        <p class="text-gray-400 text-center py-12">
+          Time-series chart visualization will be displayed here.
+          <br/>
+          <span class="text-sm">(Integration with chart library pending)</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Performance View -->
+    <div *ngIf="activeView === 'performance'" class="space-y-6">
+      <!-- Auto-Reply Metrics -->
+      <div *ngIf="dashboard.autoReplyMetrics" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h3 class="text-xl font-bold text-rep-white mb-4">
+          <i class="fas fa-robot text-rep-lime mr-2"></i>
+          Auto-Reply Performance
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-rep-white mb-2">
+              {{ formatNumber(dashboard.autoReplyMetrics.totalAutoReplies) }}
+            </div>
+            <div class="text-gray-400 text-sm">Total Auto-Replies</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-green-500 mb-2">
+              {{ formatPercentage(dashboard.autoReplyMetrics.successRate) }}
+            </div>
+            <div class="text-gray-400 text-sm">Success Rate</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-rep-lime mb-2">
+              {{ formatPercentage(dashboard.autoReplyMetrics.avgConfidence) }}
+            </div>
+            <div class="text-gray-400 text-sm">Avg Confidence</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coming Soon -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-12 border border-gray-800 text-center">
+        <i class="fas fa-chart-bar text-rep-lime text-5xl mb-4"></i>
+        <h3 class="text-2xl font-bold text-rep-white mb-2">More Metrics Coming Soon</h3>
+        <p class="text-gray-400">
+          Advanced performance analytics, engagement scores, and custom reports will be available here.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !dashboard" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-12 border border-gray-800 text-center">
+    <i class="fas fa-chart-line text-gray-600 text-5xl mb-4"></i>
+    <h3 class="text-2xl font-bold text-rep-white mb-2">No Data Available</h3>
+    <p class="text-gray-400 mb-6">
+      There's no analytics data for the selected period. Try adjusting your filters or connect more platforms.
+    </p>
+    <button
+      (click)="loadDashboard()"
+      type="button"
+      class="px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg hover:shadow-rep-lime/50 transition"
+    >
+      <i class="fas fa-sync-alt mr-2"></i>
+      Retry
+    </button>
+  </div>
+</div>
+

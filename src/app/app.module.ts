@@ -1,10 +1,12 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { SharedModule } from './shared/shared.module';
 
 // Auth Components
 import { LoginComponent } from './features/auth/login/login.component';
@@ -28,10 +30,12 @@ import { InboxDetailComponent } from './features/inbox/inbox-detail/inbox-detail
 import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
+import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { HomeComponent } from './features/home/home.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
+import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 
 /**
  * App Module - Following SOLID principles
@@ -54,17 +58,21 @@ import { ContactComponent } from './features/contact/contact.component';
     SettingsComponent,
     AgentsComponent,
     KnowledgeBaseComponent,
+    AnalyticsComponent,
     HomeComponent,
     PrivacyPolicyComponent,
     TermsConditionsComponent,
-    ContactComponent
+    ContactComponent,
+    DataDeletionStatusComponent
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
     HttpClientModule,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
+    SharedModule
   ],
   providers: [
     {
