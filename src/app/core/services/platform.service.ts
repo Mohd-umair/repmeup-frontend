@@ -186,6 +186,27 @@ export class PlatformService {
       }
     });
   }
+
+  /**
+   * Connect WhatsApp Business API
+   */
+  connectWhatsApp(): Observable<SinglePlatformConnectionResponse> {
+    return this.apiService.post<SinglePlatformConnectionResponse>('/platforms/whatsapp/connect', {});
+  }
+
+  /**
+   * Disconnect WhatsApp Business API
+   */
+  disconnectWhatsApp(): Observable<{ success: boolean; message: string }> {
+    return this.apiService.delete<{ success: boolean; message: string }>('/platforms/whatsapp/disconnect');
+  }
+
+  /**
+   * Get WhatsApp connection status
+   */
+  getWhatsAppStatus(): Observable<any> {
+    return this.apiService.get<any>('/platforms/whatsapp/status');
+  }
 }
 
 

@@ -40,7 +40,7 @@ export class SettingsComponent implements OnInit {
   // Auto-reply settings
   autoReplySettings: AutoReplySettings = {
     enabled: false,
-    enabledPlatforms: ['youtube', 'instagram', 'facebook', 'google', 'linkedin'],
+    enabledPlatforms: ['youtube', 'instagram', 'facebook', 'google', 'linkedin', 'whatsapp'],
     enabledTypes: ['comment', 'review'],
     sentimentFilter: 'all',
     replyToNegative: false,
@@ -133,6 +133,17 @@ export class SettingsComponent implements OnInit {
       gradientFrom: '#0A66C2',
       gradientTo: '#004182',
       description: 'Manage LinkedIn company page posts and comments',
+      connected: false,
+      loading: false
+    },
+    {
+      id: 'whatsapp',
+      name: 'WhatsApp Business',
+      icon: 'fab fa-whatsapp',
+      brandColor: '#25D366',
+      gradientFrom: '#25D366',
+      gradientTo: '#128C7E',
+      description: 'Connect WhatsApp Business API to manage customer messages',
       connected: false,
       loading: false
     }
@@ -393,7 +404,8 @@ export class SettingsComponent implements OnInit {
               p.id === connection.platform || 
               (connection.platform === 'google' && p.id === 'google') ||
               (connection.platform === 'youtube' && p.id === 'youtube') ||
-              (connection.platform === 'linkedin' && p.id === 'linkedin')
+              (connection.platform === 'linkedin' && p.id === 'linkedin') ||
+              (connection.platform === 'whatsapp' && p.id === 'whatsapp')
             );
 
             if (platform && connection.isActive && connection.status === 'connected') {
@@ -519,6 +531,34 @@ export class SettingsComponent implements OnInit {
       } else if (platform.id === 'linkedin') {
         // LinkedIn OAuth flow
         this.platformService.connectLinkedIn();
+      } else if (platform.id === 'whatsapp') {
+        // WhatsApp Business API connection
+        this.platformService.connectWhatsApp().subscribe({
+          next: (response) => {
+            if (response.success) {
+              platform.connected = true;
+              platform.connectionId = response.data._id;
+              platform.connectedAccount = response.data.platformData.verifiedName || 
+                                         response.data.platformData.displayPhoneNumber || 
+                                         'WhatsApp Business';
+              this.notificationService.success(
+                'WhatsApp Connected',
+                'WhatsApp Business API connected successfully!'
+              );
+              this.loadPlatformConnections();
+            }
+            platform.loading = false;
+          },
+          error: (error) => {
+            console.error('Error connecting WhatsApp:', error);
+            const errorMessage = error.error?.error || error.error?.message || 'Failed to connect WhatsApp. Please check your credentials.';
+            this.notificationService.error(
+              'Connection Failed',
+              errorMessage
+            );
+            platform.loading = false;
+          }
+        });
       } else {
         // Other platforms - show coming soon
         platform.loading = false;
