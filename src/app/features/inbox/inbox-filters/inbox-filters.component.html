@@ -17,15 +17,34 @@
       *ngFor="let platform of platforms"
       (click)="toggleFilter('platform', platform.value)"
       [class]="isFilterActive('platform', platform.value) 
-        ? 'bg-rep-lime/20 border-rep-lime text-rep-black shadow-md' 
-        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
-      class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl transition-all font-medium"
+        ? 'shadow-lg transform scale-105' 
+        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:scale-102'"
+      [style.background]="isFilterActive('platform', platform.value) 
+        ? 'linear-gradient(135deg, ' + platform.gradientFrom + '15, ' + platform.gradientTo + '15)' 
+        : ''"
+      [style.borderColor]="isFilterActive('platform', platform.value) 
+        ? platform.bgColor 
+        : '#E5E7EB'"
+      class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl transition-all duration-300 font-medium"
     >
       <div class="flex items-center space-x-3">
-        <i [class]="platform.icon + ' ' + platform.color + ' text-lg'"></i>
-        <span class="text-sm font-bold">{{ platform.label }}</span>
+        <div 
+          class="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300"
+          [style.background]="isFilterActive('platform', platform.value)
+            ? 'linear-gradient(135deg, ' + platform.gradientFrom + ', ' + platform.gradientTo + ')'
+            : platform.bgColor + '15'"
+          [style.border]="'2px solid ' + (isFilterActive('platform', platform.value) ? platform.bgColor : platform.bgColor + '30')">
+          <i [class]="platform.icon + ' text-lg'" 
+             [style.color]="isFilterActive('platform', platform.value) ? 'white' : platform.bgColor"></i>
+        </div>
+        <span class="text-sm font-bold" 
+              [style.color]="isFilterActive('platform', platform.value) ? platform.bgColor : ''">
+          {{ platform.label }}
+        </span>
       </div>
-      <i *ngIf="isFilterActive('platform', platform.value)" class="fas fa-check-circle"></i>
+      <i *ngIf="isFilterActive('platform', platform.value)" 
+         class="fas fa-check-circle text-lg" 
+         [style.color]="platform.bgColor"></i>
     </button>
   </div>
 </div>

@@ -53,24 +53,33 @@
     </div>
   </div>
 
-  <!-- Interaction List -->
-  <div *ngIf="!loading && interactions.length > 0" class="flex-1 overflow-y-auto">
+  <!-- Interaction List - Fixed Height with Scroll -->
+  <div *ngIf="!loading && interactions.length > 0" class="flex-1 overflow-y-auto p-2" style="max-height: calc(100vh - 300px);">
     <div
       *ngFor="let interaction of interactions; let i = index"
       (click)="selectInteraction(interaction)"
-      [class]="isSelected(interaction) 
-        ? 'bg-rep-lime/10 border-l-4 border-rep-lime' 
-        : 'hover:bg-gray-50 border-l-4 border-transparent'"
-      class="p-4 border-b border-gray-100 cursor-pointer transition-all duration-200 hover:shadow-sm"
+      class="p-4 mb-2 rounded-xl cursor-pointer transition-all duration-300 border-l-4"
+      [class.shadow-lg]="isSelected(interaction)"
+      [class.transform]="isSelected(interaction)"
+      [class.scale-102]="isSelected(interaction)"
+      [style.borderLeftColor]="getPlatformColors(interaction.platform).primary"
+      [style.background]="isSelected(interaction) 
+        ? 'linear-gradient(to right, ' + getPlatformColors(interaction.platform).gradientFrom + '12, ' + getPlatformColors(interaction.platform).gradientTo + '08)' 
+        : 'white'"
+      [style.boxShadow]="isSelected(interaction)
+        ? '0 8px 24px ' + getPlatformColors(interaction.platform).primary + '25'
+        : '0 1px 3px rgba(0,0,0,0.1)'"
       [style.animation-delay]="i * 50 + 'ms'"
     >
       <div class="flex items-start space-x-3">
         <!-- Avatar with Platform Badge -->
         <div class="relative flex-shrink-0">
-          <div class="w-12 h-12 bg-rep-black rounded-xl flex items-center justify-center text-rep-white font-bold text-lg shadow-md">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md transition-all duration-300"
+               [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
             {{ interaction.author.name.charAt(0).toUpperCase() }}
           </div>
-          <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-rep-white rounded-full flex items-center justify-center shadow-md border-2 border-rep-white">
+          <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-md border-2 transition-all duration-300"
+               [style.borderColor]="getPlatformColors(interaction.platform).primary">
             <span class="text-sm">{{ getPlatformIcon(interaction.platform) }}</span>
           </div>
         </div>
@@ -87,13 +96,19 @@
             </span>
           </div>
 
-          <!-- Platform & Type -->
+          <!-- Platform & Type - Platform Colored (Matching Style) -->
           <div class="flex items-center space-x-2 mb-2">
-            <span class="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium flex items-center">
-              <span class="mr-1">{{ getPlatformIcon(interaction.platform) }}</span>
+            <span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center border transition-all duration-300"
+                  [style.background]="getPlatformColors(interaction.platform).primary + '15'"
+                  [style.color]="getPlatformColors(interaction.platform).primary"
+                  [style.borderColor]="getPlatformColors(interaction.platform).primary + '40'">
+              <span class="mr-1.5">{{ getPlatformIcon(interaction.platform) }}</span>
               {{ interaction.platform }}
             </span>
-            <span class="px-2 py-0.5 bg-rep-lime/20 text-rep-black border border-rep-lime/30 rounded-md text-xs font-medium">
+            <span class="px-2.5 py-1 rounded-lg text-xs font-medium border transition-all duration-300"
+                  [style.background]="getPlatformColors(interaction.platform).primary + '15'"
+                  [style.color]="getPlatformColors(interaction.platform).primary"
+                  [style.borderColor]="getPlatformColors(interaction.platform).primary + '40'">
               {{ getTypeLabel(interaction.type) }}
             </span>
             <span 
@@ -146,8 +161,10 @@
               </span>
             </div>
 
-            <!-- Unread Indicator -->
-            <div *ngIf="interaction.status === 'unread'" class="w-2.5 h-2.5 bg-rep-lime rounded-full animate-pulse"></div>
+            <!-- Unread Indicator - Platform Colored -->
+            <div *ngIf="interaction.status === 'unread'" 
+                 class="w-2.5 h-2.5 rounded-full animate-pulse transition-all duration-300"
+                 [style.background]="getPlatformColors(interaction.platform).primary"></div>
           </div>
         </div>
       </div>

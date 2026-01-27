@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angu
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
+import { ThemeService } from '../../../core/services/theme.service';
 
 /**
  * Inbox List Component - Single Responsibility Principle
@@ -21,6 +22,8 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   searchTerm = '';
   private searchSubject = new Subject<string>();
+
+  constructor(public themeService: ThemeService) {}
 
   ngOnInit(): void {
     // Set up debounced search
@@ -107,5 +110,20 @@ export class InboxListComponent implements OnInit, OnDestroy {
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
     return new Date(date).toLocaleDateString();
+  }
+
+  /**
+   * Get platform-specific colors for each interaction
+   */
+  getPlatformColors(platform: string): any {
+    const theme = this.themeService.getTheme(platform);
+    return {
+      primary: theme.primaryColor,
+      secondary: theme.secondaryColor,
+      gradientFrom: theme.gradientFrom,
+      gradientTo: theme.gradientTo,
+      border: theme.borderColor,
+      bg: theme.backgroundColor
+    };
   }
 }

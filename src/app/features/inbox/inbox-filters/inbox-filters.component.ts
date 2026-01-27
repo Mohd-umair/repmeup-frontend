@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Output } from '@angular/core';
+import { ThemeService } from '../../../core/services/theme.service';
 import { IInboxFilters, Platform, InteractionType, Sentiment, InteractionStatus } from '../../../core/models/interaction.model';
 
 /**
@@ -14,14 +15,16 @@ export class InboxFiltersComponent {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
 
   filters: IInboxFilters = {};
+  
+  constructor(public themeService: ThemeService) {}
 
   platforms = [
-    { value: Platform.INSTAGRAM, label: 'Instagram', icon: 'fab fa-instagram', color: 'text-pink-600' },
-    { value: Platform.FACEBOOK, label: 'Facebook', icon: 'fab fa-facebook-f', color: 'text-blue-600' },
-    { value: Platform.YOUTUBE, label: 'YouTube', icon: 'fab fa-youtube', color: 'text-red-600' },
-    { value: Platform.GOOGLE, label: 'Google', icon: 'fab fa-google', color: 'text-blue-500' },
-    { value: Platform.LINKEDIN, label: 'LinkedIn', icon: 'fab fa-linkedin', color: 'text-blue-700' },
-    { value: Platform.WHATSAPP, label: 'WhatsApp', icon: 'fab fa-whatsapp', color: 'text-green-500' }
+    { value: Platform.INSTAGRAM, label: 'Instagram', icon: 'fab fa-instagram', color: 'text-pink-600', bgColor: '#E4405F', gradientFrom: '#833AB4', gradientTo: '#FD1D1D' },
+    { value: Platform.FACEBOOK, label: 'Facebook', icon: 'fab fa-facebook-f', color: 'text-blue-600', bgColor: '#1877F2', gradientFrom: '#1877F2', gradientTo: '#0C63D4' },
+    { value: Platform.YOUTUBE, label: 'YouTube', icon: 'fab fa-youtube', color: 'text-red-600', bgColor: '#FF0000', gradientFrom: '#FF0000', gradientTo: '#CC0000' },
+    { value: Platform.GOOGLE, label: 'Google', icon: 'fab fa-google', color: 'text-blue-500', bgColor: '#4285F4', gradientFrom: '#4285F4', gradientTo: '#34A853' },
+    { value: Platform.LINKEDIN, label: 'LinkedIn', icon: 'fab fa-linkedin', color: 'text-blue-700', bgColor: '#0A66C2', gradientFrom: '#0A66C2', gradientTo: '#004182' },
+    { value: Platform.WHATSAPP, label: 'WhatsApp', icon: 'fab fa-whatsapp', color: 'text-green-500', bgColor: '#25D366', gradientFrom: '#25D366', gradientTo: '#128C7E' }
   ];
 
   types = [

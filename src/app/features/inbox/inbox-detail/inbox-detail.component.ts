@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IInteraction } from '../../../core/models/interaction.model';
 import { InboxService } from '../../../core/services/inbox.service';
+import { ThemeService } from '../../../core/services/theme.service';
 
 /**
  * Inbox Detail Component - Single Responsibility Principle
@@ -38,11 +39,26 @@ export class InboxDetailComponent implements OnChanges {
 
   constructor(
     private fb: FormBuilder,
-    private inboxService: InboxService
+    private inboxService: InboxService,
+    public themeService: ThemeService
   ) {
     this.replyForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(1)]]
     });
+  }
+
+  /**
+   * Get platform-specific colors for the interaction
+   */
+  getPlatformColors(): any {
+    if (!this.interaction) return null;
+    const theme = this.themeService.getTheme(this.interaction.platform);
+    return {
+      primary: theme.primaryColor,
+      secondary: theme.secondaryColor,
+      gradientFrom: theme.gradientFrom,
+      gradientTo: theme.gradientTo
+    };
   }
 
   submitReply(): void {
