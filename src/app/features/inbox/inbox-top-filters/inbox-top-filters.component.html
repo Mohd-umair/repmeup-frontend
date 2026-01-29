@@ -2,11 +2,14 @@
   <!-- Header -->
   <div class="flex items-center justify-between mb-4">
     <div class="flex items-center space-x-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
-        <i class="fas fa-sliders-h text-white text-sm"></i>
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-md transition-all duration-300"
+           [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
+           [style.boxShadow]="'0 4px 12px var(--platform-primary, rgba(75, 85, 99, 0.3))'">
+        <i class="fas fa-sliders-h text-sm text-white"></i>
       </div>
       <div>
-        <h3 class="text-sm font-bold text-gray-900">Quick Filters</h3>
+        <h3 class="text-sm font-bold transition-colors duration-300"
+            [style.color]="'var(--platform-primary, #1F2937)'">Quick Filters</h3>
         <p class="text-[10px] text-gray-500">Refine your inbox view</p>
       </div>
     </div>

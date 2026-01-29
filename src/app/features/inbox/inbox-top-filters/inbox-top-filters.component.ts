@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { IInboxFilters, InteractionType, Sentiment, InteractionStatus } from '../../../core/models/interaction.model';
+import { ThemeService } from '../../../core/services/theme.service';
 
 /**
  * Inbox Top Filters Component
@@ -14,6 +15,8 @@ export class InboxTopFiltersComponent {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
 
   filters: IInboxFilters = {};
+
+  constructor(public themeService: ThemeService) {}
 
   types = [
     { value: InteractionType.COMMENT, label: 'Comments', icon: '💬' },

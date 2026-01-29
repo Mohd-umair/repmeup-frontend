@@ -108,14 +108,14 @@ export class ThemeService {
     },
     default: {
       platform: 'default',
-      primaryColor: '#D0FF00',
-      secondaryColor: '#B8E600',
-      gradientFrom: '#D0FF00',
-      gradientTo: '#B8E600',
-      accentColor: '#D0FF00',
-      textColor: '#000000',
+      primaryColor: '#1F2937',
+      secondaryColor: '#4B5563',
+      gradientFrom: '#4B5563',
+      gradientTo: '#6B7280',
+      accentColor: '#4B5563',
+      textColor: '#1F2937',
       backgroundColor: '#FFFFFF',
-      borderColor: '#D0FF00',
+      borderColor: '#4B5563',
       icon: 'fas fa-comments',
       name: 'All Platforms'
     }

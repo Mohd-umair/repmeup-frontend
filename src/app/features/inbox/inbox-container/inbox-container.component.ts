@@ -39,6 +39,14 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     // Don't select any conversation by default
     this.selectedInteraction = null;
     
+    // Reset theme to default (light black/gray) when entering inbox
+    this.themeService.resetTheme();
+    
+    // Apply theme based on current platform filter if exists
+    if (this.platformFilters.platform) {
+      this.themeService.setPlatformTheme(this.platformFilters.platform);
+    }
+    
     this.loadInteractions();
 
     // Subscribe to interactions

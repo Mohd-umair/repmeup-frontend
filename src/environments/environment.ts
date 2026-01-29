@@ -11,7 +11,7 @@ export const environment = {
 // export const environment = {
 //   production: false,
 //   apiUrl: 'https://repmeup.in/api',
-//   socketUrl: ''
+//   socketUrl: 'https://repmeup.in/api/socket'
 // };
 
 /*
