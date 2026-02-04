@@ -1,35 +1,35 @@
-<div class="min-h-screen bg-rep-black p-6">
-  <div class="max-w-7xl mx-auto space-y-8">
+<div class="h-full overflow-y-auto bg-rep-black p-3 sm:p-4 md:p-6">
+  <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
     <!-- Page Header -->
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-4xl font-bold text-rep-white">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex-1 min-w-0">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-rep-white truncate">
           Settings
         </h1>
-        <p class="text-gray-400 mt-2 text-lg">Manage your account and platform integrations</p>
+        <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg">Manage your account and platform integrations</p>
       </div>
       
       <!-- Connection Stats -->
-      <div class="flex items-center space-x-3">
-        <div class="bg-rep-white rounded-2xl shadow-lg px-6 py-3 border border-gray-800">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-rep-lime rounded-xl flex items-center justify-center">
-              <i class="fas fa-check text-rep-black text-lg"></i>
+      <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+        <div class="flex-1 sm:flex-none bg-rep-white rounded-xl sm:rounded-2xl shadow-lg px-3 sm:px-4 md:px-6 py-2 sm:py-3 border border-gray-800">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-rep-lime rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-check text-rep-black text-sm sm:text-base md:text-lg"></i>
             </div>
-            <div>
-              <p class="text-xs text-gray-600 font-medium uppercase tracking-wide">Connected</p>
-              <p class="text-2xl font-bold text-rep-black">{{ getConnectedCount() }}</p>
+            <div class="min-w-0">
+              <p class="text-xs text-gray-600 font-medium uppercase tracking-wide truncate">Connected</p>
+              <p class="text-xl sm:text-2xl font-bold text-rep-black">{{ getConnectedCount() }}</p>
             </div>
           </div>
         </div>
-        <div class="bg-rep-white rounded-2xl shadow-lg px-6 py-3 border border-gray-800">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
-              <i class="fas fa-clock text-gray-600 text-lg"></i>
+        <div class="flex-1 sm:flex-none bg-rep-white rounded-xl sm:rounded-2xl shadow-lg px-3 sm:px-4 md:px-6 py-2 sm:py-3 border border-gray-800">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-clock text-gray-600 text-sm sm:text-base md:text-lg"></i>
             </div>
-            <div>
-              <p class="text-xs text-gray-600 font-medium uppercase tracking-wide">Available</p>
-              <p class="text-2xl font-bold text-rep-black">{{ getPendingCount() }}</p>
+            <div class="min-w-0">
+              <p class="text-xs text-gray-600 font-medium uppercase tracking-wide truncate">Available</p>
+              <p class="text-xl sm:text-2xl font-bold text-rep-black">{{ getPendingCount() }}</p>
             </div>
           </div>
         </div>
@@ -37,137 +37,147 @@
     </div>
 
     <!-- Tabs -->
-    <div class="bg-rep-white rounded-2xl shadow-xl p-2 border border-gray-800">
-      <nav class="flex space-x-2">
+    <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800">
+      <nav class="flex gap-1 sm:gap-2 min-w-max sm:min-w-0 overflow-x-auto overflow-y-visible">
         <button
-          (click)="setActiveTab('platforms')"
+          type="button"
+          (click)="setActiveTab('platforms'); $event.stopPropagation()"
           [class]="activeTab === 'platforms' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
         >
-          <i class="fas fa-plug mr-2"></i>
-          Platforms
+          <i class="fas fa-plug mr-1 sm:mr-2 pointer-events-none"></i>
+          <span class="hidden xs:inline pointer-events-none">Platforms</span>
+          <span class="xs:hidden pointer-events-none">Plat.</span>
         </button>
         <button
-          (click)="setActiveTab('profile')"
+          type="button"
+          (click)="setActiveTab('profile'); $event.stopPropagation()"
           [class]="activeTab === 'profile' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
         >
-          <i class="fas fa-user mr-2"></i>
-          Profile
+          <i class="fas fa-user mr-1 sm:mr-2 pointer-events-none"></i>
+          <span class="pointer-events-none">Profile</span>
         </button>
         <button
-          (click)="setActiveTab('organization')"
+          type="button"
+          (click)="setActiveTab('organization'); $event.stopPropagation()"
           [class]="activeTab === 'organization' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
         >
-          <i class="fas fa-building mr-2"></i>
-          Organization
+          <i class="fas fa-building mr-1 sm:mr-2 pointer-events-none"></i>
+          <span class="hidden xs:inline pointer-events-none">Organization</span>
+          <span class="xs:hidden pointer-events-none">Org</span>
         </button>
         <button
-          (click)="setActiveTab('notifications')"
+          type="button"
+          (click)="setActiveTab('notifications'); $event.stopPropagation()"
           [class]="activeTab === 'notifications' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
         >
-          <i class="fas fa-bell mr-2"></i>
-          Notifications
+          <i class="fas fa-bell mr-1 sm:mr-2 pointer-events-none"></i>
+          <span class="hidden xs:inline pointer-events-none">Notifications</span>
+          <span class="xs:hidden pointer-events-none">Notif</span>
         </button>
         <button
-          (click)="setActiveTab('auto-reply')"
+          type="button"
+          (click)="setActiveTab('auto-reply'); $event.stopPropagation()"
           [class]="activeTab === 'auto-reply' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
         >
-          <i class="fas fa-robot mr-2"></i>
-          Auto-Reply
+          <i class="fas fa-robot mr-1 sm:mr-2 pointer-events-none"></i>
+          <span class="hidden sm:inline pointer-events-none">Auto-Reply</span>
+          <span class="sm:hidden pointer-events-none">Auto</span>
         </button>
       </nav>
     </div>
 
     <!-- Platform Connections Tab -->
-    <div *ngIf="activeTab === 'platforms'" class="space-y-8">
+    <div *ngIf="activeTab === 'platforms'" class="space-y-4 sm:space-y-6 md:space-y-8">
       <!-- Welcome Card -->
-      <div class="bg-rep-white rounded-3xl shadow-2xl p-8 border-2 border-gray-800 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-rep-lime opacity-5 rounded-full -mr-32 -mt-32"></div>
-        <div class="absolute bottom-0 left-0 w-48 h-48 bg-rep-lime opacity-5 rounded-full -ml-24 -mb-24"></div>
+      <div class="bg-rep-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 border-2 border-gray-800 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-rep-lime opacity-5 rounded-full -mr-16 sm:mr-24 md:-mr-32 -mt-16 sm:-mt-24 md:-mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 md:w-48 md:h-48 bg-rep-lime opacity-5 rounded-full -ml-12 sm:-ml-16 md:-ml-24 -mb-12 sm:-mb-16 md:-mb-24"></div>
         <div class="relative z-10">
-          <div class="flex items-center space-x-3 mb-4">
-            <div class="w-12 h-12 bg-rep-lime rounded-xl flex items-center justify-center">
-              <i class="fas fa-rocket text-2xl text-rep-black"></i>
+          <div class="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rep-lime rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-rocket text-lg sm:text-xl md:text-2xl text-rep-black"></i>
             </div>
-            <h2 class="text-3xl font-bold text-rep-black">Connect Your Platforms</h2>
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-rep-black">Connect Your Platforms</h2>
           </div>
-          <p class="text-gray-700 text-lg mb-6 max-w-3xl">
+          <p class="text-gray-700 text-sm sm:text-base md:text-lg mb-4 sm:mb-5 md:mb-6 max-w-3xl">
             Integrate all your social media accounts and review platforms in one place. Secure OAuth 2.0 authentication with real-time synchronization.
           </p>
-          <div class="flex flex-wrap gap-3">
-            <span class="inline-flex items-center px-4 py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-sm font-medium text-rep-black">
-              <i class="fas fa-shield-alt mr-2"></i> Bank-level Security
+          <div class="flex flex-wrap gap-2 sm:gap-3">
+            <span class="inline-flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
+              <i class="fas fa-shield-alt mr-1 sm:mr-2"></i> Bank-level Security
             </span>
-            <span class="inline-flex items-center px-4 py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-sm font-medium text-rep-black">
-              <i class="fas fa-bolt mr-2"></i> Real-time Sync
+            <span class="inline-flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
+              <i class="fas fa-bolt mr-1 sm:mr-2"></i> Real-time Sync
             </span>
-            <span class="inline-flex items-center px-4 py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-sm font-medium text-rep-black">
-              <i class="fas fa-globe mr-2"></i> 6 Platforms
+            <span class="inline-flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
+              <i class="fas fa-globe mr-1 sm:mr-2"></i> 6 Platforms
             </span>
           </div>
         </div>
       </div>
 
       <!-- Platform Cards Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         <!-- Instagram -->
-        <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
-          <div class="h-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600"></div>
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <div class="flex items-center space-x-4">
-                <div class="w-14 h-14 bg-gradient-to-br from-purple-600 via-pink-600 to-red-600 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-                  <i class="fab fa-instagram text-3xl text-white"></i>
+        <div class="platform-card bg-rep-white rounded-xl sm:rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-1.5 sm:h-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600"></div>
+          <div class="p-4 sm:p-5 md:p-6">
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
+              <div class="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-gradient-to-br from-purple-600 via-pink-600 to-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 flex-shrink-0">
+                  <i class="fab fa-instagram text-xl sm:text-2xl md:text-3xl text-white"></i>
                 </div>
-                <div>
-                  <h3 class="text-xl font-bold text-rep-black">Instagram</h3>
-                  <p class="text-sm text-gray-600">Social Media</p>
+                <div class="min-w-0">
+                  <h3 class="text-base sm:text-lg md:text-xl font-bold text-rep-black truncate">Instagram</h3>
+                  <p class="text-xs sm:text-sm text-gray-600 truncate">Social Media</p>
                 </div>
               </div>
-              <span *ngIf="platforms[0].connected" class="w-3 h-3 bg-rep-lime rounded-full animate-pulse"></span>
+              <span *ngIf="platforms[0].connected" class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-rep-lime rounded-full animate-pulse flex-shrink-0"></span>
             </div>
-            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+            <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
               Manage Instagram Business account comments and direct messages in real-time.
             </p>
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-xs text-blue-800">
-              <p class="font-semibold mb-1"><i class="fas fa-info-circle mr-1"></i> Note:</p>
-              <p>Instagram Business accounts must be linked to a Facebook Page. You'll authorize with Facebook to access your Instagram account.</p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 text-xs text-blue-800">
+              <p class="font-semibold mb-0.5 sm:mb-1"><i class="fas fa-info-circle mr-1"></i> Note:</p>
+              <p class="text-xs">Instagram Business accounts must be linked to a Facebook Page. You'll authorize with Facebook to access your Instagram account.</p>
             </div>
-            <div *ngIf="platforms[0].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
-              <div class="space-y-2 text-xs">
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-700 flex items-center"><i class="fas fa-at mr-2"></i> Account:</span>
-                  <span class="font-semibold text-rep-black">{{ platforms[0].connectedAccount }}</span>
+            <div *ngIf="platforms[0].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-lg sm:rounded-xl p-2 sm:p-3 mb-3 sm:mb-4">
+              <div class="space-y-1.5 sm:space-y-2 text-xs">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-at mr-1 sm:mr-2"></i> Account:</span>
+                  <span class="font-semibold text-rep-black truncate">{{ platforms[0].connectedAccount }}</span>
                 </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-2"></i> Synced:</span>
-                  <span class="font-semibold text-rep-black">{{ platforms[0].lastSync }}</span>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-1 sm:mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black truncate">{{ platforms[0].lastSync }}</span>
                 </div>
               </div>
             </div>
-            <div *ngIf="platforms[0].connected" class="flex space-x-2 mb-2">
+            <div *ngIf="platforms[0].connected" class="flex gap-2 mb-2">
               <button
                 (click)="syncPlatform(platforms[0]); $event.stopPropagation()"
                 [disabled]="platforms[0]?.loading || loading"
                 type="button"
-                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-2 px-4 rounded-xl font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-1.5 sm:py-2 px-2 sm:px-3 md:px-4 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
               >
-                <i [class]="platforms[0]?.loading ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-sync-alt mr-2'"></i>
-                {{ platforms[0]?.loading ? 'Syncing...' : 'Sync Now' }}
+                <i [class]="platforms[0]?.loading ? 'fas fa-spinner fa-spin mr-1 sm:mr-2' : 'fas fa-sync-alt mr-1 sm:mr-2'"></i>
+                <span class="hidden xs:inline">{{ platforms[0]?.loading ? 'Syncing...' : 'Sync Now' }}</span>
+                <span class="xs:hidden">{{ platforms[0]?.loading ? 'Sync...' : 'Sync' }}</span>
               </button>
             </div>
             <button
@@ -177,9 +187,9 @@
               [class]="platforms[0].connected 
                 ? 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200' 
                 : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
-              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer relative z-10"
+              class="w-full py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer relative z-10"
             >
-              <i [class]="platforms[0]?.loading ? 'fas fa-spinner fa-spin mr-2' : (platforms[0].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2')"></i>
+              <i [class]="platforms[0]?.loading ? 'fas fa-spinner fa-spin mr-1 sm:mr-2' : (platforms[0].connected ? 'fas fa-unlink mr-1 sm:mr-2' : 'fas fa-plug mr-1 sm:mr-2')"></i>
               {{ platforms[0]?.loading ? 'Connecting...' : (platforms[0].connected ? 'Disconnect' : 'Connect Now') }}
             </button>
           </div>
@@ -507,24 +517,24 @@
       </div>
 
       <!-- Help Card -->
-      <div class="bg-rep-white rounded-2xl shadow-xl p-8 border-2 border-gray-800">
-        <div class="flex items-start space-x-6">
+      <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border-2 border-gray-800">
+        <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
           <div class="flex-shrink-0">
-            <div class="w-16 h-16 bg-rep-lime rounded-2xl flex items-center justify-center">
-              <i class="fas fa-life-ring text-3xl text-rep-black"></i>
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-rep-lime rounded-xl sm:rounded-2xl flex items-center justify-center">
+              <i class="fas fa-life-ring text-xl sm:text-2xl md:text-3xl text-rep-black"></i>
             </div>
           </div>
-          <div class="flex-1">
-            <h3 class="text-2xl font-bold text-rep-black mb-2">Need Help?</h3>
-            <p class="text-gray-600 mb-4 leading-relaxed">
+          <div class="flex-1 min-w-0">
+            <h3 class="text-lg sm:text-xl md:text-2xl font-bold text-rep-black mb-2">Need Help?</h3>
+            <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 leading-relaxed">
               Our comprehensive guides and dedicated support team are here to help you connect your platforms seamlessly.
             </p>
-            <div class="flex space-x-4">
-              <a href="#" class="inline-flex items-center px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg hover:shadow-rep-lime/50 transition-all duration-300">
+            <div class="flex flex-col xs:flex-row gap-2 sm:gap-3 md:gap-4">
+              <a href="#" class="inline-flex items-center justify-center px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-rep-lime text-rep-black rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-rep-lime/50 transition-all duration-300">
                 <i class="fas fa-book mr-2"></i>
                 Documentation
               </a>
-              <a href="#" class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300">
+              <a href="#" class="inline-flex items-center justify-center px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:bg-gray-200 transition-all duration-300">
                 <i class="fas fa-headset mr-2"></i>
                 Contact Support
               </a>
@@ -706,45 +716,45 @@
 
     <!-- Auto-Reply Tab -->
     <div *ngIf="activeTab === 'auto-reply'" class="max-w-5xl mx-auto">
-      <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
-        <div class="flex items-center space-x-6 mb-8">
-          <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black">
-            <i class="fas fa-robot text-3xl"></i>
+      <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-800">
+        <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-rep-lime rounded-xl sm:rounded-2xl flex items-center justify-center text-rep-black flex-shrink-0">
+            <i class="fas fa-robot text-xl sm:text-2xl md:text-3xl"></i>
           </div>
-          <div class="flex-1">
-            <h2 class="text-3xl font-bold text-rep-black">AI Auto-Reply Settings</h2>
-            <p class="text-gray-600 mt-1">Configure automatic AI-powered responses using your knowledge base</p>
+          <div class="flex-1 min-w-0">
+            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-rep-black">AI Auto-Reply Settings</h2>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Configure automatic AI-powered responses using your knowledge base</p>
           </div>
-          <div class="flex items-center space-x-3">
-            <span class="text-sm text-gray-600">Auto-Reply Status:</span>
+          <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <span class="text-xs sm:text-sm text-gray-600">Status:</span>
             <span [class]="autoReplySettings.enabled ? 'bg-rep-lime text-rep-black' : 'bg-gray-200 text-gray-600'" 
-                  class="px-4 py-2 rounded-full font-semibold text-sm">
+                  class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm whitespace-nowrap">
               {{ autoReplySettings.enabled ? 'Enabled' : 'Disabled' }}
             </span>
           </div>
         </div>
 
         <!-- Info Banner -->
-        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-8">
-          <div class="flex items-start space-x-4">
+        <div class="bg-blue-50 border-2 border-blue-200 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 mb-6 sm:mb-8">
+          <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
             <div class="flex-shrink-0">
-              <i class="fas fa-info-circle text-3xl text-blue-600"></i>
+              <i class="fas fa-info-circle text-2xl sm:text-3xl text-blue-600"></i>
             </div>
-            <div>
-              <h3 class="text-lg font-bold text-blue-900 mb-2">How Auto-Reply Works</h3>
-              <p class="text-blue-800 text-sm leading-relaxed mb-3">
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base sm:text-lg font-bold text-blue-900 mb-1.5 sm:mb-2">How Auto-Reply Works</h3>
+              <p class="text-blue-800 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3">
                 AI Auto-Reply uses OpenAI GPT-4 combined with your uploaded Knowledge Base to generate intelligent, 
                 context-aware responses to customer interactions. The system searches your knowledge base for relevant 
                 information and creates professional replies automatically.
               </p>
-              <div class="flex flex-wrap gap-2">
-                <span class="inline-flex items-center px-3 py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900">
+              <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                <span class="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900 whitespace-nowrap">
                   <i class="fas fa-brain mr-1"></i> AI-Powered
                 </span>
-                <span class="inline-flex items-center px-3 py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900">
+                <span class="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900 whitespace-nowrap">
                   <i class="fas fa-book mr-1"></i> Knowledge Base
                 </span>
-                <span class="inline-flex items-center px-3 py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900">
+                <span class="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900 whitespace-nowrap">
                   <i class="fas fa-shield-alt mr-1"></i> Safe & Controlled
                 </span>
               </div>
@@ -752,35 +762,35 @@
           </div>
         </div>
 
-        <form class="space-y-8">
+        <form class="space-y-6 sm:space-y-8">
           <!-- Master Enable/Disable -->
-          <div class="bg-gradient-to-r from-rep-lime/10 to-green-50 border-2 border-rep-lime/30 rounded-xl p-6">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-4">
-                <div class="w-14 h-14 bg-rep-lime rounded-xl flex items-center justify-center">
-                  <i class="fas fa-power-off text-2xl text-rep-black"></i>
+          <div class="bg-gradient-to-r from-rep-lime/10 to-green-50 border-2 border-rep-lime/30 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6">
+            <div class="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 xs:gap-4">
+              <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-rep-lime rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-power-off text-lg sm:text-xl md:text-2xl text-rep-black"></i>
                 </div>
-                <div>
-                  <h3 class="text-xl font-bold text-rep-black">Enable Auto-Reply</h3>
-                  <p class="text-gray-700 text-sm mt-1">Turn on AI-powered automatic responses</p>
+                <div class="min-w-0">
+                  <h3 class="text-base sm:text-lg md:text-xl font-bold text-rep-black">Enable Auto-Reply</h3>
+                  <p class="text-gray-700 text-xs sm:text-sm mt-0.5 sm:mt-1">Turn on AI-powered automatic responses</p>
                 </div>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer">
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
                 <input type="checkbox" [(ngModel)]="autoReplySettings.enabled" name="enabled" class="sr-only peer">
-                <div class="w-20 h-10 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-8 after:w-8 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
+                <div class="w-16 h-8 sm:w-20 sm:h-10 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 sm:peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 sm:after:top-1 after:left-0.5 sm:after:left-1 after:bg-white after:rounded-full after:h-7 after:w-7 sm:after:h-8 sm:after:w-8 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
               </label>
             </div>
           </div>
 
           <!-- Settings Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
             <!-- Confidence Threshold -->
-            <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-              <label class="block text-sm font-bold text-rep-black mb-3">
-                <i class="fas fa-percentage mr-2 text-gray-600"></i>
+            <div class="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-gray-200">
+              <label class="block text-xs sm:text-sm font-bold text-rep-black mb-2 sm:mb-3">
+                <i class="fas fa-percentage mr-1 sm:mr-2 text-gray-600"></i>
                 Confidence Threshold
               </label>
-              <p class="text-xs text-gray-600 mb-4">Minimum AI confidence to generate replies (0-100%)</p>
+              <p class="text-xs text-gray-600 mb-3 sm:mb-4">Minimum AI confidence to generate replies (0-100%)</p>
               <input 
                 type="range" 
                 [(ngModel)]="autoReplySettings.minConfidence" 
@@ -790,10 +800,10 @@
                 step="0.05"
                 class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-rep-lime"
               >
-              <div class="flex justify-between items-center mt-3">
-                <span class="text-xs text-gray-600">Low (0%)</span>
-                <span class="text-2xl font-bold text-rep-black">{{ (autoReplySettings.minConfidence * 100) | number:'1.0-0' }}%</span>
-                <span class="text-xs text-gray-600">High (100%)</span>
+              <div class="flex justify-between items-center mt-2 sm:mt-3">
+                <span class="text-xs text-gray-600">Low</span>
+                <span class="text-xl sm:text-2xl font-bold text-rep-black">{{ (autoReplySettings.minConfidence * 100) | number:'1.0-0' }}%</span>
+                <span class="text-xs text-gray-600">High</span>
               </div>
               <p class="text-xs text-gray-500 mt-2 italic">
                 Recommended: 75-85% for safety
@@ -801,19 +811,19 @@
             </div>
 
             <!-- Daily Limit -->
-            <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-              <label class="block text-sm font-bold text-rep-black mb-3">
-                <i class="fas fa-tachometer-alt mr-2 text-gray-600"></i>
+            <div class="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-gray-200">
+              <label class="block text-xs sm:text-sm font-bold text-rep-black mb-2 sm:mb-3">
+                <i class="fas fa-tachometer-alt mr-1 sm:mr-2 text-gray-600"></i>
                 Daily Reply Limit
               </label>
-              <p class="text-xs text-gray-600 mb-4">Maximum auto-replies per day</p>
+              <p class="text-xs text-gray-600 mb-3 sm:mb-4">Maximum auto-replies per day</p>
               <input 
                 type="number" 
                 [(ngModel)]="autoReplySettings.maxRepliesPerDay" 
                 name="maxRepliesPerDay"
                 min="1" 
                 max="500"
-                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-lg font-semibold"
+                class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-300 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-base sm:text-lg font-semibold"
               >
               <p class="text-xs text-gray-500 mt-2">
                 Today's usage: <span class="font-semibold">{{ autoReplySettings.repliesCountToday || 0 }}</span> / {{ autoReplySettings.maxRepliesPerDay }}
@@ -822,23 +832,23 @@
           </div>
 
           <!-- Platform Filters -->
-          <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-            <h3 class="text-lg font-bold text-rep-black mb-4">
-              <i class="fas fa-filter mr-2 text-gray-600"></i>
+          <div class="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-gray-200">
+            <h3 class="text-base sm:text-lg font-bold text-rep-black mb-3 sm:mb-4">
+              <i class="fas fa-filter mr-1 sm:mr-2 text-gray-600"></i>
               Enabled Platforms
             </h3>
-            <p class="text-sm text-gray-600 mb-4">Select which platforms should have auto-reply enabled</p>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Select which platforms should have auto-reply enabled</p>
+            <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
                 <input 
                   type="checkbox" 
                   [checked]="autoReplySettings.enabledPlatforms.includes('youtube')"
                   (change)="togglePlatform('youtube')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
+                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
                 >
-                <div class="flex items-center space-x-2">
-                  <i class="fab fa-youtube text-red-600 text-xl"></i>
-                  <span class="font-semibold text-gray-800">YouTube</span>
+                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <i class="fab fa-youtube text-red-600 text-base sm:text-xl flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">YouTube</span>
                 </div>
               </label>
               <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
@@ -893,73 +903,73 @@
           </div>
 
           <!-- Interaction Type Filters -->
-          <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-            <h3 class="text-lg font-bold text-rep-black mb-4">
-              <i class="fas fa-list mr-2 text-gray-600"></i>
+          <div class="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-gray-200">
+            <h3 class="text-base sm:text-lg font-bold text-rep-black mb-3 sm:mb-4">
+              <i class="fas fa-list mr-1 sm:mr-2 text-gray-600"></i>
               Enabled Interaction Types
             </h3>
-            <p class="text-sm text-gray-600 mb-4">Select which types of interactions should receive auto-replies</p>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Select which types of interactions should receive auto-replies</p>
+            <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
                 <input 
                   type="checkbox" 
                   [checked]="autoReplySettings.enabledTypes.includes('comment')"
                   (change)="toggleType('comment')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
+                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
                 >
-                <div class="flex items-center space-x-2">
-                  <i class="fas fa-comment text-blue-600"></i>
-                  <span class="font-semibold text-gray-800">Comments</span>
+                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <i class="fas fa-comment text-blue-600 text-base sm:text-lg flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">Comments</span>
                 </div>
               </label>
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
                 <input 
                   type="checkbox" 
                   [checked]="autoReplySettings.enabledTypes.includes('review')"
                   (change)="toggleType('review')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
+                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
                 >
-                <div class="flex items-center space-x-2">
-                  <i class="fas fa-star text-yellow-500"></i>
-                  <span class="font-semibold text-gray-800">Reviews</span>
+                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <i class="fas fa-star text-yellow-500 text-base sm:text-lg flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">Reviews</span>
                 </div>
               </label>
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
                 <input 
                   type="checkbox" 
                   [checked]="autoReplySettings.enabledTypes.includes('dm')"
                   (change)="toggleType('dm')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
+                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
                 >
-                <div class="flex items-center space-x-2">
-                  <i class="fas fa-envelope text-purple-600"></i>
-                  <span class="font-semibold text-gray-800">DMs</span>
+                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <i class="fas fa-envelope text-purple-600 text-base sm:text-lg flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">DMs</span>
                 </div>
               </label>
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
                 <input 
                   type="checkbox" 
                   [checked]="autoReplySettings.enabledTypes.includes('mention')"
                   (change)="toggleType('mention')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
+                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
                 >
-                <div class="flex items-center space-x-2">
-                  <i class="fas fa-at text-green-600"></i>
-                  <span class="font-semibold text-gray-800">Mentions</span>
+                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <i class="fas fa-at text-green-600 text-base sm:text-lg flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">Mentions</span>
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Sentiment Filter -->
-          <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
-            <h3 class="text-lg font-bold text-rep-black mb-4">
-              <i class="fas fa-smile mr-2 text-purple-600"></i>
+          <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-purple-200">
+            <h3 class="text-base sm:text-lg font-bold text-rep-black mb-3 sm:mb-4">
+              <i class="fas fa-smile mr-1 sm:mr-2 text-purple-600"></i>
               Sentiment Filter
             </h3>
-            <p class="text-sm text-gray-600 mb-4">Choose which sentiment types should receive auto-replies</p>
-            <div class="space-y-3">
-              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Choose which sentiment types should receive auto-replies</p>
+            <div class="space-y-2 sm:space-y-3">
+              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'all'"
                      [class.border-transparent]="autoReplySettings.sentimentFilter !== 'all'"
                      [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'all'">
@@ -968,17 +978,17 @@
                   name="sentimentFilter" 
                   value="all"
                   [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-1 w-5 h-5 text-purple-600"
+                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
                 >
-                <div class="flex-1">
-                  <span class="text-sm font-bold text-rep-black block mb-1">
-                    <i class="fas fa-circle text-gray-400 mr-2"></i>Reply to All Sentiments
+                <div class="flex-1 min-w-0">
+                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
+                    <i class="fas fa-circle text-gray-400 mr-1 sm:mr-2"></i>Reply to All Sentiments
                   </span>
                   <span class="text-xs text-gray-700">Auto-reply to positive, neutral, and negative comments (default)</span>
                 </div>
               </label>
               
-              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'positive_neutral'"
                      [class.border-transparent]="autoReplySettings.sentimentFilter !== 'positive_neutral'"
                      [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'positive_neutral'">
@@ -987,17 +997,17 @@
                   name="sentimentFilter" 
                   value="positive_neutral"
                   [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-1 w-5 h-5 text-purple-600"
+                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
                 >
-                <div class="flex-1">
-                  <span class="text-sm font-bold text-rep-black block mb-1">
-                    <i class="fas fa-smile text-green-500 mr-2"></i>Positive & Neutral Only
+                <div class="flex-1 min-w-0">
+                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
+                    <i class="fas fa-smile text-green-500 mr-1 sm:mr-2"></i>Positive & Neutral Only
                   </span>
                   <span class="text-xs text-gray-700">Skip negative comments (recommended for most brands)</span>
                 </div>
               </label>
               
-              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'negative_only'"
                      [class.border-transparent]="autoReplySettings.sentimentFilter !== 'negative_only'"
                      [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'negative_only'">
@@ -1006,17 +1016,17 @@
                   name="sentimentFilter" 
                   value="negative_only"
                   [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-1 w-5 h-5 text-purple-600"
+                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
                 >
-                <div class="flex-1">
-                  <span class="text-sm font-bold text-rep-black block mb-1">
-                    <i class="fas fa-frown text-red-500 mr-2"></i>Negative Only
+                <div class="flex-1 min-w-0">
+                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
+                    <i class="fas fa-frown text-red-500 mr-1 sm:mr-2"></i>Negative Only
                   </span>
                   <span class="text-xs text-gray-700">Only auto-reply to negative comments for damage control</span>
                 </div>
               </label>
               
-              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'positive_only'"
                      [class.border-transparent]="autoReplySettings.sentimentFilter !== 'positive_only'"
                      [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'positive_only'">
@@ -1025,17 +1035,17 @@
                   name="sentimentFilter" 
                   value="positive_only"
                   [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-1 w-5 h-5 text-purple-600"
+                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
                 >
-                <div class="flex-1">
-                  <span class="text-sm font-bold text-rep-black block mb-1">
-                    <i class="fas fa-laugh-beam text-green-500 mr-2"></i>Positive Only
+                <div class="flex-1 min-w-0">
+                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
+                    <i class="fas fa-laugh-beam text-green-500 mr-1 sm:mr-2"></i>Positive Only
                   </span>
                   <span class="text-xs text-gray-700">Only auto-reply to positive comments to engage fans</span>
                 </div>
               </label>
               
-              <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'neutral_only'"
                      [class.border-transparent]="autoReplySettings.sentimentFilter !== 'neutral_only'"
                      [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'neutral_only'">
@@ -1044,17 +1054,17 @@
                   name="sentimentFilter" 
                   value="neutral_only"
                   [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-1 w-5 h-5 text-purple-600"
+                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
                 >
-                <div class="flex-1">
-                  <span class="text-sm font-bold text-rep-black block mb-1">
-                    <i class="fas fa-meh text-gray-500 mr-2"></i>Neutral Only
+                <div class="flex-1 min-w-0">
+                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
+                    <i class="fas fa-meh text-gray-500 mr-1 sm:mr-2"></i>Neutral Only
                   </span>
                   <span class="text-xs text-gray-700">Only auto-reply to neutral comments and questions</span>
                 </div>
               </label>
             </div>
-            <div class="mt-4 p-3 bg-purple-100 border border-purple-300 rounded-lg">
+            <div class="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-purple-100 border border-purple-300 rounded-lg">
               <p class="text-xs text-purple-900 flex items-start">
                 <i class="fas fa-info-circle mr-2 mt-0.5"></i>
                 <span>

@@ -36,6 +36,7 @@ import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
+import { PublishComponent } from './features/publish/publish.component';
 
 /**
  * App Module - Following SOLID principles
@@ -63,7 +64,8 @@ import { DataDeletionStatusComponent } from './features/data-deletion-status/dat
     PrivacyPolicyComponent,
     TermsConditionsComponent,
     ContactComponent,
-    DataDeletionStatusComponent
+    DataDeletionStatusComponent,
+    PublishComponent
   ],
   imports: [
     BrowserModule,

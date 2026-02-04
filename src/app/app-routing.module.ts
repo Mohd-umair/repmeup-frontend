@@ -17,6 +17,7 @@ import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
 import { AnalyticsComponent } from './features/analytics/analytics.component';
+import { PublishComponent } from './features/publish/publish.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
@@ -61,6 +62,7 @@ const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'inbox', component: InboxContainerComponent },
+      { path: 'publish', component: PublishComponent },
       { path: 'analytics', component: AnalyticsComponent },
       { path: 'knowledge-base', component: KnowledgeBaseComponent },
       { path: 'settings', component: SettingsComponent },

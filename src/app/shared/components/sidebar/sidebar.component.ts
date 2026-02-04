@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
 
 /**
@@ -18,10 +18,13 @@ interface MenuItem {
   styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent {
+  @Output() menuItemClicked = new EventEmitter<void>();
+  
   menuItems: MenuItem[] = [
     { label: 'Home', icon: '🏠', route: '/' },
     { label: 'Dashboard', icon: '📊', route: '/app/dashboard' },
     { label: 'Inbox', icon: '📥', route: '/app/inbox', badge: 0 },
+    { label: 'Publish', icon: '✈️', route: '/app/publish' },
     { label: 'Knowledge Base', icon: '🧠', route: '/app/knowledge-base' },
     { label: 'Analytics', icon: '📈', route: '/app/analytics' },
     { label: 'Agents', icon: '👥', route: '/app/agents' },
@@ -36,5 +39,10 @@ export class SidebarComponent {
 
   navigate(route: string): void {
     this.router.navigate([route]);
+  }
+  
+  onMenuItemClick(): void {
+    // Close sidebar on mobile when menu item is clicked
+    this.menuItemClicked.emit();
   }
 }

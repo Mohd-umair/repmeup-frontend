@@ -1,8 +1,9 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IInteraction } from '../../../core/models/interaction.model';
 import { InboxService } from '../../../core/services/inbox.service';
 import { ThemeService } from '../../../core/services/theme.service';
+import { AvatarService } from '../../../core/services/avatar.service';
 
 /**
  * Inbox Detail Component - Single Responsibility Principle
@@ -13,7 +14,7 @@ import { ThemeService } from '../../../core/services/theme.service';
   templateUrl: './inbox-detail.component.html',
   styleUrls: ['./inbox-detail.component.scss']
 })
-export class InboxDetailComponent implements OnChanges {
+export class InboxDetailComponent implements OnChanges, OnDestroy {
   @Input() interaction: IInteraction | null = null;
   @Output() interactionUpdate = new EventEmitter<void>();
 
@@ -23,6 +24,11 @@ export class InboxDetailComponent implements OnChanges {
   generatingSuggestion = false;
   aiSuggestion: { content: string; confidence: number; usedKnowledgeBase: boolean } | null = null;
   suggestionError: string | null = null;
+  /** Tracks avatar load errors so we can show initial fallback */
+  avatarFallback: Record<string, boolean> = {};
+  /** Resolved avatar blob URL from proxy (Instagram/Facebook) */
+  avatarUrl: string | null = null;
+  private avatarCacheKey: string | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
     // Clear AI suggestion when interaction changes
@@ -35,12 +41,29 @@ export class InboxDetailComponent implements OnChanges {
     if (changes['interaction'] && this.interaction && this.interaction._id) {
       this.markAsRead();
     }
+
+    // Load avatar via proxy for Instagram/Facebook
+    if (changes['interaction'] && this.interaction?.author?.platformId && (this.interaction.platform === 'instagram' || this.interaction.platform === 'facebook')) {
+      this.avatarUrl = null;
+      this.avatarCacheKey = this.avatarService.getCacheKey(this.interaction.platform, this.interaction.author.platformId);
+      this.avatarService.getAvatarUrl(this.interaction.platform, this.interaction.author.platformId).subscribe(url => {
+        this.avatarUrl = url;
+      });
+    } else {
+      this.avatarUrl = null;
+      this.avatarCacheKey = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.avatarCacheKey) this.avatarService.revoke(this.avatarCacheKey);
   }
 
   constructor(
     private fb: FormBuilder,
     private inboxService: InboxService,
-    public themeService: ThemeService
+    public themeService: ThemeService,
+    private avatarService: AvatarService
   ) {
     this.replyForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(1)]]
@@ -50,6 +73,10 @@ export class InboxDetailComponent implements OnChanges {
   /**
    * Get platform-specific colors for the interaction
    */
+  onAvatarError(key: string): void {
+    this.avatarFallback = { ...this.avatarFallback, [key]: true };
+  }
+
   getPlatformColors(): any {
     if (!this.interaction) return null;
     const theme = this.themeService.getTheme(this.interaction.platform);

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { IUser } from '../../../core/models/user.model';
 
@@ -12,6 +12,8 @@ import { IUser } from '../../../core/models/user.model';
   styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit {
+  @Output() menuToggle = new EventEmitter<void>();
+  
   currentUser: IUser | null = null;
   showUserMenu = false;
   notifications = 3; // Mock notification count
@@ -22,6 +24,11 @@ export class HeaderComponent implements OnInit {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
     });
+  }
+
+  onMenuToggle(): void {
+    console.log('🍔 Hamburger clicked!'); // Debug log
+    this.menuToggle.emit();
   }
 
   toggleUserMenu(): void {

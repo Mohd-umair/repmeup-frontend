@@ -71,11 +71,17 @@
          [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '30' : '#E5E7EB'">
       <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
         <div class="flex items-center space-x-4 min-w-0 flex-shrink">
-          <!-- Avatar - Platform Colored -->
+          <!-- Avatar - DP or initial (proxy for Instagram/Facebook) -->
           <div class="relative flex-shrink-0">
-            <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg transition-all duration-500"
+            <img *ngIf="(avatarUrl || (interaction.author.avatarUrl && !avatarFallback[interaction.platformId]))"
+                 [src]="avatarUrl || interaction.author.avatarUrl"
+                 (error)="onAvatarError(interaction.platformId)"
+                 alt=""
+                 class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-lg border-2 border-white">
+            <div *ngIf="!(avatarUrl || interaction.author.avatarUrl) || avatarFallback[interaction.platformId]"
+                 class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg transition-all duration-500"
                  [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : '#000000'">
-              {{ interaction.author.name.charAt(0).toUpperCase() }}
+              {{ interaction.author.name?.charAt(0)?.toUpperCase() || '?' }}
             </div>
             <div class="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-white rounded-lg flex items-center justify-center shadow-md border-2 transition-all duration-500"
                  [style.borderColor]="getPlatformColors() ? getPlatformColors().primary : '#D0FF00'">
@@ -163,8 +169,14 @@
           <div class="max-w-[85%]">
             <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
               <div class="flex items-center space-x-2 mb-2">
-                <div class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm">
-                  {{ interaction.author.name.charAt(0).toUpperCase() }}
+                <img *ngIf="(avatarUrl || (interaction.author.avatarUrl && !avatarFallback[interaction.platformId + '_msg']))"
+                     [src]="avatarUrl || interaction.author.avatarUrl"
+                     (error)="onAvatarError(interaction.platformId + '_msg')"
+                     alt=""
+                     class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
+                <div *ngIf="!(avatarUrl || interaction.author.avatarUrl) || avatarFallback[interaction.platformId + '_msg']"
+                     class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm flex-shrink-0">
+                  {{ interaction.author.name?.charAt(0)?.toUpperCase() || '?' }}
                 </div>
                 <div>
                   <p class="font-bold text-xs sm:text-sm text-rep-black">{{ interaction.author.name }}</p>
