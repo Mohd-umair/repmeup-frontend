@@ -1,5 +1,5 @@
 <div class="h-full overflow-y-auto bg-rep-black p-3 sm:p-4 md:p-6">
-  <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
+  <div class="w-full space-y-4 sm:space-y-6 md:space-y-8">
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div class="flex-1 min-w-0">
@@ -37,15 +37,15 @@
     </div>
 
     <!-- Tabs -->
-    <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800">
-      <nav class="flex gap-1 sm:gap-2 min-w-max sm:min-w-0 overflow-x-auto overflow-y-visible">
+    <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800 relative z-50">
+      <nav class="flex gap-1 sm:gap-2 min-w-max sm:min-w-0 overflow-x-auto overflow-y-visible touch-pan-x">
         <button
           type="button"
-          (click)="setActiveTab('platforms'); $event.stopPropagation()"
+          (click)="setActiveTab('platforms')"
           [class]="activeTab === 'platforms' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-plug mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="hidden xs:inline pointer-events-none">Platforms</span>
@@ -53,22 +53,22 @@
         </button>
         <button
           type="button"
-          (click)="setActiveTab('profile'); $event.stopPropagation()"
+          (click)="setActiveTab('profile')"
           [class]="activeTab === 'profile' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-user mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="pointer-events-none">Profile</span>
         </button>
         <button
           type="button"
-          (click)="setActiveTab('organization'); $event.stopPropagation()"
+          (click)="setActiveTab('organization')"
           [class]="activeTab === 'organization' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-building mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="hidden xs:inline pointer-events-none">Organization</span>
@@ -76,11 +76,11 @@
         </button>
         <button
           type="button"
-          (click)="setActiveTab('notifications'); $event.stopPropagation()"
+          (click)="setActiveTab('notifications')"
           [class]="activeTab === 'notifications' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-bell mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="hidden xs:inline pointer-events-none">Notifications</span>
@@ -88,11 +88,11 @@
         </button>
         <button
           type="button"
-          (click)="setActiveTab('auto-reply'); $event.stopPropagation()"
+          (click)="setActiveTab('auto-reply')"
           [class]="activeTab === 'auto-reply' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-robot mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="hidden sm:inline pointer-events-none">Auto-Reply</span>

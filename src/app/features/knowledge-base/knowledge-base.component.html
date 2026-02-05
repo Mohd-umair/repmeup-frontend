@@ -1,5 +1,5 @@
 <div class="h-full overflow-y-auto bg-rep-black p-3 sm:p-4 md:p-6">
-  <div class="max-w-7xl mx-auto space-y-4 sm:space-y-5 md:space-y-6">
+  <div class="w-full space-y-4 sm:space-y-5 md:space-y-6">
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
       <div class="min-w-0 flex-1">
@@ -17,48 +17,48 @@
     </div>
 
     <!-- Tab Navigation -->
-    <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800">
-      <nav class="flex gap-1.5 sm:gap-2 min-w-max sm:min-w-0 overflow-x-auto overflow-y-visible">
+    <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800 relative z-50">
+      <nav class="flex gap-1.5 sm:gap-2 min-w-max sm:min-w-0 overflow-x-auto overflow-y-visible touch-pan-x">
         <button
           type="button"
-          (click)="activeTab = 'list'; $event.stopPropagation()"
+          (click)="activeTab = 'list'"
           [class]="activeTab === 'list' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 inline-flex items-center justify-center py-3 sm:py-3 px-4 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 inline-flex items-center justify-center py-3 sm:py-3 px-4 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-list mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="pointer-events-none"><span class="hidden xs:inline">All </span>Entries</span>
         </button>
         <button
           type="button"
-          (click)="activeTab = 'manual'; $event.stopPropagation()"
+          (click)="activeTab = 'manual'"
           [class]="activeTab === 'manual' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 inline-flex items-center justify-center py-3 sm:py-3 px-4 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 inline-flex items-center justify-center py-3 sm:py-3 px-4 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-keyboard mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="pointer-events-none">Manual</span>
         </button>
         <button
           type="button"
-          (click)="activeTab = 'pdf'; $event.stopPropagation()"
+          (click)="activeTab = 'pdf'"
           [class]="activeTab === 'pdf' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 inline-flex items-center justify-center py-3 sm:py-3 px-4 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 inline-flex items-center justify-center py-3 sm:py-3 px-4 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-file-pdf mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="pointer-events-none">PDF</span>
         </button>
         <button
           type="button"
-          (click)="activeTab = 'url'; $event.stopPropagation()"
+          (click)="activeTab = 'url'"
           [class]="activeTab === 'url' 
             ? 'bg-rep-lime text-rep-black shadow-lg' 
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 inline-flex items-center justify-center py-3 sm:py-3 px-4 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10"
+          class="flex-1 inline-flex items-center justify-center py-3 sm:py-3 px-4 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
         >
           <i class="fas fa-globe mr-1 sm:mr-2 pointer-events-none"></i>
           <span class="pointer-events-none">URL</span>

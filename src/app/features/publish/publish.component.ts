@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { NotificationService } from '../../core/services/notification.service';
 
 interface Platform {
   id: string;
@@ -28,6 +30,8 @@ interface ScheduledPost {
   scheduledFor?: Date;
   status: 'draft' | 'scheduled' | 'published' | 'failed';
   publishedAt?: Date;
+  platformPostId?: string;
+  platformPostUrl?: string;
   firstComment?: string;
   location?: string;
 }
@@ -47,9 +51,6 @@ interface Draft {
   styleUrls: ['./publish.component.scss']
 })
 export class PublishComponent implements OnInit {
-  // View state
-  activeView: 'composer' | 'calendar' | 'history' = 'composer';
-  
   // Platforms
   platforms: Platform[] = [];
   selectedPlatforms: Platform[] = [];
@@ -93,23 +94,28 @@ export class PublishComponent implements OnInit {
   
   // Data
   scheduledPosts: ScheduledPost[] = [];
-  publishedPosts: ScheduledPost[] = [];
   drafts: Draft[] = [];
   loadingPosts: boolean = false;
-  
-  // Calendar
-  calendarDates: Date[] = [];
-  selectedCalendarDate: Date | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.loadConnectedPlatforms();
     this.loadScheduledPosts();
-    this.loadPublishedPosts();
     this.loadDrafts();
     this.setDefaultScheduleTime();
-    this.generateCalendarDates();
+  }
+  
+  navigateToCalendar(): void {
+    this.router.navigate(['/app/publish/calendar']);
+  }
+  
+  navigateToPublished(): void {
+    this.router.navigate(['/app/publish/published']);
   }
 
   /**
@@ -298,8 +304,7 @@ export class PublishComponent implements OnInit {
     this.drafts.unshift(draft);
     localStorage.setItem('publishDrafts', JSON.stringify(this.drafts));
     
-    this.success = 'Draft saved successfully';
-    setTimeout(() => this.success = null, 3000);
+    this.notificationService.success('Draft Saved', 'Your draft has been saved locally');
   }
 
   /**
@@ -316,8 +321,7 @@ export class PublishComponent implements OnInit {
     });
     this.selectedPlatforms = this.platforms.filter(p => p.selected);
     
-    this.success = 'Draft loaded';
-    setTimeout(() => this.success = null, 2000);
+    this.notificationService.info('Draft Loaded', 'Your draft has been restored');
   }
 
   /**
@@ -343,12 +347,12 @@ export class PublishComponent implements OnInit {
    */
   async publishPost(asDraft: boolean = false): Promise<void> {
     if (this.selectedPlatforms.length === 0) {
-      this.error = 'Please select at least one platform';
+      this.notificationService.error('Validation Error', 'Please select at least one platform');
       return;
     }
     
     if (!this.postContent.trim() && this.mediaFiles.length === 0) {
-      this.error = 'Please add some content or media';
+      this.notificationService.error('Validation Error', 'Please add some content or media');
       return;
     }
     
@@ -390,27 +394,40 @@ export class PublishComponent implements OnInit {
         await this.http.post<any>(`${environment.apiUrl}${endpoint}`, formData).toPromise();
       }
       
-      this.success = asDraft 
-        ? 'Draft saved successfully!' 
-        : (this.scheduleEnabled 
-          ? `Post scheduled for ${this.selectedPlatforms.length} platform(s)!` 
-          : `Post published to ${this.selectedPlatforms.length} platform(s)!`);
+      // Show success notification
+      if (asDraft) {
+        this.notificationService.success('Draft Saved', 'Your draft has been saved successfully!');
+      } else if (this.scheduleEnabled) {
+        this.notificationService.success(
+          'Post Scheduled',
+          `Your post has been scheduled for ${this.selectedPlatforms.length} platform(s)!`
+        );
+      } else {
+        this.notificationService.success(
+          'Post Published',
+          `Your post has been published to ${this.selectedPlatforms.length} platform(s)!`
+        );
+      }
       
       // Reset form
       this.resetForm();
       
       // Reload data
       this.loadScheduledPosts();
-      this.loadPublishedPosts();
       
       this.publishing = false;
-      
-      setTimeout(() => {
-        this.success = null;
-      }, 5000);
     } catch (error: any) {
-      console.error('Error publishing post:', error);
-      this.error = error.error?.message || 'Failed to publish post';
+      // Check for detailed platform error
+      if (error.error?.platformError) {
+        const platformError = error.error.platformError;
+        this.notificationService.error(
+          platformError.title || 'Platform Error',
+          platformError.message || error.error?.message || 'Failed to publish post'
+        );
+      } else {
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to publish post';
+        this.notificationService.error('Publish Failed', errorMessage);
+      }
       this.publishing = false;
     }
   }
@@ -447,20 +464,6 @@ export class PublishComponent implements OnInit {
   }
 
   /**
-   * Load published posts
-   */
-  loadPublishedPosts(): void {
-    this.http.get<any>(`${environment.apiUrl}/posts/published`).subscribe({
-      next: (response) => {
-        this.publishedPosts = response.posts || [];
-      },
-      error: (error) => {
-        console.error('Error loading published posts:', error);
-      }
-    });
-  }
-
-  /**
    * Delete scheduled post
    */
   deleteScheduledPost(postId: string): void {
@@ -471,36 +474,13 @@ export class PublishComponent implements OnInit {
     this.http.delete(`${environment.apiUrl}/posts/scheduled/${postId}`).subscribe({
       next: () => {
         this.scheduledPosts = this.scheduledPosts.filter(p => p._id !== postId);
-        this.success = 'Scheduled post deleted';
-        setTimeout(() => this.success = null, 3000);
+        this.notificationService.success('Post Deleted', 'Scheduled post has been deleted');
       },
       error: (error) => {
         console.error('Error deleting post:', error);
-        this.error = 'Failed to delete post';
+        const errorMessage = error.error?.message || 'Failed to delete post';
+        this.notificationService.error('Delete Failed', errorMessage);
       }
-    });
-  }
-
-  /**
-   * Generate calendar dates (next 30 days)
-   */
-  generateCalendarDates(): void {
-    const today = new Date();
-    for (let i = 0; i < 30; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() + i);
-      this.calendarDates.push(date);
-    }
-  }
-
-  /**
-   * Get posts for specific date
-   */
-  getPostsForDate(date: Date): ScheduledPost[] {
-    return this.scheduledPosts.filter(post => {
-      if (!post.scheduledFor) return false;
-      const postDate = new Date(post.scheduledFor);
-      return postDate.toDateString() === date.toDateString();
     });
   }
 
@@ -575,16 +555,5 @@ export class PublishComponent implements OnInit {
 
   formatDate(date: Date | string): string {
     return new Date(date).toLocaleString();
-  }
-
-  isToday(date: Date): boolean {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  }
-
-  getDateString(date: Date): string {
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
   }
 }

@@ -17,12 +17,12 @@
   ></app-sidebar>
 
   <!-- Main Content Area -->
-  <div class="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
+  <div class="flex-1 flex flex-col overflow-hidden min-w-0 w-full">
     <!-- Header -->
     <app-header (menuToggle)="toggleSidebar()"></app-header>
 
     <!-- Content -->
-    <main class="flex-1 overflow-y-auto overflow-x-hidden">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden w-full">
       <router-outlet></router-outlet>
     </main>
   </div>

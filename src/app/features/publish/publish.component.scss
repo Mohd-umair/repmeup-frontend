@@ -1,3 +1,21 @@
+/* Compose / caption textarea and inputs - ensure text is visible */
+.compose-textarea,
+input.bg-gray-800 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff;
+  &::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+  }
+  &::-webkit-input-placeholder {
+    color: #9ca3af;
+  }
+  &::-moz-placeholder {
+    color: #9ca3af;
+    opacity: 1;
+  }
+}
+
 // Line clamp utilities
 .line-clamp-2 {
   display: -webkit-box;
@@ -54,6 +72,38 @@
 
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+// Scale up animation for modal
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Slide in from right animation for toasts
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // Pulse animation for buttons

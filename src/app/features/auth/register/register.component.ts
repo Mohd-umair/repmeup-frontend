@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Register Component - Single Responsibility Principle
@@ -21,7 +23,8 @@ export class RegisterComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -118,5 +121,31 @@ export class RegisterComponent implements OnInit {
     }
     
     return '';
+  }
+
+  /**
+   * Sign up with Google OAuth
+   */
+  async signupWithGoogle(): Promise<void> {
+    try {
+      this.loading = true;
+      this.error = '';
+
+      const response = await this.http.get<{ success: boolean; authUrl: string }>(
+        `${environment.apiUrl}/auth/google`
+      ).toPromise();
+
+      if (response && response.success && response.authUrl) {
+        // Redirect to Google OAuth
+        window.location.href = response.authUrl;
+      } else {
+        this.error = 'Failed to initiate Google signup';
+        this.loading = false;
+      }
+    } catch (error: any) {
+      console.error('Google signup error:', error);
+      this.error = error?.error?.message || 'Failed to connect to Google';
+      this.loading = false;
+    }
   }
 }
