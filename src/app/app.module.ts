@@ -36,10 +36,12 @@ import { HomeComponent } from './features/home/home.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
+import { AboutComponent } from './features/about/about.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 import { PublishComponent } from './features/publish/publish.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
 import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
+import { PageManagerComponent } from './features/settings/components/page-manager/page-manager.component';
 
 /**
  * App Module - Following SOLID principles
@@ -68,10 +70,12 @@ import { PublishedPostsComponent } from './features/published-posts/published-po
     PrivacyPolicyComponent,
     TermsConditionsComponent,
     ContactComponent,
+    AboutComponent,
     DataDeletionStatusComponent,
     PublishComponent,
     CalendarComponent,
-    PublishedPostsComponent
+    PublishedPostsComponent,
+    PageManagerComponent
   ],
   imports: [
     BrowserModule,

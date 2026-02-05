@@ -24,6 +24,7 @@ import { PublishedPostsComponent } from './features/published-posts/published-po
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
+import { AboutComponent } from './features/about/about.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 
 /**
@@ -42,6 +43,9 @@ const routes: Routes = [
   
   // Contact page (public)
   { path: 'contact', component: ContactComponent },
+
+  // About page (public)
+  { path: 'about', component: AboutComponent },
   
   // Data deletion status page (public)
   { path: 'data-deletion-status', component: DataDeletionStatusComponent },
