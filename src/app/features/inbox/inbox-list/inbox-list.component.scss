@@ -1,13 +1,174 @@
-// Inbox List Styles
+// Inbox List Component Styles
+// Platform-themed interaction cards
 
-// Staggered animation for list items
-@for $i from 1 through 20 {
-  .list-item:nth-child(#{$i}) {
-    animation: slideIn 0.3s ease-out #{$i * 0.05}s both;
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+}
+
+// Custom scrollbar styling for conversation list
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.3);
+    border-radius: 10px;
+    
+    &:hover {
+      background-color: rgba(156, 163, 175, 0.5);
+    }
   }
 }
 
-@keyframes slideIn {
+// Platform-themed interaction card
+.interaction-card {
+  border-left: 4px solid var(--platform-border, #D0FF00);
+  background: white;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 0.75rem;
+  
+  &:hover {
+    border-left-width: 6px;
+    border-color: var(--platform-accent, #D0FF00);
+    box-shadow: 0 4px 16px var(--platform-primary, #D0FF00)15;
+    transform: translateX(4px);
+    background: linear-gradient(
+      to right,
+      var(--platform-primary, #D0FF00)05,
+      white
+    );
+  }
+  
+  &.selected {
+    border-left-width: 6px;
+    border-color: var(--platform-primary, #D0FF00);
+    background: linear-gradient(
+      to right,
+      var(--platform-primary, #D0FF00)10,
+      white
+    );
+    box-shadow: 0 6px 20px var(--platform-primary, #D0FF00)20;
+  }
+  
+  &.unread {
+    font-weight: 600;
+    background: linear-gradient(
+      to right,
+      var(--platform-primary, #D0FF00)08,
+      white
+    );
+  }
+}
+
+// Platform icon with dynamic colors
+.platform-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--platform-primary, #D0FF00)15;
+  border: 2px solid var(--platform-primary, #D0FF00)30;
+  color: var(--platform-primary, #D0FF00);
+  font-size: 1.25rem;
+  transition: all 0.3s ease;
+  
+  .interaction-card:hover & {
+    background: var(--platform-primary, #D0FF00)25;
+    border-color: var(--platform-primary, #D0FF00)50;
+    transform: scale(1.1);
+  }
+}
+
+// Sentiment badges
+.sentiment-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid;
+  
+  &.positive {
+    background: var(--platform-primary, #10B981)20;
+    color: var(--platform-primary, #10B981);
+    border-color: var(--platform-primary, #10B981)40;
+  }
+  
+  &.negative {
+    background: #EF444420;
+    color: #EF4444;
+    border-color: #EF444440;
+  }
+  
+  &.neutral {
+    background: #6B728020;
+    color: #6B7280;
+    border-color: #6B728040;
+  }
+}
+
+// Auto-reply indicator
+.auto-reply-badge {
+  background: linear-gradient(
+    135deg,
+    var(--platform-gradient-from, #D0FF00),
+    var(--platform-gradient-to, #B8E600)
+  );
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+// Escalation badge
+.escalation-badge {
+  background: #EF4444;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+// Smooth list animations
+.interaction-list {
+  .interaction-card {
+    animation: fadeInSlide 0.3s ease-out;
+    animation-fill-mode: both;
+  }
+  
+  .interaction-card:nth-child(1) { animation-delay: 0.05s; }
+  .interaction-card:nth-child(2) { animation-delay: 0.1s; }
+  .interaction-card:nth-child(3) { animation-delay: 0.15s; }
+  .interaction-card:nth-child(4) { animation-delay: 0.2s; }
+}
+
+@keyframes fadeInSlide {
   from {
     opacity: 0;
     transform: translateX(-20px);
@@ -17,31 +178,3 @@
     transform: translateX(0);
   }
 }
-
-// Hover lift effect
-.conversation-card {
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-  }
-}
-
-// Badge animation
-.status-badge {
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: scale(1.05);
-  }
-}
-
-// Platform badge overlay
-.platform-badge {
-  transition: transform 0.2s ease;
-  
-  &:hover {
-    transform: scale(1.1);
-  }
-}
-

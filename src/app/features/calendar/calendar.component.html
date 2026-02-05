@@ -1,0 +1,223 @@
+<div class="min-h-screen bg-rep-black p-3 sm:p-4 md:p-6 w-full">
+  <div class="w-full">
+    
+    <!-- Page Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-rep-white flex items-center gap-2 sm:gap-3">
+        <i class="fas fa-paper-plane text-rep-lime"></i>
+        Content Publisher
+      </h1>
+      <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Create, schedule, and manage your social media content</p>
+    </div>
+
+    <!-- View Tabs -->
+    <div class="mb-6 flex gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-full sm:w-fit relative z-50">
+      <button
+        routerLink="/app/publish"
+        type="button"
+        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition text-gray-400 cursor-pointer touch-manipulation select-none hover:text-rep-white active:bg-gray-700"
+      >
+        <i class="fas fa-edit mr-2"></i>
+        Composer
+      </button>
+      <button
+        type="button"
+        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition bg-rep-lime text-rep-black cursor-pointer touch-manipulation select-none"
+      >
+        <i class="fas fa-calendar-alt mr-2"></i>
+        Calendar
+      </button>
+      <button
+        routerLink="/app/publish/published"
+        type="button"
+        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition text-gray-400 cursor-pointer touch-manipulation select-none hover:text-rep-white active:bg-gray-700"
+      >
+        <i class="fas fa-history mr-2"></i>
+        Published
+      </button>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 md:p-6 border border-gray-800">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h2 class="text-xl sm:text-2xl font-bold text-rep-white flex items-center gap-2">
+          <i class="fas fa-calendar-week text-rep-lime"></i>
+          90-Day Overview
+        </h2>
+        
+        <!-- Legend -->
+        <div class="flex flex-wrap gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            <span class="text-gray-400">Published</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+            <span class="text-gray-400">Scheduled</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-rep-lime"></div>
+            <span class="text-gray-400">Today</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="flex justify-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+      </div>
+      
+      <div *ngIf="!loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 sm:gap-4">
+        <div
+          *ngFor="let date of calendarDates"
+          (click)="dateHasPosts(date) && openPostsModal(date)"
+          [ngClass]="{
+            'border-rep-lime bg-rep-lime/10': isToday(date),
+            'border-gray-700 bg-gray-800/30': !isToday(date) && !dateHasPosts(date),
+            'border-blue-500/50 bg-blue-500/10': !isToday(date) && dateHasPosts(date) && !isPastDate(date),
+            'border-green-500/50 bg-green-500/10': !isToday(date) && dateHasPosts(date) && isPastDate(date),
+            'cursor-pointer hover:scale-105': dateHasPosts(date),
+            'opacity-60': isPastDate(date) && !dateHasPosts(date)
+          }"
+          class="relative border rounded-xl p-3 transition-all duration-300 group"
+        >
+          <!-- Date Header -->
+          <div class="text-center mb-2">
+            <div class="text-xs text-gray-500 uppercase font-medium">
+              {{ getDayOfWeek(date) }}
+            </div>
+            <div [ngClass]="{
+                   'text-rep-lime font-bold': isToday(date),
+                   'text-gray-600': isPastDate(date) && !isToday(date),
+                   'text-gray-300': !isPastDate(date) && !isToday(date)
+                 }" 
+                 class="text-lg sm:text-xl font-semibold">
+              {{ getDateNumber(date) }}
+            </div>
+            <div class="text-xs text-gray-500">
+              {{ getMonthShort(date) }}
+            </div>
+          </div>
+          
+          <!-- Post Count Badge -->
+          <div *ngIf="dateHasPosts(date)" class="absolute top-2 right-2">
+            <div [ngClass]="{
+                   'bg-green-500': isPastDate(date),
+                   'bg-blue-500': !isPastDate(date)
+                 }" 
+                 class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg">
+              {{ getPostCountForDate(date) }}
+            </div>
+          </div>
+          
+          <!-- Today Indicator -->
+          <div *ngIf="isToday(date)" class="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+            <div class="px-2 py-0.5 bg-rep-lime text-rep-black text-xs font-bold rounded-full">
+              Today
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Posts Modal -->
+    <div *ngIf="showPostsModal" 
+         (click)="closePostsModal()"
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div (click)="$event.stopPropagation()" 
+           class="bg-gray-900 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden animate-scale-up border border-gray-800">
+        
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-rep-lime to-green-400 p-4 sm:p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xl sm:text-2xl font-bold text-rep-black">
+                {{ getFullDateString(selectedCalendarDate!) }}
+              </h3>
+              <p class="text-sm text-rep-black/70 mt-1">
+                {{ selectedDatePosts.length }} {{ selectedDatePosts.length === 1 ? 'post' : 'posts' }}
+              </p>
+            </div>
+            <button 
+              (click)="closePostsModal()"
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-rep-black/10 hover:bg-rep-black/20 transition">
+              <i class="fas fa-times text-rep-black text-xl"></i>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="p-4 sm:p-6 overflow-y-auto max-h-[calc(80vh-120px)] bg-gray-900">
+          <div class="space-y-4">
+            <div
+              *ngFor="let post of selectedDatePosts"
+              [ngClass]="post.status === 'published' ? 'bg-green-500/10 border-green-500/30' : 
+                         post.status === 'scheduled' ? 'bg-blue-500/10 border-blue-500/30' :
+                         post.status === 'failed' ? 'bg-red-500/10 border-red-500/30' : 'bg-gray-800/50 border-gray-700'"
+              class="border rounded-xl p-4 sm:p-5 transition-all duration-300 hover:border-rep-lime/50"
+            >
+              <!-- Post Header -->
+              <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <i *ngFor="let platform of post.platforms" 
+                     [class]="getPlatformIcon(platform) + ' text-xl sm:text-2xl text-gray-400'"></i>
+                  <span class="text-sm font-semibold text-gray-300">
+                    {{ getPlatformName(post.platforms[0]) }}
+                  </span>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                  <span [ngClass]="post.status === 'published' ? 'bg-green-500/20 text-green-400' :
+                                   post.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400' :
+                                   post.status === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400'"
+                        class="px-3 py-1 rounded-full text-xs font-bold uppercase">
+                    {{ post.status }}
+                  </span>
+                  <button
+                    *ngIf="post.status === 'scheduled'"
+                    (click)="deleteScheduledPost(post._id!)"
+                    class="text-red-400 hover:text-red-300 transition text-sm">
+                    <i class="fas fa-trash mr-1"></i>
+                    Delete
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Post Content -->
+              <p class="text-sm sm:text-base text-gray-300 mb-3 whitespace-pre-wrap">{{ post.content }}</p>
+              
+              <!-- Post Metadata -->
+              <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400 border-t border-gray-800 pt-3">
+                <div class="flex items-center gap-1">
+                  <i class="fas fa-clock"></i>
+                  <span *ngIf="post.status === 'published'">
+                    Published: {{ formatDate(post.publishedAt!) }}
+                  </span>
+                  <span *ngIf="post.status === 'scheduled'">
+                    Scheduled: {{ formatDate(post.scheduledFor!) }}
+                  </span>
+                </div>
+                
+                <a *ngIf="post.platformPostUrl" 
+                   [href]="post.platformPostUrl" 
+                   target="_blank"
+                   class="flex items-center gap-1 text-rep-lime hover:text-rep-lime/80 font-medium">
+                  <i class="fas fa-external-link-alt"></i>
+                  View on {{ getPlatformName(post.platforms[0]) }}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="bg-gray-800 p-4 flex justify-end border-t border-gray-700">
+          <button 
+            (click)="closePostsModal()"
+            class="px-6 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:bg-rep-lime/90 transition">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

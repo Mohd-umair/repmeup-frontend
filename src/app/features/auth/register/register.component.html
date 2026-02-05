@@ -224,7 +224,7 @@
           <!-- Submit Button -->
           <button
             type="submit"
-            [disabled]="loading || registerForm.invalid"
+            [disabled]="loading"
             class="w-full bg-rep-lime text-rep-black py-4 px-6 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-rep-lime/50 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             <span *ngIf="!loading" class="flex items-center justify-center">
@@ -247,9 +247,18 @@
 
         <!-- Social Login -->
         <div class="space-y-3">
-          <button class="w-full flex items-center justify-center px-4 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-rep-lime/30 transition font-medium text-gray-700">
+          <button
+            type="button"
+            (click)="signupWithGoogle()"
+            [disabled]="loading"
+            class="w-full flex items-center justify-center px-4 py-3 border-2 border-gray-200 rounded-xl hover:bg-gray-50 hover:border-rep-lime/30 transition font-medium text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <i class="fab fa-google text-red-500 mr-3"></i>
-            Sign up with Google
+            <span *ngIf="!loading">Sign up with Google</span>
+            <span *ngIf="loading" class="flex items-center">
+              <i class="fas fa-spinner fa-spin mr-2"></i>
+              Connecting...
+            </span>
           </button>
         </div>
 

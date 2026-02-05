@@ -1,78 +1,142 @@
-<div class="bg-rep-white rounded-2xl shadow-xl p-4 border border-gray-800">
+<div class="bg-gradient-to-r from-white to-gray-50 rounded-2xl shadow-lg p-5 border-2 border-gray-200 backdrop-blur-sm">
+  <!-- Header -->
   <div class="flex items-center justify-between mb-4">
-    <h3 class="text-sm font-bold text-rep-black uppercase tracking-wide flex items-center">
-      <i class="fas fa-filter mr-2"></i>
-      Quick Filters
-    </h3>
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-md transition-all duration-300"
+           [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
+           [style.boxShadow]="'0 4px 12px var(--platform-primary, rgba(75, 85, 99, 0.3))'">
+        <i class="fas fa-sliders-h text-sm text-white"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold transition-colors duration-300"
+            [style.color]="'var(--platform-primary, #1F2937)'">Quick Filters</h3>
+        <p class="text-[10px] text-gray-500">Refine your inbox view</p>
+      </div>
+    </div>
     <button 
+      *ngIf="hasActiveFilters()"
       (click)="clearFilters()"
-      class="text-xs text-rep-black hover:text-rep-lime font-bold transition flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg"
+      class="group flex items-center space-x-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all duration-300 border border-red-200 hover:border-red-300 hover:shadow-md"
+      title="Clear all filters"
     >
-      <i class="fas fa-times-circle mr-1"></i>
-      Clear All
+      <i class="fas fa-times-circle text-xs group-hover:rotate-90 transition-transform duration-300"></i>
+      <span class="text-xs font-bold">Clear</span>
     </button>
   </div>
 
-  <div class="flex flex-wrap items-center gap-3">
+  <!-- Filters Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    
     <!-- Type Filters -->
-    <div class="flex items-center space-x-2">
-      <span class="text-xs font-bold text-gray-600 uppercase">Type:</span>
-      <div class="flex items-center space-x-2">
+    <div class="space-y-2">
+      <div class="flex items-center space-x-2 mb-2">
+        <div class="w-1 h-4 rounded-full bg-gradient-to-b from-blue-500 to-blue-600"></div>
+        <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">Type</span>
+        <span *ngIf="filters.type" class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+      </div>
+      <div class="flex flex-wrap gap-2">
         <button
           *ngFor="let type of types"
           (click)="toggleFilter('type', type.value)"
-          [class]="isFilterActive('type', type.value) 
-            ? 'bg-rep-lime/20 border-rep-lime text-rep-black shadow-md' 
-            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
-          class="flex items-center space-x-2 px-3 py-2 border-2 rounded-lg transition-all font-medium text-sm"
+          class="group relative px-3 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1.5 overflow-hidden"
+          [class.ring-2]="isFilterActive('type', type.value)"
+          [class.ring-blue-400]="isFilterActive('type', type.value)"
+          [class.ring-offset-1]="isFilterActive('type', type.value)"
+          [style.background]="isFilterActive('type', type.value) 
+            ? 'linear-gradient(135deg, #3B82F6, #2563EB)' 
+            : 'white'"
+          [style.color]="isFilterActive('type', type.value) ? 'white' : '#4B5563'"
+          [style.boxShadow]="isFilterActive('type', type.value) 
+            ? '0 4px 12px rgba(59, 130, 246, 0.4)' 
+            : '0 1px 3px rgba(0,0,0,0.1)'"
         >
-          <span class="text-base">{{ type.icon }}</span>
-          <span>{{ type.label }}</span>
-          <i *ngIf="isFilterActive('type', type.value)" class="fas fa-check-circle text-xs"></i>
+          <span class="text-sm">{{ type.icon }}</span>
+          <span class="relative z-10">{{ type.label }}</span>
+          <i *ngIf="isFilterActive('type', type.value)" class="fas fa-check text-[8px] animate-bounce-in"></i>
+          
+          <!-- Hover gradient -->
+          <div 
+            class="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            [class.hidden]="isFilterActive('type', type.value)"
+          ></div>
         </button>
       </div>
     </div>
 
-    <div class="w-px h-8 bg-gray-200"></div>
-
     <!-- Sentiment Filters -->
-    <div class="flex items-center space-x-2">
-      <span class="text-xs font-bold text-gray-600 uppercase">Sentiment:</span>
-      <div class="flex items-center space-x-2">
+    <div class="space-y-2">
+      <div class="flex items-center space-x-2 mb-2">
+        <div class="w-1 h-4 rounded-full bg-gradient-to-b from-purple-500 to-pink-600"></div>
+        <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">Sentiment</span>
+        <span *ngIf="filters.sentiment" class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+      </div>
+      <div class="flex flex-wrap gap-2">
         <button
           *ngFor="let sentiment of sentiments"
           (click)="toggleFilter('sentiment', sentiment.value)"
-          [class]="isFilterActive('sentiment', sentiment.value) 
-            ? getSentimentActiveClass(sentiment.value)
-            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
-          class="flex items-center space-x-2 px-3 py-2 border-2 rounded-lg transition-all font-medium text-sm"
+          class="group relative px-3 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1.5 overflow-hidden"
+          [class.ring-2]="isFilterActive('sentiment', sentiment.value)"
+          [class.ring-offset-1]="isFilterActive('sentiment', sentiment.value)"
+          [ngClass]="{
+            'ring-green-400': isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive',
+            'ring-gray-400': isFilterActive('sentiment', sentiment.value) && sentiment.value === 'neutral',
+            'ring-red-400': isFilterActive('sentiment', sentiment.value) && sentiment.value === 'negative'
+          }"
+          [style.background]="getSentimentBackground(sentiment.value, isFilterActive('sentiment', sentiment.value))"
+          [style.color]="isFilterActive('sentiment', sentiment.value) ? 'white' : '#4B5563'"
+          [style.boxShadow]="getSentimentShadow(sentiment.value, isFilterActive('sentiment', sentiment.value))"
         >
-          <span class="text-base">{{ sentiment.icon }}</span>
-          <span>{{ sentiment.label }}</span>
-          <i *ngIf="isFilterActive('sentiment', sentiment.value)" class="fas fa-check-circle text-xs"></i>
+          <span class="text-sm">{{ sentiment.icon }}</span>
+          <span class="relative z-10">{{ sentiment.label }}</span>
+          <i *ngIf="isFilterActive('sentiment', sentiment.value)" class="fas fa-check text-[8px] animate-bounce-in"></i>
+          
+          <!-- Hover gradient -->
+          <div 
+            class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            [class.hidden]="isFilterActive('sentiment', sentiment.value)"
+            [style.background]="getSentimentHoverBackground(sentiment.value)"
+          ></div>
         </button>
       </div>
     </div>
 
-    <div class="w-px h-8 bg-gray-200"></div>
-
     <!-- Status Filters -->
-    <div class="flex items-center space-x-2">
-      <span class="text-xs font-bold text-gray-600 uppercase">Status:</span>
-      <div class="flex items-center space-x-2">
+    <div class="space-y-2">
+      <div class="flex items-center space-x-2 mb-2">
+        <div class="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-500 to-teal-600"></div>
+        <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">Status</span>
+        <span *ngIf="filters.status" class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+      </div>
+      <div class="flex flex-wrap gap-2">
         <button
           *ngFor="let status of statuses"
           (click)="toggleFilter('status', status.value)"
-          [class]="isFilterActive('status', status.value) 
-            ? getStatusActiveClass(status.value)
-            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'"
-          class="flex items-center space-x-2 px-3 py-2 border-2 rounded-lg transition-all font-medium text-sm"
+          class="group relative px-3 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1.5 overflow-hidden"
+          [class.ring-2]="isFilterActive('status', status.value)"
+          [class.ring-offset-1]="isFilterActive('status', status.value)"
+          [ngClass]="{
+            'ring-yellow-400': isFilterActive('status', status.value) && status.value === 'unread',
+            'ring-blue-400': isFilterActive('status', status.value) && status.value === 'read',
+            'ring-green-400': isFilterActive('status', status.value) && (status.value === 'replied' || status.value === 'resolved'),
+            'ring-purple-400': isFilterActive('status', status.value) && status.value === 'assigned'
+          }"
+          [style.background]="getStatusBackground(status.value, isFilterActive('status', status.value))"
+          [style.color]="isFilterActive('status', status.value) ? 'white' : '#4B5563'"
+          [style.boxShadow]="getStatusShadow(status.value, isFilterActive('status', status.value))"
         >
-          <span class="text-base">{{ status.icon }}</span>
-          <span>{{ status.label }}</span>
-          <i *ngIf="isFilterActive('status', status.value)" class="fas fa-check-circle text-xs"></i>
+          <span class="text-sm">{{ status.icon }}</span>
+          <span class="relative z-10">{{ status.label }}</span>
+          <i *ngIf="isFilterActive('status', status.value)" class="fas fa-check text-[8px] animate-bounce-in"></i>
+          
+          <!-- Hover gradient -->
+          <div 
+            class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            [class.hidden]="isFilterActive('status', status.value)"
+            [style.background]="getStatusHoverBackground(status.value)"
+          ></div>
         </button>
       </div>
     </div>
+
   </div>
 </div>

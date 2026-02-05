@@ -8,6 +8,12 @@ export const environment = {
   socketUrl: 'http://localhost:3000'
 };
 
+// export const environment = {
+//   production: false,
+//   apiUrl: 'https://repmeup.in/api',
+//   socketUrl: 'https://repmeup.in/api/socket'
+// };
+
 /*
  * For easier debugging in development mode, you can import the following file
  * to ignore zone related error stack frames such as `zone.run`, `zoneDelegate.invokeTask`.

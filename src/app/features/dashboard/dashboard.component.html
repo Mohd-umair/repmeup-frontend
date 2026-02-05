@@ -1,74 +1,74 @@
-<div class="space-y-6 bg-rep-black min-h-screen p-6">
+<div class="space-y-4 sm:space-y-5 md:space-y-6 bg-rep-black h-full overflow-y-auto p-3 sm:p-4 md:p-6 w-full">
   <!-- Page Header -->
   <div>
-    <h1 class="text-3xl font-bold text-rep-white">Dashboard</h1>
-    <p class="text-gray-300 mt-1">Welcome back! Here's your reputation overview.</p>
+    <h1 class="text-2xl sm:text-3xl font-bold text-rep-white">Dashboard</h1>
+    <p class="text-sm sm:text-base text-gray-300 mt-1">Welcome back! Here's your reputation overview.</p>
   </div>
 
   <!-- Stats Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
     <!-- Total Interactions -->
-    <div class="bg-rep-white rounded-lg shadow-sm p-6 border border-gray-200">
+    <div class="bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
       <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Total Interactions</p>
-          <p class="text-3xl font-bold text-rep-black mt-2">{{ stats?.total || 0 }}</p>
-          <p class="text-sm text-rep-lime mt-2">↑ 12% from last month</p>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs sm:text-sm font-medium text-gray-600">Total Interactions</p>
+          <p class="text-2xl sm:text-3xl font-bold text-rep-black mt-1 sm:mt-2">{{ stats?.total || 0 }}</p>
+          <p class="text-xs sm:text-sm text-rep-lime mt-1 sm:mt-2">↑ 12% from last month</p>
         </div>
-        <div class="w-12 h-12 bg-rep-lime/20 rounded-lg flex items-center justify-center border border-rep-lime/30">
-          <span class="text-2xl">📊</span>
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rep-lime/20 rounded-lg flex items-center justify-center border border-rep-lime/30 flex-shrink-0">
+          <span class="text-xl sm:text-2xl">📊</span>
         </div>
       </div>
     </div>
 
     <!-- Unread -->
-    <div class="bg-rep-white rounded-lg shadow-sm p-6 border border-gray-200">
+    <div class="bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
       <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Unread</p>
-          <p class="text-3xl font-bold text-rep-black mt-2">{{ stats?.unread || 0 }}</p>
-          <p class="text-sm text-gray-600 mt-2">Needs attention</p>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs sm:text-sm font-medium text-gray-600">Unread</p>
+          <p class="text-2xl sm:text-3xl font-bold text-rep-black mt-1 sm:mt-2">{{ stats?.unread || 0 }}</p>
+          <p class="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Needs attention</p>
         </div>
-        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
-          <span class="text-2xl">📥</span>
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300 flex-shrink-0">
+          <span class="text-xl sm:text-2xl">📥</span>
         </div>
       </div>
     </div>
 
     <!-- Positive Sentiment -->
-    <div class="bg-rep-white rounded-lg shadow-sm p-6 border border-gray-200">
+    <div class="bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
       <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Positive</p>
-          <p class="text-3xl font-bold text-rep-black mt-2">{{ stats?.positive || 0 }}</p>
-          <p class="text-sm text-rep-lime mt-2">{{ getPercentage(stats?.positive || 0, stats?.total || 1) }}% of total</p>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs sm:text-sm font-medium text-gray-600">Positive</p>
+          <p class="text-2xl sm:text-3xl font-bold text-rep-black mt-1 sm:mt-2">{{ stats?.positive || 0 }}</p>
+          <p class="text-xs sm:text-sm text-rep-lime mt-1 sm:mt-2">{{ getPercentage(stats?.positive || 0, stats?.total || 1) }}% of total</p>
         </div>
-        <div class="w-12 h-12 bg-rep-lime/20 rounded-lg flex items-center justify-center border border-rep-lime/30">
-          <span class="text-2xl">😊</span>
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rep-lime/20 rounded-lg flex items-center justify-center border border-rep-lime/30 flex-shrink-0">
+          <span class="text-xl sm:text-2xl">😊</span>
         </div>
       </div>
     </div>
 
     <!-- Negative Sentiment -->
-    <div class="bg-rep-white rounded-lg shadow-sm p-6 border border-gray-200">
+    <div class="bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
       <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Negative</p>
-          <p class="text-3xl font-bold text-rep-black mt-2">{{ stats?.negative || 0 }}</p>
-          <p class="text-sm text-gray-600 mt-2">{{ getPercentage(stats?.negative || 0, stats?.total || 1) }}% of total</p>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs sm:text-sm font-medium text-gray-600">Negative</p>
+          <p class="text-2xl sm:text-3xl font-bold text-rep-black mt-1 sm:mt-2">{{ stats?.negative || 0 }}</p>
+          <p class="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">{{ getPercentage(stats?.negative || 0, stats?.total || 1) }}% of total</p>
         </div>
-        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300">
-          <span class="text-2xl">😟</span>
+        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300 flex-shrink-0">
+          <span class="text-xl sm:text-2xl">😟</span>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Two Column Layout -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
     <!-- Platform Distribution -->
-    <div class="lg:col-span-1 bg-rep-white rounded-lg shadow-sm p-6 border border-gray-200">
-      <h2 class="text-lg font-semibold text-rep-black mb-4">Platform Distribution</h2>
+    <div class="lg:col-span-1 bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
+      <h2 class="text-base sm:text-lg font-semibold text-rep-black mb-3 sm:mb-4">Platform Distribution</h2>
       <div class="space-y-4">
         <div *ngFor="let platform of platformData" class="space-y-2">
           <div class="flex items-center justify-between text-sm">
@@ -86,28 +86,28 @@
     </div>
 
     <!-- Recent Activity -->
-    <div class="lg:col-span-2 bg-rep-white rounded-lg shadow-sm p-6 border border-gray-200">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-rep-black">Recent Activity</h2>
-        <a routerLink="/app/inbox" class="text-sm text-rep-lime hover:text-rep-black font-medium">
+    <div class="lg:col-span-2 bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
+      <div class="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 class="text-base sm:text-lg font-semibold text-rep-black">Recent Activity</h2>
+        <a routerLink="/app/inbox" class="text-xs sm:text-sm text-rep-lime hover:text-rep-black font-medium whitespace-nowrap">
           View all →
         </a>
       </div>
       
-      <div class="space-y-4">
-        <div *ngFor="let activity of recentActivity" class="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-200">
+      <div class="space-y-3 sm:space-y-4">
+        <div *ngFor="let activity of recentActivity" class="flex items-start space-x-2 sm:space-x-3 md:space-x-4 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-200">
           <!-- Platform Icon -->
-          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-rep-black flex items-center justify-center">
-            <span class="text-lg text-rep-white">{{ getPlatformIcon(activity.platform) }}</span>
+          <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-rep-black flex items-center justify-center">
+            <span class="text-base sm:text-lg text-rep-white">{{ getPlatformIcon(activity.platform) }}</span>
           </div>
 
           <!-- Content -->
           <div class="flex-1 min-w-0">
-            <div class="flex items-center space-x-2">
-              <span class="text-sm font-semibold text-rep-black">{{ activity.author }}</span>
-              <span class="text-xs text-gray-500">•</span>
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span class="text-xs sm:text-sm font-semibold text-rep-black truncate">{{ activity.author }}</span>
+              <span class="text-xs text-gray-500 hidden sm:inline">•</span>
               <span class="text-xs text-gray-500">{{ activity.platform }}</span>
-              <span class="text-xs text-gray-500">•</span>
+              <span class="text-xs text-gray-500 hidden sm:inline">•</span>
               <span class="text-xs text-gray-500">{{ activity.type }}</span>
               <span 
                 [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + getSentimentClass(activity.sentiment)"
@@ -115,34 +115,34 @@
                 {{ activity.sentiment }}
               </span>
             </div>
-            <p class="text-sm text-gray-600 mt-1">{{ activity.content }}</p>
+            <p class="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{{ activity.content }}</p>
             <p class="text-xs text-gray-400 mt-1">{{ activity.time }}</p>
           </div>
 
           <!-- Action -->
-          <button class="flex-shrink-0 px-3 py-1 text-sm font-medium text-rep-lime hover:text-rep-black border border-rep-lime rounded-lg hover:bg-rep-lime transition">
+          <button class="flex-shrink-0 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-rep-lime hover:text-rep-black border border-rep-lime rounded-lg hover:bg-rep-lime transition whitespace-nowrap">
             Reply
           </button>
         </div>
 
-        <div *ngIf="recentActivity.length === 0" class="text-center py-8">
-          <span class="text-4xl mb-2 block">📭</span>
-          <p class="text-gray-500">No recent activity</p>
+        <div *ngIf="recentActivity.length === 0" class="text-center py-6 sm:py-8">
+          <span class="text-3xl sm:text-4xl mb-2 block">📭</span>
+          <p class="text-sm sm:text-base text-gray-500">No recent activity</p>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Quick Actions -->
-  <div class="bg-rep-black rounded-lg shadow-sm p-6 border-2 border-rep-lime/30">
-    <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-xl font-bold mb-2 text-rep-white">Connect Your Platforms</h2>
-        <p class="text-gray-300">Start managing your reputation across all channels</p>
+  <div class="bg-rep-black rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border-2 border-rep-lime/30">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex-1">
+        <h2 class="text-lg sm:text-xl font-bold mb-1 sm:mb-2 text-rep-white">Connect Your Platforms</h2>
+        <p class="text-sm sm:text-base text-gray-300">Start managing your reputation across all channels</p>
       </div>
       <button 
         routerLink="/app/settings" 
-        class="px-6 py-3 bg-rep-lime text-rep-black font-medium rounded-lg hover:shadow-lg hover:shadow-rep-lime/50 transition"
+        class="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-rep-lime text-rep-black font-medium rounded-lg hover:shadow-lg hover:shadow-rep-lime/50 transition text-sm sm:text-base whitespace-nowrap"
       >
         Connect Now
       </button>

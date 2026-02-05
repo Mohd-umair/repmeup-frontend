@@ -1,0 +1,22 @@
+// Mobile responsive utilities for dashboard
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Smooth transitions
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+// Mobile-first breakpoints
+@media (max-width: 640px) {
+  // Ensure cards don't overflow on small screens
+  .bg-rep-white {
+    overflow: hidden;
+  }
+}

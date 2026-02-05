@@ -1,4 +1,87 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Mobile Responsive - Sidebar Transform Fix */
+@media (max-width: 1023px) {
+  /* Hide sidebar off-screen by default on mobile */
+  app-sidebar.sidebar-closed aside {
+    transform: translateX(-100%) !important;
+  }
+  
+  /* Show sidebar when open */
+  app-sidebar.sidebar-open aside {
+    transform: translateX(0) !important;
+  }
+  
+  /* Default state for mobile sidebar */
+  app-sidebar aside {
+    transform: translateX(-100%);
+  }
+}
+
+/* Desktop - always show sidebar */
+@media (min-width: 1024px) {
+  app-sidebar aside {
+    transform: translateX(0) !important;
+  }
+}
+
+/* Smooth transitions for mobile sidebar */
+app-sidebar aside {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* Prevent body scroll when mobile menu is open */
+body.menu-open {
+  overflow: hidden;
+}
+
+/* Ensure proper stacking context */
+app-sidebar {
+  z-index: 40;
+}
+
+.bg-opacity-50 {
+  background-opacity: 0.5;
+}
+
+/* Touch optimization for mobile buttons/tabs */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Tab button fixes for mobile */
+button[type="button"] {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+/* Scrollbar styling for horizontal scroll containers */
+nav.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+}
 /* FontAwesome is imported in index.html to avoid PostCSS parsing issues */
 
 @tailwind base;

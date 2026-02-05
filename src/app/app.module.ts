@@ -11,6 +11,7 @@ import { SharedModule } from './shared/shared.module';
 // Auth Components
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { GoogleCallbackComponent } from './features/auth/google-callback/google-callback.component';
 
 // Feature Components
 import { DashboardComponent } from './features/dashboard/dashboard.component';
@@ -36,6 +37,9 @@ import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
+import { PublishComponent } from './features/publish/publish.component';
+import { CalendarComponent } from './features/calendar/calendar.component';
+import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
 
 /**
  * App Module - Following SOLID principles
@@ -46,6 +50,7 @@ import { DataDeletionStatusComponent } from './features/data-deletion-status/dat
     AppComponent,
     LoginComponent,
     RegisterComponent,
+    GoogleCallbackComponent,
     DashboardComponent,
     SidebarComponent,
     HeaderComponent,
@@ -63,7 +68,10 @@ import { DataDeletionStatusComponent } from './features/data-deletion-status/dat
     PrivacyPolicyComponent,
     TermsConditionsComponent,
     ContactComponent,
-    DataDeletionStatusComponent
+    DataDeletionStatusComponent,
+    PublishComponent,
+    CalendarComponent,
+    PublishedPostsComponent
   ],
   imports: [
     BrowserModule,

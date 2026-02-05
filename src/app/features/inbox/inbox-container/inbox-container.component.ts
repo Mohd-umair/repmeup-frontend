@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { InboxService } from '../../../core/services/inbox.service';
 import { PlatformService } from '../../../core/services/platform.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { IInteraction, IInboxFilters } from '../../../core/models/interaction.model';
 import { forkJoin, interval, Subscription, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
@@ -30,10 +31,22 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   constructor(
     private inboxService: InboxService,
     private platformService: PlatformService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private themeService: ThemeService
   ) {}
 
   ngOnInit(): void {
+    // Don't select any conversation by default
+    this.selectedInteraction = null;
+    
+    // Reset theme to default (light black/gray) when entering inbox
+    this.themeService.resetTheme();
+    
+    // Apply theme based on current platform filter if exists
+    if (this.platformFilters.platform) {
+      this.themeService.setPlatformTheme(this.platformFilters.platform);
+    }
+    
     this.loadInteractions();
 
     // Subscribe to interactions
@@ -55,6 +68,65 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     if (this.autoSyncSubscription) {
       this.autoSyncSubscription.unsubscribe();
     }
+    // Reset theme when leaving inbox
+    this.themeService.resetTheme();
+  }
+
+  /**
+   * Get platform-specific icon for the header
+   */
+  getHeaderIcon(): string {
+    if (!this.platformFilters.platform) {
+      return 'fas fa-inbox'; // Default unified inbox icon
+    }
+
+    const platformIcons: { [key: string]: string } = {
+      'instagram': 'fab fa-instagram',
+      'facebook': 'fab fa-facebook-f',
+      'youtube': 'fab fa-youtube',
+      'google': 'fab fa-google',
+      'linkedin': 'fab fa-linkedin-in',
+      'whatsapp': 'fab fa-whatsapp',
+      'website': 'fas fa-globe'
+    };
+
+    return platformIcons[this.platformFilters.platform.toLowerCase()] || 'fas fa-inbox';
+  }
+
+  /**
+   * Get platform-specific title for the header
+   */
+  getHeaderTitle(): string {
+    if (!this.platformFilters.platform) {
+      return 'Unified Inbox';
+    }
+
+    // Capitalize first letter of platform name
+    const platformName = this.platformFilters.platform.charAt(0).toUpperCase() + 
+                         this.platformFilters.platform.slice(1);
+    return `${platformName} Inbox`;
+  }
+
+  /**
+   * Get platform-specific subtitle for the header
+   */
+  getHeaderSubtitle(): string {
+    if (!this.platformFilters.platform) {
+      return 'Manage all your interactions in one place';
+    }
+
+    const platformSubtitles: { [key: string]: string } = {
+      'instagram': 'Manage your Instagram comments and messages',
+      'facebook': 'Manage your Facebook posts and comments',
+      'youtube': 'Manage your YouTube comments',
+      'google': 'Manage your Google Business reviews',
+      'linkedin': 'Manage your LinkedIn posts and comments',
+      'whatsapp': 'Manage your WhatsApp conversations',
+      'website': 'Manage your website interactions'
+    };
+
+    return platformSubtitles[this.platformFilters.platform.toLowerCase()] || 
+           `Manage your ${this.platformFilters.platform} interactions`;
   }
 
   /**
@@ -223,6 +295,17 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   onPlatformFilterChange(filters: IInboxFilters): void {
     this.platformFilters = filters;
+    
+    // Clear selected interaction when switching platforms
+    this.selectedInteraction = null;
+    
+    // Apply platform theme when platform filter is selected
+    if (filters.platform) {
+      this.themeService.setPlatformTheme(filters.platform);
+    } else {
+      this.themeService.resetTheme();
+    }
+    
     this.loadInteractions();
   }
 

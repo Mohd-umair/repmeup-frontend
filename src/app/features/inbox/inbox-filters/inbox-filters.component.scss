@@ -1,93 +1,40 @@
-// Inbox Filters Styles
+// Inbox Filters Component Styles
+// Beautiful platform-themed filters
 
-// Filter button animation
-.filter-button {
-  transition: all 0.2s ease;
+:host {
+  display: block;
+}
+
+// Smooth hover effect
+button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   &:hover {
-    transform: translateX(4px);
+    transform: scale(1.02);
   }
   
-  &.active {
-    animation: filterPulse 0.3s ease-out;
+  &:active {
+    transform: scale(0.98);
   }
 }
 
-@keyframes filterPulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
+// Platform icon transitions
+.platform-icon-wrapper {
+  transition: all 0.3s ease;
+}
+
+// Clear button
+.clear-button {
+  &:hover {
+    color: #EF4444;
   }
 }
 
-// Section header animation
-.filter-section {
-  h4 {
-    position: relative;
-    
-    i {
-      transition: transform 0.2s ease;
-    }
-    
-    &:hover i {
-      transform: scale(1.2) rotate(5deg);
-    }
-  }
+// Filter section headers
+.filter-section-header {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6B7280;
 }
-
-// Clear all button effect
-.clear-filters {
-  position: relative;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: currentColor;
-    transition: width 0.2s ease;
-  }
-  
-  &:hover::before {
-    width: 100%;
-  }
-}
-
-// Checkmark animation
-.check-icon {
-  animation: checkPop 0.3s ease-out;
-}
-
-@keyframes checkPop {
-  0% {
-    transform: scale(0);
-  }
-  50% {
-    transform: scale(1.2);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-// Coming soon section pulse
-.coming-soon {
-  animation: comingSoonPulse 2s ease-in-out infinite;
-}
-
-@keyframes comingSoonPulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-

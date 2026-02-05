@@ -1,14 +1,73 @@
-// Inbox Container Styles
+// Inbox Container Component Styles
+// Dynamic theming based on selected platform
 
-// Smooth animations
-.fade-in {
-  animation: fadeIn 0.3s ease-in;
+:host {
+  display: block;
+  height: 100%;
 }
 
-@keyframes fadeIn {
+// Smooth transitions for theme changes
+* {
+  transition: background-color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease,
+              color 0.3s ease;
+}
+
+// Platform-themed header
+.platform-themed-header {
+  background: linear-gradient(
+    135deg,
+    var(--platform-gradient-from, #D0FF00),
+    var(--platform-gradient-to, #B8E600)
+  );
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+// Stats cards with platform accent
+.stat-card {
+  border-top: 3px solid var(--platform-primary, #D0FF00);
+  
+  &:hover {
+    box-shadow: 0 8px 24px var(--platform-primary, #D0FF00)20;
+    transform: translateY(-2px);
+  }
+}
+
+// Sync button with platform colors
+.sync-button {
+  background: linear-gradient(
+    135deg,
+    var(--platform-gradient-from, #D0FF00),
+    var(--platform-gradient-to, #B8E600)
+  );
+  color: white;
+  
+  &:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 16px var(--platform-primary, #D0FF00)40;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Filter pills with platform colors
+.platform-filter-active {
+  background: var(--platform-primary, #D0FF00);
+  color: white;
+  box-shadow: 0 2px 8px var(--platform-primary, #D0FF00)30;
+}
+
+// Empty state animations
+@keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -16,47 +75,6 @@
   }
 }
 
-// Custom scrollbar
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
 }
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
-  border-radius: 10px;
-  
-  &:hover {
-    background: linear-gradient(180deg, #2563eb, #7c3aed);
-  }
-}
-
-// Glassmorphism effect
-.glass-card {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-// Pulsing animation for unread indicator
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-  }
-  50% {
-    opacity: 0.8;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0);
-  }
-}
-
-.pulse-indicator {
-  animation: pulse-glow 2s infinite;
-}
-

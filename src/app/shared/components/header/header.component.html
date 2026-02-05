@@ -1,6 +1,19 @@
-<header class="bg-rep-black border-b border-gray-800 h-16 flex items-center justify-between px-6">
+<header class="bg-rep-black border-b border-gray-800 h-16 flex items-center justify-between px-3 sm:px-4 md:px-6">
+  <!-- Mobile Menu Button -->
+  <button 
+    (click)="onMenuToggle(); $event.stopPropagation()"
+    type="button"
+    class="lg:hidden p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition mr-2 cursor-pointer z-50"
+    aria-label="Toggle menu"
+    style="touch-action: manipulation;"
+  >
+    <svg class="h-6 w-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
+
   <!-- Search Bar -->
-  <div class="flex-1 max-w-2xl">
+  <div class="flex-1 max-w-2xl hidden md:block">
     <div class="relative">
       <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,7 +29,7 @@
   </div>
 
   <!-- Right Section -->
-  <div class="flex items-center space-x-4 ml-6">
+  <div class="flex items-center space-x-2 sm:space-x-3 md:space-x-4 ml-2 sm:ml-4 md:ml-6">
     <!-- Notifications -->
     <button class="relative p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition">
       <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
