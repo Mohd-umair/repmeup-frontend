@@ -26,6 +26,8 @@ export class InboxDetailComponent implements OnChanges, OnDestroy {
   suggestionError: string | null = null;
   /** Tracks avatar load errors so we can show initial fallback */
   avatarFallback: Record<string, boolean> = {};
+  /** Used for star rating display (1–5) */
+  readonly ratingStars = [1, 2, 3, 4, 5];
   /** Resolved avatar blob URL from proxy (Instagram/Facebook) */
   avatarUrl: string | null = null;
   private avatarCacheKey: string | null = null;
@@ -154,6 +156,14 @@ export class InboxDetailComponent implements OnChanges, OnDestroy {
       'google': '🔍'
     };
     return icons[platform.toLowerCase()] || '💬';
+  }
+
+  /** Star rating for reviews (Google Business etc.); undefined if not a review or no rating */
+  getReviewRating(): number | undefined {
+    if (!this.interaction) return undefined;
+    const r = (this.interaction as any).rating ?? this.interaction.metadata?.starRating;
+    if (r == null || typeof r !== 'number') return undefined;
+    return Math.min(5, Math.max(1, Math.round(r)));
   }
 
   getSentimentIcon(sentiment?: string): string {

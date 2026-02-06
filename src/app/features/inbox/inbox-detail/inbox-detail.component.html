@@ -139,6 +139,11 @@
           </span>
         </div>
         <span class="text-gray-300 hidden sm:inline">|</span>
+        <div *ngIf="interaction.type === 'review' && getReviewRating()" class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
+          <i class="fas fa-star text-amber-500 flex-shrink-0"></i>
+          <span class="font-semibold">{{ getReviewRating() }}/5</span>
+        </div>
+        <span *ngIf="interaction.type === 'review' && getReviewRating()" class="text-gray-300 hidden sm:inline">|</span>
         <div class="flex items-center space-x-2 text-gray-700 min-w-0">
           <i class="fas fa-clock flex-shrink-0"></i>
           <span class="font-semibold truncate">{{ formatDate(interaction.platformCreatedAt) }}</span>
@@ -182,6 +187,12 @@
                   <p class="font-bold text-xs sm:text-sm text-rep-black">{{ interaction.author.name }}</p>
                   <p class="text-xs text-gray-500">{{ formatDate(interaction.platformCreatedAt) }}</p>
                 </div>
+              </div>
+              <div *ngIf="interaction.type === 'review' && getReviewRating()" class="flex items-center gap-1 mb-2">
+                <span class="text-amber-500 text-sm" [attr.aria-label]="'Rating ' + getReviewRating() + ' out of 5'">
+                  <i *ngFor="let star of ratingStars" class="fas fa-star" [class.text-amber-500]="star <= getReviewRating()!" [class.text-gray-200]="star > getReviewRating()!"></i>
+                </span>
+                <span class="text-xs text-gray-600 font-medium">{{ getReviewRating() }}/5</span>
               </div>
               <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ interaction.content }}</p>
             </div>

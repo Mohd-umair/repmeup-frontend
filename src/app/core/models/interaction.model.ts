@@ -22,6 +22,8 @@ export interface IInteraction {
   labels?: ILabel[];
   priority?: Priority;
   tags?: string[];
+  /** Star rating (1–5) for review-type interactions (e.g. Google Business) */
+  rating?: number;
   metadata?: any;
   replies?: IReply[];
   responseCount?: number;

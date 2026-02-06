@@ -103,7 +103,7 @@
           </div>
 
           <!-- Platform & Type - Platform Colored (Matching Style) -->
-          <div class="flex items-center space-x-2 mb-2">
+          <div class="flex items-center space-x-2 mb-2 flex-wrap gap-y-1">
             <span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center border transition-all duration-300"
                   [style.background]="getPlatformColors(interaction.platform).primary + '15'"
                   [style.color]="getPlatformColors(interaction.platform).primary"
@@ -116,6 +116,11 @@
                   [style.color]="getPlatformColors(interaction.platform).primary"
                   [style.borderColor]="getPlatformColors(interaction.platform).primary + '40'">
               {{ getTypeLabel(interaction.type) }}
+            </span>
+            <span *ngIf="interaction.type === 'review' && getReviewRating(interaction)"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-50 text-amber-800 border-amber-200"
+                  title="Star rating">
+              <i class="fas fa-star text-amber-500 mr-1"></i>{{ getReviewRating(interaction) }}
             </span>
             <span 
               *ngIf="interaction.sentiment"
