@@ -72,14 +72,14 @@
       [style.animation-delay]="i * 50 + 'ms'"
     >
       <div class="flex items-start space-x-3">
-        <!-- Avatar with Platform Badge - DP or initial (proxy for Instagram/Facebook) -->
+        <!-- Avatar with Platform Badge -->
         <div class="relative flex-shrink-0">
-          <img *ngIf="(avatarUrls[interaction.platformId] || (interaction.author.avatarUrl && !avatarFallback[interaction.platformId]))"
-               [src]="avatarUrls[interaction.platformId] || interaction.author.avatarUrl"
+          <img *ngIf="interaction.author.avatarUrl && !avatarFallback[interaction.platformId]"
+               [src]="interaction.author.avatarUrl"
                (error)="onAvatarError(interaction.platformId)"
                alt=""
                class="w-12 h-12 rounded-xl object-cover shadow-md flex-shrink-0">
-          <div *ngIf="!(avatarUrls[interaction.platformId] || interaction.author.avatarUrl) || avatarFallback[interaction.platformId]"
+          <div *ngIf="!interaction.author.avatarUrl || avatarFallback[interaction.platformId]"
                class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md transition-all duration-300"
                [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
             {{ interaction.author.name?.charAt(0)?.toUpperCase() || '?' }}

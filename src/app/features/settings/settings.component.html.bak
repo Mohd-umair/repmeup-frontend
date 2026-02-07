@@ -200,8 +200,7 @@
           [connections]="(connections$ | async) || []"
           [loading]="loading"
           (sync)="onSyncConnection($event)"
-          (disconnect)="onDisconnectConnection($event)"
-          (refreshLocations)="onRefreshLocations($event)">
+          (disconnect)="onDisconnectConnection($event)">
         </app-connected-accounts-list>
       </div>
 
@@ -212,6 +211,457 @@
       </app-meta-page-selector>
     </div>
 
+        
+        <!-- Welcome Card -->
+        <div class="bg-rep-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 border-2 border-gray-800 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-rep-lime opacity-5 rounded-full -mr-16 sm:mr-24 md:-mr-32 -mt-16 sm:-mt-24 md:-mt-32"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 md:w-48 md:h-48 bg-rep-lime opacity-5 rounded-full -ml-12 sm:-ml-16 md:-ml-24 -mb-12 sm:-mb-16 md:-mb-24"></div>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rep-lime rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-rocket text-lg sm:text-xl md:text-2xl text-rep-black"></i>
+                </div>
+                <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-rep-black">Quick Connect (Legacy View)</h2>
+              </div>
+              <button 
+                (click)="activeTab = 'platforms'"
+                class="px-4 py-2 bg-rep-lime text-rep-black rounded-lg text-sm font-semibold hover:shadow-lg transition-all">
+                <i class="fas fa-list mr-2"></i>Back to List View
+              </button>
+            </div>
+            <p class="text-gray-700 text-sm sm:text-base md:text-lg mb-4 sm:mb-5 md:mb-6 max-w-3xl">
+              Integrate all your social media accounts and review platforms in one place. Secure OAuth 2.0 authentication with real-time synchronization.
+            </p>
+            <div class="flex flex-wrap gap-2 sm:gap-3">
+              <span class="inline-flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
+                <i class="fas fa-shield-alt mr-1 sm:mr-2"></i> Bank-level Security
+              </span>
+              <span class="inline-flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
+                <i class="fas fa-bolt mr-1 sm:mr-2"></i> Real-time Sync
+              </span>
+              <span class="inline-flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 bg-rep-lime/20 border border-rep-lime/30 rounded-full text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
+                <i class="fas fa-globe mr-1 sm:mr-2"></i> 6 Platforms
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Platform Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+        <!-- Instagram -->
+        <div class="platform-card bg-rep-white rounded-xl sm:rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-1.5 sm:h-2 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600"></div>
+          <div class="p-4 sm:p-5 md:p-6">
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
+              <div class="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-gradient-to-br from-purple-600 via-pink-600 to-red-600 rounded-xl sm:rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 flex-shrink-0">
+                  <i class="fab fa-instagram text-xl sm:text-2xl md:text-3xl text-white"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-base sm:text-lg md:text-xl font-bold text-rep-black truncate">Instagram</h3>
+                  <p class="text-xs sm:text-sm text-gray-600 truncate">Social Media</p>
+                </div>
+              </div>
+              <span *ngIf="platforms[0].connected" class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-rep-lime rounded-full animate-pulse flex-shrink-0"></span>
+            </div>
+            <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
+              Manage Instagram Business account comments and direct messages in real-time.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 text-xs text-blue-800">
+              <p class="font-semibold mb-0.5 sm:mb-1"><i class="fas fa-info-circle mr-1"></i> Note:</p>
+              <p class="text-xs">Instagram Business accounts must be linked to a Facebook Page. You'll authorize with Facebook to access your Instagram account.</p>
+            </div>
+            <div *ngIf="platforms[0].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-lg sm:rounded-xl p-2 sm:p-3 mb-3 sm:mb-4">
+              <div class="space-y-1.5 sm:space-y-2 text-xs">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-at mr-1 sm:mr-2"></i> Account:</span>
+                  <span class="font-semibold text-rep-black truncate">{{ platforms[0].connectedAccount }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-1 sm:mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black truncate">{{ platforms[0].lastSync }}</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="platforms[0].connected" class="flex gap-2 mb-2">
+              <button
+                (click)="syncPlatform(platforms[0]); $event.stopPropagation()"
+                [disabled]="platforms[0]?.loading || loading"
+                type="button"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-1.5 sm:py-2 px-2 sm:px-3 md:px-4 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+              >
+                <i [class]="platforms[0]?.loading ? 'fas fa-spinner fa-spin mr-1 sm:mr-2' : 'fas fa-sync-alt mr-1 sm:mr-2'"></i>
+                <span class="hidden xs:inline">{{ platforms[0]?.loading ? 'Syncing...' : 'Sync Now' }}</span>
+                <span class="xs:hidden">{{ platforms[0]?.loading ? 'Sync...' : 'Sync' }}</span>
+              </button>
+            </div>
+            <button
+              (click)="connectPlatform(platforms[0]); $event.stopPropagation()"
+              [disabled]="platforms[0]?.loading || loading"
+              type="button"
+              [class]="platforms[0].connected 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200' 
+                : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
+              class="w-full py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer relative z-10"
+            >
+              <i [class]="platforms[0]?.loading ? 'fas fa-spinner fa-spin mr-1 sm:mr-2' : (platforms[0].connected ? 'fas fa-unlink mr-1 sm:mr-2' : 'fas fa-plug mr-1 sm:mr-2')"></i>
+              {{ platforms[0]?.loading ? 'Connecting...' : (platforms[0].connected ? 'Disconnect' : 'Connect Now') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Facebook -->
+        <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-2 bg-gradient-to-r from-blue-700 to-blue-500"></div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-700 to-blue-500 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                  <i class="fab fa-facebook-f text-3xl text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-rep-black">Facebook</h3>
+                  <p class="text-sm text-gray-600">Social Network</p>
+                </div>
+              </div>
+              <span *ngIf="platforms[1].connected" class="w-3 h-3 bg-rep-lime rounded-full animate-pulse"></span>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+              Monitor Facebook page comments, reviews, and Messenger conversations.
+            </p>
+            <div *ngIf="platforms[1].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-at mr-2"></i> Account:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[1].connectedAccount }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[1].lastSync }}</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="platforms[1].connected" class="flex space-x-2 mb-2">
+              <button
+                (click)="syncPlatform(platforms[1]); $event.stopPropagation()"
+                [disabled]="platforms[1].loading || loading"
+                type="button"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-2 px-4 rounded-xl font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+              >
+                <i [class]="platforms[1].loading ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-sync-alt mr-2'"></i>
+                {{ platforms[1].loading ? 'Syncing...' : 'Sync Now' }}
+              </button>
+            </div>
+            <button
+              (click)="connectPlatform(platforms[1]); $event.stopPropagation()"
+              [disabled]="platforms[1].loading || loading"
+              type="button"
+              [class]="platforms[1].connected 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200' 
+                : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer relative z-10"
+            >
+              <i [class]="platforms[1].loading ? 'fas fa-spinner fa-spin mr-2' : (platforms[1].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2')"></i>
+              {{ platforms[1].loading ? 'Connecting...' : (platforms[1].connected ? 'Disconnect' : 'Connect Now') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- YouTube -->
+        <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-2 bg-gradient-to-r from-red-600 to-red-500"></div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-red-600 to-red-500 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                  <i class="fab fa-youtube text-3xl text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-rep-black">YouTube</h3>
+                  <p class="text-sm text-gray-600">Video Platform</p>
+                </div>
+              </div>
+              <span *ngIf="platforms[2]?.connected" class="w-3 h-3 bg-rep-lime rounded-full animate-pulse"></span>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+              Track and respond to YouTube video comments and community posts.
+            </p>
+            <div *ngIf="platforms[2]?.connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-at mr-2"></i> Channel:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[2]?.connectedAccount }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[2]?.lastSync }}</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="platforms[2]?.connected" class="flex space-x-2 mb-2">
+              <button
+                (click)="syncPlatform(platforms[2]); $event.stopPropagation()"
+                [disabled]="platforms[2]?.loading || loading"
+                type="button"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-2 px-4 rounded-xl font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+              >
+                <i [class]="platforms[2]?.loading ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-sync-alt mr-2'"></i>
+                {{ platforms[2]?.loading ? 'Syncing...' : 'Sync Now' }}
+              </button>
+            </div>
+            <button
+              (click)="connectPlatform(platforms[2]); $event.stopPropagation()"
+              [disabled]="platforms[2]?.loading || loading"
+              type="button"
+              [class]="platforms[2]?.connected 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200' 
+                : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer relative z-10"
+            >
+              <i [class]="platforms[2]?.loading ? 'fas fa-spinner fa-spin mr-2' : (platforms[2]?.connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2')"></i>
+              {{ platforms[2]?.loading ? 'Connecting...' : (platforms[2]?.connected ? 'Disconnect' : 'Connect Now') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Google Business -->
+        <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-2 bg-gradient-to-r from-blue-500 via-yellow-500 to-green-500"></div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-green-500 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                  <i class="fab fa-google text-3xl text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-rep-black">Google</h3>
+                  <p class="text-sm text-gray-600">Business Profile</p>
+                </div>
+              </div>
+              <span *ngIf="platforms[3]?.connected" class="w-3 h-3 bg-rep-lime rounded-full animate-pulse"></span>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+              Manage Google Business Profile reviews and customer Q&A responses.
+            </p>
+            <div *ngIf="platforms[3]?.connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-building mr-2"></i> Business:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[3]?.connectedAccount }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[3]?.lastSync }}</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="platforms[3]?.connected" class="flex space-x-2 mb-2">
+              <button
+                (click)="syncPlatform(platforms[3]); $event.stopPropagation()"
+                type="button"
+                [disabled]="platforms[3]?.loading"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-2 px-4 rounded-xl font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <i [class]="platforms[3]?.loading ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-sync-alt mr-2'"></i>
+                {{ platforms[3]?.loading ? 'Syncing...' : 'Sync Now' }}
+              </button>
+            </div>
+            <button
+              (click)="connectPlatform(platforms[3]); $event.stopPropagation()"
+              type="button"
+              [disabled]="platforms[3]?.loading || loading"
+              [class]="platforms[3]?.connected 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200' 
+                : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none cursor-pointer relative z-10"
+            >
+              <i [class]="platforms[3]?.loading ? 'fas fa-spinner fa-spin mr-2' : (platforms[3]?.connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2')"></i>
+              {{ platforms[3]?.loading ? 'Connecting...' : (platforms[3]?.connected ? 'Disconnect' : 'Connect Now') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-2 bg-gradient-to-r from-green-600 to-green-500"></div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-green-600 to-green-500 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                  <i class="fab fa-whatsapp text-3xl text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-rep-black">WhatsApp</h3>
+                  <p class="text-sm text-gray-600">Business API</p>
+                </div>
+              </div>
+              <span *ngIf="platforms[4].connected" class="w-3 h-3 bg-rep-lime rounded-full animate-pulse"></span>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+              Handle WhatsApp Business API messages and customer conversations.
+            </p>
+            <div *ngIf="platforms[4].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-phone mr-2"></i> Number:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[4].connectedAccount }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[4].lastSync }}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              (click)="connectPlatform(platforms[4])"
+              [class]="platforms[4].connected 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300' 
+                : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300"
+            >
+              <i [class]="platforms[4].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2'"></i>
+              {{ platforms[4].connected ? 'Disconnect' : 'Connect Now' }}
+            </button>
+          </div>
+        </div>
+
+         <!-- LinkedIn -->
+         <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-2 bg-gradient-to-r from-blue-700 to-blue-900"></div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-700 to-blue-900 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                  <i class="fab fa-linkedin text-3xl text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-rep-black">LinkedIn</h3>
+                  <p class="text-sm text-gray-600">Professional Network</p>
+                </div>
+              </div>
+              <span *ngIf="platforms[6].connected" class="w-3 h-3 bg-rep-lime rounded-full animate-pulse"></span>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+              Manage LinkedIn company page posts, comments, and professional engagement.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-xs text-blue-800">
+              <p class="font-semibold mb-1"><i class="fas fa-info-circle mr-1"></i> Note:</p>
+              <p>You must be an Administrator of a LinkedIn Company Page. Personal profiles alone cannot post as organizations.</p>
+            </div>
+            <div *ngIf="platforms[6].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-building mr-2"></i> Organization:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[6].connectedAccount }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[6].lastSync }}</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="platforms[6].connected" class="flex space-x-2 mb-2">
+              <button
+                (click)="syncPlatform(platforms[6]); $event.stopPropagation()"
+                [disabled]="platforms[6].loading || loading"
+                type="button"
+                class="flex-1 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 py-2 px-4 rounded-xl font-semibold transition-all duration-300 hover:bg-rep-lime/30 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+              >
+                <i class="fas fa-sync-alt mr-2"></i>
+                {{ platforms[6]?.loading ? 'Syncing...' : 'Sync Now' }}
+              </button>
+            </div>
+            <button
+              (click)="connectPlatform(platforms[6]); $event.stopPropagation()"
+              [class]="platforms[6]?.connected 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300 hover:bg-gray-200' 
+                : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
+              [disabled]="platforms[6]?.loading || loading"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer relative z-10"
+            >
+              <i [class]="platforms[6]?.connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2'"></i>
+              {{ platforms[6]?.loading ? 'Connecting...' : (platforms[6]?.connected ? 'Disconnect' : 'Connect Now') }}
+            </button>
+          </div>
+        </div>
+        <!-- Twitter -->
+        <div class="platform-card bg-rep-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group border border-gray-800">
+          <div class="h-2 bg-gradient-to-r from-sky-500 to-blue-600"></div>
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+                  <i class="fab fa-twitter text-3xl text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold text-rep-black">Twitter</h3>
+                  <p class="text-sm text-gray-600">Social Network</p>
+                </div>
+              </div>
+              <span *ngIf="platforms[5].connected" class="w-3 h-3 bg-rep-lime rounded-full animate-pulse"></span>
+            </div>
+            <p class="text-gray-600 text-sm mb-4 leading-relaxed">
+              Monitor mentions, replies, and direct messages on Twitter (X platform).
+            </p>
+            <div *ngIf="platforms[5].connected" class="bg-rep-lime/20 border border-rep-lime/30 rounded-xl p-3 mb-4">
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-at mr-2"></i> Account:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[5].connectedAccount }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-700 flex items-center"><i class="fas fa-clock mr-2"></i> Synced:</span>
+                  <span class="font-semibold text-rep-black">{{ platforms[5].lastSync }}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              (click)="connectPlatform(platforms[5])"
+              [class]="platforms[5].connected 
+                ? 'bg-gray-100 text-gray-700 border-2 border-gray-300' 
+                : 'bg-rep-lime text-rep-black shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1'"
+              class="w-full py-3 px-4 rounded-xl font-semibold transition-all duration-300"
+            >
+              <i [class]="platforms[5].connected ? 'fas fa-unlink mr-2' : 'fas fa-plug mr-2'"></i>
+              {{ platforms[5].connected ? 'Disconnect' : 'Connect Now' }}
+            </button>
+          </div>
+        </div>
+
+       
+      </div>
+
+      <!-- Help Card -->
+      <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border-2 border-gray-800">
+        <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-rep-lime rounded-xl sm:rounded-2xl flex items-center justify-center">
+              <i class="fas fa-life-ring text-xl sm:text-2xl md:text-3xl text-rep-black"></i>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-lg sm:text-xl md:text-2xl font-bold text-rep-black mb-2">Need Help?</h3>
+            <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 leading-relaxed">
+              Our comprehensive guides and dedicated support team are here to help you connect your platforms seamlessly.
+            </p>
+            <div class="flex flex-col xs:flex-row gap-2 sm:gap-3 md:gap-4">
+              <a href="#" class="inline-flex items-center justify-center px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-rep-lime text-rep-black rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:shadow-lg hover:shadow-rep-lime/50 transition-all duration-300">
+                <i class="fas fa-book mr-2"></i>
+                Documentation
+              </a>
+              <a href="#" class="inline-flex items-center justify-center px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-gray-100 text-gray-700 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:bg-gray-200 transition-all duration-300">
+                <i class="fas fa-headset mr-2"></i>
+                Contact Support
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page Manager -->
+      <app-page-manager></app-page-manager>
+    </div>
 
     <!-- Profile Tab -->
     <div *ngIf="activeTab === 'profile'" class="max-w-4xl mx-auto">

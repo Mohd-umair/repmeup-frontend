@@ -1,9 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IInteraction } from '../../../core/models/interaction.model';
 import { InboxService } from '../../../core/services/inbox.service';
 import { ThemeService } from '../../../core/services/theme.service';
-import { AvatarService } from '../../../core/services/avatar.service';
 
 /**
  * Inbox Detail Component - Single Responsibility Principle
@@ -14,7 +13,7 @@ import { AvatarService } from '../../../core/services/avatar.service';
   templateUrl: './inbox-detail.component.html',
   styleUrls: ['./inbox-detail.component.scss']
 })
-export class InboxDetailComponent implements OnChanges, OnDestroy {
+export class InboxDetailComponent implements OnChanges {
   @Input() interaction: IInteraction | null = null;
   @Output() interactionUpdate = new EventEmitter<void>();
 
@@ -28,9 +27,6 @@ export class InboxDetailComponent implements OnChanges, OnDestroy {
   avatarFallback: Record<string, boolean> = {};
   /** Used for star rating display (1–5) */
   readonly ratingStars = [1, 2, 3, 4, 5];
-  /** Resolved avatar blob URL from proxy (Instagram/Facebook) */
-  avatarUrl: string | null = null;
-  private avatarCacheKey: string | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
     // Clear AI suggestion when interaction changes
@@ -43,29 +39,12 @@ export class InboxDetailComponent implements OnChanges, OnDestroy {
     if (changes['interaction'] && this.interaction && this.interaction._id) {
       this.markAsRead();
     }
-
-    // Load avatar via proxy for Instagram/Facebook
-    if (changes['interaction'] && this.interaction?.author?.platformId && (this.interaction.platform === 'instagram' || this.interaction.platform === 'facebook')) {
-      this.avatarUrl = null;
-      this.avatarCacheKey = this.avatarService.getCacheKey(this.interaction.platform, this.interaction.author.platformId);
-      this.avatarService.getAvatarUrl(this.interaction.platform, this.interaction.author.platformId).subscribe(url => {
-        this.avatarUrl = url;
-      });
-    } else {
-      this.avatarUrl = null;
-      this.avatarCacheKey = null;
-    }
-  }
-
-  ngOnDestroy(): void {
-    if (this.avatarCacheKey) this.avatarService.revoke(this.avatarCacheKey);
   }
 
   constructor(
     private fb: FormBuilder,
     private inboxService: InboxService,
-    public themeService: ThemeService,
-    private avatarService: AvatarService
+    public themeService: ThemeService
   ) {
     this.replyForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(1)]]
