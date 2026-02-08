@@ -111,6 +111,74 @@
         [showUpgrade]="true">
       </app-connection-usage-bar>
 
+      <!-- 90% Capacity Warning Banner -->
+      <div *ngIf="subscriptionLimits && isNearLimit() && !isLimitReached()" 
+           class="bg-gradient-to-r from-amber-50 to-amber-100 border-2 border-amber-400 rounded-xl p-5 shadow-md">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-bold text-amber-900 mb-1">
+              Approaching Account Limit
+            </h3>
+            <p class="text-amber-800 mb-3">
+              You're using <strong>{{ subscriptionLimits.usage.connectedAccounts }}</strong> of 
+              <strong>{{ subscriptionLimits.limits.maxAccounts }}</strong> accounts 
+              ({{ getUsagePercentage() | number:'1.0-0' }}% capacity).
+              <span *ngIf="subscriptionLimits.remaining > 0">
+                You can add {{ subscriptionLimits.remaining }} more.
+              </span>
+            </p>
+            <button *ngIf="subscriptionLimits.nextTier" 
+                    (click)="upgradeToNextTier()"
+                    [disabled]="upgradingPlan"
+                    class="px-4 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              <i [class]="upgradingPlan ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-arrow-up mr-2'"></i>
+              {{ upgradingPlan ? 'Upgrading...' : 'Upgrade to ' + subscriptionLimits.nextTier.name + ' (' + subscriptionLimits.nextTier.maxAccounts + ' accounts)' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Limit Reached Banner -->
+      <div *ngIf="subscriptionLimits && isLimitReached()" 
+           class="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-400 rounded-xl p-5 shadow-md">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0">
+            <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center">
+              <i class="fas fa-ban text-white text-xl"></i>
+            </div>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-bold text-red-900 mb-1">
+              Account Limit Reached
+            </h3>
+            <p class="text-red-800 mb-3">
+              Your <strong>{{ subscriptionLimits.plan }}</strong> plan allows <strong>{{ subscriptionLimits.limits.maxAccounts }}</strong> 
+              connected account{{ subscriptionLimits.limits.maxAccounts !== 1 ? 's' : '' }}. 
+              To add more accounts, please upgrade your plan.
+            </p>
+            <div class="flex gap-3">
+              <button *ngIf="subscriptionLimits.nextTier" 
+                      (click)="upgradeToNextTier()"
+                      [disabled]="upgradingPlan"
+                      class="px-5 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                <i [class]="upgradingPlan ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-arrow-up mr-2'"></i>
+                {{ upgradingPlan ? 'Upgrading...' : 'Upgrade to ' + subscriptionLimits.nextTier.name }}
+              </button>
+              <button (click)="goToPlansPage()"
+                      class="px-5 py-2.5 bg-white border-2 border-red-300 text-red-700 rounded-lg font-semibold hover:bg-red-50 transition-all">
+                <i class="fas fa-eye mr-2"></i>
+                View All Plans
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- NEW: Add Account Section (Step 8) -->
       <div class="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6">
         <h3 class="text-lg font-bold text-rep-black mb-4">Add Account</h3>
@@ -191,6 +259,56 @@
         </p>
       </div>
 
+      <!-- NEW: Available Accounts Section -->
+      <div *ngIf="availableAccounts.length > 0" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-md border-2 border-blue-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-xl font-bold text-rep-black flex items-center">
+              <i class="fas fa-plug text-blue-600 mr-2"></i>
+              Available to Connect
+            </h3>
+            <p class="text-sm text-gray-600 mt-1">
+              These accounts are authenticated and ready to use
+            </p>
+          </div>
+          <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold">
+            {{ availableAccounts.length }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          <div *ngFor="let account of availableAccounts" 
+               class="bg-white rounded-lg border-2 border-gray-200 p-4 hover:border-blue-400 hover:shadow-lg transition-all">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                  <i [class]="'fab fa-' + account.platform + ' text-white'"></i>
+                </div>
+                <div>
+                  <h4 class="font-semibold text-rep-black text-sm">{{ account.platformUsername }}</h4>
+                  <p class="text-xs text-gray-500 capitalize">{{ account.platform }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <button 
+              (click)="connectAvailableAccount(account)"
+              [disabled]="!subscriptionLimits?.canConnectMore"
+              class="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-check-circle mr-2"></i>
+              Connect Now
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="!subscriptionLimits?.canConnectMore" class="mt-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
+          <p class="text-sm text-amber-800">
+            <i class="fas fa-info-circle mr-2"></i>
+            You've reached your plan limit. Upgrade to connect these accounts.
+          </p>
+        </div>
+      </div>
+
       <!-- NEW: Connected Accounts List (SOLID: Single Responsibility) -->
       <div class="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6">
         <div class="flex items-center justify-between mb-6">
@@ -210,6 +328,121 @@
         [(visible)]="showMetaPageSelector"
         (pagesConnected)="onPagesConnected()">
       </app-meta-page-selector>
+
+      <!-- Plans Modal -->
+      <div *ngIf="showPlansModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closePlansModal()">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+          <!-- Modal Header -->
+          <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+            <div>
+              <h2 class="text-2xl font-bold text-rep-black">Choose Your Plan</h2>
+              <p class="text-sm text-gray-600 mt-1">Select the plan that fits your needs</p>
+            </div>
+            <button (click)="closePlansModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
+              <i class="fas fa-times text-gray-600 text-xl"></i>
+            </button>
+          </div>
+
+          <!-- Plans Grid -->
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div *ngFor="let planKey of getPlanKeys()" 
+                   [class]="subscriptionLimits?.planId === planKey ? 'border-4 border-rep-lime' : 'border-2 border-gray-200'"
+                   class="bg-white rounded-xl p-6 hover:shadow-lg transition-all relative">
+                
+                <!-- Current Plan Badge -->
+                <div *ngIf="subscriptionLimits?.planId === planKey" 
+                     class="absolute top-4 right-4 px-3 py-1 bg-rep-lime text-rep-black rounded-full text-xs font-bold">
+                  CURRENT
+                </div>
+
+                <!-- Plan Header -->
+                <div class="mb-4">
+                  <h3 class="text-2xl font-bold text-rep-black">{{ allPlans[planKey].name }}</h3>
+                  <div class="mt-2">
+                    <span class="text-4xl font-bold text-rep-black">{{ formatPrice(allPlans[planKey].price) }}</span>
+                  </div>
+                </div>
+
+                <!-- Limits -->
+                <div class="space-y-3 mb-6">
+                  <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-plug text-rep-lime w-5"></i>
+                    <span class="text-gray-700">
+                      <strong>{{ allPlans[planKey].limits.maxAccounts === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAccounts }}</strong> 
+                      Social Accounts
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-users text-rep-lime w-5"></i>
+                    <span class="text-gray-700">
+                      <strong>{{ allPlans[planKey].limits.maxUsers === -1 ? 'Unlimited' : allPlans[planKey].limits.maxUsers }}</strong> 
+                      Team Members
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-paper-plane text-rep-lime w-5"></i>
+                    <span class="text-gray-700">
+                      <strong>{{ allPlans[planKey].limits.maxPostsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxPostsPerMonth }}</strong> 
+                      Posts/Month
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-robot text-rep-lime w-5"></i>
+                    <span class="text-gray-700">
+                      <strong>{{ allPlans[planKey].limits.maxAutoRepliesPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAutoRepliesPerMonth }}</strong> 
+                      Auto-Replies/Month
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Features -->
+                <div class="space-y-2 mb-6 pb-6 border-b border-gray-200">
+                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Features</p>
+                  <div *ngFor="let feature of allPlans[planKey].features" class="flex items-start gap-2 text-sm">
+                    <i class="fas fa-check text-green-600 mt-0.5 flex-shrink-0"></i>
+                    <span class="text-gray-700">{{ formatFeatureName(feature) }}</span>
+                  </div>
+                </div>
+
+                <!-- Action Button -->
+                <button 
+                  *ngIf="subscriptionLimits?.planId !== planKey && allPlans[planKey].tier > (subscriptionLimits?.tier || 0)"
+                  (click)="upgradeToPlan(planKey, allPlans[planKey].name)"
+                  [disabled]="upgradingPlan"
+                  class="w-full py-3 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                  <i [class]="upgradingPlan ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-arrow-up mr-2'"></i>
+                  {{ upgradingPlan ? 'Upgrading...' : 'Upgrade to ' + allPlans[planKey].name }}
+                </button>
+
+                <div *ngIf="subscriptionLimits?.planId === planKey"
+                     class="w-full py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-center">
+                  <i class="fas fa-check mr-2"></i>
+                  Current Plan
+                </div>
+
+                <div *ngIf="allPlans[planKey].tier < (subscriptionLimits?.tier || 0)"
+                     class="w-full py-3 bg-gray-50 text-gray-400 rounded-xl font-bold text-center cursor-not-allowed">
+                  <i class="fas fa-arrow-down mr-2"></i>
+                  Downgrade Not Available
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between rounded-b-2xl">
+            <p class="text-sm text-gray-600">
+              <i class="fas fa-info-circle mr-2"></i>
+              Need a custom plan? Contact our sales team
+            </p>
+            <button (click)="closePlansModal()" 
+                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
 

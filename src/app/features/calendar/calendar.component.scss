@@ -27,3 +27,29 @@
 .animate-scale-up {
   animation: scaleUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+// Posts modal: fixed header + footer, scrollable body only
+.calendar-posts-modal {
+  display: flex;
+  flex-direction: column;
+  height: 85vh;
+  max-height: 85vh;
+  overflow: hidden;
+}
+
+.calendar-posts-modal__header {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+}
+
+.calendar-posts-modal__body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.calendar-posts-modal__footer {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+}

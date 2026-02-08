@@ -5,6 +5,8 @@ import { OrganizationService, AutoReplySettings } from '../../core/services/orga
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
+import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
+import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
 import { Observable } from 'rxjs';
 
 /**
@@ -48,8 +50,22 @@ export class SettingsComponent implements OnInit, OnDestroy {
   canAddConnection = true;
   connectionLimitMessage = '';
   
+  // Subscription management
+  subscriptionLimits$: Observable<ISubscriptionLimits | null>;
+  subscriptionLimits: ISubscriptionLimits | null = null;
+  loadingSubscription = false;
+  
+  // Available accounts (authenticated but not connected)
+  availableAccounts: ISocialAccount[] = [];
+  loadingAvailableAccounts = false;
+  
   // Meta page selector modal
   showMetaPageSelector = false;
+  
+  // Plans modal
+  showPlansModal = false;
+  allPlans: any = null;
+  upgradingPlan = false;
 
   // Auto-reply settings
   autoReplySettings: AutoReplySettings = {
@@ -170,11 +186,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private route: ActivatedRoute,
     private router: Router,
-    public platformConnectionService: PlatformConnectionService // SOLID: Dependency Injection
+    public platformConnectionService: PlatformConnectionService, // SOLID: Dependency Injection
+    private subscriptionService: SubscriptionService,
+    private socialAccountsService: SocialAccountsService
   ) {
     // Initialize observables (reactive state management)
     this.usage$ = this.platformConnectionService.usage$;
     this.connections$ = this.platformConnectionService.connections$;
+    this.subscriptionLimits$ = this.subscriptionService.limits$;
   }
 
   ngOnInit(): void {
@@ -188,6 +207,19 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     // Step 10: Start auto-refresh polling for real-time updates
     this.platformConnectionService.startPolling();
+
+    // Load subscription limits
+    this.loadSubscriptionLimits();
+    
+    // Load available accounts
+    this.loadAvailableAccounts();
+    
+    // Subscribe to subscription limits for reactive UI updates
+    this.subscriptionLimits$.subscribe(limits => {
+      if (limits) {
+        this.subscriptionLimits = limits;
+      }
+    });
 
     // Check for OAuth callback parameters
     this.route.queryParams.subscribe(params => {
@@ -962,6 +994,257 @@ export class SettingsComponent implements OnInit, OnDestroy {
     // Refresh connections to show newly added accounts
     this.platformConnectionService.refresh().subscribe();
     this.loadPlatformConnections();
+  }
+
+  /**
+   * Load subscription limits and plan info
+   */
+  loadSubscriptionLimits(): void {
+    this.loadingSubscription = true;
+    this.subscriptionService.getLimits().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.subscriptionLimits = response.data;
+        }
+        this.loadingSubscription = false;
+      },
+      error: (error) => {
+        console.error('Error loading subscription limits:', error);
+        this.loadingSubscription = false;
+      }
+    });
+  }
+
+  /**
+   * Load available accounts (authenticated but not connected)
+   */
+  loadAvailableAccounts(): void {
+    this.loadingAvailableAccounts = true;
+    this.socialAccountsService.getAvailableAccounts().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.availableAccounts = response.data.accounts || [];
+        }
+        this.loadingAvailableAccounts = false;
+      },
+      error: (error) => {
+        console.error('Error loading available accounts:', error);
+        this.loadingAvailableAccounts = false;
+      }
+    });
+  }
+
+  /**
+   * Connect an available account
+   */
+  connectAvailableAccount(account: ISocialAccount): void {
+    if (!this.subscriptionLimits || !this.subscriptionLimits.canConnectMore) {
+      this.notificationService.warning(
+        'Plan Limit Reached',
+        `Your ${this.subscriptionLimits?.plan} plan allows ${this.subscriptionLimits?.limits.maxAccounts} accounts. Please upgrade to connect more.`
+      );
+      return;
+    }
+
+    this.socialAccountsService.connectAccount(account._id).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notificationService.success(
+            'Account Connected',
+            `${account.platformUsername} connected successfully!`
+          );
+          // Refresh both available accounts and connected accounts
+          this.loadAvailableAccounts();
+          this.loadSubscriptionLimits();
+          this.platformConnectionService.refresh().subscribe();
+        }
+      },
+      error: (error) => {
+        console.error('Error connecting account:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to connect account';
+        
+        if (error.error?.error === 'ACCOUNT_LIMIT_REACHED') {
+          this.notificationService.warning(
+            'Plan Limit Reached',
+            errorMessage
+          );
+        } else {
+          this.notificationService.error(
+            'Connection Failed',
+            errorMessage
+          );
+        }
+      }
+    });
+  }
+
+  /**
+   * Check if near limit (90% or more)
+   */
+  isNearLimit(): boolean {
+    if (!this.subscriptionLimits) return false;
+    return this.subscriptionService.isNearLimit(
+      this.subscriptionLimits.usage.connectedAccounts,
+      this.subscriptionLimits.limits.maxAccounts
+    );
+  }
+
+  /**
+   * Check if limit reached
+   */
+  isLimitReached(): boolean {
+    if (!this.subscriptionLimits) return false;
+    return this.subscriptionService.isLimitReached(
+      this.subscriptionLimits.usage.connectedAccounts,
+      this.subscriptionLimits.limits.maxAccounts
+    );
+  }
+
+  /**
+   * Get usage percentage
+   */
+  getUsagePercentage(): number {
+    if (!this.subscriptionLimits) return 0;
+    return this.subscriptionService.getUsagePercentage(
+      this.subscriptionLimits.usage.connectedAccounts,
+      this.subscriptionLimits.limits.maxAccounts
+    );
+  }
+
+  /**
+   * Show plans modal
+   */
+  openPlansModal(): void {
+    if (!this.allPlans) {
+      // Load plans if not already loaded
+      this.subscriptionService.getPlans().subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.allPlans = response.data;
+            this.showPlansModal = true;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading plans:', error);
+          this.notificationService.error(
+            'Failed to Load Plans',
+            'Could not load subscription plans. Please try again.'
+          );
+        }
+      });
+    } else {
+      this.showPlansModal = true;
+    }
+  }
+
+  /**
+   * Close plans modal
+   */
+  closePlansModal(): void {
+    this.showPlansModal = false;
+  }
+
+  /**
+   * Upgrade to next tier (quick upgrade)
+   */
+  upgradeToNextTier(): void {
+    if (!this.subscriptionLimits?.nextTier) {
+      this.notificationService.info(
+        'Already at Top Tier',
+        'You are already on the highest available plan.'
+      );
+      return;
+    }
+
+    const nextPlanId = Object.keys(this.allPlans || {}).find(
+      key => this.allPlans && this.allPlans[key].tier === this.subscriptionLimits!.nextTier!.tier
+    );
+
+    if (!nextPlanId) {
+      this.openPlansModal();
+      return;
+    }
+
+    this.confirmUpgrade(nextPlanId, this.subscriptionLimits.nextTier.name);
+  }
+
+  /**
+   * Upgrade to specific plan
+   */
+  upgradeToPlan(planId: string, planName: string): void {
+    this.confirmUpgrade(planId, planName);
+  }
+
+  /**
+   * Confirm and execute upgrade
+   */
+  private confirmUpgrade(planId: string, planName: string): void {
+    if (!confirm(`Upgrade to ${planName} plan?\n\nThis will immediately update your account limits.`)) {
+      return;
+    }
+
+    this.upgradingPlan = true;
+    this.subscriptionService.upgradePlan(planId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notificationService.success(
+            'Plan Upgraded!',
+            `Successfully upgraded to ${planName} plan.`
+          );
+          
+          // Refresh subscription limits
+          this.loadSubscriptionLimits();
+          
+          // Close modal if open
+          this.closePlansModal();
+        }
+        this.upgradingPlan = false;
+      },
+      error: (error) => {
+        console.error('Error upgrading plan:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to upgrade plan';
+        this.notificationService.error(
+          'Upgrade Failed',
+          errorMessage
+        );
+        this.upgradingPlan = false;
+      }
+    });
+  }
+
+  /**
+   * Get plan tier keys as array
+   */
+  getPlanKeys(): string[] {
+    if (!this.allPlans) return [];
+    return Object.keys(this.allPlans);
+  }
+
+  /**
+   * Format price display
+   */
+  formatPrice(price: number | string): string {
+    if (price === 'custom') return 'Custom';
+    if (typeof price === 'number') return `$${price}/mo`;
+    return price;
+  }
+
+  /**
+   * Format feature name (replace underscores with spaces and title case)
+   */
+  formatFeatureName(feature: string): string {
+    return feature
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+
+  /**
+   * Navigate to dedicated plans page
+   */
+  goToPlansPage(): void {
+    this.router.navigate(['/app/plans']);
   }
 
   /**

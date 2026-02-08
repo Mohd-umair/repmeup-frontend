@@ -18,7 +18,10 @@ export interface IInteraction {
   autoReplyEligible?: boolean;
   autoReplied?: boolean;
   assignedTo?: string;
+  assignedBy?: string;
   assignedAt?: Date;
+  assignmentReason?: string;
+  assignmentHistory?: IAssignmentHistory[];
   labels?: ILabel[];
   priority?: Priority;
   tags?: string[];
@@ -169,6 +172,13 @@ export interface IInboxFilters {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+}
+
+export interface IAssignmentHistory {
+  assignedTo: any;
+  assignedBy: any;
+  assignedAt: Date;
+  reason?: string;
 }
 
 export interface IInboxStats {

@@ -157,6 +157,14 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm">
                 <div class="flex items-center space-x-2">
                   <button 
+                    (click)="openPerformanceModal(agent)"
+                    class="text-blue-600 hover:text-blue-800 font-medium transition"
+                    title="View performance">
+                    <i class="fas fa-chart-line mr-1"></i>
+                    Stats
+                  </button>
+                  <span class="text-gray-300">|</span>
+                  <button 
                     (click)="openEditModal(agent)"
                     class="text-rep-black hover:text-rep-lime font-medium transition"
                   >
@@ -179,18 +187,6 @@
       </div>
     </div>
 
-    <!-- Performance Chart -->
-    <div class="bg-rep-white rounded-xl shadow-xl p-6 border border-gray-800">
-      <h2 class="text-lg font-bold text-rep-black mb-4 flex items-center">
-        <i class="fas fa-chart-bar mr-2"></i>
-        Agent Performance
-      </h2>
-      <div class="text-center py-12 text-gray-600">
-        <span class="text-4xl mb-2 block">📊</span>
-        <p class="font-medium">Performance charts will be displayed here</p>
-        <p class="text-sm mt-1">Integration with chart library pending</p>
-      </div>
-    </div>
   </div>
 
   <!-- Add Agent Modal -->
@@ -394,6 +390,148 @@
           class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition"
         >
           Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Performance Modal -->
+  <div *ngIf="showPerformanceModal && selectedAgent" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-rep-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-bold text-lg">
+            {{ getInitials(selectedAgent.firstName, selectedAgent.lastName) }}
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-rep-black">{{ selectedAgent.firstName }} {{ selectedAgent.lastName }}</h2>
+            <p class="text-sm text-gray-600">{{ selectedAgent.email }}</p>
+          </div>
+        </div>
+        <button (click)="closePerformanceModal()" class="text-gray-600 hover:text-gray-900">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loadingStats" class="text-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-rep-lime mb-4"></i>
+        <p class="text-gray-600">Loading performance data...</p>
+      </div>
+
+      <!-- Performance Stats -->
+      <div *ngIf="!loadingStats && selectedAgentStats" class="space-y-6">
+        <!-- Quick Stats Grid -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+            <p class="text-sm font-semibold text-blue-700 mb-1">Assigned Tasks</p>
+            <p class="text-3xl font-bold text-blue-900">{{ selectedAgentStats.assignedTasks || 0 }}</p>
+            <p class="text-xs text-blue-600 mt-1">Current workload</p>
+          </div>
+
+          <div class="bg-rep-lime/20 rounded-xl p-4 border-2 border-rep-lime/40">
+            <p class="text-sm font-semibold text-rep-black mb-1">Resolved Today</p>
+            <p class="text-3xl font-bold text-rep-black">{{ selectedAgentStats.resolvedToday || 0 }}</p>
+            <p class="text-xs text-gray-700 mt-1">Since midnight</p>
+          </div>
+
+          <div class="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+            <p class="text-sm font-semibold text-purple-700 mb-1">This Week</p>
+            <p class="text-3xl font-bold text-purple-900">{{ selectedAgentStats.resolvedThisWeek || 0 }}</p>
+            <p class="text-xs text-purple-600 mt-1">Last 7 days</p>
+          </div>
+
+          <div class="bg-indigo-50 rounded-xl p-4 border-2 border-indigo-200">
+            <p class="text-sm font-semibold text-indigo-700 mb-1">This Month</p>
+            <p class="text-3xl font-bold text-indigo-900">{{ selectedAgentStats.resolvedThisMonth || 0 }}</p>
+            <p class="text-xs text-indigo-600 mt-1">Current month</p>
+          </div>
+        </div>
+
+        <!-- Detailed Stats -->
+        <div class="bg-gray-50 rounded-xl p-5 border border-gray-200">
+          <h3 class="text-lg font-bold text-rep-black mb-4 flex items-center">
+            <i class="fas fa-trophy text-amber-500 mr-2"></i>
+            All-Time Performance
+          </h3>
+          
+          <div class="space-y-3">
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+              <div class="flex items-center space-x-3">
+                <i class="fas fa-check-double text-rep-lime text-xl"></i>
+                <span class="text-sm font-semibold text-gray-700">Total Resolved</span>
+              </div>
+              <span class="text-lg font-bold text-rep-black">{{ selectedAgentStats.totalResolved || 0 }}</span>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+              <div class="flex items-center space-x-3">
+                <i class="fas fa-clock text-blue-600 text-xl"></i>
+                <span class="text-sm font-semibold text-gray-700">Avg Response Time</span>
+              </div>
+              <span class="text-lg font-bold text-blue-900">
+                {{ selectedAgentStats.avgResponseTimeMinutes || 0 }} min
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+              <div class="flex items-center space-x-3">
+                <i class="fas fa-user-check text-rep-lime text-xl"></i>
+                <span class="text-sm font-semibold text-gray-700">Status</span>
+              </div>
+              <span [class]="'px-3 py-1 rounded-full text-xs font-bold ' + getRoleColor(selectedAgent.role)">
+                {{ selectedAgent.role }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="bg-gradient-to-br from-rep-lime/10 to-rep-lime/5 rounded-xl p-5 border-2 border-rep-lime/30">
+          <h3 class="text-lg font-bold text-rep-black mb-3 flex items-center">
+            <i class="fas fa-lightbulb text-amber-500 mr-2"></i>
+            Performance Insights
+          </h3>
+          
+          <div class="space-y-2">
+            <div *ngIf="selectedAgentStats.resolvedToday >= 10" class="flex items-start space-x-2">
+              <i class="fas fa-fire text-orange-500 mt-1"></i>
+              <p class="text-sm text-gray-700">
+                <span class="font-bold">On Fire! 🔥</span> Resolved {{ selectedAgentStats.resolvedToday }} interactions today
+              </p>
+            </div>
+            
+            <div *ngIf="selectedAgentStats.avgResponseTimeMinutes < 15" class="flex items-start space-x-2">
+              <i class="fas fa-bolt text-rep-lime mt-1"></i>
+              <p class="text-sm text-gray-700">
+                <span class="font-bold">Lightning Fast! ⚡</span> Average response time under 15 minutes
+              </p>
+            </div>
+            
+            <div *ngIf="selectedAgentStats.assignedTasks > 10" class="flex items-start space-x-2">
+              <i class="fas fa-exclamation-triangle text-amber-500 mt-1"></i>
+              <p class="text-sm text-gray-700">
+                <span class="font-bold">High Workload</span> - Consider reassigning some tasks
+              </p>
+            </div>
+
+            <div *ngIf="selectedAgentStats.totalResolved >= 100" class="flex items-start space-x-2">
+              <i class="fas fa-star text-amber-500 mt-1"></i>
+              <p class="text-sm text-gray-700">
+                <span class="font-bold">Milestone Achieved! 🎯</span> Over 100 interactions resolved
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <div class="mt-6 flex justify-end">
+        <button 
+          (click)="closePerformanceModal()"
+          class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition"
+        >
+          Close
         </button>
       </div>
     </div>

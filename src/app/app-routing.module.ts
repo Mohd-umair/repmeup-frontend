@@ -21,6 +21,7 @@ import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { PublishComponent } from './features/publish/publish.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
 import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
+import { PlansComponent } from './features/plans/plans.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
@@ -76,7 +77,8 @@ const routes: Routes = [
       { path: 'analytics', component: AnalyticsComponent },
       { path: 'knowledge-base', component: KnowledgeBaseComponent },
       { path: 'settings', component: SettingsComponent },
-      { path: 'agents', component: AgentsComponent }
+      { path: 'agents', component: AgentsComponent },
+      { path: 'plans', component: PlansComponent }
     ]
   },
 

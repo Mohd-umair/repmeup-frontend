@@ -41,6 +41,7 @@ import { DataDeletionStatusComponent } from './features/data-deletion-status/dat
 import { PublishComponent } from './features/publish/publish.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
 import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
+import { PlansComponent } from './features/plans/plans.component';
 import { PageManagerComponent } from './features/settings/components/page-manager/page-manager.component';
 
 /**
@@ -75,6 +76,7 @@ import { PageManagerComponent } from './features/settings/components/page-manage
     PublishComponent,
     CalendarComponent,
     PublishedPostsComponent,
+    PlansComponent,
     PageManagerComponent
   ],
   imports: [

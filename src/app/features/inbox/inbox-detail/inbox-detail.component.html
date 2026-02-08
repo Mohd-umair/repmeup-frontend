@@ -99,7 +99,7 @@
           </div>
         </div>
 
-        <!-- Status Badges -->
+        <!-- Status Badges & Actions -->
         <div class="flex items-center flex-wrap gap-2 flex-shrink-0">
           <span 
             [class]="'px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-1 sm:space-x-2 shadow-md whitespace-nowrap ' + getSentimentClass(interaction.sentiment)"
@@ -112,12 +112,33 @@
           >
             {{ interaction.status }}
           </span>
+          
+          <!-- Resolve/Reopen Button -->
+          <button 
+            *ngIf="canResolve()"
+            (click)="resolveInteraction()"
+            [disabled]="resolvingInteraction"
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-xl text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-50 flex items-center space-x-1 sm:space-x-2"
+            title="Mark as resolved">
+            <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-check-circle'"></i>
+            <span class="hidden sm:inline">Resolve</span>
+          </button>
+          
+          <button 
+            *ngIf="isResolved()"
+            (click)="reopenInteraction()"
+            [disabled]="resolvingInteraction"
+            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-50 flex items-center space-x-1 sm:space-x-2"
+            title="Reopen conversation">
+            <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-redo'"></i>
+            <span class="hidden sm:inline">Reopen</span>
+          </button>
         </div>
       </div>
 
       <!-- Metadata Bar -->
       <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs sm:text-sm bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
-        <div class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
+        <!-- <div class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
           <i class="fas fa-layer-group flex-shrink-0"></i>
           <span class="font-semibold">Platform:</span>
           <span class="px-2.5 py-1.5 rounded-lg font-bold whitespace-nowrap border transition-all duration-300"
@@ -126,7 +147,7 @@
                 [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '40' : '#D0FF0040'">
             {{ interaction.platform }}
           </span>
-        </div>
+        </div> -->
         <span class="text-gray-300 hidden sm:inline">|</span>
         <div class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
           <i class="fas fa-comment flex-shrink-0"></i>
@@ -150,6 +171,92 @@
         </div>
       </div>
 
+      <!-- Agent Assignment Section (Admin/Manager only) -->
+      <div *ngIf="canAssign()" class="mt-4 bg-white rounded-xl p-4 border-2 border-gray-200 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <label class="block text-sm font-bold text-gray-700 mb-2 flex items-center">
+              <i class="fas fa-user-tie mr-2 text-rep-lime"></i>
+              Assign to Agent
+            </label>
+            
+            <!-- Currently Assigned -->
+            <div *ngIf="isAssigned()" class="flex items-center space-x-3 mb-3">
+              <div class="flex items-center space-x-2 px-3 py-2 bg-rep-lime/10 border-2 border-rep-lime/30 rounded-lg">
+                <div class="w-8 h-8 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-bold text-sm">
+                  {{ getAssignedAgentName().charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-rep-black">{{ getAssignedAgentName() }}</p>
+                  <p class="text-xs text-gray-600">Currently Assigned</p>
+                </div>
+              </div>
+              <button 
+                (click)="unassignInteraction()"
+                [disabled]="assigningAgent"
+                class="px-3 py-2 text-sm font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
+                title="Unassign">
+                <i class="fas fa-times mr-1"></i>
+                Unassign
+              </button>
+            </div>
+
+            <!-- Assign Dropdown -->
+            <div class="flex items-center space-x-2">
+              <select 
+                (change)="assignToAgent($any($event.target).value)"
+                [disabled]="loadingAgents || assigningAgent || availableAgents.length === 0"
+                class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                [value]="getAssignedAgentId()">
+                <option value="">
+                  {{ isAssigned() ? 'Reassign to...' : 'Select agent to assign...' }}
+                </option>
+                <option *ngFor="let agent of availableAgents" 
+                        [value]="agent._id"
+                        [disabled]="isAgentAssigned(agent._id)">
+                  {{ agent.firstName }} {{ agent.lastName }} 
+                  ({{ agent.currentWorkload || 0 }} {{ (agent.currentWorkload || 0) === 1 ? 'task' : 'tasks' }})
+                </option>
+              </select>
+              
+              <button 
+                *ngIf="loadingAgents"
+                class="px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-semibold flex items-center space-x-2"
+                disabled>
+                <i class="fas fa-spinner fa-spin"></i>
+                <span class="hidden sm:inline">Loading...</span>
+              </button>
+              
+              <button 
+                *ngIf="!loadingAgents && availableAgents.length === 0"
+                class="px-4 py-2.5 bg-amber-50 text-amber-800 rounded-xl text-sm font-semibold border-2 border-amber-200"
+                disabled>
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                No agents available
+              </button>
+            </div>
+
+            <p *ngIf="!loadingAgents && availableAgents.length > 0" class="text-xs text-gray-500 mt-2">
+              <i class="fas fa-info-circle mr-1"></i>
+              Agents are sorted by current workload (least busy first)
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assigned Agent Display (For all users) -->
+      <div *ngIf="!canAssign() && isAssigned()" class="mt-4 bg-rep-lime/10 rounded-xl p-4 border-2 border-rep-lime/30">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-bold">
+            {{ getAssignedAgentName().charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <p class="text-xs text-gray-600 font-semibold">Assigned to</p>
+            <p class="text-sm font-bold text-rep-black">{{ getAssignedAgentName() }}</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Labels -->
       <div *ngIf="interaction.labels && interaction.labels.length > 0" class="mt-4 flex flex-wrap gap-2">
         <span 
@@ -169,73 +276,105 @@
     <div class="flex-1 overflow-y-auto p-3 sm:p-4 bg-gradient-to-b from-gray-50 to-gray-100" #conversationThread>
       <div class="max-w-4xl mx-auto space-y-3 pb-4">
         
-        <!-- Original Customer Message -->
-        <div class="flex justify-start">
-          <div class="max-w-[85%]">
-            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
-              <div class="flex items-center space-x-2 mb-2">
-                <img *ngIf="interaction.author.avatarUrl && !avatarFallback[interaction.platformId + '_msg']"
-                     [src]="interaction.author.avatarUrl"
-                     (error)="onAvatarError(interaction.platformId + '_msg')"
-                     alt=""
-                     class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
-                <div *ngIf="!interaction.author.avatarUrl || avatarFallback[interaction.platformId + '_msg']"
-                     class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm flex-shrink-0">
-                  {{ interaction.author.name?.charAt(0)?.toUpperCase() || '?' }}
+        <!-- Chronological Timeline (Messages, Replies, Assignment) -->
+        <ng-container *ngFor="let item of getConversationTimeline()">
+          
+          <!-- Original Customer Message -->
+          <div *ngIf="item.type === 'message'" class="flex justify-start">
+            <div class="max-w-[85%]">
+              <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
+                <div class="flex items-center space-x-2 mb-2">
+                  <img *ngIf="item.data.author.avatarUrl && !avatarFallback[item.data.platformId + '_msg']"
+                       [src]="item.data.author.avatarUrl"
+                       (error)="onAvatarError(item.data.platformId + '_msg')"
+                       alt=""
+                       class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
+                  <div *ngIf="!item.data.author.avatarUrl || avatarFallback[item.data.platformId + '_msg']"
+                       class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm flex-shrink-0">
+                    {{ item.data.author.name?.charAt(0)?.toUpperCase() || '?' }}
+                  </div>
+                  <div>
+                    <p class="font-bold text-xs sm:text-sm text-rep-black">{{ item.data.author.name }}</p>
+                    <p class="text-xs text-gray-500">{{ formatDate(item.data.platformCreatedAt) }}</p>
+                  </div>
                 </div>
-                <div>
-                  <p class="font-bold text-xs sm:text-sm text-rep-black">{{ interaction.author.name }}</p>
-                  <p class="text-xs text-gray-500">{{ formatDate(interaction.platformCreatedAt) }}</p>
+                <div *ngIf="item.data.type === 'review' && getReviewRating()" class="flex items-center gap-1 mb-2">
+                  <span class="text-amber-500 text-sm" [attr.aria-label]="'Rating ' + getReviewRating() + ' out of 5'">
+                    <i *ngFor="let star of ratingStars" class="fas fa-star" [class.text-amber-500]="star <= getReviewRating()!" [class.text-gray-200]="star > getReviewRating()!"></i>
+                  </span>
+                  <span class="text-xs text-gray-600 font-medium">{{ getReviewRating() }}/5</span>
                 </div>
+                <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
               </div>
-              <div *ngIf="interaction.type === 'review' && getReviewRating()" class="flex items-center gap-1 mb-2">
-                <span class="text-amber-500 text-sm" [attr.aria-label]="'Rating ' + getReviewRating() + ' out of 5'">
-                  <i *ngFor="let star of ratingStars" class="fas fa-star" [class.text-amber-500]="star <= getReviewRating()!" [class.text-gray-200]="star > getReviewRating()!"></i>
-                </span>
-                <span class="text-xs text-gray-600 font-medium">{{ getReviewRating() }}/5</span>
-              </div>
-              <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ interaction.content }}</p>
             </div>
           </div>
-        </div>
 
-        <!-- Replies Thread -->
-        <div *ngFor="let reply of interaction.replies">
+          <!-- Assignment Info Banner (WhatsApp Style) -->
+          <div *ngIf="item.type === 'assignment'" class="flex justify-center my-4">
+            <!-- Regular Assignment -->
+            <div *ngIf="!item.data.isUnassignment" class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 shadow-sm max-w-md">
+              <div class="flex items-center justify-center space-x-2 text-xs text-amber-900">
+                <i class="fas fa-user-check text-amber-600"></i>
+                <span class="font-medium text-center">
+                  Assigned to <span class="font-bold">{{ item.data.assignedToName }}</span>
+                  by <span class="font-bold">{{ item.data.assignedByName }}</span>
+                </span>
+              </div>
+              <div class="text-center text-xs text-amber-700 mt-1">
+                {{ item.data.assignedAtFormatted }}
+              </div>
+            </div>
+            
+            <!-- Unassignment -->
+            <div *ngIf="item.data.isUnassignment" class="bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 shadow-sm max-w-md">
+              <div class="flex items-center justify-center space-x-2 text-xs text-gray-700">
+                <i class="fas fa-user-times text-gray-500"></i>
+                <span class="font-medium text-center">
+                  Unassigned by <span class="font-bold">{{ item.data.assignedByName }}</span>
+                </span>
+              </div>
+              <div class="text-center text-xs text-gray-600 mt-1">
+                {{ item.data.assignedAtFormatted }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Replies --><ng-container *ngIf="item.type === 'reply'">
           
           <!-- Platform Replies (from other users on YouTube/Instagram/etc) - Left Side -->
-          <div *ngIf="reply.isPlatformReply" class="flex justify-start mb-3">
+          <div *ngIf="item.data.isPlatformReply" class="flex justify-start mb-3">
             <div class="max-w-[85%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
                   <div class="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                    {{ (reply.author?.name || '?').charAt(0).toUpperCase() }}
+                    {{ (item.data.author?.name || '?').charAt(0).toUpperCase() }}
                   </div>
                   <div>
                     <p class="font-bold text-xs sm:text-sm text-rep-black">
-                      {{ reply.author?.name || reply.sentBy || 'Unknown User' }}
+                      {{ item.data.author?.name || item.data.sentBy || 'Unknown User' }}
                       <span class="ml-1 text-xs bg-gray-100 px-2 py-0.5 rounded">
-                        <i class="fab" [class.fa-youtube]="reply.platform === 'youtube'" 
-                           [class.fa-instagram]="reply.platform === 'instagram'"
-                           [class.fa-facebook]="reply.platform === 'facebook'"
-                           [class.fa-google]="reply.platform === 'google'"
-                           [class.fa-linkedin]="reply.platform === 'linkedin'"
-                           [class.fa-whatsapp]="reply.platform === 'whatsapp'"
-                           class="mr-1"></i>{{ reply.platform }}
+                        <i class="fab" [class.fa-youtube]="item.data.platform === 'youtube'" 
+                           [class.fa-instagram]="item.data.platform === 'instagram'"
+                           [class.fa-facebook]="item.data.platform === 'facebook'"
+                           [class.fa-google]="item.data.platform === 'google'"
+                           [class.fa-linkedin]="item.data.platform === 'linkedin'"
+                           [class.fa-whatsapp]="item.data.platform === 'whatsapp'"
+                           class="mr-1"></i>{{ item.data.platform }}
                       </span>
                     </p>
-                    <p class="text-xs text-gray-500">{{ formatDate(reply.sentAt) }}</p>
+                    <p class="text-xs text-gray-500">{{ formatDate(item.data.sentAt) }}</p>
                   </div>
                 </div>
-                <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ reply.content }}</p>
-                <div *ngIf="reply.sentiment" class="mt-2 flex items-center space-x-2">
+                <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
+                <div *ngIf="item.data.sentiment" class="mt-2 flex items-center space-x-2">
                   <span class="text-xs px-2 py-1 rounded" 
-                        [class.bg-green-100]="reply.sentiment === 'positive'"
-                        [class.text-green-700]="reply.sentiment === 'positive'"
-                        [class.bg-red-100]="reply.sentiment === 'negative'"
-                        [class.text-red-700]="reply.sentiment === 'negative'"
-                        [class.bg-gray-100]="reply.sentiment === 'neutral'"
-                        [class.text-gray-700]="reply.sentiment === 'neutral'">
-                    {{ reply.sentiment }}
+                        [class.bg-green-100]="item.data.sentiment === 'positive'"
+                        [class.text-green-700]="item.data.sentiment === 'positive'"
+                        [class.bg-red-100]="item.data.sentiment === 'negative'"
+                        [class.text-red-700]="item.data.sentiment === 'negative'"
+                        [class.bg-gray-100]="item.data.sentiment === 'neutral'"
+                        [class.text-gray-700]="item.data.sentiment === 'neutral'">
+                    {{ item.data.sentiment }}
                   </span>
                 </div>
               </div>
@@ -243,32 +382,33 @@
           </div>
 
           <!-- App Replies (sent from your app) - Right Side -->
-          <div *ngIf="!reply.isPlatformReply" class="flex justify-end mb-3">
+          <div *ngIf="!item.data.isPlatformReply" class="flex justify-end mb-3">
             <div class="max-w-[85%]">
               <div class="bg-rep-lime rounded-2xl shadow-md border-2 border-rep-lime/50 p-3 sm:p-4">
                 <div class="flex items-center justify-end space-x-2 mb-2">
                   <div class="text-right">
                     <p class="font-bold text-xs sm:text-sm text-rep-black">
-                      {{ getUserFullName(reply.sentBy) }}
-                      <span *ngIf="reply.wasAutoGenerated" class="ml-1 text-xs bg-rep-black/10 px-2 py-0.5 rounded">
+                      {{ getUserFullName(item.data.sentBy) }}
+                      <span *ngIf="item.data.wasAutoGenerated" class="ml-1 text-xs bg-rep-black/10 px-2 py-0.5 rounded">
                         <i class="fas fa-robot mr-1"></i>Auto
                       </span>
                     </p>
-                    <p class="text-xs text-gray-700">{{ formatDate(reply.sentAt) }}</p>
+                    <p class="text-xs text-gray-700">{{ formatDate(item.data.sentAt) }}</p>
                   </div>
                   <div class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-black rounded-lg flex items-center justify-center text-rep-lime font-bold text-xs sm:text-sm">
-                    {{ getInitials(getUserFirstName(reply.sentBy), getUserLastName(reply.sentBy)) }}
+                    {{ getInitials(getUserFirstName(item.data.sentBy), getUserLastName(item.data.sentBy)) }}
                   </div>
                 </div>
-                <p class="text-sm sm:text-base text-rep-black leading-relaxed whitespace-pre-wrap">{{ reply.content }}</p>
-                <div *ngIf="reply.status === 'failed'" class="mt-2 flex items-center text-xs text-red-600">
+                <p class="text-sm sm:text-base text-rep-black leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
+                <div *ngIf="item.data.status === 'failed'" class="mt-2 flex items-center text-xs text-red-600">
                   <i class="fas fa-exclamation-circle mr-1"></i>
                   <span>Failed to send to platform</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+          </ng-container>
+        </ng-container>
 
         <!-- AI Suggestion (if any) -->
         <div *ngIf="aiSuggestion" class="flex justify-center">

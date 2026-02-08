@@ -1,0 +1,32 @@
+// Plans Component Styles
+
+// Smooth animations
+.scale-105 {
+  transform: scale(1.05);
+}
+
+// Custom scrollbar for features list
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+// Plan card hover effect
+.group:hover {
+  .plan-icon {
+    transform: scale(1.1);
+  }
+}
