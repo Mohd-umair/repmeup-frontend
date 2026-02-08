@@ -111,6 +111,49 @@
         [showUpgrade]="true">
       </app-connection-usage-bar>
 
+      <!-- AI Credits Usage Bar -->
+      <div *ngIf="subscriptionLimits" class="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-magic text-purple-600 text-xl"></i>
+            <h3 class="text-lg font-semibold text-rep-black">AI Credits This Month</h3>
+          </div>
+          <span class="text-sm text-gray-600">
+            {{ subscriptionLimits.usage.aiCreditsThisMonth || 0 }} / 
+            {{ subscriptionLimits.limits.maxAICreditsPerMonth === -1 ? 'Unlimited' : subscriptionLimits.limits.maxAICreditsPerMonth }}
+          </span>
+        </div>
+        
+        <!-- Progress bar -->
+        <div *ngIf="subscriptionLimits.limits.maxAICreditsPerMonth !== -1" class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div 
+            class="h-full transition-all duration-300 rounded-full"
+            [ngClass]="{
+              'bg-green-500': getAICreditsPercentage() < 70,
+              'bg-amber-500': getAICreditsPercentage() >= 70 && getAICreditsPercentage() < 90,
+              'bg-red-500': getAICreditsPercentage() >= 90
+            }"
+            [style.width.%]="getAICreditsPercentage()">
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-2">
+          <i class="fas fa-info-circle mr-1"></i>
+          AI credits are used for Knowledge Base generation (1-10 credits) and Auto-Replies (1 credit each)
+        </p>
+
+        <!-- Near limit warning -->
+        <div *ngIf="getAICreditsPercentage() >= 90 && subscriptionLimits.limits.maxAICreditsPerMonth !== -1" 
+             class="mt-3 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <i class="fas fa-exclamation-triangle text-red-600 mt-0.5"></i>
+          <div class="flex-1">
+            <p class="text-sm text-red-800">
+              <strong>AI Credits Running Low!</strong> You've used {{ subscriptionLimits.usage.aiCreditsThisMonth || 0 }} of {{ subscriptionLimits.limits.maxAICreditsPerMonth }} credits this month.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- 90% Capacity Warning Banner -->
       <div *ngIf="subscriptionLimits && isNearLimit() && !isLimitReached()" 
            class="bg-gradient-to-r from-amber-50 to-amber-100 border-2 border-amber-400 rounded-xl p-5 shadow-md">
@@ -395,6 +438,13 @@
                     <span class="text-gray-700">
                       <strong>{{ allPlans[planKey].limits.maxAutoRepliesPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAutoRepliesPerMonth }}</strong> 
                       Auto-Replies/Month
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 text-sm">
+                    <i class="fas fa-magic text-rep-lime w-5"></i>
+                    <span class="text-gray-700">
+                      <strong>{{ allPlans[planKey].limits.maxAICreditsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAICreditsPerMonth }}</strong> 
+                      AI Credits/Month
                     </span>
                   </div>
                 </div>

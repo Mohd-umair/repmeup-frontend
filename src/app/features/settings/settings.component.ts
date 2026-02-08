@@ -1250,6 +1250,21 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get AI credits usage percentage
+   */
+  getAICreditsPercentage(): number {
+    if (!this.subscriptionLimits) return 0;
+    
+    const current = this.subscriptionLimits.usage.aiCreditsThisMonth || 0;
+    const max = this.subscriptionLimits.limits.maxAICreditsPerMonth;
+
+    if (max === -1) return 0; // Unlimited
+    if (max === 0) return 100;
+    
+    return Math.min(100, (current / max) * 100);
+  }
+
+  /**
    * Navigate to dedicated plans page
    */
   goToPlansPage(): void {

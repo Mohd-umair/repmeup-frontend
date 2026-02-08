@@ -1,0 +1,324 @@
+<div class="social-preview-container">
+  
+  <!-- FACEBOOK PREVIEW -->
+  <div *ngIf="platform.id === 'facebook'" class="preview-card facebook-preview">
+    <!-- Post Header -->
+    <div class="preview-header">
+      <img [src]="getProfilePicture()" alt="Profile" class="profile-pic">
+      <div class="header-info">
+        <div class="page-name">{{ platform.platformUsername || 'Your Page' }}</div>
+        <div class="post-meta">
+          <span class="timestamp">{{ getTimestamp() }}</span>
+          <span class="visibility"><i class="fas fa-globe-americas"></i></span>
+        </div>
+      </div>
+      <button class="more-btn"><i class="fas fa-ellipsis-h"></i></button>
+    </div>
+
+    <!-- Post Content -->
+    <div class="preview-content">
+      <div class="post-text" *ngIf="content">
+        <span [innerHTML]="formatContent(getDisplayText())"></span>
+        <button *ngIf="hasMoreText" class="see-more" (click)="toggleSeeMore()">
+          {{ showFullText ? 'See less' : 'See more' }}
+        </button>
+      </div>
+
+      <!-- Media -->
+      <div class="media-container" *ngIf="mediaFiles.length > 0">
+        <div class="media-wrapper">
+          <img 
+            *ngIf="getCurrentMedia()?.type === 'image'"
+            [src]="getCurrentMedia()?.preview" 
+            alt="Post media"
+            class="media-image"
+          />
+          <video 
+            *ngIf="getCurrentMedia()?.type === 'video'"
+            [src]="getCurrentMedia()?.preview"
+            class="media-video"
+            controls
+          ></video>
+
+          <!-- Carousel controls -->
+          <div class="carousel-controls" *ngIf="isCarousel()">
+            <button 
+              class="carousel-btn prev" 
+              (click)="prevMedia()"
+              [disabled]="currentMediaIndex === 0"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button 
+              class="carousel-btn next" 
+              (click)="nextMedia()"
+              [disabled]="currentMediaIndex === mediaFiles.length - 1"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="carousel-dots">
+              <span 
+                *ngFor="let media of mediaFiles; let i = index"
+                class="dot"
+                [class.active]="i === currentMediaIndex"
+              ></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="location-tag" *ngIf="location">
+        <i class="fas fa-map-marker-alt"></i>
+        {{ location }}
+      </div>
+    </div>
+
+    <!-- Engagement Bar -->
+    <div class="engagement-bar" *ngIf="getMockEngagement().likes > 0 || getMockEngagement().comments > 0 || getMockEngagement().shares > 0">
+      <div class="engagement-stats">
+        <span class="reactions" *ngIf="getMockEngagement().likes > 0">
+          <i class="fas fa-thumbs-up reaction-icon"></i>
+          <i class="fas fa-heart reaction-icon"></i>
+          {{ getMockEngagement().likes }}
+        </span>
+      </div>
+      <div class="engagement-counts">
+        <span *ngIf="getMockEngagement().comments > 0">{{ getMockEngagement().comments }} Comments</span>
+        <span *ngIf="getMockEngagement().shares > 0">{{ getMockEngagement().shares }} Shares</span>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <button class="action-btn"><i class="fas fa-thumbs-up"></i> Like</button>
+      <button class="action-btn"><i class="fas fa-comment"></i> Comment</button>
+      <button class="action-btn"><i class="fas fa-share"></i> Share</button>
+    </div>
+  </div>
+
+  <!-- INSTAGRAM PREVIEW -->
+  <div *ngIf="platform.id === 'instagram'" class="preview-card instagram-preview">
+    <!-- Post Header -->
+    <div class="preview-header">
+      <div class="header-left">
+        <img [src]="getProfilePicture()" alt="Profile" class="profile-pic">
+        <div class="header-info">
+          <div class="username">{{ platform.platformUsername || 'your_username' }}</div>
+          <div class="location" *ngIf="location">{{ location }}</div>
+        </div>
+      </div>
+      <button class="more-btn"><i class="fas fa-ellipsis-h"></i></button>
+    </div>
+
+    <!-- Media (Instagram shows media first) -->
+    <div class="media-container" *ngIf="mediaFiles.length > 0">
+      <div class="media-wrapper">
+        <img 
+          *ngIf="getCurrentMedia()?.type === 'image'"
+          [src]="getCurrentMedia()?.preview" 
+          alt="Post media"
+          class="media-image"
+        />
+        <video 
+          *ngIf="getCurrentMedia()?.type === 'video'"
+          [src]="getCurrentMedia()?.preview"
+          class="media-video"
+          controls
+        ></video>
+
+        <!-- Carousel indicator -->
+        <div class="carousel-indicator" *ngIf="isCarousel()">
+          <span 
+            *ngFor="let media of mediaFiles; let i = index"
+            class="indicator-dot"
+            [class.active]="i === currentMediaIndex"
+          ></span>
+        </div>
+
+        <!-- Navigation dots (swipe simulation) -->
+        <div class="carousel-controls" *ngIf="isCarousel()">
+          <button 
+            class="carousel-btn prev" 
+            (click)="prevMedia()"
+            [disabled]="currentMediaIndex === 0"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button 
+            class="carousel-btn next" 
+            (click)="nextMedia()"
+            [disabled]="currentMediaIndex === mediaFiles.length - 1"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <div class="action-left">
+        <button class="action-btn"><i class="far fa-heart"></i></button>
+        <button class="action-btn"><i class="far fa-comment"></i></button>
+        <button class="action-btn"><i class="far fa-paper-plane"></i></button>
+      </div>
+      <button class="action-btn"><i class="far fa-bookmark"></i></button>
+    </div>
+
+    <!-- Likes -->
+    <div class="likes-section" *ngIf="getMockEngagement().likes > 0">
+      <span class="likes-count">{{ getMockEngagement().likes }} likes</span>
+    </div>
+
+    <!-- Caption -->
+    <div class="caption-section" *ngIf="content">
+      <span class="username">{{ platform.platformUsername || 'your_username' }}</span>
+      <span class="caption-text" [innerHTML]="formatContent(getDisplayText())"></span>
+      <button *ngIf="hasMoreText" class="see-more" (click)="toggleSeeMore()">
+        {{ showFullText ? 'less' : 'more' }}
+      </button>
+    </div>
+
+    <!-- Timestamp -->
+    <div class="timestamp">{{ getTimestamp() }}</div>
+  </div>
+
+  <!-- LINKEDIN PREVIEW -->
+  <div *ngIf="platform.id === 'linkedin'" class="preview-card linkedin-preview">
+    <!-- Post Header -->
+    <div class="preview-header">
+      <img [src]="getProfilePicture()" alt="Profile" class="profile-pic">
+      <div class="header-info">
+        <div class="profile-name">
+          {{ platform.platformUsername || 'Your Name' }}
+        </div>
+        <div class="profile-subtitle">
+          Company • 1st
+        </div>
+        <div class="post-meta">
+          <span class="timestamp">{{ getTimestamp() }}</span>
+          <span class="visibility"><i class="fas fa-globe-americas"></i></span>
+        </div>
+      </div>
+      <button class="more-btn"><i class="fas fa-ellipsis-h"></i></button>
+    </div>
+
+    <!-- Post Content -->
+    <div class="preview-content">
+      <div class="post-text" *ngIf="content">
+        <span [innerHTML]="formatContent(getDisplayText())"></span>
+        <button *ngIf="hasMoreText" class="see-more" (click)="toggleSeeMore()">
+          {{ showFullText ? '...see less' : '...see more' }}
+        </button>
+      </div>
+
+      <!-- Media -->
+      <div class="media-container" *ngIf="mediaFiles.length > 0">
+        <div class="media-wrapper">
+          <img 
+            *ngIf="getCurrentMedia()?.type === 'image'"
+            [src]="getCurrentMedia()?.preview" 
+            alt="Post media"
+            class="media-image"
+          />
+          <video 
+            *ngIf="getCurrentMedia()?.type === 'video'"
+            [src]="getCurrentMedia()?.preview"
+            class="media-video"
+            controls
+          ></video>
+
+          <!-- Carousel controls -->
+          <div class="carousel-controls" *ngIf="isCarousel()">
+            <button 
+              class="carousel-btn prev" 
+              (click)="prevMedia()"
+              [disabled]="currentMediaIndex === 0"
+            >
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button 
+              class="carousel-btn next" 
+              (click)="nextMedia()"
+              [disabled]="currentMediaIndex === mediaFiles.length - 1"
+            >
+              <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="carousel-counter">
+              {{ currentMediaIndex + 1 }} / {{ mediaFiles.length }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="location-tag" *ngIf="location">
+        <i class="fas fa-map-marker-alt"></i>
+        {{ location }}
+      </div>
+    </div>
+
+    <!-- Engagement Bar -->
+    <div class="engagement-bar" *ngIf="getMockEngagement().likes > 0 || getMockEngagement().comments > 0">
+      <div class="engagement-stats">
+        <div class="engagement-icons" *ngIf="getMockEngagement().likes > 0">
+          <i class="fas fa-thumbs-up"></i>
+          <i class="fas fa-lightbulb"></i>
+          <i class="fas fa-heart"></i>
+        </div>
+        <span class="engagement-count" *ngIf="getMockEngagement().likes > 0">{{ getMockEngagement().likes }}</span>
+      </div>
+      <div class="engagement-counts">
+        <span *ngIf="getMockEngagement().comments > 0">{{ getMockEngagement().comments }} comments</span>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <button class="action-btn">
+        <i class="far fa-thumbs-up"></i>
+        <span>Like</span>
+      </button>
+      <button class="action-btn">
+        <i class="far fa-comment"></i>
+        <span>Comment</span>
+      </button>
+      <button class="action-btn">
+        <i class="fas fa-share"></i>
+        <span>Share</span>
+      </button>
+      <button class="action-btn">
+        <i class="far fa-paper-plane"></i>
+        <span>Send</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- YOUTUBE PREVIEW (if needed) -->
+  <div *ngIf="platform.id === 'youtube'" class="preview-card youtube-preview">
+    <div class="preview-placeholder">
+      <i class="fab fa-youtube text-6xl text-red-600 mb-3"></i>
+      <p class="text-gray-400">YouTube preview coming soon</p>
+    </div>
+  </div>
+
+  <!-- GENERIC PREVIEW (for other platforms) -->
+  <div *ngIf="!['facebook', 'instagram', 'linkedin', 'youtube'].includes(platform.id)" class="preview-card generic-preview">
+    <div class="preview-header">
+      <img [src]="getProfilePicture()" alt="Profile" class="profile-pic">
+      <div class="header-info">
+        <div class="profile-name">{{ platform.platformUsername || 'Your Profile' }}</div>
+        <div class="timestamp">{{ getTimestamp() }}</div>
+      </div>
+    </div>
+    <div class="preview-content">
+      <div class="post-text" *ngIf="content" [innerHTML]="formatContent(content)"></div>
+      <div class="media-container" *ngIf="mediaFiles.length > 0">
+        <img *ngIf="getCurrentMedia()?.type === 'image'" [src]="getCurrentMedia()?.preview" alt="Media" class="media-image" />
+        <video *ngIf="getCurrentMedia()?.type === 'video'" [src]="getCurrentMedia()?.preview" class="media-video" controls></video>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -36,6 +36,12 @@ export class KnowledgeBaseComponent implements OnInit {
   filterCategory = '';
   filterSource = '';
 
+  // Word count and tag count options for URL import (credit estimate)
+  wordCountOptions = [1000, 2000, 3000, 4000, 5000];
+  tagCountOptions = [5, 10, 15, 20, 25];
+  showCreditConfirmModal = false;
+  pendingUrlFormData: any = null;
+
   // Predefined options
   typeOptions = [
     { value: 'faq', label: 'FAQ', icon: 'fa-question-circle' },
@@ -96,8 +102,44 @@ export class KnowledgeBaseComponent implements OnInit {
       title: [''],
       category: [''],
       tags: [''],
-      priority: [5, [Validators.min(1), Validators.max(10)]]
+      priority: [5, [Validators.min(1), Validators.max(10)]],
+      targetWordCount: [2000],
+      targetTagCount: [10]
     });
+  }
+
+  /**
+   * Estimate AI credits for knowledge base creation (variable: words + tags, capped 1–10)
+   */
+  estimateCreditsForKB(wordCount: number, tagCount: number): number {
+    const fromWords = Math.ceil(wordCount / 500);
+    const fromTags = Math.ceil(tagCount / 5);
+    const total = Math.max(1, fromWords + fromTags);
+    return Math.min(10, total);
+  }
+
+  get estimatedCredits(): number {
+    const words = this.urlForm?.get('targetWordCount')?.value ?? 2000;
+    const tags = this.urlForm?.get('targetTagCount')?.value ?? 10;
+    return this.estimateCreditsForKB(words, tags);
+  }
+
+  openCreditConfirmAndSubmit(): void {
+    if (this.urlForm.invalid) return;
+    this.pendingUrlFormData = { ...this.urlForm.value };
+    this.showCreditConfirmModal = true;
+  }
+
+  closeCreditConfirmModal(): void {
+    this.showCreditConfirmModal = false;
+    this.pendingUrlFormData = null;
+  }
+
+  confirmCreateKnowledgeBase(): void {
+    if (!this.pendingUrlFormData) return;
+    this.showCreditConfirmModal = false;
+    this.submitURLWithData(this.pendingUrlFormData);
+    this.pendingUrlFormData = null;
   }
 
   /**
@@ -239,25 +281,26 @@ export class KnowledgeBaseComponent implements OnInit {
   }
 
   /**
-   * Submit URL scraping
+   * Submit URL scraping (called after user confirms credit estimate)
    */
-  submitURL(): void {
-    if (this.urlForm.invalid) return;
-
+  submitURLWithData(formData: any): void {
     this.submitting = true;
-    const formData = { ...this.urlForm.value };
-    
-    // Convert tags string to array
-    if (formData.tags) {
-      formData.tags = formData.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean);
+    const payload = { ...formData };
+    if (payload.tags && typeof payload.tags === 'string') {
+      payload.tags = payload.tags.split(',').map((tag: string) => tag.trim()).filter(Boolean);
     }
 
-    this.knowledgeBaseService.createFromURL(formData).subscribe({
+    this.knowledgeBaseService.createFromURL(payload).subscribe({
       next: (response) => {
         if (response.success) {
-          this.urlForm.reset({ priority: 5 });
+          this.urlForm.reset({
+            priority: 5,
+            targetWordCount: 2000,
+            targetTagCount: 10
+          });
           this.loadKnowledgeBase();
           this.activeTab = 'list';
+          this.notificationService.success('Knowledge Base', 'Entry created from URL successfully.');
         }
         this.submitting = false;
       },

@@ -14,12 +14,14 @@ export interface ISubscriptionLimits {
     maxUsers: number;
     maxPostsPerMonth: number;
     maxAutoRepliesPerMonth: number;
+    maxAICreditsPerMonth: number;
   };
   usage: {
     connectedAccounts: number;
     activeUsers: number;
     postsThisMonth: number;
     autoRepliesThisMonth: number;
+    aiCreditsThisMonth: number;
   };
   canConnectMore: boolean;
   remaining: number;
@@ -42,12 +44,14 @@ export interface ISubscription {
     maxUsers: number;
     maxPostsPerMonth: number;
     maxAutoRepliesPerMonth: number;
+    maxAICreditsPerMonth: number;
   };
   usage: {
     connectedAccounts: number;
     activeUsers: number;
     postsThisMonth: number;
     autoRepliesThisMonth: number;
+    aiCreditsThisMonth: number;
     lastResetAt: Date;
   };
   status: string;
@@ -63,6 +67,7 @@ export interface IPlanTier {
     maxUsers: number;
     maxPostsPerMonth: number;
     maxAutoRepliesPerMonth: number;
+    maxAICreditsPerMonth: number;
   };
   features: string[];
 }

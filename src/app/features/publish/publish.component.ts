@@ -71,7 +71,7 @@ export class PublishComponent implements OnInit {
   showHashtagHelper: boolean = false;
   showFirstComment: boolean = false;
   showLocationPicker: boolean = false;
-  showPreview: boolean = false;
+  showPreview: boolean = true; // Start with preview visible
   
   // Hashtag suggestions
   suggestedHashtags: string[] = [
@@ -96,6 +96,9 @@ export class PublishComponent implements OnInit {
   scheduledPosts: ScheduledPost[] = [];
   drafts: Draft[] = [];
   loadingPosts: boolean = false;
+  
+  // Preview
+  previewPlatformIndex: number = 0;
 
   constructor(
     private http: HttpClient,
@@ -555,5 +558,15 @@ export class PublishComponent implements OnInit {
 
   formatDate(date: Date | string): string {
     return new Date(date).toLocaleString();
+  }
+
+  /**
+   * Get scheduled date for preview
+   */
+  getScheduledDate(): Date | undefined {
+    if (this.scheduleEnabled && this.scheduledDate && this.scheduledTime) {
+      return new Date(`${this.scheduledDate}T${this.scheduledTime}`);
+    }
+    return undefined;
   }
 }

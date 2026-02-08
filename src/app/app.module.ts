@@ -43,6 +43,7 @@ import { CalendarComponent } from './features/calendar/calendar.component';
 import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
 import { PlansComponent } from './features/plans/plans.component';
 import { PageManagerComponent } from './features/settings/components/page-manager/page-manager.component';
+import { SocialPreviewComponent } from './features/publish/social-preview/social-preview.component';
 
 /**
  * App Module - Following SOLID principles
@@ -77,7 +78,8 @@ import { PageManagerComponent } from './features/settings/components/page-manage
     CalendarComponent,
     PublishedPostsComponent,
     PlansComponent,
-    PageManagerComponent
+    PageManagerComponent,
+    SocialPreviewComponent
   ],
   imports: [
     BrowserModule,

@@ -1,0 +1,825 @@
+.social-preview-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.preview-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Common Preview Header
+.preview-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #e4e6eb;
+
+  .profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .header-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .more-btn {
+    background: none;
+    border: none;
+    color: #65676b;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #f0f2f5;
+    }
+  }
+}
+
+// Content section
+.preview-content {
+  .post-text {
+    padding: 0 16px 12px;
+    color: #050505;
+    font-size: 15px;
+    line-height: 1.3333;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+
+    .see-more {
+      background: none;
+      border: none;
+      color: #65676b;
+      cursor: pointer;
+      font-weight: 600;
+      padding: 0;
+      margin-left: 4px;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .location-tag {
+    padding: 0 16px 8px;
+    color: #65676b;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    i {
+      font-size: 12px;
+    }
+  }
+}
+
+// Media container
+.media-container {
+  position: relative;
+  background: #000;
+  width: 100%;
+
+  .media-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+
+  .media-image,
+  .media-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  // Carousel controls
+  .carousel-controls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+
+    .carousel-btn {
+      pointer-events: all;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 10;
+
+      &.prev {
+        left: 12px;
+      }
+
+      &.next {
+        right: 12px;
+      }
+
+      &:hover:not(:disabled) {
+        background: #fff;
+        transform: translateY(-50%) scale(1.1);
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      i {
+        color: #000;
+        font-size: 14px;
+      }
+    }
+
+    .carousel-dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      pointer-events: none;
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transition: background 0.2s;
+
+        &.active {
+          background: #fff;
+        }
+      }
+    }
+
+    .carousel-counter {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  }
+}
+
+// Engagement bar
+.engagement-bar {
+  padding: 8px 16px;
+  border-top: 1px solid #e4e6eb;
+  border-bottom: 1px solid #e4e6eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #65676b;
+
+  .engagement-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .reactions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .reaction-icon {
+        font-size: 12px;
+        color: #1877f2;
+      }
+    }
+
+    .engagement-icons {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+
+      i {
+        font-size: 14px;
+        color: #0a66c2;
+      }
+    }
+  }
+
+  .engagement-counts {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+// Action bar
+.action-bar {
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 4px;
+
+  .action-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #65676b;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    i {
+      font-size: 18px;
+    }
+
+    &:hover {
+      background: #f0f2f5;
+    }
+  }
+
+  .action-left {
+    display: flex;
+    gap: 16px;
+  }
+}
+
+// Hashtags and mentions
+:host ::ng-deep {
+  .facebook-preview {
+    .hashtag {
+      color: #385898;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .mention {
+      color: #385898;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .instagram-preview {
+    .hashtag {
+      color: #00376b;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    .mention {
+      color: #00376b;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  }
+
+  .linkedin-preview {
+    .hashtag {
+      color: #0a66c2;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .mention {
+      color: #0a66c2;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// ==================
+// FACEBOOK SPECIFIC
+// ==================
+.facebook-preview {
+  font-family: Helvetica, Arial, sans-serif;
+  border-radius: 8px;
+
+  .preview-header {
+    padding: 12px 16px;
+    background: #fff;
+  }
+
+  .profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
+  .page-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #050505;
+    line-height: 20px;
+  }
+
+  .post-meta {
+    font-size: 13px;
+    color: #65676b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 16px;
+
+    .timestamp {
+      font-weight: 400;
+    }
+
+    .visibility i {
+      font-size: 12px;
+    }
+  }
+
+  .post-text {
+    padding: 4px 16px 12px;
+    font-size: 15px;
+    line-height: 20px;
+    color: #050505;
+    word-break: break-word;
+  }
+
+  .media-container {
+    margin-top: 0;
+    background: #f0f2f5;
+
+    .media-wrapper {
+      aspect-ratio: 16 / 9;
+    }
+  }
+
+  .engagement-bar {
+    padding: 8px 16px;
+    font-size: 15px;
+
+    .reactions {
+      font-weight: 400;
+      color: #65676b;
+    }
+
+    .engagement-counts {
+      font-size: 15px;
+      color: #65676b;
+
+      span:hover {
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .engagement-stats .reactions .reaction-icon {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: -4px;
+    border: 2px solid #fff;
+
+    &:first-child {
+      background: #1877f2;
+      color: #fff;
+      z-index: 3;
+    }
+    &:nth-child(2) {
+      background: #f33e5b;
+      color: #fff;
+      z-index: 2;
+    }
+  }
+
+  .action-bar {
+    border-top: 1px solid #e4e6eb;
+    
+    .action-btn {
+      font-size: 15px;
+      font-weight: 600;
+      color: #65676b;
+      padding: 8px;
+
+      &:hover {
+        background: #f2f3f5;
+      }
+    }
+  }
+}
+
+// ==================
+// INSTAGRAM SPECIFIC
+// ==================
+.instagram-preview {
+  max-width: 470px;
+  border-radius: 3px;
+  border: 1px solid #dbdbdb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  .preview-header {
+    padding: 14px 4px 14px 16px;
+    border-bottom: 1px solid #efefef;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .profile-pic {
+      width: 32px;
+      height: 32px;
+      border: 2px solid transparent;
+      background: linear-gradient(#fff, #fff), linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      background-clip: padding-box, border-box;
+      background-origin: padding-box, border-box;
+    }
+
+    .username {
+      font-size: 14px;
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .location {
+      font-size: 12px;
+      color: #262626;
+    }
+  }
+
+  .media-container {
+    .media-wrapper {
+      aspect-ratio: 1 / 1;
+    }
+
+    .carousel-indicator {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      display: flex;
+      gap: 4px;
+
+      .indicator-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+
+        &.active {
+          background: #fff;
+        }
+      }
+    }
+  }
+
+  .action-bar {
+    padding: 6px 16px 8px;
+    border-bottom: none;
+    justify-content: space-between;
+
+    .action-btn {
+      flex: unset;
+      padding: 8px 0;
+      color: #262626;
+      background: transparent;
+
+      i {
+        font-size: 24px;
+        font-weight: 400;
+      }
+
+      &:hover {
+        background: transparent;
+        color: #8e8e8e;
+      }
+
+      &:active {
+        color: #262626;
+        opacity: 0.5;
+      }
+    }
+
+    .action-left {
+      display: flex;
+      gap: 16px;
+    }
+  }
+
+  .likes-section {
+    padding: 0 16px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #000;
+
+    .likes-count {
+      font-weight: 600;
+      line-height: 18px;
+    }
+  }
+
+  .caption-section {
+    padding: 0 16px;
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #000;
+    line-height: 18px;
+
+    .username {
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
+    .caption-text {
+      word-wrap: break-word;
+      white-space: pre-wrap;
+      font-weight: 400;
+    }
+
+    .see-more {
+      background: none;
+      border: none;
+      color: #00376b;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+      margin-left: 4px;
+      font-weight: 400;
+
+      &:hover {
+        opacity: 0.7;
+      }
+    }
+  }
+
+  .timestamp {
+    padding: 0 16px;
+    margin-bottom: 16px;
+    font-size: 10px;
+    color: #8e8e8e;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    font-weight: 400;
+    line-height: 12px;
+  }
+}
+
+// ==================
+// LINKEDIN SPECIFIC
+// ==================
+.linkedin-preview {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, "Oxygen Sans", Cantarell, "Droid Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Lucida Grande", Helvetica, Arial, sans-serif;
+
+  .preview-header {
+    padding: 12px 16px 0;
+    border-bottom: none;
+  }
+
+  .profile-pic {
+    width: 48px;
+    height: 48px;
+  }
+
+  .profile-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.9);
+    line-height: 1.42857;
+  }
+
+  .profile-subtitle {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    line-height: 1.33333;
+    font-weight: 400;
+  }
+
+  .post-meta {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-weight: 400;
+
+    .timestamp {
+      font-weight: 400;
+    }
+
+    .visibility i {
+      font-size: 12px;
+    }
+  }
+
+  .preview-content {
+    padding-top: 8px;
+  }
+
+  .post-text {
+    padding: 0 16px 8px;
+    font-size: 14px;
+    line-height: 1.42857;
+    color: rgba(0, 0, 0, 0.9);
+    font-weight: 400;
+    word-break: break-word;
+
+    .see-more {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 14px;
+      font-weight: 600;
+      margin-left: 4px;
+
+      &:hover {
+        color: #0a66c2;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .engagement-bar {
+    border-top: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 12px 16px 8px;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .engagement-stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      font-weight: 400;
+
+      .engagement-icons {
+        display: flex;
+        gap: 0;
+        
+        i {
+          font-size: 16px;
+          margin-right: -2px;
+
+          &:first-child {
+            color: #0a66c2;
+          }
+          &:nth-child(2) {
+            color: #6dae4f;
+          }
+          &:nth-child(3) {
+            color: #df704d;
+          }
+        }
+      }
+
+      .engagement-count {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .engagement-counts {
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      font-weight: 400;
+
+      span {
+        cursor: pointer;
+
+        &:hover {
+          color: #0a66c2;
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+
+  .action-bar {
+    padding: 4px 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: space-around;
+
+    .action-btn {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 14px;
+      font-weight: 600;
+      gap: 6px;
+      padding: 14px 8px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+
+      i {
+        font-size: 20px;
+      }
+
+      span {
+        font-size: 14px;
+        line-height: 1.42857;
+      }
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.08);
+      }
+    }
+  }
+}
+
+// ==================
+// YOUTUBE PREVIEW
+// ==================
+.youtube-preview {
+  .preview-placeholder {
+    padding: 60px 20px;
+    text-align: center;
+    color: #9ca3af;
+  }
+}
+
+// ==================
+// GENERIC PREVIEW
+// ==================
+.generic-preview {
+  .profile-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #050505;
+  }
+
+  .timestamp {
+    font-size: 13px;
+    color: #65676b;
+  }
+}
+
+// Responsive
+@media (max-width: 640px) {
+  .social-preview-container {
+    max-width: 100%;
+  }
+
+  .preview-card {
+    border-radius: 0;
+  }
+
+  .instagram-preview {
+    max-width: 100%;
+  }
+}
