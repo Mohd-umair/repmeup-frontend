@@ -1112,6 +1112,15 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * When over limit, return how many accounts over (for display).
+   */
+  getOverLimitCount(): number {
+    if (!this.subscriptionLimits || this.subscriptionLimits.limits.maxAccounts === -1) return 0;
+    const over = this.subscriptionLimits.usage.connectedAccounts - this.subscriptionLimits.limits.maxAccounts;
+    return Math.max(0, over);
+  }
+
+  /**
    * Show plans modal
    */
   openPlansModal(): void {
