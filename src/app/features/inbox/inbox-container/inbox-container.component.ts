@@ -24,6 +24,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   topFilters: IInboxFilters = {};
   loading = false;
   syncing = false;
+  analyzingSentiment = false;
   lastSyncTime: Date | null = null;
   autoSyncEnabled = true;
   private autoSyncSubscription?: Subscription;
@@ -372,5 +373,28 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       interactionDate.setHours(0, 0, 0, 0);
       return interactionDate.getTime() === today.getTime();
     }).length;
+  }
+
+  /**
+   * Run sentiment analysis on comments that have no sentiment (so positive/negative/neutral filters work)
+   */
+  runAnalyzeSentiment(): void {
+    this.analyzingSentiment = true;
+    this.inboxService.analyzeSentiment(500).subscribe({
+      next: (res) => {
+        this.analyzingSentiment = false;
+        if (res.success && res.data) {
+          this.notificationService.success(
+            'Sentiment Analyzed',
+            res.data.message || `Analyzed ${res.data.analyzed} comment(s). Try the Positive / Negative / Neutral filters again.`
+          );
+          this.loadInteractions();
+        }
+      },
+      error: () => {
+        this.analyzingSentiment = false;
+        this.notificationService.error('Analysis Failed', 'Could not analyze sentiment. Try again later.');
+      }
+    });
   }
 }

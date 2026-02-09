@@ -34,6 +34,7 @@ interface ScheduledPost {
   platformPostUrl?: string;
   firstComment?: string;
   location?: string;
+  postType?: 'post' | 'story' | 'reel' | 'short';
 }
 
 interface Draft {
@@ -60,6 +61,15 @@ export class PublishComponent implements OnInit {
   mediaFiles: MediaFile[] = [];
   firstComment: string = '';
   location: string = '';
+  postType: 'post' | 'story' | 'reel' | 'short' = 'post';
+  
+  // Post type options
+  postTypes = [
+    { value: 'post', label: 'Post', icon: 'fas fa-image', description: 'Regular feed post', platforms: ['instagram', 'facebook', 'linkedin'] },
+    { value: 'story', label: 'Story', icon: 'fas fa-clock', description: '24-hour temporary content', platforms: ['instagram', 'facebook'] },
+    { value: 'reel', label: 'Reel', icon: 'fas fa-video', description: 'Short-form video content', platforms: ['instagram', 'facebook'] },
+    { value: 'short', label: 'Short', icon: 'fas fa-film', description: 'Vertical short video', platforms: ['facebook'] }
+  ];
   
   // Scheduling
   scheduleEnabled: boolean = false;
@@ -134,6 +144,10 @@ export class PublishComponent implements OnInit {
         
         connections.forEach((conn: any) => {
           const platform = conn.platform.toLowerCase();
+          // Exclude YouTube from publishing platforms
+          if (platform === 'youtube') {
+            return;
+          }
           if (!platformMap.has(platform)) {
             platformMap.set(platform, {
               id: platform,
@@ -165,6 +179,7 @@ export class PublishComponent implements OnInit {
   togglePlatform(platform: Platform): void {
     platform.selected = !platform.selected;
     this.selectedPlatforms = this.platforms.filter(p => p.selected);
+    this.onPlatformSelectionChange();
   }
 
   /**
@@ -369,6 +384,7 @@ export class PublishComponent implements OnInit {
         const formData = new FormData();
         formData.append('platform', platform.id);
         formData.append('content', this.postContent);
+        formData.append('postType', this.postType);
         
         if (this.firstComment) {
           formData.append('firstComment', this.firstComment);
@@ -443,6 +459,7 @@ export class PublishComponent implements OnInit {
     this.firstComment = '';
     this.location = '';
     this.mediaFiles = [];
+    this.postType = 'post';
     this.deselectAllPlatforms();
     this.scheduleEnabled = false;
     this.showFirstComment = false;
@@ -527,9 +544,9 @@ export class PublishComponent implements OnInit {
     const names: { [key: string]: string } = {
       instagram: 'Instagram',
       facebook: 'Facebook',
-      youtube: 'YouTube',
       linkedin: 'LinkedIn',
-      google: 'Google My Business'
+      google: 'Google My Business',
+      whatsapp: 'WhatsApp'
     };
     return names[platform] || platform;
   }
@@ -538,20 +555,20 @@ export class PublishComponent implements OnInit {
     const icons: { [key: string]: string } = {
       instagram: 'fab fa-instagram',
       facebook: 'fab fa-facebook',
-      youtube: 'fab fa-youtube',
       linkedin: 'fab fa-linkedin',
-      google: 'fab fa-google'
+      google: 'fab fa-google',
+      whatsapp: 'fab fa-whatsapp'
     };
     return icons[platform] || 'fas fa-share-alt';
   }
 
   getPlatformColor(platform: string): string {
     const colors: { [key: string]: string } = {
-      instagram: 'from-pink-500 to-purple-600',
-      facebook: 'from-blue-500 to-blue-700',
-      youtube: 'from-red-500 to-red-700',
-      linkedin: 'from-blue-600 to-blue-800',
-      google: 'from-green-500 to-green-700'
+      instagram: 'from-pink-400 to-purple-400',
+      facebook: 'from-blue-400 to-blue-500',
+      linkedin: 'from-blue-400 to-blue-500',
+      google: 'from-green-500 to-green-700',
+      whatsapp: 'from-green-400 to-green-500'
     };
     return colors[platform] || 'from-gray-500 to-gray-700';
   }
@@ -568,5 +585,57 @@ export class PublishComponent implements OnInit {
       return new Date(`${this.scheduledDate}T${this.scheduledTime}`);
     }
     return undefined;
+  }
+
+  /**
+   * Get available post types for currently selected platforms
+   */
+  getAvailablePostTypes() {
+    if (this.selectedPlatforms.length === 0) {
+      return this.postTypes;
+    }
+    
+    const selectedPlatformIds = this.selectedPlatforms.map(p => p.id);
+    
+    return this.postTypes.filter(type => 
+      type.platforms.some(platform => selectedPlatformIds.includes(platform))
+    );
+  }
+
+  /**
+   * Check if current post type is valid for selected platforms
+   */
+  isPostTypeValid(): boolean {
+    if (this.selectedPlatforms.length === 0) {
+      return true;
+    }
+    
+    const currentPostType = this.postTypes.find(t => t.value === this.postType);
+    if (!currentPostType) {
+      return false;
+    }
+    
+    return this.selectedPlatforms.every(platform => 
+      currentPostType.platforms.includes(platform.id)
+    );
+  }
+
+  /**
+   * Auto-select valid post type when platforms change
+   */
+  onPlatformSelectionChange(): void {
+    if (!this.isPostTypeValid()) {
+      const availableTypes = this.getAvailablePostTypes();
+      if (availableTypes.length > 0) {
+        this.postType = availableTypes[0].value as 'post' | 'story' | 'reel' | 'short';
+      }
+    }
+  }
+
+  /**
+   * Set post type with proper type casting
+   */
+  setPostType(value: string): void {
+    this.postType = value as 'post' | 'story' | 'reel' | 'short';
   }
 }

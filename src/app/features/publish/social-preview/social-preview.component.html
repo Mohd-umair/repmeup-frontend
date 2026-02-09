@@ -295,16 +295,8 @@
     </div>
   </div>
 
-  <!-- YOUTUBE PREVIEW (if needed) -->
-  <div *ngIf="platform.id === 'youtube'" class="preview-card youtube-preview">
-    <div class="preview-placeholder">
-      <i class="fab fa-youtube text-6xl text-red-600 mb-3"></i>
-      <p class="text-gray-400">YouTube preview coming soon</p>
-    </div>
-  </div>
-
   <!-- GENERIC PREVIEW (for other platforms) -->
-  <div *ngIf="!['facebook', 'instagram', 'linkedin', 'youtube'].includes(platform.id)" class="preview-card generic-preview">
+  <div *ngIf="!['facebook', 'instagram', 'linkedin'].includes(platform.id)" class="preview-card generic-preview">
     <div class="preview-header">
       <img [src]="getProfilePicture()" alt="Profile" class="profile-pic">
       <div class="header-info">

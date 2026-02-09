@@ -108,6 +108,48 @@
           </div>
         </div>
 
+        <!-- Post Type Selection -->
+        <div *ngIf="selectedPlatforms.length > 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 md:p-6 border border-gray-800">
+          <h2 class="text-lg sm:text-xl font-bold text-rep-white mb-4 flex items-center gap-2">
+            <i class="fas fa-layer-group text-rep-lime"></i>
+            Content Type
+          </h2>
+          
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <button
+              *ngFor="let type of getAvailablePostTypes()"
+              (click)="setPostType(type.value)"
+              [class]="postType === type.value 
+                ? 'ring-2 ring-rep-lime bg-gray-800 scale-105' 
+                : 'bg-gray-800/50 hover:bg-gray-800 hover:scale-105'"
+              class="relative p-3 sm:p-4 rounded-xl border border-gray-700 transition-all duration-300 cursor-pointer group"
+            >
+              <div class="flex flex-col items-center gap-2">
+                <i [class]="type.icon + ' text-2xl sm:text-3xl'" [style.color]="postType === type.value ? '#D4FF00' : '#9CA3AF'"></i>
+                <span class="font-bold text-xs sm:text-sm" [class.text-rep-lime]="postType === type.value" [class.text-gray-400]="postType !== type.value">
+                  {{ type.label }}
+                </span>
+                <span class="text-xs text-gray-500 text-center">{{ type.description }}</span>
+                
+                <div *ngIf="postType === type.value" class="absolute -top-2 -right-2 w-6 h-6 sm:w-7 sm:h-7 bg-rep-lime rounded-full flex items-center justify-center shadow-lg">
+                  <i class="fas fa-check text-rep-black text-xs"></i>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <!-- Post Type Info -->
+          <div class="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
+            <p class="text-xs sm:text-sm text-blue-400">
+              <i class="fas fa-lightbulb mr-2"></i>
+              <span *ngIf="postType === 'post'">Regular feed posts appear on profiles and in followers' feeds</span>
+              <span *ngIf="postType === 'story'">Stories disappear after 24 hours - great for time-sensitive content</span>
+              <span *ngIf="postType === 'reel'">Reels are short-form videos optimized for discovery and engagement</span>
+              <span *ngIf="postType === 'short'">Shorts are vertical videos designed for quick, engaging content</span>
+            </p>
+          </div>
+        </div>
+
         <!-- Post Composer -->
         <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 md:p-6 border border-gray-800">
           <h2 class="text-lg sm:text-xl font-bold text-rep-white mb-4 flex items-center gap-2">

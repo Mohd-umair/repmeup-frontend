@@ -128,6 +128,28 @@
     <app-inbox-top-filters (filtersChange)="onTopFilterChange($event)"></app-inbox-top-filters>
   </div>
 
+  <!-- Sentiment filter active but no results: offer to analyze sentiment -->
+  <div *ngIf="topFilters.sentiment && !loading && interactions.length === 0" 
+       class="mb-4 p-4 rounded-xl border-2 border-amber-200 bg-amber-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-smile text-amber-600"></i>
+      </div>
+      <div>
+        <h3 class="font-bold text-amber-900">No comments with "{{ topFilters.sentiment }}" sentiment yet</h3>
+        <p class="text-sm text-amber-800 mt-1">Comments are not analyzed for sentiment by default. Run analysis once so Positive / Negative / Neutral filters work.</p>
+      </div>
+    </div>
+    <button 
+      type="button"
+      (click)="runAnalyzeSentiment()"
+      [disabled]="analyzingSentiment"
+      class="px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold hover:bg-amber-600 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap">
+      <i class="fas" [class.fa-spinner]="analyzingSentiment" [class.fa-spin]="analyzingSentiment" [class.fa-magic]="!analyzingSentiment"></i>
+      {{ analyzingSentiment ? 'Analyzing...' : 'Analyze Sentiment' }}
+    </button>
+  </div>
+
   <!-- Three Column Layout - Responsive -->
   <div class="flex flex-col lg:flex-row gap-3 sm:gap-4 md:gap-6 lg:h-[calc(100vh-350px)]">
     <!-- Left: Platform Filters - same height as conversation box -->

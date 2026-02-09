@@ -42,6 +42,13 @@ export class InboxService {
   }
 
   /**
+   * Analyze sentiment for interactions that have no sentiment (keyword-based backfill)
+   */
+  analyzeSentiment(limit?: number): Observable<IApiResponse<{ analyzed: number; sample: any[]; message?: string }>> {
+    return this.apiService.post<IApiResponse<{ analyzed: number; sample: any[]; message?: string }>>('/inbox/analyze-sentiment', { limit });
+  }
+
+  /**
    * Get single interaction by ID
    */
   getInteraction(id: string): Observable<IApiResponse<IInteraction>> {
