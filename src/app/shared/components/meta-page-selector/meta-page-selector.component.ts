@@ -225,8 +225,16 @@ export class MetaPageSelectorComponent implements OnInit, OnChanges {
     
     if (newConnectionsCount > this.remainingSlots) {
       this.notificationService.error(
-        'Exceeds Limit',
-        `You can only add ${this.remainingSlots} more account(s). Your selection would add ${newConnectionsCount}.`
+        'Plan Limit Exceeded',
+        `Your plan allows only ${this.remainingSlots} more account${this.remainingSlots !== 1 ? 's' : ''}. You selected ${newConnectionsCount}. Please unselect ${newConnectionsCount - this.remainingSlots} account${newConnectionsCount - this.remainingSlots !== 1 ? 's' : ''} or upgrade your plan.`
+      );
+      return;
+    }
+
+    if (this.remainingSlots === 0) {
+      this.notificationService.error(
+        'Plan Limit Reached',
+        'You have reached your plan limit. Please upgrade your plan or disconnect an existing account to connect new ones.'
       );
       return;
     }
@@ -268,10 +276,23 @@ export class MetaPageSelectorComponent implements OnInit, OnChanges {
       },
       error: (error) => {
         console.error('Error connecting pages:', error);
-        this.notificationService.error(
-          'Connection Failed',
-          error.error?.error || 'Failed to connect pages. Please try again.'
-        );
+        
+        // Show specific error for plan limit exceeded
+        if (error.error?.code === 'PLAN_LIMIT_EXCEEDED') {
+          this.notificationService.error(
+            'Plan Limit Exceeded',
+            error.error?.error || 'You have reached your plan limit for connected accounts.'
+          );
+          
+          // Reload pages to refresh remaining slots
+          this.loadPages();
+        } else {
+          this.notificationService.error(
+            'Connection Failed',
+            error.error?.error || 'Failed to connect pages. Please try again.'
+          );
+        }
+        
         this.connecting = false;
       }
     });

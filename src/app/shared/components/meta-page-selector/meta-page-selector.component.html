@@ -24,15 +24,27 @@
     </div>
 
     <!-- Limit Info Banner -->
-    <div class="bg-blue-50 border-b-2 border-blue-200 p-4">
+    <div [class]="getNewConnectionsCount() > remainingSlots ? 'bg-red-50 border-b-2 border-red-300 p-4' : (remainingSlots === 0 ? 'bg-amber-50 border-b-2 border-amber-300 p-4' : 'bg-blue-50 border-b-2 border-blue-200 p-4')">
       <div class="flex items-start space-x-3">
-        <i class="fas fa-info-circle text-blue-600 text-lg mt-0.5"></i>
+        <i [class]="getNewConnectionsCount() > remainingSlots ? 'fas fa-exclamation-triangle text-red-600 text-lg mt-0.5' : (remainingSlots === 0 ? 'fas fa-exclamation-circle text-amber-600 text-lg mt-0.5' : 'fas fa-info-circle text-blue-600 text-lg mt-0.5')"></i>
         <div class="flex-1">
-          <p class="text-sm font-semibold text-blue-900 mb-1">Account Selection</p>
-          <p class="text-xs text-blue-800">
-            You can add <span class="font-bold">{{ remainingSlots }}</span> more account{{ remainingSlots !== 1 ? 's' : '' }} on your current plan.
-            <span *ngIf="remainingSlots === 0" class="text-amber-700 font-semibold">
-              Please disconnect an existing account or upgrade your plan.
+          <p class="text-sm font-semibold mb-1" [class]="getNewConnectionsCount() > remainingSlots ? 'text-red-900' : (remainingSlots === 0 ? 'text-amber-900' : 'text-blue-900')">
+            {{ getNewConnectionsCount() > remainingSlots ? 'Selection Exceeds Plan Limit!' : (remainingSlots === 0 ? 'No Available Slots' : 'Account Selection') }}
+          </p>
+          <p class="text-xs" [class]="getNewConnectionsCount() > remainingSlots ? 'text-red-800' : (remainingSlots === 0 ? 'text-amber-800' : 'text-blue-800')">
+            <span *ngIf="getNewConnectionsCount() > remainingSlots">
+              You selected <span class="font-bold">{{ getNewConnectionsCount() }}</span> account{{ getNewConnectionsCount() !== 1 ? 's' : '' }}, 
+              but can only add <span class="font-bold">{{ remainingSlots }}</span>. 
+              Please unselect {{ getNewConnectionsCount() - remainingSlots }} account{{ getNewConnectionsCount() - remainingSlots !== 1 ? 's' : '' }} or upgrade your plan.
+            </span>
+            <span *ngIf="getNewConnectionsCount() <= remainingSlots && remainingSlots > 0">
+              You can add <span class="font-bold">{{ remainingSlots }}</span> more account{{ remainingSlots !== 1 ? 's' : '' }} on your current plan.
+              <span *ngIf="getNewConnectionsCount() > 0">
+                ({{ getNewConnectionsCount() }} selected)
+              </span>
+            </span>
+            <span *ngIf="remainingSlots === 0" class="font-semibold">
+              You've reached your plan limit. Please disconnect an existing account or upgrade your plan to connect more.
             </span>
           </p>
         </div>

@@ -227,6 +227,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
         // Successfully connected
         const platform = params['connected'];
         this.loadPlatformConnections();
+        // CRITICAL: Refresh subscription limits to update connection count
+        this.loadSubscriptionLimits();
         
         // Show success message
         setTimeout(() => {
@@ -259,6 +261,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
           
           // Reload connections first and wait for it to complete
           this.loadPlatformConnections();
+          // CRITICAL: Refresh subscription limits to update connection count
+          this.loadSubscriptionLimits();
           
           // Also refresh the platform connection service
           this.platformConnectionService.refresh().subscribe({
@@ -347,6 +351,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
             );
           } else {
             this.loadPlatformConnections();
+            // CRITICAL: Refresh subscription limits to update connection count
+            this.loadSubscriptionLimits();
             setTimeout(() => {
               this.notificationService.success(
                 'Instagram Connected',
@@ -421,6 +427,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
             );
           } else {
             this.loadPlatformConnections();
+            // CRITICAL: Refresh subscription limits to update connection count
+            this.loadSubscriptionLimits();
             setTimeout(() => {
               this.notificationService.success(
                 'LinkedIn Connected',
@@ -565,6 +573,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
                 
                 // Reload connections to ensure UI is in sync
                 this.loadPlatformConnections();
+                // CRITICAL: Refresh subscription limits to update connection count
+                this.loadSubscriptionLimits();
                 
                 // Show success message
                 this.notificationService.success(
@@ -633,6 +643,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
                 'WhatsApp Business API connected successfully!'
               );
               this.loadPlatformConnections();
+              // CRITICAL: Refresh subscription limits to update connection count
+              this.loadSubscriptionLimits();
             }
             platform.loading = false;
           },
@@ -994,6 +1006,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     // Refresh connections to show newly added accounts
     this.platformConnectionService.refresh().subscribe();
     this.loadPlatformConnections();
+    // CRITICAL: Also refresh subscription limits to update connection count
+    this.loadSubscriptionLimits();
   }
 
   /**
