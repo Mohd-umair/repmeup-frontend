@@ -101,6 +101,8 @@ export class PublishComponent implements OnInit {
   publishing: boolean = false;
   error: string | null = null;
   success: string | null = null;
+  showMediaGuide: boolean = false;
+  fileValidationErrors: string[] = [];
   
   // Data
   scheduledPosts: ScheduledPost[] = [];
@@ -210,18 +212,23 @@ export class PublishComponent implements OnInit {
     }
     
     files.forEach((file: File) => {
-      // Validate file size
-      const maxSize = 8 * 1024 * 1024;
-      if (file.size > maxSize) {
-        this.error = `${file.name} is too large. Max 8MB per file.`;
+      // Validate file against platform requirements
+      const validation = this.validateMediaFile(file);
+      
+      if (!validation.valid) {
+        this.fileValidationErrors.push(...validation.errors);
+        this.notificationService.error(
+          'Invalid File',
+          validation.errors[0] || 'File does not meet platform requirements'
+        );
         return;
       }
-      
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'video/mp4'];
-      if (!allowedTypes.includes(file.type)) {
-        this.error = `${file.name} is not a supported format`;
-        return;
+
+      // Show warnings if any
+      if (validation.warnings && validation.warnings.length > 0) {
+        validation.warnings.forEach((warning: string) => {
+          this.notificationService.warning('Media Warning', warning);
+        });
       }
       
       const mediaType = file.type.startsWith('image') ? 'image' : 'video';
@@ -637,5 +644,83 @@ export class PublishComponent implements OnInit {
    */
   setPostType(value: string): void {
     this.postType = value as 'post' | 'story' | 'reel' | 'short';
+  }
+
+  /**
+   * Validate media file against platform requirements
+   */
+  validateMediaFile(file: File): { valid: boolean; errors: string[]; warnings: string[] } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+    const mediaType = file.type.startsWith('image') ? 'image' : 'video';
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+    // Platform-specific limits
+    const platformLimits: any = {
+      facebook: {
+        image: { maxSize: 8, formats: ['jpg', 'jpeg', 'png'] },
+        video: { maxSize: 1024, formats: ['mp4', 'mov'] }
+      },
+      instagram: {
+        image: { maxSize: 8, formats: ['jpg', 'jpeg', 'png'] },
+        video: { maxSize: 100, formats: ['mp4', 'mov'] }
+      },
+      linkedin: {
+        image: { maxSize: 5, formats: ['jpg', 'jpeg', 'png', 'gif'] },
+        video: { maxSize: 200, formats: ['mp4', 'mov'] }
+      }
+    };
+
+    // Check against each selected platform
+    for (const platform of this.selectedPlatforms) {
+      const limits = platformLimits[platform.id]?.[mediaType];
+      
+      if (!limits) {
+        continue;
+      }
+
+      // Check file size
+      if (file.size > limits.maxSize * 1024 * 1024) {
+        errors.push(`${platform.name}: File size ${fileSizeMB}MB exceeds ${limits.maxSize}MB limit`);
+      }
+
+      // Check format
+      if (!limits.formats.includes(fileExtension)) {
+        errors.push(`${platform.name}: Format .${fileExtension} not supported. Use: ${limits.formats.join(', ')}`);
+      }
+    }
+
+    // Get strictest limit
+    const strictestLimit = Math.min(
+      ...this.selectedPlatforms
+        .map(p => platformLimits[p.id]?.[mediaType]?.maxSize || 999)
+        .filter(l => l !== undefined)
+    );
+
+    if (strictestLimit && file.size > strictestLimit * 1024 * 1024) {
+      warnings.push(`File may be too large for some platforms. Consider compressing to under ${strictestLimit}MB`);
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+
+  /**
+   * Toggle media guide modal
+   */
+  toggleMediaGuide(): void {
+    this.showMediaGuide = !this.showMediaGuide;
+  }
+
+  /**
+   * Get selected platform IDs for media guide
+   */
+  getSelectedPlatformIds(): string[] {
+    return this.selectedPlatforms.map(p => p.id);
   }
 }

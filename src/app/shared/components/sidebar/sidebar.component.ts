@@ -77,7 +77,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
    */
   loadMenus(): void {
     this.loadingMenus = true;
-    this.menuService.loadMenus().subscribe({
+    const menuLoadSub = this.menuService.loadMenus().subscribe({
       next: (response) => {
         if (response.success) {
           console.log('✅ Menus loaded successfully');
@@ -91,6 +91,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.setDefaultMenus();
       }
     });
+    this.subscriptions.push(menuLoadSub);
   }
 
   /**

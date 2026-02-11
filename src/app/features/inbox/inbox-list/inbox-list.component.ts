@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
@@ -22,6 +22,7 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   searchTerm = '';
   private searchSubject = new Subject<string>();
+  private searchSubscription?: Subscription;
   /** Tracks avatar load errors so we can show initial fallback */
   avatarFallback: Record<string, boolean> = {};
 
@@ -34,16 +35,16 @@ export class InboxListComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Set up debounced search
-    this.searchSubject.pipe(
-      debounceTime(400), // Wait 400ms after user stops typing
-      distinctUntilChanged() // Only emit if value has changed
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
     ).subscribe(searchTerm => {
       this.searchChange.emit(searchTerm);
     });
   }
 
   ngOnDestroy(): void {
+    this.searchSubscription?.unsubscribe();
     this.searchSubject.complete();
   }
 

@@ -228,9 +228,17 @@
 
           <!-- Media Upload -->
           <div class="mb-4">
-            <label class="block text-xs sm:text-sm font-semibold text-rep-white mb-2">
-              <i class="fas fa-images mr-1"></i> Media (up to 10 files for carousel)
-            </label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs sm:text-sm font-semibold text-rep-white">
+                <i class="fas fa-images mr-1"></i> Media (up to 10 files for carousel)
+              </label>
+              <button
+                type="button"
+                (click)="toggleMediaGuide()"
+                class="text-xs px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition">
+                <i class="fas fa-info-circle mr-1"></i> View Guidelines
+              </button>
+            </div>
 
             <div *ngIf="mediaFiles.length === 0" class="border-2 border-dashed border-gray-700 rounded-xl p-6 sm:p-8 text-center hover:border-rep-lime hover:bg-rep-lime/5 transition cursor-pointer"
                  (click)="fileInput.click()">
@@ -601,4 +609,12 @@
     </div>
 
   </div>
-</div> 
+</div>
+
+<!-- Media Upload Guide Modal -->
+<app-media-upload-guide
+  [selectedPlatforms]="getSelectedPlatformIds()"
+  [postType]="postType"
+  [showModal]="showMediaGuide"
+  (close)="showMediaGuide = false">
+</app-media-upload-guide>

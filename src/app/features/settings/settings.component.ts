@@ -7,7 +7,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 /**
  * Settings Component - Single Responsibility Principle
@@ -66,6 +66,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   showPlansModal = false;
   allPlans: any = null;
   upgradingPlan = false;
+
+  private subscriptions: Subscription[] = [];
 
   // Auto-reply settings
   autoReplySettings: AutoReplySettings = {
@@ -134,35 +136,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
       loading: false
     },
     {
-      id: 'whatsapp',
-      name: 'WhatsApp Business',
-      icon: 'fab fa-whatsapp',
-      brandColor: '#25D366',
-      gradientFrom: '#25D366',
-      gradientTo: '#128C7E',
-      description: 'Handle WhatsApp Business API messages',
-      connected: false,
-      loading: false
-    },
-    {
-      id: 'twitter',
+      id: 'linkedin',
       name: 'Twitter (X)',
       icon: 'fab fa-twitter',
       brandColor: '#1DA1F2',
       gradientFrom: '#1DA1F2',
       gradientTo: '#0C85D0',
       description: 'Monitor mentions, replies, and direct messages',
-      connected: false,
-      loading: false
-    },
-    {
-      id: 'linkedin',
-      name: 'LinkedIn',
-      icon: 'fab fa-linkedin',
-      brandColor: '#0A66C2',
-      gradientFrom: '#0A66C2',
-      gradientTo: '#004182',
-      description: 'Manage LinkedIn company page posts and comments',
       connected: false,
       loading: false
     },
@@ -197,32 +177,29 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Get organization ID from current user
-    this.authService.currentUser$.subscribe(user => {
-      if (user && user.organization) {
-        this.organizationId = typeof user.organization === 'string' ? user.organization : user.organization._id;
-        this.loadAutoReplySettings();
-      }
-    });
+    this.subscriptions.push(
+      this.authService.currentUser$.subscribe(user => {
+        if (user && user.organization) {
+          this.organizationId = typeof user.organization === 'string' ? user.organization : user.organization._id;
+          this.loadAutoReplySettings();
+        }
+      })
+    );
 
-    // Step 10: Start auto-refresh polling for real-time updates
     this.platformConnectionService.startPolling();
-
-    // Load subscription limits
     this.loadSubscriptionLimits();
-    
-    // Load available accounts
     this.loadAvailableAccounts();
-    
-    // Subscribe to subscription limits for reactive UI updates
-    this.subscriptionLimits$.subscribe(limits => {
-      if (limits) {
-        this.subscriptionLimits = limits;
-      }
-    });
 
-    // Check for OAuth callback parameters
-    this.route.queryParams.subscribe(params => {
+    this.subscriptions.push(
+      this.subscriptionLimits$.subscribe(limits => {
+        if (limits) {
+          this.subscriptionLimits = limits;
+        }
+      })
+    );
+
+    this.subscriptions.push(
+      this.route.queryParams.subscribe(params => {
       if (params['connected']) {
         // Successfully connected
         const platform = params['connected'];
@@ -479,9 +456,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
           queryParams: {}
         });
       }
-    });
+    })
+    );
 
-    // Load existing connections
     this.loadPlatformConnections();
   }
 
@@ -1289,7 +1266,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
    * Component cleanup (Step 10)
    */
   ngOnDestroy(): void {
-    // Stop polling when leaving settings
     this.platformConnectionService.stopPolling();
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 }

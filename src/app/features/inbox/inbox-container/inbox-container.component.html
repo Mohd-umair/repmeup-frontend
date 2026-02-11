@@ -1,130 +1,129 @@
 <div class="h-full p-3 sm:p-4 md:p-6 transition-colors duration-500 overflow-y-auto" 
      [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #000000)08, var(--platform-gradient-to, #000000)08)'">
-  <!-- Modern Header with Stats - Platform Themed -->
-  <div class="mb-4 sm:mb-5 md:mb-6">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 sm:mb-5 md:mb-6 p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl backdrop-blur-sm border-2 transition-all duration-500"
-         [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #D0FF00)15, var(--platform-gradient-to, #B8E600)15)'"
-         [style.borderColor]="'var(--platform-primary, #D0FF00)40'"
-         [style.boxShadow]="'0 8px 32px var(--platform-primary, #D0FF00)20'">
-      <div class="flex-1">
-        <div class="flex items-center gap-2 sm:gap-3">
-          <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-500 shadow-lg flex-shrink-0"
-               [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-               [style.boxShadow]="'0 8px 24px var(--platform-primary, rgba(75, 85, 99, 0.4))'">
-            <i [class]="getHeaderIcon() + ' text-lg sm:text-xl md:text-2xl text-white'"></i>
-          </div>
-          <div class="min-w-0">
-            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold transition-all duration-500 truncate" 
-                [style.color]="'var(--platform-primary, #1F2937)'">
-              {{ getHeaderTitle() }}
-            </h1>
-            <p class="text-xs sm:text-sm md:text-base text-gray-600 mt-0.5 sm:mt-1 transition-all duration-300 truncate">
-              {{ getHeaderSubtitle() }}
-              <span *ngIf="lastSyncTime" class="hidden sm:inline text-xs text-gray-500 ml-2">
-                • Last synced: {{ lastSyncTime | date:'short' }}
-              </span>
-            </p>
+  <!-- Compact Header - Platform Themed -->
+  <div class="mb-4 sm:mb-5">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-xl backdrop-blur-sm border-2 transition-all duration-300"
+         [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #D0FF00)10, var(--platform-gradient-to, #B8E600)10)'"
+         [style.borderColor]="'var(--platform-primary, #D0FF00)30'">
+      <div class="flex items-center gap-3 flex-1 min-w-0">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+             [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'">
+          <i [class]="getHeaderIcon() + ' text-lg sm:text-xl text-white'"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h1 class="text-lg sm:text-xl font-bold transition-all duration-300 truncate" 
+              [style.color]="'var(--platform-primary, #1F2937)'">
+            {{ getHeaderTitle() }}
+          </h1>
+          <div class="flex items-center gap-3 text-xs sm:text-sm text-gray-600 mt-0.5">
+            <span class="truncate">{{ interactions.length }} messages</span>
+            <span *ngIf="getUnreadCount() > 0" class="flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full animate-pulse" [style.background]="'var(--platform-primary, #D0FF00)'"></span>
+              {{ getUnreadCount() }} unread
+            </span>
           </div>
         </div>
       </div>
-      <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <!-- Stats toggle button -->
+        <button 
+          (click)="showStats = !showStats"
+          type="button"
+          class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 text-gray-700 hover:bg-white/50"
+          title="Toggle stats">
+          <i class="fas" [class.fa-chart-bar]="!showStats" [class.fa-times]="showStats"></i>
+          <span class="hidden sm:inline ml-1.5">{{ showStats ? 'Hide' : 'Stats' }}</span>
+        </button>
+        
         <!-- Auto-sync toggle -->
         <button 
           (click)="toggleAutoSync()"
           type="button"
-          class="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-medium transition-all duration-300 text-white whitespace-nowrap"
+          class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 text-white"
           [style.background]="autoSyncEnabled ? 'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))' : 'rgba(75, 85, 99, 0.2)'"
-          [style.boxShadow]="autoSyncEnabled ? '0 4px 12px var(--platform-primary, rgba(75, 85, 99, 0.3))' : 'none'"
-          title="Toggle auto-sync (every 5 minutes)">
-          <i class="fas mr-1 sm:mr-2" [class.fa-toggle-on]="autoSyncEnabled" [class.fa-toggle-off]="!autoSyncEnabled"></i>
-          <span class="hidden sm:inline">Auto-sync</span>
-          <span class="sm:hidden">Auto</span>
+          title="Toggle auto-sync">
+          <i class="fas" [class.fa-toggle-on]="autoSyncEnabled" [class.fa-toggle-off]="!autoSyncEnabled"></i>
         </button>
         
-        <!-- Manual sync button -->
+        <!-- Sync button -->
         <button 
           (click)="onSyncClick()"
           type="button"
           [disabled]="syncing || loading"
-          class="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base font-bold rounded-lg sm:rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-white whitespace-nowrap"
-          [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-          [style.boxShadow]="'0 6px 20px var(--platform-primary, rgba(75, 85, 99, 0.4))'">
-          <i class="fas mr-1 sm:mr-2" [class.fa-sync-alt]="!syncing" [class.fa-spinner]="syncing" [class.fa-spin]="syncing"></i>
-          {{ syncing ? 'Syncing...' : 'Sync' }}
+          class="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-all duration-300 disabled:opacity-50 text-white"
+          [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'">
+          <i class="fas mr-1.5" [class.fa-sync-alt]="!syncing" [class.fa-spinner]="syncing" [class.fa-spin]="syncing"></i>
+          Sync
         </button>
       </div>
     </div>
 
-    <!-- Stats Cards - Platform Themed -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
-      <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 border-2 transition-all duration-500 hover:shadow-xl"
-           style="border-color: rgba(75, 85, 99, 0.2); box-shadow: 0 4px 12px rgba(75, 85, 99, 0.1);">
+    <!-- Collapsible Stats Cards -->
+    <div *ngIf="showStats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3 animate-slideDown">
+      <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
+           style="border-color: rgba(75, 85, 99, 0.15);">
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">
-            <p class="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Messages</p>
-            <p class="text-xl sm:text-2xl font-bold transition-colors duration-500"
+            <p class="text-xs font-medium text-gray-500 truncate">Total</p>
+            <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
                [style.color]="'var(--platform-primary, #1F2937)'">{{ interactions.length }}</p>
           </div>
-          <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center transition-all duration-500 flex-shrink-0"
-               [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-               [style.boxShadow]="'0 4px 12px var(--platform-primary, rgba(75, 85, 99, 0.3))'">
-            <i class="fas fa-inbox text-sm sm:text-base md:text-xl text-white"></i>
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+               [style.background]="'var(--platform-primary, #4B5563)' + '15'">
+            <i class="fas fa-inbox text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 border-2 transition-all duration-500 hover:shadow-xl"
-           style="border-color: rgba(75, 85, 99, 0.2); box-shadow: 0 4px 12px rgba(75, 85, 99, 0.1);">
+      <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
+           style="border-color: rgba(75, 85, 99, 0.15);">
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">
-            <p class="text-xs sm:text-sm font-medium text-gray-600 truncate">Unread</p>
-            <p class="text-xl sm:text-2xl font-bold transition-colors duration-500"
+            <p class="text-xs font-medium text-gray-500 truncate">Unread</p>
+            <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
                [style.color]="'var(--platform-primary, #1F2937)'">{{ getUnreadCount() }}</p>
           </div>
-          <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center transition-all duration-500 flex-shrink-0"
-               [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-               [style.boxShadow]="'0 4px 12px var(--platform-primary, rgba(75, 85, 99, 0.3))'">
-            <i class="fas fa-envelope text-sm sm:text-base md:text-xl text-white"></i>
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+               [style.background]="'var(--platform-primary, #4B5563)' + '15'">
+            <i class="fas fa-envelope text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 border-2 transition-all duration-500 hover:shadow-xl"
-           style="border-color: rgba(75, 85, 99, 0.2); box-shadow: 0 4px 12px rgba(75, 85, 99, 0.1);">
+      <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
+           style="border-color: rgba(75, 85, 99, 0.15);">
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">
-            <p class="text-xs sm:text-sm font-medium text-gray-600 truncate">Today</p>
-            <p class="text-xl sm:text-2xl font-bold transition-colors duration-500"
+            <p class="text-xs font-medium text-gray-500 truncate">Today</p>
+            <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
                [style.color]="'var(--platform-primary, #1F2937)'">{{ getTodayCount() }}</p>
           </div>
-          <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center transition-all duration-500 flex-shrink-0"
-               [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-               [style.boxShadow]="'0 4px 12px var(--platform-primary, rgba(75, 85, 99, 0.3))'">
-            <i class="fas fa-calendar-day text-sm sm:text-base md:text-xl text-white"></i>
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+               [style.background]="'var(--platform-primary, #4B5563)' + '15'">
+            <i class="fas fa-calendar-day text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
           </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 border-2 transition-all duration-500 hover:shadow-xl"
-           style="border-color: rgba(75, 85, 99, 0.2); box-shadow: 0 4px 12px rgba(75, 85, 99, 0.1);">
+      <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
+           style="border-color: rgba(75, 85, 99, 0.15);">
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">
-            <p class="text-xs sm:text-sm font-medium text-gray-600 truncate">Response Rate</p>
-            <p class="text-xl sm:text-2xl font-bold transition-colors duration-500"
+            <p class="text-xs font-medium text-gray-500 truncate">Response</p>
+            <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
                [style.color]="'var(--platform-primary, #1F2937)'">94%</p>
           </div>
-          <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center transition-all duration-500 flex-shrink-0"
-               [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-               [style.boxShadow]="'0 4px 12px var(--platform-primary, rgba(75, 85, 99, 0.3))'">
-            <i class="fas fa-chart-line text-sm sm:text-base md:text-xl text-white"></i>
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+               [style.background]="'var(--platform-primary, #4B5563)' + '15'">
+            <i class="fas fa-chart-line text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Top Filters Bar -->
-  <div class="mb-4 sm:mb-5 md:mb-6">
+  <!-- Top Filters Bar - Simplified -->
+  <div class="mb-4">
     <app-inbox-top-filters (filtersChange)="onTopFilterChange($event)"></app-inbox-top-filters>
   </div>
 
@@ -151,45 +150,41 @@
   </div>
 
   <!-- Three Column Layout - Responsive -->
-  <div class="flex flex-col lg:flex-row gap-3 sm:gap-4 md:gap-6 lg:h-[calc(100vh-350px)]">
-    <!-- Left: Platform Filters - same height as conversation box -->
-    <div class="w-full lg:w-80 lg:min-h-0 bg-white rounded-xl sm:rounded-2xl shadow-xl flex flex-col border-2 transition-all duration-500 lg:overflow-hidden lg:flex-shrink-0"
-         [style.borderColor]="'var(--platform-primary, #D0FF00)40'"
-         [style.boxShadow]="'0 8px 32px var(--platform-primary, #D0FF00)15'">
-      <div class="p-3 sm:p-4 md:p-6 border-b-2 transition-all duration-500"
-           [style.background]="'linear-gradient(to right, var(--platform-gradient-from, #D0FF00)10, var(--platform-gradient-to, #B8E600)10)'"
-           [style.borderColor]="'var(--platform-primary, #D0FF00)20'">
-        <h2 class="text-sm sm:text-base md:text-lg font-bold flex items-center transition-colors duration-500"
-            [style.color]="'var(--platform-primary, #000000)'">
+  <div class="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:h-[calc(100vh-320px)]">
+    <!-- Left: Platform Filters - Collapsible -->
+    <div class="w-full lg:w-80 lg:min-h-0 bg-white rounded-xl shadow-md flex flex-col border transition-all duration-300 lg:overflow-hidden lg:flex-shrink-0"
+         [class.lg:w-12]="!showFilters"
+         style="border-color: rgba(0,0,0,0.08);">
+      <div class="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+           (click)="showFilters = !showFilters"
+           style="border-color: rgba(0,0,0,0.05);">
+        <h2 *ngIf="showFilters" class="text-sm font-bold flex items-center text-gray-900">
           <i class="fas fa-filter mr-2"></i>
-          Platform Filters
+          Filters
         </h2>
+        <button class="text-gray-600 hover:text-gray-900 transition-colors">
+          <i class="fas" [class.fa-chevron-left]="showFilters" [class.fa-chevron-right]="!showFilters"></i>
+        </button>
       </div>
-      <div class="flex-1 overflow-y-auto">
+      <div *ngIf="showFilters" class="flex-1 overflow-y-auto animate-slideDown">
         <app-inbox-filters (filtersChange)="onPlatformFilterChange($event)"></app-inbox-filters>
       </div>
     </div>
 
     <!-- Middle: Interaction List or Empty State -->
-    <div class="flex-1 bg-white rounded-xl sm:rounded-2xl shadow-xl border-2 transition-all duration-500 lg:overflow-hidden"
-         style="min-height: 400px;"
-         [style.borderColor]="'var(--platform-primary, #D0FF00)40'"
-         [style.boxShadow]="'0 8px 32px var(--platform-primary, #D0FF00)15'">
+    <div class="flex-1 bg-white rounded-xl shadow-md border transition-all duration-300 lg:overflow-hidden"
+         style="min-height: 400px; border-color: rgba(0,0,0,0.08);">
       
       <!-- Show conversations only when platform is selected -->
-      <div *ngIf="platformFilters.platform" class="h-full flex flex-col"
-           [style.background]="'linear-gradient(to bottom, var(--platform-bg, #FFFFFF), white)'">
-        <div class="p-3 sm:p-4 md:p-6 border-b-2 transition-all duration-500"
-             [style.background]="'linear-gradient(to right, var(--platform-gradient-from, #D0FF00)10, var(--platform-gradient-to, #B8E600)10)'"
-             [style.borderColor]="'var(--platform-primary, #D0FF00)20'">
-          <h2 class="text-sm sm:text-base md:text-lg font-bold flex items-center justify-between transition-colors duration-500"
-              [style.color]="'var(--platform-primary, #000000)'">
+      <div *ngIf="platformFilters.platform" class="h-full flex flex-col">
+        <div class="p-4 border-b"
+             style="border-color: rgba(0,0,0,0.05);">
+          <h2 class="text-sm font-bold flex items-center justify-between text-gray-900">
             <span>
-              <i class="fas fa-comments mr-1 sm:mr-2"></i>
-              <span class="hidden sm:inline">Conversations</span>
-              <span class="sm:hidden">Chats</span>
+              <i class="fas fa-comments mr-2"></i>
+              Conversations
             </span>
-            <span class="text-xs sm:text-sm font-normal text-gray-600">{{ interactions.length }}</span>
+            <span class="text-xs font-normal text-gray-500">{{ interactions.length }}</span>
           </h2>
         </div>
         <div class="flex-1 overflow-hidden">
@@ -242,13 +237,10 @@
       </div>
     </div>
 
-    <!-- Right: Detail View - Platform Themed -->
-    <div class="flex-1 bg-white rounded-xl sm:rounded-2xl shadow-xl border-2 min-w-0 max-w-full transition-all duration-500 lg:overflow-hidden"
-         style="min-height: 400px;"
-         [style.borderColor]="'var(--platform-primary, #D0FF00)40'"
-         [style.boxShadow]="'0 8px 32px var(--platform-primary, #D0FF00)15'">
-      <div class="h-full w-full overflow-x-hidden"
-           [style.background]="'linear-gradient(to bottom, var(--platform-bg, #FFFFFF), white)'">
+    <!-- Right: Detail View -->
+    <div class="flex-1 bg-white rounded-xl shadow-md border min-w-0 max-w-full transition-all duration-300 lg:overflow-hidden"
+         style="min-height: 400px; border-color: rgba(0,0,0,0.08);">
+      <div class="h-full w-full overflow-x-hidden">
         <app-inbox-detail 
           [interaction]="selectedInteraction"
           (updateInteraction)="onInteractionUpdate()"

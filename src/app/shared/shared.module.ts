@@ -5,13 +5,15 @@ import { NotificationComponent } from './components/notification/notification.co
 import { ConnectionUsageBarComponent } from './components/connection-usage-bar/connection-usage-bar.component';
 import { ConnectedAccountsListComponent } from './components/connected-accounts-list/connected-accounts-list.component';
 import { MetaPageSelectorComponent } from './components/meta-page-selector/meta-page-selector.component';
+import { MediaUploadGuideComponent } from './components/media-upload-guide/media-upload-guide.component';
 
 @NgModule({
   declarations: [
     NotificationComponent,
     ConnectionUsageBarComponent,
     ConnectedAccountsListComponent,
-    MetaPageSelectorComponent
+    MetaPageSelectorComponent,
+    MediaUploadGuideComponent
   ],
   imports: [
     CommonModule
@@ -20,7 +22,8 @@ import { MetaPageSelectorComponent } from './components/meta-page-selector/meta-
     NotificationComponent,
     ConnectionUsageBarComponent,
     ConnectedAccountsListComponent,
-    MetaPageSelectorComponent
+    MetaPageSelectorComponent,
+    MediaUploadGuideComponent
   ]
 })
 export class SharedModule { }

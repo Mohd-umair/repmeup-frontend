@@ -54,22 +54,20 @@
   </div>
 
   <!-- Interaction List - Fixed Height with Scroll -->
-  <div *ngIf="!loading && interactions.length > 0" class="flex-1 overflow-y-auto p-2" style="max-height: calc(100vh - 300px);">
+  <div *ngIf="!loading && interactions.length > 0" class="flex-1 overflow-y-auto p-3" style="max-height: calc(100vh - 300px);">
     <div
       *ngFor="let interaction of interactions; let i = index"
       (click)="selectInteraction(interaction)"
-      class="p-4 mb-2 rounded-xl cursor-pointer transition-all duration-300 border-l-4"
+      class="p-4 mb-4 rounded-xl cursor-pointer transition-all duration-300 border-l-4 border"
       [class.shadow-lg]="isSelected(interaction)"
-      [class.transform]="isSelected(interaction)"
-      [class.scale-102]="isSelected(interaction)"
       [style.borderLeftColor]="getPlatformColors(interaction.platform).primary"
+      [style.borderColor]="isSelected(interaction) ? getPlatformColors(interaction.platform).primary + '40' : 'rgba(0,0,0,0.05)'"
       [style.background]="isSelected(interaction) 
-        ? 'linear-gradient(to right, ' + getPlatformColors(interaction.platform).gradientFrom + '12, ' + getPlatformColors(interaction.platform).gradientTo + '08)' 
+        ? 'linear-gradient(to right, ' + getPlatformColors(interaction.platform).gradientFrom + '08, white)' 
         : 'white'"
       [style.boxShadow]="isSelected(interaction)
-        ? '0 8px 24px ' + getPlatformColors(interaction.platform).primary + '25'
-        : '0 1px 3px rgba(0,0,0,0.1)'"
-      [style.animation-delay]="i * 50 + 'ms'"
+        ? '0 4px 16px ' + getPlatformColors(interaction.platform).primary + '20'
+        : '0 1px 2px rgba(0,0,0,0.05)'"
     >
       <div class="flex items-start space-x-3">
         <!-- Avatar with Platform Badge -->
@@ -93,89 +91,70 @@
         <!-- Content -->
         <div class="flex-1 min-w-0">
           <!-- Header Row -->
-          <div class="flex items-center justify-between mb-1">
-            <h3 class="text-sm font-bold text-rep-black truncate">
-              {{ interaction.author.name }}
-            </h3>
-            <span class="text-xs text-gray-500 flex-shrink-0 ml-2">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <h3 class="text-sm font-semibold text-gray-900 truncate">
+                {{ interaction.author.name }}
+              </h3>
+              <!-- Unread dot -->
+              <span *ngIf="interaction.status === 'unread'" 
+                    class="w-2 h-2 rounded-full flex-shrink-0" 
+                    [style.background]="getPlatformColors(interaction.platform).primary"></span>
+            </div>
+            <span class="text-xs text-gray-400 flex-shrink-0 ml-2">
               {{ formatTime(interaction.platformCreatedAt) }}
             </span>
           </div>
 
-          <!-- Platform & Type - Platform Colored (Matching Style) -->
-          <div class="flex items-center space-x-2 mb-2 flex-wrap gap-y-1">
-            <span class="px-2.5 py-1 rounded-lg text-xs font-bold flex items-center border transition-all duration-300"
-                  [style.background]="getPlatformColors(interaction.platform).primary + '15'"
-                  [style.color]="getPlatformColors(interaction.platform).primary"
-                  [style.borderColor]="getPlatformColors(interaction.platform).primary + '40'">
-              <span class="mr-1.5">{{ getPlatformIcon(interaction.platform) }}</span>
-              {{ interaction.platform }}
-            </span>
-            <span class="px-2.5 py-1 rounded-lg text-xs font-medium border transition-all duration-300"
-                  [style.background]="getPlatformColors(interaction.platform).primary + '15'"
-                  [style.color]="getPlatformColors(interaction.platform).primary"
-                  [style.borderColor]="getPlatformColors(interaction.platform).primary + '40'">
-              {{ getTypeLabel(interaction.type) }}
+          <!-- Simplified Badges - Only Essential Info -->
+          <div class="flex items-center space-x-1.5 mb-2">
+            <span class="text-xs flex items-center gap-1"
+                  [style.color]="getPlatformColors(interaction.platform).primary">
+              <span>{{ getPlatformIcon(interaction.platform) }}</span>
+              <span class="font-medium">{{ getTypeLabel(interaction.type) }}</span>
             </span>
             <span *ngIf="interaction.type === 'review' && getReviewRating(interaction)"
-                  class="px-2.5 py-1 rounded-lg text-xs font-semibold border bg-amber-50 text-amber-800 border-amber-200"
-                  title="Star rating">
-              <i class="fas fa-star text-amber-500 mr-1"></i>{{ getReviewRating(interaction) }}
+                  class="text-xs flex items-center gap-1 text-amber-600">
+              <i class="fas fa-star"></i>{{ getReviewRating(interaction) }}
             </span>
-            <span 
-              *ngIf="interaction.sentiment"
-              [class]="'px-2 py-0.5 rounded-md text-xs font-medium flex items-center space-x-1 ' + getSentimentClass(interaction.sentiment)"
-            >
-              <span>{{ getSentimentIcon(interaction.sentiment) }}</span>
-              <span>{{ interaction.sentiment }}</span>
+            <span *ngIf="interaction.sentiment" class="text-xs">
+              {{ getSentimentIcon(interaction.sentiment) }}
             </span>
           </div>
 
           <!-- Message Preview -->
-          <p class="text-sm text-gray-600 line-clamp-2 mb-2 leading-relaxed">
+          <p class="text-sm text-gray-600 line-clamp-2 leading-relaxed">
             {{ interaction.content }}
           </p>
 
-          <!-- Footer with Status & Labels -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-1.5 flex-wrap gap-1">
-              <!-- Status Badge -->
-              <span 
-                [class]="'px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center space-x-1 ' + 
-                  (interaction.status === 'unread' ? 'bg-gray-100 text-gray-800 border border-gray-200' : 
-                   interaction.status === 'replied' ? 'bg-rep-lime/20 text-rep-black border border-rep-lime/30' : 
-                   'bg-gray-100 text-gray-700 border border-gray-200')"
-              >
-                <i [class]="interaction.status === 'unread' ? 'fas fa-circle text-gray-600' : 
-                             interaction.status === 'replied' ? 'fas fa-check-circle text-rep-lime' : 
-                             'fas fa-dot-circle'"></i>
-                <span>{{ interaction.status }}</span>
-              </span>
+          <!-- Footer - Only show if replied or has labels -->
+          <div *ngIf="interaction.status === 'replied' || (interaction.labels && interaction.labels.length > 0)" 
+               class="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
+            <!-- Replied Badge -->
+            <span *ngIf="interaction.status === 'replied'"
+                  class="text-xs flex items-center gap-1"
+                  [style.color]="getPlatformColors(interaction.platform).primary">
+              <i class="fas fa-check-circle"></i>
+              <span class="font-medium">Replied</span>
+            </span>
 
-              <!-- Labels -->
-              <span 
-                *ngFor="let label of interaction.labels?.slice(0, 2)"
-                [style.background-color]="label.color + '15'"
-                [style.border-color]="label.color + '40'"
-                [style.color]="label.color"
-                class="px-2 py-1 rounded-lg text-xs font-medium border"
-              >
-                {{ label.name }}
-              </span>
+            <!-- Labels (First 2) -->
+            <span 
+              *ngFor="let label of interaction.labels?.slice(0, 2)"
+              class="px-2 py-0.5 rounded text-xs font-medium"
+              [style.background-color]="label.color + '15'"
+              [style.color]="label.color"
+            >
+              {{ label.name }}
+            </span>
 
-              <!-- More Labels Indicator -->
-              <span 
-                *ngIf="interaction.labels && interaction.labels.length > 2"
-                class="px-2 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200"
-              >
-                +{{ interaction.labels.length - 2 }}
-              </span>
-            </div>
-
-            <!-- Unread Indicator - Platform Colored -->
-            <div *ngIf="interaction.status === 'unread'" 
-                 class="w-2.5 h-2.5 rounded-full animate-pulse transition-all duration-300"
-                 [style.background]="getPlatformColors(interaction.platform).primary"></div>
+            <!-- More Labels -->
+            <span 
+              *ngIf="interaction.labels && interaction.labels.length > 2"
+              class="text-xs text-gray-400 font-medium"
+            >
+              +{{ interaction.labels.length - 2 }}
+            </span>
           </div>
         </div>
       </div>
