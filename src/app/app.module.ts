@@ -44,6 +44,7 @@ import { PublishedPostsComponent } from './features/published-posts/published-po
 import { PlansComponent } from './features/plans/plans.component';
 import { PageManagerComponent } from './features/settings/components/page-manager/page-manager.component';
 import { SocialPreviewComponent } from './features/publish/social-preview/social-preview.component';
+import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 
 /**
  * App Module - Following SOLID principles
@@ -79,7 +80,8 @@ import { SocialPreviewComponent } from './features/publish/social-preview/social
     PublishedPostsComponent,
     PlansComponent,
     PageManagerComponent,
-    SocialPreviewComponent
+    SocialPreviewComponent,
+    AiCreditsComponent
   ],
   imports: [
     BrowserModule,

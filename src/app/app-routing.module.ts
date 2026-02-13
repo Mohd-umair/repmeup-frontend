@@ -27,6 +27,7 @@ import { TermsConditionsComponent } from './features/legal/terms-conditions/term
 import { ContactComponent } from './features/contact/contact.component';
 import { AboutComponent } from './features/about/about.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
+import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -78,7 +79,8 @@ const routes: Routes = [
       { path: 'knowledge-base', component: KnowledgeBaseComponent },
       { path: 'settings', component: SettingsComponent },
       { path: 'agents', component: AgentsComponent },
-      { path: 'plans', component: PlansComponent }
+      { path: 'plans', component: PlansComponent },
+      { path: 'ai-credits', component: AiCreditsComponent }
     ]
   },
 

@@ -41,246 +41,346 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
       
       <!-- Left Column - Composer (2 cols) -->
-      <div class="xl:col-span-2 space-y-4 sm:space-y-5 md:space-y-6">
+      <div class="xl:col-span-2 space-y-3">
         
-        <!-- Platform Selection -->
-        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 md:p-6 border border-gray-800">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg sm:text-xl font-bold text-rep-white flex items-center gap-2">
-              <i class="fas fa-network-wired text-rep-lime"></i>
-              Select Platforms
-            </h2>
-            <div class="flex gap-2">
-              <button
-                (click)="selectAllPlatforms()"
-                class="text-xs px-2 py-1 bg-rep-lime/20 text-rep-lime rounded-md hover:bg-rep-lime/30 transition"
-              >
-                Select All
-              </button>
-              <button
-                (click)="deselectAllPlatforms()"
-                class="text-xs px-2 py-1 bg-gray-700 text-gray-400 rounded-md hover:bg-gray-600 transition"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-          
-          <div *ngIf="loading" class="flex justify-center py-8">
-            <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+        <!-- Clean Platform & Content Type Selection -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800/50">
+          <div *ngIf="loading" class="flex justify-center py-4">
+            <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
           </div>
 
-          <div *ngIf="!loading && platforms.length === 0" class="text-center py-8">
-            <i class="fas fa-plug text-4xl text-gray-600 mb-3"></i>
-            <p class="text-gray-400 mb-4">No platforms connected</p>
-            <a routerLink="/app/settings" class="inline-flex items-center px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition">
-              <i class="fas fa-cog mr-2"></i>
+          <div *ngIf="!loading && platforms.length === 0" class="text-center py-4">
+            <p class="text-gray-400 text-sm mb-2">No platforms connected</p>
+            <a routerLink="/app/settings" class="inline-flex items-center px-3 py-1.5 bg-rep-lime text-rep-black rounded-lg text-sm font-semibold hover:shadow-lg transition">
+              <i class="fas fa-cog mr-1.5 text-xs"></i>
               Connect Platforms
             </a>
           </div>
 
-          <div *ngIf="!loading && platforms.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            <button
-              *ngFor="let platform of platforms"
-              (click)="togglePlatform(platform)"
-              [class]="platform.selected 
-                ? 'ring-2 ring-rep-lime bg-gray-800 scale-105' 
-                : 'bg-gray-800/50 hover:bg-gray-800 hover:scale-105'"
-              class="relative p-3 sm:p-4 rounded-xl border border-gray-700 transition-all duration-300 cursor-pointer group"
-            >
-              <div class="flex flex-col items-center gap-2">
-                <i [class]="platform.icon + ' text-2xl sm:text-3xl'" [style.color]="platform.selected ? '#D4FF00' : '#9CA3AF'"></i>
-                <span class="font-bold text-xs sm:text-sm" [class.text-rep-lime]="platform.selected" [class.text-gray-400]="!platform.selected">{{ platform.name }}</span>
-                <span class="text-xs text-gray-500 truncate max-w-full px-1">@{{ platform.platformUsername || 'Connected' }}</span>
-                
-                <div *ngIf="platform.selected" class="absolute -top-2 -right-2 w-6 h-6 sm:w-7 sm:h-7 bg-rep-lime rounded-full flex items-center justify-center shadow-lg">
-                  <i class="fas fa-check text-rep-black text-xs"></i>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          <div *ngIf="selectedPlatforms.length > 0" class="mt-4 p-3 bg-rep-lime/10 rounded-lg border border-rep-lime/30">
-            <p class="text-xs sm:text-sm text-rep-lime">
-              <i class="fas fa-info-circle mr-2"></i>
-              <strong>{{ selectedPlatforms.length }}</strong> platform(s) selected for cross-posting
-            </p>
-          </div>
-        </div>
-
-        <!-- Post Type Selection -->
-        <div *ngIf="selectedPlatforms.length > 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 md:p-6 border border-gray-800">
-          <h2 class="text-lg sm:text-xl font-bold text-rep-white mb-4 flex items-center gap-2">
-            <i class="fas fa-layer-group text-rep-lime"></i>
-            Content Type
-          </h2>
-          
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <button
-              *ngFor="let type of getAvailablePostTypes()"
-              (click)="setPostType(type.value)"
-              [class]="postType === type.value 
-                ? 'ring-2 ring-rep-lime bg-gray-800 scale-105' 
-                : 'bg-gray-800/50 hover:bg-gray-800 hover:scale-105'"
-              class="relative p-3 sm:p-4 rounded-xl border border-gray-700 transition-all duration-300 cursor-pointer group"
-            >
-              <div class="flex flex-col items-center gap-2">
-                <i [class]="type.icon + ' text-2xl sm:text-3xl'" [style.color]="postType === type.value ? '#D4FF00' : '#9CA3AF'"></i>
-                <span class="font-bold text-xs sm:text-sm" [class.text-rep-lime]="postType === type.value" [class.text-gray-400]="postType !== type.value">
-                  {{ type.label }}
-                </span>
-                <span class="text-xs text-gray-500 text-center">{{ type.description }}</span>
-                
-                <div *ngIf="postType === type.value" class="absolute -top-2 -right-2 w-6 h-6 sm:w-7 sm:h-7 bg-rep-lime rounded-full flex items-center justify-center shadow-lg">
-                  <i class="fas fa-check text-rep-black text-xs"></i>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          <!-- Post Type Info -->
-          <div class="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
-            <p class="text-xs sm:text-sm text-blue-400">
-              <i class="fas fa-lightbulb mr-2"></i>
-              <span *ngIf="postType === 'post'">Regular feed posts appear on profiles and in followers' feeds</span>
-              <span *ngIf="postType === 'story'">Stories disappear after 24 hours - great for time-sensitive content</span>
-              <span *ngIf="postType === 'reel'">Reels are short-form videos optimized for discovery and engagement</span>
-              <span *ngIf="postType === 'short'">Shorts are vertical videos designed for quick, engaging content</span>
-            </p>
-          </div>
-        </div>
-
-        <!-- Post Composer -->
-        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 md:p-6 border border-gray-800">
-          <h2 class="text-lg sm:text-xl font-bold text-rep-white mb-4 flex items-center gap-2">
-            <i class="fas fa-pen-fancy text-rep-lime"></i>
-            Compose Your Post
-          </h2>
-
-          <!-- Caption -->
-          <div class="mb-4">
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-xs sm:text-sm font-semibold text-rep-white">
-                <i class="fas fa-align-left mr-1"></i> Caption
-              </label>
-              <div class="flex gap-2">
-                <button
-                  (click)="showEmojiPicker = !showEmojiPicker"
-                  class="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded-md hover:bg-yellow-500/30 transition"
-                >
-                  😊 Emoji
-                </button>
-                <button
-                  (click)="showHashtagHelper = !showHashtagHelper"
-                  class="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition"
-                >
-                  # Hashtags
-                </button>
-              </div>
-            </div>
-
-            <!-- Emoji Picker -->
-            <div *ngIf="showEmojiPicker" class="mb-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+          <div *ngIf="!loading && platforms.length > 0">
+            <!-- Single Row: Platforms + Types + Actions -->
+            <div class="flex items-center gap-3 flex-wrap">
+              <!-- Platform Chips -->
               <div class="flex flex-wrap gap-2">
                 <button
-                  *ngFor="let emoji of popularEmojis"
-                  (click)="insertEmoji(emoji)"
-                  class="w-8 h-8 sm:w-10 sm:h-10 hover:bg-yellow-500/20 rounded-lg transition text-lg sm:text-xl"
+                  *ngFor="let platform of platforms"
+                  (click)="togglePlatform(platform)"
+                  [class]="platform.selected ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5"
+                  [title]="'@' + (platform.platformUsername || 'Connected')"
                 >
-                  {{ emoji }}
+                  <i [class]="platform.icon + ' text-sm'"></i>
+                  <span>{{ platform.name }}</span>
+                  <i *ngIf="platform.selected" class="fas fa-check text-xs"></i>
+                </button>
+              </div>
+
+              <!-- Divider -->
+              <div *ngIf="selectedPlatforms.length > 0" class="h-6 w-px bg-gray-700"></div>
+
+              <!-- Content Type Icons (Only show if platforms selected) -->
+              <div *ngIf="selectedPlatforms.length > 0" class="flex gap-2">
+                <ng-container *ngFor="let type of getAvailablePostTypes()">
+                  <!-- Post -->
+                  <button
+                    *ngIf="type.value === 'post'"
+                    (click)="setPostType('post')"
+                    [class]="postType === 'post' ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+                    class="w-9 h-9 rounded-lg transition flex items-center justify-center"
+                    title="Regular Post"
+                  >
+                    <i class="fas fa-image text-base"></i>
+                  </button>
+                  
+                  <!-- Story (WhatsApp style) -->
+                  <button
+                    *ngIf="type.value === 'story'"
+                    (click)="setPostType('story')"
+                    [class]="postType === 'story' ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+                    class="w-9 h-9 rounded-lg transition flex items-center justify-center"
+                    title="24-hour Story"
+                  >
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                      <circle cx="12" cy="12" r="5" fill="currentColor"/>
+                    </svg>
+                  </button>
+                  
+                  <!-- Reel -->
+                  <button
+                    *ngIf="type.value === 'reel'"
+                    (click)="setPostType('reel')"
+                    [class]="postType === 'reel' ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+                    class="w-9 h-9 rounded-lg transition flex items-center justify-center"
+                    title="Reel"
+                  >
+                    <i class="fas fa-video text-base"></i>
+                  </button>
+                  
+                  <!-- Short -->
+                  <button
+                    *ngIf="type.value === 'short'"
+                    (click)="setPostType('short')"
+                    [class]="postType === 'short' ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+                    class="w-9 h-9 rounded-lg transition flex items-center justify-center"
+                    title="Short"
+                  >
+                    <i class="fas fa-film text-base"></i>
+                  </button>
+                </ng-container>
+              </div>
+
+              <!-- Type Label (shows selected type name) -->
+              <span *ngIf="selectedPlatforms.length > 0" class="text-xs text-gray-400 font-medium">
+                <span *ngIf="postType === 'post'">Post</span>
+                <span *ngIf="postType === 'story'">Story</span>
+                <span *ngIf="postType === 'reel'">Reel</span>
+                <span *ngIf="postType === 'short'">Short</span>
+              </span>
+
+              <!-- Quick Actions (at the end) -->
+              <div class="ml-auto flex gap-1.5">
+                <button (click)="selectAllPlatforms()" class="w-8 h-8 bg-gray-800 text-gray-400 hover:bg-gray-700 rounded-lg transition flex items-center justify-center" title="Select All">
+                  <i class="fas fa-check-double text-xs"></i>
+                </button>
+                <button (click)="deselectAllPlatforms()" class="w-8 h-8 bg-gray-800 text-gray-400 hover:bg-gray-700 rounded-lg transition flex items-center justify-center" title="Clear All">
+                  <i class="fas fa-times text-xs"></i>
                 </button>
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Hashtag Helper -->
-            <div *ngIf="showHashtagHelper" class="mb-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
-              <p class="text-xs text-blue-400 mb-2 font-semibold">
-                <i class="fas fa-lightbulb mr-1"></i> Popular Hashtags
+        <!-- AI Post Writer (Cleaner Design) -->
+        <div *ngIf="selectedPlatforms.length > 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800/50 overflow-hidden">
+          <!-- AI Writer Header (Always Visible) -->
+          <button
+            type="button"
+            (click)="showAIWriter = !showAIWriter"
+            class="w-full p-4 flex items-center justify-between hover:bg-gray-800/50 transition cursor-pointer"
+          >
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                <i class="fas fa-magic text-purple-400"></i>
+              </div>
+              <span class="font-semibold text-white text-sm">Write with AI</span>
+              <div *ngIf="aiCredits" class="flex items-center gap-1.5 bg-purple-500/10 px-2.5 py-1 rounded-md border border-purple-500/20">
+                <i class="fas fa-bolt text-purple-400 text-xs"></i>
+                <span class="text-xs font-medium text-purple-300">
+                  {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
+                </span>
+              </div>
+            </div>
+            <i [class]="showAIWriter ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-gray-500 text-sm"></i>
+          </button>
+
+          <!-- AI Writer Content (Collapsible) -->
+          <div *ngIf="showAIWriter" class="p-4 pt-0 border-t border-gray-800">
+            <!-- Mode Selection (Cleaner) -->
+            <div class="mb-3 flex gap-2">
+              <button
+                type="button"
+                (click)="aiMode = 'same'"
+                [class]="aiMode === 'same' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+                class="flex-1 px-3 py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-1.5"
+              >
+                <i class="fas fa-clone text-xs"></i>
+                <span>Same Post</span>
+                <span class="text-xs opacity-75">(1 credit)</span>
+              </button>
+              <button
+                type="button"
+                (click)="aiMode = 'custom'"
+                [class]="aiMode === 'custom' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+                class="flex-1 px-3 py-2 rounded-lg font-medium text-sm transition flex items-center justify-center gap-1.5"
+              >
+                <i class="fas fa-layer-group text-xs"></i>
+                <span>Custom</span>
+                <span class="text-xs opacity-75">({{ selectedPlatforms.length }})</span>
+              </button>
+            </div>
+
+            <!-- Prompt Input (Cleaner) -->
+            <div class="mb-3">
+              <textarea
+                [(ngModel)]="aiPrompt"
+                placeholder="Example: 'Announce our new product launch with excitement' or 'Share a motivational Monday post'"
+                rows="3"
+                class="w-full px-3 py-2.5 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500 transition resize-none text-sm"
+              ></textarea>
+              <p class="text-xs text-gray-400 mt-1.5 flex items-center gap-1.5">
+                <i class="fas fa-info-circle"></i>
+                <span *ngIf="aiMode === 'same'">
+                  AI will generate 1 post for all {{ selectedPlatforms.length }} platforms (1 credit)
+                </span>
+                <span *ngIf="aiMode === 'custom'">
+                  AI will generate {{ selectedPlatforms.length }} unique posts, one per platform ({{ selectedPlatforms.length }} credits)
+                </span>
+              </p>
+            </div>
+
+            <!-- Generate Button (Cleaner) -->
+            <button
+              type="button"
+              (click)="generatePostWithAI()"
+              [disabled]="!aiPrompt.trim() || generatingAI || selectedPlatforms.length === 0"
+              class="w-full px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <i [class]="generatingAI ? 'fas fa-spinner fa-spin' : 'fas fa-wand-magic-sparkles'" class="text-sm"></i>
+              <span *ngIf="!generatingAI">Generate Post with AI ({{ getCreditsNeeded() }} credit{{ getCreditsNeeded() > 1 ? 's' : '' }})</span>
+              <span *ngIf="generatingAI">Generating...</span>
+            </button>
+
+            <!-- Custom Mode: Platform Selector (Cleaner) -->
+            <div *ngIf="aiMode === 'custom' && Object.keys(platformPosts).length > 0" class="mt-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+              <p class="text-xs font-medium text-gray-400 mb-2">
+                <i class="fas fa-edit mr-1"></i>
+                Load platform content:
               </p>
               <div class="flex flex-wrap gap-2">
                 <button
-                  *ngFor="let hashtag of suggestedHashtags"
-                  (click)="insertHashtag(hashtag)"
-                  class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition text-xs font-medium"
+                  *ngFor="let platform of selectedPlatforms"
+                  type="button"
+                  (click)="loadPlatformContent(platform.id)"
+                  class="px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5"
+                  [class.bg-purple-500]="postContent === platformPosts[platform.id]"
+                  [class.text-white]="postContent === platformPosts[platform.id]"
+                  [class.bg-gray-700]="postContent !== platformPosts[platform.id]"
+                  [class.text-gray-300]="postContent !== platformPosts[platform.id]"
                 >
-                  {{ hashtag }}
+                  <i [class]="platform.icon + ' text-xs'"></i>
+                  {{ platform.name }}
                 </button>
               </div>
             </div>
+          </div>
+        </div>
 
-            <textarea
-              [(ngModel)]="postContent"
-              placeholder="What's on your mind? Share your story..."
-              rows="8"
-              [class]="isOverLimit() ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-700 focus:ring-rep-lime/20 focus:border-rep-lime'"
-              class="compose-textarea w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-800 border border-gray-700 rounded-xl focus:ring-2 transition resize-none text-sm sm:text-base text-white placeholder-gray-500"
-            ></textarea>
-            <div class="flex items-center justify-between mt-2">
-              <span class="text-xs text-gray-500">
-                <i class="fas fa-magic mr-1"></i>
-                Hashtags, emojis, and mentions supported
-              </span>
-              <span [class]="isOverLimit() ? 'text-red-500 font-bold' : 'text-gray-500'" class="text-xs sm:text-sm font-medium">
-                {{ getCharacterCount() }} / {{ getMaxCharacters() }}
-              </span>
+        <!-- Post Composer (Compact) -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-800">
+          <!-- Caption Header with Quick Actions -->
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-xs font-semibold text-rep-white flex items-center gap-1.5">
+              <i class="fas fa-pen-fancy text-rep-lime"></i> Caption
+            </label>
+            <div class="flex gap-1.5">
+              <button
+                (click)="showEmojiPicker = !showEmojiPicker"
+                [class]="showEmojiPicker ? 'bg-yellow-500/30 text-yellow-400' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'"
+                class="text-xs px-2 py-1 rounded-md transition"
+                title="Emoji Picker"
+              >
+                😊
+              </button>
+              <button
+                (click)="showHashtagHelper = !showHashtagHelper"
+                [class]="showHashtagHelper ? 'bg-blue-500/30 text-blue-400' : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'"
+                class="text-xs px-2 py-1 rounded-md transition"
+                title="Hashtag Helper"
+              >
+                #
+              </button>
             </div>
           </div>
 
-          <!-- Media Upload -->
-          <div class="mb-4">
+          <!-- Emoji Picker (Compact) -->
+          <div *ngIf="showEmojiPicker" class="mb-2 p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/30">
+            <div class="flex flex-wrap gap-1">
+              <button
+                *ngFor="let emoji of popularEmojis"
+                (click)="insertEmoji(emoji)"
+                class="w-7 h-7 hover:bg-yellow-500/20 rounded transition text-base"
+              >
+                {{ emoji }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Hashtag Helper (Compact) -->
+          <div *ngIf="showHashtagHelper" class="mb-2 p-2 bg-blue-500/10 rounded-lg border border-blue-500/30">
+            <div class="flex flex-wrap gap-1">
+              <button
+                *ngFor="let hashtag of suggestedHashtags"
+                (click)="insertHashtag(hashtag)"
+                class="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition text-xs"
+              >
+                {{ hashtag }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Caption Textarea -->
+          <textarea
+            [(ngModel)]="postContent"
+            placeholder="What's on your mind? Share your story..."
+            rows="6"
+            [class]="isOverLimit() ? 'border-red-500 focus:ring-red-500/20 focus:border-red-500' : 'border-gray-700 focus:ring-rep-lime/20 focus:border-rep-lime'"
+            class="compose-textarea w-full px-3 py-2 bg-gray-800 border rounded-lg focus:ring-2 transition resize-none text-sm text-white placeholder-gray-500"
+          ></textarea>
+          <div class="flex items-center justify-between mt-1.5">
+            <span class="text-xs text-gray-500">
+              Hashtags & mentions supported
+            </span>
+            <span [class]="isOverLimit() ? 'text-red-500 font-bold' : 'text-gray-500'" class="text-xs font-medium">
+              {{ getCharacterCount() }} / {{ getMaxCharacters() }}
+            </span>
+          </div>
+
+          <!-- Media Upload (Compact) -->
+          <div class="mt-3 mb-3">
             <div class="flex items-center justify-between mb-2">
-              <label class="text-xs sm:text-sm font-semibold text-rep-white">
-                <i class="fas fa-images mr-1"></i> Media (up to 10 files for carousel)
+              <label class="text-xs font-semibold text-rep-white flex items-center gap-1.5">
+                <i class="fas fa-images text-rep-lime"></i> Media
               </label>
               <button
                 type="button"
                 (click)="toggleMediaGuide()"
-                class="text-xs px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition">
-                <i class="fas fa-info-circle mr-1"></i> View Guidelines
+                class="text-xs px-2 py-1 bg-blue-500/20 text-blue-400 rounded-md hover:bg-blue-500/30 transition">
+                <i class="fas fa-info-circle"></i> Guidelines
               </button>
             </div>
 
-            <div *ngIf="mediaFiles.length === 0" class="border-2 border-dashed border-gray-700 rounded-xl p-6 sm:p-8 text-center hover:border-rep-lime hover:bg-rep-lime/5 transition cursor-pointer"
+            <div *ngIf="mediaFiles.length === 0" class="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center hover:border-rep-lime hover:bg-rep-lime/5 transition cursor-pointer"
                  (click)="fileInput.click()">
-              <i class="fas fa-cloud-upload-alt text-4xl sm:text-5xl text-gray-600 mb-3"></i>
-              <p class="text-sm sm:text-base text-gray-400 mb-2 font-medium">Click to upload photos or videos</p>
-              <p class="text-xs text-gray-500">JPEG, PNG or MP4 • Max 8MB per file • Up to 10 files</p>
+              <i class="fas fa-cloud-upload-alt text-3xl text-gray-600 mb-2"></i>
+              <p class="text-xs text-gray-400 mb-1">Click to upload photos or videos</p>
+              <p class="text-xs text-gray-500">JPEG, PNG, MP4 • Max 8MB • Up to 10 files</p>
             </div>
 
-            <!-- Media Gallery -->
-            <div *ngIf="mediaFiles.length > 0" class="space-y-3">
-              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <!-- Media Gallery (Compact) -->
+            <div *ngIf="mediaFiles.length > 0" class="space-y-2">
+              <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 <div
                   *ngFor="let media of mediaFiles; let i = index"
-                  class="relative group rounded-xl overflow-hidden border border-gray-700 hover:border-rep-lime transition aspect-square"
+                  class="relative group rounded-lg overflow-hidden border border-gray-700 hover:border-rep-lime transition aspect-square"
                 >
                   <img *ngIf="media.type === 'image'" [src]="media.preview" alt="Preview" class="w-full h-full object-cover">
                   <video *ngIf="media.type === 'video'" [src]="media.preview" class="w-full h-full object-cover"></video>
                   
                   <!-- Order badge -->
-                  <div class="absolute top-2 left-2 w-6 h-6 bg-rep-black/80 text-rep-lime rounded-full flex items-center justify-center text-xs font-bold">
+                  <div class="absolute top-1 left-1 w-5 h-5 bg-rep-black/80 text-rep-lime rounded-full flex items-center justify-center text-xs font-bold">
                     {{ i + 1 }}
                   </div>
                   
                   <!-- Controls -->
-                  <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                  <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1">
                     <button
                       *ngIf="i > 0"
                       (click)="moveMediaUp(i)"
-                      class="w-8 h-8 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-full flex items-center justify-center transition"
+                      class="w-6 h-6 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-full flex items-center justify-center transition"
                     >
                       <i class="fas fa-arrow-left text-xs"></i>
                     </button>
                     <button
                       (click)="removeMedia(i)"
-                      class="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition"
+                      class="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition"
                     >
                       <i class="fas fa-trash text-xs"></i>
                     </button>
                     <button
                       *ngIf="i < mediaFiles.length - 1"
                       (click)="moveMediaDown(i)"
-                      class="w-8 h-8 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-full flex items-center justify-center transition"
+                      class="w-6 h-6 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-full flex items-center justify-center transition"
                     >
                       <i class="fas fa-arrow-right text-xs"></i>
                     </button>
@@ -291,9 +391,9 @@
               <button
                 *ngIf="mediaFiles.length < 10"
                 (click)="fileInput.click()"
-                class="w-full py-2 border-2 border-dashed border-gray-700 rounded-xl text-gray-400 hover:border-rep-lime hover:text-rep-lime transition text-sm"
+                class="w-full py-1.5 border border-dashed border-gray-700 rounded-lg text-gray-400 hover:border-rep-lime hover:text-rep-lime transition text-xs"
               >
-                <i class="fas fa-plus mr-2"></i>
+                <i class="fas fa-plus mr-1"></i>
                 Add More ({{ 10 - mediaFiles.length }} remaining)
               </button>
             </div>
@@ -308,194 +408,159 @@
             />
           </div>
 
-          <!-- Advanced Options -->
-          <div class="space-y-3 mb-4">
-            <h3 class="text-sm font-semibold text-gray-400 flex items-center gap-2">
-              <i class="fas fa-sliders-h text-rep-lime"></i>
-              Advanced Options
-            </h3>
-            
-            <!-- Schedule Toggle -->
-            <label class="flex items-center gap-3 cursor-pointer p-3 bg-blue-500/10 rounded-lg border border-blue-500/30 hover:border-blue-500/50 transition">
-              <input
-                type="checkbox"
-                [(ngModel)]="scheduleEnabled"
-                class="w-5 h-5 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20"
-              />
-              <div class="flex-1">
-                <span class="font-semibold text-rep-white text-sm flex items-center gap-2">
-                  <i class="fas fa-clock text-blue-400"></i>
-                  Schedule for later
-                </span>
-                <p class="text-xs text-gray-500 mt-0.5">Choose a specific date and time to publish</p>
-              </div>
-            </label>
+          <!-- Advanced Options (Compact & Collapsible) -->
+          <div class="mt-3 mb-3">
+            <button
+              type="button"
+              (click)="showAdvancedOptions = !showAdvancedOptions"
+              class="w-full flex items-center justify-between p-2 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition cursor-pointer border border-gray-700"
+            >
+              <span class="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
+                <i class="fas fa-sliders-h text-rep-lime"></i>
+                Advanced Options
+              </span>
+              <i [class]="showAdvancedOptions ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-gray-500 text-xs"></i>
+            </button>
 
-            <!-- First Comment Toggle -->
-            <label class="flex items-center gap-3 cursor-pointer p-3 bg-purple-500/10 rounded-lg border border-purple-500/30 hover:border-purple-500/50 transition">
-              <input
-                type="checkbox"
-                [(ngModel)]="showFirstComment"
-                class="w-5 h-5 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20"
-              />
-              <div class="flex-1">
-                <span class="font-semibold text-rep-white text-sm flex items-center gap-2">
-                  <i class="fas fa-comment text-purple-400"></i>
-                  Add first comment
-                </span>
-                <p class="text-xs text-gray-500 mt-0.5">Post a comment immediately after publishing</p>
-              </div>
-            </label>
+            <div *ngIf="showAdvancedOptions" class="mt-2 p-2 bg-gray-800/30 rounded-lg border border-gray-700 space-y-2">
+              <!-- Schedule Toggle (Inline) -->
+              <label class="flex items-center gap-2 cursor-pointer p-2 bg-blue-500/10 rounded-lg border border-blue-500/30 hover:bg-blue-500/15 transition">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="scheduleEnabled"
+                  class="w-4 h-4 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20"
+                />
+                <i class="fas fa-clock text-blue-400 text-sm"></i>
+                <span class="text-xs text-rep-white font-medium flex-1">Schedule for later</span>
+              </label>
 
-            <!-- Location Toggle -->
-            <label class="flex items-center gap-3 cursor-pointer p-3 bg-green-500/10 rounded-lg border border-green-500/30 hover:border-green-500/50 transition">
-              <input
-                type="checkbox"
-                [(ngModel)]="showLocationPicker"
-                class="w-5 h-5 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20"
-              />
-              <div class="flex-1">
-                <span class="font-semibold text-rep-white text-sm flex items-center gap-2">
-                  <i class="fas fa-map-marker-alt text-green-400"></i>
-                  Add location
-                </span>
-                <p class="text-xs text-gray-500 mt-0.5">Tag a location to your post</p>
-              </div>
-            </label>
-          </div>
-
-          <!-- Schedule Date/Time -->
-          <div *ngIf="scheduleEnabled" class="mb-4 p-4 bg-blue-500/10 rounded-xl border border-blue-500/30 space-y-3">
-            <h4 class="text-sm font-semibold text-blue-400 flex items-center gap-2">
-              <i class="fas fa-calendar-check"></i>
-              Schedule Details
-            </h4>
-            <div class="grid grid-cols-1 xs:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-2">
-                  <i class="fas fa-calendar mr-1"></i> Date
-                </label>
+              <!-- Schedule Date/Time (Inline) -->
+              <div *ngIf="scheduleEnabled" class="grid grid-cols-2 gap-2 pl-6">
                 <input
                   type="date"
                   [(ngModel)]="scheduledDate"
-                  class="compose-textarea w-full px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm"
+                  placeholder="Date"
+                  class="px-2 py-1.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-xs"
                 />
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-400 mb-2">
-                  <i class="fas fa-clock mr-1"></i> Time
-                </label>
                 <input
                   type="time"
                   [(ngModel)]="scheduledTime"
-                  class="compose-textarea w-full px-3 py-2 bg-gray-800 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm"
+                  placeholder="Time"
+                  class="px-2 py-1.5 bg-gray-800 text-white border border-gray-700 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-xs"
+                />
+              </div>
+
+              <!-- First Comment Toggle (Inline) -->
+              <label class="flex items-center gap-2 cursor-pointer p-2 bg-purple-500/10 rounded-lg border border-purple-500/30 hover:bg-purple-500/15 transition">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="showFirstComment"
+                  class="w-4 h-4 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20"
+                />
+                <i class="fas fa-comment text-purple-400 text-sm"></i>
+                <span class="text-xs text-rep-white font-medium flex-1">Add first comment</span>
+              </label>
+
+              <!-- First Comment Input -->
+              <div *ngIf="showFirstComment" class="pl-6">
+                <textarea
+                  [(ngModel)]="firstComment"
+                  placeholder="Comment to post immediately..."
+                  rows="2"
+                  class="w-full px-2 py-1.5 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition resize-none text-xs"
+                ></textarea>
+              </div>
+
+              <!-- Location Toggle (Inline) -->
+              <label class="flex items-center gap-2 cursor-pointer p-2 bg-green-500/10 rounded-lg border border-green-500/30 hover:bg-green-500/15 transition">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="showLocationPicker"
+                  class="w-4 h-4 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20"
+                />
+                <i class="fas fa-map-marker-alt text-green-400 text-sm"></i>
+                <span class="text-xs text-rep-white font-medium flex-1">Add location</span>
+              </label>
+
+              <!-- Location Input -->
+              <div *ngIf="showLocationPicker" class="pl-6">
+                <input
+                  type="text"
+                  [(ngModel)]="location"
+                  placeholder="Search for a location..."
+                  class="w-full px-2 py-1.5 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-xs"
                 />
               </div>
             </div>
           </div>
 
-          <!-- First Comment -->
-          <div *ngIf="showFirstComment" class="mb-4 p-4 bg-purple-500/10 rounded-xl border border-purple-500/30">
-            <label class="block text-xs font-semibold text-gray-400 mb-2">
-              <i class="fas fa-comment-dots mr-1"></i> First Comment
-            </label>
-            <textarea
-              [(ngModel)]="firstComment"
-              placeholder="Add a comment that will be posted immediately..."
-              rows="3"
-              class="compose-textarea w-full px-3 py-2 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition resize-none text-sm"
-            ></textarea>
-            <p class="text-xs text-gray-500 mt-2">
-              <i class="fas fa-info-circle mr-1"></i>
-              Great for adding links, CTAs, or additional hashtags!
-            </p>
-          </div>
-
-          <!-- Location -->
-          <div *ngIf="showLocationPicker" class="mb-4 p-4 bg-green-500/10 rounded-xl border border-green-500/30">
-            <label class="block text-xs font-semibold text-gray-400 mb-2">
-              <i class="fas fa-map-pin mr-1"></i> Location
-            </label>
-            <input
-              type="text"
-              [(ngModel)]="location"
-              placeholder="Search for a location..."
-              class="compose-textarea w-full px-3 py-2 bg-gray-800 text-white placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm"
-            />
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="grid grid-cols-1 xs:grid-cols-3 gap-3">
+          <!-- Action Buttons (Compact) -->
+          <div class="grid grid-cols-3 gap-2 mt-3">
             <button
               (click)="saveDraft()"
               [disabled]="publishing"
-              class="px-4 py-3 bg-gray-700 text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-600 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50"
+              class="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-xs hover:bg-gray-600 transition disabled:opacity-50"
             >
-              <i class="fas fa-save mr-2"></i>
-              Save Draft
+              <i class="fas fa-save mr-1"></i>
+              <span class="hidden sm:inline">Draft</span>
             </button>
             <button
               (click)="resetForm()"
               [disabled]="publishing"
-              class="px-4 py-3 bg-red-500/20 text-red-400 rounded-xl font-semibold text-sm hover:bg-red-500/30 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50"
+              class="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg font-semibold text-xs hover:bg-red-500/30 transition disabled:opacity-50"
             >
-              <i class="fas fa-redo mr-2"></i>
-              Reset
+              <i class="fas fa-redo mr-1"></i>
+              <span class="hidden sm:inline">Reset</span>
             </button>
             <button
               (click)="publishPost()"
               [disabled]="publishing"
-              class="px-4 py-3 bg-gradient-to-r from-rep-lime to-green-400 text-rep-black rounded-xl font-bold text-sm hover:shadow-2xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:transform-none"
+              class="px-3 py-2 bg-gradient-to-r from-rep-lime to-green-400 text-rep-black rounded-lg font-bold text-xs hover:shadow-lg transition disabled:opacity-50"
             >
-              <i [class]="publishing ? 'fas fa-spinner fa-spin mr-2' : (scheduleEnabled ? 'fas fa-clock mr-2' : 'fas fa-rocket mr-2')"></i>
+              <i [class]="publishing ? 'fas fa-spinner fa-spin mr-1' : (scheduleEnabled ? 'fas fa-clock mr-1' : 'fas fa-rocket mr-1')"></i>
               <span *ngIf="publishing">Publishing...</span>
               <span *ngIf="!publishing && scheduleEnabled">Schedule</span>
-              <span *ngIf="!publishing && !scheduleEnabled">Publish Now</span>
+              <span *ngIf="!publishing && !scheduleEnabled">Publish</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Right Column - Sidebar & Preview -->
-      <div class="xl:col-span-1 space-y-4 sm:space-y-5">
+      <!-- Right Column - Sidebar & Preview (Compact) -->
+      <div class="xl:col-span-1 space-y-3">
         
-        <!-- Preview Toggle -->
-        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
-          <label class="flex items-center gap-3 cursor-pointer">
+        <!-- Preview Toggle (Compact) -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800">
+          <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               [(ngModel)]="showPreview"
-              class="w-5 h-5 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20"
+              class="w-4 h-4 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20"
             />
-            <div class="flex-1">
-              <span class="font-semibold text-rep-white text-sm flex items-center gap-2">
-                <i class="fas fa-eye text-rep-lime"></i>
-                Show Post Preview
-              </span>
-              <p class="text-xs text-gray-500 mt-0.5">See how your post will look on each platform</p>
-            </div>
+            <i class="fas fa-eye text-rep-lime text-sm"></i>
+            <span class="font-semibold text-rep-white text-xs flex-1">Show Preview</span>
           </label>
         </div>
 
-        <!-- Post Previews -->
-        <div *ngIf="showPreview && selectedPlatforms.length > 0" class="space-y-4">
-          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-gray-800">
-            <h2 class="text-base sm:text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
-              <i class="fas fa-desktop text-rep-lime"></i>
-              Post Preview
+        <!-- Post Previews (Compact) -->
+        <div *ngIf="showPreview && selectedPlatforms.length > 0">
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-800">
+            <h2 class="text-sm font-bold text-rep-white mb-2 flex items-center gap-1.5">
+              <i class="fas fa-desktop text-rep-lime text-sm"></i>
+              Preview
             </h2>
 
-            <!-- Platform Tabs -->
-            <div *ngIf="selectedPlatforms.length > 1" class="flex gap-2 mb-4 flex-wrap">
+            <!-- Platform Tabs (Compact) -->
+            <div *ngIf="selectedPlatforms.length > 1" class="flex gap-1.5 mb-3 flex-wrap">
               <button
                 *ngFor="let platform of selectedPlatforms; let i = index"
                 (click)="previewPlatformIndex = i"
                 [class]="previewPlatformIndex === i 
                   ? 'bg-rep-lime text-rep-black' 
                   : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
-                class="px-3 py-2 rounded-lg font-medium text-sm transition flex items-center gap-2"
+                class="px-2 py-1 rounded-lg font-medium text-xs transition flex items-center gap-1"
               >
-                <i [class]="platform.icon"></i>
+                <i [class]="platform.icon + ' text-xs'"></i>
                 {{ platform.name }}
               </button>
             </div>
@@ -510,39 +575,30 @@
                 [scheduledFor]="getScheduledDate()"
               ></app-social-preview>
             </div>
-
-            <div class="mt-4 p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
-              <p class="text-xs text-blue-400">
-                <i class="fas fa-info-circle mr-2"></i>
-                This is a preview. Actual appearance may vary slightly on the platform.
-              </p>
-            </div>
           </div>
         </div>
 
-        <!-- Empty state when no platforms selected -->
-        <div *ngIf="showPreview && selectedPlatforms.length === 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800 text-center">
-          <i class="fas fa-box-open text-4xl text-gray-600 mb-3"></i>
-          <p class="text-sm text-gray-400 mb-2 font-medium">No Preview Available</p>
-          <p class="text-xs text-gray-500">Select at least one platform to see the preview</p>
+        <!-- Empty state (Compact) -->
+        <div *ngIf="showPreview && selectedPlatforms.length === 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800 text-center">
+          <i class="fas fa-box-open text-3xl text-gray-600 mb-2"></i>
+          <p class="text-xs text-gray-400">Select platforms to preview</p>
         </div>
         
-        <!-- Drafts -->
-        <div *ngIf="drafts.length > 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-gray-800">
-          <h2 class="text-base sm:text-lg font-bold text-rep-white mb-3 flex items-center gap-2">
-            <i class="fas fa-file-alt text-yellow-500"></i>
-            Saved Drafts
+        <!-- Drafts (Compact) -->
+        <div *ngIf="drafts.length > 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-800">
+          <h2 class="text-sm font-bold text-rep-white mb-2 flex items-center gap-1.5">
+            <i class="fas fa-file-alt text-yellow-500 text-sm"></i>
+            Drafts
           </h2>
-          <div class="space-y-2 max-h-60 overflow-y-auto">
+          <div class="space-y-1.5 max-h-48 overflow-y-auto">
             <div
               *ngFor="let draft of drafts"
-              class="p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-yellow-500/50 transition cursor-pointer group"
+              class="p-2 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-yellow-500/50 transition cursor-pointer group"
               (click)="loadDraft(draft)"
             >
-              <p class="text-xs text-gray-300 line-clamp-2 mb-2">{{ draft.content }}</p>
+              <p class="text-xs text-gray-300 line-clamp-2 mb-1">{{ draft.content }}</p>
               <div class="flex items-center justify-between">
                 <span class="text-xs text-gray-500">
-                  <i class="fas fa-clock mr-1"></i>
                   {{ formatDate(draft.savedAt) }}
                 </span>
                 <button
@@ -556,30 +612,30 @@
           </div>
         </div>
 
-        <!-- Scheduled Posts -->
-        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-gray-800 sticky top-4">
-          <h2 class="text-base sm:text-lg font-bold text-rep-white mb-3 flex items-center gap-2">
-            <i class="fas fa-calendar-check text-blue-500"></i>
-            Scheduled Posts
+        <!-- Scheduled Posts (Compact) -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-3 border border-gray-800 sticky top-4">
+          <h2 class="text-sm font-bold text-rep-white mb-2 flex items-center gap-1.5">
+            <i class="fas fa-calendar-check text-blue-500 text-sm"></i>
+            Scheduled
           </h2>
 
-          <div *ngIf="loadingPosts" class="flex justify-center py-8">
-            <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+          <div *ngIf="loadingPosts" class="flex justify-center py-4">
+            <i class="fas fa-spinner fa-spin text-xl text-gray-400"></i>
           </div>
 
-          <div *ngIf="!loadingPosts && scheduledPosts.length === 0" class="text-center py-8">
-            <i class="fas fa-calendar-times text-4xl text-gray-600 mb-3"></i>
-            <p class="text-sm text-gray-400">No scheduled posts</p>
+          <div *ngIf="!loadingPosts && scheduledPosts.length === 0" class="text-center py-4">
+            <i class="fas fa-calendar-times text-3xl text-gray-600 mb-2"></i>
+            <p class="text-xs text-gray-400">No scheduled posts</p>
           </div>
 
-          <div *ngIf="!loadingPosts && scheduledPosts.length > 0" class="space-y-3 max-h-96 overflow-y-auto">
+          <div *ngIf="!loadingPosts && scheduledPosts.length > 0" class="space-y-2 max-h-80 overflow-y-auto">
             <div
               *ngFor="let post of scheduledPosts"
-              class="p-3 border border-gray-700 rounded-xl hover:border-rep-lime/50 transition bg-gray-800/30 group"
+              class="p-2 border border-gray-700 rounded-lg hover:border-rep-lime/50 transition bg-gray-800/30 group"
             >
-              <div class="flex items-start justify-between mb-2">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <i *ngFor="let platform of post.platforms" [class]="getPlatformIcon(platform) + ' text-sm text-gray-400'"></i>
+              <div class="flex items-start justify-between mb-1">
+                <div class="flex items-center gap-1 flex-wrap">
+                  <i *ngFor="let platform of post.platforms" [class]="getPlatformIcon(platform) + ' text-xs text-gray-400'"></i>
                 </div>
                 <button
                   (click)="deleteScheduledPost(post._id!)"
@@ -589,19 +645,20 @@
                 </button>
               </div>
               
-              <p class="text-xs text-gray-300 mb-2 line-clamp-2">{{ post.content }}</p>
+              <p class="text-xs text-gray-300 mb-1 line-clamp-2">{{ post.content }}</p>
               
-              <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                <i class="fas fa-clock"></i>
-                <span>{{ formatDate(post.scheduledFor!) }}</span>
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-gray-500 flex items-center gap-1">
+                  <i class="fas fa-clock text-xs"></i>
+                  {{ formatDate(post.scheduledFor!) }}
+                </span>
+                <span [class]="'px-1.5 py-0.5 rounded-full text-xs font-medium ' + 
+                  (post.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400' : 
+                   post.status === 'published' ? 'bg-green-500/20 text-green-400' : 
+                   post.status === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400')">
+                  {{ post.status }}
+                </span>
               </div>
-
-              <span [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + 
-                (post.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400' : 
-                 post.status === 'published' ? 'bg-green-500/20 text-green-400' : 
-                 post.status === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400')">
-                {{ post.status }}
-              </span>
             </div>
           </div>
         </div>

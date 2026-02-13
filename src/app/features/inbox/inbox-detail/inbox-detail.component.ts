@@ -258,6 +258,12 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
           this.replyForm.patchValue({
             content: this.aiSuggestion.content
           });
+
+          // Show credit usage notification if credits are provided
+          const credits = (response as any).credits;
+          if (credits && credits.isNearLimit) {
+            console.warn(`⚡ AI Credits Low: ${credits.remaining} remaining out of ${credits.limit}`);
+          }
         } else {
           this.suggestionError = 'Failed to generate AI suggestion. Please try again.';
         }
@@ -265,7 +271,14 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error generating AI suggestion:', error);
-        this.suggestionError = error.error?.error || error.error?.message || 'Failed to generate AI suggestion. Please try again.';
+        
+        // Handle specific credit-related errors
+        if (error.error?.code === 'INSUFFICIENT_CREDITS' || error.error?.code === 'AI_CREDITS_EXCEEDED') {
+          this.suggestionError = '⚡ You have run out of AI credits. Please upgrade your plan to continue using AI features.';
+        } else {
+          this.suggestionError = error.error?.error || error.error?.message || 'Failed to generate AI suggestion. Please try again.';
+        }
+        
         this.generatingSuggestion = false;
       }
     });

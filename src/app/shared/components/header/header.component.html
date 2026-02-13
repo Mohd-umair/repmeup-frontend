@@ -117,6 +117,25 @@
       </div>
     </div>
 
+    <!-- AI Credits Badge -->
+    <button 
+      *ngIf="aiCredits"
+      (click)="navigateToCredits()"
+      class="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition cursor-pointer"
+      title="View AI Credits Usage"
+    >
+      <i class="fas fa-bolt" [class]="getCreditStatusColor()"></i>
+      <div class="hidden sm:flex flex-col items-start">
+        <span class="text-xs font-semibold" [class]="getCreditStatusColor()">
+          {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
+        </span>
+        <span class="text-xs text-gray-500">credits</span>
+      </div>
+      <span class="text-xs font-bold sm:hidden" [class]="getCreditStatusColor()">
+        {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
+      </span>
+    </button>
+
     <!-- Help -->
     <button class="p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition">
       <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

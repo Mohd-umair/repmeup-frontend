@@ -52,6 +52,9 @@ interface Draft {
   styleUrls: ['./publish.component.scss']
 })
 export class PublishComponent implements OnInit {
+  // Expose Object for template
+  Object = Object;
+  
   // Platforms
   platforms: Platform[] = [];
   selectedPlatforms: Platform[] = [];
@@ -62,6 +65,14 @@ export class PublishComponent implements OnInit {
   firstComment: string = '';
   location: string = '';
   postType: 'post' | 'story' | 'reel' | 'short' = 'post';
+  
+  // AI post generation
+  aiPrompt: string = '';
+  aiMode: 'same' | 'custom' = 'same';
+  generatingAI: boolean = false;
+  platformPosts: { [key: string]: string } = {}; // For custom mode
+  showAIWriter: boolean = false;
+  aiCredits: any = null;
   
   // Post type options
   postTypes = [
@@ -82,6 +93,8 @@ export class PublishComponent implements OnInit {
   showFirstComment: boolean = false;
   showLocationPicker: boolean = false;
   showPreview: boolean = true; // Start with preview visible
+  showAdvancedOptions: boolean = false; // Collapsible advanced options
+  showPlatformSection: boolean = true; // Can collapse platform selection
   
   // Hashtag suggestions
   suggestedHashtags: string[] = [
@@ -123,6 +136,114 @@ export class PublishComponent implements OnInit {
     this.loadScheduledPosts();
     this.loadDrafts();
     this.setDefaultScheduleTime();
+    this.loadAICredits();
+  }
+  
+  /**
+   * Load AI credits info
+   */
+  loadAICredits(): void {
+    this.http.get<any>(`${environment.apiUrl}/users/ai-credits`).subscribe({
+      next: (response) => {
+        this.aiCredits = response.credits || response;
+      },
+      error: (error) => {
+        console.error('Error loading AI credits:', error);
+      }
+    });
+  }
+  
+  /**
+   * Generate post with AI
+   */
+  generatePostWithAI(): void {
+    if (!this.aiPrompt.trim()) {
+      this.notificationService.error('Prompt Required', 'Please enter a prompt to generate post');
+      return;
+    }
+    
+    if (this.selectedPlatforms.length === 0) {
+      this.notificationService.error('No Platforms', 'Please select at least one platform');
+      return;
+    }
+    
+    const platformIds = this.selectedPlatforms.map(p => p.id);
+    const creditsNeeded = this.aiMode === 'same' ? 1 : platformIds.length;
+    
+    // Confirm credits
+    if (this.aiCredits && !this.aiCredits.isUnlimited && this.aiCredits.remaining < creditsNeeded) {
+      this.notificationService.error(
+        'Insufficient Credits',
+        `You need ${creditsNeeded} credits but have ${this.aiCredits.remaining} remaining`
+      );
+      return;
+    }
+    
+    this.generatingAI = true;
+    this.error = null;
+    
+    this.http.post<any>(`${environment.apiUrl}/posts/generate`, {
+      prompt: this.aiPrompt,
+      platforms: platformIds,
+      mode: this.aiMode,
+      postType: this.postType
+    }).subscribe({
+      next: (response) => {
+        this.generatingAI = false;
+        
+        if (response.success) {
+          const result = response.data;
+          
+          if (result.mode === 'same') {
+            // Same post for all platforms
+            this.postContent = result.posts.all;
+            this.notificationService.success(
+              'Post Generated!',
+              `Used ${result.creditsUsed} credit. ${response.credits.remaining} remaining`
+            );
+          } else {
+            // Custom posts per platform
+            this.platformPosts = result.posts;
+            // Set first platform's content as default
+            if (platformIds[0]) {
+              this.postContent = result.posts[platformIds[0]];
+            }
+            this.notificationService.success(
+              'Posts Generated!',
+              `Used ${result.creditsUsed} credits. ${response.credits.remaining} remaining`
+            );
+          }
+          
+          // Update credits
+          this.aiCredits = response.credits;
+          
+          // Clear prompt
+          this.aiPrompt = '';
+        }
+      },
+      error: (error) => {
+        this.generatingAI = false;
+        console.error('AI generation error:', error);
+        const errorMsg = error.error?.message || 'Failed to generate post';
+        this.notificationService.error('Generation Failed', errorMsg);
+      }
+    });
+  }
+  
+  /**
+   * Load content for a specific platform (custom mode)
+   */
+  loadPlatformContent(platformId: string): void {
+    if (this.platformPosts[platformId]) {
+      this.postContent = this.platformPosts[platformId];
+    }
+  }
+  
+  /**
+   * Get credits needed based on current mode
+   */
+  getCreditsNeeded(): number {
+    return this.aiMode === 'same' ? 1 : this.selectedPlatforms.length;
   }
   
   navigateToCalendar(): void {

@@ -1,9 +1,11 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationDataService, INotification } from '../../../core/services/notification-data.service';
 import { IUser } from '../../../core/models/user.model';
-import { Subscription } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Header Component - Single Responsibility Principle
@@ -24,17 +26,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
   notifications: INotification[] = [];
   loadingNotifications = false;
 
+  // AI Credits
+  aiCredits: any = null;
+  loadingCredits = false;
+
   private subscriptions: Subscription[] = [];
 
   constructor(
     private authService: AuthService,
     private notificationDataService: NotificationDataService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
     const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+      if (user) {
+        this.loadAICredits(); // Load credits when user is available
+      }
     });
     this.subscriptions.push(userSub);
 
@@ -49,6 +59,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.notifications = notifications;
     });
     this.subscriptions.push(notifSub);
+
+    // Refresh AI credits every 30 seconds
+    const creditRefreshSub = interval(30000).subscribe(() => {
+      if (this.currentUser) {
+        this.loadAICredits();
+      }
+    });
+    this.subscriptions.push(creditRefreshSub);
   }
 
   ngOnDestroy(): void {
@@ -156,5 +174,33 @@ export class HeaderComponent implements OnInit, OnDestroy {
   getUserInitials(): string {
     if (!this.currentUser) return 'U';
     return `${this.currentUser.firstName.charAt(0)}${this.currentUser.lastName.charAt(0)}`.toUpperCase();
+  }
+
+  loadAICredits(): void {
+    if (this.loadingCredits) return;
+    
+    this.loadingCredits = true;
+    this.http.get<any>(`${environment.apiUrl}/users/ai-credits`).subscribe({
+      next: (response) => {
+        this.aiCredits = response.credits;
+        this.loadingCredits = false;
+      },
+      error: (error) => {
+        console.error('Error loading AI credits:', error);
+        this.loadingCredits = false;
+      }
+    });
+  }
+
+  navigateToCredits(): void {
+    this.router.navigate(['/app/ai-credits']);
+  }
+
+  getCreditStatusColor(): string {
+    if (!this.aiCredits) return 'text-gray-400';
+    if (this.aiCredits.isUnlimited) return 'text-purple-400';
+    if (this.aiCredits.isAtLimit) return 'text-red-400';
+    if (this.aiCredits.isNearLimit) return 'text-yellow-400';
+    return 'text-purple-400';
   }
 }
