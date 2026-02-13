@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/cor
 import { Router } from '@angular/router';
 import { NotificationDataService } from '../../../core/services/notification-data.service';
 import { MenuService, IMenuItem } from '../../../core/services/menu.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Subscription } from 'rxjs';
 
 /**
@@ -25,16 +26,24 @@ export class SidebarComponent implements OnInit, OnDestroy {
   
   menuItems: MenuItem[] = [];
   loadingMenus = true;
+  currentUser: any = null;
 
   private subscriptions: Subscription[] = [];
 
   constructor(
     private router: Router,
     private notificationDataService: NotificationDataService,
-    private menuService: MenuService
+    private menuService: MenuService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    // Get current user
+    const userSub = this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+    });
+    this.subscriptions.push(userSub);
+
     // Start polling for notifications
     this.notificationDataService.startPolling();
 
@@ -126,5 +135,62 @@ export class SidebarComponent implements OnInit, OnDestroy {
   onMenuItemClick(): void {
     // Close sidebar on mobile when menu item is clicked
     this.menuItemClicked.emit();
+  }
+
+  /**
+   * Get user display name
+   */
+  getUserDisplayName(): string {
+    if (!this.currentUser) return 'User';
+    
+    const firstName = this.currentUser.firstName || '';
+    const lastName = this.currentUser.lastName || '';
+    
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`;
+    } else if (firstName) {
+      return firstName;
+    } else if (this.currentUser.email) {
+      return this.currentUser.email.split('@')[0];
+    }
+    
+    return 'User';
+  }
+
+  /**
+   * Get user initials for avatar
+   */
+  getUserInitials(): string {
+    if (!this.currentUser) return 'U';
+    
+    const firstName = this.currentUser.firstName || '';
+    const lastName = this.currentUser.lastName || '';
+    
+    if (firstName && lastName) {
+      return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    } else if (firstName) {
+      return firstName.charAt(0).toUpperCase();
+    } else if (this.currentUser.email) {
+      return this.currentUser.email.charAt(0).toUpperCase();
+    }
+    
+    return 'U';
+  }
+
+  /**
+   * Get user email
+   */
+  getUserEmail(): string {
+    return this.currentUser?.email || 'user@example.com';
+  }
+
+  /**
+   * Logout user
+   */
+  logout(): void {
+    if (confirm('Are you sure you want to logout?')) {
+      this.authService.logout();
+      this.router.navigate(['/login']);
+    }
   }
 }

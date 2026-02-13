@@ -5,12 +5,9 @@ import { InboxService } from '../../core/services/inbox.service';
 import { AuthService } from '../../core/services/auth.service';
 import { IInboxStats } from '../../core/models/interaction.model';
 import { environment } from '../../../environments/environment';
-import { Subscription, interval } from 'rxjs';
+import { Subscription } from 'rxjs';
 
-/**
- * Dashboard Component - Single Responsibility Principle
- * Displays interactive overview of system metrics and statistics
- */
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -106,12 +103,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
     this.loadAllData();
-
-    // Refresh data every 30 seconds
-    const refreshSub = interval(30000).subscribe(() => {
-      this.loadAllData();
-    });
-    this.subscriptions.push(refreshSub);
   }
 
   ngOnDestroy(): void {
@@ -309,10 +300,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadTasks(): void {
     this.loadingTasks = true;
     
-    // Get all interactions (tasks) for the current user's organization
+    // Get only interactions assigned to the current user (agent tasks)
+    if (!this.currentUser || !this.currentUser._id) {
+      this.tasks = { total: 0, pending: 0, completed: 0, completionRate: 0 };
+      this.loadingTasks = false;
+      return;
+    }
+    
     this.inboxService.getInteractions({ 
       page: 1,
-      limit: 1000 // Get all interactions
+      limit: 1000, // Get all assigned interactions
+      assignedTo: this.currentUser._id // Filter by current user
     }).subscribe({
       next: (response) => {
         if (response.success && response.data) {
@@ -320,15 +318,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const interactions = response.data.interactions || response.data;
           const interactionArray = Array.isArray(interactions) ? interactions : [];
           
-          this.tasks.total = interactionArray.length;
+          // Filter to only show interactions assigned to current user
+          const myTasks = interactionArray.filter((int: any) => 
+            int.assignedTo === this.currentUser._id || 
+            (int.assignedTo && int.assignedTo._id === this.currentUser._id)
+          );
+          
+          this.tasks.total = myTasks.length;
           
           // Count pending (not resolved)
-          this.tasks.pending = interactionArray.filter((int: any) => 
+          this.tasks.pending = myTasks.filter((int: any) => 
             int.status !== 'resolved' && int.status !== 'closed'
           ).length;
           
           // Count completed (resolved or closed)
-          this.tasks.completed = interactionArray.filter((int: any) => 
+          this.tasks.completed = myTasks.filter((int: any) => 
             int.status === 'resolved' || int.status === 'closed'
           ).length;
           
@@ -353,15 +357,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getTasksStatusMessage(): string {
     if (this.tasks.pending === 0 && this.tasks.total > 0) {
-      return '🎉 Amazing! All tasks completed!';
+      return '🎉 Amazing! All assigned tasks completed!';
     } else if (this.tasks.pending === 0) {
-      return '👍 No tasks assigned yet';
+      return '👍 No tasks assigned to you yet';
     } else if (this.tasks.pending <= 5) {
-      return '💪 Almost there! Just a few more tasks';
+      return '💪 Almost there! Just a few more assigned tasks';
     } else if (this.tasks.pending <= 10) {
       return '⚡ Keep going! You\'re making great progress';
     } else {
-      return '🚀 Let\'s tackle these tasks!';
+      return '🚀 Let\'s tackle your assigned tasks!';
     }
   }
 

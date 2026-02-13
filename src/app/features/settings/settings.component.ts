@@ -680,11 +680,15 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   getConnectedCount(): number {
-    return this.platforms.filter(p => p.connected).length;
+    // Use the actual usage data from the service instead of the static platforms array
+    const usage = this.platformConnectionService.getCurrentUsage();
+    return usage ? usage.current : 0;
   }
 
   getPendingCount(): number {
-    return this.platforms.filter(p => !p.connected).length;
+    // Calculate available platforms: max limit minus current connections
+    const usage = this.platformConnectionService.getCurrentUsage();
+    return usage ? usage.remaining : 0;
   }
 
   /**
