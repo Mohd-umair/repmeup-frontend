@@ -31,12 +31,108 @@
   <!-- Right Section -->
   <div class="flex items-center space-x-2 sm:space-x-3 md:space-x-4 ml-2 sm:ml-4 md:ml-6">
     <!-- Notifications -->
-    <button class="relative p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition">
-      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-      </svg>
-      <span *ngIf="notifications > 0" class="absolute top-1 right-1 w-5 h-5 bg-rep-lime text-rep-black text-xs font-bold rounded-full flex items-center justify-center">
-        {{ notifications }}
+    <div class="relative">
+      <button 
+        (click)="toggleNotifications()"
+        class="relative p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition"
+      >
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+        </svg>
+        <span *ngIf="notificationCount > 0" class="absolute top-1 right-1 w-5 h-5 bg-rep-lime text-rep-black text-xs font-bold rounded-full flex items-center justify-center">
+          {{ notificationCount }}
+        </span>
+      </button>
+
+      <!-- Notification Dropdown -->
+      <div 
+        *ngIf="showNotifications"
+        class="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] bg-rep-black rounded-lg shadow-2xl border border-gray-800 z-50 max-h-[80vh] overflow-hidden flex flex-col"
+      >
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 border-b border-gray-800">
+          <h3 class="text-lg font-bold text-rep-white flex items-center">
+            <span class="mr-2">🔔</span>
+            Notifications
+          </h3>
+          <button 
+            *ngIf="notificationCount > 0"
+            (click)="markAllAsRead()"
+            class="text-xs text-rep-lime hover:text-rep-lime/80 font-semibold"
+          >
+            Mark all read
+          </button>
+        </div>
+
+        <!-- Notifications List -->
+        <div class="overflow-y-auto flex-1">
+          <!-- Loading State -->
+          <div *ngIf="loadingNotifications" class="p-8 text-center">
+            <i class="fas fa-spinner fa-spin text-3xl text-rep-lime mb-2"></i>
+            <p class="text-gray-400 text-sm">Loading notifications...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="!loadingNotifications && notifications.length === 0" class="p-8 text-center">
+            <span class="text-5xl mb-3 block">🎉</span>
+            <p class="text-gray-400 font-medium">All caught up!</p>
+            <p class="text-gray-500 text-sm mt-1">No new notifications</p>
+          </div>
+
+          <!-- Notification Items -->
+          <div *ngIf="!loadingNotifications && notifications.length > 0">
+            <button
+              *ngFor="let notification of notifications"
+              (click)="markAsRead(notification)"
+              [class]="'w-full text-left p-4 border-b border-gray-800 hover:bg-gray-900 transition ' + (notification.isRead ? 'opacity-60' : 'bg-gray-900/30')"
+            >
+              <div class="flex items-start space-x-3">
+                <!-- Icon -->
+                <div class="flex-shrink-0 mt-1">
+                  <span class="text-2xl">{{ getNotificationIcon(notification.type) }}</span>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between">
+                    <p class="text-sm font-bold text-rep-white">{{ notification.title }}</p>
+                    <span *ngIf="!notification.isRead" class="ml-2 w-2 h-2 bg-rep-lime rounded-full flex-shrink-0 mt-1"></span>
+                  </div>
+                  <p class="text-sm text-gray-400 mt-1 line-clamp-2">{{ notification.message }}</p>
+                  <p class="text-xs text-gray-500 mt-2">{{ getTimeAgo(notification.createdAt) }}</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div *ngIf="notifications.length > 0" class="p-3 border-t border-gray-800 bg-gray-900/50">
+          <button 
+            class="w-full text-center text-sm text-rep-lime hover:text-rep-lime/80 font-semibold"
+          >
+            View all notifications
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Credits Badge -->
+    <button 
+      *ngIf="aiCredits"
+      (click)="navigateToCredits()"
+      class="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition cursor-pointer"
+      title="View AI Credits Usage"
+    >
+      <i class="fas fa-bolt" [class]="getCreditStatusColor()"></i>
+      <div class="hidden sm:flex flex-col items-start">
+        <span class="text-xs font-semibold" [class]="getCreditStatusColor()">
+          {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
+        </span>
+        <span class="text-xs text-gray-500">credits</span>
+      </div>
+      <span class="text-xs font-bold sm:hidden" [class]="getCreditStatusColor()">
+        {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
       </span>
     </button>
 

@@ -6,7 +6,8 @@ import { NotificationService } from '../../core/services/notification.service';
 
 interface ScheduledPost {
   _id?: string;
-  platforms: string[];
+  platform?: string;
+  platforms?: string[];
   content: string;
   mediaUrls?: string[];
   scheduledFor?: Date;
@@ -211,6 +212,10 @@ export class CalendarComponent implements OnInit {
       google: 'Google My Business'
     };
     return names[platform] || platform;
+  }
+
+  getPostPlatform(post: ScheduledPost): string {
+    return post.platform || post.platforms?.[0] || '';
   }
 
   getPlatformIcon(platform: string): string {

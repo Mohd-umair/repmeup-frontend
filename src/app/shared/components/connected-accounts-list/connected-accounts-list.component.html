@@ -1,0 +1,155 @@
+<!-- Loading State -->
+<div *ngIf="loading" class="flex items-center justify-center py-12">
+  <div class="text-center">
+    <div class="w-12 h-12 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mx-auto mb-4"></div>
+    <p class="text-sm text-gray-600">Loading connections...</p>
+  </div>
+</div>
+
+<!-- Empty State -->
+<div *ngIf="!loading && connections.length === 0" class="text-center py-12">
+  <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+    <i class="fas fa-link text-4xl text-gray-400"></i>
+  </div>
+  <h3 class="text-xl font-bold text-gray-800 mb-2">No accounts connected yet</h3>
+  <p class="text-sm text-gray-600 mb-6">Connect your first social media account to get started</p>
+</div>
+
+<!-- Desktop Table View -->
+<div *ngIf="!loading && connections.length > 0" class="hidden md:block overflow-x-auto">
+  <table class="w-full">
+    <thead class="bg-gray-50 border-b-2 border-gray-200">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+          Platform
+        </th>
+        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+          Account Name
+        </th>
+        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+          Status
+        </th>
+        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+          Last Synced
+        </th>
+        <th class="px-6 py-3 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+          Actions
+        </th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr *ngFor="let connection of connections" 
+          class="hover:bg-gray-50 transition-colors duration-150">
+        <!-- Platform -->
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center space-x-3">
+            <div [class]="'w-10 h-10 rounded-lg flex items-center justify-center ' + getPlatformColors(connection.platform).bg">
+              <i [class]="getPlatformIcon(connection.platform) + ' text-xl ' + getPlatformColors(connection.platform).text"></i>
+            </div>
+            <span class="text-sm font-medium text-gray-900">{{ getPlatformLabel(connection.platform) }}</span>
+          </div>
+        </td>
+
+        <!-- Account Name -->
+        <td class="px-6 py-4">
+          <div class="text-sm font-medium text-gray-900">{{ getAccountName(connection) }}</div>
+          <div *ngIf="connection.platformEmail" class="text-xs text-gray-500">{{ connection.platformEmail }}</div>
+          <!-- Warning for Google with no locations -->
+          <div *ngIf="needsLocationSetup(connection)" 
+               class="mt-2 px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-lg text-xs text-amber-800">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            {{ getSetupWarning(connection) }}
+          </div>
+        </td>
+
+        <!-- Status -->
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span [class]="'px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ' + getStatusBadge(connection.status).class">
+            <i [class]="'fas ' + getStatusBadge(connection.status).icon + ' mr-1.5'"></i>
+            {{ getStatusBadge(connection.status).label }}
+          </span>
+        </td>
+
+        <!-- Last Synced -->
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+          <i class="far fa-clock mr-1.5 text-gray-400"></i>
+          {{ formatLastSync(connection.lastSyncAt) }}
+        </td>
+
+        <!-- Actions -->
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <!-- Setup Locations button for Google with no locations -->
+          <button
+            *ngIf="needsLocationSetup(connection)"
+            (click)="onRefreshLocations(connection, $event)"
+            class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg mr-2 transition-colors duration-150"
+            title="Setup business locations">
+            <i class="fas fa-map-marker-alt mr-1"></i>
+            Setup Locations
+          </button>
+          <!-- Regular sync button -->
+          <button
+            *ngIf="connection.status === 'connected' && !needsLocationSetup(connection)"
+            (click)="onSync(connection, $event)"
+            class="text-rep-lime hover:text-rep-black mr-3 transition-colors duration-150"
+            title="Sync now">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+          <!-- Disconnect button -->
+          <button
+            (click)="onDisconnect(connection, $event)"
+            class="text-red-600 hover:text-red-800 transition-colors duration-150"
+            title="Disconnect">
+            <i class="fas fa-unlink"></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Mobile Card View -->
+<div *ngIf="!loading && connections.length > 0" class="md:hidden space-y-4">
+  <div *ngFor="let connection of connections"
+       class="bg-white rounded-xl shadow-md border-2 border-gray-200 p-4 hover:shadow-lg transition-shadow duration-200">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-3">
+      <div class="flex items-center space-x-3 flex-1 min-w-0">
+        <div [class]="'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ' + getPlatformColors(connection.platform).bg">
+          <i [class]="getPlatformIcon(connection.platform) + ' text-2xl ' + getPlatformColors(connection.platform).text"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-semibold text-gray-500 uppercase">{{ getPlatformLabel(connection.platform) }}</p>
+          <p class="text-sm font-bold text-gray-900 truncate">{{ getAccountName(connection) }}</p>
+          <p *ngIf="connection.platformEmail" class="text-xs text-gray-500 truncate">{{ connection.platformEmail }}</p>
+        </div>
+      </div>
+      
+      <span [class]="'px-2.5 py-1 text-xs font-semibold rounded-full border whitespace-nowrap flex-shrink-0 ml-2 ' + getStatusBadge(connection.status).class">
+        <i [class]="'fas ' + getStatusBadge(connection.status).icon + ' mr-1'"></i>
+        {{ getStatusBadge(connection.status).label }}
+      </span>
+    </div>
+
+    <!-- Last Synced -->
+    <div class="flex items-center text-xs text-gray-600 mb-3">
+      <i class="far fa-clock mr-1.5 text-gray-400"></i>
+      Last synced: {{ formatLastSync(connection.lastSyncAt) }}
+    </div>
+
+    <!-- Actions -->
+    <div class="flex space-x-2">
+      <button
+        *ngIf="connection.status === 'connected'"
+        (click)="onSync(connection, $event)"
+        class="flex-1 px-4 py-2 bg-rep-lime/20 text-rep-black border-2 border-rep-lime/30 rounded-lg text-sm font-semibold hover:bg-rep-lime/30 transition-colors duration-150">
+        <i class="fas fa-sync-alt mr-2"></i>Sync
+      </button>
+      <button
+        (click)="onDisconnect(connection, $event)"
+        class="flex-1 px-4 py-2 bg-red-50 text-red-700 border-2 border-red-200 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors duration-150">
+        <i class="fas fa-unlink mr-2"></i>Disconnect
+      </button>
+    </div>
+  </div>
+</div>

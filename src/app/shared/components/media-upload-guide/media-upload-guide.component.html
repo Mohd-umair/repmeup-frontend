@@ -1,0 +1,162 @@
+<div *ngIf="showModal" class="media-modal-overlay fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="media-modal-container bg-gray-900 rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl border border-gray-800">
+    
+    <!-- Header (fixed) -->
+    <div class="media-modal-header flex-shrink-0 bg-gradient-to-r from-rep-lime/20 to-blue-500/20 p-4 sm:p-6 border-b border-gray-800">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-rep-lime rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-info-circle text-2xl text-rep-black"></i>
+          </div>
+          <div class="min-w-0">
+            <h2 class="text-xl sm:text-2xl font-bold text-white truncate">Media Upload Guidelines</h2>
+            <p class="text-gray-400 text-sm mt-1 truncate">Requirements for {{ postType }} on selected platforms</p>
+          </div>
+        </div>
+        <button 
+          (click)="closeModal()"
+          class="w-10 h-10 flex-shrink-0 rounded-lg bg-gray-800 hover:bg-gray-700 transition flex items-center justify-center text-gray-400 hover:text-white">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content (scrollable) -->
+    <div class="media-modal-body flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
+      
+      <div *ngIf="loading" class="flex justify-center py-12">
+        <i class="fas fa-spinner fa-spin text-4xl text-rep-lime"></i>
+      </div>
+
+      <div *ngIf="!loading && getFilteredRequirements().length === 0" class="text-center py-12">
+        <i class="fas fa-image text-6xl text-gray-700 mb-4"></i>
+        <p class="text-gray-400">Select platforms to view their media requirements</p>
+      </div>
+
+      <!-- Platform Requirements -->
+      <div *ngIf="!loading" class="space-y-6">
+        <div 
+          *ngFor="let req of getFilteredRequirements()" 
+          class="bg-gray-800/50 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-600 transition">
+          
+          <!-- Platform Header -->
+          <div class="p-4 border-b border-gray-700 flex items-center gap-3"
+               [style.background]="'linear-gradient(to right, ' + getPlatformColor(req.platform) + '15, transparent)'">
+            <i [class]="getPlatformIcon(req.platform) + ' text-3xl'" [style.color]="getPlatformColor(req.platform)"></i>
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-white capitalize">{{ req.platform }}</h3>
+              <p class="text-sm text-gray-400">{{ req.postType | titlecase }} Requirements</p>
+            </div>
+          </div>
+
+          <!-- Image Requirements -->
+          <div *ngIf="req.image" class="p-4 border-b border-gray-700/50">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-image text-rep-lime"></i>
+              <h4 class="font-bold text-white">Image Requirements</h4>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+              <div class="bg-gray-900/50 rounded-lg p-3">
+                <p class="text-xs text-gray-500 mb-1">Max Size</p>
+                <p class="text-sm font-bold text-white">{{ req.image.maxSize }}</p>
+              </div>
+              <div class="bg-gray-900/50 rounded-lg p-3">
+                <p class="text-xs text-gray-500 mb-1">Recommended</p>
+                <p class="text-sm font-bold text-white">{{ req.image.dimensions }}</p>
+              </div>
+              <div class="bg-gray-900/50 rounded-lg p-3">
+                <p class="text-xs text-gray-500 mb-1">Formats</p>
+                <p class="text-sm font-bold text-white">{{ req.image.formats }}</p>
+              </div>
+            </div>
+            
+            <p class="text-xs text-gray-400 flex items-start gap-2">
+              <i class="fas fa-lightbulb text-yellow-500 mt-0.5"></i>
+              <span>{{ req.image.description }}</span>
+            </p>
+          </div>
+
+          <!-- Video Requirements -->
+          <div *ngIf="req.video" class="p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <i class="fas fa-video text-rep-lime"></i>
+              <h4 class="font-bold text-white">Video Requirements</h4>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+              <div class="bg-gray-900/50 rounded-lg p-3">
+                <p class="text-xs text-gray-500 mb-1">Max Size</p>
+                <p class="text-sm font-bold text-white">{{ req.video.maxSize }}</p>
+              </div>
+              <div class="bg-gray-900/50 rounded-lg p-3">
+                <p class="text-xs text-gray-500 mb-1">Duration</p>
+                <p class="text-sm font-bold text-white">{{ req.video.duration }}</p>
+              </div>
+              <div class="bg-gray-900/50 rounded-lg p-3">
+                <p class="text-xs text-gray-500 mb-1">Formats</p>
+                <p class="text-sm font-bold text-white">{{ req.video.formats }}</p>
+              </div>
+            </div>
+            
+            <p class="text-xs text-gray-400 flex items-start gap-2">
+              <i class="fas fa-lightbulb text-yellow-500 mt-0.5"></i>
+              <span>{{ req.video.description }}</span>
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- General Tips -->
+      <div class="mt-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/30">
+        <h4 class="font-bold text-blue-400 mb-3 flex items-center gap-2">
+          <i class="fas fa-tips"></i>
+          Pro Tips
+        </h4>
+        <ul class="space-y-2 text-sm text-gray-300">
+          <li class="flex items-start gap-2">
+            <i class="fas fa-check text-rep-lime mt-1"></i>
+            <span>Use high-quality images with good lighting and sharp focus</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fas fa-check text-rep-lime mt-1"></i>
+            <span>Compress images to reduce file size while maintaining quality</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fas fa-check text-rep-lime mt-1"></i>
+            <span>Test your media on different devices before posting</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <i class="fas fa-check text-rep-lime mt-1"></i>
+            <span>Follow platform-specific aspect ratios for best results</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Footer (fixed) -->
+    <div class="media-modal-footer flex-shrink-0 p-4 border-t border-gray-800 bg-gray-900 flex justify-end">
+      <button 
+        (click)="closeModal()"
+        class="px-6 py-2 bg-rep-lime text-rep-black rounded-lg font-bold hover:shadow-lg transition">
+        Got it!
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Inline Quick Guide (when not in modal) -->
+<div *ngIf="!showModal && getFilteredRequirements().length > 0" class="p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
+  <div class="flex items-start gap-2">
+    <i class="fas fa-info-circle text-blue-400 mt-0.5"></i>
+    <div class="flex-1 text-xs text-gray-300">
+      <strong class="text-blue-400">Media Requirements:</strong>
+      <span *ngFor="let req of getFilteredRequirements(); let last = last">
+        <span class="capitalize">{{ req.platform }}</span>: {{ req.image?.maxSize || 'N/A' }}<span *ngIf="!last">, </span>
+      </span>
+    </div>
+  </div>
+</div>

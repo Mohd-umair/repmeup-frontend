@@ -1,0 +1,200 @@
+<!-- Modal Overlay -->
+<div *ngIf="visible" 
+     class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+     (click)="close()">
+  
+  <!-- Modal Content -->
+  <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+       (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold mb-1">
+            <i class="fab fa-facebook-f mr-3"></i>Select Pages to Connect
+          </h2>
+          <p class="text-blue-100 text-sm">Choose which Facebook pages and Instagram accounts to connect</p>
+        </div>
+        <button (click)="close()" 
+                class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Limit Info Banner -->
+    <div [class]="getNewConnectionsCount() > remainingSlots ? 'bg-red-50 border-b-2 border-red-300 p-4' : (remainingSlots === 0 ? 'bg-amber-50 border-b-2 border-amber-300 p-4' : 'bg-blue-50 border-b-2 border-blue-200 p-4')">
+      <div class="flex items-start space-x-3">
+        <i [class]="getNewConnectionsCount() > remainingSlots ? 'fas fa-exclamation-triangle text-red-600 text-lg mt-0.5' : (remainingSlots === 0 ? 'fas fa-exclamation-circle text-amber-600 text-lg mt-0.5' : 'fas fa-info-circle text-blue-600 text-lg mt-0.5')"></i>
+        <div class="flex-1">
+          <p class="text-sm font-semibold mb-1" [class]="getNewConnectionsCount() > remainingSlots ? 'text-red-900' : (remainingSlots === 0 ? 'text-amber-900' : 'text-blue-900')">
+            {{ getNewConnectionsCount() > remainingSlots ? 'Selection Exceeds Plan Limit!' : (remainingSlots === 0 ? 'No Available Slots' : 'Account Selection') }}
+          </p>
+          <p class="text-xs" [class]="getNewConnectionsCount() > remainingSlots ? 'text-red-800' : (remainingSlots === 0 ? 'text-amber-800' : 'text-blue-800')">
+            <span *ngIf="getNewConnectionsCount() > remainingSlots">
+              You selected <span class="font-bold">{{ getNewConnectionsCount() }}</span> account{{ getNewConnectionsCount() !== 1 ? 's' : '' }}, 
+              but can only add <span class="font-bold">{{ remainingSlots }}</span>. 
+              Please unselect {{ getNewConnectionsCount() - remainingSlots }} account{{ getNewConnectionsCount() - remainingSlots !== 1 ? 's' : '' }} or upgrade your plan.
+            </span>
+            <span *ngIf="getNewConnectionsCount() <= remainingSlots && remainingSlots > 0">
+              You can add <span class="font-bold">{{ remainingSlots }}</span> more account{{ remainingSlots !== 1 ? 's' : '' }} on your current plan.
+              <span *ngIf="getNewConnectionsCount() > 0">
+                ({{ getNewConnectionsCount() }} selected)
+              </span>
+            </span>
+            <span *ngIf="remainingSlots === 0" class="font-semibold">
+              You've reached your plan limit. Please disconnect an existing account or upgrade your plan to connect more.
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="p-12 text-center">
+      <div class="w-16 h-16 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-gray-600 font-medium">Loading your Facebook pages...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loading && pages.length === 0" class="p-12 text-center">
+      <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fab fa-facebook text-4xl text-gray-400"></i>
+      </div>
+      <h3 class="text-xl font-bold text-gray-800 mb-2">No Facebook Pages Found</h3>
+      <p class="text-sm text-gray-600 mb-6">You need to be an admin of at least one Facebook Page to connect.</p>
+      <div class="flex justify-center space-x-3">
+        <button (click)="loadPages()" 
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+          <i class="fas fa-sync-alt mr-2"></i>Retry
+        </button>
+        <button (click)="close()" 
+                class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Pages List -->
+    <div *ngIf="!loading && pages.length > 0" class="overflow-y-auto max-h-[50vh] p-6">
+      <div class="space-y-4">
+        <div *ngFor="let page of pages" 
+             class="border-2 rounded-xl p-4 transition-all duration-200"
+             [class.border-blue-500]="isPageSelected(page.id)"
+             [class.bg-blue-50]="isPageSelected(page.id)"
+             [class.border-gray-200]="!isPageSelected(page.id)"
+             [class.hover:border-gray-300]="!isPageSelected(page.id) && page.canConnect"
+             [class.opacity-50]="!page.canConnect">
+          
+          <!-- Page Header -->
+          <div class="flex items-start space-x-4">
+            <!-- Checkbox -->
+            <div class="flex-shrink-0 pt-1">
+              <input
+                type="checkbox"
+                [checked]="isPageSelected(page.id)"
+                (change)="togglePageSelection(page.id)"
+                [disabled]="!page.canConnect || page.isConnectedFacebook"
+                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer disabled:cursor-not-allowed">
+            </div>
+
+            <!-- Page Icon -->
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center flex-shrink-0">
+              <i class="fab fa-facebook-f text-white text-xl"></i>
+            </div>
+
+            <!-- Page Info -->
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">{{ page.name }}</h3>
+              <p *ngIf="page.category" class="text-xs text-gray-500 mb-2">{{ page.category }}</p>
+              
+              <!-- Status Badges -->
+              <div class="flex flex-wrap gap-2">
+                <span *ngIf="page.isConnectedFacebook" 
+                      class="px-2.5 py-1 bg-green-100 text-green-800 border border-green-300 rounded-lg text-xs font-semibold">
+                  <i class="fas fa-check-circle mr-1"></i>Facebook Connected
+                </span>
+                <span *ngIf="page.hasInstagram && page.isConnectedInstagram" 
+                      class="px-2.5 py-1 bg-purple-100 text-purple-800 border border-purple-300 rounded-lg text-xs font-semibold">
+                  <i class="fab fa-instagram mr-1"></i>Instagram Connected
+                </span>
+                <span *ngIf="!page.canConnect && !page.isConnectedFacebook" 
+                      class="px-2.5 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-semibold">
+                  <i class="fas fa-exclamation-triangle mr-1"></i>Limit Reached
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Instagram Option (if page has Instagram and is selected) -->
+          <div *ngIf="page.hasInstagram && isPageSelected(page.id) && !page.isConnectedInstagram" 
+               class="mt-4 ml-9 pl-4 border-l-2 border-purple-300 bg-purple-50 rounded-lg p-3">
+            <label class="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                [checked]="includeInstagram.get(page.id) || false"
+                (change)="toggleInstagram(page.id)"
+                class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2">
+              <div class="flex items-center space-x-2 flex-1">
+                <i class="fab fa-instagram text-purple-600 text-lg"></i>
+                <div>
+                  <p class="text-sm font-semibold text-gray-900">Also connect Instagram</p>
+                  <p class="text-xs text-gray-600">@{{ page.instagramAccount?.username }}</p>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <!-- Already Connected Instagram (disabled) -->
+          <div *ngIf="page.hasInstagram && page.isConnectedInstagram" 
+               class="mt-4 ml-9 pl-4 border-l-2 border-gray-300 bg-gray-50 rounded-lg p-3">
+            <div class="flex items-center space-x-3 opacity-60">
+              <i class="fab fa-instagram text-gray-500 text-lg"></i>
+              <div>
+                <p class="text-sm font-semibold text-gray-700">Instagram Already Connected</p>
+                <p class="text-xs text-gray-500">@{{ page.instagramAccount?.username }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="border-t-2 border-gray-200 p-6 bg-gray-50">
+      <!-- Selection Summary -->
+      <div class="mb-4 flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+          <span class="font-semibold">{{ getNewConnectionsCount() }}</span> account{{ getNewConnectionsCount() !== 1 ? 's' : '' }} will be added
+          <span *ngIf="remainingSlots > 0" class="text-gray-500">
+            ({{ remainingSlots - getNewConnectionsCount() }} slot{{ (remainingSlots - getNewConnectionsCount()) !== 1 ? 's' : '' }} remaining)
+          </span>
+        </div>
+        
+        <!-- Validation Warning -->
+        <span *ngIf="getNewConnectionsCount() > remainingSlots"
+              class="px-3 py-1.5 bg-red-100 text-red-800 border border-red-300 rounded-lg text-xs font-semibold">
+          <i class="fas fa-exclamation-triangle mr-1"></i>Exceeds limit
+        </span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex space-x-3">
+        <button
+          (click)="close()"
+          [disabled]="connecting"
+          class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          Cancel
+        </button>
+        <button
+          (click)="connectPages()"
+          [disabled]="!canConnect()"
+          class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none">
+          <i [class]="connecting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-plug mr-2'"></i>
+          {{ connecting ? 'Connecting...' : getSelectionSummary() }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

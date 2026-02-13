@@ -1,9 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
-import { AvatarService } from '../../../core/services/avatar.service';
 
 /**
  * Inbox List Component - Single Responsibility Principle
@@ -14,7 +13,7 @@ import { AvatarService } from '../../../core/services/avatar.service';
   templateUrl: './inbox-list.component.html',
   styleUrls: ['./inbox-list.component.scss']
 })
-export class InboxListComponent implements OnInit, OnDestroy, OnChanges {
+export class InboxListComponent implements OnInit, OnDestroy {
   @Input() interactions: IInteraction[] = [];
   @Input() loading = false;
   @Input() selectedInteraction: IInteraction | null = null;
@@ -23,54 +22,30 @@ export class InboxListComponent implements OnInit, OnDestroy, OnChanges {
 
   searchTerm = '';
   private searchSubject = new Subject<string>();
+  private searchSubscription?: Subscription;
   /** Tracks avatar load errors so we can show initial fallback */
   avatarFallback: Record<string, boolean> = {};
-  /** Resolved avatar blob URLs from proxy (Instagram/Facebook), keyed by interaction.platformId */
-  avatarUrls: Record<string, string> = {};
-  private avatarCacheKeys = new Set<string>();
 
   constructor(
-    public themeService: ThemeService,
-    private avatarService: AvatarService
+    public themeService: ThemeService
   ) {}
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['interactions'] && this.interactions?.length) {
-      this.loadAvatars();
-    }
-  }
-
-  private loadAvatars(): void {
-    for (const i of this.interactions) {
-      if ((i.platform === 'instagram' || i.platform === 'facebook') && i.author?.platformId && !this.avatarUrls[i.platformId]) {
-        const cacheKey = this.avatarService.getCacheKey(i.platform, i.author.platformId);
-        const interactionPlatformId = i.platformId;
-        this.avatarCacheKeys.add(cacheKey);
-        this.avatarService.getAvatarUrl(i.platform, i.author.platformId).subscribe(url => {
-          if (url) this.avatarUrls = { ...this.avatarUrls, [interactionPlatformId]: url };
-        });
-      }
-    }
-  }
 
   onAvatarError(key: string): void {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
   }
 
   ngOnInit(): void {
-    // Set up debounced search
-    this.searchSubject.pipe(
-      debounceTime(400), // Wait 400ms after user stops typing
-      distinctUntilChanged() // Only emit if value has changed
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
     ).subscribe(searchTerm => {
       this.searchChange.emit(searchTerm);
     });
   }
 
   ngOnDestroy(): void {
+    this.searchSubscription?.unsubscribe();
     this.searchSubject.complete();
-    this.avatarCacheKeys.forEach(key => this.avatarService.revoke(key));
-    this.avatarCacheKeys.clear();
   }
 
   selectInteraction(interaction: IInteraction): void {
@@ -130,6 +105,13 @@ export class InboxListComponent implements OnInit, OnDestroy, OnChanges {
 
   getTypeLabel(type: string): string {
     return type.charAt(0).toUpperCase() + type.slice(1);
+  }
+
+  /** Star rating for reviews (Google Business etc.); undefined if not a review or no rating */
+  getReviewRating(interaction: IInteraction): number | undefined {
+    const r = (interaction as any).rating ?? interaction.metadata?.starRating;
+    if (r == null || typeof r !== 'number') return undefined;
+    return Math.min(5, Math.max(1, Math.round(r)));
   }
 
   formatTime(date: Date): string {

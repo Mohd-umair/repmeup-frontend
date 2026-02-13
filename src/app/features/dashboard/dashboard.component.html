@@ -1,151 +1,772 @@
-<div class="space-y-4 sm:space-y-5 md:space-y-6 bg-rep-black h-full overflow-y-auto p-3 sm:p-4 md:p-6 w-full">
-  <!-- Page Header -->
-  <div>
-    <h1 class="text-2xl sm:text-3xl font-bold text-rep-white">Dashboard</h1>
-    <p class="text-sm sm:text-base text-gray-300 mt-1">Welcome back! Here's your reputation overview.</p>
+<div class="min-h-screen bg-rep-black p-4 sm:p-6 overflow-y-auto">
+  <!-- Welcome Header -->
+  <div class="mb-6 sm:mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold text-rep-white mb-2">
+      {{ getGreeting() }}, {{ currentUser?.firstName || 'User' }}! 👋
+    </h1>
+    <p class="text-gray-400 text-sm sm:text-base">Here's what's happening with your social reputation today</p>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-    <!-- Total Interactions -->
-    <div class="bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs sm:text-sm font-medium text-gray-600">Total Interactions</p>
-          <p class="text-2xl sm:text-3xl font-bold text-rep-black mt-1 sm:mt-2">{{ stats?.total || 0 }}</p>
-          <p class="text-xs sm:text-sm text-rep-lime mt-1 sm:mt-2">↑ 12% from last month</p>
-        </div>
-        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rep-lime/20 rounded-lg flex items-center justify-center border border-rep-lime/30 flex-shrink-0">
-          <span class="text-xl sm:text-2xl">📊</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Unread -->
-    <div class="bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs sm:text-sm font-medium text-gray-600">Unread</p>
-          <p class="text-2xl sm:text-3xl font-bold text-rep-black mt-1 sm:mt-2">{{ stats?.unread || 0 }}</p>
-          <p class="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Needs attention</p>
-        </div>
-        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300 flex-shrink-0">
-          <span class="text-xl sm:text-2xl">📥</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Positive Sentiment -->
-    <div class="bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs sm:text-sm font-medium text-gray-600">Positive</p>
-          <p class="text-2xl sm:text-3xl font-bold text-rep-black mt-1 sm:mt-2">{{ stats?.positive || 0 }}</p>
-          <p class="text-xs sm:text-sm text-rep-lime mt-1 sm:mt-2">{{ getPercentage(stats?.positive || 0, stats?.total || 1) }}% of total</p>
-        </div>
-        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-rep-lime/20 rounded-lg flex items-center justify-center border border-rep-lime/30 flex-shrink-0">
-          <span class="text-xl sm:text-2xl">😊</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Negative Sentiment -->
-    <div class="bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs sm:text-sm font-medium text-gray-600">Negative</p>
-          <p class="text-2xl sm:text-3xl font-bold text-rep-black mt-1 sm:mt-2">{{ stats?.negative || 0 }}</p>
-          <p class="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">{{ getPercentage(stats?.negative || 0, stats?.total || 1) }}% of total</p>
-        </div>
-        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-300 flex-shrink-0">
-          <span class="text-xl sm:text-2xl">😟</span>
-        </div>
-      </div>
+  <!-- Loading State -->
+  <div *ngIf="loading || checkingPlatforms" class="flex justify-center items-center py-20">
+    <div class="text-center">
+      <div class="w-16 h-16 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mx-auto mb-4"></div>
+      <p class="text-gray-400">Loading your dashboard...</p>
     </div>
   </div>
 
-  <!-- Two Column Layout -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-    <!-- Platform Distribution -->
-    <div class="lg:col-span-1 bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
-      <h2 class="text-base sm:text-lg font-semibold text-rep-black mb-3 sm:mb-4">Platform Distribution</h2>
-      <div class="space-y-4">
-        <div *ngFor="let platform of platformData" class="space-y-2">
-          <div class="flex items-center justify-between text-sm">
-            <span class="font-medium text-gray-700">{{ platform.name }}</span>
-            <span class="text-gray-600">{{ platform.value }}%</span>
+  <!-- Onboarding Guide (when no platforms connected) -->
+  <div *ngIf="!loading && !checkingPlatforms && !hasConnectedPlatforms" class="space-y-6">
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-rep-lime/10 to-transparent backdrop-blur-sm rounded-xl border border-rep-lime/30 p-8 text-center">
+      <div class="w-20 h-20 bg-rep-lime/20 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-rocket text-rep-lime text-4xl"></i>
+      </div>
+      <h2 class="text-3xl font-bold text-rep-white mb-3">Welcome to Your ORM Dashboard! 🎉</h2>
+      <p class="text-gray-300 text-lg max-w-2xl mx-auto">
+        Let's get you started with managing your online reputation across all social platforms in one place.
+      </p>
+    </div>
+
+    <!-- Step-by-Step Guide -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Step 1: Connect Platforms -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6 relative overflow-hidden">
+        <div class="absolute top-4 right-4 w-12 h-12 bg-rep-lime/20 rounded-full flex items-center justify-center">
+          <span class="text-rep-lime font-bold text-xl">1</span>
+        </div>
+        <div class="mb-4">
+          <div class="w-14 h-14 bg-rep-lime/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fas fa-plug text-rep-lime text-2xl"></i>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              class="bg-rep-lime h-2 rounded-full" 
-              [style.width.%]="platform.value"
-            ></div>
+          <h3 class="text-2xl font-bold text-rep-white mb-2">Connect Your Platforms</h3>
+          <p class="text-gray-400 mb-4">Link your social media accounts to start managing all interactions in one place.</p>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center gap-3 text-gray-300">
+            <i class="fab fa-instagram text-pink-500 text-xl w-6"></i>
+            <span class="text-sm">Instagram - Comments, DMs, Stories</span>
+          </div>
+          <div class="flex items-center gap-3 text-gray-300">
+            <i class="fab fa-facebook text-blue-500 text-xl w-6"></i>
+            <span class="text-sm">Facebook - Posts, Comments, Reviews</span>
+          </div>
+          <div class="flex items-center gap-3 text-gray-300">
+            <i class="fab fa-youtube text-red-500 text-xl w-6"></i>
+            <span class="text-sm">YouTube - Comments, Live Chat</span>
+          </div>
+          <div class="flex items-center gap-3 text-gray-300">
+            <i class="fab fa-whatsapp text-green-500 text-xl w-6"></i>
+            <span class="text-sm">WhatsApp - Business Messages</span>
+          </div>
+        </div>
+        <button
+          (click)="navigateTo('/app/settings')"
+          class="w-full py-3 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-lg font-bold transition flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-plug"></i>
+          Connect Platforms
+        </button>
+      </div>
+
+      <!-- Step 2: Set Up AI Agents -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6 relative overflow-hidden">
+        <div class="absolute top-4 right-4 w-12 h-12 bg-rep-lime/20 rounded-full flex items-center justify-center">
+          <span class="text-rep-lime font-bold text-xl">2</span>
+        </div>
+        <div class="mb-4">
+          <div class="w-14 h-14 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fas fa-robot text-purple-400 text-2xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-rep-white mb-2">Configure AI Agents</h3>
+          <p class="text-gray-400 mb-4">Set up intelligent AI assistants to automatically respond to customer inquiries.</p>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-rep-lime mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">Auto-Reply Settings</p>
+              <p class="text-gray-500 text-xs">Configure when AI should respond</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-rep-lime mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">Knowledge Base</p>
+              <p class="text-gray-500 text-xs">Train AI with your business info</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-check-circle text-rep-lime mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">Response Tone</p>
+              <p class="text-gray-500 text-xs">Set your brand's voice</p>
+            </div>
+          </div>
+        </div>
+        <button
+          (click)="navigateTo('/app/agents')"
+          class="w-full py-3 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg font-bold transition flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-robot"></i>
+          Setup AI Agents
+        </button>
+      </div>
+
+      <!-- Step 3: Manage Inbox -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6 relative overflow-hidden">
+        <div class="absolute top-4 right-4 w-12 h-12 bg-rep-lime/20 rounded-full flex items-center justify-center">
+          <span class="text-rep-lime font-bold text-xl">3</span>
+        </div>
+        <div class="mb-4">
+          <div class="w-14 h-14 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fas fa-inbox text-blue-400 text-2xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-rep-white mb-2">Manage Your Inbox</h3>
+          <p class="text-gray-400 mb-4">View and respond to all customer interactions from a unified inbox.</p>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-star text-yellow-500 mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">Unified Conversations</p>
+              <p class="text-gray-500 text-xs">All platforms in one place</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-star text-yellow-500 mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">AI-Generated Replies</p>
+              <p class="text-gray-500 text-xs">Get smart response suggestions</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-star text-yellow-500 mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">Smart Filters</p>
+              <p class="text-gray-500 text-xs">Sort by sentiment, platform, status</p>
+            </div>
+          </div>
+        </div>
+        <button
+          (click)="navigateTo('/app/inbox')"
+          class="w-full py-3 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg font-bold transition flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-inbox"></i>
+          View Inbox
+        </button>
+      </div>
+
+      <!-- Step 4: Publish Content -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6 relative overflow-hidden">
+        <div class="absolute top-4 right-4 w-12 h-12 bg-rep-lime/20 rounded-full flex items-center justify-center">
+          <span class="text-rep-lime font-bold text-xl">4</span>
+        </div>
+        <div class="mb-4">
+          <div class="w-14 h-14 bg-green-500/20 rounded-lg flex items-center justify-center mb-4">
+            <i class="fas fa-paper-plane text-green-400 text-2xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-rep-white mb-2">Create & Publish</h3>
+          <p class="text-gray-400 mb-4">Create engaging content and publish across all platforms simultaneously.</p>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-magic text-rep-lime mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">AI Post Writing</p>
+              <p class="text-gray-500 text-xs">Generate content with AI</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-magic text-rep-lime mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">Multi-Platform Publishing</p>
+              <p class="text-gray-500 text-xs">Post to all platforms at once</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fas fa-magic text-rep-lime mt-0.5"></i>
+            <div>
+              <p class="text-gray-300 text-sm font-medium">Schedule Posts</p>
+              <p class="text-gray-500 text-xs">Plan your content calendar</p>
+            </div>
+          </div>
+        </div>
+        <button
+          (click)="navigateTo('/app/publish')"
+          class="w-full py-3 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg font-bold transition flex items-center justify-center gap-2"
+        >
+          <i class="fas fa-paper-plane"></i>
+          Create Post
+        </button>
+      </div>
+    </div>
+
+    <!-- Key Features Overview -->
+    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+      <h3 class="text-2xl font-bold text-rep-white mb-6 text-center">What You Can Do With ORM</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center">
+          <div class="w-16 h-16 bg-rep-lime/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-chart-line text-rep-lime text-2xl"></i>
+          </div>
+          <h4 class="text-lg font-bold text-rep-white mb-2">Real-Time Analytics</h4>
+          <p class="text-gray-400 text-sm">Track sentiment, engagement, and response times across all platforms.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-brain text-purple-400 text-2xl"></i>
+          </div>
+          <h4 class="text-lg font-bold text-rep-white mb-2">AI-Powered Responses</h4>
+          <p class="text-gray-400 text-sm">Let AI handle routine inquiries while you focus on complex issues.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-users text-blue-400 text-2xl"></i>
+          </div>
+          <h4 class="text-lg font-bold text-rep-white mb-2">Team Collaboration</h4>
+          <p class="text-gray-400 text-sm">Assign conversations to team members and track performance.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Tips -->
+    <div class="bg-gradient-to-r from-rep-lime/5 to-transparent backdrop-blur-sm rounded-xl border border-rep-lime/20 p-6">
+      <h3 class="text-xl font-bold text-rep-white mb-4 flex items-center gap-2">
+        <i class="fas fa-lightbulb text-rep-lime"></i>
+        Quick Tips to Get Started
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 bg-rep-lime/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fas fa-check text-rep-lime text-xs"></i>
+          </div>
+          <div>
+            <p class="text-gray-300 font-medium mb-1">Start with one platform</p>
+            <p class="text-gray-500 text-sm">Connect your most active social media account first</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 bg-rep-lime/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fas fa-check text-rep-lime text-xs"></i>
+          </div>
+          <div>
+            <p class="text-gray-300 font-medium mb-1">Build your knowledge base</p>
+            <p class="text-gray-500 text-sm">Add FAQs and common responses for better AI performance</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 bg-rep-lime/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fas fa-check text-rep-lime text-xs"></i>
+          </div>
+          <div>
+            <p class="text-gray-300 font-medium mb-1">Set up auto-replies gradually</p>
+            <p class="text-gray-500 text-sm">Start with simple queries and expand as you gain confidence</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <div class="w-6 h-6 bg-rep-lime/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fas fa-check text-rep-lime text-xs"></i>
+          </div>
+          <div>
+            <p class="text-gray-300 font-medium mb-1">Monitor analytics regularly</p>
+            <p class="text-gray-500 text-sm">Check your dashboard daily to stay on top of customer sentiment</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Recent Activity -->
-    <div class="lg:col-span-2 bg-rep-white rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border border-gray-200">
-      <div class="flex items-center justify-between mb-3 sm:mb-4">
-        <h2 class="text-base sm:text-lg font-semibold text-rep-black">Recent Activity</h2>
-        <a routerLink="/app/inbox" class="text-xs sm:text-sm text-rep-lime hover:text-rep-black font-medium whitespace-nowrap">
-          View all →
-        </a>
+    <!-- Need Help? -->
+    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6 text-center">
+      <h3 class="text-xl font-bold text-rep-white mb-2">Need Help?</h3>
+      <p class="text-gray-400 mb-4">Our support team is here to assist you with setup and configuration.</p>
+      <div class="flex justify-center gap-3">
+        <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg font-medium transition">
+          <i class="fas fa-book mr-2"></i>
+          Documentation
+        </button>
+        <button class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg font-medium transition">
+          <i class="fas fa-headset mr-2"></i>
+          Contact Support
+        </button>
       </div>
-      
-      <div class="space-y-3 sm:space-y-4">
-        <div *ngFor="let activity of recentActivity" class="flex items-start space-x-2 sm:space-x-3 md:space-x-4 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-200">
-          <!-- Platform Icon -->
-          <div class="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-rep-black flex items-center justify-center">
-            <span class="text-base sm:text-lg text-rep-white">{{ getPlatformIcon(activity.platform) }}</span>
+    </div>
+  </div>
+
+  <!-- Regular Dashboard (when platforms are connected) -->
+  <div *ngIf="!loading && !checkingPlatforms && hasConnectedPlatforms" class="space-y-6">
+    <!-- Quick Actions / Navigation Cards -->
+    <div>
+      <h2 class="text-xl font-bold text-rep-white mb-4 flex items-center gap-2">
+        <i class="fas fa-rocket text-rep-lime"></i>
+        Quick Actions
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div 
+          *ngFor="let action of quickActions"
+          (click)="navigateTo(action.route)"
+          class="group cursor-pointer bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 hover:border-rep-lime/30 p-6 transition-all duration-300 transform hover:scale-105"
+        >
+          <!-- Icon -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-rep-lime/20 rounded-lg flex items-center justify-center">
+              <i [class]="action.icon + ' text-2xl text-rep-lime'"></i>
+            </div>
+            <i class="fas fa-arrow-right text-gray-400 group-hover:text-rep-lime group-hover:translate-x-1 transition-all"></i>
           </div>
 
           <!-- Content -->
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span class="text-xs sm:text-sm font-semibold text-rep-black truncate">{{ activity.author }}</span>
-              <span class="text-xs text-gray-500 hidden sm:inline">•</span>
-              <span class="text-xs text-gray-500">{{ activity.platform }}</span>
-              <span class="text-xs text-gray-500 hidden sm:inline">•</span>
-              <span class="text-xs text-gray-500">{{ activity.type }}</span>
-              <span 
-                [class]="'px-2 py-0.5 rounded-full text-xs font-medium ' + getSentimentClass(activity.sentiment)"
-              >
-                {{ activity.sentiment }}
-              </span>
-            </div>
-            <p class="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">{{ activity.content }}</p>
-            <p class="text-xs text-gray-400 mt-1">{{ activity.time }}</p>
+          <h3 class="text-lg font-bold text-rep-white mb-1">{{ action.title }}</h3>
+          <p class="text-gray-400 text-sm mb-3">{{ action.description }}</p>
+
+          <!-- Stats Badge -->
+          <div class="flex items-center gap-2">
+            <span class="text-2xl font-bold text-rep-white">{{ action.stats }}</span>
+            <span class="text-xs text-gray-500">{{ action.statsLabel }}</span>
           </div>
-
-          <!-- Action -->
-          <button class="flex-shrink-0 px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium text-rep-lime hover:text-rep-black border border-rep-lime rounded-lg hover:bg-rep-lime transition whitespace-nowrap">
-            Reply
-          </button>
-        </div>
-
-        <div *ngIf="recentActivity.length === 0" class="text-center py-6 sm:py-8">
-          <span class="text-3xl sm:text-4xl mb-2 block">📭</span>
-          <p class="text-sm sm:text-base text-gray-500">No recent activity</p>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Quick Actions -->
-  <div class="bg-rep-black rounded-lg shadow-sm p-4 sm:p-5 md:p-6 border-2 border-rep-lime/30">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div class="flex-1">
-        <h2 class="text-lg sm:text-xl font-bold mb-1 sm:mb-2 text-rep-white">Connect Your Platforms</h2>
-        <p class="text-sm sm:text-base text-gray-300">Start managing your reputation across all channels</p>
+    <!-- Key Metrics -->
+    <div>
+      <h2 class="text-xl font-bold text-rep-white mb-4 flex items-center gap-2">
+        <i class="fas fa-chart-bar text-rep-lime"></i>
+        Key Metrics
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Interactions -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 hover:border-rep-lime/30 p-6 transition-all">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-rep-lime/20 rounded-lg flex items-center justify-center">
+              <i class="fas fa-comments text-rep-lime text-2xl"></i>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-bold text-rep-white">{{ stats?.total || 0 }}</p>
+              <p *ngIf="!loadingGrowth && growthPercentage !== 0" 
+                 class="text-xs flex items-center gap-1 justify-end"
+                 [ngClass]="{'text-green-500': growthPercentage > 0, 'text-red-500': growthPercentage < 0}">
+                <i class="fas" [ngClass]="{'fa-arrow-up': growthPercentage > 0, 'fa-arrow-down': growthPercentage < 0}"></i> 
+                {{ Math.abs(growthPercentage) }}%
+              </p>
+              <p *ngIf="loadingGrowth" class="text-xs text-gray-500">
+                <i class="fas fa-spinner fa-spin"></i>
+              </p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-400 font-medium">Total Interactions</p>
+          <div class="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div class="h-full bg-rep-lime rounded-full transition-all" 
+                 [style.width.%]="getTotalInteractionsProgress()"></div>
+          </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 hover:border-rep-lime/30 p-6 transition-all">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+              <i class="fas fa-clock text-yellow-500 text-2xl"></i>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-bold text-rep-white">{{ stats?.unread || 0 }}</p>
+              <p class="text-xs text-gray-400">pending</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-400 font-medium">Needs Attention</p>
+          <button 
+            (click)="navigateTo('/app/inbox')" 
+            class="mt-3 w-full py-2 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-lg text-sm font-bold transition"
+          >
+            View Inbox
+          </button>
+        </div>
+
+        <!-- Positive Sentiment -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 hover:border-rep-lime/30 p-6 transition-all">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+              <i class="fas fa-smile text-green-500 text-2xl"></i>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-bold text-rep-white">{{ stats?.positive || 0 }}</p>
+              <p class="text-xs text-green-500">{{ getPercentage(stats?.positive || 0, stats?.total || 1) }}%</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-400 font-medium">Positive Feedback</p>
+          <div class="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div class="h-full bg-green-500 rounded-full" [style.width.%]="getPercentage(stats?.positive || 0, stats?.total || 1)"></div>
+          </div>
+        </div>
+
+        <!-- Negative Sentiment -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 hover:border-red-500/30 p-6 transition-all">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+              <i class="fas fa-frown text-red-500 text-2xl"></i>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-bold text-rep-white">{{ stats?.negative || 0 }}</p>
+              <p class="text-xs text-red-500">{{ getPercentage(stats?.negative || 0, stats?.total || 1) }}%</p>
+            </div>
+          </div>
+          <p class="text-sm text-gray-400 font-medium">Needs Improvement</p>
+          <div class="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
+            <div class="h-full bg-red-500 rounded-full" [style.width.%]="getPercentage(stats?.negative || 0, stats?.total || 1)"></div>
+          </div>
+        </div>
       </div>
-      <button 
-        routerLink="/app/settings" 
-        class="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-rep-lime text-rep-black font-medium rounded-lg hover:shadow-lg hover:shadow-rep-lime/50 transition text-sm sm:text-base whitespace-nowrap"
-      >
-        Connect Now
-      </button>
+    </div>
+
+    <!-- Tasks Overview Section -->
+    <div>
+      <h2 class="text-xl font-bold text-rep-white mb-4 flex items-center gap-2">
+        <i class="fas fa-tasks text-rep-lime"></i>
+        Your Tasks
+      </h2>
+
+      <!-- Loading State -->
+      <div *ngIf="loadingTasks" class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-8">
+        <div class="text-center">
+          <div class="w-12 h-12 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mx-auto mb-2"></div>
+          <p class="text-gray-400 text-sm">Loading tasks...</p>
+        </div>
+      </div>
+
+      <!-- Tasks Content -->
+      <div *ngIf="!loadingTasks" class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 overflow-hidden">
+        <!-- Status Message Header -->
+        <div class="bg-gray-800/50 p-6 border-b border-gray-700">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center"
+                   [ngClass]="{
+                     'bg-green-500/20': tasks.pending === 0 && tasks.total > 0,
+                     'bg-rep-lime/20': tasks.pending > 0 && tasks.pending <= 5,
+                     'bg-yellow-500/20': tasks.pending > 5 && tasks.pending <= 10,
+                     'bg-red-500/20': tasks.pending > 10,
+                     'bg-gray-700': tasks.pending === 0 && tasks.total === 0
+                   }">
+                <i class="fas text-2xl"
+                   [ngClass]="{
+                     'fa-trophy': tasks.pending === 0 && tasks.total > 0,
+                     'fa-check-circle': tasks.pending > 0 && tasks.pending <= 5,
+                     'fa-hourglass-half': tasks.pending > 5 && tasks.pending <= 10,
+                     'fa-exclamation-circle': tasks.pending > 10,
+                     'fa-clipboard-list': tasks.pending === 0 && tasks.total === 0
+                   }"
+                   [class]="getTasksStatusColor()"></i>
+              </div>
+              <div>
+                <h3 [class]="'text-xl font-bold mb-1 ' + getTasksStatusColor()">{{ getTasksStatusMessage() }}</h3>
+                <p class="text-gray-400 text-sm">{{ tasks.total }} total tasks assigned</p>
+              </div>
+            </div>
+            <button 
+              *ngIf="tasks.pending > 0"
+              (click)="navigateTo('/app/inbox')" 
+              class="px-4 py-2 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-lg text-sm font-bold transition"
+            >
+              View Tasks
+            </button>
+          </div>
+        </div>
+
+        <!-- Tasks Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-700">
+          <!-- Total Tasks -->
+          <div class="p-6 text-center hover:bg-gray-800/30 transition">
+            <div class="mb-3">
+              <div class="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto">
+                <i class="fas fa-clipboard-list text-gray-400 text-2xl"></i>
+              </div>
+            </div>
+            <p class="text-3xl font-bold text-rep-white mb-1">{{ tasks.total }}</p>
+            <p class="text-sm text-gray-400">Total Assigned</p>
+          </div>
+
+          <!-- Pending Tasks -->
+          <div class="p-6 text-center hover:bg-gray-800/30 transition">
+            <div class="mb-3">
+              <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+                   [ngClass]="{'bg-yellow-500/20': tasks.pending > 0, 'bg-gray-700': tasks.pending === 0}">
+                <i class="fas fa-clock text-2xl"
+                   [ngClass]="{'text-yellow-500': tasks.pending > 0, 'text-gray-400': tasks.pending === 0}"></i>
+              </div>
+            </div>
+            <p class="text-3xl font-bold mb-1"
+               [class.text-yellow-500]="tasks.pending > 0"
+               [class.text-gray-400]="tasks.pending === 0">{{ tasks.pending }}</p>
+            <p class="text-sm text-gray-400">Pending Tasks</p>
+            <div *ngIf="tasks.pending > 0" class="mt-3">
+              <button 
+                (click)="navigateTo('/app/inbox')"
+                class="text-xs text-yellow-500 hover:text-yellow-400 font-medium transition"
+              >
+                Work on these →
+              </button>
+            </div>
+          </div>
+
+          <!-- Completed Tasks -->
+          <div class="p-6 text-center hover:bg-gray-800/30 transition">
+            <div class="mb-3">
+              <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+                   [ngClass]="{'bg-green-500/20': tasks.completed > 0, 'bg-gray-700': tasks.completed === 0}">
+                <i class="fas fa-check-circle text-2xl"
+                   [ngClass]="{'text-green-500': tasks.completed > 0, 'text-gray-400': tasks.completed === 0}"></i>
+              </div>
+            </div>
+            <p class="text-3xl font-bold mb-1"
+               [class.text-green-500]="tasks.completed > 0"
+               [class.text-gray-400]="tasks.completed === 0">{{ tasks.completed }}</p>
+            <p class="text-sm text-gray-400">Completed</p>
+            <div *ngIf="tasks.total > 0" class="mt-2">
+              <div class="w-full bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                <div class="h-full bg-green-500 rounded-full transition-all"
+                     [style.width.%]="tasks.completionRate"></div>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">{{ tasks.completionRate }}% completion rate</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Motivational Message for No Tasks -->
+        <div *ngIf="tasks.pending === 0 && tasks.total === 0" class="p-8 text-center border-t border-gray-700">
+          <div class="w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-inbox text-gray-500 text-3xl"></i>
+          </div>
+          <p class="text-gray-400 text-lg font-medium mb-2">No tasks assigned yet</p>
+          <p class="text-gray-500 text-sm">Tasks will appear here when conversations are assigned to you</p>
+        </div>
+
+        <!-- Celebration for All Complete -->
+        <div *ngIf="tasks.pending === 0 && tasks.total > 0" class="bg-green-500/10 border-t border-green-500/30 p-6 text-center">
+          <p class="text-green-400 font-medium flex items-center justify-center gap-2">
+            <i class="fas fa-trophy"></i>
+            <span>Excellent work! All assigned tasks have been completed.</span>
+            <i class="fas fa-trophy"></i>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Recent Activity (2/3 width) -->
+      <div class="lg:col-span-2">
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-rep-white flex items-center gap-2">
+              <i class="fas fa-stream text-rep-lime"></i>
+              Recent Activity
+            </h2>
+            <button 
+              (click)="navigateTo('/app/inbox')" 
+              class="text-sm text-rep-lime hover:text-rep-lime/80 font-bold flex items-center gap-1 transition"
+            >
+              View All
+              <i class="fas fa-arrow-right text-xs"></i>
+            </button>
+          </div>
+
+          <!-- Loading State -->
+          <div *ngIf="loadingActivity" class="text-center py-8">
+            <div class="w-12 h-12 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mx-auto mb-2"></div>
+            <p class="text-gray-400 text-sm">Loading activity...</p>
+          </div>
+
+          <!-- Activity List -->
+          <div *ngIf="!loadingActivity" class="space-y-3">
+            <div 
+              *ngFor="let activity of recentActivity" 
+              (click)="viewInteraction(activity.id)"
+              class="group relative flex items-start gap-4 p-4 rounded-lg bg-gray-800/50 hover:bg-gray-800 border border-gray-700 hover:border-rep-lime/30 cursor-pointer transition-all"
+            >
+              <!-- Platform Icon -->
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                <i [class]="getPlatformIcon(activity.platform) + ' text-lg text-rep-white'"></i>
+              </div>
+
+              <!-- Content -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-bold text-rep-white">{{ activity.author }}</span>
+                  <span class="text-xs text-gray-600">•</span>
+                  <span class="text-xs text-gray-400">{{ activity.platform }}</span>
+                  <span class="text-xs text-gray-600">•</span>
+                  <span class="text-xs text-gray-400">{{ activity.time }}</span>
+                  <span 
+                    *ngIf="activity.isUnread"
+                    class="ml-auto px-2 py-0.5 bg-rep-lime/20 text-rep-lime rounded-full text-xs font-bold"
+                  >
+                    New
+                  </span>
+                </div>
+                <p class="text-sm text-gray-300 line-clamp-2 mb-2">{{ activity.content }}</p>
+                <div class="flex items-center gap-2">
+                  <span [class]="'px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 ' + getSentimentClass(activity.sentiment)">
+                    <i [class]="'fas ' + (activity.sentiment === 'positive' ? 'fa-smile' : activity.sentiment === 'negative' ? 'fa-frown' : 'fa-meh')"></i>
+                    {{ activity.sentiment }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Hover Arrow -->
+              <i class="fas fa-chevron-right text-gray-600 group-hover:text-rep-lime group-hover:translate-x-1 transition-all"></i>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="recentActivity.length === 0" class="text-center py-12">
+              <i class="fas fa-inbox text-5xl text-gray-600 mb-4"></i>
+              <p class="text-rep-white font-bold mb-2">No Recent Activity</p>
+              <p class="text-gray-400 text-sm mb-4">Connect your platforms to start tracking interactions</p>
+              <button 
+                (click)="navigateTo('/app/settings')" 
+                class="px-4 py-2 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-lg text-sm font-bold transition"
+              >
+                Connect Platforms
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Sidebar (1/3 width) -->
+      <div class="space-y-6">
+        <!-- AI Credits Widget -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 hover:border-rep-lime/30 p-6 transition-all">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-rep-white flex items-center gap-2">
+              <i class="fas fa-bolt text-rep-lime"></i>
+              AI Credits
+            </h3>
+            <button 
+              (click)="navigateTo('/app/ai-credits')" 
+              class="text-rep-lime hover:text-rep-lime/80 transition"
+            >
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+
+          <div *ngIf="!loadingCredits && aiCredits" class="space-y-4">
+            <div class="text-center">
+              <p [class]="'text-5xl font-bold mb-2 ' + getCreditStatusColor()">
+                {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
+              </p>
+              <p class="text-gray-400 text-sm">Credits Remaining</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div *ngIf="!aiCredits.isUnlimited" class="space-y-2">
+              <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div 
+                  [class]="'h-full rounded-full transition-all ' + (aiCredits.isAtLimit ? 'bg-red-500' : aiCredits.isNearLimit ? 'bg-yellow-500' : 'bg-rep-lime')"
+                  [style.width.%]="aiCredits.percentage"
+                ></div>
+              </div>
+              <p class="text-xs text-gray-400 text-center">
+                {{ aiCredits.current }} / {{ aiCredits.limit }} used this month
+              </p>
+            </div>
+
+            <!-- Warning -->
+            <div *ngIf="aiCredits.isNearLimit && !aiCredits.isUnlimited" class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+              <p class="text-yellow-500 text-sm font-medium">⚠️ Running low on credits</p>
+            </div>
+
+            <!-- Action Button -->
+            <button 
+              (click)="navigateTo('/app/plans')" 
+              class="w-full py-2 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-lg text-sm font-bold transition"
+            >
+              Upgrade Plan
+            </button>
+          </div>
+
+          <div *ngIf="loadingCredits" class="text-center py-4">
+            <div class="w-12 h-12 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mx-auto"></div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+          <h3 class="text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
+            <i class="fas fa-tachometer-alt text-rep-lime"></i>
+            Performance
+          </h3>
+
+          <!-- Loading State -->
+          <div *ngIf="loadingPerformance" class="space-y-4">
+            <div class="flex items-center justify-center py-8">
+              <div class="w-8 h-8 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin"></div>
+            </div>
+          </div>
+
+          <!-- Performance Data -->
+          <div *ngIf="!loadingPerformance" class="space-y-4">
+            <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Avg. Response Time</p>
+                <p class="text-lg font-bold text-rep-white">{{ performanceMetrics.avgResponseTime }}</p>
+              </div>
+              <i class="fas fa-clock text-2xl text-rep-lime"></i>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Resolution Rate</p>
+                <p class="text-lg font-bold text-rep-white">{{ performanceMetrics.resolutionRate }}%</p>
+              </div>
+              <i class="fas fa-check-circle text-2xl text-green-500"></i>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Satisfaction Score</p>
+                <p class="text-lg font-bold text-rep-white">{{ performanceMetrics.satisfactionScore }}/5.0</p>
+              </div>
+              <i class="fas fa-star text-2xl text-yellow-500"></i>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Active Agents</p>
+                <p class="text-lg font-bold text-rep-white">{{ performanceMetrics.activeAgents }}</p>
+              </div>
+              <i class="fas fa-users text-2xl text-rep-lime"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Getting Started / Help Section -->
+    <div class="bg-rep-black rounded-xl border-2 border-rep-lime/30 p-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex-1">
+          <h2 class="text-xl font-bold text-rep-white mb-2 flex items-center gap-2">
+            <i class="fas fa-lightbulb text-rep-lime"></i>
+            Need Help Getting Started?
+          </h2>
+          <p class="text-gray-400 text-sm">Connect your social media platforms, set up AI agents, and start managing your reputation effortlessly.</p>
+        </div>
+        <div class="flex gap-3">
+          <button 
+            (click)="navigateTo('/app/settings')" 
+            class="px-4 py-2 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-lg text-sm font-bold transition whitespace-nowrap"
+          >
+            <i class="fas fa-plug mr-2"></i>
+            Connect Platforms
+          </button>
+          <button 
+            (click)="navigateTo('/app/agents')" 
+            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg text-sm font-bold transition whitespace-nowrap"
+          >
+            <i class="fas fa-robot mr-2"></i>
+            Setup AI Agents
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

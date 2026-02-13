@@ -1,0 +1,264 @@
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <button (click)="goToSettings()" 
+              class="inline-flex items-center text-gray-600 hover:text-rep-black mb-4 transition-colors">
+        <i class="fas fa-arrow-left mr-2"></i>
+        Back to Settings
+      </button>
+      
+      <h1 class="text-4xl sm:text-5xl font-bold text-rep-black mb-4">
+        Choose Your Plan
+      </h1>
+      <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Select the perfect plan for your business. Scale up or down anytime.
+      </p>
+
+      <!-- Current Plan Badge -->
+      <div *ngIf="subscriptionLimits" class="mt-6 inline-flex items-center px-4 py-2 bg-rep-lime rounded-full">
+        <i class="fas fa-check-circle mr-2 text-rep-black"></i>
+        <span class="font-semibold text-rep-black">
+          Currently on {{ subscriptionLimits.plan }} Plan
+        </span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingPlans || loadingSubscription" class="text-center py-20">
+      <i class="fas fa-spinner fa-spin text-4xl text-rep-lime mb-4"></i>
+      <p class="text-gray-600">Loading plans...</p>
+    </div>
+
+    <!-- Plans Grid -->
+    <div *ngIf="!loadingPlans && !loadingSubscription && allPlans" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+      
+      <div *ngFor="let planKey of getPlanKeys()" 
+           [class.scale-105]="planKey === 'pro'"
+           [class.shadow-2xl]="planKey === 'pro'"
+           [class.border-4]="isCurrentPlan(planKey)"
+           [class.border-rep-lime]="isCurrentPlan(planKey)"
+           class="bg-white rounded-2xl shadow-lg overflow-hidden transition-all hover:shadow-xl relative">
+        
+        <!-- Recommendation Badge -->
+        <div *ngIf="getPlanBadge(planKey)" 
+             [class]="getPlanBadgeColor(planKey)"
+             class="absolute top-4 right-4 px-3 py-1 text-white rounded-full text-xs font-bold z-10">
+          {{ getPlanBadge(planKey) }}
+        </div>
+
+        <!-- Current Plan Badge -->
+        <div *ngIf="isCurrentPlan(planKey)" 
+             class="absolute top-4 left-4 px-3 py-1 bg-rep-lime text-rep-black rounded-full text-xs font-bold z-10 flex items-center gap-1">
+          <i class="fas fa-check-circle"></i>
+          CURRENT
+        </div>
+
+        <!-- Plan Header -->
+        <div class="p-8 border-b border-gray-200">
+          <h3 class="text-2xl font-bold text-rep-black mb-2">
+            {{ allPlans[planKey].name }}
+          </h3>
+          <div class="flex items-baseline gap-1">
+            <span class="text-5xl font-bold text-rep-black">
+              {{ formatPrice(allPlans[planKey].price).split('/')[0] }}
+            </span>
+            <span *ngIf="allPlans[planKey].price !== 0 && allPlans[planKey].price !== 'custom'" 
+                  class="text-gray-600 text-lg">
+              /month
+            </span>
+          </div>
+          <p *ngIf="allPlans[planKey].price === 0" class="text-gray-600 text-sm mt-2">
+            Perfect for getting started
+          </p>
+        </div>
+
+        <!-- Plan Limits -->
+        <div class="p-8 border-b border-gray-200">
+          <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+            What's Included
+          </h4>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-plug text-blue-600"></i>
+              </div>
+              <div>
+                <p class="font-bold text-rep-black">
+                  {{ allPlans[planKey].limits.maxAccounts === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAccounts }}
+                </p>
+                <p class="text-sm text-gray-600">Social Accounts</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-users text-green-600"></i>
+              </div>
+              <div>
+                <p class="font-bold text-rep-black">
+                  {{ allPlans[planKey].limits.maxUsers === -1 ? 'Unlimited' : allPlans[planKey].limits.maxUsers }}
+                </p>
+                <p class="text-sm text-gray-600">Team Members</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-paper-plane text-purple-600"></i>
+              </div>
+              <div>
+                <p class="font-bold text-rep-black">
+                  {{ allPlans[planKey].limits.maxPostsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxPostsPerMonth }}
+                </p>
+                <p class="text-sm text-gray-600">Posts per Month</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-robot text-amber-600"></i>
+              </div>
+              <div>
+                <p class="font-bold text-rep-black">
+                  {{ allPlans[planKey].limits.maxAutoRepliesPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAutoRepliesPerMonth }}
+                </p>
+                <p class="text-sm text-gray-600">Auto-Replies per Month</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features List -->
+        <div class="p-8">
+          <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+            Features
+          </h4>
+          <div class="space-y-3 max-h-64 overflow-y-auto">
+            <div *ngFor="let feature of allPlans[planKey].features" 
+                 class="flex items-start gap-2">
+              <i class="fas fa-check text-green-500 mt-1 flex-shrink-0"></i>
+              <span class="text-gray-700 text-sm">
+                {{ formatFeatureName(feature) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="p-8 pt-0">
+          <!-- Current Plan -->
+          <div *ngIf="isCurrentPlan(planKey)"
+               class="w-full py-4 bg-gray-100 text-gray-600 rounded-xl font-bold text-center">
+            <i class="fas fa-check mr-2"></i>
+            Your Current Plan
+          </div>
+
+          <!-- Upgrade Button -->
+          <button *ngIf="canUpgradeToPlan(allPlans[planKey].tier) && allPlans[planKey].price !== 'custom'"
+                  (click)="upgradeToPlan(planKey, allPlans[planKey].name)"
+                  [disabled]="upgradingPlan"
+                  [class.scale-105]="planKey === 'pro'"
+                  class="w-full py-4 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-lg hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+            <i [class]="upgradingPlan ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-arrow-up mr-2'"></i>
+            {{ upgradingPlan ? 'Processing...' : 'Upgrade to ' + allPlans[planKey].name }}
+          </button>
+
+          <!-- Contact Sales (Enterprise) -->
+          <button *ngIf="canUpgradeToPlan(allPlans[planKey].tier) && allPlans[planKey].price === 'custom'"
+                  (click)="contactSales()"
+                  class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold hover:shadow-lg transform hover:-translate-y-1 transition-all">
+            <i class="fas fa-envelope mr-2"></i>
+            Contact Sales
+          </button>
+
+          <!-- Downgrade Not Available -->
+          <div *ngIf="isDowngrade(allPlans[planKey].tier)"
+               class="w-full py-4 bg-gray-50 text-gray-400 rounded-xl font-bold text-center cursor-not-allowed">
+            <i class="fas fa-arrow-down mr-2"></i>
+            Downgrade Not Available
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="mt-20 max-w-4xl mx-auto">
+      <h2 class="text-3xl font-bold text-rep-black text-center mb-8">
+        Frequently Asked Questions
+      </h2>
+      
+      <div class="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        <div class="border-b border-gray-200 pb-6">
+          <h3 class="text-lg font-bold text-rep-black mb-2">
+            Can I change plans anytime?
+          </h3>
+          <p class="text-gray-600">
+            Yes! You can upgrade your plan at any time. Your new limits take effect immediately.
+          </p>
+        </div>
+
+        <div class="border-b border-gray-200 pb-6">
+          <h3 class="text-lg font-bold text-rep-black mb-2">
+            What happens if I reach my limit?
+          </h3>
+          <p class="text-gray-600">
+            When you reach your account limit, you'll be prompted to upgrade. Your existing connections will continue working normally.
+          </p>
+        </div>
+
+        <div class="border-b border-gray-200 pb-6">
+          <h3 class="text-lg font-bold text-rep-black mb-2">
+            Do you offer refunds?
+          </h3>
+          <p class="text-gray-600">
+            Yes, we offer a 30-day money-back guarantee for all paid plans. No questions asked.
+          </p>
+        </div>
+
+        <div class="border-b border-gray-200 pb-6">
+          <h3 class="text-lg font-bold text-rep-black mb-2">
+            What payment methods do you accept?
+          </h3>
+          <p class="text-gray-600">
+            We accept all major credit cards (Visa, MasterCard, American Express) and PayPal.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="text-lg font-bold text-rep-black mb-2">
+            Need a custom solution?
+          </h3>
+          <p class="text-gray-600">
+            Contact our sales team for Enterprise pricing and custom features tailored to your business needs.
+          </p>
+          <button (click)="contactSales()"
+                  class="mt-3 px-6 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-md transition-all">
+            <i class="fas fa-envelope mr-2"></i>
+            Contact Sales
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trust Badges -->
+    <div class="mt-12 text-center">
+      <p class="text-gray-600 mb-4">Trusted by businesses worldwide</p>
+      <div class="flex items-center justify-center gap-8 flex-wrap">
+        <div class="flex items-center gap-2 text-gray-500">
+          <i class="fas fa-shield-alt text-2xl text-green-500"></i>
+          <span class="font-semibold">Secure Payments</span>
+        </div>
+        <div class="flex items-center gap-2 text-gray-500">
+          <i class="fas fa-lock text-2xl text-blue-500"></i>
+          <span class="font-semibold">Data Encrypted</span>
+        </div>
+        <div class="flex items-center gap-2 text-gray-500">
+          <i class="fas fa-headset text-2xl text-purple-500"></i>
+          <span class="font-semibold">24/7 Support</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

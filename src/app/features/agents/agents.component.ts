@@ -20,7 +20,10 @@ export class AgentsComponent implements OnInit {
   showAddModal = false;
   showEditModal = false;
   showDeleteModal = false;
+  showPerformanceModal = false;
   selectedAgent: IUser | null = null;
+  selectedAgentStats: any = null;
+  loadingStats = false;
   
   // Forms
   addAgentForm: FormGroup;
@@ -229,5 +232,42 @@ export class AgentsComponent implements OnInit {
 
   getActiveAgentsCount(): number {
     return this.agents.filter(agent => agent.isActive).length;
+  }
+
+  /**
+   * Open performance modal and load stats
+   */
+  openPerformanceModal(agent: IUser): void {
+    this.selectedAgent = agent;
+    this.showPerformanceModal = true;
+    this.loadAgentStats(agent._id);
+  }
+
+  /**
+   * Close performance modal
+   */
+  closePerformanceModal(): void {
+    this.showPerformanceModal = false;
+    this.selectedAgent = null;
+    this.selectedAgentStats = null;
+  }
+
+  /**
+   * Load detailed agent statistics
+   */
+  loadAgentStats(agentId: string): void {
+    this.loadingStats = true;
+    this.userService.getUserStats(agentId).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.selectedAgentStats = response.data.stats;
+        }
+        this.loadingStats = false;
+      },
+      error: (error) => {
+        console.error('Load agent stats error:', error);
+        this.loadingStats = false;
+      }
+    });
   }
 }

@@ -119,15 +119,15 @@
       </div>
     </div>
 
-    <!-- Posts Modal -->
+    <!-- Posts Modal: fixed header + footer, scrollable content only -->
     <div *ngIf="showPostsModal" 
          (click)="closePostsModal()"
          class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
       <div (click)="$event.stopPropagation()" 
-           class="bg-gray-900 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden animate-scale-up border border-gray-800">
+           class="calendar-posts-modal bg-gray-900 rounded-2xl shadow-2xl max-w-3xl w-full animate-scale-up border border-gray-800">
         
-        <!-- Modal Header -->
-        <div class="bg-gradient-to-r from-rep-lime to-green-400 p-4 sm:p-6">
+        <!-- Modal Header - fixed at top, does not scroll -->
+        <div class="calendar-posts-modal__header bg-gradient-to-r from-rep-lime to-green-400 p-4 sm:p-6 rounded-t-2xl">
           <div class="flex items-center justify-between">
             <div>
               <h3 class="text-xl sm:text-2xl font-bold text-rep-black">
@@ -145,8 +145,8 @@
           </div>
         </div>
         
-        <!-- Modal Body -->
-        <div class="p-4 sm:p-6 overflow-y-auto max-h-[calc(80vh-120px)] bg-gray-900">
+        <!-- Modal Body - only this area scrolls -->
+        <div class="calendar-posts-modal__body p-4 sm:p-6 bg-gray-900">
           <div class="space-y-4">
             <div
               *ngFor="let post of selectedDatePosts"
@@ -158,10 +158,10 @@
               <!-- Post Header -->
               <div class="flex items-start justify-between mb-3">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <i *ngFor="let platform of post.platforms" 
-                     [class]="getPlatformIcon(platform) + ' text-xl sm:text-2xl text-gray-400'"></i>
+                  <i *ngIf="getPostPlatform(post)" 
+                     [class]="getPlatformIcon(getPostPlatform(post)) + ' text-xl sm:text-2xl text-gray-400'"></i>
                   <span class="text-sm font-semibold text-gray-300">
-                    {{ getPlatformName(post.platforms[0]) }}
+                    {{ getPlatformName(getPostPlatform(post)) }}
                   </span>
                 </div>
                 <div class="flex flex-col items-end gap-2">
@@ -201,15 +201,15 @@
                    target="_blank"
                    class="flex items-center gap-1 text-rep-lime hover:text-rep-lime/80 font-medium">
                   <i class="fas fa-external-link-alt"></i>
-                  View on {{ getPlatformName(post.platforms[0]) }}
+                  View on {{ getPlatformName(getPostPlatform(post)) }}
                 </a>
               </div>
             </div>
           </div>
         </div>
         
-        <!-- Modal Footer -->
-        <div class="bg-gray-800 p-4 flex justify-end border-t border-gray-700">
+        <!-- Modal Footer - fixed at bottom, does not scroll -->
+        <div class="calendar-posts-modal__footer bg-gray-800 p-4 flex justify-end border-t border-gray-700 rounded-b-2xl">
           <button 
             (click)="closePostsModal()"
             class="px-6 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:bg-rep-lime/90 transition">

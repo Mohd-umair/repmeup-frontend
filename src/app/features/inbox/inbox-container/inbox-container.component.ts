@@ -24,9 +24,13 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   topFilters: IInboxFilters = {};
   loading = false;
   syncing = false;
+  analyzingSentiment = false;
   lastSyncTime: Date | null = null;
   autoSyncEnabled = true;
+  showStats = false; // Stats are hidden by default for cleaner UI
+  showFilters = true; // Filters are shown by default, but can be collapsed
   private autoSyncSubscription?: Subscription;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private inboxService: InboxService,
@@ -49,26 +53,29 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     
     this.loadInteractions();
 
-    // Subscribe to interactions
-    this.inboxService.interactions$.subscribe(interactions => {
-      this.interactions = interactions;
-    });
+    // Subscribe to interactions (must unsubscribe on destroy to avoid memory leak)
+    this.subscriptions.push(
+      this.inboxService.interactions$.subscribe(interactions => {
+        this.interactions = interactions;
+      })
+    );
 
     // Subscribe to selected interaction
-    this.inboxService.selectedInteraction$.subscribe(interaction => {
-      this.selectedInteraction = interaction;
-    });
+    this.subscriptions.push(
+      this.inboxService.selectedInteraction$.subscribe(interaction => {
+        this.selectedInteraction = interaction;
+      })
+    );
 
     // Start auto-sync (every 5 minutes)
     this.startAutoSync();
   }
 
   ngOnDestroy(): void {
-    // Clean up auto-sync subscription
     if (this.autoSyncSubscription) {
       this.autoSyncSubscription.unsubscribe();
     }
-    // Reset theme when leaving inbox
+    this.subscriptions.forEach(sub => sub.unsubscribe());
     this.themeService.resetTheme();
   }
 
@@ -372,5 +379,28 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       interactionDate.setHours(0, 0, 0, 0);
       return interactionDate.getTime() === today.getTime();
     }).length;
+  }
+
+  /**
+   * Run sentiment analysis on comments that have no sentiment (so positive/negative/neutral filters work)
+   */
+  runAnalyzeSentiment(): void {
+    this.analyzingSentiment = true;
+    this.inboxService.analyzeSentiment(500).subscribe({
+      next: (res) => {
+        this.analyzingSentiment = false;
+        if (res.success && res.data) {
+          this.notificationService.success(
+            'Sentiment Analyzed',
+            res.data.message || `Analyzed ${res.data.analyzed} comment(s). Try the Positive / Negative / Neutral filters again.`
+          );
+          this.loadInteractions();
+        }
+      },
+      error: () => {
+        this.analyzingSentiment = false;
+        this.notificationService.error('Analysis Failed', 'Could not analyze sentiment. Try again later.');
+      }
+    });
   }
 }

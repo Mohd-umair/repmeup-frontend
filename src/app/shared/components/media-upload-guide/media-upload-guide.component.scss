@@ -1,0 +1,62 @@
+// Scoped to host (encapsulation: None) so we don't affect other components
+app-media-upload-guide {
+  // Animation for modal
+  .media-modal-overlay.fixed {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  // Modal layout: fixed header + scrollable body + fixed footer
+  .media-modal-container {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+    min-height: 0 !important;
+  }
+
+  .media-modal-header {
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .media-modal-body {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .media-modal-footer {
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  // Custom scrollbar for modal body
+  .media-modal-body::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .media-modal-body::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 3px;
+  }
+
+  .media-modal-body::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 3px;
+  }
+
+  .media-modal-body::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+}

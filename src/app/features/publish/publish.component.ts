@@ -34,6 +34,7 @@ interface ScheduledPost {
   platformPostUrl?: string;
   firstComment?: string;
   location?: string;
+  postType?: 'post' | 'story' | 'reel' | 'short';
 }
 
 interface Draft {
@@ -51,6 +52,9 @@ interface Draft {
   styleUrls: ['./publish.component.scss']
 })
 export class PublishComponent implements OnInit {
+  // Expose Object for template
+  Object = Object;
+  
   // Platforms
   platforms: Platform[] = [];
   selectedPlatforms: Platform[] = [];
@@ -60,6 +64,23 @@ export class PublishComponent implements OnInit {
   mediaFiles: MediaFile[] = [];
   firstComment: string = '';
   location: string = '';
+  postType: 'post' | 'story' | 'reel' | 'short' = 'post';
+  
+  // AI post generation
+  aiPrompt: string = '';
+  aiMode: 'same' | 'custom' = 'same';
+  generatingAI: boolean = false;
+  platformPosts: { [key: string]: string } = {}; // For custom mode
+  showAIWriter: boolean = false;
+  aiCredits: any = null;
+  
+  // Post type options
+  postTypes = [
+    { value: 'post', label: 'Post', icon: 'fas fa-image', description: 'Regular feed post', platforms: ['instagram', 'facebook', 'linkedin'] },
+    { value: 'story', label: 'Story', icon: 'fas fa-clock', description: '24-hour temporary content', platforms: ['instagram', 'facebook'] },
+    { value: 'reel', label: 'Reel', icon: 'fas fa-video', description: 'Short-form video content', platforms: ['instagram', 'facebook'] },
+    { value: 'short', label: 'Short', icon: 'fas fa-film', description: 'Vertical short video', platforms: ['facebook'] }
+  ];
   
   // Scheduling
   scheduleEnabled: boolean = false;
@@ -71,7 +92,9 @@ export class PublishComponent implements OnInit {
   showHashtagHelper: boolean = false;
   showFirstComment: boolean = false;
   showLocationPicker: boolean = false;
-  showPreview: boolean = false;
+  showPreview: boolean = true; // Start with preview visible
+  showAdvancedOptions: boolean = false; // Collapsible advanced options
+  showPlatformSection: boolean = true; // Can collapse platform selection
   
   // Hashtag suggestions
   suggestedHashtags: string[] = [
@@ -91,11 +114,16 @@ export class PublishComponent implements OnInit {
   publishing: boolean = false;
   error: string | null = null;
   success: string | null = null;
+  showMediaGuide: boolean = false;
+  fileValidationErrors: string[] = [];
   
   // Data
   scheduledPosts: ScheduledPost[] = [];
   drafts: Draft[] = [];
   loadingPosts: boolean = false;
+  
+  // Preview
+  previewPlatformIndex: number = 0;
 
   constructor(
     private http: HttpClient,
@@ -108,6 +136,114 @@ export class PublishComponent implements OnInit {
     this.loadScheduledPosts();
     this.loadDrafts();
     this.setDefaultScheduleTime();
+    this.loadAICredits();
+  }
+  
+  /**
+   * Load AI credits info
+   */
+  loadAICredits(): void {
+    this.http.get<any>(`${environment.apiUrl}/users/ai-credits`).subscribe({
+      next: (response) => {
+        this.aiCredits = response.credits || response;
+      },
+      error: (error) => {
+        console.error('Error loading AI credits:', error);
+      }
+    });
+  }
+  
+  /**
+   * Generate post with AI
+   */
+  generatePostWithAI(): void {
+    if (!this.aiPrompt.trim()) {
+      this.notificationService.error('Prompt Required', 'Please enter a prompt to generate post');
+      return;
+    }
+    
+    if (this.selectedPlatforms.length === 0) {
+      this.notificationService.error('No Platforms', 'Please select at least one platform');
+      return;
+    }
+    
+    const platformIds = this.selectedPlatforms.map(p => p.id);
+    const creditsNeeded = this.aiMode === 'same' ? 1 : platformIds.length;
+    
+    // Confirm credits
+    if (this.aiCredits && !this.aiCredits.isUnlimited && this.aiCredits.remaining < creditsNeeded) {
+      this.notificationService.error(
+        'Insufficient Credits',
+        `You need ${creditsNeeded} credits but have ${this.aiCredits.remaining} remaining`
+      );
+      return;
+    }
+    
+    this.generatingAI = true;
+    this.error = null;
+    
+    this.http.post<any>(`${environment.apiUrl}/posts/generate`, {
+      prompt: this.aiPrompt,
+      platforms: platformIds,
+      mode: this.aiMode,
+      postType: this.postType
+    }).subscribe({
+      next: (response) => {
+        this.generatingAI = false;
+        
+        if (response.success) {
+          const result = response.data;
+          
+          if (result.mode === 'same') {
+            // Same post for all platforms
+            this.postContent = result.posts.all;
+            this.notificationService.success(
+              'Post Generated!',
+              `Used ${result.creditsUsed} credit. ${response.credits.remaining} remaining`
+            );
+          } else {
+            // Custom posts per platform
+            this.platformPosts = result.posts;
+            // Set first platform's content as default
+            if (platformIds[0]) {
+              this.postContent = result.posts[platformIds[0]];
+            }
+            this.notificationService.success(
+              'Posts Generated!',
+              `Used ${result.creditsUsed} credits. ${response.credits.remaining} remaining`
+            );
+          }
+          
+          // Update credits
+          this.aiCredits = response.credits;
+          
+          // Clear prompt
+          this.aiPrompt = '';
+        }
+      },
+      error: (error) => {
+        this.generatingAI = false;
+        console.error('AI generation error:', error);
+        const errorMsg = error.error?.message || 'Failed to generate post';
+        this.notificationService.error('Generation Failed', errorMsg);
+      }
+    });
+  }
+  
+  /**
+   * Load content for a specific platform (custom mode)
+   */
+  loadPlatformContent(platformId: string): void {
+    if (this.platformPosts[platformId]) {
+      this.postContent = this.platformPosts[platformId];
+    }
+  }
+  
+  /**
+   * Get credits needed based on current mode
+   */
+  getCreditsNeeded(): number {
+    return this.aiMode === 'same' ? 1 : this.selectedPlatforms.length;
   }
   
   navigateToCalendar(): void {
@@ -131,6 +267,10 @@ export class PublishComponent implements OnInit {
         
         connections.forEach((conn: any) => {
           const platform = conn.platform.toLowerCase();
+          // Exclude YouTube from publishing platforms
+          if (platform === 'youtube') {
+            return;
+          }
           if (!platformMap.has(platform)) {
             platformMap.set(platform, {
               id: platform,
@@ -162,6 +302,7 @@ export class PublishComponent implements OnInit {
   togglePlatform(platform: Platform): void {
     platform.selected = !platform.selected;
     this.selectedPlatforms = this.platforms.filter(p => p.selected);
+    this.onPlatformSelectionChange();
   }
 
   /**
@@ -192,18 +333,23 @@ export class PublishComponent implements OnInit {
     }
     
     files.forEach((file: File) => {
-      // Validate file size
-      const maxSize = 8 * 1024 * 1024;
-      if (file.size > maxSize) {
-        this.error = `${file.name} is too large. Max 8MB per file.`;
+      // Validate file against platform requirements
+      const validation = this.validateMediaFile(file);
+      
+      if (!validation.valid) {
+        this.fileValidationErrors.push(...validation.errors);
+        this.notificationService.error(
+          'Invalid File',
+          validation.errors[0] || 'File does not meet platform requirements'
+        );
         return;
       }
-      
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'video/mp4'];
-      if (!allowedTypes.includes(file.type)) {
-        this.error = `${file.name} is not a supported format`;
-        return;
+
+      // Show warnings if any
+      if (validation.warnings && validation.warnings.length > 0) {
+        validation.warnings.forEach((warning: string) => {
+          this.notificationService.warning('Media Warning', warning);
+        });
       }
       
       const mediaType = file.type.startsWith('image') ? 'image' : 'video';
@@ -366,6 +512,7 @@ export class PublishComponent implements OnInit {
         const formData = new FormData();
         formData.append('platform', platform.id);
         formData.append('content', this.postContent);
+        formData.append('postType', this.postType);
         
         if (this.firstComment) {
           formData.append('firstComment', this.firstComment);
@@ -440,6 +587,7 @@ export class PublishComponent implements OnInit {
     this.firstComment = '';
     this.location = '';
     this.mediaFiles = [];
+    this.postType = 'post';
     this.deselectAllPlatforms();
     this.scheduleEnabled = false;
     this.showFirstComment = false;
@@ -524,9 +672,9 @@ export class PublishComponent implements OnInit {
     const names: { [key: string]: string } = {
       instagram: 'Instagram',
       facebook: 'Facebook',
-      youtube: 'YouTube',
       linkedin: 'LinkedIn',
-      google: 'Google My Business'
+      google: 'Google My Business',
+      whatsapp: 'WhatsApp'
     };
     return names[platform] || platform;
   }
@@ -535,25 +683,165 @@ export class PublishComponent implements OnInit {
     const icons: { [key: string]: string } = {
       instagram: 'fab fa-instagram',
       facebook: 'fab fa-facebook',
-      youtube: 'fab fa-youtube',
       linkedin: 'fab fa-linkedin',
-      google: 'fab fa-google'
+      google: 'fab fa-google',
+      whatsapp: 'fab fa-whatsapp'
     };
     return icons[platform] || 'fas fa-share-alt';
   }
 
   getPlatformColor(platform: string): string {
     const colors: { [key: string]: string } = {
-      instagram: 'from-pink-500 to-purple-600',
-      facebook: 'from-blue-500 to-blue-700',
-      youtube: 'from-red-500 to-red-700',
-      linkedin: 'from-blue-600 to-blue-800',
-      google: 'from-green-500 to-green-700'
+      instagram: 'from-pink-400 to-purple-400',
+      facebook: 'from-blue-400 to-blue-500',
+      linkedin: 'from-blue-400 to-blue-500',
+      google: 'from-green-500 to-green-700',
+      whatsapp: 'from-green-400 to-green-500'
     };
     return colors[platform] || 'from-gray-500 to-gray-700';
   }
 
   formatDate(date: Date | string): string {
     return new Date(date).toLocaleString();
+  }
+
+  /**
+   * Get scheduled date for preview
+   */
+  getScheduledDate(): Date | undefined {
+    if (this.scheduleEnabled && this.scheduledDate && this.scheduledTime) {
+      return new Date(`${this.scheduledDate}T${this.scheduledTime}`);
+    }
+    return undefined;
+  }
+
+  /**
+   * Get available post types for currently selected platforms
+   */
+  getAvailablePostTypes() {
+    if (this.selectedPlatforms.length === 0) {
+      return this.postTypes;
+    }
+    
+    const selectedPlatformIds = this.selectedPlatforms.map(p => p.id);
+    
+    return this.postTypes.filter(type => 
+      type.platforms.some(platform => selectedPlatformIds.includes(platform))
+    );
+  }
+
+  /**
+   * Check if current post type is valid for selected platforms
+   */
+  isPostTypeValid(): boolean {
+    if (this.selectedPlatforms.length === 0) {
+      return true;
+    }
+    
+    const currentPostType = this.postTypes.find(t => t.value === this.postType);
+    if (!currentPostType) {
+      return false;
+    }
+    
+    return this.selectedPlatforms.every(platform => 
+      currentPostType.platforms.includes(platform.id)
+    );
+  }
+
+  /**
+   * Auto-select valid post type when platforms change
+   */
+  onPlatformSelectionChange(): void {
+    if (!this.isPostTypeValid()) {
+      const availableTypes = this.getAvailablePostTypes();
+      if (availableTypes.length > 0) {
+        this.postType = availableTypes[0].value as 'post' | 'story' | 'reel' | 'short';
+      }
+    }
+  }
+
+  /**
+   * Set post type with proper type casting
+   */
+  setPostType(value: string): void {
+    this.postType = value as 'post' | 'story' | 'reel' | 'short';
+  }
+
+  /**
+   * Validate media file against platform requirements
+   */
+  validateMediaFile(file: File): { valid: boolean; errors: string[]; warnings: string[] } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+    const mediaType = file.type.startsWith('image') ? 'image' : 'video';
+    const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+
+    // Platform-specific limits
+    const platformLimits: any = {
+      facebook: {
+        image: { maxSize: 8, formats: ['jpg', 'jpeg', 'png'] },
+        video: { maxSize: 1024, formats: ['mp4', 'mov'] }
+      },
+      instagram: {
+        image: { maxSize: 8, formats: ['jpg', 'jpeg', 'png'] },
+        video: { maxSize: 100, formats: ['mp4', 'mov'] }
+      },
+      linkedin: {
+        image: { maxSize: 5, formats: ['jpg', 'jpeg', 'png', 'gif'] },
+        video: { maxSize: 200, formats: ['mp4', 'mov'] }
+      }
+    };
+
+    // Check against each selected platform
+    for (const platform of this.selectedPlatforms) {
+      const limits = platformLimits[platform.id]?.[mediaType];
+      
+      if (!limits) {
+        continue;
+      }
+
+      // Check file size
+      if (file.size > limits.maxSize * 1024 * 1024) {
+        errors.push(`${platform.name}: File size ${fileSizeMB}MB exceeds ${limits.maxSize}MB limit`);
+      }
+
+      // Check format
+      if (!limits.formats.includes(fileExtension)) {
+        errors.push(`${platform.name}: Format .${fileExtension} not supported. Use: ${limits.formats.join(', ')}`);
+      }
+    }
+
+    // Get strictest limit
+    const strictestLimit = Math.min(
+      ...this.selectedPlatforms
+        .map(p => platformLimits[p.id]?.[mediaType]?.maxSize || 999)
+        .filter(l => l !== undefined)
+    );
+
+    if (strictestLimit && file.size > strictestLimit * 1024 * 1024) {
+      warnings.push(`File may be too large for some platforms. Consider compressing to under ${strictestLimit}MB`);
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+
+  /**
+   * Toggle media guide modal
+   */
+  toggleMediaGuide(): void {
+    this.showMediaGuide = !this.showMediaGuide;
+  }
+
+  /**
+   * Get selected platform IDs for media guide
+   */
+  getSelectedPlatformIds(): string[] {
+    return this.selectedPlatforms.map(p => p.id);
   }
 }

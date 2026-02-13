@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { NotificationService } from '../../core/services/notification.service';
 import {
@@ -177,16 +177,14 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Setup auto-refresh
+   * Setup auto-refresh (uses RxJS interval so it can be unsubscribed in ngOnDestroy - no memory leak)
    */
   private setupAutoRefresh(): void {
-    // Auto-refresh every 5 minutes
-    this.refreshSubscription = new Subscription();
-    setInterval(() => {
+    this.refreshSubscription = interval(this.refreshInterval).subscribe(() => {
       if (!this.loading) {
         this.loadDashboard();
       }
-    }, this.refreshInterval);
+    });
   }
 
   /**

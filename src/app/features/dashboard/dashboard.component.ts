@@ -1,59 +1,151 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { InboxService } from '../../core/services/inbox.service';
+import { AuthService } from '../../core/services/auth.service';
 import { IInboxStats } from '../../core/models/interaction.model';
+import { environment } from '../../../environments/environment';
+import { Subscription, interval } from 'rxjs';
 
 /**
  * Dashboard Component - Single Responsibility Principle
- * Displays overview of system metrics and statistics
+ * Displays interactive overview of system metrics and statistics
  */
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   stats: IInboxStats | null = null;
   loading = true;
+  currentUser: any = null;
+  
+  // AI Credits
+  aiCredits: any = null;
+  loadingCredits = true;
 
-  // Mock data for charts
-  platformData = [
-    { name: 'Instagram', value: 45, color: 'bg-purple-500' },
-    { name: 'Facebook', value: 30, color: 'bg-blue-500' },
-    { name: 'YouTube', value: 15, color: 'bg-red-500' },
-    { name: 'Google', value: 10, color: 'bg-yellow-500' }
-  ];
+  // Onboarding state
+  hasConnectedPlatforms = false;
+  checkingPlatforms = true;
 
-  recentActivity = [
+  // Tasks tracking
+  tasks = {
+    total: 0,
+    pending: 0,
+    completed: 0,
+    completionRate: 0
+  };
+  loadingTasks = true;
+
+  // Quick Navigation Cards
+  quickActions = [
     {
-      platform: 'Instagram',
-      type: 'Comment',
-      author: 'john_doe',
-      content: 'Great product! Really happy with the service.',
-      sentiment: 'positive',
-      time: '2 minutes ago'
+      title: 'Inbox',
+      description: 'Manage conversations',
+      icon: 'fas fa-inbox',
+      route: '/app/inbox',
+      stats: 0,
+      statsLabel: 'unread'
     },
     {
-      platform: 'Facebook',
-      type: 'Review',
-      author: 'Jane Smith',
-      content: 'Not satisfied with the delivery time.',
-      sentiment: 'negative',
-      time: '15 minutes ago'
+      title: 'Publish',
+      description: 'Create & schedule posts',
+      icon: 'fas fa-paper-plane',
+      route: '/app/publish',
+      stats: 0,
+      statsLabel: 'scheduled'
     },
     {
-      platform: 'YouTube',
-      type: 'Comment',
-      author: 'tech_reviewer',
-      content: 'Can you make a tutorial about this?',
-      sentiment: 'neutral',
-      time: '1 hour ago'
+      title: 'Analytics',
+      description: 'View insights',
+      icon: 'fas fa-chart-line',
+      route: '/app/analytics',
+      stats: 0,
+      statsLabel: 'reports'
+    },
+    {
+      title: 'AI Credits',
+      description: 'Manage AI usage',
+      icon: 'fas fa-bolt',
+      route: '/app/ai-credits',
+      stats: 0,
+      statsLabel: 'remaining'
     }
   ];
 
-  constructor(private inboxService: InboxService) {}
+  // Performance Metrics
+  performanceMetrics = {
+    avgResponseTime: '0h',
+    resolutionRate: 0,
+    satisfactionScore: 0,
+    activeAgents: 0
+  };
+  loadingPerformance = true;
+
+  // Growth metrics
+  growthPercentage = 0;
+  loadingGrowth = true;
+
+  // Recent Activity
+  recentActivity: any[] = [];
+  loadingActivity = true;
+
+  // Make Math available in template
+  Math = Math;
+
+  private subscriptions: Subscription[] = [];
+
+  constructor(
+    private inboxService: InboxService,
+    private authService: AuthService,
+    private router: Router,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
+    this.currentUser = this.authService.currentUserValue;
+    this.loadAllData();
+
+    // Refresh data every 30 seconds
+    const refreshSub = interval(30000).subscribe(() => {
+      this.loadAllData();
+    });
+    this.subscriptions.push(refreshSub);
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  loadAllData(): void {
+    this.checkPlatformConnections();
     this.loadStats();
+    this.loadAICredits();
+    this.loadRecentActivity();
+    this.loadTasks();
+    this.loadPerformanceMetrics();
+    this.loadGrowthStats();
+    this.loadScheduledPosts();
+  }
+
+  checkPlatformConnections(): void {
+    this.checkingPlatforms = true;
+    this.http.get<any>(`${environment.apiUrl}/platforms/connections`).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Check if any platform is connected
+          this.hasConnectedPlatforms = response.data.some((platform: any) => platform.status === 'connected');
+        }
+        this.checkingPlatforms = false;
+      },
+      error: (error) => {
+        console.error('Error checking platforms:', error);
+        // Assume no platforms connected if error
+        this.hasConnectedPlatforms = false;
+        this.checkingPlatforms = false;
+      }
+    });
   }
 
   loadStats(): void {
@@ -61,39 +153,417 @@ export class DashboardComponent implements OnInit {
       next: (response) => {
         if (response.success && response.data) {
           this.stats = response.data;
+          // Update quick action stats
+          const inboxAction = this.quickActions.find(action => action.title === 'Inbox');
+          if (inboxAction) {
+            inboxAction.stats = response.data.unread || 0;
+          }
+        } else {
+          this.stats = { total: 0, unread: 0, positive: 0, negative: 0, neutral: 0 } as any;
         }
         this.loading = false;
       },
-      error: () => {
+      error: (error) => {
+        console.error('Error loading stats:', error);
+        this.stats = { total: 0, unread: 0, positive: 0, negative: 0, neutral: 0 } as any;
         this.loading = false;
       }
     });
   }
 
+  loadAICredits(): void {
+    this.loadingCredits = true;
+    
+    this.http.get<any>(`${environment.apiUrl}/users/ai-credits`).subscribe({
+      next: (response) => {
+        if (response.success && response.credits) {
+          this.aiCredits = response.credits;
+          // Update AI credits quick action
+          const creditsAction = this.quickActions.find(action => action.title === 'AI Credits');
+          if (creditsAction) {
+            creditsAction.stats = this.aiCredits.isUnlimited ? '∞' : this.aiCredits.remaining;
+          }
+        } else {
+          // Handle empty response
+          this.aiCredits = { current: 0, limit: 0, remaining: 0, isUnlimited: false };
+          const creditsAction = this.quickActions.find(action => action.title === 'AI Credits');
+          if (creditsAction) {
+            creditsAction.stats = 0;
+          }
+        }
+        this.loadingCredits = false;
+      },
+      error: (error) => {
+        console.error('Error loading AI credits:', error);
+        // Set default values on error
+        this.aiCredits = { current: 0, limit: 0, remaining: 0, isUnlimited: false };
+        const creditsAction = this.quickActions.find(action => action.title === 'AI Credits');
+        if (creditsAction) {
+          creditsAction.stats = 0;
+        }
+        this.loadingCredits = false;
+      }
+    });
+  }
+
+  loadRecentActivity(): void {
+    this.loadingActivity = true;
+    
+    // Load last 5 interactions
+    this.inboxService.getInteractions({ page: 1, limit: 5 }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Handle both formats: response.data.interactions or response.data as array
+          const interactions = response.data.interactions || response.data;
+          const interactionArray = Array.isArray(interactions) ? interactions : [];
+          
+          this.recentActivity = interactionArray.slice(0, 5).map((interaction: any) => ({
+            id: interaction._id,
+            platform: interaction.platform,
+            type: interaction.type,
+            author: interaction.author?.username || interaction.author?.name || 'Unknown',
+            content: interaction.lastMessage?.content || interaction.content || '',
+            sentiment: interaction.sentiment || 'neutral',
+            time: this.getTimeAgo(interaction.createdAt),
+            isUnread: interaction.status === 'unread'
+          }));
+        } else {
+          this.recentActivity = [];
+        }
+        this.loadingActivity = false;
+      },
+      error: (error) => {
+        console.error('Error loading recent activity:', error);
+        this.recentActivity = [];
+        this.loadingActivity = false;
+      }
+    });
+  }
+
+  getTimeAgo(date: Date): string {
+    const now = new Date();
+    const diffMs = now.getTime() - new Date(date).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return new Date(date).toLocaleDateString();
+  }
+
   getSentimentClass(sentiment: string): string {
     switch (sentiment) {
       case 'positive':
-        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30';
+        return 'bg-green-500/20 text-green-500 border border-green-500/30';
       case 'negative':
-        return 'bg-gray-100 text-gray-800 border border-gray-300';
+        return 'bg-red-500/20 text-red-500 border border-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-800 border border-gray-300';
+        return 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30';
     }
   }
 
   getPlatformIcon(platform: string): string {
     const icons: { [key: string]: string } = {
-      'Instagram': '📷',
-      'Facebook': '👍',
-      'YouTube': '🎥',
-      'Google': '🔍',
-      'WhatsApp': '💬'
+      'instagram': 'fab fa-instagram',
+      'facebook': 'fab fa-facebook',
+      'youtube': 'fab fa-youtube',
+      'google': 'fab fa-google',
+      'whatsapp': 'fab fa-whatsapp',
+      'twitter': 'fab fa-twitter'
     };
-    return icons[platform] || '📱';
+    return icons[platform.toLowerCase()] || 'fas fa-comment';
   }
 
   getPercentage(value: number, total: number): number {
     if (total === 0) return 0;
     return Math.round((value / total) * 100);
+  }
+
+
+  navigateTo(route: string): void {
+    this.router.navigate([route]);
+  }
+
+  viewInteraction(id: string): void {
+    this.router.navigate(['/app/inbox'], { queryParams: { selected: id } });
+  }
+
+  getCreditStatusColor(): string {
+    if (!this.aiCredits) return 'text-gray-400';
+    if (this.aiCredits.isUnlimited) return 'text-rep-lime';
+    if (this.aiCredits.isAtLimit) return 'text-red-500';
+    if (this.aiCredits.isNearLimit) return 'text-yellow-500';
+    return 'text-rep-lime';
+  }
+
+  getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  loadTasks(): void {
+    this.loadingTasks = true;
+    
+    // Get all interactions (tasks) for the current user's organization
+    this.inboxService.getInteractions({ 
+      page: 1,
+      limit: 1000 // Get all interactions
+    }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Handle both formats: response.data.interactions or response.data as array
+          const interactions = response.data.interactions || response.data;
+          const interactionArray = Array.isArray(interactions) ? interactions : [];
+          
+          this.tasks.total = interactionArray.length;
+          
+          // Count pending (not resolved)
+          this.tasks.pending = interactionArray.filter((int: any) => 
+            int.status !== 'resolved' && int.status !== 'closed'
+          ).length;
+          
+          // Count completed (resolved or closed)
+          this.tasks.completed = interactionArray.filter((int: any) => 
+            int.status === 'resolved' || int.status === 'closed'
+          ).length;
+          
+          // Calculate completion rate
+          this.tasks.completionRate = this.tasks.total > 0 
+            ? Math.round((this.tasks.completed / this.tasks.total) * 100) 
+            : 0;
+        } else {
+          // Handle empty or error response
+          this.tasks = { total: 0, pending: 0, completed: 0, completionRate: 0 };
+        }
+        this.loadingTasks = false;
+      },
+      error: (error) => {
+        console.error('Error loading tasks:', error);
+        // Set default values on error
+        this.tasks = { total: 0, pending: 0, completed: 0, completionRate: 0 };
+        this.loadingTasks = false;
+      }
+    });
+  }
+
+  getTasksStatusMessage(): string {
+    if (this.tasks.pending === 0 && this.tasks.total > 0) {
+      return '🎉 Amazing! All tasks completed!';
+    } else if (this.tasks.pending === 0) {
+      return '👍 No tasks assigned yet';
+    } else if (this.tasks.pending <= 5) {
+      return '💪 Almost there! Just a few more tasks';
+    } else if (this.tasks.pending <= 10) {
+      return '⚡ Keep going! You\'re making great progress';
+    } else {
+      return '🚀 Let\'s tackle these tasks!';
+    }
+  }
+
+  getTasksStatusColor(): string {
+    if (this.tasks.pending === 0) {
+      return 'text-green-500';
+    } else if (this.tasks.pending <= 5) {
+      return 'text-rep-lime';
+    } else if (this.tasks.pending <= 10) {
+      return 'text-yellow-500';
+    } else {
+      return 'text-red-500';
+    }
+  }
+
+  loadPerformanceMetrics(): void {
+    this.loadingPerformance = true;
+    
+    // Load all interactions to calculate performance metrics
+    this.inboxService.getInteractions({ page: 1, limit: 1000 }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Handle both formats: response.data.interactions or response.data as array
+          const interactions = response.data.interactions || response.data;
+          const interactionArray = Array.isArray(interactions) ? interactions : [];
+          
+          // Calculate average response time
+          const respondedInteractions = interactionArray.filter((int: any) => int.respondedAt && int.createdAt);
+          if (respondedInteractions.length > 0) {
+            const totalResponseTime = respondedInteractions.reduce((sum: number, int: any) => {
+              const responseTime = new Date(int.respondedAt).getTime() - new Date(int.createdAt).getTime();
+              return sum + responseTime;
+            }, 0);
+            const avgMinutes = totalResponseTime / respondedInteractions.length / 60000; // Convert to minutes
+            this.performanceMetrics.avgResponseTime = this.formatTime(avgMinutes);
+          } else {
+            this.performanceMetrics.avgResponseTime = 'N/A';
+          }
+          
+          // Calculate resolution rate
+          const totalInteractions = interactionArray.length;
+          const resolvedInteractions = interactionArray.filter((int: any) => 
+            int.status === 'resolved' || int.status === 'closed'
+          ).length;
+          this.performanceMetrics.resolutionRate = totalInteractions > 0 
+            ? Math.round((resolvedInteractions / totalInteractions) * 100) 
+            : 0;
+          
+          // Calculate satisfaction score (based on positive sentiment)
+          const positiveCount = interactionArray.filter((int: any) => int.sentiment === 'positive').length;
+          const negativeCount = interactionArray.filter((int: any) => int.sentiment === 'negative').length;
+          const neutralCount = interactionArray.filter((int: any) => int.sentiment === 'neutral').length;
+          const totalSentiment = positiveCount + negativeCount + neutralCount;
+          
+          if (totalSentiment > 0) {
+            // Score from 0-5 based on sentiment distribution
+            const score = ((positiveCount * 5) + (neutralCount * 3) + (negativeCount * 1)) / totalSentiment;
+            this.performanceMetrics.satisfactionScore = Math.round(score * 10) / 10; // Round to 1 decimal
+          } else {
+            this.performanceMetrics.satisfactionScore = 0;
+          }
+        } else {
+          // Set defaults if no data
+          this.performanceMetrics.avgResponseTime = 'N/A';
+          this.performanceMetrics.resolutionRate = 0;
+          this.performanceMetrics.satisfactionScore = 0;
+        }
+        this.loadingPerformance = false;
+      },
+      error: (error) => {
+        console.error('Error loading performance metrics:', error);
+        // Set defaults on error
+        this.performanceMetrics.avgResponseTime = 'N/A';
+        this.performanceMetrics.resolutionRate = 0;
+        this.performanceMetrics.satisfactionScore = 0;
+        this.loadingPerformance = false;
+      }
+    });
+    
+    // Load active agents count
+    this.http.get<any>(`${environment.apiUrl}/users/agents/available`).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.performanceMetrics.activeAgents = response.data.length;
+        } else {
+          this.performanceMetrics.activeAgents = 0;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading active agents:', error);
+        this.performanceMetrics.activeAgents = 0;
+      }
+    });
+  }
+
+  loadGrowthStats(): void {
+    this.loadingGrowth = true;
+    
+    // Calculate growth compared to last month
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Get current month stats
+    this.inboxService.getInteractions({ page: 1, limit: 10000 }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Handle both formats
+          const allInteractions = response.data.interactions || response.data;
+          const interactionArray = Array.isArray(allInteractions) ? allInteractions : [];
+          
+          // Count this month's interactions
+          const thisMonthCount = interactionArray.filter((int: any) => 
+            new Date(int.createdAt) >= thisMonthStart
+          ).length;
+          
+          // Count last month's interactions
+          const lastMonthCount = interactionArray.filter((int: any) => {
+            const createdAt = new Date(int.createdAt);
+            return createdAt >= lastMonth && createdAt < thisMonthStart;
+          }).length;
+          
+          // Calculate percentage growth
+          if (lastMonthCount > 0) {
+            this.growthPercentage = Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100);
+          } else if (thisMonthCount > 0) {
+            this.growthPercentage = 100; // 100% growth if there was nothing last month
+          } else {
+            this.growthPercentage = 0;
+          }
+        } else {
+          this.growthPercentage = 0;
+        }
+        this.loadingGrowth = false;
+      },
+      error: (error) => {
+        console.error('Error loading growth stats:', error);
+        this.growthPercentage = 0;
+        this.loadingGrowth = false;
+      }
+    });
+  }
+
+  loadScheduledPosts(): void {
+    // Load scheduled posts count for quick actions
+    this.http.get<any>(`${environment.apiUrl}/posts/scheduled`).subscribe({
+      next: (response) => {
+        const publishAction = this.quickActions.find(action => action.title === 'Publish');
+        if (publishAction) {
+          if (response.success && response.data) {
+            publishAction.stats = response.data.length || 0;
+          } else if (response.posts) {
+            // Handle old format
+            publishAction.stats = response.posts.length || 0;
+          } else {
+            publishAction.stats = 0;
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error loading scheduled posts:', error);
+        const publishAction = this.quickActions.find(action => action.title === 'Publish');
+        if (publishAction) {
+          publishAction.stats = 0;
+        }
+      }
+    });
+
+    // Load analytics count - use a simpler approach
+    // Just count connected platforms as reports
+    this.http.get<any>(`${environment.apiUrl}/platforms/connections`).subscribe({
+      next: (response) => {
+        const analyticsAction = this.quickActions.find(action => action.title === 'Analytics');
+        if (analyticsAction) {
+          if (response.success && response.data) {
+            const connectedPlatforms = response.data.filter((p: any) => p.status === 'connected');
+            analyticsAction.stats = connectedPlatforms.length;
+          } else {
+            analyticsAction.stats = 0;
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error loading analytics count:', error);
+        const analyticsAction = this.quickActions.find(action => action.title === 'Analytics');
+        if (analyticsAction) {
+          analyticsAction.stats = 0;
+        }
+      }
+    });
+  }
+
+  formatTime(minutes: number): string {
+    if (minutes < 60) {
+      return `${Math.round(minutes)}m`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
+
+  getTotalInteractionsProgress(): number {
+    return this.Math.min(100, ((this.stats?.total || 0) / 100) * 100);
   }
 }
