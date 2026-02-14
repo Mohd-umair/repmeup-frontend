@@ -70,6 +70,13 @@
         : '0 1px 2px rgba(0,0,0,0.05)'"
     >
       <div class="flex items-start space-x-3">
+        <!-- Checkbox for bulk select -->
+        <input
+          type="checkbox"
+          [checked]="isBulkSelected(interaction)"
+          (click)="toggleBulkSelection(interaction, $event)"
+          class="mt-1 w-4 h-4 rounded border-gray-300 text-rep-lime focus:ring-rep-lime flex-shrink-0"
+        />
         <!-- Avatar with Platform Badge -->
         <div class="relative flex-shrink-0">
           <img *ngIf="interaction.author.avatarUrl && !avatarFallback[interaction.platformId]"
@@ -107,7 +114,7 @@
           </div>
 
           <!-- Simplified Badges - Only Essential Info -->
-          <div class="flex items-center space-x-1.5 mb-2">
+          <div class="flex items-center flex-wrap gap-1.5 mb-2">
             <span class="text-xs flex items-center gap-1"
                   [style.color]="getPlatformColors(interaction.platform).primary">
               <span>{{ getPlatformIcon(interaction.platform) }}</span>
@@ -119,6 +126,18 @@
             </span>
             <span *ngIf="interaction.sentiment" class="text-xs">
               {{ getSentimentIcon(interaction.sentiment) }}
+            </span>
+            <!-- SLA indicator: Response in X / Overdue / Replied in X -->
+            <span *ngIf="getSlaLabel(interaction) as sla"
+                  class="text-xs px-2 py-0.5 rounded font-medium"
+                  [class.bg-red-100]="isOverdue(interaction)"
+                  [class.text-red-700]="isOverdue(interaction)"
+                  [class.bg-amber-100]="!isOverdue(interaction) && !interaction.respondedAt"
+                  [class.text-amber-800]="!isOverdue(interaction) && !interaction.respondedAt"
+                  [class.bg-gray-100]="interaction.respondedAt"
+                  [class.text-gray-700]="interaction.respondedAt">
+              <i class="fas fa-clock mr-1" [class.text-red-500]="isOverdue(interaction)"></i>
+              {{ sla }}
             </span>
           </div>
 

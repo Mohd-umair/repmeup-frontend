@@ -134,7 +134,7 @@ export class UserService {
    * Get available agents for assignment
    */
   getAvailableAgents(): Observable<IApiResponse<IAvailableAgent[]>> {
-    return this.apiService.get<IApiResponse<IAvailableAgent[]>>('/users/agents/available');
+    return this.apiService.get<IApiResponse<IAvailableAgent[]>>('/inbox/agents');
   }
 }
 

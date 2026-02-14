@@ -39,10 +39,22 @@
         <button 
           (click)="toggleAutoSync()"
           type="button"
-          class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 text-white"
+          class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 text-white flex items-center gap-1.5"
           [style.background]="autoSyncEnabled ? 'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))' : 'rgba(75, 85, 99, 0.2)'"
-          title="Toggle auto-sync">
+          [attr.aria-pressed]="autoSyncEnabled"
+          title="{{ autoSyncEnabled ? 'Auto-sync ON – syncing every 5 min' : 'Auto-sync OFF – click to enable' }}">
           <i class="fas" [class.fa-toggle-on]="autoSyncEnabled" [class.fa-toggle-off]="!autoSyncEnabled"></i>
+          <span class="hidden sm:inline">{{ autoSyncEnabled ? 'Auto-sync ON' : 'Auto-sync OFF' }}</span>
+        </button>
+        
+        <!-- Keyboard shortcuts hint -->
+        <button 
+          (click)="showShortcutsOverlay = true"
+          type="button"
+          class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+          title="Keyboard shortcuts (?)"
+        >
+          <i class="fas fa-keyboard"></i>
         </button>
         
         <!-- Sync button -->
@@ -111,7 +123,7 @@
           <div class="flex-1 min-w-0">
             <p class="text-xs font-medium text-gray-500 truncate">Response</p>
             <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
-               [style.color]="'var(--platform-primary, #1F2937)'">94%</p>
+               [style.color]="'var(--platform-primary, #1F2937)'">{{ inboxStats?.responseRate ?? 0 }}%</p>
           </div>
           <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
                [style.background]="'var(--platform-primary, #4B5563)' + '15'">
@@ -122,9 +134,82 @@
     </div>
   </div>
 
+  <!-- View Mode + Platform Filter (single row) -->
+  <div class="mb-3 flex flex-wrap items-center gap-2 p-3 bg-white rounded-xl border" style="border-color: rgba(0,0,0,0.08);">
+    <div class="flex flex-wrap gap-2 items-center">
+    <span class="text-xs font-medium text-gray-500 self-center mr-1">View:</span>
+    <button
+      (click)="setViewMode('all')"
+      type="button"
+      class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+      [class.bg-gray-900]="viewMode === 'all'"
+      [class.text-white]="viewMode === 'all'"
+      [class.bg-gray-100]="viewMode !== 'all'"
+      [class.text-gray-700]="viewMode !== 'all'"
+      [class.hover:bg-gray-200]="viewMode !== 'all'"
+    >
+      All
+    </button>
+    <button
+      (click)="setViewMode('priority')"
+      type="button"
+      class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+      [class.bg-gray-900]="viewMode === 'priority'"
+      [class.text-white]="viewMode === 'priority'"
+      [class.bg-gray-100]="viewMode !== 'priority'"
+      [class.text-gray-700]="viewMode !== 'priority'"
+      [class.hover:bg-gray-200]="viewMode !== 'priority'"
+    >
+      <i class="fas fa-fire-alt mr-1"></i>Priority
+    </button>
+    <button
+      (click)="setViewMode('assigned')"
+      type="button"
+      class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+      [class.bg-gray-900]="viewMode === 'assigned'"
+      [class.text-white]="viewMode === 'assigned'"
+      [class.bg-gray-100]="viewMode !== 'assigned'"
+      [class.text-gray-700]="viewMode !== 'assigned'"
+      [class.hover:bg-gray-200]="viewMode !== 'assigned'"
+    >
+      <i class="fas fa-user-tag mr-1"></i>Assigned to me
+    </button>
+    <button
+      (click)="setViewMode('needs_response')"
+      type="button"
+      class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+      [class.bg-gray-900]="viewMode === 'needs_response'"
+      [class.text-white]="viewMode === 'needs_response'"
+      [class.bg-gray-100]="viewMode !== 'needs_response'"
+      [class.text-gray-700]="viewMode !== 'needs_response'"
+      [class.hover:bg-gray-200]="viewMode !== 'needs_response'"
+    >
+      <i class="fas fa-clock mr-1"></i>Needs response
+    </button>
+    <button
+      (click)="setViewMode('overdue')"
+      type="button"
+      class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+      [class.bg-red-900]="viewMode === 'overdue'"
+      [class.text-white]="viewMode === 'overdue'"
+      [class.bg-red-100]="viewMode !== 'overdue'"
+      [class.text-red-700]="viewMode !== 'overdue'"
+      [class.hover:bg-red-200]="viewMode !== 'overdue'"
+    >
+      <i class="fas fa-exclamation-triangle mr-1"></i>Overdue
+    </button>
+    </div>
+    <div class="flex items-center gap-2 ml-auto flex-shrink-0 border-l border-gray-200 pl-3">
+      <app-inbox-filters [inline]="true" [showLabel]="false" (filtersChange)="onPlatformFilterChange($event)"></app-inbox-filters>
+    </div>
+  </div>
+
   <!-- Top Filters Bar - Simplified -->
   <div class="mb-4">
-    <app-inbox-top-filters (filtersChange)="onTopFilterChange($event)"></app-inbox-top-filters>
+    <app-inbox-top-filters 
+      [initialFilters]="topFilters"
+      (filtersChange)="onTopFilterChange($event)">
+    </app-inbox-top-filters>
   </div>
 
   <!-- Sentiment filter active but no results: offer to analyze sentiment -->
@@ -149,29 +234,9 @@
     </button>
   </div>
 
-  <!-- Three Column Layout - Responsive -->
+  <!-- Three Column Layout - List + Detail + Actions -->
   <div class="flex flex-col lg:flex-row gap-3 sm:gap-4 lg:h-[calc(100vh-320px)]">
-    <!-- Left: Platform Filters - Collapsible -->
-    <div class="w-full lg:w-80 lg:min-h-0 bg-white rounded-xl shadow-md flex flex-col border transition-all duration-300 lg:overflow-hidden lg:flex-shrink-0"
-         [class.lg:w-12]="!showFilters"
-         style="border-color: rgba(0,0,0,0.08);">
-      <div class="p-4 border-b flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200"
-           (click)="showFilters = !showFilters"
-           style="border-color: rgba(0,0,0,0.05);">
-        <h2 *ngIf="showFilters" class="text-sm font-bold flex items-center text-gray-900">
-          <i class="fas fa-filter mr-2"></i>
-          Filters
-        </h2>
-        <button class="text-gray-600 hover:text-gray-900 transition-colors">
-          <i class="fas" [class.fa-chevron-left]="showFilters" [class.fa-chevron-right]="!showFilters"></i>
-        </button>
-      </div>
-      <div *ngIf="showFilters" class="flex-1 overflow-y-auto animate-slideDown">
-        <app-inbox-filters (filtersChange)="onPlatformFilterChange($event)"></app-inbox-filters>
-      </div>
-    </div>
-
-    <!-- Middle: Interaction List or Empty State -->
+    <!-- Left: Interaction List or Empty State -->
     <div class="flex-1 bg-white rounded-xl shadow-md border transition-all duration-300 lg:overflow-hidden"
          style="min-height: 400px; border-color: rgba(0,0,0,0.08);">
       
@@ -187,13 +252,35 @@
             <span class="text-xs font-normal text-gray-500">{{ interactions.length }}</span>
           </h2>
         </div>
+        <!-- Bulk actions bar -->
+        <div *ngIf="selectedIds.size > 0" class="p-3 border-b bg-rep-lime/10 flex flex-wrap items-center gap-2" style="border-color: rgba(0,0,0,0.05);">
+          <span class="text-sm font-medium text-gray-800">{{ selectedIds.size }} selected</span>
+          <button (click)="clearBulkSelection()" type="button" class="px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900">Clear</button>
+          <button (click)="selectAllOnPage()" type="button" class="px-2 py-1 text-xs font-medium text-rep-black hover:underline">Select all</button>
+          <span class="text-gray-300">|</span>
+          <button (click)="bulkMarkAsRead()" [disabled]="bulkProcessing" type="button" class="px-2.5 py-1 rounded text-xs font-medium bg-rep-lime text-rep-black hover:bg-rep-lime/90 disabled:opacity-50">Mark read</button>
+          <button (click)="bulkResolve()" [disabled]="bulkProcessing" type="button" class="px-2.5 py-1 rounded text-xs font-medium bg-rep-black text-white hover:bg-gray-800 disabled:opacity-50">Resolve</button>
+          <ng-container *ngIf="canAssign()">
+            <select [(ngModel)]="bulkAssignAgentId" (change)="bulkAssignAgentId && bulkAssign()" [disabled]="bulkProcessing || availableAgents.length === 0" class="px-2 py-1 border rounded text-xs" style="border-color: rgba(0,0,0,0.15);">
+              <option value="">{{ availableAgents.length === 0 ? 'No agents available' : 'Assign...' }}</option>
+              <option *ngFor="let a of availableAgents" [value]="a._id">{{ a.firstName }} {{ a.lastName }} ({{ a.currentWorkload || 0 }})</option>
+            </select>
+          </ng-container>
+          <select *ngIf="orgLabels.length > 0" [(ngModel)]="bulkLabelId" (change)="bulkLabelId && bulkAddLabel()" [disabled]="bulkProcessing" class="px-2 py-1 border rounded text-xs" style="border-color: rgba(0,0,0,0.15);">
+            <option value="">Add label...</option>
+            <option *ngFor="let l of orgLabels" [value]="l._id">{{ l.name }}</option>
+          </select>
+          <button (click)="bulkArchive()" [disabled]="bulkProcessing" type="button" class="px-2.5 py-1 rounded text-xs font-medium bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50">Archive</button>
+        </div>
         <div class="flex-1 overflow-hidden">
           <app-inbox-list 
             [interactions]="interactions" 
             [selectedInteraction]="selectedInteraction"
+            [selectedIds]="selectedIds"
             [loading]="loading"
             (interactionSelect)="onInteractionSelect($event)"
             (searchChange)="onSearchChange($event)"
+            (selectionChange)="onSelectionChange($event)"
           ></app-inbox-list>
         </div>
       </div>
@@ -225,19 +312,19 @@
             Select a Platform
           </h3>
           <p class="text-gray-600 text-base leading-relaxed mb-4">
-            Choose a platform from the left sidebar to view and manage conversations
+            Select a platform from the options above to view and manage conversations
           </p>
 
           <!-- Arrow indicator -->
           <div class="flex items-center justify-center space-x-2 text-gray-400 animate-bounce">
-            <i class="fas fa-arrow-left"></i>
+            <i class="fas fa-arrow-up"></i>
             <span class="text-sm font-medium">Choose a platform</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Right: Detail View -->
+    <!-- Middle: Detail View -->
     <div class="flex-1 bg-white rounded-xl shadow-md border min-w-0 max-w-full transition-all duration-300 lg:overflow-hidden"
          style="min-height: 400px; border-color: rgba(0,0,0,0.08);">
       <div class="h-full w-full overflow-x-hidden">
@@ -246,6 +333,65 @@
           (updateInteraction)="onInteractionUpdate()"
         ></app-inbox-detail>
       </div>
+    </div>
+
+    <!-- Right: Actions Panel -->
+    <div *ngIf="selectedInteraction" 
+         class="w-full lg:w-64 lg:flex-shrink-0 bg-white rounded-xl shadow-md border transition-all duration-300 lg:overflow-hidden"
+         style="min-height: 400px; border-color: rgba(0,0,0,0.08);">
+      <div class="p-4 border-b" style="border-color: rgba(0,0,0,0.05);">
+        <h2 class="text-sm font-bold text-gray-900">
+          <i class="fas fa-bolt text-rep-lime mr-2"></i>
+          Actions
+        </h2>
+      </div>
+      <div class="h-[calc(100%-52px)] overflow-hidden">
+        <app-inbox-actions 
+          [interaction]="selectedInteraction"
+          (updated)="onInteractionUpdate()">
+        </app-inbox-actions>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Overlay -->
+  <div *ngIf="showShortcutsOverlay" 
+       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+       (click)="showShortcutsOverlay = false">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200"
+         (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <i class="fas fa-keyboard text-rep-lime"></i>
+          Keyboard Shortcuts
+        </h3>
+        <button (click)="showShortcutsOverlay = false" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="space-y-3 text-sm">
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-gray-700">Next conversation</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded font-mono">J</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-gray-700">Previous conversation</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded font-mono">K</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-gray-700">Focus reply box</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded font-mono">R</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-gray-700">Resolve conversation</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded font-mono">E</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2">
+          <span class="text-gray-700">Show this help</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded font-mono">?</kbd>
+        </div>
+      </div>
+      <p class="text-xs text-gray-500 mt-4">Press Escape to close</p>
     </div>
   </div>
 </div>

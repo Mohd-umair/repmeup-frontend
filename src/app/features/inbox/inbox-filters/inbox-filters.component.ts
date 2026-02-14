@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { ThemeService } from '../../../core/services/theme.service';
 import { IInboxFilters, Platform, InteractionType, Sentiment, InteractionStatus } from '../../../core/models/interaction.model';
 
@@ -13,6 +13,8 @@ import { IInboxFilters, Platform, InteractionType, Sentiment, InteractionStatus 
 })
 export class InboxFiltersComponent {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
+  @Input() inline = false;
+  @Input() showLabel = true;
 
   filters: IInboxFilters = {};
   

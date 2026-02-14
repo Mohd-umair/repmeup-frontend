@@ -1,50 +1,27 @@
-<div class="p-6">
-  <!-- Header -->
-  <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
-    <h3 class="text-sm font-bold text-rep-black uppercase tracking-wide">Platforms</h3>
-    <button 
-      (click)="clearPlatformFilters()"
-      class="text-sm text-rep-black hover:text-rep-lime font-bold transition flex items-center"
-    >
-      <i class="fas fa-times-circle mr-1"></i>
-      Clear
-    </button>
-  </div>
-
-  <!-- Platform Filter Only -->
-  <div class="space-y-2">
+<div [class]="inline ? 'flex items-center gap-2 flex-wrap' : 'p-3'">
+  <span *ngIf="showLabel" class="text-xs font-semibold text-gray-500 uppercase tracking-wide" [class.mr-2]="inline" [class.mb-3]="!inline" [class.block]="!inline">Platforms</span>
+  <button 
+    *ngIf="filters.platform"
+    (click)="clearPlatformFilters()"
+    class="text-xs text-gray-500 hover:text-rep-lime font-medium transition p-1 -mr-1"
+    title="Clear"
+  >
+    <i class="fas fa-times"></i>
+  </button>
+  <div class="flex flex-wrap gap-1.5" [class.flex-1]="inline">
     <button
       *ngFor="let platform of platforms"
       (click)="toggleFilter('platform', platform.value)"
-      [class]="isFilterActive('platform', platform.value) 
-        ? 'shadow-lg transform scale-105' 
-        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:scale-102'"
+      [attr.title]="platform.label"
+      type="button"
+      class="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 text-sm"
       [style.background]="isFilterActive('platform', platform.value) 
-        ? 'linear-gradient(135deg, ' + platform.gradientFrom + '15, ' + platform.gradientTo + '15)' 
-        : ''"
-      [style.borderColor]="isFilterActive('platform', platform.value) 
-        ? platform.bgColor 
-        : '#E5E7EB'"
-      class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl transition-all duration-300 font-medium"
+        ? 'linear-gradient(135deg, ' + platform.gradientFrom + ', ' + platform.gradientTo + ')' 
+        : 'rgba(0,0,0,0.04)'"
+      [style.color]="isFilterActive('platform', platform.value) ? 'white' : platform.bgColor"
+      [style.border]="'1px solid ' + (isFilterActive('platform', platform.value) ? platform.bgColor : 'rgba(0,0,0,0.08)')"
     >
-      <div class="flex items-center space-x-3">
-        <div 
-          class="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300"
-          [style.background]="isFilterActive('platform', platform.value)
-            ? 'linear-gradient(135deg, ' + platform.gradientFrom + ', ' + platform.gradientTo + ')'
-            : platform.bgColor + '15'"
-          [style.border]="'2px solid ' + (isFilterActive('platform', platform.value) ? platform.bgColor : platform.bgColor + '30')">
-          <i [class]="platform.icon + ' text-lg'" 
-             [style.color]="isFilterActive('platform', platform.value) ? 'white' : platform.bgColor"></i>
-        </div>
-        <span class="text-sm font-bold" 
-              [style.color]="isFilterActive('platform', platform.value) ? platform.bgColor : ''">
-          {{ platform.label }}
-        </span>
-      </div>
-      <i *ngIf="isFilterActive('platform', platform.value)" 
-         class="fas fa-check-circle text-lg" 
-         [style.color]="platform.bgColor"></i>
+      <i [class]="platform.icon + ' text-base'"></i>
     </button>
   </div>
 </div>

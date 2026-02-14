@@ -161,12 +161,15 @@ export interface ILabel {
   icon?: string;
 }
 
+export type InboxViewMode = 'all' | 'priority' | 'assigned' | 'needs_response' | 'overdue';
+
 export interface IInboxFilters {
   platform?: Platform;
   type?: InteractionType;
   sentiment?: Sentiment;
   status?: InteractionStatus;
   assignedTo?: string;
+  viewMode?: InboxViewMode;
   search?: string;
   page?: number;
   limit?: number;
@@ -185,8 +188,13 @@ export interface IInboxStats {
   total: number;
   unread: number;
   assigned: number;
+  replied?: number;
+  resolved?: number;
+  responseRate?: number;
   positive: number;
   negative: number;
   neutral: number;
+  avgResponseTimeMinutes?: number | null;
+  overdueCount?: number;
 }
 

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IInteraction, InteractionStatus, IAssignmentHistory } from '../../../core/models/interaction.model';
 import { InboxService } from '../../../core/services/inbox.service';
@@ -20,6 +20,7 @@ import { Subscription } from 'rxjs';
 export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   @Input() interaction: IInteraction | null = null;
   @Output() interactionUpdate = new EventEmitter<void>();
+  @ViewChild('replyTextarea') replyTextarea?: ElementRef<HTMLTextAreaElement>;
 
   replyForm: FormGroup;
   submittingReply = false;
@@ -431,6 +432,18 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /**
+   * Check if current user can reply to this interaction.
+   * Agents can only reply when currently assigned; admin/manager can always reply.
+   */
+  canReply(): boolean {
+    if (!this.currentUser || !this.interaction) return false;
+    if (this.currentUser.role === 'admin' || this.currentUser.role === 'manager') return true;
+    if (this.currentUser.role !== 'agent') return false;
+    const assignedTo = this.interaction.assignedTo as any;
+    return assignedTo && (assignedTo._id || assignedTo) === this.currentUser._id;
+  }
+
+  /**
    * Get assigned agent display name
    */
   getAssignedAgentName(): string {
@@ -550,6 +563,13 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /**
+   * Focus the reply textarea (used by keyboard shortcut R)
+   */
+  focusReplyBox(): void {
+    setTimeout(() => this.replyTextarea?.nativeElement?.focus(), 0);
+  }
+
+  /**
    * Mark notifications related to this interaction as read
    */
   private markNotificationsAsRead(): void {
@@ -641,12 +661,12 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /**
-   * Get chronologically sorted timeline (messages, replies, assignments)
+   * Get chronologically sorted timeline (messages, replies, assignments, notes)
    */
-  getConversationTimeline(): Array<{type: 'message' | 'reply' | 'assignment', data: any, timestamp: Date}> {
+  getConversationTimeline(): Array<{type: 'message' | 'reply' | 'assignment' | 'note', data: any, timestamp: Date}> {
     if (!this.interaction) return [];
 
-    const timeline: Array<{type: 'message' | 'reply' | 'assignment', data: any, timestamp: Date}> = [];
+    const timeline: Array<{type: 'message' | 'reply' | 'assignment' | 'note', data: any, timestamp: Date}> = [];
 
     // Add original message
     timeline.push({
@@ -702,6 +722,26 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
             timestamp: new Date(assignment.assignedAt)
           });
         }
+      });
+    }
+
+    // Add internal notes
+    if (this.interaction.internalNotes && this.interaction.internalNotes.length > 0) {
+      this.interaction.internalNotes.forEach((note: any) => {
+        const addedBy = note.addedBy as any;
+        const addedByName = addedBy?.firstName && addedBy?.lastName
+          ? `${addedBy.firstName} ${addedBy.lastName}`
+          : addedBy?.email || 'Unknown';
+        timeline.push({
+          type: 'note',
+          data: {
+            note: note.note,
+            addedByName,
+            addedAt: note.addedAt,
+            isPrivate: note.isPrivate
+          },
+          timestamp: new Date(note.addedAt)
+        });
       });
     }
 

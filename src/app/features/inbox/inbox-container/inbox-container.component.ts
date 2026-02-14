@@ -1,10 +1,14 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { InboxService } from '../../../core/services/inbox.service';
 import { PlatformService } from '../../../core/services/platform.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ThemeService } from '../../../core/services/theme.service';
-import { IInteraction, IInboxFilters } from '../../../core/models/interaction.model';
-import { forkJoin, interval, Subscription, of } from 'rxjs';
+import { UserService, IAvailableAgent } from '../../../core/services/user.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { IInteraction, IInboxFilters, InboxViewMode } from '../../../core/models/interaction.model';
+import { InboxDetailComponent } from '../inbox-detail/inbox-detail.component';
+import { forkJoin, timer, Subscription, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 
 /**
@@ -22,6 +26,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   filters: IInboxFilters = {};
   platformFilters: IInboxFilters = {};
   topFilters: IInboxFilters = {};
+  viewMode: InboxViewMode = 'all';
   loading = false;
   syncing = false;
   analyzingSentiment = false;
@@ -29,6 +34,15 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   autoSyncEnabled = true;
   showStats = false; // Stats are hidden by default for cleaner UI
   showFilters = true; // Filters are shown by default, but can be collapsed
+  inboxStats: { responseRate?: number } | null = null;
+  showShortcutsOverlay = false;
+  selectedIds = new Set<string>();
+  bulkProcessing = false;
+  availableAgents: IAvailableAgent[] = [];
+  bulkAssignAgentId = '';
+  orgLabels: { _id: string; name: string }[] = [];
+  bulkLabelId = '';
+  @ViewChild(InboxDetailComponent) inboxDetail?: InboxDetailComponent;
   private autoSyncSubscription?: Subscription;
   private subscriptions: Subscription[] = [];
 
@@ -36,7 +50,10 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     private inboxService: InboxService,
     private platformService: PlatformService,
     private notificationService: NotificationService,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private userService: UserService,
+    private authService: AuthService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -51,12 +68,25 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       this.themeService.setPlatformTheme(this.platformFilters.platform);
     }
     
+    // Apply initial filters from route query params (e.g. ?sentiment=negative, ?status=unread, ?overdue=true)
+    const params = this.route.snapshot.queryParams;
+    if (params['sentiment']) {
+      this.topFilters = { ...this.topFilters, sentiment: params['sentiment'] as any };
+    }
+    if (params['status']) {
+      this.topFilters = { ...this.topFilters, status: params['status'] as any };
+    }
+    if (params['overdue'] === 'true' || params['overdue'] === '1') {
+      this.viewMode = 'overdue';
+    }
+
     this.loadInteractions();
+    this.loadInboxStats();
 
     // Subscribe to interactions (must unsubscribe on destroy to avoid memory leak)
     this.subscriptions.push(
       this.inboxService.interactions$.subscribe(interactions => {
-        this.interactions = interactions;
+        this.interactions = this.applyViewModeSort(interactions);
       })
     );
 
@@ -69,6 +99,143 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
     // Start auto-sync (every 5 minutes)
     this.startAutoSync();
+
+    // Load agents for bulk assign (admin/manager only)
+    if (this.canAssign()) {
+      this.userService.getAvailableAgents().subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.availableAgents = res.data;
+            console.log('Available agents loaded:', this.availableAgents.length);
+          }
+        },
+        error: (err) => {
+          console.error('Failed to load agents:', err);
+          this.notificationService.error('Failed to load agents', 'Could not load available agents for assignment');
+        }
+      });
+    }
+
+    // Load labels for bulk add
+    this.inboxService.getLabels().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.orgLabels = res.data;
+          console.log('Labels loaded:', this.orgLabels.length);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load labels:', err);
+      }
+    });
+  }
+
+  onSelectionChange(next: Set<string>): void {
+    this.selectedIds = next;
+  }
+
+  clearBulkSelection(): void {
+    this.selectedIds = new Set();
+  }
+
+  selectAllOnPage(): void {
+    this.selectedIds = new Set(this.interactions.map(i => i._id));
+  }
+
+  bulkMarkAsRead(): void {
+    const ids = Array.from(this.selectedIds);
+    if (ids.length === 0) return;
+    this.bulkProcessing = true;
+    this.inboxService.updateStatusBulk(ids, 'read').subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.notificationService.success('Bulk update', `Marked ${(res as any).data?.updated || ids.length} as read`);
+          this.clearBulkSelection();
+          this.loadInteractions();
+        }
+        this.bulkProcessing = false;
+      },
+      error: () => { this.bulkProcessing = false; }
+    });
+  }
+
+  bulkResolve(): void {
+    const ids = Array.from(this.selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Mark ${ids.length} conversation(s) as resolved?`)) return;
+    this.bulkProcessing = true;
+    this.inboxService.updateStatusBulk(ids, 'resolved').subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.notificationService.success('Bulk update', `Resolved ${(res as any).data?.updated || ids.length} conversation(s)`);
+          this.clearBulkSelection();
+          this.loadInteractions();
+        }
+        this.bulkProcessing = false;
+      },
+      error: () => { this.bulkProcessing = false; }
+    });
+  }
+
+  bulkAssign(): void {
+    if (!this.bulkAssignAgentId) return;
+    const ids = Array.from(this.selectedIds);
+    if (ids.length === 0) return;
+    this.bulkProcessing = true;
+    this.inboxService.assignBulk(ids, this.bulkAssignAgentId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.notificationService.success('Bulk assign', `Assigned ${(res as any).data?.updated || ids.length} conversation(s)`);
+          this.clearBulkSelection();
+          this.bulkAssignAgentId = '';
+          this.loadInteractions();
+        }
+        this.bulkProcessing = false;
+      },
+      error: () => { this.bulkProcessing = false; }
+    });
+  }
+
+  canAssign(): boolean {
+    const user = this.authService.currentUserValue;
+    return !!(user && (user.role === 'admin' || user.role === 'manager'));
+  }
+
+  bulkAddLabel(): void {
+    if (!this.bulkLabelId) return;
+    const ids = Array.from(this.selectedIds);
+    if (ids.length === 0) return;
+    this.bulkProcessing = true;
+    this.inboxService.addLabelBulk(ids, this.bulkLabelId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.notificationService.success('Bulk label', `Added label to ${(res as any).data?.updated || ids.length} conversation(s)`);
+          this.clearBulkSelection();
+          this.bulkLabelId = '';
+          this.loadInteractions();
+        }
+        this.bulkProcessing = false;
+      },
+      error: () => { this.bulkProcessing = false; }
+    });
+  }
+
+  bulkArchive(): void {
+    const ids = Array.from(this.selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Archive ${ids.length} conversation(s)?`)) return;
+    this.bulkProcessing = true;
+    this.inboxService.updateStatusBulk(ids, 'archived').subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.notificationService.success('Bulk update', `Archived ${(res as any).data?.updated || ids.length} conversation(s)`);
+          this.clearBulkSelection();
+          this.loadInteractions();
+        }
+        this.bulkProcessing = false;
+      },
+      error: () => { this.bulkProcessing = false; }
+    });
   }
 
   ngOnDestroy(): void {
@@ -138,23 +305,33 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   /**
    * Start auto-sync for platforms (every 5 minutes)
+   * Uses timer(0, 300000) to run immediately on start, then every 5 min
    */
   startAutoSync(): void {
     if (!this.autoSyncEnabled) {
       return;
     }
 
-    // Sync every 5 minutes (300000 ms)
-    this.autoSyncSubscription = interval(300000)
+    // Unsubscribe any existing auto-sync before starting new one
+    if (this.autoSyncSubscription) {
+      this.autoSyncSubscription.unsubscribe();
+      this.autoSyncSubscription = undefined;
+    }
+
+    // Sync immediately, then every 5 minutes (300000 ms)
+    this.autoSyncSubscription = timer(0, 300000)
       .pipe(
-        switchMap(() => this.syncAllPlatforms(true))
+        switchMap(() => this.syncAllPlatforms(true)),
+        catchError((err) => {
+          console.error('Auto-sync error:', err);
+          return of(null); // Continue interval even if one sync fails
+        })
       )
       .subscribe({
         next: () => {
-          console.log('Auto-sync completed');
-        },
-        error: (error) => {
-          console.error('Auto-sync error:', error);
+          if (this.autoSyncEnabled) {
+            this.lastSyncTime = new Date();
+          }
         }
       });
   }
@@ -164,11 +341,14 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    */
   toggleAutoSync(): void {
     this.autoSyncEnabled = !this.autoSyncEnabled;
-    
+
     if (this.autoSyncEnabled) {
       this.startAutoSync();
-    } else if (this.autoSyncSubscription) {
-      this.autoSyncSubscription.unsubscribe();
+    } else {
+      if (this.autoSyncSubscription) {
+        this.autoSyncSubscription.unsubscribe();
+        this.autoSyncSubscription = undefined;
+      }
     }
   }
 
@@ -288,14 +468,58 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   loadInteractions(): void {
     this.loading = true;
-    // Merge filters from both sources
-    this.filters = { ...this.platformFilters, ...this.topFilters };
+    // Merge filters: viewMode affects assignedTo and status/sort
+    this.filters = {
+      ...this.platformFilters,
+      ...this.topFilters,
+      viewMode: this.viewMode === 'all' ? undefined : this.viewMode
+    };
     this.inboxService.getInteractions(this.filters).subscribe({
       next: () => {
         this.loading = false;
       },
       error: () => {
         this.loading = false;
+      }
+    });
+    this.loadInboxStats();
+  }
+
+  setViewMode(mode: InboxViewMode): void {
+    this.viewMode = mode;
+    this.loadInteractions();
+  }
+
+  /**
+   * Apply priority sort on frontend (unread first, negative sentiment, then by date)
+   */
+  private applyViewModeSort(interactions: IInteraction[]): IInteraction[] {
+    if (this.viewMode !== 'priority' || interactions.length === 0) {
+      return interactions;
+    }
+    return [...interactions].sort((a, b) => {
+      const score = (i: IInteraction) => {
+        let s = 0;
+        if (i.status === 'unread' && i.sentiment === 'negative') return 300;
+        if (i.status === 'unread') return 200;
+        if (i.sentiment === 'negative') return 100;
+        return 0;
+      };
+      const diff = score(b) - score(a);
+      if (diff !== 0) return diff;
+      const dateA = new Date(a.platformCreatedAt).getTime();
+      const dateB = new Date(b.platformCreatedAt).getTime();
+      return dateB - dateA;
+    });
+  }
+
+  loadInboxStats(): void {
+    const filters = this.platformFilters.platform ? { platform: this.platformFilters.platform } : undefined;
+    this.inboxService.getStats(filters).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.inboxStats = response.data;
+        }
       }
     });
   }
@@ -379,6 +603,78 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       interactionDate.setHours(0, 0, 0, 0);
       return interactionDate.getTime() === today.getTime();
     }).length;
+  }
+
+  /**
+   * Keyboard shortcuts: J/K navigate, R focus reply, E resolve, ? show help
+   */
+  @HostListener('document:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    // Ignore when typing in inputs, textareas, or contenteditable
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) {
+      if (event.key !== 'Escape') return;
+      if (this.showShortcutsOverlay) {
+        this.showShortcutsOverlay = false;
+      }
+      return;
+    }
+
+    switch (event.key) {
+      case 'j':
+        if (!event.metaKey && !event.ctrlKey) {
+          event.preventDefault();
+          this.navigateNext();
+        }
+        break;
+      case 'k':
+        if (!event.metaKey && !event.ctrlKey) {
+          event.preventDefault();
+          this.navigatePrev();
+        }
+        break;
+      case 'r':
+      case 'R':
+        if (!event.metaKey && !event.ctrlKey) {
+          event.preventDefault();
+          this.inboxDetail?.focusReplyBox();
+        }
+        break;
+      case 'e':
+      case 'E':
+        if (!event.metaKey && !event.ctrlKey) {
+          event.preventDefault();
+          if (this.inboxDetail?.canResolve?.()) {
+            this.inboxDetail?.resolveInteraction?.();
+          }
+        }
+        break;
+      case '?':
+        event.preventDefault();
+        this.showShortcutsOverlay = !this.showShortcutsOverlay;
+        break;
+      case 'Escape':
+        this.showShortcutsOverlay = false;
+        break;
+    }
+  }
+
+  navigateNext(): void {
+    if (this.interactions.length === 0) return;
+    const idx = this.selectedInteraction
+      ? this.interactions.findIndex(i => i._id === this.selectedInteraction!._id)
+      : -1;
+    const nextIdx = idx < 0 ? 0 : Math.min(idx + 1, this.interactions.length - 1);
+    this.onInteractionSelect(this.interactions[nextIdx]);
+  }
+
+  navigatePrev(): void {
+    if (this.interactions.length === 0) return;
+    const idx = this.selectedInteraction
+      ? this.interactions.findIndex(i => i._id === this.selectedInteraction!._id)
+      : 0;
+    const prevIdx = Math.max(0, idx - 1);
+    this.onInteractionSelect(this.interactions[prevIdx]);
   }
 
   /**

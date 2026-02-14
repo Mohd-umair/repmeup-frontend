@@ -76,7 +76,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     avgResponseTime: '0h',
     resolutionRate: 0,
     satisfactionScore: 0,
-    activeAgents: 0
+    activeAgents: 0,
+    overdueCount: 0
   };
   loadingPerformance = true;
 
@@ -149,6 +150,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
           if (inboxAction) {
             inboxAction.stats = response.data.unread || 0;
           }
+          // Update SLA metrics from stats (avg response time, overdue count)
+          const avgMin = response.data.avgResponseTimeMinutes;
+          if (avgMin != null && avgMin > 0) {
+            this.performanceMetrics.avgResponseTime = this.formatTime(avgMin);
+          }
+          this.performanceMetrics.overdueCount = response.data.overdueCount ?? 0;
         } else {
           this.stats = { total: 0, unread: 0, positive: 0, negative: 0, neutral: 0 } as any;
         }
@@ -274,8 +281,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
 
-  navigateTo(route: string): void {
-    this.router.navigate([route]);
+  navigateTo(route: string, queryParams?: Record<string, string>): void {
+    if (queryParams) {
+      this.router.navigate([route], { queryParams });
+    } else {
+      this.router.navigate([route]);
+    }
   }
 
   viewInteraction(id: string): void {
@@ -392,17 +403,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const interactions = response.data.interactions || response.data;
           const interactionArray = Array.isArray(interactions) ? interactions : [];
           
-          // Calculate average response time
-          const respondedInteractions = interactionArray.filter((int: any) => int.respondedAt && int.createdAt);
-          if (respondedInteractions.length > 0) {
-            const totalResponseTime = respondedInteractions.reduce((sum: number, int: any) => {
-              const responseTime = new Date(int.respondedAt).getTime() - new Date(int.createdAt).getTime();
-              return sum + responseTime;
-            }, 0);
-            const avgMinutes = totalResponseTime / respondedInteractions.length / 60000; // Convert to minutes
-            this.performanceMetrics.avgResponseTime = this.formatTime(avgMinutes);
-          } else {
-            this.performanceMetrics.avgResponseTime = 'N/A';
+          // Avg response time comes from stats (backend aggregation); only set N/A here if stats didn't
+          if (this.performanceMetrics.avgResponseTime === '0h') {
+            const respondedInteractions = interactionArray.filter((int: any) => int.respondedAt && (int.platformCreatedAt || int.createdAt));
+            if (respondedInteractions.length > 0) {
+              const totalResponseTime = respondedInteractions.reduce((sum: number, int: any) => {
+                const created = int.platformCreatedAt || int.createdAt;
+                return sum + (new Date(int.respondedAt).getTime() - new Date(created).getTime());
+              }, 0);
+              const avgMinutes = totalResponseTime / respondedInteractions.length / 60000;
+              this.performanceMetrics.avgResponseTime = this.formatTime(avgMinutes);
+            } else {
+              this.performanceMetrics.avgResponseTime = 'N/A';
+            }
           }
           
           // Calculate resolution rate

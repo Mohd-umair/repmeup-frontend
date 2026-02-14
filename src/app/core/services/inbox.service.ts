@@ -64,9 +64,11 @@ export class InboxService {
 
   /**
    * Get inbox statistics
+   * @param filters Optional filters (e.g. platform) for per-platform stats
    */
-  getStats(): Observable<IApiResponse<IInboxStats>> {
-    return this.apiService.get<IApiResponse<IInboxStats>>('/inbox/stats')
+  getStats(filters?: { platform?: string }): Observable<IApiResponse<IInboxStats>> {
+    const params = filters?.platform ? { platform: filters.platform } : undefined;
+    return this.apiService.get<IApiResponse<IInboxStats>>('/inbox/stats', params)
       .pipe(
         tap(response => {
           if (response.success && response.data) {
@@ -105,6 +107,13 @@ export class InboxService {
   }
 
   /**
+   * Get org labels
+   */
+  getLabels(): Observable<IApiResponse<{ _id: string; name: string; color?: string; icon?: string }[]>> {
+    return this.apiService.get<IApiResponse<any>>('/inbox/labels');
+  }
+
+  /**
    * Add label to interaction
    */
   addLabel(id: string, labelId: string): Observable<IApiResponse> {
@@ -126,6 +135,34 @@ export class InboxService {
    */
   updateStatus(id: string, status: string): Observable<IApiResponse> {
     return this.apiService.put<IApiResponse>(`/inbox/${id}/status`, { status });
+  }
+
+  /**
+   * Manually escalate interaction to human agent
+   */
+  escalate(id: string, reason?: string): Observable<IApiResponse> {
+    return this.apiService.post<IApiResponse>(`/inbox/${id}/escalate`, { reason });
+  }
+
+  /**
+   * Bulk assign interactions to agent
+   */
+  assignBulk(interactionIds: string[], userId: string): Observable<IApiResponse> {
+    return this.apiService.post<IApiResponse>('/inbox/assign-bulk', { interactionIds, userId });
+  }
+
+  /**
+   * Bulk update interaction status
+   */
+  updateStatusBulk(interactionIds: string[], status: string): Observable<IApiResponse> {
+    return this.apiService.post<IApiResponse>('/inbox/status-bulk', { interactionIds, status });
+  }
+
+  /**
+   * Bulk add label to interactions
+   */
+  addLabelBulk(interactionIds: string[], labelId: string): Observable<IApiResponse> {
+    return this.apiService.post<IApiResponse>('/inbox/labels-bulk', { interactionIds, labelId });
   }
 
   /**

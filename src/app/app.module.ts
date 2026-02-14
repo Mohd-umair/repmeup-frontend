@@ -28,6 +28,7 @@ import { InboxFiltersComponent } from './features/inbox/inbox-filters/inbox-filt
 import { InboxTopFiltersComponent } from './features/inbox/inbox-top-filters/inbox-top-filters.component';
 import { InboxListComponent } from './features/inbox/inbox-list/inbox-list.component';
 import { InboxDetailComponent } from './features/inbox/inbox-detail/inbox-detail.component';
+import { InboxActionsComponent } from './features/inbox/inbox-actions/inbox-actions.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
@@ -65,6 +66,7 @@ import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
     InboxTopFiltersComponent,
     InboxListComponent,
     InboxDetailComponent,
+    InboxActionsComponent,
     SettingsComponent,
     AgentsComponent,
     KnowledgeBaseComponent,

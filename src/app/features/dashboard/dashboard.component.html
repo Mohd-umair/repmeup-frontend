@@ -295,6 +295,81 @@
 
   <!-- Regular Dashboard (when platforms are connected) -->
   <div *ngIf="!loading && !checkingPlatforms && hasConnectedPlatforms" class="space-y-6">
+    <!-- Negative Sentiment Alert Banner -->
+    <div *ngIf="stats && stats.negative > 0" 
+         class="bg-gradient-to-r from-red-500/10 to-red-600/5 backdrop-blur-sm rounded-xl border-2 border-red-500/30 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-red-200">Negative Interactions Need Attention</h3>
+          <p class="text-red-300/80 text-sm mt-1">
+            {{ stats.negative }} negative {{ stats.negative === 1 ? 'interaction' : 'interactions' }} require your response
+          </p>
+        </div>
+      </div>
+      <button
+        (click)="navigateTo('/app/inbox', { sentiment: 'negative' })"
+        class="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition flex items-center gap-2 whitespace-nowrap"
+      >
+        <i class="fas fa-inbox"></i>
+        View in Inbox
+      </button>
+    </div>
+
+    <!-- At a Glance Widget -->
+    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 overflow-hidden">
+      <h2 class="text-lg font-bold text-rep-white p-5 pb-0 flex items-center gap-2">
+        <i class="fas fa-eye text-rep-lime"></i>
+        At a Glance
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-800">
+        <button
+          (click)="navigateTo('/app/inbox', { status: 'unread' })"
+          class="flex items-center gap-4 p-5 hover:bg-gray-800/30 transition text-left"
+        >
+          <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-envelope text-yellow-500 text-xl"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-2xl font-bold text-rep-white">{{ stats?.unread ?? 0 }}</p>
+            <p class="text-sm text-gray-400">Unread</p>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500 flex-shrink-0"></i>
+        </button>
+        <button
+          (click)="navigateTo('/app/inbox', { sentiment: 'negative' })"
+          class="flex items-center gap-4 p-5 hover:bg-gray-800/30 transition text-left"
+        >
+          <div class="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-frown text-red-500 text-xl"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-2xl font-bold text-rep-white">{{ stats?.negative ?? 0 }}</p>
+            <p class="text-sm text-gray-400">Negative</p>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500 flex-shrink-0"></i>
+        </button>
+        <button
+          (click)="navigateTo('/app/inbox', { overdue: 'true' })"
+          class="flex items-center gap-4 p-5 hover:bg-gray-800/30 transition text-left"
+        >
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+               [ngClass]="{ 'bg-red-500/20': (stats?.overdueCount ?? 0) >= 1, 'bg-gray-700': (stats?.overdueCount ?? 0) === 0 }">
+            <i class="fas fa-clock text-xl" [ngClass]="{ 'text-red-500': (stats?.overdueCount ?? 0) >= 1, 'text-gray-500': (stats?.overdueCount ?? 0) === 0 }"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-2xl font-bold" [ngClass]="{ 'text-rep-white': (stats?.overdueCount ?? 0) === 0, 'text-red-400': (stats?.overdueCount ?? 0) >= 1 }">
+              {{ stats?.overdueCount ?? 0 }}
+            </p>
+            <p class="text-sm text-gray-400">Overdue</p>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500 flex-shrink-0"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- Quick Actions / Navigation Cards -->
     <div>
       <h2 class="text-xl font-bold text-rep-white mb-4 flex items-center gap-2">
@@ -734,6 +809,23 @@
                 <p class="text-lg font-bold text-rep-white">{{ performanceMetrics.activeAgents }}</p>
               </div>
               <i class="fas fa-users text-2xl text-rep-lime"></i>
+            </div>
+
+            <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
+              <div>
+                <p class="text-xs text-gray-400 mb-1">Conversations Overdue</p>
+                <p class="text-lg font-bold" [class.text-rep-white]="performanceMetrics.overdueCount === 0" [class.text-red-400]="performanceMetrics.overdueCount > 0">
+                  {{ performanceMetrics.overdueCount }}
+                </p>
+              </div>
+              <button 
+                *ngIf="performanceMetrics.overdueCount > 0"
+                (click)="navigateTo('/app/inbox', { overdue: 'true' }); $event.stopPropagation()"
+                class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition"
+              >
+                View
+              </button>
+              <i *ngIf="performanceMetrics.overdueCount === 0" class="fas fa-check-circle text-2xl text-green-500"></i>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { IInboxFilters, InteractionType, Sentiment, InteractionStatus } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
 
@@ -11,12 +11,19 @@ import { ThemeService } from '../../../core/services/theme.service';
   templateUrl: './inbox-top-filters.component.html',
   styleUrls: ['./inbox-top-filters.component.scss']
 })
-export class InboxTopFiltersComponent {
+export class InboxTopFiltersComponent implements OnChanges {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
+  @Input() initialFilters: IInboxFilters = {};
 
   filters: IInboxFilters = {};
 
   constructor(public themeService: ThemeService) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['initialFilters'] && this.initialFilters && Object.keys(this.initialFilters).length > 0) {
+      this.filters = { ...this.initialFilters };
+    }
+  }
 
   types = [
     { value: InteractionType.COMMENT, label: 'Comments', icon: '💬' },
