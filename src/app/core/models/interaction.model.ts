@@ -156,7 +156,7 @@ export interface IEngagement {
 export interface ILabel {
   _id: string;
   name: string;
-  color: string;
+  color?: string;
   description?: string;
   icon?: string;
 }
@@ -171,6 +171,7 @@ export interface IInboxFilters {
   assignedTo?: string;
   viewMode?: InboxViewMode;
   search?: string;
+  label?: string; // Label ID for filtering
   page?: number;
   limit?: number;
   sortBy?: string;

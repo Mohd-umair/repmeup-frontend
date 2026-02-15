@@ -6,7 +6,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ThemeService } from '../../../core/services/theme.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { IInteraction, IInboxFilters, InboxViewMode } from '../../../core/models/interaction.model';
+import { IInteraction, IInboxFilters, InboxViewMode, ILabel } from '../../../core/models/interaction.model';
 import { InboxDetailComponent } from '../inbox-detail/inbox-detail.component';
 import { forkJoin, timer, Subscription, of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
@@ -40,7 +40,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   bulkProcessing = false;
   availableAgents: IAvailableAgent[] = [];
   bulkAssignAgentId = '';
-  orgLabels: { _id: string; name: string }[] = [];
+  orgLabels: ILabel[] = [];
   bulkLabelId = '';
   @ViewChild(InboxDetailComponent) inboxDetail?: InboxDetailComponent;
   private autoSyncSubscription?: Subscription;

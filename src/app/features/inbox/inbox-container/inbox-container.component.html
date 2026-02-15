@@ -200,14 +200,15 @@
     </button>
     </div>
     <div class="flex items-center gap-2 ml-auto flex-shrink-0 border-l border-gray-200 pl-3">
-      <app-inbox-filters [inline]="true" [showLabel]="false" (filtersChange)="onPlatformFilterChange($event)"></app-inbox-filters>
+      <app-inbox-filters [inline]="true" [showLabel]="false" [platformOnly]="true" (filtersChange)="onPlatformFilterChange($event)"></app-inbox-filters>
     </div>
   </div>
 
-  <!-- Top Filters Bar - Simplified -->
+  <!-- Top Filters Bar - Type, Sentiment, Status, Labels -->
   <div class="mb-4">
     <app-inbox-top-filters 
       [initialFilters]="topFilters"
+      [labels]="orgLabels"
       (filtersChange)="onTopFilterChange($event)">
     </app-inbox-top-filters>
   </div>

@@ -28,6 +28,7 @@ import { ContactComponent } from './features/contact/contact.component';
 import { AboutComponent } from './features/about/about.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
+import { NotificationsComponent } from './features/notifications/notifications.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -80,7 +81,8 @@ const routes: Routes = [
       { path: 'settings', component: SettingsComponent },
       { path: 'agents', component: AgentsComponent },
       { path: 'plans', component: PlansComponent },
-      { path: 'ai-credits', component: AiCreditsComponent }
+      { path: 'ai-credits', component: AiCreditsComponent },
+      { path: 'notifications', component: NotificationsComponent }
     ]
   },
 

@@ -196,6 +196,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.router.navigate(['/app/ai-credits']);
   }
 
+  navigateToNotifications(): void {
+    this.showNotifications = false;
+    this.router.navigate(['/app/notifications']);
+  }
+
   getCreditStatusColor(): string {
     if (!this.aiCredits) return 'text-gray-400';
     if (this.aiCredits.isUnlimited) return 'text-purple-400';

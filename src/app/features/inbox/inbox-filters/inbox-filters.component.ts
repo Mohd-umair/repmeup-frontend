@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { ThemeService } from '../../../core/services/theme.service';
-import { IInboxFilters, Platform, InteractionType, Sentiment, InteractionStatus } from '../../../core/models/interaction.model';
+import { IInboxFilters, Platform, InteractionType, Sentiment, InteractionStatus, ILabel } from '../../../core/models/interaction.model';
 
 /**
  * Inbox Filters Component - Single Responsibility Principle
@@ -15,10 +15,21 @@ export class InboxFiltersComponent {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
   @Input() inline = false;
   @Input() showLabel = true;
+  @Input() labels: ILabel[] = []; // Organization labels for filtering
+  @Input() platformOnly = false; // When true, only show platform buttons (no More Filters)
 
   filters: IInboxFilters = {};
+  showMoreFilters = false; // Toggle for more filters section
   
   constructor(public themeService: ThemeService) {}
+
+  toggleMoreFilters(): void {
+    this.showMoreFilters = !this.showMoreFilters;
+  }
+
+  hasActiveAdvancedFilters(): boolean {
+    return !!(this.filters.label || this.filters.type || this.filters.sentiment || this.filters.status);
+  }
 
   platforms = [
     { value: Platform.INSTAGRAM, label: 'Instagram', icon: 'fab fa-instagram', color: 'text-pink-600', bgColor: '#E4405F', gradientFrom: '#833AB4', gradientTo: '#FD1D1D' },
@@ -70,6 +81,11 @@ export class InboxFiltersComponent {
 
   clearPlatformFilters(): void {
     delete this.filters.platform;
+    this.emitFilters();
+  }
+
+  clearLabelFilters(): void {
+    delete this.filters.label;
     this.emitFilters();
   }
 

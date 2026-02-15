@@ -46,6 +46,7 @@ import { PlansComponent } from './features/plans/plans.component';
 import { PageManagerComponent } from './features/settings/components/page-manager/page-manager.component';
 import { SocialPreviewComponent } from './features/publish/social-preview/social-preview.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
+import { NotificationsComponent } from './features/notifications/notifications.component';
 
 /**
  * App Module - Following SOLID principles
@@ -83,7 +84,8 @@ import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
     PlansComponent,
     PageManagerComponent,
     SocialPreviewComponent,
-    AiCreditsComponent
+    AiCreditsComponent,
+    NotificationsComponent
   ],
   imports: [
     BrowserModule,
