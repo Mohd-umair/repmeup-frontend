@@ -469,11 +469,18 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   loadInteractions(): void {
     this.loading = true;
     // Merge filters: viewMode affects assignedTo and status/sort
-    this.filters = {
+    // Clean undefined values to prevent wrong cache keys
+    const mergedFilters = {
       ...this.platformFilters,
       ...this.topFilters,
       viewMode: this.viewMode === 'all' ? undefined : this.viewMode
     };
+    
+    // Remove undefined/null/empty values from filters
+    this.filters = Object.fromEntries(
+      Object.entries(mergedFilters).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+    ) as IInboxFilters;
+    
     this.inboxService.getInteractions(this.filters).subscribe({
       next: () => {
         this.loading = false;
