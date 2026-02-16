@@ -340,11 +340,27 @@
               </button>
             </div>
 
-            <div *ngIf="mediaFiles.length === 0" class="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center hover:border-rep-lime hover:bg-rep-lime/5 transition cursor-pointer"
-                 (click)="fileInput.click()">
-              <i class="fas fa-cloud-upload-alt text-3xl text-gray-600 mb-2"></i>
-              <p class="text-xs text-gray-400 mb-1">Click to upload photos or videos</p>
-              <p class="text-xs text-gray-500">JPEG, PNG, MP4 • Max 8MB • Up to 10 files</p>
+            <div *ngIf="mediaFiles.length === 0" class="space-y-2">
+              <div class="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center hover:border-rep-lime hover:bg-rep-lime/5 transition cursor-pointer"
+                   (click)="fileInput.click()">
+                <i class="fas fa-cloud-upload-alt text-3xl text-gray-600 mb-2"></i>
+                <p class="text-xs text-gray-400 mb-1">Click to upload new photos or videos</p>
+                <p class="text-xs text-gray-500">JPEG, PNG, MP4 • Max 8MB • Up to 10 files</p>
+              </div>
+              
+              <div class="flex items-center gap-2">
+                <div class="flex-1 h-px bg-gray-700"></div>
+                <span class="text-xs text-gray-500">or</span>
+                <div class="flex-1 h-px bg-gray-700"></div>
+              </div>
+
+              <button
+                type="button"
+                (click)="openMediaSelector()"
+                class="w-full py-3 border-2 border-dashed border-gray-700 rounded-lg text-gray-400 hover:border-rep-lime hover:text-rep-lime hover:bg-rep-lime/5 transition text-xs font-medium flex items-center justify-center gap-2">
+                <i class="fas fa-photo-video"></i>
+                Select from Media Library
+              </button>
             </div>
 
             <!-- Media Gallery (Compact) -->
@@ -388,14 +404,22 @@
                 </div>
               </div>
               
-              <button
-                *ngIf="mediaFiles.length < 10"
-                (click)="fileInput.click()"
-                class="w-full py-1.5 border border-dashed border-gray-700 rounded-lg text-gray-400 hover:border-rep-lime hover:text-rep-lime transition text-xs"
-              >
-                <i class="fas fa-plus mr-1"></i>
-                Add More ({{ 10 - mediaFiles.length }} remaining)
-              </button>
+              <div *ngIf="mediaFiles.length < 10" class="flex gap-2">
+                <button
+                  (click)="fileInput.click()"
+                  class="flex-1 py-1.5 border border-dashed border-gray-700 rounded-lg text-gray-400 hover:border-rep-lime hover:text-rep-lime transition text-xs font-medium flex items-center justify-center gap-1"
+                >
+                  <i class="fas fa-upload"></i>
+                  Upload ({{ 10 - mediaFiles.length }} left)
+                </button>
+                <button
+                  (click)="openMediaSelector()"
+                  class="flex-1 py-1.5 border border-dashed border-gray-700 rounded-lg text-gray-400 hover:border-rep-lime hover:text-rep-lime transition text-xs font-medium flex items-center justify-center gap-1"
+                >
+                  <i class="fas fa-photo-video"></i>
+                  From Library
+                </button>
+              </div>
             </div>
 
             <input
@@ -675,3 +699,12 @@
   [showModal]="showMediaGuide"
   (close)="showMediaGuide = false">
 </app-media-upload-guide>
+
+<!-- Media Library Selector Modal -->
+<app-media-selector-modal
+  *ngIf="showMediaSelector"
+  [allowMultiple]="true"
+  [mediaType]="postType === 'reel' || postType === 'short' ? 'video' : 'all'"
+  (close)="closeMediaSelector()"
+  (select)="onMediaLibrarySelect($event)">
+</app-media-selector-modal>

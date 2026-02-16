@@ -504,7 +504,7 @@
       <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
         <div class="flex items-center space-x-6 mb-8">
           <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black font-bold text-3xl">
-            JD
+            {{ (profileData.firstName?.charAt(0) || '') + (profileData.lastName?.charAt(0) || '') }}
           </div>
           <div>
             <h2 class="text-3xl font-bold text-rep-black">Profile Settings</h2>
@@ -512,21 +512,31 @@
           </div>
         </div>
         
-        <form class="space-y-6">
-          <div class="grid grid-cols-2 gap-6">
+        <form (ngSubmit)="saveProfile()" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-semibold text-rep-black mb-2">
                 <i class="fas fa-user mr-2 text-gray-400"></i>
                 First Name
               </label>
-              <input type="text" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition" value="John">
+              <input 
+                type="text" 
+                [(ngModel)]="profileData.firstName" 
+                name="firstName"
+                required
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
             </div>
             <div>
               <label class="block text-sm font-semibold text-rep-black mb-2">
                 <i class="fas fa-user mr-2 text-gray-400"></i>
                 Last Name
               </label>
-              <input type="text" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition" value="Doe">
+              <input 
+                type="text" 
+                [(ngModel)]="profileData.lastName" 
+                name="lastName"
+                required
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
             </div>
           </div>
 
@@ -535,13 +545,26 @@
               <i class="fas fa-envelope mr-2 text-gray-400"></i>
               Email Address
             </label>
-            <input type="email" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition" value="john@example.com">
+            <input 
+              type="email" 
+              [(ngModel)]="profileData.email" 
+              name="email"
+              required
+              disabled
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-gray-100 cursor-not-allowed">
+            <p class="text-xs text-gray-500 mt-1">
+              <i class="fas fa-info-circle mr-1"></i>
+              Email cannot be changed. Contact support if you need to update it.
+            </p>
           </div>
 
           <div class="pt-6">
-            <button type="submit" class="px-8 py-4 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300">
-              <i class="fas fa-save mr-2"></i>
-              Save Changes
+            <button 
+              type="submit" 
+              [disabled]="savingProfile"
+              class="px-8 py-4 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+              <i [class]="savingProfile ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-save mr-2'"></i>
+              {{ savingProfile ? 'Saving...' : 'Save Changes' }}
             </button>
           </div>
         </form>
@@ -561,13 +584,18 @@
           </div>
         </div>
         
-        <form class="space-y-6">
+        <form (ngSubmit)="saveOrganization()" class="space-y-6">
           <div>
             <label class="block text-sm font-semibold text-rep-black mb-2">
               <i class="fas fa-building mr-2 text-gray-400"></i>
               Organization Name
             </label>
-            <input type="text" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition" value="Acme Inc.">
+            <input 
+              type="text" 
+              [(ngModel)]="organizationData.name" 
+              name="name"
+              required
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
           </div>
 
           <div>
@@ -575,13 +603,66 @@
               <i class="fas fa-globe mr-2 text-gray-400"></i>
               Website
             </label>
-            <input type="url" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition" value="https://acme.com">
+            <input 
+              type="url" 
+              [(ngModel)]="organizationData.website" 
+              name="website"
+              placeholder="https://example.com"
+              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-semibold text-rep-black mb-2">
+                <i class="fas fa-industry mr-2 text-gray-400"></i>
+                Industry
+              </label>
+              <select 
+                [(ngModel)]="organizationData.industry" 
+                name="industry"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white">
+                <option value="">Select Industry</option>
+                <option value="technology">Technology</option>
+                <option value="retail">Retail & E-commerce</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="finance">Finance & Banking</option>
+                <option value="education">Education</option>
+                <option value="hospitality">Hospitality & Travel</option>
+                <option value="real-estate">Real Estate</option>
+                <option value="automotive">Automotive</option>
+                <option value="food">Food & Beverage</option>
+                <option value="entertainment">Entertainment & Media</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-rep-black mb-2">
+                <i class="fas fa-users mr-2 text-gray-400"></i>
+                Company Size
+              </label>
+              <select 
+                [(ngModel)]="organizationData.size" 
+                name="size"
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white">
+                <option value="">Select Size</option>
+                <option value="1-10">1-10 employees</option>
+                <option value="11-50">11-50 employees</option>
+                <option value="51-200">51-200 employees</option>
+                <option value="201-500">201-500 employees</option>
+                <option value="501-1000">501-1000 employees</option>
+                <option value="1000+">1000+ employees</option>
+              </select>
+            </div>
           </div>
 
           <div class="pt-6">
-            <button type="submit" class="px-8 py-4 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300">
-              <i class="fas fa-save mr-2"></i>
-              Save Changes
+            <button 
+              type="submit" 
+              [disabled]="savingOrganization"
+              class="px-8 py-4 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+              <i [class]="savingOrganization ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-save mr-2'"></i>
+              {{ savingOrganization ? 'Saving...' : 'Save Changes' }}
             </button>
           </div>
         </form>

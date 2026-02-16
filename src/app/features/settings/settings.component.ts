@@ -67,6 +67,23 @@ export class SettingsComponent implements OnInit, OnDestroy {
   allPlans: any = null;
   upgradingPlan = false;
 
+  // Profile settings
+  profileData = {
+    firstName: '',
+    lastName: '',
+    email: ''
+  };
+  savingProfile = false;
+
+  // Organization settings
+  organizationData = {
+    name: '',
+    website: '',
+    industry: '',
+    size: ''
+  };
+  savingOrganization = false;
+
   private subscriptions: Subscription[] = [];
 
   // Auto-reply settings
@@ -182,6 +199,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
         if (user && user.organization) {
           this.organizationId = typeof user.organization === 'string' ? user.organization : user.organization._id;
           this.loadAutoReplySettings();
+          this.loadProfileData(user);
+          this.loadOrganizationData();
         }
       })
     );
@@ -1264,6 +1283,104 @@ export class SettingsComponent implements OnInit, OnDestroy {
    */
   goToPlansPage(): void {
     this.router.navigate(['/app/plans']);
+  }
+
+  /**
+   * Load profile data from current user
+   */
+  private loadProfileData(user: any): void {
+    this.profileData = {
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || ''
+    };
+  }
+
+  /**
+   * Load organization data
+   */
+  private loadOrganizationData(): void {
+    if (!this.organizationId) return;
+
+    this.organizationService.getOrganization(this.organizationId).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.organizationData = {
+            name: response.data.name || '',
+            website: response.data.website || '',
+            industry: response.data.industry || '',
+            size: response.data.size || ''
+          };
+        }
+      },
+      error: (error) => {
+        console.error('Error loading organization:', error);
+      }
+    });
+  }
+
+  /**
+   * Save profile changes
+   */
+  saveProfile(): void {
+    this.savingProfile = true;
+
+    this.authService.updateProfile(this.profileData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notificationService.success(
+            'Profile Updated',
+            'Your profile has been updated successfully!'
+          );
+        }
+        this.savingProfile = false;
+      },
+      error: (error) => {
+        console.error('Error updating profile:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to update profile';
+        this.notificationService.error(
+          'Update Failed',
+          errorMessage
+        );
+        this.savingProfile = false;
+      }
+    });
+  }
+
+  /**
+   * Save organization changes
+   */
+  saveOrganization(): void {
+    if (!this.organizationId) {
+      this.notificationService.error(
+        'Organization Not Found',
+        'Organization ID not found. Please refresh the page.'
+      );
+      return;
+    }
+
+    this.savingOrganization = true;
+
+    this.organizationService.updateOrganization(this.organizationId, this.organizationData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notificationService.success(
+            'Organization Updated',
+            'Organization settings have been updated successfully!'
+          );
+        }
+        this.savingOrganization = false;
+      },
+      error: (error) => {
+        console.error('Error updating organization:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to update organization';
+        this.notificationService.error(
+          'Update Failed',
+          errorMessage
+        );
+        this.savingOrganization = false;
+      }
+    });
   }
 
   /**

@@ -47,6 +47,7 @@ import { PageManagerComponent } from './features/settings/components/page-manage
 import { SocialPreviewComponent } from './features/publish/social-preview/social-preview.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 import { NotificationsComponent } from './features/notifications/notifications.component';
+import { MediaLibraryComponent } from './features/media-library/media-library.component';
 
 /**
  * App Module - Following SOLID principles
@@ -85,7 +86,8 @@ import { NotificationsComponent } from './features/notifications/notifications.c
     PageManagerComponent,
     SocialPreviewComponent,
     AiCreditsComponent,
-    NotificationsComponent
+    NotificationsComponent,
+    MediaLibraryComponent
   ],
   imports: [
     BrowserModule,
