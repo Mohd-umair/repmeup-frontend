@@ -1,10 +1,14 @@
 import { Component, EventEmitter, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MediaLibraryService } from '../../../core/services/media-library.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Media } from '../../../core/models/media.model';
 
 @Component({
   selector: 'app-media-upload-modal',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './media-upload-modal.component.html'
 })
 export class MediaUploadModalComponent {

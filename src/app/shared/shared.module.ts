@@ -10,7 +10,10 @@ import { MediaUploadModalComponent } from './components/media-upload-modal/media
 import { MediaSelectorModalComponent } from './components/media-selector-modal/media-selector-modal.component';
 
 @NgModule({
-  declarations: [
+  declarations: [],
+  imports: [
+    CommonModule,
+    FormsModule,
     NotificationComponent,
     ConnectionUsageBarComponent,
     ConnectedAccountsListComponent,
@@ -19,11 +22,9 @@ import { MediaSelectorModalComponent } from './components/media-selector-modal/m
     MediaUploadModalComponent,
     MediaSelectorModalComponent
   ],
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
   exports: [
+    CommonModule,
+    FormsModule,
     NotificationComponent,
     ConnectionUsageBarComponent,
     ConnectedAccountsListComponent,

@@ -1,4 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
@@ -10,6 +12,8 @@ import { ThemeService } from '../../../core/services/theme.service';
  */
 @Component({
   selector: 'app-inbox-list',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './inbox-list.component.html',
   styleUrls: ['./inbox-list.component.scss']
 })

@@ -7,8 +7,13 @@ import {
   IAnalyticsDashboard, 
   IAnalyticsFilters, 
   IAnalyticsResponse,
-  IAnalyticsDateRange 
+  IAnalyticsDateRange,
+  IAgentAnalytics,
+  IEngagementAnalytics,
+  ExportFormat,
+  ReportType
 } from '../models/analytics.model';
+import { saveAs } from 'file-saver';
 
 /**
  * Analytics Service - Scalable analytics data management
@@ -80,14 +85,41 @@ export class AnalyticsService {
   }
 
   /**
-   * Export analytics data
+   * Export analytics data and trigger browser download
    */
-  exportData(filters: IAnalyticsFilters, format: 'csv' | 'xlsx' | 'pdf'): Observable<Blob> {
+  exportData(filters: IAnalyticsFilters, format: ExportFormat, reportType: ReportType = 'platform'): Observable<Blob> {
     return this.http.post(
       `${this.apiUrl}/analytics/export`,
-      { ...filters, format },
+      { ...filters, format, reportType },
       { responseType: 'blob' }
     );
+  }
+
+  /**
+   * Trigger export + auto-download
+   */
+  downloadReport(filters: IAnalyticsFilters, format: ExportFormat, reportType: ReportType): void {
+    this.exportData(filters, format, reportType).subscribe({
+      next: (blob) => {
+        const filename = `${reportType}-report-${Date.now()}.${format}`;
+        saveAs(blob, filename);
+      },
+      error: (err) => console.error('Export error:', err)
+    });
+  }
+
+  /**
+   * Get agent analytics
+   */
+  getAgentAnalytics(filters: IAnalyticsFilters, agentId?: string): Observable<{ success: boolean; data: IAgentAnalytics }> {
+    return this.apiService.post<{ success: boolean; data: IAgentAnalytics }>('/analytics/agents', { ...filters, agentId });
+  }
+
+  /**
+   * Get engagement analytics
+   */
+  getEngagementAnalytics(filters: IAnalyticsFilters): Observable<{ success: boolean; data: IEngagementAnalytics }> {
+    return this.apiService.post<{ success: boolean; data: IEngagementAnalytics }>('/analytics/engagement', filters);
   }
 
   /**

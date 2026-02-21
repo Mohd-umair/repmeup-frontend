@@ -192,6 +192,17 @@
         <i class="fas fa-tachometer-alt mr-2"></i>
         Performance
       </button>
+      <button
+        (click)="setActiveView('reports')"
+        [class.bg-rep-lime]="activeView === 'reports'"
+        [class.text-rep-black]="activeView === 'reports'"
+        [class.text-gray-400]="activeView !== 'reports'"
+        type="button"
+        class="px-4 py-2 rounded-lg font-medium transition"
+      >
+        <i class="fas fa-file-download mr-2"></i>
+        Reports
+      </button>
     </div>
 
     <!-- Overview View -->
@@ -359,17 +370,57 @@
     </div>
 
     <!-- Trends View -->
-    <div *ngIf="activeView === 'trends'">
+    <div *ngIf="activeView === 'trends'" class="space-y-6">
+      <!-- Interaction Volume Over Time -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-rep-white">
+            <i class="fas fa-chart-area text-rep-lime mr-2"></i>
+            Interaction Volume Over Time
+          </h3>
+          <span class="text-xs text-gray-500">Interactions &amp; Responses</span>
+        </div>
+        <app-time-series-chart
+          [data]="dashboard.timeSeries"
+          [height]="320"
+        ></app-time-series-chart>
+      </div>
+
+      <!-- Bottom row: Sentiment + Platform Bar -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <h3 class="text-xl font-bold text-rep-white mb-4">
+            <i class="fas fa-heart text-rep-lime mr-2"></i>
+            Sentiment Distribution
+          </h3>
+          <app-sentiment-donut-chart
+            [sentimentData]="dashboard.sentimentBreakdown"
+            [height]="280"
+          ></app-sentiment-donut-chart>
+        </div>
+
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <h3 class="text-xl font-bold text-rep-white mb-4">
+            <i class="fas fa-layer-group text-rep-lime mr-2"></i>
+            Platform Comparison
+          </h3>
+          <app-platform-bar-chart
+            [platforms]="dashboard.platformMetrics"
+            [height]="280"
+          ></app-platform-bar-chart>
+        </div>
+      </div>
+
+      <!-- Response Time Distribution -->
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
         <h3 class="text-xl font-bold text-rep-white mb-4">
-          <i class="fas fa-chart-line text-rep-lime mr-2"></i>
-          Interaction Trends
+          <i class="fas fa-stopwatch text-rep-lime mr-2"></i>
+          Response Time Distribution
         </h3>
-        <p class="text-gray-400 text-center py-12">
-          Time-series chart visualization will be displayed here.
-          <br/>
-          <span class="text-sm">(Integration with chart library pending)</span>
-        </p>
+        <app-response-time-histogram
+          [metrics]="dashboard.responseTimeMetrics"
+          [height]="260"
+        ></app-response-time-histogram>
       </div>
     </div>
 
@@ -403,15 +454,234 @@
         </div>
       </div>
 
-      <!-- Coming Soon -->
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-12 border border-gray-800 text-center">
-        <i class="fas fa-chart-bar text-rep-lime text-5xl mb-4"></i>
-        <h3 class="text-2xl font-bold text-rep-white mb-2">More Metrics Coming Soon</h3>
-        <p class="text-gray-400">
-          Advanced performance analytics, engagement scores, and custom reports will be available here.
-        </p>
+      <!-- Agent Performance Chart -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h3 class="text-xl font-bold text-rep-white mb-4">
+          <i class="fas fa-users text-rep-lime mr-2"></i>
+          Agent Performance
+        </h3>
+        <div *ngIf="agentLoading" class="flex justify-center items-center h-40">
+          <i class="fas fa-spinner fa-spin text-rep-lime text-3xl"></i>
+        </div>
+        <ng-container *ngIf="!agentLoading && agentAnalytics">
+          <app-agent-performance-chart
+            [agents]="agentAnalytics.agents"
+            [height]="300"
+          ></app-agent-performance-chart>
+          <!-- Team averages -->
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-rep-lime">{{ agentAnalytics.teamAverages.resolutionRate }}%</div>
+              <div class="text-gray-400 text-sm mt-1">Team Resolution Rate</div>
+            </div>
+            <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+              <div class="text-2xl font-bold text-rep-white">{{ formatTime(agentAnalytics.teamAverages.avgResponseTime) }}</div>
+              <div class="text-gray-400 text-sm mt-1">Avg Response Time</div>
+            </div>
+          </div>
+        </ng-container>
+        <div *ngIf="!agentLoading && !agentAnalytics" class="text-center py-8 text-gray-500">
+          <i class="fas fa-users text-4xl mb-3 text-gray-700"></i>
+          <p class="text-sm">No agent data for this period</p>
+        </div>
+      </div>
+
+      <!-- Response Time metrics -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h3 class="text-xl font-bold text-rep-white mb-4">
+          <i class="fas fa-stopwatch text-rep-lime mr-2"></i>
+          Response Time Analysis
+        </h3>
+        <app-response-time-histogram
+          [metrics]="dashboard.responseTimeMetrics"
+          [height]="240"
+        ></app-response-time-histogram>
+        <div class="grid grid-cols-4 gap-3 mt-4">
+          <div class="bg-gray-800/50 rounded-xl p-3 text-center">
+            <div class="text-xl font-bold text-rep-lime">{{ formatTime(dashboard.responseTimeMetrics.avg) }}</div>
+            <div class="text-gray-400 text-xs mt-1">Average</div>
+          </div>
+          <div class="bg-gray-800/50 rounded-xl p-3 text-center">
+            <div class="text-xl font-bold text-rep-white">{{ formatTime(dashboard.responseTimeMetrics.median) }}</div>
+            <div class="text-gray-400 text-xs mt-1">Median</div>
+          </div>
+          <div class="bg-gray-800/50 rounded-xl p-3 text-center">
+            <div class="text-xl font-bold text-green-400">{{ formatTime(dashboard.responseTimeMetrics.fastest) }}</div>
+            <div class="text-gray-400 text-xs mt-1">Fastest</div>
+          </div>
+          <div class="bg-gray-800/50 rounded-xl p-3 text-center">
+            <div class="text-xl font-bold text-red-400">{{ formatTime(dashboard.responseTimeMetrics.slowest) }}</div>
+            <div class="text-gray-400 text-xs mt-1">Slowest</div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Reports View -->
+    <div *ngIf="activeView === 'reports'" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Report Builder Panel -->
+        <div class="lg:col-span-1 space-y-4">
+
+          <!-- Report Type -->
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-bold text-rep-white mb-4">
+              <i class="fas fa-file-alt text-rep-lime mr-2"></i>
+              Report Type
+            </h3>
+            <div class="space-y-2">
+              <button
+                *ngFor="let rt of reportTypes"
+                (click)="selectedReportType = rt.value"
+                [class.bg-rep-lime]="selectedReportType === rt.value"
+                [class.text-rep-black]="selectedReportType === rt.value"
+                [class.bg-gray-800]="selectedReportType !== rt.value"
+                [class.text-gray-300]="selectedReportType !== rt.value"
+                type="button"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition text-left"
+              >
+                <i [class]="rt.icon + ' w-4'"></i>
+                {{ rt.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Export Format -->
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-bold text-rep-white mb-4">
+              <i class="fas fa-file-export text-rep-lime mr-2"></i>
+              Export Format
+            </h3>
+            <div class="space-y-2">
+              <button
+                *ngFor="let fmt of exportFormats"
+                (click)="selectedExportFormat = fmt.value"
+                [class.bg-rep-lime]="selectedExportFormat === fmt.value"
+                [class.text-rep-black]="selectedExportFormat === fmt.value"
+                [class.bg-gray-800]="selectedExportFormat !== fmt.value"
+                [class.text-gray-300]="selectedExportFormat !== fmt.value"
+                type="button"
+                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition text-left"
+              >
+                <i [class]="fmt.icon + ' w-4'"></i>
+                {{ fmt.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Generate Button -->
+          <button
+            (click)="generateReport()"
+            [disabled]="exportLoading"
+            type="button"
+            class="w-full bg-rep-lime text-rep-black py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-rep-lime/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span *ngIf="!exportLoading" class="flex items-center justify-center gap-2">
+              <i class="fas fa-download"></i>
+              Generate &amp; Download
+            </span>
+            <span *ngIf="exportLoading" class="flex items-center justify-center gap-2">
+              <i class="fas fa-spinner fa-spin"></i>
+              Generating...
+            </span>
+          </button>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="lg:col-span-2 space-y-6">
+
+          <!-- Preview: Platform report -->
+          <div *ngIf="selectedReportType === 'platform'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-bold text-rep-white mb-4">
+              <i class="fas fa-layer-group text-rep-lime mr-2"></i>
+              Platform Comparison Preview
+            </h3>
+            <app-platform-bar-chart [platforms]="dashboard.platformMetrics" [height]="280"></app-platform-bar-chart>
+          </div>
+
+          <!-- Preview: Sentiment -->
+          <div *ngIf="selectedReportType === 'sentiment'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-bold text-rep-white mb-4">
+              <i class="fas fa-heart text-rep-lime mr-2"></i>
+              Sentiment Analysis Preview
+            </h3>
+            <app-sentiment-donut-chart [sentimentData]="dashboard.sentimentBreakdown" [height]="280"></app-sentiment-donut-chart>
+          </div>
+
+          <!-- Preview: Response -->
+          <div *ngIf="selectedReportType === 'response'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-bold text-rep-white mb-4">
+              <i class="fas fa-stopwatch text-rep-lime mr-2"></i>
+              Response Performance Preview
+            </h3>
+            <app-response-time-histogram [metrics]="dashboard.responseTimeMetrics" [height]="260"></app-response-time-histogram>
+          </div>
+
+          <!-- Preview: Agent -->
+          <div *ngIf="selectedReportType === 'agent'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-bold text-rep-white mb-4">
+              <i class="fas fa-users text-rep-lime mr-2"></i>
+              Agent Performance Preview
+            </h3>
+            <div *ngIf="agentLoading" class="flex justify-center items-center h-40">
+              <i class="fas fa-spinner fa-spin text-rep-lime text-3xl"></i>
+            </div>
+            <app-agent-performance-chart
+              *ngIf="!agentLoading && agentAnalytics"
+              [agents]="agentAnalytics.agents"
+              [height]="280"
+            ></app-agent-performance-chart>
+            <div *ngIf="!agentLoading && !agentAnalytics" class="text-center py-8 text-gray-500">
+              <p class="text-sm">No agent data available for this period</p>
+            </div>
+          </div>
+
+          <!-- Metrics Summary Table -->
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+            <h3 class="text-lg font-bold text-rep-white mb-4">
+              <i class="fas fa-table text-rep-lime mr-2"></i>
+              Platform Metrics Summary
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-700">
+                    <th class="text-left text-gray-400 pb-3 pr-4">Platform</th>
+                    <th class="text-right text-gray-400 pb-3 px-4">Total</th>
+                    <th class="text-right text-gray-400 pb-3 px-4">Responded</th>
+                    <th class="text-right text-gray-400 pb-3 px-4">Pending</th>
+                    <th class="text-right text-gray-400 pb-3 px-4">Response Rate</th>
+                    <th class="text-right text-gray-400 pb-3 pl-4">Avg Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let p of dashboard.platformMetrics"
+                    class="border-b border-gray-800/50 hover:bg-gray-800/30 transition">
+                    <td class="py-3 pr-4">
+                      <div class="flex items-center gap-2">
+                        <i [class]="getPlatformIcon(p.platform)" [style.color]="getPlatformColor(p.platform)"></i>
+                        <span class="text-rep-white capitalize">{{ p.platform }}</span>
+                      </div>
+                    </td>
+                    <td class="text-right text-rep-white py-3 px-4">{{ formatNumber(p.totalInteractions) }}</td>
+                    <td class="text-right text-green-400 py-3 px-4">{{ formatNumber(p.responded) }}</td>
+                    <td class="text-right text-yellow-400 py-3 px-4">{{ formatNumber(p.pending) }}</td>
+                    <td class="text-right py-3 px-4">
+                      <span class="text-rep-lime font-semibold">
+                        {{ p.totalInteractions ? formatPercentage((p.responded / p.totalInteractions) * 100) : '0.0%' }}
+                      </span>
+                    </td>
+                    <td class="text-right text-gray-300 py-3 pl-4">{{ formatTime(p.avgResponseTime) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Empty State -->

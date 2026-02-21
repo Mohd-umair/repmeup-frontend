@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PlatformService, PlatformConnection } from '../../core/services/platform.service';
 import { OrganizationService, AutoReplySettings } from '../../core/services/organization.service';
@@ -7,6 +9,9 @@ import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
+import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
+import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
+import { ConnectionUsageBarComponent } from '../../shared/components/connection-usage-bar/connection-usage-bar.component';
 import { Observable, Subscription } from 'rxjs';
 
 /**
@@ -35,6 +40,8 @@ interface Platform {
 
 @Component({
   selector: 'app-settings',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, ConnectionUsageBarComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })

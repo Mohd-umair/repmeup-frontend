@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { KnowledgeBaseService, IKnowledgeBase } from '../../core/services/knowledge-base.service';
 import { NotificationService } from '../../core/services/notification.service';
 
@@ -9,6 +10,8 @@ import { NotificationService } from '../../core/services/notification.service';
  */
 @Component({
   selector: 'app-knowledge-base',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './knowledge-base.component.html',
   styleUrls: ['./knowledge-base.component.scss']
 })

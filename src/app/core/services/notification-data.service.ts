@@ -92,7 +92,8 @@ export class NotificationDataService {
    * Get unread count
    */
   getUnreadCount(): Observable<IApiResponse<{ count: number }>> {
-    return this.apiService.get<IApiResponse<{ count: number }>>('/notifications/unread-count')
+    // Use silent (no loader) because this is called on a 30-second interval
+    return this.apiService.getSilent<IApiResponse<{ count: number }>>('/notifications/unread-count')
       .pipe(
         tap(response => {
           if (response.success && response.data) {

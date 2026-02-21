@@ -8,6 +8,7 @@ import { UserService, IUser, ICreateUserDto, IUpdateUserDto } from '../../core/s
  */
 @Component({
   selector: 'app-agents',
+  standalone: false,
   templateUrl: './agents.component.html',
   styleUrls: ['./agents.component.scss']
 })

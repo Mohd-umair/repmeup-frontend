@@ -1,10 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate, state } from '@angular/animations';
 import { NotificationService, Notification } from '../../../core/services/notification.service';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-notification',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './notification.component.html',
   styleUrls: ['./notification.component.scss'],
   animations: [

@@ -6,6 +6,8 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { GoogleCallbackComponent } from './features/auth/google-callback/google-callback.component';
+import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './features/auth/reset-password/reset-password.component';
 
 // Layout
 import { MainLayoutComponent } from './shared/components/main-layout/main-layout.component';
@@ -60,7 +62,9 @@ const routes: Routes = [
       { path: '', redirectTo: 'login', pathMatch: 'full' },
       { path: 'login', component: LoginComponent },
       { path: 'register', component: RegisterComponent },
-      { path: 'google-callback', component: GoogleCallbackComponent }
+      { path: 'google-callback', component: GoogleCallbackComponent },
+      { path: 'forgot-password', component: ForgotPasswordComponent },
+      { path: 'reset-password', component: ResetPasswordComponent }
     ]
   },
 

@@ -23,6 +23,7 @@ import { MainLayoutComponent } from './shared/components/main-layout/main-layout
 
 // Interceptors
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { LoaderInterceptor } from './core/interceptors/loader.interceptor';
 import { InboxContainerComponent } from './features/inbox/inbox-container/inbox-container.component';
 import { InboxFiltersComponent } from './features/inbox/inbox-filters/inbox-filters.component';
 import { InboxTopFiltersComponent } from './features/inbox/inbox-top-filters/inbox-top-filters.component';
@@ -56,38 +57,12 @@ import { MediaLibraryComponent } from './features/media-library/media-library.co
 @NgModule({
   declarations: [
     AppComponent,
-    LoginComponent,
-    RegisterComponent,
     GoogleCallbackComponent,
-    DashboardComponent,
-    SidebarComponent,
-    HeaderComponent,
-    MainLayoutComponent,
-    InboxContainerComponent,
-    InboxFiltersComponent,
-    InboxTopFiltersComponent,
-    InboxListComponent,
-    InboxDetailComponent,
-    InboxActionsComponent,
-    SettingsComponent,
     AgentsComponent,
-    KnowledgeBaseComponent,
-    AnalyticsComponent,
-    HomeComponent,
     PrivacyPolicyComponent,
     TermsConditionsComponent,
-    ContactComponent,
     AboutComponent,
-    DataDeletionStatusComponent,
-    PublishComponent,
-    CalendarComponent,
-    PublishedPostsComponent,
-    PlansComponent,
-    PageManagerComponent,
-    SocialPreviewComponent,
-    AiCreditsComponent,
-    NotificationsComponent,
-    MediaLibraryComponent
+    AiCreditsComponent
   ],
   imports: [
     BrowserModule,
@@ -96,12 +71,38 @@ import { MediaLibraryComponent } from './features/media-library/media-library.co
     HttpClientModule,
     ReactiveFormsModule,
     FormsModule,
-    SharedModule
+    SharedModule,
+    LoginComponent,
+    RegisterComponent,
+    DashboardComponent,
+    AnalyticsComponent,
+    HomeComponent,
+    ContactComponent,
+    DataDeletionStatusComponent,
+    CalendarComponent,
+    PlansComponent,
+    SidebarComponent,
+    HeaderComponent,
+    MainLayoutComponent,
+    SettingsComponent,
+    PublishComponent,
+    PublishedPostsComponent,
+    PageManagerComponent,
+    InboxContainerComponent,
+    KnowledgeBaseComponent,
+    NotificationsComponent,
+    MediaLibraryComponent,
+    SocialPreviewComponent
   ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoaderInterceptor,
       multi: true
     }
   ],

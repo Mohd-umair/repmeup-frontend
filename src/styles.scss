@@ -1,4 +1,42 @@
 /* You can add global styles to this file, and also import other style files */
+@use 'sweetalert2/src/sweetalert2.scss' as *;
+
+/* SweetAlert2 Custom Dark Theme */
+.swal-dark-theme {
+  border: 1px solid #374151 !important;
+}
+
+.swal-confirm-btn {
+  background-color: #c0ff00 !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+.swal-confirm-btn:hover {
+  background-color: #a8e600 !important;
+}
+
+.swal-delete-btn {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.swal-delete-btn:hover {
+  background-color: #dc2626 !important;
+}
+
+.swal-cancel-btn {
+  background-color: #6b7280 !important;
+  color: #ffffff !important;
+}
+
+.swal-cancel-btn:hover {
+  background-color: #4b5563 !important;
+}
+
+.swal-toast-dark {
+  border: 1px solid #374151 !important;
+}
 
 /* Mobile Responsive - Sidebar Transform Fix */
 @media (max-width: 1023px) {

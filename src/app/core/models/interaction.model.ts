@@ -161,7 +161,7 @@ export interface ILabel {
   icon?: string;
 }
 
-export type InboxViewMode = 'all' | 'priority' | 'assigned' | 'needs_response' | 'overdue';
+export type InboxViewMode = 'all' | 'priority' | 'assigned' | 'needs_response' | 'overdue' | 'archived';
 
 export interface IInboxFilters {
   platform?: Platform;

@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Output, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../core/services/theme.service';
 import { IInboxFilters, Platform, InteractionType, Sentiment, InteractionStatus, ILabel } from '../../../core/models/interaction.model';
 
@@ -8,6 +9,8 @@ import { IInboxFilters, Platform, InteractionType, Sentiment, InteractionStatus,
  */
 @Component({
   selector: 'app-inbox-filters',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './inbox-filters.component.html',
   styleUrls: ['./inbox-filters.component.scss']
 })

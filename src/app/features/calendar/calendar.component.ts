@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 
@@ -21,6 +22,8 @@ interface ScheduledPost {
 
 @Component({
   selector: 'app-calendar',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss']
 })

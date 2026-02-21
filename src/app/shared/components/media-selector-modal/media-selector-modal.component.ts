@@ -1,9 +1,14 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MediaUploadModalComponent } from '../media-upload-modal/media-upload-modal.component';
 import { Media, MediaLibraryParams } from '../../../core/models/media.model';
 import { MediaLibraryService } from '../../../core/services/media-library.service';
 
 @Component({
   selector: 'app-media-selector-modal',
+  standalone: true,
+  imports: [CommonModule, FormsModule, MediaUploadModalComponent],
   templateUrl: './media-selector-modal.component.html'
 })
 export class MediaSelectorModalComponent implements OnInit {

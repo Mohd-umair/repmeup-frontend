@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { PlatformConnection } from '../../../core/services/platform-connection.service';
 
 /**
@@ -8,6 +9,8 @@ import { PlatformConnection } from '../../../core/services/platform-connection.s
  */
 @Component({
   selector: 'app-connected-accounts-list',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './connected-accounts-list.component.html',
   styleUrls: ['./connected-accounts-list.component.scss']
 })

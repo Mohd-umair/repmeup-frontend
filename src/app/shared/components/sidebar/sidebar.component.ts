@@ -1,5 +1,6 @@
 import { Component, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { NotificationDataService } from '../../../core/services/notification-data.service';
 import { MenuService, IMenuItem } from '../../../core/services/menu.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -18,6 +19,8 @@ interface MenuItem {
 
 @Component({
   selector: 'app-sidebar',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })

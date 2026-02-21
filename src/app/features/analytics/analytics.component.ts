@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -7,8 +9,17 @@ import {
   IAnalyticsFilters,
   IAnalyticsDateRange,
   IMetricCard,
-  IPlatformMetrics
+  IPlatformMetrics,
+  IAgentAnalytics,
+  IEngagementAnalytics,
+  ExportFormat,
+  ReportType
 } from '../../core/models/analytics.model';
+import { TimeSeriesChartComponent } from '../../shared/components/charts/time-series-chart.component';
+import { SentimentDonutChartComponent } from '../../shared/components/charts/sentiment-donut-chart.component';
+import { PlatformBarChartComponent } from '../../shared/components/charts/platform-bar-chart.component';
+import { ResponseTimeHistogramComponent } from '../../shared/components/charts/response-time-histogram.component';
+import { AgentPerformanceChartComponent } from '../../shared/components/charts/agent-performance-chart.component';
 
 /**
  * Analytics Component - Scalable analytics dashboard
@@ -16,14 +27,26 @@ import {
  */
 @Component({
   selector: 'app-analytics',
+  standalone: true,
+  imports: [
+    CommonModule, ReactiveFormsModule, FormsModule,
+    TimeSeriesChartComponent, SentimentDonutChartComponent,
+    PlatformBarChartComponent, ResponseTimeHistogramComponent,
+    AgentPerformanceChartComponent
+  ],
   templateUrl: './analytics.component.html',
   styleUrls: ['./analytics.component.scss']
 })
 export class AnalyticsComponent implements OnInit, OnDestroy {
   // Data
   dashboard: IAnalyticsDashboard | null = null;
+  agentAnalytics: IAgentAnalytics | null = null;
+  engagementAnalytics: IEngagementAnalytics | null = null;
   loading = false;
-  
+  agentLoading = false;
+  engagementLoading = false;
+  exportLoading = false;
+
   // Filters
   selectedDateRange: IAnalyticsDateRange;
   selectedPlatforms: string[] = [];
@@ -33,11 +56,26 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     { label: 'Last 30 Days', value: '30days' },
     { label: 'Last 90 Days', value: '90days' }
   ];
-  
+
   // UI State
-  activeView: 'overview' | 'platforms' | 'trends' | 'performance' = 'overview';
-  refreshInterval = 5 * 60 * 1000; // 5 minutes
+  activeView: 'overview' | 'platforms' | 'trends' | 'performance' | 'reports' = 'overview';
+  refreshInterval = 5 * 60 * 1000;
   private refreshSubscription?: Subscription;
+
+  // Reports state
+  selectedReportType: ReportType = 'platform';
+  selectedExportFormat: ExportFormat = 'xlsx';
+  reportTypes = [
+    { value: 'platform' as ReportType, label: 'Platform Comparison', icon: 'fas fa-layer-group' },
+    { value: 'sentiment' as ReportType, label: 'Sentiment Analysis', icon: 'fas fa-heart' },
+    { value: 'response' as ReportType, label: 'Response Performance', icon: 'fas fa-stopwatch' },
+    { value: 'agent' as ReportType, label: 'Agent Performance', icon: 'fas fa-users' }
+  ];
+  exportFormats = [
+    { value: 'xlsx' as ExportFormat, label: 'Excel (.xlsx)', icon: 'fas fa-file-excel' },
+    { value: 'csv' as ExportFormat, label: 'CSV (.csv)', icon: 'fas fa-file-csv' },
+    { value: 'pdf' as ExportFormat, label: 'PDF (.pdf)', icon: 'fas fa-file-pdf' }
+  ];
   
   // Chart configurations
   chartColors = {
@@ -62,6 +100,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.loadAgentAnalytics();
     this.setupAutoRefresh();
   }
 
@@ -112,6 +151,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   onDateRangeChange(preset: string): void {
     this.selectedDateRange = this.analyticsService.getDateRangePreset(preset);
     this.loadDashboard();
+    this.loadAgentAnalytics();
   }
 
   /**
@@ -125,13 +165,32 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
       this.selectedPlatforms.push(platform);
     }
     this.loadDashboard();
+    this.loadAgentAnalytics();
   }
 
   /**
    * Change active view
    */
-  setActiveView(view: 'overview' | 'platforms' | 'trends' | 'performance'): void {
+  setActiveView(view: 'overview' | 'platforms' | 'trends' | 'performance' | 'reports'): void {
     this.activeView = view;
+  }
+
+  /**
+   * Load agent analytics
+   */
+  loadAgentAnalytics(): void {
+    this.agentLoading = true;
+    const filters: IAnalyticsFilters = {
+      dateRange: this.selectedDateRange,
+      platforms: this.selectedPlatforms.length > 0 ? this.selectedPlatforms : undefined
+    };
+    this.analyticsService.getAgentAnalytics(filters).subscribe({
+      next: (res) => {
+        if (res.success) this.agentAnalytics = res.data;
+        this.agentLoading = false;
+      },
+      error: () => { this.agentLoading = false; }
+    });
   }
 
   /**
@@ -139,39 +198,46 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
    */
   refreshData(): void {
     this.analyticsService.clearCache();
+    this.agentAnalytics = null;
     this.loadDashboard();
+    this.loadAgentAnalytics();
     this.notificationService.info('Refreshing Analytics', 'Loading latest data...');
   }
 
   /**
-   * Export data
+   * Export data (legacy quick export from toolbar)
    */
-  exportData(format: 'csv' | 'xlsx' | 'pdf'): void {
+  exportData(format: ExportFormat): void {
+    this.generateReport(format, 'platform');
+  }
+
+  /**
+   * Generate and download report
+   */
+  generateReport(format?: ExportFormat, reportType?: ReportType): void {
+    const fmt = format || this.selectedExportFormat;
+    const type = reportType || this.selectedReportType;
     const filters: IAnalyticsFilters = {
       dateRange: this.selectedDateRange,
       platforms: this.selectedPlatforms.length > 0 ? this.selectedPlatforms : undefined
     };
 
-    this.analyticsService.exportData(filters, format).subscribe({
+    this.exportLoading = true;
+    this.analyticsService.exportData(filters, fmt, type).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `analytics-${Date.now()}.${format}`;
+        link.download = `${type}-report-${Date.now()}.${fmt}`;
         link.click();
         window.URL.revokeObjectURL(url);
-        
-        this.notificationService.success(
-          'Export Successful',
-          `Analytics exported as ${format.toUpperCase()}`
-        );
+        this.exportLoading = false;
+        this.notificationService.success('Export Successful', `Report exported as ${fmt.toUpperCase()}`);
       },
       error: (error) => {
         console.error('Export error:', error);
-        this.notificationService.error(
-          'Export Failed',
-          'Could not export analytics data.'
-        );
+        this.exportLoading = false;
+        this.notificationService.error('Export Failed', 'Could not export report. Please try again.');
       }
     });
   }

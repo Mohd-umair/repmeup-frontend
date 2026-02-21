@@ -706,5 +706,5 @@
   [allowMultiple]="true"
   [mediaType]="postType === 'reel' || postType === 'short' ? 'video' : 'all'"
   (close)="closeMediaSelector()"
-  (select)="onMediaLibrarySelect($event)">
+  (select)="onMediaLibrarySelect($any($event))">
 </app-media-selector-modal>

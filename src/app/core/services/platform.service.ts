@@ -95,6 +95,11 @@ export class PlatformService {
     return this.apiService.post<SyncResponse>(`/platforms/${id}/sync`, {});
   }
 
+  /** Same as syncPlatform but skips the global loader (for background auto-sync) */
+  syncPlatformSilent(id: string): Observable<SyncResponse> {
+    return this.apiService.postSilent<SyncResponse>(`/platforms/${id}/sync`, {});
+  }
+
   /**
    * Initiate Google OAuth flow
    * Redirects user to Google authorization page

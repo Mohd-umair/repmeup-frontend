@@ -1,4 +1,5 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 interface Platform {
   id: string;
@@ -13,6 +14,8 @@ interface MediaFile {
 
 @Component({
   selector: 'app-social-preview',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './social-preview.component.html',
   styleUrls: ['./social-preview.component.scss']
 })

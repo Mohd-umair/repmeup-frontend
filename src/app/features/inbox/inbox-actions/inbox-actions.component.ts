@@ -1,4 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { InboxService } from '../../../core/services/inbox.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
@@ -6,6 +8,8 @@ import { IInteraction, InteractionStatus } from '../../../core/models/interactio
 
 @Component({
   selector: 'app-inbox-actions',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './inbox-actions.component.html',
   styleUrls: ['./inbox-actions.component.scss']
 })

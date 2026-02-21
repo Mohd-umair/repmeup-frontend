@@ -1,15 +1,23 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { InboxService } from '../../../core/services/inbox.service';
 import { PlatformService } from '../../../core/services/platform.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { IInteraction, IInboxFilters, InboxViewMode, ILabel } from '../../../core/models/interaction.model';
 import { InboxDetailComponent } from '../inbox-detail/inbox-detail.component';
-import { forkJoin, timer, Subscription, of } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { InboxFiltersComponent } from '../inbox-filters/inbox-filters.component';
+import { InboxListComponent } from '../inbox-list/inbox-list.component';
+import { InboxTopFiltersComponent } from '../inbox-top-filters/inbox-top-filters.component';
+import { InboxActionsComponent } from '../inbox-actions/inbox-actions.component';
+import { OrganizationService } from '../../../core/services/organization.service';
+import { forkJoin, timer, Subscription, of, from } from 'rxjs';
+import { exhaustMap, catchError } from 'rxjs/operators';
 
 /**
  * Inbox Container Component - Single Responsibility Principle
@@ -17,6 +25,8 @@ import { switchMap, catchError } from 'rxjs/operators';
  */
 @Component({
   selector: 'app-inbox-container',
+  standalone: true,
+  imports: [CommonModule, FormsModule, InboxDetailComponent, InboxFiltersComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent],
   templateUrl: './inbox-container.component.html',
   styleUrls: ['./inbox-container.component.scss']
 })
@@ -34,8 +44,17 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   autoSyncEnabled = true;
   showStats = false; // Stats are hidden by default for cleaner UI
   showFilters = true; // Filters are shown by default, but can be collapsed
-  inboxStats: { responseRate?: number } | null = null;
+  inboxStats: { 
+    responseRate?: number;
+    priorityCount?: number;
+    overdueCount?: number;
+  } | null = null;
   showShortcutsOverlay = false;
+  showMoreOptions = false;      // Header more options dropdown
+  showBulkMoreActions = false;  // Bulk assign dropdown
+  showBulkLabelActions = false; // Bulk label dropdown
+  assignDropdownPos: { top: number; left: number } | null = null;
+  labelDropdownPos: { top: number; left: number } | null = null;
   selectedIds = new Set<string>();
   bulkProcessing = false;
   availableAgents: IAvailableAgent[] = [];
@@ -50,9 +69,11 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     private inboxService: InboxService,
     private platformService: PlatformService,
     private notificationService: NotificationService,
+    private sweetAlertService: SweetAlertService,
     private themeService: ThemeService,
     private userService: UserService,
     private authService: AuthService,
+    private organizationService: OrganizationService,
     private route: ActivatedRoute
   ) {}
 
@@ -80,6 +101,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       this.viewMode = 'overdue';
     }
 
+    // Load saved auto-sync preference from the organisation
+    this.loadAutoSyncSetting();
+
     this.loadInteractions();
     this.loadInboxStats();
 
@@ -96,9 +120,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         this.selectedInteraction = interaction;
       })
     );
-
-    // Start auto-sync (every 5 minutes)
-    this.startAutoSync();
 
     // Load agents for bulk assign (admin/manager only)
     if (this.canAssign()) {
@@ -136,6 +157,63 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   clearBulkSelection(): void {
     this.selectedIds = new Set();
+    this.showBulkMoreActions = false;
+    this.showBulkLabelActions = false;
+    this.assignDropdownPos = null;
+    this.labelDropdownPos = null;
+  }
+
+  /** Open assign dropdown with fixed positioning (escapes overflow clipping) */
+  toggleAssignDropdown(ev?: Event): void {
+    this.showBulkLabelActions = false;
+    this.labelDropdownPos = null;
+    if (this.showBulkMoreActions) {
+      this.showBulkMoreActions = false;
+      this.assignDropdownPos = null;
+      return;
+    }
+    this.showBulkMoreActions = true;
+    const btn = (ev?.currentTarget ?? ev?.target) as HTMLElement;
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      this.assignDropdownPos = { top: rect.bottom + 6, left: rect.left };
+    } else {
+      this.assignDropdownPos = { top: 120, left: 24 };
+    }
+    setTimeout(() => this.attachDropdownCloseListener(), 0);
+  }
+
+  /** Open label dropdown with fixed positioning (escapes overflow clipping) */
+  toggleLabelDropdown(ev?: Event): void {
+    this.showBulkMoreActions = false;
+    this.assignDropdownPos = null;
+    if (this.showBulkLabelActions) {
+      this.showBulkLabelActions = false;
+      this.labelDropdownPos = null;
+      return;
+    }
+    this.showBulkLabelActions = true;
+    const btn = (ev?.currentTarget ?? ev?.target) as HTMLElement;
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      this.labelDropdownPos = { top: rect.bottom + 6, left: rect.left };
+    } else {
+      this.labelDropdownPos = { top: 120, left: 24 };
+    }
+    setTimeout(() => this.attachDropdownCloseListener(), 0);
+  }
+
+  private dropdownCloseHandler = (): void => {
+    this.showBulkMoreActions = false;
+    this.showBulkLabelActions = false;
+    this.assignDropdownPos = null;
+    this.labelDropdownPos = null;
+    document.removeEventListener('click', this.dropdownCloseHandler);
+  };
+
+  private attachDropdownCloseListener(): void {
+    document.removeEventListener('click', this.dropdownCloseHandler);
+    setTimeout(() => document.addEventListener('click', this.dropdownCloseHandler), 0);
   }
 
   selectAllOnPage(): void {
@@ -152,6 +230,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           this.notificationService.success('Bulk update', `Marked ${(res as any).data?.updated || ids.length} as read`);
           this.clearBulkSelection();
           this.loadInteractions();
+          this.refreshSelectedIfAffected(ids);
         }
         this.bulkProcessing = false;
       },
@@ -161,19 +240,46 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   bulkResolve(): void {
     const ids = Array.from(this.selectedIds);
-    if (ids.length === 0) return;
-    if (!confirm(`Mark ${ids.length} conversation(s) as resolved?`)) return;
-    this.bulkProcessing = true;
-    this.inboxService.updateStatusBulk(ids, 'resolved').subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.notificationService.success('Bulk update', `Resolved ${(res as any).data?.updated || ids.length} conversation(s)`);
-          this.clearBulkSelection();
-          this.loadInteractions();
-        }
-        this.bulkProcessing = false;
-      },
-      error: () => { this.bulkProcessing = false; }
+    if (ids.length === 0) {
+      this.sweetAlertService.warning('No Selection', 'Please select conversations to resolve');
+      return;
+    }
+
+    this.sweetAlertService.confirm(
+      'Mark as Resolved?',
+      `Are you sure you want to mark ${ids.length} conversation(s) as resolved?`,
+      'Yes, Resolve',
+      'Cancel'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.bulkProcessing = true;
+        this.sweetAlertService.showLoading('Resolving...', 'Please wait while we resolve the conversations');
+        
+        this.inboxService.updateStatusBulk(ids, 'resolved').subscribe({
+          next: (res) => {
+            this.sweetAlertService.close();
+            if (res.success) {
+              const updatedCount = (res as any).data?.updated || ids.length;
+              this.sweetAlertService.success(
+                'Success!',
+                `Resolved ${updatedCount} conversation(s)`
+              );
+              this.clearBulkSelection();
+              this.loadInteractions();
+              this.refreshSelectedIfAffected(ids);
+            }
+            this.bulkProcessing = false;
+          },
+          error: (err) => {
+            this.sweetAlertService.close();
+            this.sweetAlertService.error(
+              'Error',
+              err?.error?.message || 'Failed to resolve conversations'
+            );
+            this.bulkProcessing = false;
+          }
+        });
+      }
     });
   }
 
@@ -185,14 +291,58 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     this.inboxService.assignBulk(ids, this.bulkAssignAgentId).subscribe({
       next: (res) => {
         if (res.success) {
-          this.notificationService.success('Bulk assign', `Assigned ${(res as any).data?.updated || ids.length} conversation(s)`);
+          const count = (res as any).data?.updated || ids.length;
+          const agent = this.availableAgents.find(a => a._id === this.bulkAssignAgentId);
+          const agentName = agent ? `${agent.firstName} ${agent.lastName}` : 'agent';
+          this.notificationService.success('Assigned', `${count} conversation(s) assigned to ${agentName}`);
           this.clearBulkSelection();
           this.bulkAssignAgentId = '';
           this.loadInteractions();
+          // Refresh agent workload counts
+          this.refreshAgentWorkloads();
         }
         this.bulkProcessing = false;
       },
       error: () => { this.bulkProcessing = false; }
+    });
+  }
+
+  /** Assign directly from dropdown — avoids two-step property set + call */
+  assignToAgent(agentId: string): void {
+    this.bulkAssignAgentId = agentId;
+    this.showBulkMoreActions = false;
+    this.assignDropdownPos = null;
+    const ids = Array.from(this.selectedIds);
+    if (ids.length === 0) return;
+    this.bulkProcessing = true;
+    this.inboxService.assignBulk(ids, agentId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          const count = (res as any).data?.updated || ids.length;
+          const agent = this.availableAgents.find(a => a._id === agentId);
+          const agentName = agent ? `${agent.firstName} ${agent.lastName}` : 'agent';
+          this.notificationService.success('Assigned', `${count} conversation(s) assigned to ${agentName}`);
+          this.clearBulkSelection();
+          this.bulkAssignAgentId = '';
+          this.loadInteractions();
+          this.refreshAgentWorkloads();
+          // Re-fetch the open detail panel so the "Assigned to…" banner appears immediately
+          this.refreshSelectedIfAffected(ids);
+        }
+        this.bulkProcessing = false;
+      },
+      error: () => { this.bulkProcessing = false; }
+    });
+  }
+
+  refreshAgentWorkloads(): void {
+    if (!this.canAssign()) return;
+    this.userService.getAvailableAgents().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.availableAgents = res.data;
+        }
+      }
     });
   }
 
@@ -213,6 +363,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           this.clearBulkSelection();
           this.bulkLabelId = '';
           this.loadInteractions();
+          this.refreshSelectedIfAffected(ids);
         }
         this.bulkProcessing = false;
       },
@@ -222,23 +373,96 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   bulkArchive(): void {
     const ids = Array.from(this.selectedIds);
-    if (ids.length === 0) return;
-    if (!confirm(`Archive ${ids.length} conversation(s)?`)) return;
-    this.bulkProcessing = true;
-    this.inboxService.updateStatusBulk(ids, 'archived').subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.notificationService.success('Bulk update', `Archived ${(res as any).data?.updated || ids.length} conversation(s)`);
-          this.clearBulkSelection();
-          this.loadInteractions();
-        }
-        this.bulkProcessing = false;
-      },
-      error: () => { this.bulkProcessing = false; }
+    if (ids.length === 0) {
+      this.sweetAlertService.warning('No Selection', 'Please select conversations to archive');
+      return;
+    }
+
+    this.sweetAlertService.confirm(
+      'Archive Conversations?',
+      `Are you sure you want to archive ${ids.length} conversation(s)?`,
+      'Yes, Archive',
+      'Cancel'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.bulkProcessing = true;
+        this.sweetAlertService.showLoading('Archiving...', 'Please wait while we archive the conversations');
+        
+        this.inboxService.updateStatusBulk(ids, 'archived').subscribe({
+          next: (res) => {
+            this.sweetAlertService.close();
+            if (res.success) {
+              const updatedCount = (res as any).data?.updated || ids.length;
+              this.sweetAlertService.success(
+                'Success!',
+                `Archived ${updatedCount} conversation(s)`
+              );
+              this.clearBulkSelection();
+              this.loadInteractions();
+              this.refreshSelectedIfAffected(ids);
+            }
+            this.bulkProcessing = false;
+          },
+          error: (err) => {
+            this.sweetAlertService.close();
+            this.sweetAlertService.error(
+              'Error',
+              err?.error?.message || 'Failed to archive conversations'
+            );
+            this.bulkProcessing = false;
+          }
+        });
+      }
+    });
+  }
+
+  bulkUnarchive(): void {
+    const ids = Array.from(this.selectedIds);
+    if (ids.length === 0) {
+      this.sweetAlertService.warning('No Selection', 'Please select conversations to unarchive');
+      return;
+    }
+
+    this.sweetAlertService.confirm(
+      'Unarchive Conversations?',
+      `Are you sure you want to unarchive ${ids.length} conversation(s)?`,
+      'Yes, Unarchive',
+      'Cancel'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.bulkProcessing = true;
+        this.sweetAlertService.showLoading('Unarchiving...', 'Please wait while we unarchive the conversations');
+        
+        this.inboxService.updateStatusBulk(ids, 'unread').subscribe({
+          next: (res) => {
+            this.sweetAlertService.close();
+            if (res.success) {
+              const updatedCount = (res as any).data?.updated || ids.length;
+              this.sweetAlertService.success(
+                'Success!',
+                `Unarchived ${updatedCount} conversation(s)`
+              );
+              this.clearBulkSelection();
+              this.loadInteractions();
+              this.refreshSelectedIfAffected(ids);
+            }
+            this.bulkProcessing = false;
+          },
+          error: (err) => {
+            this.sweetAlertService.close();
+            this.sweetAlertService.error(
+              'Error',
+              err?.error?.message || 'Failed to unarchive conversations'
+            );
+            this.bulkProcessing = false;
+          }
+        });
+      }
     });
   }
 
   ngOnDestroy(): void {
+    document.removeEventListener('click', this.dropdownCloseHandler);
     if (this.autoSyncSubscription) {
       this.autoSyncSubscription.unsubscribe();
     }
@@ -250,6 +474,11 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    * Get platform-specific icon for the header
    */
   getHeaderIcon(): string {
+    // If in archived view, show archive icon
+    if (this.viewMode === 'archived') {
+      return 'fas fa-archive';
+    }
+    
     if (!this.platformFilters.platform) {
       return 'fas fa-inbox'; // Default unified inbox icon
     }
@@ -271,6 +500,11 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    * Get platform-specific title for the header
    */
   getHeaderTitle(): string {
+    // If in archived view, show archived title
+    if (this.viewMode === 'archived') {
+      return 'Archived Conversations';
+    }
+    
     if (!this.platformFilters.platform) {
       return 'Unified Inbox';
     }
@@ -318,14 +552,20 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       this.autoSyncSubscription = undefined;
     }
 
-    // Sync immediately, then every 5 minutes (300000 ms)
+    // Sync immediately, then every 5 minutes (300000 ms).
+    // exhaustMap: if a sync is still running when the timer fires, skip that tick.
+    // catchError inside exhaustMap: errors are scoped to one iteration so they
+    // never complete the outer timer Observable.
     this.autoSyncSubscription = timer(0, 300000)
       .pipe(
-        switchMap(() => this.syncAllPlatforms(true)),
-        catchError((err) => {
-          console.error('Auto-sync error:', err);
-          return of(null); // Continue interval even if one sync fails
-        })
+        exhaustMap(() =>
+          from(this.syncAllPlatforms(true)).pipe(
+            catchError((err) => {
+              console.error('Auto-sync error:', err);
+              return of(null);
+            })
+          )
+        )
       )
       .subscribe({
         next: () => {
@@ -336,19 +576,76 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       });
   }
 
+  /** Get the current organisation ID from the authenticated user */
+  private getOrgId(): string | null {
+    const user = this.authService.currentUserValue;
+    if (!user) return null;
+    return typeof user.organization === 'string'
+      ? user.organization
+      : (user.organization as any)?._id ?? null;
+  }
+
+  /** Load the saved auto-sync preference from the backend */
+  private loadAutoSyncSetting(): void {
+    const orgId = this.getOrgId();
+    if (!orgId) return;
+    this.organizationService.getOrganization(orgId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          // Default to true if the field hasn't been set yet
+          const saved = res.data.inboxSettings?.autoSyncEnabled;
+          this.autoSyncEnabled = saved !== false;
+          if (this.autoSyncEnabled) {
+            this.startAutoSync();
+          }
+        }
+      },
+      error: () => {
+        // If we can't reach the backend, keep the default (true) and start sync
+        this.startAutoSync();
+      }
+    });
+  }
+
+  /** Persist the auto-sync preference to the backend */
+  private saveAutoSyncSetting(enabled: boolean): void {
+    const orgId = this.getOrgId();
+    if (!orgId) return;
+    this.organizationService.updateInboxSettings(orgId, { autoSyncEnabled: enabled }).subscribe({
+      error: (err) => console.error('Failed to save auto-sync preference:', err)
+    });
+  }
+
   /**
-   * Toggle auto-sync on/off
+   * Toggle auto-sync on/off.
+   * Turning OFF shows a confirmation dialog and persists the choice to the backend.
+   * Turning ON starts the sync immediately and persists.
    */
   toggleAutoSync(): void {
-    this.autoSyncEnabled = !this.autoSyncEnabled;
-
     if (this.autoSyncEnabled) {
-      this.startAutoSync();
+      // Currently ON → ask the user to confirm turning it OFF
+      this.sweetAlertService.confirm(
+        'Turn Off Auto-Sync?',
+        'Automatic syncing will stop. Your inbox won\'t receive new messages until you turn it back on or refresh manually.',
+        'Yes, Turn Off',
+        'Cancel'
+      ).then((result) => {
+        if (result.isConfirmed) {
+          this.autoSyncEnabled = false;
+          if (this.autoSyncSubscription) {
+            this.autoSyncSubscription.unsubscribe();
+            this.autoSyncSubscription = undefined;
+          }
+          this.saveAutoSyncSetting(false);
+          this.notificationService.info('Auto-Sync Disabled', 'Your inbox will no longer sync automatically.');
+        }
+      });
     } else {
-      if (this.autoSyncSubscription) {
-        this.autoSyncSubscription.unsubscribe();
-        this.autoSyncSubscription = undefined;
-      }
+      // Currently OFF → turn it back on immediately
+      this.autoSyncEnabled = true;
+      this.startAutoSync();
+      this.saveAutoSyncSetting(true);
+      this.notificationService.success('Auto-Sync Enabled', 'Your inbox will sync automatically every 5 minutes.');
     }
   }
 
@@ -378,8 +675,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           }
 
           // Sync all platforms in parallel with error handling
+          // Use silent variant for background auto-sync to avoid loader flicker
           const syncObservables = connectedPlatforms.map((platform: any) =>
-            this.platformService.syncPlatform(platform._id).pipe(
+            (silent ? this.platformService.syncPlatformSilent(platform._id) : this.platformService.syncPlatform(platform._id)).pipe(
               // Catch errors for individual platforms so one failure doesn't break all
               catchError((error) => {
                 console.error(`Error syncing ${platform.platform}:`, error);
@@ -473,7 +771,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     const mergedFilters = {
       ...this.platformFilters,
       ...this.topFilters,
-      viewMode: this.viewMode === 'all' ? undefined : this.viewMode
+      viewMode: this.viewMode === 'all' ? undefined : this.viewMode,
+      // Pass status from topFilters unless we're in archived view
+      status: this.topFilters.status || undefined
     };
     
     // Remove undefined/null/empty values from filters
@@ -596,6 +896,36 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   onInteractionUpdate(): void {
     this.loadInteractions();
+
+    // Re-fetch the open conversation so new replies appear immediately
+    if (this.selectedInteraction?._id) {
+      this.inboxService.getInteraction(this.selectedInteraction._id).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.inboxService.setSelectedInteraction(res.data);
+          }
+        }
+      });
+    }
+  }
+
+  /**
+   * After bulk operations that mutate interaction data (assign, label, archive…),
+   * re-fetch the currently open detail panel so banners / metadata refresh instantly.
+   */
+  private refreshSelectedIfAffected(ids: string[]): void {
+    if (!this.selectedInteraction) return;
+    if (!ids.includes(this.selectedInteraction._id)) return;
+    this.inboxService.getInteraction(this.selectedInteraction._id).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.inboxService.setSelectedInteraction(res.data);
+          // Also update the item in the local list so the sidebar stays in sync
+          const idx = this.interactions.findIndex(i => i._id === res.data!._id);
+          if (idx !== -1) { this.interactions[idx] = res.data!; }
+        }
+      }
+    });
   }
 
   getUnreadCount(): number {
@@ -662,6 +992,11 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         break;
       case 'Escape':
         this.showShortcutsOverlay = false;
+        this.showMoreOptions = false;
+        this.showBulkMoreActions = false;
+        this.showBulkLabelActions = false;
+        this.assignDropdownPos = null;
+        this.labelDropdownPos = null;
         break;
     }
   }

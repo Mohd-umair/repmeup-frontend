@@ -22,6 +22,7 @@ interface CreditStats {
 
 @Component({
   selector: 'app-ai-credits',
+  standalone: false,
   templateUrl: './ai-credits.component.html',
   styleUrls: ['./ai-credits.component.scss']
 })

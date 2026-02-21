@@ -252,7 +252,7 @@
 <app-media-upload-modal
   *ngIf="showUploadModal"
   (close)="closeUploadModal()"
-  (uploadSuccess)="onUploadSuccess($event)">
+  (uploadSuccess)="onUploadSuccess($any($event))">
 </app-media-upload-modal>
 
 <!-- Detail Modal -->

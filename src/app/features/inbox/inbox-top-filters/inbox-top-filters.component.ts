@@ -1,4 +1,6 @@
 import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { IInboxFilters, InteractionType, Sentiment, InteractionStatus, ILabel } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
 
@@ -8,6 +10,8 @@ import { ThemeService } from '../../../core/services/theme.service';
  */
 @Component({
   selector: 'app-inbox-top-filters',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './inbox-top-filters.component.html',
   styleUrls: ['./inbox-top-filters.component.scss']
 })

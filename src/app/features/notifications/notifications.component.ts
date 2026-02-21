@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
@@ -11,6 +13,8 @@ import { NotificationService } from '../../core/services/notification.service';
  */
 @Component({
   selector: 'app-notifications',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss']
 })

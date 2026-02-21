@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, ViewEncapsulation } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
@@ -21,6 +22,8 @@ interface MediaRequirements {
 
 @Component({
   selector: 'app-media-upload-guide',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './media-upload-guide.component.html',
   styleUrls: ['./media-upload-guide.component.scss'],
   encapsulation: ViewEncapsulation.None

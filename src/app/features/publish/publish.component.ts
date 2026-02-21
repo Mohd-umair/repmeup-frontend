@@ -1,9 +1,14 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 import { Media } from '../../core/models/media.model';
+import { MediaSelectorModalComponent } from '../../shared/components/media-selector-modal/media-selector-modal.component';
+import { MediaUploadGuideComponent } from '../../shared/components/media-upload-guide/media-upload-guide.component';
+import { SocialPreviewComponent } from '../publish/social-preview/social-preview.component';
 
 interface Platform {
   id: string;
@@ -51,6 +56,8 @@ interface Draft {
 
 @Component({
   selector: 'app-publish',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink, MediaSelectorModalComponent, MediaUploadGuideComponent, SocialPreviewComponent],
   templateUrl: './publish.component.html',
   styleUrls: ['./publish.component.scss']
 })
