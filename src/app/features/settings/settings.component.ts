@@ -1006,6 +1006,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Start Instagram OAuth with auth_type=reauthorize so Meta shows the permission consent screen.
+   * Use this when recording the App Review screencast.
+   */
+  connectInstagramForceConsent(): void {
+    this.platformService.connectInstagram(true);
+  }
+
+  /**
    * Handle pages connected from modal (Step 8)
    */
   onPagesConnected(): void {

@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 interface Platform {
   id: string;
@@ -21,6 +22,8 @@ interface MediaFile {
 })
 export class SocialPreviewComponent implements OnChanges {
   @Input() platform!: Platform;
+
+  constructor(private sanitizer: DomSanitizer) {}
   @Input() content: string = '';
   @Input() mediaFiles: MediaFile[] = [];
   @Input() location: string = '';
@@ -122,16 +125,31 @@ export class SocialPreviewComponent implements OnChanges {
   }
 
   /**
-   * Format content with hashtags and mentions highlighted
+   * Escape HTML entities to prevent XSS when content is bound to [innerHTML]
    */
-  formatContent(text: string): string {
-    if (!text) return '';
-    
-    // Highlight hashtags and mentions
-    return text
+  private escapeHtml(text: string): string {
+    const map: { [k: string]: string } = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return text.replace(/[&<>"']/g, (ch) => map[ch] ?? ch);
+  }
+
+  /**
+   * Format content with hashtags and mentions highlighted. Input is escaped first, then
+   * only safe tags (span, br) are added, and the result is sanitized for [innerHTML].
+   */
+  formatContent(text: string): SafeHtml {
+    if (!text) return this.sanitizer.bypassSecurityTrustHtml('');
+    const escaped = this.escapeHtml(text);
+    const withFormatting = escaped
       .replace(/(#\w+)/g, '<span class="hashtag">$1</span>')
       .replace(/(@\w+)/g, '<span class="mention">$1</span>')
       .replace(/\n/g, '<br>');
+    return this.sanitizer.bypassSecurityTrustHtml(withFormatting);
   }
 
   /**

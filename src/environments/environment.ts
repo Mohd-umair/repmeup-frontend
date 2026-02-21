@@ -2,17 +2,17 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
-// export const environment = {
-//   production: false,
-//   apiUrl: 'http://localhost:3000/api',
-//   socketUrl: 'http://localhost:3000'
-// };
-
 export const environment = {
   production: false,
-  apiUrl: 'https://repmeup.in/api',
-  socketUrl: 'https://repmeup.in/api/socket'
+  apiUrl: 'http://localhost:3000/api',
+  socketUrl: 'http://localhost:3000'
 };
+
+// export const environment = {
+//   production: false,
+//   apiUrl: 'https://repmeup.in/api',
+//   socketUrl: 'https://repmeup.in/api/socket'
+// };
 
 /*
  * For easier debugging in development mode, you can import the following file
