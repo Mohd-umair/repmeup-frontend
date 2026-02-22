@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
@@ -33,11 +34,23 @@ export class InboxListComponent implements OnInit, OnDestroy {
   avatarFallback: Record<string, boolean> = {};
 
   constructor(
-    public themeService: ThemeService
+    public themeService: ThemeService,
+    private sanitizer: DomSanitizer
   ) {}
 
   onAvatarError(key: string): void {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
+  }
+
+  /** Profile picture URL for author (avatarUrl or profilePicture). */
+  getAuthorAvatarUrl(author: IInteraction['author']): string | null {
+    return author?.avatarUrl || author?.profilePicture || null;
+  }
+
+  /** Safe URL for img [src] so external CDN avatars load. */
+  getAuthorAvatarSafeUrl(author: IInteraction['author']): SafeUrl | null {
+    const url = this.getAuthorAvatarUrl(author);
+    return url ? this.sanitizer.bypassSecurityTrustUrl(url) : null;
   }
 
   ngOnInit(): void {

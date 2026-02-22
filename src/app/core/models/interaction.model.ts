@@ -93,6 +93,8 @@ export interface IAuthor {
   email?: string;
   profileUrl?: string;
   avatarUrl?: string;
+  /** Alternative field some APIs use for profile image */
+  profilePicture?: string;
   followerCount?: number;
   isVerified?: boolean;
 }

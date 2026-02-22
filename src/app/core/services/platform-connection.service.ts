@@ -27,13 +27,14 @@ export interface PlatformConnection {
   platformUserId: string;
   platformUsername?: string;
   platformDisplayName?: string;
+  platformProfilePicture?: string;
   platformEmail?: string;
   platformPageId?: string;
   status: 'connected' | 'disconnected' | 'error' | 'token_expired';
   isActive: boolean;
   lastSyncAt?: Date;
   platformData?: any;
-  metadata?: any;
+  metadata?: { profilePicture?: string; [key: string]: any };
   createdAt: Date;
   updatedAt: Date;
 }

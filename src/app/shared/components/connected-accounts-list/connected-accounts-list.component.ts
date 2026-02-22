@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { PlatformConnection } from '../../../core/services/platform-connection.service';
 
 /**
@@ -17,10 +18,15 @@ import { PlatformConnection } from '../../../core/services/platform-connection.s
 export class ConnectedAccountsListComponent {
   @Input() connections: PlatformConnection[] = [];
   @Input() loading: boolean = false;
-  
+
+  constructor(private sanitizer: DomSanitizer) {}
+
   @Output() sync = new EventEmitter<PlatformConnection>();
   @Output() disconnect = new EventEmitter<PlatformConnection>();
   @Output() refreshLocations = new EventEmitter<PlatformConnection>();
+
+  /** Track profile picture load errors so we can show platform icon instead */
+  profilePictureError: Set<string> = new Set();
 
   platformIcons: Record<string, string> = {
     'instagram': 'fab fa-instagram',
@@ -61,10 +67,32 @@ export class ConnectedAccountsListComponent {
   }
 
   getAccountName(connection: PlatformConnection): string {
-    return connection.platformDisplayName || 
-           connection.platformUsername || 
-           connection.platformEmail || 
+    return connection.platformDisplayName ||
+           connection.platformUsername ||
+           connection.platformEmail ||
            'Connected Account';
+  }
+
+  /** Profile picture URL (root or metadata); null if none (use platform icon). */
+  getProfilePictureUrl(connection: PlatformConnection): string | null {
+    return connection.platformProfilePicture
+      || connection.metadata?.profilePicture
+      || null;
+  }
+
+  /** Safe URL for img [src] so Angular does not block external CDN (e.g. fbcdn.net). */
+  getProfilePictureSafeUrl(connection: PlatformConnection): SafeUrl | null {
+    const url = this.getProfilePictureUrl(connection);
+    return url ? this.sanitizer.bypassSecurityTrustUrl(url) : null;
+  }
+
+  showProfilePicture(connection: PlatformConnection): boolean {
+    const url = this.getProfilePictureUrl(connection);
+    return !!url && !this.profilePictureError.has(connection._id);
+  }
+
+  onProfilePictureError(connection: PlatformConnection): void {
+    this.profilePictureError.add(connection._id);
   }
 
   getStatusBadge(status: string): { class: string, label: string, icon: string } {

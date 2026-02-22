@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { IInteraction, InteractionStatus, IAssignmentHistory } from '../../../core/models/interaction.model';
 import { InboxService } from '../../../core/services/inbox.service';
 import { ThemeService } from '../../../core/services/theme.service';
@@ -126,7 +127,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     private notificationDataService: NotificationDataService,
     private sweetAlertService: SweetAlertService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private sanitizer: DomSanitizer
   ) {
     this.replyForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(1)]]
@@ -138,6 +140,17 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
    */
   onAvatarError(key: string): void {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
+  }
+
+  /** Profile picture URL for author (avatarUrl or profilePicture). */
+  getAuthorAvatarUrl(author: IInteraction['author']): string | null {
+    return author?.avatarUrl || author?.profilePicture || null;
+  }
+
+  /** Safe URL for img [src] so external CDN avatars load. */
+  getAuthorAvatarSafeUrl(author: IInteraction['author']): SafeUrl | null {
+    const url = this.getAuthorAvatarUrl(author);
+    return url ? this.sanitizer.bypassSecurityTrustUrl(url) : null;
   }
 
   getPlatformColors(): any {
