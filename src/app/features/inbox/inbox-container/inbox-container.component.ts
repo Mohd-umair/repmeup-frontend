@@ -89,7 +89,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       this.themeService.setPlatformTheme(this.platformFilters.platform);
     }
     
-    // Apply initial filters from route query params (e.g. ?sentiment=negative, ?status=unread, ?overdue=true)
+    // Apply initial filters from route query params (e.g. ?sentiment=negative, ?status=unread, ?postId=... from Content)
     const params = this.route.snapshot.queryParams;
     if (params['sentiment']) {
       this.topFilters = { ...this.topFilters, sentiment: params['sentiment'] as any };
@@ -99,6 +99,15 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     }
     if (params['overdue'] === 'true' || params['overdue'] === '1') {
       this.viewMode = 'overdue';
+    }
+    if (params['postId']) {
+      this.platformFilters = { ...this.platformFilters, postId: params['postId'] };
+    }
+    if (params['platform']) {
+      this.platformFilters = { ...this.platformFilters, platform: params['platform'] as any };
+    }
+    if (params['type']) {
+      this.topFilters = { ...this.topFilters, type: params['type'] as any };
     }
 
     // Load saved auto-sync preference from the organisation

@@ -66,8 +66,32 @@ export class MenuService {
       .pipe(
         tap(response => {
           if (response.success && response.data) {
-            this.menusSubject.next(response.data.menus);
-            this.groupedMenusSubject.next(response.data.grouped);
+            let menus = response.data.menus || [];
+            // Ensure Content menu is always present (backward compatibility)
+            if (!menus.some((m: IMenuItem) => m.route === '/app/content')) {
+              const contentMenu: IMenuItem = {
+                _id: 'content-default',
+                label: 'Content',
+                icon: '📄',
+                route: '/app/content',
+                requiredRoles: ['admin', 'manager', 'agent'],
+                requiredPermissions: [],
+                order: 5,
+                isActive: true,
+                group: 'main'
+              };
+              menus = [...menus, contentMenu].sort((a, b) => {
+                const g = (m: IMenuItem) => (m.group === 'main' ? 0 : m.group === 'management' ? 1 : 2);
+                return g(a) - g(b) || (a.order ?? 0) - (b.order ?? 0);
+              });
+            }
+            this.menusSubject.next(menus);
+            // Rebuild grouped so Content appears in main
+            const grouped = { main: [] as IMenuItem[], management: [] as IMenuItem[], settings: [] as IMenuItem[] };
+            menus.forEach((m: IMenuItem) => {
+              if (grouped[m.group]) grouped[m.group].push(m);
+            });
+            this.groupedMenusSubject.next(grouped);
           }
           this.loadingSubject.next(false);
         })

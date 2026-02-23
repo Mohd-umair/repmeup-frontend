@@ -23,6 +23,7 @@ import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { PublishComponent } from './features/publish/publish.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
 import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
+import { ContentComponent } from './features/content/content.component';
 import { PlansComponent } from './features/plans/plans.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
@@ -80,6 +81,7 @@ const routes: Routes = [
             { path: 'publish', component: PublishComponent },
             { path: 'publish/calendar', component: CalendarComponent },
             { path: 'publish/published', component: PublishedPostsComponent },
+      { path: 'content', component: ContentComponent },
       { path: 'analytics', component: AnalyticsComponent },
       { path: 'knowledge-base', component: KnowledgeBaseComponent },
       { path: 'settings', component: SettingsComponent },

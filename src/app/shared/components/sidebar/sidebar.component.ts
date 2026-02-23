@@ -93,6 +93,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success) {
           console.log('✅ Menus loaded successfully');
+          // If API returned no menus, use default (e.g. first load or misconfiguration)
+          const menus = this.menuService.menusValue;
+          if (!menus || menus.length === 0) {
+            this.setDefaultMenus();
+          }
         }
         this.loadingMenus = false;
       },
@@ -115,6 +120,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       { label: 'Dashboard', icon: '📊', route: '/app/dashboard' },
       { label: 'Inbox', icon: '📥', route: '/app/inbox', badge: 0 },
       { label: 'Publish', icon: '✈️', route: '/app/publish' },
+      { label: 'Content', icon: '📄', route: '/app/content' },
       { label: 'Knowledge Base', icon: '🧠', route: '/app/knowledge-base' },
       { label: 'Analytics', icon: '📈', route: '/app/analytics' },
       { label: 'Agents', icon: '👥', route: '/app/agents' },

@@ -174,6 +174,8 @@ export interface IInboxFilters {
   viewMode?: InboxViewMode;
   search?: string;
   label?: string; // Label ID for filtering
+  /** Filter by post (e.g. from Content page "Comments" – show only comments for this post) */
+  postId?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
