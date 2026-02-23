@@ -29,6 +29,10 @@ export interface InboxSettings {
   autoSyncEnabled: boolean;
 }
 
+export interface EscalationSettings {
+  autoAssign?: boolean;
+}
+
 export interface IOrganization {
   _id: string;
   name: string;
@@ -43,6 +47,7 @@ export interface IOrganization {
   whiteLabel?: any;
   autoReplySettings?: AutoReplySettings;
   inboxSettings?: InboxSettings;
+  escalationSettings?: EscalationSettings;
   owner: string;
   isActive: boolean;
   createdAt: Date;

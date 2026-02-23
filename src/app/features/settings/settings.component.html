@@ -663,6 +663,29 @@
             </div>
           </div>
 
+          <!-- Inbox / Conversations: Auto-assign -->
+          <div class="pt-6 border-t border-gray-200">
+            <h3 class="text-lg font-semibold text-rep-black mb-2">
+              <i class="fas fa-inbox mr-2 text-gray-400"></i>
+              Inbox &amp; conversations
+            </h3>
+            <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-rep-lime/20 rounded-xl flex items-center justify-center border border-rep-lime/30">
+                  <i class="fas fa-user-plus text-xl text-rep-black"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-semibold text-rep-black">Auto-assign new conversations</h3>
+                  <p class="text-sm text-gray-600">When off, new chats are not assigned; agents assign them manually from the inbox.</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" [(ngModel)]="organizationData.escalationSettings.autoAssign" name="autoAssign" class="sr-only peer">
+                <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
+              </label>
+            </div>
+          </div>
+
           <div class="pt-6">
             <button 
               type="submit" 

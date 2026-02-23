@@ -87,7 +87,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     name: '',
     website: '',
     industry: '',
-    size: ''
+    size: '',
+    escalationSettings: { autoAssign: true } as { autoAssign: boolean }
   };
   savingOrganization = false;
 
@@ -1320,11 +1321,15 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.organizationService.getOrganization(this.organizationId).subscribe({
       next: (response) => {
         if (response.success && response.data) {
+          const data = response.data as any;
           this.organizationData = {
-            name: response.data.name || '',
-            website: response.data.website || '',
-            industry: response.data.industry || '',
-            size: response.data.size || ''
+            name: data.name || '',
+            website: data.website || '',
+            industry: data.industry || '',
+            size: data.size || '',
+            escalationSettings: {
+              autoAssign: data.escalationSettings?.autoAssign !== false
+            }
           };
         }
       },

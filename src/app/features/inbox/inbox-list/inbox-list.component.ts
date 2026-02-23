@@ -157,7 +157,7 @@ export class InboxListComponent implements OnInit, OnDestroy {
     return Math.min(5, Math.max(1, Math.round(r)));
   }
 
-  /** Default SLA: 24 hours. Show "Response in Xm/Xd", "Overdue by Xh/Xd", or "Replied in Xm/Xd" */
+  /** Default SLA: 24 hours. Show "Not Replied", "Overdue by Xh/Xd", or "Replied in Xm/Xd" */
   getSlaLabel(interaction: IInteraction): string | null {
     const SLA_MINUTES = 24 * 60;
     const MINS_PER_DAY = 24 * 60;
@@ -182,8 +182,7 @@ export class InboxListComponent implements OnInit, OnDestroy {
       return `Overdue by ${formatDuration(overdueMins)}`;
     }
 
-    const remainingMins = SLA_MINUTES - elapsedMins;
-    return `Response in ${formatDuration(remainingMins)}`;
+    return 'Not Replied';
   }
 
   /** True if interaction is overdue (unreplied, past SLA) */

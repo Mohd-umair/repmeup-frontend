@@ -788,10 +788,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /**
-   * Get formatted assignment info for display
+   * Get formatted assignment info for display.
+   * When assignedBy is missing (e.g. auto-assign by system), show "System" instead of "Unknown user".
    */
   getAssignmentInfo(): { assignedToName: string; assignedByName: string; assignedAtFormatted: string } | null {
-    if (!this.interaction?.assignedTo || !this.interaction?.assignedBy) {
+    if (!this.interaction?.assignedTo) {
       return null;
     }
 
@@ -799,15 +800,27 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const assignedBy = this.interaction.assignedBy as any;
     const assignedAt = this.interaction.assignedAt;
 
+    const assignedToName = assignedTo.firstName && assignedTo.lastName
+      ? `${assignedTo.firstName} ${assignedTo.lastName}`
+      : assignedTo.name || 'Unknown Agent';
+    const assignedByName = this.getAssignedByName(assignedBy);
+
     return {
-      assignedToName: assignedTo.firstName && assignedTo.lastName 
-        ? `${assignedTo.firstName} ${assignedTo.lastName}` 
-        : assignedTo.name || 'Unknown Agent',
-      assignedByName: assignedBy.firstName && assignedBy.lastName 
-        ? `${assignedBy.firstName} ${assignedBy.lastName}` 
-        : assignedBy.name || 'Unknown User',
+      assignedToName,
+      assignedByName,
       assignedAtFormatted: assignedAt ? this.formatAssignmentDate(new Date(assignedAt)) : ''
     };
+  }
+
+  /** Resolve "assigned by" label: user name or "System" when auto-assigned (no assignedBy). */
+  private getAssignedByName(assignedBy: any): string {
+    if (!assignedBy || (typeof assignedBy === 'object' && !assignedBy._id)) {
+      return 'System';
+    }
+    if (assignedBy.firstName && assignedBy.lastName) {
+      return `${assignedBy.firstName} ${assignedBy.lastName}`;
+    }
+    return assignedBy.name || 'System';
   }
 
   /**
@@ -892,25 +905,21 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
             type: 'assignment',
             data: {
               isUnassignment: true,
-              assignedByName: assignedBy?.firstName && assignedBy?.lastName 
-                ? `${assignedBy.firstName} ${assignedBy.lastName}` 
-                : assignedBy?.name || 'Unknown User',
+              assignedByName: this.getAssignedByName(assignedBy),
               assignedAtFormatted: this.formatAssignmentDate(new Date(assignment.assignedAt))
             },
             timestamp: new Date(assignment.assignedAt)
           });
         } else {
-          // Regular assignment
+          // Regular assignment (use "System" when assignedBy is missing)
           timeline.push({
             type: 'assignment',
             data: {
               isUnassignment: false,
-              assignedToName: assignedTo?.firstName && assignedTo?.lastName 
-                ? `${assignedTo.firstName} ${assignedTo.lastName}` 
+              assignedToName: assignedTo?.firstName && assignedTo?.lastName
+                ? `${assignedTo.firstName} ${assignedTo.lastName}`
                 : assignedTo?.name || 'Unknown Agent',
-              assignedByName: assignedBy?.firstName && assignedBy?.lastName 
-                ? `${assignedBy.firstName} ${assignedBy.lastName}` 
-                : assignedBy?.name || 'Unknown User',
+              assignedByName: this.getAssignedByName(assignedBy),
               assignedAtFormatted: this.formatAssignmentDate(new Date(assignment.assignedAt))
             },
             timestamp: new Date(assignment.assignedAt)
