@@ -16,7 +16,7 @@ import { InboxListComponent } from '../inbox-list/inbox-list.component';
 import { InboxTopFiltersComponent } from '../inbox-top-filters/inbox-top-filters.component';
 import { InboxActionsComponent } from '../inbox-actions/inbox-actions.component';
 import { OrganizationService } from '../../../core/services/organization.service';
-import { forkJoin, timer, Subscription, of, from } from 'rxjs';
+import { forkJoin, timer, Subscription, of, from, interval } from 'rxjs';
 import { exhaustMap, catchError } from 'rxjs/operators';
 
 /**
@@ -63,6 +63,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   bulkLabelId = '';
   @ViewChild(InboxDetailComponent) inboxDetail?: InboxDetailComponent;
   private autoSyncSubscription?: Subscription;
+  private inboxPollSubscription?: Subscription;
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -115,6 +116,13 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
     this.loadInteractions();
     this.loadInboxStats();
+
+    // Poll inbox list every 10s so new DMs (saved by webhook worker) appear without clicking Sync
+    this.inboxPollSubscription = interval(10000).subscribe(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        this.refreshInboxListSilent();
+      }
+    });
 
     // Subscribe to interactions (must unsubscribe on destroy to avoid memory leak)
     this.subscriptions.push(
@@ -475,6 +483,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     if (this.autoSyncSubscription) {
       this.autoSyncSubscription.unsubscribe();
     }
+    if (this.inboxPollSubscription) {
+      this.inboxPollSubscription.unsubscribe();
+    }
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.themeService.resetTheme();
   }
@@ -771,6 +782,23 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    */
   onSyncClick(): void {
     this.syncAllPlatforms(false);
+  }
+
+  /**
+   * Refresh inbox list without showing loading spinner (for polling so new DMs appear like chat).
+   */
+  private refreshInboxListSilent(): void {
+    const mergedFilters = {
+      ...this.platformFilters,
+      ...this.topFilters,
+      viewMode: this.viewMode === 'all' ? undefined : this.viewMode,
+      status: this.topFilters.status || undefined
+    };
+    this.filters = Object.fromEntries(
+      Object.entries(mergedFilters).filter(([_, v]) => v !== undefined && v !== null && v !== '')
+    ) as IInboxFilters;
+    this.inboxService.getInteractions(this.filters).subscribe();
+    this.loadInboxStats();
   }
 
   loadInteractions(): void {
