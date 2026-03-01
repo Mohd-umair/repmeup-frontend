@@ -866,12 +866,28 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
     const timeline: Array<{type: 'message' | 'reply' | 'assignment' | 'note', data: any, timestamp: Date}> = [];
 
-    // Add original message
-    timeline.push({
-      type: 'message',
-      data: this.interaction,
-      timestamp: new Date(this.interaction.platformCreatedAt)
-    });
+    // Incoming messages: use full history for DM threads (e.g. Instagram), else single original message
+    const incoming = (this.interaction as any).metadata?.incomingMessages;
+    if (incoming && Array.isArray(incoming) && incoming.length > 0) {
+      incoming.forEach((msg: { text?: string; timestamp?: number }) => {
+        const ts = msg.timestamp ? new Date(msg.timestamp) : new Date(this.interaction!.platformCreatedAt);
+        timeline.push({
+          type: 'message',
+          data: {
+            ...this.interaction,
+            content: msg.text ?? (this.interaction as any).content,
+            platformCreatedAt: ts
+          },
+          timestamp: ts
+        });
+      });
+    } else {
+      timeline.push({
+        type: 'message',
+        data: this.interaction,
+        timestamp: new Date(this.interaction.platformCreatedAt)
+      });
+    }
 
     // Add replies
     if (this.interaction.replies && this.interaction.replies.length > 0) {
