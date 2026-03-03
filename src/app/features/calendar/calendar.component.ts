@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
@@ -18,22 +19,33 @@ interface ScheduledPost {
   platformPostUrl?: string;
   firstComment?: string;
   location?: string;
+  postType?: string;
 }
 
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss']
 })
 export class CalendarComponent implements OnInit {
   // Calendar
+  viewMode: 'month' | 'week' | 'list' = 'month';
+  filterPlatform = '';
+  filterStatus = '';
+  currentMonth = new Date();
   calendarDates: Date[] = [];
   selectedCalendarDate: Date | null = null;
   calendarPosts: Map<string, ScheduledPost[]> = new Map();
   showPostsModal: boolean = false;
   selectedDatePosts: ScheduledPost[] = [];
+  reschedulePostId: string | null = null;
+  rescheduleDate = '';
+  rescheduleTime = '';
+  duplicatingId: string | null = null;
+  duplicateDate = '';
+  duplicateTime = '';
   
   // Data
   scheduledPosts: ScheduledPost[] = [];
@@ -62,14 +74,30 @@ export class CalendarComponent implements OnInit {
 
   generateCalendarDates(): void {
     this.calendarDates = [];
-    const today = new Date();
-    
-    for (let i = -30; i < 60; i++) {
-      const date = new Date(today);
-      date.setDate(date.getDate() + i);
-      this.calendarDates.push(date);
+    const base = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), 1);
+    if (this.viewMode === 'month') {
+      const start = new Date(base);
+      start.setDate(start.getDate() - start.getDay());
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        this.calendarDates.push(d);
+      }
+    } else if (this.viewMode === 'week') {
+      const start = new Date(this.currentMonth);
+      start.setDate(start.getDate() - start.getDay());
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        this.calendarDates.push(d);
+      }
+    } else {
+      for (let i = 0; i < 30; i++) {
+        const d = new Date(base);
+        d.setDate(base.getDate() + i);
+        this.calendarDates.push(d);
+      }
     }
-    
     this.updateCalendarPosts();
   }
 
@@ -77,7 +105,7 @@ export class CalendarComponent implements OnInit {
     this.loading = true;
     this.http.get<any>(`${environment.apiUrl}/posts/scheduled`).subscribe({
       next: (response) => {
-        this.scheduledPosts = response.posts || [];
+        this.scheduledPosts = response.data || response.posts || [];
         this.updateCalendarPosts();
         this.loading = false;
       },
@@ -91,7 +119,7 @@ export class CalendarComponent implements OnInit {
   loadPublishedPosts(): void {
     this.http.get<any>(`${environment.apiUrl}/posts/published`).subscribe({
       next: (response) => {
-        this.publishedPosts = response.posts || [];
+        this.publishedPosts = response.posts || response.data || [];
         this.updateCalendarPosts();
       },
       error: (error) => {
@@ -102,8 +130,14 @@ export class CalendarComponent implements OnInit {
 
   updateCalendarPosts(): void {
     this.calendarPosts.clear();
-    
-    this.scheduledPosts.forEach(post => {
+    let scheduled = this.scheduledPosts;
+    if (this.filterPlatform) {
+      scheduled = scheduled.filter(p => (p.platform || p.platforms?.[0]) === this.filterPlatform);
+    }
+    if (this.filterStatus) {
+      scheduled = scheduled.filter(p => p.status === this.filterStatus);
+    }
+    scheduled.forEach(post => {
       if (post.scheduledFor) {
         const dateKey = new Date(post.scheduledFor).toDateString();
         if (!this.calendarPosts.has(dateKey)) {
@@ -140,10 +174,7 @@ export class CalendarComponent implements OnInit {
   openPostsModal(date: Date): void {
     this.selectedCalendarDate = date;
     this.selectedDatePosts = this.getPostsForDate(date);
-    
-    if (this.selectedDatePosts.length > 0) {
-      this.showPostsModal = true;
-    }
+    this.showPostsModal = true;
   }
 
   closePostsModal(): void {
@@ -234,5 +265,80 @@ export class CalendarComponent implements OnInit {
 
   formatDate(date: Date | string): string {
     return new Date(date).toLocaleString();
+  }
+
+  prevPeriod(): void {
+    if (this.viewMode === 'month') {
+      this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1);
+    } else {
+      this.currentMonth.setDate(this.currentMonth.getDate() - 7);
+    }
+    this.generateCalendarDates();
+  }
+
+  nextPeriod(): void {
+    if (this.viewMode === 'month') {
+      this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1);
+    } else {
+      this.currentMonth.setDate(this.currentMonth.getDate() + 7);
+    }
+    this.generateCalendarDates();
+  }
+
+  periodLabel(): string {
+    if (this.viewMode === 'month') {
+      return this.currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }
+    if (this.viewMode === 'week') {
+      const start = new Date(this.currentMonth);
+      start.setDate(start.getDate() - start.getDay());
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      return start.toLocaleDateString() + ' – ' + end.toLocaleDateString();
+    }
+    return 'List view';
+  }
+
+  openReschedule(post: ScheduledPost): void {
+    this.reschedulePostId = post._id!;
+    this.rescheduleDate = post.scheduledFor ? new Date(post.scheduledFor).toISOString().slice(0, 10) : '';
+    this.rescheduleTime = post.scheduledFor ? new Date(post.scheduledFor).toTimeString().slice(0, 5) : '12:00';
+  }
+
+  confirmReschedule(): void {
+    if (!this.reschedulePostId || !this.rescheduleDate || !this.rescheduleTime) return;
+    const scheduledFor = new Date(`${this.rescheduleDate}T${this.rescheduleTime}`).toISOString();
+    this.http.patch(`${environment.apiUrl}/posts/scheduled/${this.reschedulePostId}/reschedule`, { scheduledFor }).subscribe({
+      next: () => {
+        this.reschedulePostId = null;
+        this.loadScheduledPosts();
+      }
+    });
+  }
+
+  openDuplicate(post: ScheduledPost): void {
+    this.duplicatingId = post._id!;
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    this.duplicateDate = d.toISOString().slice(0, 10);
+    this.duplicateTime = '12:00';
+  }
+
+  confirmDuplicate(): void {
+    if (!this.duplicatingId) return;
+    const post = this.scheduledPosts.find(p => p._id === this.duplicatingId);
+    if (!post || !post.content || !post.platform) return;
+    const scheduledFor = new Date(`${this.duplicateDate}T${this.duplicateTime}`).toISOString();
+    this.http.post(`${environment.apiUrl}/posts/schedule`, {
+      platform: post.platform,
+      content: post.content,
+      scheduledFor,
+      postType: post.postType || 'post'
+    }).subscribe({
+      next: () => {
+        this.duplicatingId = null;
+        this.loadScheduledPosts();
+      }
+    });
   }
 }

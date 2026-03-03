@@ -32,6 +32,10 @@ import { AboutComponent } from './features/about/about.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 import { NotificationsComponent } from './features/notifications/notifications.component';
+import { BrandHubComponent } from './features/brand-hub/brand-hub.component';
+import { ApprovalQueueComponent } from './features/approval-queue/approval-queue.component';
+import { TrendExplorerComponent } from './features/trend-explorer/trend-explorer.component';
+import { ContentStudioComponent } from './features/content-studio/content-studio.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -78,10 +82,15 @@ const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'inbox', component: InboxContainerComponent },
-            { path: 'publish', component: PublishComponent },
-            { path: 'publish/calendar', component: CalendarComponent },
-            { path: 'publish/published', component: PublishedPostsComponent },
+      { path: 'publish', component: PublishComponent },
+      { path: 'publish/calendar', component: CalendarComponent },
+      { path: 'publish/published', component: PublishedPostsComponent },
+      { path: 'calendar', component: CalendarComponent },
       { path: 'content', component: ContentComponent },
+      { path: 'brand-hub', component: BrandHubComponent },
+      { path: 'content-studio', component: ContentStudioComponent },
+      { path: 'approval-queue', component: ApprovalQueueComponent },
+      { path: 'trend-explorer', component: TrendExplorerComponent },
       { path: 'analytics', component: AnalyticsComponent },
       { path: 'knowledge-base', component: KnowledgeBaseComponent },
       { path: 'settings', component: SettingsComponent },

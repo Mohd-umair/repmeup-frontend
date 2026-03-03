@@ -8,13 +8,19 @@ import { Subscription } from 'rxjs';
 
 /**
  * Sidebar Component - Single Responsibility Principle
- * Handles dynamic navigation menu with notification badges
+ * Handles dynamic navigation menu with notification badges (grouped: Main / Management / Settings)
  */
 interface MenuItem {
   label: string;
   icon: string;
   route: string;
   badge?: number;
+}
+
+interface GroupedMenuItems {
+  main: MenuItem[];
+  management: MenuItem[];
+  settings: MenuItem[];
 }
 
 @Component({
@@ -27,7 +33,8 @@ interface MenuItem {
 export class SidebarComponent implements OnInit, OnDestroy {
   @Output() menuItemClicked = new EventEmitter<void>();
   
-  menuItems: MenuItem[] = [];
+  /** Grouped menu items for display (Main / Management / Settings) */
+  groupedItems: GroupedMenuItems = { main: [], management: [], settings: [] };
   loadingMenus = true;
   currentUser: any = null;
 
@@ -55,33 +62,47 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     // Subscribe to unread count updates
     const unreadSub = this.notificationDataService.unreadCount$.subscribe(count => {
-      // Update inbox badge
-      const inboxItem = this.menuItems.find(item => item.route === '/app/inbox');
-      if (inboxItem) {
-        inboxItem.badge = count;
-      }
+      this.updateInboxBadgeInGrouped(count);
     });
     this.subscriptions.push(unreadSub);
 
-    // Subscribe to menu changes
-    const menuSub = this.menuService.menus$.subscribe(menus => {
-      this.menuItems = menus.map(menu => ({
-        label: menu.label,
-        icon: menu.icon,
-        route: menu.route,
-        badge: menu.badge?.enabled && menu.badge.source === 'inbox' ? 0 : undefined
-      }));
-      
-      // Update inbox badge with current count if it exists
-      const unreadCount = this.notificationDataService.unreadCountValue;
-      if (unreadCount > 0) {
-        const inboxItem = this.menuItems.find(item => item.route === '/app/inbox');
-        if (inboxItem) {
-          inboxItem.badge = unreadCount;
-        }
+    // Subscribe to grouped menu changes (new menus from API)
+    const menuSub = this.menuService.groupedMenus$.subscribe(grouped => {
+      if (!grouped || (grouped.main?.length === 0 && grouped.management?.length === 0 && grouped.settings?.length === 0)) {
+        return; // Keep current or fallback
       }
+      this.groupedItems = {
+        main: (grouped.main || []).map((m: IMenuItem) => this.menuToItem(m)),
+        management: (grouped.management || []).map((m: IMenuItem) => this.menuToItem(m)),
+        settings: (grouped.settings || []).map((m: IMenuItem) => this.menuToItem(m))
+      };
+      this.applyInboxBadge(this.notificationDataService.unreadCountValue);
     });
     this.subscriptions.push(menuSub);
+  }
+
+  private menuToItem(menu: IMenuItem): MenuItem {
+    return {
+      label: menu.label,
+      icon: menu.icon,
+      route: menu.route,
+      badge: menu.badge?.enabled && menu.badge?.source === 'inbox' ? 0 : undefined
+    };
+  }
+
+  private updateInboxBadgeInGrouped(count: number): void {
+    this.applyInboxBadge(count);
+  }
+
+  private applyInboxBadge(count: number): void {
+    if (count <= 0) return;
+    const apply = (list: MenuItem[]) => {
+      const inbox = list.find(item => item.route === '/app/inbox');
+      if (inbox) inbox.badge = count;
+    };
+    apply(this.groupedItems.main);
+    apply(this.groupedItems.management);
+    apply(this.groupedItems.settings);
   }
 
   /**
@@ -112,20 +133,32 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Set default menus as fallback
+   * Set default menus as fallback (grouped to match new menu structure)
    */
   private setDefaultMenus(): void {
-    this.menuItems = [
-      { label: 'Home', icon: '🏠', route: '/' },
-      { label: 'Dashboard', icon: '📊', route: '/app/dashboard' },
-      { label: 'Inbox', icon: '📥', route: '/app/inbox', badge: 0 },
-      { label: 'Publish', icon: '✈️', route: '/app/publish' },
-      { label: 'Content', icon: '📄', route: '/app/content' },
-      { label: 'Knowledge Base', icon: '🧠', route: '/app/knowledge-base' },
-      { label: 'Analytics', icon: '📈', route: '/app/analytics' },
-      { label: 'Agents', icon: '👥', route: '/app/agents' },
-      { label: 'Settings', icon: '⚙️', route: '/app/settings' }
-    ];
+    this.groupedItems = {
+      main: [
+        { label: 'Home', icon: '🏠', route: '/' },
+        { label: 'Dashboard', icon: '📊', route: '/app/dashboard' },
+        { label: 'Inbox', icon: '📥', route: '/app/inbox', badge: 0 },
+        { label: 'Publish', icon: '✈️', route: '/app/publish' },
+        { label: 'Content', icon: '📄', route: '/app/content' },
+        { label: 'Brand Hub', icon: '🎨', route: '/app/brand-hub' },
+        { label: 'Content Studio', icon: '✨', route: '/app/content-studio' },
+        { label: 'Calendar', icon: '📅', route: '/app/calendar' },
+        { label: 'Approval Queue', icon: '✅', route: '/app/approval-queue' },
+        { label: 'Trend Explorer', icon: '📈', route: '/app/trend-explorer' },
+        { label: 'Analytics', icon: '📉', route: '/app/analytics' },
+        { label: 'Knowledge Base', icon: '🧠', route: '/app/knowledge-base' }
+      ],
+      management: [
+        { label: 'Agents', icon: '👥', route: '/app/agents' }
+      ],
+      settings: [
+        { label: 'Plans', icon: '💎', route: '/app/plans' },
+        { label: 'Settings', icon: '⚙️', route: '/app/settings' }
+      ]
+    };
   }
 
   ngOnDestroy(): void {

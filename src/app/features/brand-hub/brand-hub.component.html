@@ -1,0 +1,142 @@
+<div class="min-h-screen bg-rep-black p-4 md:p-6">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-rep-white flex items-center gap-2">
+      <i class="fas fa-palette text-rep-lime"></i>
+      Brand Hub
+    </h1>
+    <p class="text-gray-400 mt-1">Set your brand voice, tone, and compliance rules for AI-generated content.</p>
+  </div>
+
+  <!-- Re-train Voice banner -->
+  <div *ngIf="showRetrainBanner" class="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex flex-wrap items-center justify-between gap-3">
+    <p class="text-amber-200 font-medium">Brand config has changed. Re-train the voice model so new content matches your settings.</p>
+    <app-button variant="primary" size="sm" [loading]="retraining" (buttonClick)="retrain()">
+      Re-train Voice Model
+    </app-button>
+  </div>
+
+  <div *ngIf="loading" class="flex justify-center py-12">
+    <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+  </div>
+
+  <div *ngIf="!loading && config" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left: structured fields -->
+    <div class="lg:col-span-2 space-y-6">
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+        <h2 class="text-lg font-bold text-rep-white mb-4">Brand overview</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Tone of voice</label>
+            <select
+              [(ngModel)]="config.toneOfVoice"
+              class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime focus:border-rep-lime"
+            >
+              <option *ngFor="let t of toneOptions" [value]="t">{{ t }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Brand personality tags</label>
+            <div class="flex flex-wrap gap-2 mb-2">
+              <span
+                *ngFor="let tag of config.personalityTags"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rep-lime/20 text-rep-lime text-sm"
+              >
+                {{ tag }}
+                <button type="button" (click)="removePersonality(tag)" class="hover:text-white">&times;</button>
+              </span>
+            </div>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                [(ngModel)]="personalityInput"
+                (keydown.enter)="addPersonality(); $event.preventDefault()"
+                placeholder="Add tag"
+                class="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
+              />
+              <app-button variant="secondary" size="sm" (buttonClick)="addPersonality()">Add</app-button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Banned words</label>
+            <div class="flex flex-wrap gap-2 mb-2">
+              <span
+                *ngFor="let w of config.bannedWords"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 text-sm"
+              >
+                {{ w }}
+                <button type="button" (click)="removeBanned(w)" class="hover:text-white">&times;</button>
+              </span>
+            </div>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                [(ngModel)]="bannedInput"
+                (keydown.enter)="addBanned(); $event.preventDefault()"
+                placeholder="Add banned word"
+                class="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
+              />
+              <app-button variant="secondary" size="sm" (buttonClick)="addBanned()">Add</app-button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Approved hashtags</label>
+            <div class="flex flex-wrap gap-2 mb-2">
+              <span
+                *ngFor="let tag of config.approvedHashtags"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 text-sm"
+              >
+                {{ tag }}
+                <button type="button" (click)="removeHashtag(tag)" class="hover:text-white">&times;</button>
+              </span>
+            </div>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                [(ngModel)]="hashtagInput"
+                (keydown.enter)="addHashtag(); $event.preventDefault()"
+                placeholder="#hashtag"
+                class="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
+              />
+              <app-button variant="secondary" size="sm" (buttonClick)="addHashtag()">Add</app-button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-2">Legal disclaimers</label>
+            <textarea
+              [(ngModel)]="config.legalDisclaimers"
+              rows="3"
+              placeholder="Optional disclaimer text to include when relevant"
+              class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime resize-none"
+            ></textarea>
+          </div>
+          <app-button variant="primary" [loading]="saving" (buttonClick)="save()">Save brand config</app-button>
+        </div>
+      </div>
+      <!-- Upload area (link to KB) -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+        <h2 class="text-lg font-bold text-rep-white mb-2">Knowledge base</h2>
+        <p class="text-gray-400 text-sm mb-4">Upload documents and URLs to train AI on your brand. Manage entries in Knowledge Base.</p>
+        <a routerLink="/app/knowledge-base" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition">
+          <i class="fas fa-external-link-alt"></i>
+          Open Knowledge Base
+        </a>
+      </div>
+    </div>
+
+    <!-- Right: Brand Voice Preview -->
+    <div class="lg:col-span-1">
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6 sticky top-4">
+        <h2 class="text-lg font-bold text-rep-white mb-2">Brand voice preview</h2>
+        <p class="text-gray-400 text-sm mb-4">Sample post using your current brand settings.</p>
+        <div *ngIf="loadingPreview" class="py-6 text-center">
+          <i class="fas fa-spinner fa-spin text-2xl text-rep-lime"></i>
+        </div>
+        <div *ngIf="!loadingPreview && preview" class="p-4 rounded-lg bg-gray-800 border border-gray-700 text-gray-200 text-sm whitespace-pre-wrap mb-4">{{ preview }}</div>
+        <div *ngIf="!loadingPreview && !preview" class="py-4 text-gray-500 text-sm">Generate a preview to see how your brand sounds.</div>
+        <app-button variant="primary" size="sm" [loading]="loadingPreview" (buttonClick)="loadPreview()">
+          Regenerate preview
+        </app-button>
+      </div>
+    </div>
+  </div>
+</div>

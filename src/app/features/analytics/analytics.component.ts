@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subscription, interval } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { NotificationService } from '../../core/services/notification.service';
 import {
@@ -20,6 +21,7 @@ import { SentimentDonutChartComponent } from '../../shared/components/charts/sen
 import { PlatformBarChartComponent } from '../../shared/components/charts/platform-bar-chart.component';
 import { ResponseTimeHistogramComponent } from '../../shared/components/charts/response-time-histogram.component';
 import { AgentPerformanceChartComponent } from '../../shared/components/charts/agent-performance-chart.component';
+import { environment } from '../../../environments/environment';
 
 /**
  * Analytics Component - Scalable analytics dashboard
@@ -46,6 +48,8 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   agentLoading = false;
   engagementLoading = false;
   exportLoading = false;
+  contentPerformance: { aiCount: number; humanCount: number; total: number; aiPercent: number } | null = null;
+  suggestedImprovements: { id: string; type: string; title: string; description: string }[] = [];
 
   // Filters
   selectedDateRange: IAnalyticsDateRange;
@@ -92,7 +96,8 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
   constructor(
     private analyticsService: AnalyticsService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private http: HttpClient
   ) {
     // Default to last 30 days
     this.selectedDateRange = this.analyticsService.getDateRangePreset('30days');
@@ -101,6 +106,8 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadDashboard();
     this.loadAgentAnalytics();
+    this.loadContentPerformance();
+    this.loadSuggestedImprovements();
     this.setupAutoRefresh();
   }
 
@@ -175,6 +182,22 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     this.activeView = view;
   }
 
+  loadContentPerformance(): void {
+    this.http.get<{ success: boolean; data: any }>(`${environment.apiUrl}/analytics/content-performance`).subscribe({
+      next: (res) => {
+        if (res.success && res.data) this.contentPerformance = res.data;
+      }
+    });
+  }
+
+  loadSuggestedImprovements(): void {
+    this.http.get<{ success: boolean; data: any[] }>(`${environment.apiUrl}/analytics/suggested-improvements`).subscribe({
+      next: (res) => {
+        if (res.success && res.data) this.suggestedImprovements = res.data;
+      }
+    });
+  }
+
   /**
    * Load agent analytics
    */
@@ -201,6 +224,8 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     this.agentAnalytics = null;
     this.loadDashboard();
     this.loadAgentAnalytics();
+    this.loadContentPerformance();
+    this.loadSuggestedImprovements();
     this.notificationService.info('Refreshing Analytics', 'Loading latest data...');
   }
 

@@ -12,6 +12,7 @@ import { SocialAccountsService, ISocialAccount } from '../../core/services/socia
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
 import { ConnectionUsageBarComponent } from '../../shared/components/connection-usage-bar/connection-usage-bar.component';
+import { RouterModule } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 
 /**
@@ -20,7 +21,7 @@ import { Observable, Subscription } from 'rxjs';
  */
 
 // All available settings tabs
-type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply';
+type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply' | 'brand-rules' | 'compliance';
 
 interface Platform {
   id: string;
@@ -41,7 +42,7 @@ interface Platform {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, ConnectionUsageBarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, ConnectionUsageBarComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })

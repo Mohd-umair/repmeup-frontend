@@ -146,6 +146,47 @@
       </div>
     </div>
 
+    <!-- AI vs Human & Suggested Improvements -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h3 class="text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
+          <i class="fas fa-robot text-purple-400"></i>
+          AI vs Human (last 30 days)
+        </h3>
+        <div *ngIf="contentPerformance" class="flex gap-6">
+          <div class="text-center">
+            <p class="text-3xl font-bold text-purple-400">{{ contentPerformance.aiCount }}</p>
+            <p class="text-sm text-gray-400">AI generated</p>
+          </div>
+          <div class="text-center">
+            <p class="text-3xl font-bold text-rep-lime">{{ contentPerformance.humanCount }}</p>
+            <p class="text-sm text-gray-400">Human written</p>
+          </div>
+          <div class="text-center">
+            <p class="text-3xl font-bold text-gray-300">{{ contentPerformance.aiPercent }}%</p>
+            <p class="text-sm text-gray-400">AI share</p>
+          </div>
+        </div>
+        <p *ngIf="!contentPerformance" class="text-gray-500 text-sm">No published posts in the last 30 days.</p>
+      </div>
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h3 class="text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
+          <i class="fas fa-lightbulb text-rep-lime"></i>
+          Suggested improvements
+        </h3>
+        <ul class="space-y-3">
+          <li *ngFor="let s of suggestedImprovements" class="flex gap-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+            <span class="text-rep-lime mt-0.5"><i class="fas fa-check-circle"></i></span>
+            <div>
+              <p class="font-medium text-rep-white">{{ s.title }}</p>
+              <p class="text-sm text-gray-400">{{ s.description }}</p>
+            </div>
+          </li>
+        </ul>
+        <p *ngIf="suggestedImprovements.length === 0" class="text-gray-500 text-sm">No suggestions yet.</p>
+      </div>
+    </div>
+
     <!-- View Tabs -->
     <div class="flex gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-fit">
       <button

@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+.post-card {
+  transition: border-color 0.15s ease;
+}
+
+.post-card:hover {
+  border-color: rgba(75, 85, 99, 0.8);
+}

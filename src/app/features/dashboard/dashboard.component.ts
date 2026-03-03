@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { InboxService } from '../../core/services/inbox.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,7 +13,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -88,6 +89,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   growthPercentage = 0;
   loadingGrowth = true;
 
+  // Dashboard KPIs (Social Autopilot)
+  kpi = {
+    postsScheduled: 0,
+    pendingApprovals: 0,
+    engagement30d: 0,
+    aiGeneratedPercent: 0
+  };
+  loadingKpi = true;
+  upcomingPosts: any[] = [];
+  loadingUpcoming = true;
+  trendInsights: any[] = [];
+  loadingTrends = true;
+  calendarMonth: Date = new Date();
+
   // Recent Activity
   recentActivity: any[] = [];
   loadingActivity = true;
@@ -122,6 +137,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadPerformanceMetrics();
     this.loadGrowthStats();
     this.loadScheduledPosts();
+    this.loadDashboardKpi();
+    this.loadUpcomingPosts();
+    this.loadTrendInsights();
   }
 
   checkPlatformConnections(): void {
@@ -148,6 +166,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success && response.data) {
           this.stats = response.data;
+          this.kpi.engagement30d = response.data.total ?? 0;
           // Update quick action stats
           const inboxAction = this.quickActions.find(action => action.title === 'Inbox');
           if (inboxAction) {
@@ -585,5 +604,97 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getTotalInteractionsProgress(): number {
     return this.Math.min(100, ((this.stats?.total || 0) / 100) * 100);
+  }
+
+  loadDashboardKpi(): void {
+    this.loadingKpi = true;
+    this.http.get<any>(`${environment.apiUrl}/posts/dashboard-counts`).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.kpi.postsScheduled = res.data.scheduled ?? 0;
+          this.kpi.pendingApprovals = res.data.pendingApproval ?? 0;
+          this.kpi.aiGeneratedPercent = res.data.aiGeneratedPercent ?? 0;
+        }
+        this.kpi.engagement30d = this.stats?.total ?? 0;
+        this.loadingKpi = false;
+      },
+      error: () => {
+        this.loadingKpi = false;
+      }
+    });
+  }
+
+  loadUpcomingPosts(): void {
+    this.loadingUpcoming = true;
+    this.http.get<any>(`${environment.apiUrl}/posts/scheduled`).subscribe({
+      next: (res) => {
+        if (res.success && res.data && Array.isArray(res.data)) {
+          this.upcomingPosts = res.data.slice(0, 10);
+        } else {
+          this.upcomingPosts = [];
+        }
+        this.loadingUpcoming = false;
+      },
+      error: () => {
+        this.upcomingPosts = [];
+        this.loadingUpcoming = false;
+      }
+    });
+  }
+
+  loadTrendInsights(): void {
+    this.loadingTrends = true;
+    this.http.get<any>(`${environment.apiUrl}/trends`).subscribe({
+      next: (res) => {
+        if (res.success && res.data && Array.isArray(res.data)) {
+          this.trendInsights = res.data.slice(0, 5);
+        } else {
+          this.trendInsights = [];
+        }
+        this.loadingTrends = false;
+      },
+      error: () => {
+        this.trendInsights = [];
+        this.loadingTrends = false;
+      }
+    });
+  }
+
+  getCalendarDays(): { date: Date; day: number; isCurrentMonth: boolean; isToday: boolean }[] {
+    const year = this.calendarMonth.getFullYear();
+    const month = this.calendarMonth.getMonth();
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const startPad = first.getDay();
+    const days: { date: Date; day: number; isCurrentMonth: boolean; isToday: boolean }[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < startPad; i++) {
+      const d = new Date(year, month, -startPad + i + 1);
+      days.push({ date: d, day: d.getDate(), isCurrentMonth: false, isToday: false });
+    }
+    for (let d = 1; d <= last.getDate(); d++) {
+      const date = new Date(year, month, d);
+      date.setHours(0, 0, 0, 0);
+      days.push({ date, day: d, isCurrentMonth: true, isToday: date.getTime() === today.getTime() });
+    }
+    const remaining = 42 - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      const d = new Date(year, month + 1, i);
+      days.push({ date: d, day: d.getDate(), isCurrentMonth: false, isToday: false });
+    }
+    return days.slice(0, 42);
+  }
+
+  prevMonth(): void {
+    this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() - 1);
+  }
+
+  nextMonth(): void {
+    this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() + 1);
+  }
+
+  calendarMonthLabel(): string {
+    return this.calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
   }
 }
