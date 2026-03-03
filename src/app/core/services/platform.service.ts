@@ -150,13 +150,13 @@ export class PlatformService {
   /**
    * Initiate Facebook OAuth flow
    * Redirects user to Facebook/Meta authorization page
+   * @param forceConsentScreen If true, adds auth_type=reauthorize so Meta shows the permission consent screen (for App Review screencast)
    */
-  connectFacebook(): void {
-    // Facebook uses Meta OAuth endpoint
-    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/facebook').subscribe({
+  connectFacebook(forceConsentScreen = false): void {
+    const params = forceConsentScreen ? { auth_type: 'reauthorize' } : undefined;
+    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/facebook', params).subscribe({
       next: (response) => {
         if (response.success && response.authUrl) {
-          // Redirect to Facebook OAuth page
           window.location.href = response.authUrl;
         }
       },

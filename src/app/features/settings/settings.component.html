@@ -330,9 +330,13 @@
         <p class="text-xs text-gray-500 mt-2 text-center">
           Recording for App Review?
           <button type="button" (click)="connectInstagramForceConsent()" class="text-blue-600 hover:underline ml-1">
-            Force consent screen
+            Force consent screen (Instagram)
           </button>
-          to show Meta's permission screen when connecting Instagram.
+          or
+          <button type="button" (click)="connectFacebookForceConsent()" class="text-blue-600 hover:underline ml-1">
+            Force consent screen (Facebook)
+          </button>
+          to show Meta's permission screen when connecting.
         </p>
       </div>
 
