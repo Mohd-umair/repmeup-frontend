@@ -1,4 +1,10 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { NotificationComponent } from '../notification/notification.component';
+import { SidebarComponent } from '../sidebar/sidebar.component';
+import { HeaderComponent } from '../header/header.component';
+import { GlobalLoaderComponent } from '../global-loader/global-loader.component';
 
 /**
  * Main Layout Component - Single Responsibility Principle
@@ -6,6 +12,8 @@ import { Component } from '@angular/core';
  */
 @Component({
   selector: 'app-main-layout',
+  standalone: true,
+  imports: [CommonModule, RouterModule, NotificationComponent, SidebarComponent, HeaderComponent, GlobalLoaderComponent],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss']
 })

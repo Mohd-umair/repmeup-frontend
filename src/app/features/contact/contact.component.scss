@@ -18,48 +18,64 @@
     opacity: 0.8;
   }
 
-  // Smooth scrolling
   scroll-behavior: smooth;
+}
 
-  // Form input animations
-  input,
-  textarea,
-  select {
-    transition: all 0.3s ease;
+// Form inputs - dark glassmorphism style
+.contact-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;   
 
-    &:focus {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(216, 255, 0, 0.1);
-    }
-
-    &::placeholder {
-      color: #9CA3AF;
-      opacity: 0.7;
-    }
+  &::placeholder {
+    color: rgba(156, 163, 175, 0.8);
   }
 
-  // Button hover effect
-  button:not(:disabled):hover {
-    transform: scale(1.02) translateY(-2px);
+  &:focus {
+    outline: none;
+    border-color: rgba(216, 255, 0, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(216, 255, 0, 0.1);
   }
 
-  // Icon animations
-  i {
-    transition: transform 0.3s ease;
-  }
-
-  a:hover i {
-    transform: translateX(-3px);
-  }
-
-  // Card hover effect
-  .bg-rep-white {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    }
+  option {
+    background: #1f2937;
+    color: white;
   }
 }
 
+// Primary submit button
+.contact-btn {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  color: #0B0B0B;
+  background: #D8FF00;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(216, 255, 0, 0.2);
+
+  &:hover:not(:disabled) {
+    background: rgba(216, 255, 0, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(216, 255, 0, 0.3);
+  }
+}
+
+.contact-btn-disabled {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  background: #4b5563;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border: none;
+}

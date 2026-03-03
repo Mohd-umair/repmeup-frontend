@@ -1,22 +1,39 @@
-import { Component, EventEmitter, Output } from '@angular/core';
-import { IInboxFilters, InteractionType, Sentiment, InteractionStatus } from '../../../core/models/interaction.model';
+import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { IInboxFilters, InteractionType, Sentiment, InteractionStatus, ILabel } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
 
 /**
  * Inbox Top Filters Component
- * Handles Type, Sentiment, and Status filters in the top bar
+ * Handles Type, Sentiment, Status, and Labels filters in the top bar
  */
 @Component({
   selector: 'app-inbox-top-filters',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './inbox-top-filters.component.html',
   styleUrls: ['./inbox-top-filters.component.scss']
 })
-export class InboxTopFiltersComponent {
+export class InboxTopFiltersComponent implements OnChanges {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
+  @Input() initialFilters: IInboxFilters = {};
+  @Input() labels: ILabel[] = [];
 
   filters: IInboxFilters = {};
+  expanded = false;
 
   constructor(public themeService: ThemeService) {}
+
+  toggleExpanded(): void {
+    this.expanded = !this.expanded;
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['initialFilters'] && this.initialFilters && Object.keys(this.initialFilters).length > 0) {
+      this.filters = { ...this.initialFilters };
+    }
+  }
 
   types = [
     { value: InteractionType.COMMENT, label: 'Comments', icon: '💬' },
@@ -66,6 +83,13 @@ export class InboxTopFiltersComponent {
    */
   hasActiveFilters(): boolean {
     return Object.keys(this.filters).length > 0;
+  }
+
+  /**
+   * Get count of active filters (for collapsed badge)
+   */
+  getActiveFilterCount(): number {
+    return Object.keys(this.filters).length;
   }
 
   /**

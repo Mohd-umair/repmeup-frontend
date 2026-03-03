@@ -6,6 +6,8 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { GoogleCallbackComponent } from './features/auth/google-callback/google-callback.component';
+import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './features/auth/reset-password/reset-password.component';
 
 // Layout
 import { MainLayoutComponent } from './shared/components/main-layout/main-layout.component';
@@ -21,6 +23,7 @@ import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { PublishComponent } from './features/publish/publish.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
 import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
+import { ContentComponent } from './features/content/content.component';
 import { PlansComponent } from './features/plans/plans.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
@@ -28,6 +31,11 @@ import { ContactComponent } from './features/contact/contact.component';
 import { AboutComponent } from './features/about/about.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
+import { NotificationsComponent } from './features/notifications/notifications.component';
+import { BrandHubComponent } from './features/brand-hub/brand-hub.component';
+import { ApprovalQueueComponent } from './features/approval-queue/approval-queue.component';
+import { TrendExplorerComponent } from './features/trend-explorer/trend-explorer.component';
+import { ContentStudioComponent } from './features/content-studio/content-studio.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -59,7 +67,9 @@ const routes: Routes = [
       { path: '', redirectTo: 'login', pathMatch: 'full' },
       { path: 'login', component: LoginComponent },
       { path: 'register', component: RegisterComponent },
-      { path: 'google-callback', component: GoogleCallbackComponent }
+      { path: 'google-callback', component: GoogleCallbackComponent },
+      { path: 'forgot-password', component: ForgotPasswordComponent },
+      { path: 'reset-password', component: ResetPasswordComponent }
     ]
   },
 
@@ -72,15 +82,22 @@ const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
       { path: 'inbox', component: InboxContainerComponent },
-            { path: 'publish', component: PublishComponent },
-            { path: 'publish/calendar', component: CalendarComponent },
-            { path: 'publish/published', component: PublishedPostsComponent },
+      { path: 'publish', component: PublishComponent },
+      { path: 'publish/calendar', component: CalendarComponent },
+      { path: 'publish/published', component: PublishedPostsComponent },
+      { path: 'calendar', component: CalendarComponent },
+      { path: 'content', component: ContentComponent },
+      { path: 'brand-hub', component: BrandHubComponent },
+      { path: 'content-studio', component: ContentStudioComponent },
+      { path: 'approval-queue', component: ApprovalQueueComponent },
+      { path: 'trend-explorer', component: TrendExplorerComponent },
       { path: 'analytics', component: AnalyticsComponent },
       { path: 'knowledge-base', component: KnowledgeBaseComponent },
       { path: 'settings', component: SettingsComponent },
       { path: 'agents', component: AgentsComponent },
       { path: 'plans', component: PlansComponent },
-      { path: 'ai-credits', component: AiCreditsComponent }
+      { path: 'ai-credits', component: AiCreditsComponent },
+      { path: 'notifications', component: NotificationsComponent }
     ]
   },
 

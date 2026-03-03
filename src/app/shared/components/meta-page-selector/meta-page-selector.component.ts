@@ -1,4 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
@@ -49,6 +51,8 @@ export interface GetPagesResponse {
 
 @Component({
   selector: 'app-meta-page-selector',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './meta-page-selector.component.html',
   styleUrls: ['./meta-page-selector.component.scss']
 })

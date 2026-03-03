@@ -43,8 +43,9 @@
         <!-- Platform -->
         <td class="px-6 py-4 whitespace-nowrap">
           <div class="flex items-center space-x-3">
-            <div [class]="'w-10 h-10 rounded-lg flex items-center justify-center ' + getPlatformColors(connection.platform).bg">
-              <i [class]="getPlatformIcon(connection.platform) + ' text-xl ' + getPlatformColors(connection.platform).text"></i>
+            <div [class]="'w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 ' + (!showProfilePicture(connection) ? getPlatformColors(connection.platform).bg : 'bg-gray-100')">
+              <img *ngIf="showProfilePicture(connection)" [src]="getProfilePictureSafeUrl(connection)" alt="" class="w-full h-full object-cover" (error)="onProfilePictureError(connection)" />
+              <i *ngIf="!showProfilePicture(connection)" [class]="getPlatformIcon(connection.platform) + ' text-xl ' + getPlatformColors(connection.platform).text"></i>
             </div>
             <span class="text-sm font-medium text-gray-900">{{ getPlatformLabel(connection.platform) }}</span>
           </div>
@@ -115,8 +116,9 @@
     <!-- Header -->
     <div class="flex items-start justify-between mb-3">
       <div class="flex items-center space-x-3 flex-1 min-w-0">
-        <div [class]="'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ' + getPlatformColors(connection.platform).bg">
-          <i [class]="getPlatformIcon(connection.platform) + ' text-2xl ' + getPlatformColors(connection.platform).text"></i>
+        <div [class]="'w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ' + (!showProfilePicture(connection) ? getPlatformColors(connection.platform).bg : 'bg-gray-100')">
+          <img *ngIf="showProfilePicture(connection)" [src]="getProfilePictureSafeUrl(connection)" alt="" class="w-full h-full object-cover" (error)="onProfilePictureError(connection)" />
+          <i *ngIf="!showProfilePicture(connection)" [class]="getPlatformIcon(connection.platform) + ' text-2xl ' + getPlatformColors(connection.platform).text"></i>
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-xs font-semibold text-gray-500 uppercase">{{ getPlatformLabel(connection.platform) }}</p>

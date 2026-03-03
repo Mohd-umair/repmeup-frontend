@@ -93,6 +93,8 @@ export interface IAuthor {
   email?: string;
   profileUrl?: string;
   avatarUrl?: string;
+  /** Alternative field some APIs use for profile image */
+  profilePicture?: string;
   followerCount?: number;
   isVerified?: boolean;
 }
@@ -156,10 +158,12 @@ export interface IEngagement {
 export interface ILabel {
   _id: string;
   name: string;
-  color: string;
+  color?: string;
   description?: string;
   icon?: string;
 }
+
+export type InboxViewMode = 'all' | 'priority' | 'assigned' | 'needs_response' | 'overdue' | 'archived';
 
 export interface IInboxFilters {
   platform?: Platform;
@@ -167,7 +171,11 @@ export interface IInboxFilters {
   sentiment?: Sentiment;
   status?: InteractionStatus;
   assignedTo?: string;
+  viewMode?: InboxViewMode;
   search?: string;
+  label?: string; // Label ID for filtering
+  /** Filter by post (e.g. from Content page "Comments" – show only comments for this post) */
+  postId?: string;
   page?: number;
   limit?: number;
   sortBy?: string;
@@ -185,8 +193,13 @@ export interface IInboxStats {
   total: number;
   unread: number;
   assigned: number;
+  replied?: number;
+  resolved?: number;
+  responseRate?: number;
   positive: number;
   negative: number;
   neutral: number;
+  avgResponseTimeMinutes?: number | null;
+  overdueCount?: number;
 }
 

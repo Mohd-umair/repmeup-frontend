@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PlatformService, PlatformConnection } from '../../core/services/platform.service';
 import { OrganizationService, AutoReplySettings } from '../../core/services/organization.service';
@@ -7,6 +9,10 @@ import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
+import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
+import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
+import { ConnectionUsageBarComponent } from '../../shared/components/connection-usage-bar/connection-usage-bar.component';
+import { RouterModule } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 
 /**
@@ -15,7 +21,7 @@ import { Observable, Subscription } from 'rxjs';
  */
 
 // All available settings tabs
-type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply';
+type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply' | 'brand-rules' | 'compliance';
 
 interface Platform {
   id: string;
@@ -35,6 +41,8 @@ interface Platform {
 
 @Component({
   selector: 'app-settings',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, ConnectionUsageBarComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
@@ -66,6 +74,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
   showPlansModal = false;
   allPlans: any = null;
   upgradingPlan = false;
+
+  // Profile settings
+  profileData = {
+    firstName: '',
+    lastName: '',
+    email: ''
+  };
+  savingProfile = false;
+
+  // Organization settings
+  organizationData = {
+    name: '',
+    website: '',
+    industry: '',
+    size: '',
+    escalationSettings: { autoAssign: true } as { autoAssign: boolean }
+  };
+  savingOrganization = false;
 
   private subscriptions: Subscription[] = [];
 
@@ -182,6 +208,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
         if (user && user.organization) {
           this.organizationId = typeof user.organization === 'string' ? user.organization : user.organization._id;
           this.loadAutoReplySettings();
+          this.loadProfileData(user);
+          this.loadOrganizationData();
         }
       })
     );
@@ -680,11 +708,15 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   getConnectedCount(): number {
-    return this.platforms.filter(p => p.connected).length;
+    // Use the actual usage data from the service instead of the static platforms array
+    const usage = this.platformConnectionService.getCurrentUsage();
+    return usage ? usage.current : 0;
   }
 
   getPendingCount(): number {
-    return this.platforms.filter(p => !p.connected).length;
+    // Calculate available platforms: max limit minus current connections
+    const usage = this.platformConnectionService.getCurrentUsage();
+    return usage ? usage.remaining : 0;
   }
 
   /**
@@ -976,6 +1008,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Start Instagram OAuth with auth_type=reauthorize so Meta shows the permission consent screen.
+   * Use this when recording the App Review screencast.
+   */
+  connectInstagramForceConsent(): void {
+    this.platformService.connectInstagram(true);
+  }
+
+  /**
    * Handle pages connected from modal (Step 8)
    */
   onPagesConnected(): void {
@@ -1260,6 +1300,108 @@ export class SettingsComponent implements OnInit, OnDestroy {
    */
   goToPlansPage(): void {
     this.router.navigate(['/app/plans']);
+  }
+
+  /**
+   * Load profile data from current user
+   */
+  private loadProfileData(user: any): void {
+    this.profileData = {
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || ''
+    };
+  }
+
+  /**
+   * Load organization data
+   */
+  private loadOrganizationData(): void {
+    if (!this.organizationId) return;
+
+    this.organizationService.getOrganization(this.organizationId).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const data = response.data as any;
+          this.organizationData = {
+            name: data.name || '',
+            website: data.website || '',
+            industry: data.industry || '',
+            size: data.size || '',
+            escalationSettings: {
+              autoAssign: data.escalationSettings?.autoAssign !== false
+            }
+          };
+        }
+      },
+      error: (error) => {
+        console.error('Error loading organization:', error);
+      }
+    });
+  }
+
+  /**
+   * Save profile changes
+   */
+  saveProfile(): void {
+    this.savingProfile = true;
+
+    this.authService.updateProfile(this.profileData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notificationService.success(
+            'Profile Updated',
+            'Your profile has been updated successfully!'
+          );
+        }
+        this.savingProfile = false;
+      },
+      error: (error) => {
+        console.error('Error updating profile:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to update profile';
+        this.notificationService.error(
+          'Update Failed',
+          errorMessage
+        );
+        this.savingProfile = false;
+      }
+    });
+  }
+
+  /**
+   * Save organization changes
+   */
+  saveOrganization(): void {
+    if (!this.organizationId) {
+      this.notificationService.error(
+        'Organization Not Found',
+        'Organization ID not found. Please refresh the page.'
+      );
+      return;
+    }
+
+    this.savingOrganization = true;
+
+    this.organizationService.updateOrganization(this.organizationId, this.organizationData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notificationService.success(
+            'Organization Updated',
+            'Organization settings have been updated successfully!'
+          );
+        }
+        this.savingOrganization = false;
+      },
+      error: (error) => {
+        console.error('Error updating organization:', error);
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to update organization';
+        this.notificationService.error(
+          'Update Failed',
+          errorMessage
+        );
+        this.savingOrganization = false;
+      }
+    });
   }
 
   /**

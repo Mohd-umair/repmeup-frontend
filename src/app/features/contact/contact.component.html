@@ -1,218 +1,233 @@
-<div class="contact bg-rep-black min-h-screen py-12 px-4">
-  <div class="w-full">
+<div class="contact relative min-h-screen overflow-hidden">
+  <!-- Background decoration -->
+  <div class="absolute inset-0 bg-gradient-to-br from-rep-black via-gray-950 to-rep-black"></div>
+  <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-rep-lime/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+  <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-rep-lime/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-transparent via-transparent to-rep-black/50"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+    
     <!-- Header -->
-    <div class="text-center mb-12">
-      <h1 class="text-5xl font-bold text-rep-white mb-4">Get in Touch</h1>
-      <p class="text-xl text-gray-400 max-w-2xl mx-auto">
-        Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+    <div class="text-center mb-12 sm:mb-16">
+      <span class="inline-block px-4 py-1.5 bg-rep-lime/10 border border-rep-lime/30 rounded-full text-rep-lime text-sm font-semibold mb-6">
+        We're here to help
+      </span>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
+        Let's start a <span class="text-rep-lime">conversation</span>
+      </h1>
+      <p class="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+        Have questions about RepMeUp? We'd love to hear from you. Drop us a line and we'll get back within 24 hours.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Contact Information Card -->
-      <div class="lg:col-span-1 space-y-6">
-        <!-- Main Contact Card -->
-        <div class="bg-rep-white rounded-2xl shadow-2xl p-8 border border-gray-800">
-          <h2 class="text-2xl font-bold text-rep-black mb-6">Contact Information</h2>
-          
-          <div class="space-y-6">
-            <!-- Email -->
-            <div class="flex items-start space-x-4">
-              <div class="w-12 h-12 bg-rep-lime/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-envelope text-rep-lime text-xl"></i>
-              </div>
-              <div>
-                <h3 class="font-semibold text-rep-black mb-1">Email</h3>
-                <a href="mailto:support&#64;repmeup.com" class="text-gray-700 hover:text-rep-lime transition">
-                  support&#64;repmeup.com
-                </a>
-              </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+      
+      <!-- Contact Info Sidebar -->
+      <div class="lg:col-span-4 space-y-6">
+        
+        <!-- Quick Contact Cards -->
+        <div class="space-y-4">
+          <!-- Email Card -->
+          <a 
+            href="mailto:info&#64;repmeup.com"
+            class="group flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-rep-lime/30 hover:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+          >
+            <div class="w-14 h-14 rounded-xl bg-rep-lime/20 flex items-center justify-center group-hover:bg-rep-lime/30 transition-colors">
+              <i class="fas fa-envelope text-rep-lime text-xl"></i>
             </div>
-
-            <!-- Phone -->
-            <div class="flex items-start space-x-4">
-              <div class="w-12 h-12 bg-rep-lime/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-phone text-rep-lime text-xl"></i>
-              </div>
-              <div>
-                <h3 class="font-semibold text-rep-black mb-1">Phone</h3>
-                <a href="tel:+1234567890" class="text-gray-700 hover:text-rep-lime transition">
-                  +1 (234) 567-890
-                </a>
-              </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Email</p>
+              <p class="text-white font-medium truncate group-hover:text-rep-lime transition-colors">info&#64;repmeup.com</p>
             </div>
+            <i class="fas fa-arrow-right text-gray-500 group-hover:text-rep-lime group-hover:translate-x-1 transition-all"></i>
+          </a>
 
-            <!-- Address -->
-            <div class="flex items-start space-x-4">
-              <div class="w-12 h-12 bg-rep-lime/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-map-marker-alt text-rep-lime text-xl"></i>
-              </div>
-              <div>
-                <h3 class="font-semibold text-rep-black mb-1">Address</h3>
-                <p class="text-gray-700">
-                  123 Business Street<br>
-                  City, State 12345<br>
-                  Country
-                </p>
-              </div>
+          <!-- Phone Card -->
+          <a 
+            href="tel:+919911275112"
+            class="group flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-rep-lime/30 hover:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
+          >
+            <div class="w-14 h-14 rounded-xl bg-rep-lime/20 flex items-center justify-center group-hover:bg-rep-lime/30 transition-colors">
+              <i class="fas fa-phone text-rep-lime text-xl"></i>
             </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Phone</p>
+              <p class="text-white font-medium group-hover:text-rep-lime transition-colors">+91 99112 75112</p>
+            </div>
+            <i class="fas fa-arrow-right text-gray-500 group-hover:text-rep-lime group-hover:translate-x-1 transition-all"></i>
+          </a>
 
-            <!-- Social Media -->
-            <div class="pt-4 border-t border-gray-200">
-              <h3 class="font-semibold text-rep-black mb-4">Follow Us</h3>
-              <div class="flex space-x-4">
-                <a href="#" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-rep-lime hover:text-rep-black transition">
-                  <i class="fab fa-twitter"></i>
-                </a>
-                <a href="#" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-rep-lime hover:text-rep-black transition">
-                  <i class="fab fa-linkedin"></i>
-                </a>
-                <a href="#" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-rep-lime hover:text-rep-black transition">
-                  <i class="fab fa-facebook"></i>
-                </a>
-                <a href="#" class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-rep-lime hover:text-rep-black transition">
-                  <i class="fab fa-instagram"></i>
-                </a>
-              </div>
+          <!-- Address Card -->
+          <div class="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="w-14 h-14 rounded-xl bg-rep-lime/20 flex items-center justify-center">
+              <i class="fas fa-map-marker-alt text-rep-lime text-xl"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Office</p>
+              <p class="text-white font-medium">Gurugram, Haryana<br><span class="text-gray-400">India</span></p>
             </div>
           </div>
         </div>
 
-        <!-- Support Hours -->
-        <div class="bg-rep-white rounded-2xl shadow-2xl p-6 border border-gray-800">
-          <h3 class="text-lg font-bold text-rep-black mb-4">Support Hours</h3>
-          <div class="space-y-2 text-sm text-gray-700">
-            <div class="flex justify-between">
-              <span class="font-medium">Monday - Friday:</span>
-              <span>9:00 AM - 6:00 PM</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium">Saturday:</span>
-              <span>10:00 AM - 4:00 PM</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="font-medium">Sunday:</span>
-              <span>Closed</span>
-            </div>
+        <!-- Social Links -->
+        <div class="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+          <p class="text-sm font-semibold text-gray-400 mb-4">Connect with us</p>
+          <div class="flex gap-3">
+            <a 
+              href="https://www.facebook.com/profile.php?id=61586432831752" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all duration-300"
+              title="Facebook"
+            >
+              <i class="fab fa-facebook-f text-lg"></i>
+            </a>
+            <a 
+              href="https://www.instagram.com/rep_me_up/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300"
+              title="Instagram"
+            >
+              <i class="fab fa-instagram text-lg"></i>
+            </a>
+            <a 
+              href="https://www.linkedin.com/company/111395945/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-blue-700 hover:text-white hover:border-blue-600 transition-all duration-300"
+              title="LinkedIn"
+            >
+              <i class="fab fa-linkedin-in text-lg"></i>
+            </a>
           </div>
-          <div class="mt-4 pt-4 border-t border-gray-200">
-            <p class="text-xs text-gray-600">
-              <i class="fas fa-clock mr-2"></i>
-              All times are in your local timezone
-            </p>
+        </div>
+
+        <!-- Support Badge -->
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-rep-lime/10 to-rep-lime/5 border border-rep-lime/20 backdrop-blur-sm">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-rep-lime/30 flex items-center justify-center">
+              <i class="fas fa-headset text-rep-lime text-xl"></i>
+            </div>
+            <div>
+              <p class="font-bold text-white">Available 7 days</p>
+              <p class="text-sm text-gray-400">We respond within 24 hours</p>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Contact Form -->
-      <div class="lg:col-span-2">
-        <div class="bg-rep-white rounded-2xl shadow-2xl p-8 border border-gray-800">
-          <h2 class="text-2xl font-bold text-rep-black mb-6">Send us a Message</h2>
+      <div class="lg:col-span-8">
+        <div class="rounded-3xl bg-white/[0.03] border border-white/10 p-8 sm:p-10 lg:p-12 backdrop-blur-xl shadow-2xl">
+          
+          <div class="flex items-center gap-3 mb-8">
+            <div class="w-12 h-12 rounded-xl bg-rep-lime/20 flex items-center justify-center">
+              <i class="fas fa-paper-plane text-rep-lime text-xl"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-bold text-white">Send a message</h2>
+              <p class="text-sm text-gray-400">Fill out the form below and we'll get back to you</p>
+            </div>
+          </div>
 
           <!-- Success Message -->
-          <div *ngIf="success" class="mb-6 p-4 bg-rep-lime/20 border border-rep-lime/30 rounded-xl">
-            <div class="flex items-center">
-              <i class="fas fa-check-circle text-rep-lime text-xl mr-3"></i>
-              <div>
-                <p class="font-semibold text-rep-black">Message sent successfully!</p>
-                <p class="text-sm text-gray-700 mt-1">We'll get back to you within 24 hours.</p>
-              </div>
+          <div *ngIf="success" class="mb-8 p-5 rounded-2xl bg-rep-lime/10 border border-rep-lime/30 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-rep-lime/20 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-check text-rep-lime text-xl"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-white">Message sent successfully!</p>
+              <p class="text-sm text-gray-400 mt-1">We'll get back to you within 24 hours.</p>
             </div>
           </div>
 
           <!-- Error Message -->
-          <div *ngIf="error" class="mb-6 p-4 bg-red-100 border border-red-300 rounded-xl">
-            <div class="flex items-center">
-              <i class="fas fa-exclamation-circle text-red-600 text-xl mr-3"></i>
-              <div>
-                <p class="font-semibold text-red-800">Error sending message</p>
-                <p class="text-sm text-red-700 mt-1">Please try again later.</p>
-              </div>
+          <div *ngIf="error" class="mb-8 p-5 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-exclamation text-red-400 text-xl"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-red-200">Error sending message</p>
+              <p class="text-sm text-red-300/80 mt-1">Please try again later.</p>
             </div>
           </div>
 
           <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="space-y-6">
-            <!-- Name and Email Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label for="name" class="block text-sm font-semibold text-rep-black mb-2">
-                  Full Name <span class="text-red-500">*</span>
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+                  Full Name <span class="text-rep-lime">*</span>
                 </label>
                 <input
                   type="text"
                   id="name"
                   formControlName="name"
                   [class]="submitted && f['name'].invalid 
-                    ? 'w-full px-4 py-3 border-2 border-red-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white text-rep-black' 
-                    : 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime bg-white text-rep-black'"
+                    ? 'contact-input border-red-500/50 focus:ring-red-500/30' 
+                    : 'contact-input'"
                   placeholder="John Doe"
                 />
-                <p *ngIf="submitted && f['name'].invalid" class="mt-1 text-sm text-red-600">
+                <p *ngIf="submitted && f['name'].invalid" class="mt-2 text-sm text-red-400">
                   {{ getFieldError('name') }}
                 </p>
               </div>
 
               <div>
-                <label for="email" class="block text-sm font-semibold text-rep-black mb-2">
-                  Email Address <span class="text-red-500">*</span>
+                <label for="email" class="block text-sm font-medium text-gray-300 mb-2">
+                  Email <span class="text-rep-lime">*</span>
                 </label>
                 <input
                   type="email"
                   id="email"
                   formControlName="email"
                   [class]="submitted && f['email'].invalid 
-                    ? 'w-full px-4 py-3 border-2 border-red-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white text-rep-black' 
-                    : 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime bg-white text-rep-black'"
+                    ? 'contact-input border-red-500/50 focus:ring-red-500/30' 
+                    : 'contact-input'"
                   placeholder="john&#64;example.com"
                 />
-                <p *ngIf="submitted && f['email'].invalid" class="mt-1 text-sm text-red-600">
+                <p *ngIf="submitted && f['email'].invalid" class="mt-2 text-sm text-red-400">
                   {{ getFieldError('email') }}
                 </p>
               </div>
             </div>
 
-            <!-- Phone and Company Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label for="phone" class="block text-sm font-semibold text-rep-black mb-2">
-                  Phone Number
-                </label>
+                <label for="phone" class="block text-sm font-medium text-gray-300 mb-2">Phone</label>
                 <input
                   type="tel"
                   id="phone"
                   formControlName="phone"
-                  class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime bg-white text-rep-black"
-                  placeholder="+1 (234) 567-890"
+                  class="contact-input"
+                  placeholder="+91 99112 75112"
                 />
               </div>
 
               <div>
-                <label for="company" class="block text-sm font-semibold text-rep-black mb-2">
-                  Company Name
-                </label>
+                <label for="company" class="block text-sm font-medium text-gray-300 mb-2">Company</label>
                 <input
                   type="text"
                   id="company"
                   formControlName="company"
-                  class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime bg-white text-rep-black"
-                  placeholder="Acme Inc."
+                  class="contact-input"
+                  placeholder="Your company name"
                 />
               </div>
             </div>
 
-            <!-- Subject -->
             <div>
-              <label for="subject" class="block text-sm font-semibold text-rep-black mb-2">
-                Subject <span class="text-red-500">*</span>
+              <label for="subject" class="block text-sm font-medium text-gray-300 mb-2">
+                Subject <span class="text-rep-lime">*</span>
               </label>
               <select
                 id="subject"
                 formControlName="subject"
                 [class]="submitted && f['subject'].invalid 
-                  ? 'w-full px-4 py-3 border-2 border-red-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white text-rep-black' 
-                  : 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime bg-white text-rep-black'"
+                  ? 'contact-input border-red-500/50 focus:ring-red-500/30' 
+                  : 'contact-input'"
               >
-                <option value="">Select a subject</option>
+                <option value="">What's this about?</option>
                 <option value="general">General Inquiry</option>
                 <option value="support">Technical Support</option>
                 <option value="sales">Sales Question</option>
@@ -220,48 +235,44 @@
                 <option value="partnership">Partnership Opportunity</option>
                 <option value="other">Other</option>
               </select>
-              <p *ngIf="submitted && f['subject'].invalid" class="mt-1 text-sm text-red-600">
+              <p *ngIf="submitted && f['subject'].invalid" class="mt-2 text-sm text-red-400">
                 {{ getFieldError('subject') }}
               </p>
             </div>
 
-            <!-- Message -->
             <div>
-              <label for="message" class="block text-sm font-semibold text-rep-black mb-2">
-                Message <span class="text-red-500">*</span>
+              <label for="message" class="block text-sm font-medium text-gray-300 mb-2">
+                Message <span class="text-rep-lime">*</span>
               </label>
               <textarea
                 id="message"
                 formControlName="message"
-                rows="6"
+                rows="5"
                 [class]="submitted && f['message'].invalid 
-                  ? 'w-full px-4 py-3 border-2 border-red-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white text-rep-black resize-none' 
-                  : 'w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime bg-white text-rep-black resize-none'"
+                  ? 'contact-input border-red-500/50 focus:ring-red-500/30 min-h-[140px]' 
+                  : 'contact-input min-h-[140px]'"
                 placeholder="Tell us how we can help you..."
               ></textarea>
-              <p *ngIf="submitted && f['message'].invalid" class="mt-1 text-sm text-red-600">
+              <p *ngIf="submitted && f['message'].invalid" class="mt-2 text-sm text-red-400">
                 {{ getFieldError('message') }}
               </p>
-              <p class="mt-1 text-xs text-gray-500">
-                Minimum 10 characters required
-              </p>
+              <p class="mt-1 text-xs text-gray-500">Minimum 10 characters</p>
             </div>
 
-            <!-- Submit Button -->
-            <div class="pt-4">
+            <div class="pt-2">
               <button
                 type="submit"
                 [disabled]="loading"
                 [class]="loading 
-                  ? 'w-full py-4 px-6 bg-gray-400 text-gray-600 rounded-xl font-semibold cursor-not-allowed' 
-                  : 'w-full py-4 px-6 bg-rep-lime text-rep-black rounded-xl font-semibold hover:bg-rep-lime/90 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-rep-lime/50'"
+                  ? 'contact-btn-disabled' 
+                  : 'contact-btn'"
               >
-                <span *ngIf="!loading" class="flex items-center justify-center">
-                  <i class="fas fa-paper-plane mr-2"></i>
+                <span *ngIf="!loading" class="flex items-center justify-center gap-2">
+                  <i class="fas fa-paper-plane"></i>
                   Send Message
                 </span>
-                <span *ngIf="loading" class="flex items-center justify-center">
-                  <i class="fas fa-spinner fa-spin mr-2"></i>
+                <span *ngIf="loading" class="flex items-center justify-center gap-2">
+                  <i class="fas fa-spinner fa-spin"></i>
                   Sending...
                 </span>
               </button>
@@ -271,10 +282,13 @@
       </div>
     </div>
 
-    <!-- Back Button -->
-    <div class="text-center mt-12">
-      <a routerLink="/" class="inline-flex items-center text-rep-lime hover:text-rep-lime/80 transition-colors">
-        <i class="fas fa-arrow-left mr-2"></i>
+    <!-- Back to Home -->
+    <div class="mt-12 sm:mt-16 text-center">
+      <a 
+        routerLink="/" 
+        class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-gray-400 hover:text-rep-lime hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-300 group"
+      >
+        <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
         Back to Home
       </a>
     </div>

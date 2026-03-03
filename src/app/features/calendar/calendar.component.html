@@ -11,38 +11,65 @@
     </div>
 
     <!-- View Tabs -->
-    <div class="mb-6 flex gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-full sm:w-fit relative z-50">
+    <div class="mb-4 flex flex-wrap gap-2">
       <button
-        routerLink="/app/publish"
         type="button"
-        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition text-gray-400 cursor-pointer touch-manipulation select-none hover:text-rep-white active:bg-gray-700"
+        (click)="viewMode = 'month'; generateCalendarDates()"
+        [class]="viewMode === 'month' ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+        class="px-4 py-2 rounded-lg font-medium transition"
       >
-        <i class="fas fa-edit mr-2"></i>
-        Composer
+        Month
       </button>
       <button
         type="button"
-        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition bg-rep-lime text-rep-black cursor-pointer touch-manipulation select-none"
+        (click)="viewMode = 'week'; generateCalendarDates()"
+        [class]="viewMode === 'week' ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+        class="px-4 py-2 rounded-lg font-medium transition"
       >
-        <i class="fas fa-calendar-alt mr-2"></i>
-        Calendar
+        Week
       </button>
       <button
-        routerLink="/app/publish/published"
         type="button"
-        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition text-gray-400 cursor-pointer touch-manipulation select-none hover:text-rep-white active:bg-gray-700"
+        (click)="viewMode = 'list'; generateCalendarDates()"
+        [class]="viewMode === 'list' ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+        class="px-4 py-2 rounded-lg font-medium transition"
       >
-        <i class="fas fa-history mr-2"></i>
-        Published
+        List
       </button>
+    </div>
+
+    <!-- Filters & period nav -->
+    <div class="mb-4 flex flex-wrap items-center gap-4">
+      <select [(ngModel)]="filterPlatform" (ngModelChange)="updateCalendarPosts()" class="px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm">
+        <option value="">All platforms</option>
+        <option value="instagram">Instagram</option>
+        <option value="facebook">Facebook</option>
+        <option value="linkedin">LinkedIn</option>
+      </select>
+      <select [(ngModel)]="filterStatus" (ngModelChange)="updateCalendarPosts()" class="px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm">
+        <option value="">All statuses</option>
+        <option value="scheduled">Scheduled</option>
+        <option value="published">Published</option>
+      </select>
+      <div class="flex items-center gap-2 ml-auto">
+        <button type="button" (click)="prevPeriod()" class="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white"><i class="fas fa-chevron-left"></i></button>
+        <span class="text-lg font-bold text-rep-white min-w-[180px] text-center">{{ periodLabel() }}</span>
+        <button type="button" (click)="nextPeriod()" class="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Composer / Published links -->
+    <div class="mb-6 flex gap-2">
+      <a routerLink="/app/content-studio" class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 text-sm">Composer</a>
+      <a routerLink="/app/publish/published" class="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 text-sm">Published</a>
     </div>
 
     <!-- CALENDAR VIEW -->
     <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 md:p-6 border border-gray-800">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <h2 class="text-xl sm:text-2xl font-bold text-rep-white flex items-center gap-2">
+          <h2 class="text-xl sm:text-2xl font-bold text-rep-white flex items-center gap-2">
           <i class="fas fa-calendar-week text-rep-lime"></i>
-          90-Day Overview
+          {{ periodLabel() }}
         </h2>
         
         <!-- Legend -->
@@ -66,7 +93,12 @@
         <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
       </div>
       
-      <div *ngIf="!loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-3 sm:gap-4">
+      <div *ngIf="!loading" class="grid gap-3 sm:gap-4"
+           [ngClass]="{
+             'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7': viewMode === 'month',
+             'grid-cols-7': viewMode === 'week',
+             'grid-cols-1': viewMode === 'list'
+           }">
         <div
           *ngFor="let date of calendarDates"
           (click)="dateHasPosts(date) && openPostsModal(date)"
@@ -171,13 +203,18 @@
                         class="px-3 py-1 rounded-full text-xs font-bold uppercase">
                     {{ post.status }}
                   </span>
-                  <button
-                    *ngIf="post.status === 'scheduled'"
-                    (click)="deleteScheduledPost(post._id!)"
-                    class="text-red-400 hover:text-red-300 transition text-sm">
-                    <i class="fas fa-trash mr-1"></i>
-                    Delete
-                  </button>
+                  <div class="flex gap-2">
+                    <button *ngIf="post.status === 'scheduled'" (click)="openReschedule(post); $event.stopPropagation()" class="text-xs text-rep-lime hover:text-rep-lime/80">Reschedule</button>
+                    <button *ngIf="post.status === 'scheduled'" (click)="openDuplicate(post); $event.stopPropagation()" class="text-xs text-gray-400 hover:text-white">Duplicate</button>
+                    <a *ngIf="post.status === 'scheduled'" routerLink="/app/content-studio" class="text-xs text-gray-400 hover:text-white">Edit</a>
+                    <button
+                      *ngIf="post.status === 'scheduled'"
+                      (click)="deleteScheduledPost(post._id!)"
+                      class="text-red-400 hover:text-red-300 transition text-sm">
+                      <i class="fas fa-trash mr-1"></i>
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -215,6 +252,48 @@
             class="px-6 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:bg-rep-lime/90 transition">
             Close
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reschedule modal -->
+    <div *ngIf="reschedulePostId" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
+      <div class="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-sm" (click)="$event.stopPropagation()">
+        <h3 class="text-lg font-bold text-rep-white mb-4">Reschedule post</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Date</label>
+            <input type="date" [(ngModel)]="rescheduleDate" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Time</label>
+            <input type="time" [(ngModel)]="rescheduleTime" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg" />
+          </div>
+        </div>
+        <div class="flex gap-2 mt-6">
+          <button type="button" (click)="confirmReschedule()" class="px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold">Save</button>
+          <button type="button" (click)="reschedulePostId = null" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Duplicate modal -->
+    <div *ngIf="duplicatingId" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60">
+      <div class="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-sm" (click)="$event.stopPropagation()">
+        <h3 class="text-lg font-bold text-rep-white mb-4">Duplicate post</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">New date</label>
+            <input type="date" [(ngModel)]="duplicateDate" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-400 mb-1">Time</label>
+            <input type="time" [(ngModel)]="duplicateTime" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg" />
+          </div>
+        </div>
+        <div class="flex gap-2 mt-6">
+          <button type="button" (click)="confirmDuplicate()" class="px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold">Duplicate</button>
+          <button type="button" (click)="duplicatingId = null" class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg">Cancel</button>
         </div>
       </div>
     </div>

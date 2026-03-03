@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col overflow-hidden">
+<div class="h-full flex flex-col overflow-hidden min-h-0">
   <!-- Empty State with Light Black/Gray Theme -->
   <div *ngIf="!interaction" class="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-50 p-8">
     <div class="text-center max-w-lg animate-fade-in">
@@ -44,41 +44,28 @@
       <h3 class="text-3xl font-bold mb-4 text-gray-800">
         Select a Conversation
       </h3>
-      <p class="text-gray-600 text-lg leading-relaxed mb-6">
-        Choose a conversation from the list to view details and engage with your customers across all platforms.
+      <p class="text-gray-600 text-base leading-relaxed">
+        Choose a conversation from the list to view details and engage with your customers.
       </p>
-      
-      <!-- Feature Pills - Light Black/Gray Theme -->
-      <div class="flex flex-wrap justify-center gap-3 mt-8">
-        <div class="px-4 py-2 rounded-full text-sm font-medium border-2 bg-gray-100 text-gray-700 border-gray-300">
-          <i class="fas fa-inbox mr-2"></i>Unified Inbox
-        </div>
-        <div class="px-4 py-2 rounded-full text-sm font-medium border-2 bg-gray-100 text-gray-700 border-gray-300">
-          <i class="fas fa-robot mr-2"></i>AI Powered
-        </div>
-        <div class="px-4 py-2 rounded-full text-sm font-medium border-2 bg-gray-100 text-gray-700 border-gray-300">
-          <i class="fas fa-bolt mr-2"></i>Real-time
-        </div>
-      </div>
     </div>
   </div>
 
   <!-- Interaction Detail -->
-  <div *ngIf="interaction" class="flex-1 flex flex-col overflow-hidden h-full">
-    <!-- Enhanced Header - Platform Themed -->
-    <div class="p-4 sm:p-6 border-b-2 flex-shrink-0 transition-all duration-500"
+  <div *ngIf="interaction" class="flex-1 flex flex-col overflow-hidden h-full min-h-0 relative">
+    <!-- Header -->
+    <div class="p-3 sm:p-4 border-b flex-shrink-0 transition-all duration-500"
          [style.background]="getPlatformColors() ? 'linear-gradient(to right, ' + getPlatformColors().gradientFrom + '10, ' + getPlatformColors().gradientTo + '10)' : 'white'"
          [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '30' : '#E5E7EB'">
-      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
         <div class="flex items-center space-x-4 min-w-0 flex-shrink">
           <!-- Avatar -->
           <div class="relative flex-shrink-0">
-            <img *ngIf="interaction.author.avatarUrl && !avatarFallback[interaction.platformId]"
-                 [src]="interaction.author.avatarUrl"
+            <img *ngIf="getAuthorAvatarUrl(interaction.author) && !avatarFallback[interaction.platformId]"
+                 [src]="getAuthorAvatarSafeUrl(interaction.author)"
                  (error)="onAvatarError(interaction.platformId)"
                  alt=""
                  class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-lg border-2 border-white">
-            <div *ngIf="!interaction.author.avatarUrl || avatarFallback[interaction.platformId]"
+            <div *ngIf="!getAuthorAvatarUrl(interaction.author) || avatarFallback[interaction.platformId]"
                  class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg transition-all duration-500"
                  [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : '#000000'">
               {{ interaction.author.name?.charAt(0)?.toUpperCase() || '?' }}
@@ -99,160 +86,60 @@
           </div>
         </div>
 
-        <!-- Status Badges & Actions -->
-        <div class="flex items-center flex-wrap gap-2 flex-shrink-0">
+        <div class="flex items-center flex-wrap gap-1.5 flex-shrink-0">
           <span 
-            [class]="'px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center space-x-1 sm:space-x-2 shadow-md whitespace-nowrap ' + getSentimentClass(interaction.sentiment)"
-          >
-            <span class="text-sm sm:text-base">{{ getSentimentIcon(interaction.sentiment) }}</span>
-            <span>{{ interaction.sentiment || 'neutral' }}</span>
+            [class]="'px-2 py-1 rounded-md text-[10px] sm:text-xs font-medium flex items-center gap-1 ' + getSentimentClass(interaction.sentiment)"
+            [attr.title]="'Sentiment: ' + (interaction.sentiment || 'neutral')">
+            <span>{{ getSentimentIcon(interaction.sentiment) }}</span>
+            <span class="hidden sm:inline">{{ interaction.sentiment || 'neutral' }}</span>
           </span>
           <span 
-            [class]="'px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md whitespace-nowrap ' + getStatusColor(interaction.status)"
-          >
+            [class]="'px-2 py-1 rounded-md text-[10px] sm:text-xs font-medium ' + getStatusColor(interaction.status)">
             {{ interaction.status }}
           </span>
-          
-          <!-- Resolve/Reopen Button -->
           <button 
             *ngIf="canResolve()"
             (click)="resolveInteraction()"
             [disabled]="resolvingInteraction"
-            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-rep-lime hover:bg-rep-lime/80 text-rep-black rounded-xl text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-50 flex items-center space-x-1 sm:space-x-2"
+            class="px-2.5 py-1 rounded-md text-xs font-semibold bg-rep-lime hover:bg-rep-lime/80 text-rep-black transition disabled:opacity-50"
             title="Mark as resolved">
             <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-check-circle'"></i>
-            <span class="hidden sm:inline">Resolve</span>
           </button>
-          
           <button 
             *ngIf="isResolved()"
             (click)="reopenInteraction()"
             [disabled]="resolvingInteraction"
-            class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-50 flex items-center space-x-1 sm:space-x-2"
+            class="px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-500 hover:bg-gray-600 text-white transition disabled:opacity-50"
             title="Reopen conversation">
             <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-redo'"></i>
-            <span class="hidden sm:inline">Reopen</span>
           </button>
         </div>
       </div>
 
-      <!-- Metadata Bar -->
-      <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs sm:text-sm bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
-        <!-- <div class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
-          <i class="fas fa-layer-group flex-shrink-0"></i>
-          <span class="font-semibold">Platform:</span>
-          <span class="px-2.5 py-1.5 rounded-lg font-bold whitespace-nowrap border transition-all duration-300"
-                [style.background]="getPlatformColors() ? getPlatformColors().primary + '15' : '#D0FF0020'"
-                [style.color]="getPlatformColors() ? getPlatformColors().primary : '#D0FF00'"
-                [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '40' : '#D0FF0040'">
-            {{ interaction.platform }}
+      <!-- Compact metadata line -->
+      <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-2">
+        <span class="px-2 py-0.5 rounded bg-gray-100">{{ interaction.type }}</span>
+        <span *ngIf="interaction.type === 'review' && getReviewRating()" class="flex items-center gap-0.5">
+          <i class="fas fa-star text-amber-500 text-[10px]"></i>
+          {{ getReviewRating() }}/5
+        </span>
+        <span>{{ formatDate(interaction.platformCreatedAt) }}</span>
+        <span *ngIf="interaction.labels && interaction.labels.length > 0" class="flex flex-wrap gap-1 ml-1">
+          <span 
+            *ngFor="let label of interaction.labels"
+            [style.background-color]="label.color + '20'"
+            [style.color]="label.color"
+            class="px-1.5 py-0.5 rounded text-[10px] font-medium">
+            {{ label.name }}
           </span>
-        </div> -->
-        <span class="text-gray-300 hidden sm:inline">|</span>
-        <div class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
-          <i class="fas fa-comment flex-shrink-0"></i>
-          <span class="font-semibold">Type:</span>
-          <span class="px-2.5 py-1.5 rounded-lg font-medium whitespace-nowrap border transition-all duration-300"
-                [style.background]="getPlatformColors() ? getPlatformColors().primary + '15' : '#D0FF0020'"
-                [style.color]="getPlatformColors() ? getPlatformColors().primary : '#000000'"
-                [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '40' : '#D0FF0040'">
-            {{ interaction.type }}
-          </span>
-        </div>
-        <span class="text-gray-300 hidden sm:inline">|</span>
-        <div *ngIf="interaction.type === 'review' && getReviewRating()" class="flex items-center space-x-2 text-gray-700 whitespace-nowrap">
-          <i class="fas fa-star text-amber-500 flex-shrink-0"></i>
-          <span class="font-semibold">{{ getReviewRating() }}/5</span>
-        </div>
-        <span *ngIf="interaction.type === 'review' && getReviewRating()" class="text-gray-300 hidden sm:inline">|</span>
-        <div class="flex items-center space-x-2 text-gray-700 min-w-0">
-          <i class="fas fa-clock flex-shrink-0"></i>
-          <span class="font-semibold truncate">{{ formatDate(interaction.platformCreatedAt) }}</span>
-        </div>
-      </div>
-
-      <!-- Compact Agent Assignment (Admin/Manager only) -->
-      <div *ngIf="canAssign()" class="mt-3 flex items-center gap-2 bg-gray-50 rounded-lg p-2 border" style="border-color: rgba(0,0,0,0.08);">
-        <label class="text-xs font-medium text-gray-600 flex items-center gap-1 flex-shrink-0">
-          <i class="fas fa-user-tie text-gray-400"></i>
-          Agent:
-        </label>
-        
-        <!-- Currently Assigned - Compact -->
-        <div *ngIf="isAssigned()" class="flex items-center gap-1.5 bg-white border rounded-lg px-2 py-1" style="border-color: rgba(0,0,0,0.1);">
-          <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-            {{ getAssignedAgentName().charAt(0).toUpperCase() }}
-          </div>
-          <span class="text-xs font-medium text-gray-900">{{ getAssignedAgentName() }}</span>
-          <button 
-            (click)="unassignInteraction()"
-            [disabled]="assigningAgent"
-            class="text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 ml-1"
-            title="Unassign">
-            <i class="fas fa-times text-xs"></i>
-          </button>
-        </div>
-
-        <!-- Assign Dropdown - Compact -->
-        <select 
-          *ngIf="!loadingAgents && availableAgents.length > 0"
-          (change)="assignToAgent($any($event.target).value)"
-          [disabled]="assigningAgent"
-          class="flex-1 px-2 py-1 border rounded-lg text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition disabled:opacity-50"
-          style="border-color: rgba(0,0,0,0.1);"
-          [value]="getAssignedAgentId()">
-          <option value="">{{ isAssigned() ? 'Reassign...' : 'Select agent...' }}</option>
-          <option *ngFor="let agent of availableAgents" 
-                  [value]="agent._id"
-                  [disabled]="isAgentAssigned(agent._id)">
-            {{ agent.firstName }} {{ agent.lastName }} ({{ agent.currentWorkload || 0 }})
-          </option>
-        </select>
-        
-        <!-- Loading State -->
-        <span *ngIf="loadingAgents" class="text-xs text-gray-500 flex items-center gap-1">
-          <i class="fas fa-spinner fa-spin"></i>
-          Loading...
-        </span>
-        
-        <!-- No Agents -->
-        <span *ngIf="!loadingAgents && availableAgents.length === 0" class="text-xs text-amber-700 flex items-center gap-1">
-          <i class="fas fa-exclamation-triangle"></i>
-          No agents
-        </span>
-      </div>
-
-      <!-- Compact Assigned Agent Display (For non-admin users) -->
-      <div *ngIf="!canAssign() && isAssigned()" class="mt-3 flex items-center gap-2 bg-blue-50 rounded-lg p-2 border border-blue-200">
-        <span class="text-xs font-medium text-gray-600 flex items-center gap-1">
-          <i class="fas fa-user-tie text-blue-500"></i>
-          Agent:
-        </span>
-        <div class="flex items-center gap-1.5">
-          <div class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
-            {{ getAssignedAgentName().charAt(0).toUpperCase() }}
-          </div>
-          <span class="text-xs font-semibold text-gray-900">{{ getAssignedAgentName() }}</span>
-        </div>
-      </div>
-
-      <!-- Labels -->
-      <div *ngIf="interaction.labels && interaction.labels.length > 0" class="mt-4 flex flex-wrap gap-2">
-        <span 
-          *ngFor="let label of interaction.labels"
-          [style.background-color]="label.color + '15'"
-          [style.border-color]="label.color + '40'"
-          [style.color]="label.color"
-          class="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold border-2 shadow-sm"
-        >
-          <i class="fas fa-tag mr-1"></i>
-          {{ label.name }}
         </span>
       </div>
     </div>
 
     <!-- Conversation Thread with Reply Form at End -->
-    <div class="flex-1 overflow-y-auto p-3 sm:p-4 bg-gradient-to-b from-gray-50 to-gray-100" #conversationThread>
+    <div class="flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 bg-gradient-to-b from-gray-50 to-gray-100"
+         #conversationThread
+         (scroll)="onThreadScroll($event)">
       <div class="max-w-4xl mx-auto space-y-3 pb-4">
         
         <!-- Chronological Timeline (Messages, Replies, Assignment) -->
@@ -263,12 +150,12 @@
             <div class="max-w-[85%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
-                  <img *ngIf="item.data.author.avatarUrl && !avatarFallback[item.data.platformId + '_msg']"
-                       [src]="item.data.author.avatarUrl"
+                  <img *ngIf="getAuthorAvatarUrl(item.data.author) && !avatarFallback[item.data.platformId + '_msg']"
+                       [src]="getAuthorAvatarSafeUrl(item.data.author)"
                        (error)="onAvatarError(item.data.platformId + '_msg')"
                        alt=""
                        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
-                  <div *ngIf="!item.data.author.avatarUrl || avatarFallback[item.data.platformId + '_msg']"
+                  <div *ngIf="!getAuthorAvatarUrl(item.data.author) || avatarFallback[item.data.platformId + '_msg']"
                        class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm flex-shrink-0">
                     {{ item.data.author.name?.charAt(0)?.toUpperCase() || '?' }}
                   </div>
@@ -285,6 +172,14 @@
                 </div>
                 <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
               </div>
+            </div>
+          </div>
+
+          <!-- Internal Note -->
+          <div *ngIf="item.type === 'note'" class="flex justify-center my-3">
+            <div class="max-w-[85%] bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <span class="text-[11px] text-amber-800">{{ item.data.addedByName }} · {{ formatDate(item.data.addedAt) }}{{ item.data.isPrivate ? ' (Private)' : '' }}</span>
+              <p class="text-xs text-amber-900 whitespace-pre-wrap mt-0.5">{{ item.data.note }}</p>
             </div>
           </div>
 
@@ -325,37 +220,24 @@
             <div class="max-w-[85%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
-                  <div class="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs sm:text-sm">
+                  <img *ngIf="getAuthorAvatarUrl(item.data.author) && !avatarFallback[item.data.platformId + '_platform']"
+                       [src]="getAuthorAvatarSafeUrl(item.data.author)"
+                       (error)="onAvatarError(item.data.platformId + '_platform')"
+                       alt=""
+                       class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
+                  <div *ngIf="!getAuthorAvatarUrl(item.data.author) || avatarFallback[item.data.platformId + '_platform']"
+                       class="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs sm:text-sm">
                     {{ (item.data.author?.name || '?').charAt(0).toUpperCase() }}
                   </div>
                   <div>
-                    <p class="font-bold text-xs sm:text-sm text-rep-black">
+                    <p class="font-bold text-xs text-rep-black">
                       {{ item.data.author?.name || item.data.sentBy || 'Unknown User' }}
-                      <span class="ml-1 text-xs bg-gray-100 px-2 py-0.5 rounded">
-                        <i class="fab" [class.fa-youtube]="item.data.platform === 'youtube'" 
-                           [class.fa-instagram]="item.data.platform === 'instagram'"
-                           [class.fa-facebook]="item.data.platform === 'facebook'"
-                           [class.fa-google]="item.data.platform === 'google'"
-                           [class.fa-linkedin]="item.data.platform === 'linkedin'"
-                           [class.fa-whatsapp]="item.data.platform === 'whatsapp'"
-                           class="mr-1"></i>{{ item.data.platform }}
-                      </span>
+                      <span class="ml-1 text-[10px] text-gray-500">{{ item.data.platform }}</span>
                     </p>
                     <p class="text-xs text-gray-500">{{ formatDate(item.data.sentAt) }}</p>
                   </div>
                 </div>
                 <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
-                <div *ngIf="item.data.sentiment" class="mt-2 flex items-center space-x-2">
-                  <span class="text-xs px-2 py-1 rounded" 
-                        [class.bg-green-100]="item.data.sentiment === 'positive'"
-                        [class.text-green-700]="item.data.sentiment === 'positive'"
-                        [class.bg-red-100]="item.data.sentiment === 'negative'"
-                        [class.text-red-700]="item.data.sentiment === 'negative'"
-                        [class.bg-gray-100]="item.data.sentiment === 'neutral'"
-                        [class.text-gray-700]="item.data.sentiment === 'neutral'">
-                    {{ item.data.sentiment }}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -363,25 +245,61 @@
           <!-- App Replies (sent from your app) - Right Side -->
           <div *ngIf="!item.data.isPlatformReply" class="flex justify-end mb-3">
             <div class="max-w-[85%]">
-              <div class="bg-rep-lime rounded-2xl shadow-md border-2 border-rep-lime/50 p-3 sm:p-4">
+              <!-- Bubble: dimmed while pending, normal when sent/failed -->
+              <div class="rounded-2xl shadow-md p-3 sm:p-4 transition-opacity duration-300"
+                   [class.opacity-60]="item.data.status === 'pending' && !item.data._optimistic"
+                   [class.bg-rep-lime]="item.data.status !== 'failed'"
+                   [class.border-2]="item.data.status !== 'failed'"
+                   [class.border-rep-lime]="item.data.status !== 'failed' && !item.data._optimistic"
+                   [class.border-dashed]="item.data._optimistic && item.data.status === 'pending'"
+                   [class.border-rep-lime]="item.data._optimistic && item.data.status === 'pending'"
+                   [class.bg-red-50]="item.data.status === 'failed'"
+                   [class.border-red-300]="item.data.status === 'failed'"
+                   [class.border-2]="item.data.status === 'failed'">
                 <div class="flex items-center justify-end space-x-2 mb-2">
                   <div class="text-right">
-                    <p class="font-bold text-xs sm:text-sm text-rep-black">
+                    <p class="font-bold text-xs"
+                       [class.text-rep-black]="item.data.status !== 'failed'"
+                       [class.text-red-700]="item.data.status === 'failed'">
                       {{ getUserFullName(item.data.sentBy) }}
-                      <span *ngIf="item.data.wasAutoGenerated" class="ml-1 text-xs bg-rep-black/10 px-2 py-0.5 rounded">
-                        <i class="fas fa-robot mr-1"></i>Auto
-                      </span>
+                      <span *ngIf="item.data.wasAutoGenerated" class="ml-1 text-[10px] text-gray-500">Auto</span>
                     </p>
-                    <p class="text-xs text-gray-700">{{ formatDate(item.data.sentAt) }}</p>
+                    <p class="text-xs" [class.text-gray-700]="item.data.status !== 'failed'" [class.text-red-500]="item.data.status === 'failed'">
+                      {{ formatDate(item.data.sentAt) }}
+                    </p>
                   </div>
-                  <div class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-black rounded-lg flex items-center justify-center text-rep-lime font-bold text-xs sm:text-sm">
-                    {{ getInitials(getUserFirstName(item.data.sentBy), getUserLastName(item.data.sentBy)) }}
+                  <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm"
+                       [class.bg-rep-black]="item.data.status !== 'failed'"
+                       [class.text-rep-lime]="item.data.status !== 'failed'"
+                       [class.bg-red-200]="item.data.status === 'failed'"
+                       [class.text-red-700]="item.data.status === 'failed'">
+                    <i *ngIf="item.data.status === 'pending'" class="fas fa-spinner fa-spin text-xs"></i>
+                    <span *ngIf="item.data.status !== 'pending'">{{ getInitials(getUserFirstName(item.data.sentBy), getUserLastName(item.data.sentBy)) }}</span>
+
                   </div>
                 </div>
-                <p class="text-sm sm:text-base text-rep-black leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
-                <div *ngIf="item.data.status === 'failed'" class="mt-2 flex items-center text-xs text-red-600">
-                  <i class="fas fa-exclamation-circle mr-1"></i>
-                  <span>Failed to send to platform</span>
+
+                <p class="text-sm sm:text-base leading-relaxed whitespace-pre-wrap"
+                   [class.text-rep-black]="item.data.status !== 'failed'"
+                   [class.text-red-800]="item.data.status === 'failed'">{{ item.data.content }}</p>
+
+                <!-- Pending label -->
+                <div *ngIf="item.data.status === 'pending' || item.data.status === 'sent'" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-600">
+                  <i [class]="item.data.status === 'sent' ? 'fas fa-check' : 'fas fa-clock'"></i>
+                  <span>{{ item.data.status === 'sent' ? 'Sent' : 'Sending…' }}</span>
+                </div>
+
+                <!-- Failed label + retry -->
+                <div *ngIf="item.data.status === 'failed'" class="mt-2 flex items-center justify-between gap-2">
+                  <span class="flex items-center gap-1 text-xs text-red-600">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Not sent
+                  </span>
+                  <button *ngIf="item.data._optimistic"
+                          (click)="retryOptimisticReply(item.data)"
+                          class="text-[10px] px-2 py-0.5 bg-red-100 hover:bg-red-200 text-red-700 rounded font-semibold transition">
+                    <i class="fas fa-redo mr-0.5"></i> Retry
+                  </button>
                 </div>
               </div>
             </div>
@@ -389,48 +307,21 @@
           </ng-container>
         </ng-container>
 
-        <!-- AI Suggestion (if any) -->
+        <!-- AI Suggestion -->
         <div *ngIf="aiSuggestion" class="flex justify-center">
-          <div class="max-w-[90%]">
-            <div class="p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-xl animate-fadeIn">
-              <div class="flex items-start space-x-2 sm:space-x-3">
-                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-robot text-white text-sm sm:text-base"></i>
-                  </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center justify-between mb-2 gap-2">
-                    <p class="text-xs sm:text-sm font-bold text-gray-900 flex items-center">
-                        <i class="fas fa-sparkles mr-1"></i>
-                      <span class="hidden sm:inline">AI Suggested Response</span>
-                      <span class="sm:hidden">AI Suggestion</span>
-                    </p>
-                    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-                      <span class="text-xs font-semibold text-blue-900 bg-blue-100 border border-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg">
-                        {{ (aiSuggestion.confidence * 100).toFixed(0) }}%
-                        </span>
-                      <button 
-                        (click)="useAISuggestion()"
-                        class="px-2 sm:px-3 py-1 bg-blue-500 text-white rounded-lg text-xs font-bold hover:bg-blue-600 transition"
-                      >
-                          <i class="fas fa-check mr-1"></i>
-                        <span class="hidden sm:inline">Use</span>
-                      </button>
-                      <button 
-                        (click)="clearAISuggestion()"
-                        class="px-1.5 sm:px-2 py-1 text-gray-600 hover:text-gray-800 transition"
-                        title="Dismiss"
-                      >
-                        <i class="fas fa-times"></i>
-                        </button>
-                      </div>
-                    </div>
-                  <p class="text-xs sm:text-sm text-gray-800 leading-relaxed mb-2">{{ aiSuggestion.content }}</p>
-                  <div *ngIf="aiSuggestion.usedKnowledgeBase" class="flex items-center space-x-1 text-xs text-blue-600">
-                    <i class="fas fa-book"></i>
-                    <span>Using Knowledge Base</span>
-                  </div>
+          <div class="max-w-[90%] w-full">
+            <div class="p-3 bg-rep-lime/10 border border-rep-lime/30 rounded-lg animate-fadeIn">
+              <div class="flex items-start justify-between gap-2 mb-1.5">
+                <span class="text-xs font-semibold text-gray-800 flex items-center gap-1">
+                  <i class="fas fa-robot text-rep-lime"></i>
+                  AI Suggestion <span class="text-gray-500 font-normal">({{ (aiSuggestion.confidence * 100).toFixed(0) }}%)</span>
+                </span>
+                <div class="flex items-center gap-0.5">
+                  <button (click)="useAISuggestion()" class="px-2 py-0.5 bg-rep-lime text-rep-black rounded text-[10px] font-semibold hover:bg-rep-lime/90">Use</button>
+                  <button (click)="clearAISuggestion()" class="p-0.5 text-gray-500 hover:text-gray-700" title="Dismiss"><i class="fas fa-times text-[10px]"></i></button>
                 </div>
               </div>
+              <p class="text-xs text-gray-800 leading-relaxed">{{ aiSuggestion.content }}</p>
             </div>
           </div>
         </div>
@@ -456,86 +347,83 @@
       </div>
     </div>
 
-        <!-- Reply Form at End of Thread -->
-        <div class="border-t-2 border-gray-300 bg-white rounded-2xl shadow-lg mt-4 p-3 sm:p-4">
-          <!-- Success/Error Messages -->
-          <div *ngIf="replySuccess" class="mb-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-            <p class="text-xs font-semibold text-green-800 flex items-center">
-              <i class="fas fa-check-circle mr-1"></i>
+      </div>
+    </div>
+
+    <!-- Scroll to bottom FAB — appears when user scrolls up -->
+    <div class="absolute bottom-20 right-4 z-20 transition-all duration-300"
+         [class.opacity-100]="!isScrolledToBottom"
+         [class.pointer-events-auto]="!isScrolledToBottom"
+         [class.opacity-0]="isScrolledToBottom"
+         [class.pointer-events-none]="isScrolledToBottom"
+         [class.translate-y-0]="!isScrolledToBottom"
+         [class.translate-y-4]="isScrolledToBottom">
+      <button
+        (click)="scrollToBottom()"
+        class="w-10 h-10 bg-white shadow-lg rounded-full flex items-center justify-center border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all duration-150"
+        title="Scroll to latest message">
+        <i class="fas fa-chevron-down text-gray-600 text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Reply Form — pinned to the bottom, never scrolls away -->
+    <div class="flex-shrink-0 bg-white border-t border-gray-200 p-3 sm:p-4">
+      <!-- View-only notice for agents on previously-assigned chats -->
+      <div *ngIf="!canReply() && interaction" class="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <p class="text-xs font-medium text-amber-800 flex items-center gap-2">
+          <i class="fas fa-eye"></i>
+          View only – this conversation is no longer assigned to you. You can view the thread but cannot reply.
+        </p>
+      </div>
+      <!-- Success banner -->
+      <div *ngIf="replySuccess" class="mb-2 p-2 bg-rep-lime/10 border border-rep-lime/30 rounded-lg">
+        <p class="text-xs font-semibold text-rep-black flex items-center">
+          <i class="fas fa-check-circle mr-1"></i>
           Reply sent successfully!
         </p>
       </div>
 
-      <form [formGroup]="replyForm" (ngSubmit)="submitReply()">
-            <!-- Compact Textarea with Action Buttons -->
-            <div class="flex items-start space-x-2">
-        <!-- Textarea -->
+      <form *ngIf="canReply()" [formGroup]="replyForm" (ngSubmit)="submitReply()">
+        <!-- Textarea + Send button -->
+        <div class="flex items-start space-x-2">
           <textarea
+            #replyTextarea
             formControlName="content"
-                rows="2"
-                class="flex-1 px-3 py-2 text-sm bg-gray-50 rounded-xl focus:bg-white transition-all duration-300 resize-none border-2"
-                placeholder="Type your reply..."
-                [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '30' : '#E5E7EB'"
-                [style.focusBorderColor]="getPlatformColors() ? getPlatformColors().primary : '#D0FF00'"
+            rows="2"
+            class="flex-1 px-3 py-2 text-sm bg-gray-50 rounded-xl focus:bg-white transition-all duration-300 resize-none border-2"
+            placeholder="Type your reply..."
+            [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '30' : '#E5E7EB'"
           ></textarea>
-
-              <!-- Send Button - Platform Themed -->
-              <button 
-                type="submit"
-                [disabled]="replyForm.invalid || submittingReply"
-                class="px-3 sm:px-4 py-2 h-full rounded-xl font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[70px] sm:min-w-[80px] text-white"
-                [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : 'linear-gradient(135deg, #D0FF00, #B8E600)'"
-                [style.boxShadow]="getPlatformColors() ? '0 4px 16px ' + getPlatformColors().primary + '40' : '0 4px 16px #D0FF0040'"
-              >
-                <span *ngIf="!submittingReply">
-                  <i class="fas fa-paper-plane mr-1"></i>
-                  <span class="hidden sm:inline">Send</span>
-                </span>
-                <span *ngIf="submittingReply">
-                  <i class="fas fa-spinner fa-spin"></i>
-                </span>
-              </button>
+          <button
+            type="submit"
+            [disabled]="replyForm.invalid || submittingReply"
+            class="px-3 sm:px-4 py-2 h-full rounded-xl font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[70px] sm:min-w-[80px] text-white"
+            [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : 'linear-gradient(135deg, #D0FF00, #B8E600)'"
+            [style.boxShadow]="getPlatformColors() ? '0 4px 16px ' + getPlatformColors().primary + '40' : '0 4px 16px #D0FF0040'"
+          >
+            <span *ngIf="!submittingReply"><i class="fas fa-paper-plane mr-1"></i><span class="hidden sm:inline">Send</span></span>
+            <span *ngIf="submittingReply"><i class="fas fa-spinner fa-spin"></i></span>
+          </button>
         </div>
-
-            <!-- Quick Action Buttons -->
-            <div class="flex items-center justify-between mt-2">
-              <div class="flex items-center gap-1">
-            <button 
-              type="button"
-                  (click)="generateAISuggestion()"
-                  [disabled]="generatingSuggestion || !interaction"
-                  class="px-2 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Generate AI Suggestion"
-            >
-                  <i [class]="generatingSuggestion ? 'fas fa-spinner fa-spin' : 'fas fa-robot'"></i>
-                  <span class="ml-1 hidden sm:inline">AI</span>
+        <!-- Quick actions -->
+        <div class="flex items-center justify-between mt-1.5">
+          <div class="flex items-center gap-0.5">
+            <button type="button" (click)="generateAISuggestion()" [disabled]="generatingSuggestion || !interaction"
+              class="p-1.5 rounded text-gray-600 hover:bg-rep-lime/20 hover:text-rep-black transition disabled:opacity-50"
+              title="AI suggestion">
+              <i [class]="generatingSuggestion ? 'fas fa-spinner fa-spin text-xs' : 'fas fa-robot text-xs'"></i>
             </button>
-            <button 
-              type="button"
-                  class="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition flex items-center"
-                  title="Use Template"
-            >
-                  <i class="fas fa-file-alt"></i>
-                  <span class="ml-1 hidden sm:inline">Template</span>
+            <button type="button" class="p-1.5 rounded text-gray-500 hover:bg-gray-100 transition" title="Template">
+              <i class="fas fa-file-alt text-xs"></i>
             </button>
-            <button 
-              type="button"
-                  class="px-2 py-1 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition flex items-center"
-                  title="Attach File"
-            >
-                  <i class="fas fa-paperclip"></i>
+            <button type="button" class="p-1.5 rounded text-gray-500 hover:bg-gray-100 transition" title="Attach">
+              <i class="fas fa-paperclip text-xs"></i>
             </button>
           </div>
-
-              <!-- Reply Count -->
-              <div class="text-xs text-gray-500">
-                <span class="font-semibold">{{ interaction.replies?.length || 0 }}</span> replies
-          </div>
+          <span class="text-[10px] text-gray-400">{{ interaction.replies?.length || 0 }} replies</span>
         </div>
       </form>
-        </div>
-
-      </div>
     </div>
+
   </div>
 </div>

@@ -1,8 +1,14 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
+import { Media } from '../../core/models/media.model';
+import { MediaSelectorModalComponent } from '../../shared/components/media-selector-modal/media-selector-modal.component';
+import { MediaUploadGuideComponent } from '../../shared/components/media-upload-guide/media-upload-guide.component';
+import { SocialPreviewComponent } from '../publish/social-preview/social-preview.component';
 
 interface Platform {
   id: string;
@@ -16,10 +22,12 @@ interface Platform {
 }
 
 interface MediaFile {
-  file: File;
+  file?: File;
   preview: string;
   type: 'image' | 'video';
   order: number;
+  libraryMediaId?: string; // ID from media library
+  publicUrl?: string; // URL from media library
 }
 
 interface ScheduledPost {
@@ -48,6 +56,8 @@ interface Draft {
 
 @Component({
   selector: 'app-publish',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink, MediaSelectorModalComponent, MediaUploadGuideComponent, SocialPreviewComponent],
   templateUrl: './publish.component.html',
   styleUrls: ['./publish.component.scss']
 })
@@ -95,6 +105,7 @@ export class PublishComponent implements OnInit {
   showPreview: boolean = true; // Start with preview visible
   showAdvancedOptions: boolean = false; // Collapsible advanced options
   showPlatformSection: boolean = true; // Can collapse platform selection
+  showMediaSelector: boolean = false; // Media library selector modal
   
   // Hashtag suggestions
   suggestedHashtags: string[] = [
@@ -382,6 +393,47 @@ export class PublishComponent implements OnInit {
   }
 
   /**
+   * Open media library selector modal
+   */
+  openMediaSelector(): void {
+    this.showMediaSelector = true;
+  }
+
+  /**
+   * Close media library selector modal
+   */
+  closeMediaSelector(): void {
+    this.showMediaSelector = false;
+  }
+
+  /**
+   * Handle media selection from library
+   */
+  onMediaLibrarySelect(selected: Media | Media[]): void {
+    const mediaArray = Array.isArray(selected) ? selected : [selected];
+    
+    if (this.mediaFiles.length + mediaArray.length > 10) {
+      this.notificationService.error('Maximum Reached', 'Maximum 10 media files allowed');
+      return;
+    }
+
+    mediaArray.forEach((media: Media) => {
+      const mediaFile: MediaFile = {
+        preview: media.publicUrl,
+        publicUrl: media.publicUrl,
+        type: media.mediaType,
+        order: this.mediaFiles.length,
+        libraryMediaId: media._id
+      };
+      
+      this.mediaFiles.push(mediaFile);
+    });
+
+    this.closeMediaSelector();
+    this.notificationService.success('Media Added', `${mediaArray.length} media item(s) added from library`);
+  }
+
+  /**
    * Reorder media files (for carousel)
    */
   moveMediaUp(index: number): void {
@@ -522,10 +574,28 @@ export class PublishComponent implements OnInit {
           formData.append('location', this.location);
         }
         
-        // Add media files
-        this.mediaFiles.forEach((media, index) => {
-          formData.append('media', media.file);
-        });
+        // Add media files or library IDs
+        const libraryMediaIds = this.mediaFiles
+          .filter(m => m.libraryMediaId)
+          .map(m => m.libraryMediaId);
+        
+        const newMediaFiles = this.mediaFiles.filter(m => m.file);
+
+        if (libraryMediaIds.length > 0) {
+          // Using media from library
+          if (libraryMediaIds.length === 1 && libraryMediaIds[0]) {
+            formData.append('mediaLibraryId', libraryMediaIds[0]);
+          } else {
+            formData.append('mediaLibraryIds', JSON.stringify(libraryMediaIds));
+          }
+        }
+
+        // Add any new uploaded files
+        if (newMediaFiles.length > 0) {
+          newMediaFiles.forEach((media) => {
+            formData.append('media', media.file!);
+          });
+        }
         
         if (this.scheduleEnabled && this.scheduledDate && this.scheduledTime) {
           const scheduledFor = new Date(`${this.scheduledDate}T${this.scheduledTime}`);

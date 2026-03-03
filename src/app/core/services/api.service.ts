@@ -3,6 +3,8 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+const SKIP_LOADER_HEADER = new HttpHeaders({ 'X-Skip-Loader': 'true' });
+
 /**
  * API Service - Single Responsibility Principle
  * Handles all HTTP communication with the backend
@@ -49,6 +51,26 @@ export class ApiService {
    */
   patch<T>(endpoint: string, body: any): Observable<T> {
     return this.http.patch<T>(`${this.apiUrl}${endpoint}`, body);
+  }
+
+  /**
+   * Silent GET — skips the global loader (use for background polling)
+   */
+  getSilent<T>(endpoint: string, params?: any): Observable<T> {
+    const httpParams = this.buildParams(params);
+    return this.http.get<T>(`${this.apiUrl}${endpoint}`, {
+      params: httpParams,
+      headers: SKIP_LOADER_HEADER
+    });
+  }
+
+  /**
+   * Silent POST — skips the global loader (use for background sync)
+   */
+  postSilent<T>(endpoint: string, body: any): Observable<T> {
+    return this.http.post<T>(`${this.apiUrl}${endpoint}`, body, {
+      headers: SKIP_LOADER_HEADER
+    });
   }
 
   /**

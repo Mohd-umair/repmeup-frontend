@@ -1,0 +1,112 @@
+<div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="closeModal()">
+  <div class="bg-gray-900 rounded-2xl border border-gray-800 w-full max-w-2xl max-h-[90vh] flex flex-col animate-scale-up" (click)="$event.stopPropagation()">
+    
+    <!-- Header (Fixed) -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-800 flex-shrink-0">
+      <h2 class="text-2xl font-bold text-rep-white flex items-center gap-2">
+        <i class="fas fa-upload text-rep-lime"></i>
+        Upload to Media Library
+      </h2>
+      <button class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-rep-white transition flex items-center justify-center" (click)="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Scrollable Body -->
+    <div class="p-6 overflow-y-auto flex-1">
+      <!-- File Upload Area -->
+      <div class="border-2 border-dashed rounded-xl p-12 text-center transition cursor-pointer mb-6" [ngClass]="{'border-gray-700 bg-gray-800/30': !dragOver && !selectedFile, 'border-rep-lime bg-rep-lime/10': dragOver}" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+        
+        <!-- No File Selected -->
+        <div *ngIf="!selectedFile">
+          <i class="fas fa-cloud-upload-alt text-6xl text-gray-600 mb-4"></i>
+          <h3 class="text-xl font-bold text-rep-white mb-2">Drag & Drop or Click to Upload</h3>
+          <p class="text-gray-400 mb-1">Images: JPG, PNG, GIF, WEBP | Videos: MP4, MOV, AVI</p>
+          <p class="text-gray-500 text-sm mb-4">Max size: 100MB</p>
+          <input type="file" #fileInput hidden accept="image/*,video/*" (change)="onFileSelected($event)">
+          <label for="fileInput" class="inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition cursor-pointer" (click)="fileInput.click(); $event.preventDefault()">
+            <i class="fas fa-file-upload"></i>
+            Choose File
+          </label>
+        </div>
+
+        <!-- File Selected -->
+        <div *ngIf="selectedFile" class="relative">
+          <button class="absolute top-2 right-2 w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition z-10" (click)="removeFile(); $event.stopPropagation()">
+            <i class="fas fa-times"></i>
+          </button>
+
+          <!-- Image Preview -->
+          <div class="rounded-xl overflow-hidden bg-gray-800 max-h-64 flex items-center justify-center mb-4" *ngIf="fileType === 'image'">
+            <img [src]="filePreview" [alt]="selectedFile.name" class="w-full max-h-64 object-contain">
+          </div>
+
+          <!-- Video Preview -->
+          <div class="rounded-xl overflow-hidden bg-gray-800 max-h-64 flex items-center justify-center mb-4" *ngIf="fileType === 'video'">
+            <video [src]="filePreview" controls class="w-full max-h-64 object-contain"></video>
+          </div>
+
+          <!-- File Info -->
+          <div class="flex items-center gap-3 p-4 bg-gray-800/50 rounded-xl">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" [ngClass]="{'bg-blue-500': fileType === 'image', 'bg-purple-500': fileType === 'video'}">
+              <i [class]="fileType === 'image' ? 'fas fa-image text-white' : 'fas fa-video text-white'"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-rep-white font-medium truncate">{{ selectedFile.name }}</div>
+              <div class="text-gray-400 text-sm">{{ formatSize(selectedFile.size) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metadata Form -->
+      <div class="space-y-4" *ngIf="selectedFile">
+        <div>
+          <label class="block text-rep-white font-medium mb-2 flex items-center gap-2">
+            <i class="fas fa-tags text-rep-lime"></i>
+            Tags (comma-separated)
+          </label>
+          <input type="text" [(ngModel)]="tags" placeholder="e.g., product, demo, promo" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-rep-white placeholder-gray-500 focus:outline-none focus:border-rep-lime transition">
+          <small class="text-gray-500 text-sm mt-1 block">Helps organize and find media later</small>
+        </div>
+
+        <div>
+          <label class="block text-rep-white font-medium mb-2 flex items-center gap-2">
+            <i class="fas fa-align-left text-rep-lime"></i>
+            Description (optional)
+          </label>
+          <textarea [(ngModel)]="description" placeholder="Describe this media..." rows="3" maxlength="500" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-rep-white placeholder-gray-500 focus:outline-none focus:border-rep-lime transition resize-none"></textarea>
+          <small class="text-gray-500 text-sm mt-1 block">{{ description.length }}/500 characters</small>
+        </div>
+
+        <!-- Upload Progress -->
+        <div *ngIf="uploading" class="mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-rep-white font-medium">Uploading...</span>
+            <span class="text-rep-lime font-bold">{{ uploadProgress }}%</span>
+          </div>
+          <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-rep-lime to-green-400 transition-all duration-300" [style.width.%]="uploadProgress"></div>
+          </div>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+          <i class="fas fa-exclamation-circle text-red-500 text-xl mt-0.5"></i>
+          <p class="text-red-200 text-sm">{{ errorMessage }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer (Fixed) -->
+    <div class="p-6 border-t border-gray-800 flex justify-end gap-3 flex-shrink-0 bg-gray-900">
+      <button class="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-rep-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed" (click)="closeModal()" [disabled]="uploading">
+        Cancel
+      </button>
+      <button class="px-6 py-2.5 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" (click)="upload()" [disabled]="!selectedFile || uploading">
+        <i [class]="uploading ? 'fas fa-spinner fa-spin' : 'fas fa-upload'"></i>
+        {{ uploading ? 'Uploading...' : 'Upload to Library' }}
+      </button>
+    </div>
+  </div>
+</div>

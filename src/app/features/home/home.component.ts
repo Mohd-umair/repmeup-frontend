@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { IUser } from '../../core/models/user.model';
 import { Subscription } from 'rxjs';
@@ -10,6 +11,8 @@ import { Subscription } from 'rxjs';
  */
 @Component({
   selector: 'app-home',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })

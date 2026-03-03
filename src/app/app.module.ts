@@ -23,11 +23,13 @@ import { MainLayoutComponent } from './shared/components/main-layout/main-layout
 
 // Interceptors
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { LoaderInterceptor } from './core/interceptors/loader.interceptor';
 import { InboxContainerComponent } from './features/inbox/inbox-container/inbox-container.component';
 import { InboxFiltersComponent } from './features/inbox/inbox-filters/inbox-filters.component';
 import { InboxTopFiltersComponent } from './features/inbox/inbox-top-filters/inbox-top-filters.component';
 import { InboxListComponent } from './features/inbox/inbox-list/inbox-list.component';
 import { InboxDetailComponent } from './features/inbox/inbox-detail/inbox-detail.component';
+import { InboxActionsComponent } from './features/inbox/inbox-actions/inbox-actions.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
@@ -45,6 +47,8 @@ import { PlansComponent } from './features/plans/plans.component';
 import { PageManagerComponent } from './features/settings/components/page-manager/page-manager.component';
 import { SocialPreviewComponent } from './features/publish/social-preview/social-preview.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
+import { NotificationsComponent } from './features/notifications/notifications.component';
+import { MediaLibraryComponent } from './features/media-library/media-library.component';
 
 /**
  * App Module - Following SOLID principles
@@ -53,34 +57,11 @@ import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 @NgModule({
   declarations: [
     AppComponent,
-    LoginComponent,
-    RegisterComponent,
     GoogleCallbackComponent,
-    DashboardComponent,
-    SidebarComponent,
-    HeaderComponent,
-    MainLayoutComponent,
-    InboxContainerComponent,
-    InboxFiltersComponent,
-    InboxTopFiltersComponent,
-    InboxListComponent,
-    InboxDetailComponent,
-    SettingsComponent,
     AgentsComponent,
-    KnowledgeBaseComponent,
-    AnalyticsComponent,
-    HomeComponent,
     PrivacyPolicyComponent,
     TermsConditionsComponent,
-    ContactComponent,
     AboutComponent,
-    DataDeletionStatusComponent,
-    PublishComponent,
-    CalendarComponent,
-    PublishedPostsComponent,
-    PlansComponent,
-    PageManagerComponent,
-    SocialPreviewComponent,
     AiCreditsComponent
   ],
   imports: [
@@ -90,12 +71,38 @@ import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
     HttpClientModule,
     ReactiveFormsModule,
     FormsModule,
-    SharedModule
+    SharedModule,
+    LoginComponent,
+    RegisterComponent,
+    DashboardComponent,
+    AnalyticsComponent,
+    HomeComponent,
+    ContactComponent,
+    DataDeletionStatusComponent,
+    CalendarComponent,
+    PlansComponent,
+    SidebarComponent,
+    HeaderComponent,
+    MainLayoutComponent,
+    SettingsComponent,
+    PublishComponent,
+    PublishedPostsComponent,
+    PageManagerComponent,
+    InboxContainerComponent,
+    KnowledgeBaseComponent,
+    NotificationsComponent,
+    MediaLibraryComponent,
+    SocialPreviewComponent
   ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoaderInterceptor,
       multi: true
     }
   ],

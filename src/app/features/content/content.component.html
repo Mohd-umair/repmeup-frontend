@@ -1,0 +1,209 @@
+<div class="min-h-screen bg-rep-black p-3 sm:p-4 md:p-6 w-full">
+  <div class="w-full">
+
+    <!-- Page Header -->
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-rep-white flex items-center gap-2 sm:gap-3">
+        <i class="fas fa-th-large text-rep-lime"></i>
+        Content
+      </h1>
+      <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">
+        Posts from your connected Facebook Pages and Instagram accounts. More platforms coming soon.
+      </p>
+    </div>
+
+    <!-- Platform Filter (icon buttons) + Sync on the right -->
+    <div class="mb-6 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <i class="fas fa-filter text-rep-lime"></i>
+          <span class="text-gray-400 text-sm">Platform:</span>
+          <button
+            type="button"
+            (click)="setPlatform('all'); onPlatformChange()"
+            [class.bg-rep-lime]="selectedPlatform === 'all'"
+            [class.text-rep-black]="selectedPlatform === 'all'"
+            [class.bg-gray-800]="selectedPlatform !== 'all'"
+            [class.text-gray-400]="selectedPlatform !== 'all'"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+            title="All platforms"
+          >
+            <i class="fas fa-th-large"></i>
+          </button>
+          <button
+            *ngFor="let platform of platformFilterOptions"
+            type="button"
+            (click)="setPlatform(platform); onPlatformChange()"
+            [class.bg-rep-lime]="selectedPlatform === platform"
+            [class.text-rep-black]="selectedPlatform === platform"
+            [class.bg-gray-800]="selectedPlatform !== platform"
+            [class.text-gray-400]="selectedPlatform !== platform"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+            [attr.title]="getPlatformName(platform)"
+          >
+            <i [class]="getPlatformIcon(platform)"></i>
+          </button>
+        </div>
+        <div *ngIf="showContentTypeFilter" class="flex items-center gap-3 flex-shrink-0">
+          <span *ngIf="lastSyncedAt" class="text-xs text-gray-500" [title]="formatDate(lastSyncedAt)">
+            Last synced: {{ getRelativeTime(lastSyncedAt) }}
+          </span>
+          <button
+            type="button"
+            (click)="syncPosts()"
+            [disabled]="syncing"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition"
+          >
+            <i class="fas fa-sync-alt" [class.fa-spin]="syncing"></i>
+            {{ syncing ? 'Syncing...' : 'Sync from ' + getPlatformName(selectedPlatform) }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Type Filter (when Facebook or Instagram is selected) -->
+    <div *ngIf="showContentTypeFilter" class="mb-6 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
+      <div class="flex flex-wrap items-center gap-2">
+        <i class="fas fa-layer-group text-rep-lime"></i>
+        <span class="text-gray-400 text-sm">Content type:</span>
+        <button
+          *ngFor="let ct of contentTypes"
+          type="button"
+          (click)="setContentType(ct.value)"
+          [class.bg-rep-lime]="selectedContentType === ct.value"
+          [class.text-rep-black]="selectedContentType === ct.value"
+          [class.bg-gray-800]="selectedContentType !== ct.value"
+          [class.text-gray-400]="selectedContentType !== ct.value"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
+          [attr.title]="ct.label"
+        >
+          <i [class]="ct.icon"></i>
+          <span class="hidden sm:inline">{{ ct.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-xl text-red-200 text-sm">
+      {{ error }}
+    </div>
+
+    <!-- Default: Select platform first (no platform selected) -->
+    <div *ngIf="!loading && !error && selectedPlatform === 'all'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 md:p-16 border border-gray-800 text-center">
+      <div class="max-w-sm mx-auto mb-6">
+        <svg class="w-full h-auto text-gray-600" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="20" y="20" width="80" height="80" rx="12" stroke="currentColor" stroke-width="2" fill="none"/>
+          <rect x="100" y="20" width="80" height="80" rx="12" stroke="currentColor" stroke-width="2" fill="none" opacity="0.5"/>
+          <path d="M60 60 L80 60 L80 40 L60 40 Z" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7"/>
+          <circle cx="70" cy="70" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <text x="100" y="65" text-anchor="middle" class="text-2xl fill-current" opacity="0.6">?</text>
+        </svg>
+      </div>
+      <h2 class="text-xl sm:text-2xl font-bold text-rep-white mb-2">Select a platform first</h2>
+      <p class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">
+        Choose Facebook or Instagram above to view and sync posts from your connected accounts.
+      </p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex justify-center py-12">
+      <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+    </div>
+
+    <!-- Empty (platform selected but no posts in DB – prompt to sync) -->
+    <div *ngIf="!loading && !error && selectedPlatform !== 'all' && posts.length === 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
+      <i class="fas fa-cloud-download-alt text-6xl text-gray-600 mb-4"></i>
+      <p class="text-lg text-gray-400 mb-2">No posts yet</p>
+      <p class="text-sm text-gray-500 mb-6">
+        Click <strong>Sync from {{ getPlatformName(selectedPlatform) }}</strong> to fetch posts from your {{ getPlatformName(selectedPlatform) }} account and save them here.
+      </p>
+      <button
+        type="button"
+        (click)="syncPosts()"
+        [disabled]="syncing"
+        class="inline-flex items-center gap-2 px-5 py-3 bg-rep-lime text-rep-black rounded-lg font-semibold hover:opacity-90 disabled:opacity-60 transition"
+      >
+        <i class="fas fa-sync-alt" [class.fa-spin]="syncing"></i>
+        {{ syncing ? 'Syncing...' : 'Sync from ' + getPlatformName(selectedPlatform) }}
+      </button>
+    </div>
+
+    <!-- Empty (filter returned no results) -->
+    <div *ngIf="!loading && !error && posts.length > 0 && getFilteredPosts().length === 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
+      <i class="fas fa-filter text-6xl text-gray-600 mb-4"></i>
+      <p class="text-lg text-gray-400 mb-2">No content for this filter</p>
+      <p class="text-sm text-gray-500">
+        Try a different content type or platform.
+      </p>
+    </div>
+
+    <!-- Posts Grid (unified layout for any platform) -->
+    <div *ngIf="!loading && getFilteredPosts().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+      <article
+        *ngFor="let post of getFilteredPosts()"
+        class="border border-gray-700 rounded-xl overflow-hidden bg-gray-800/30 hover:border-rep-lime/40 transition-all duration-300 flex flex-col"
+      >
+        <!-- Media (if any) – medium thumbnail -->
+        <div class="h-44 sm:h-52 bg-gray-900/50 relative overflow-hidden">
+          <img
+            *ngIf="post.mediaUrl && (post.mediaType === 'image' || post.mediaType === 'carousel')"
+            [src]="post.mediaUrl"
+            [alt]="(post.text || 'Post') | slice:0:80"
+            class="w-full h-full object-cover"
+            loading="lazy"
+          />
+          <div
+            *ngIf="post.mediaUrl && post.mediaType === 'video'"
+            class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500"
+          >
+            <i class="fas fa-play-circle text-3xl"></i>
+          </div>
+          <div
+            *ngIf="!post.mediaUrl"
+            class="w-full h-full flex items-center justify-center text-gray-600"
+          >
+            <i class="fas fa-quote-left text-2xl"></i>
+          </div>
+          <!-- Platform badge (Font Awesome + brand color, like analytics platform cards) -->
+          <div
+            class="absolute bottom-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center shadow-md"
+            [style.background-color]="getPlatformColors(post.platform).primary + '20'"
+          >
+            <i [class]="getPlatformIcon(post.platform) + ' text-base'" [style.color]="getPlatformColors(post.platform).primary"></i>
+          </div>
+        </div>
+
+        <div class="p-4 flex flex-col flex-1">
+          <p class="text-sm sm:text-base text-gray-300 line-clamp-3 whitespace-pre-wrap flex-1">{{ post.text || 'No caption' }}</p>
+          <p class="text-xs text-gray-500 mt-2">{{ post.connectionName }}</p>
+          <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
+            <span class="text-xs text-gray-500" [title]="'Posted on ' + formatDate(post.createdAt)">
+              Posted {{ getRelativeTime(post.createdAt) }}
+            </span>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                (click)="openPostComments(post)"
+                class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-700 text-gray-200 rounded-lg font-semibold text-xs hover:bg-gray-600 transition"
+              >
+                <i class="fas fa-comments"></i>
+                Comments ({{ post.commentCount ?? 0 }})
+              </button>
+              <a
+                *ngIf="post.permalink"
+                [href]="post.permalink"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 px-3 py-1.5 bg-rep-lime text-rep-black rounded-lg font-semibold text-xs hover:opacity-90 transition"
+              >
+                <i class="fas fa-external-link-alt"></i>
+                View
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+  </div>
+</div>

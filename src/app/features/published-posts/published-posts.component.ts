@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
 interface ScheduledPost {
@@ -21,6 +23,8 @@ interface ScheduledPost {
 
 @Component({
   selector: 'app-published-posts',
+  standalone: true,
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './published-posts.component.html',
   styleUrls: ['./published-posts.component.scss']
 })

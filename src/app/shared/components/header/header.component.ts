@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationDataService, INotification } from '../../../core/services/notification-data.service';
@@ -13,6 +14,8 @@ import { environment } from '../../../../environments/environment';
  */
 @Component({
   selector: 'app-header',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -194,6 +197,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   navigateToCredits(): void {
     this.router.navigate(['/app/ai-credits']);
+  }
+
+  navigateToNotifications(): void {
+    this.showNotifications = false;
+    this.router.navigate(['/app/notifications']);
   }
 
   getCreditStatusColor(): string {

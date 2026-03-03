@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 /**
  * Connection Usage Bar Component (Single Responsibility)
@@ -6,6 +7,8 @@ import { Component, Input } from '@angular/core';
  */
 @Component({
   selector: 'app-connection-usage-bar',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './connection-usage-bar.component.html',
   styleUrls: ['./connection-usage-bar.component.scss']
 })

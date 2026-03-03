@@ -95,6 +95,11 @@ export class PlatformService {
     return this.apiService.post<SyncResponse>(`/platforms/${id}/sync`, {});
   }
 
+  /** Same as syncPlatform but skips the global loader (for background auto-sync) */
+  syncPlatformSilent(id: string): Observable<SyncResponse> {
+    return this.apiService.postSilent<SyncResponse>(`/platforms/${id}/sync`, {});
+  }
+
   /**
    * Initiate Google OAuth flow
    * Redirects user to Google authorization page
@@ -120,10 +125,11 @@ export class PlatformService {
   /**
    * Initiate Instagram OAuth flow
    * Redirects user to Instagram/Meta authorization page
+   * @param forceConsentScreen If true, adds auth_type=reauthorize so Meta shows the permission consent screen (for App Review screencast)
    */
-  connectInstagram(): void {
-    // Instagram uses Meta OAuth endpoint
-    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/instagram').subscribe({
+  connectInstagram(forceConsentScreen = false): void {
+    const params = forceConsentScreen ? { auth_type: 'reauthorize' } : undefined;
+    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/instagram', params).subscribe({
       next: (response) => {
         if (response.success && response.authUrl) {
           // Redirect to Instagram OAuth page

@@ -1,26 +1,58 @@
 <div class="bg-white rounded-xl shadow-sm p-4 border" style="border-color: rgba(0,0,0,0.08);">
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-3">
-    <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2">
+  <!-- Header (clickable to collapse/expand) -->
+  <div 
+    (click)="toggleExpanded()"
+    class="flex items-center justify-between cursor-pointer select-none group"
+  >
+    <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2 group-hover:text-gray-700">
       <i class="fas fa-sliders-h text-gray-400"></i>
-      Quick Filters
+      <span>Quick Filters</span>
+      <span *ngIf="hasActiveFilters() && !expanded" class="text-xs font-normal text-rep-lime">({{ getActiveFilterCount() }} active)</span>
     </h3>
-    <button 
-      *ngIf="hasActiveFilters()"
-      (click)="clearFilters()"
-      (touchstart)="clearFilters()"
-      type="button"
-      class="touch-manipulation flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-xs font-medium"
-      title="Clear all filters"
-    >
-      <i class="fas fa-times text-xs"></i>
-      Clear
-    </button>
+    <div class="flex items-center gap-2">
+      <button 
+        *ngIf="hasActiveFilters() && expanded"
+        (click)="clearFilters(); $event.stopPropagation()"
+        (touchstart)="clearFilters(); $event.stopPropagation()"
+        type="button"
+        class="touch-manipulation flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-xs font-medium"
+        title="Clear all filters"
+      >
+        <i class="fas fa-times text-xs"></i>
+        Clear
+      </button>
+      <i class="fas transition-transform duration-200 text-gray-400 text-sm" 
+         [class.fa-chevron-down]="expanded" 
+         [class.fa-chevron-right]="!expanded"
+         [class.rotate-0]="expanded"
+         title="{{ expanded ? 'Collapse' : 'Expand' }}"></i>
+    </div>
   </div>
 
-  <!-- Filters Row -->
-  <div class="flex flex-wrap gap-4">
+  <!-- Filters Row (collapsible) -->
+  <div *ngIf="expanded" class="flex flex-wrap gap-4 mt-3 animate-slideDown">
     
+    <!-- Labels Filter -->
+    <div *ngIf="labels && labels.length > 0" class="flex items-center gap-2">
+      <span class="text-xs font-medium text-gray-500">Labels:</span>
+      <div class="flex gap-1.5">
+        <button
+          *ngFor="let label of labels"
+          (click)="toggleFilter('label', label._id)"
+          (touchstart)="toggleFilter('label', label._id)"
+          type="button"
+          class="touch-manipulation px-2.5 py-1 rounded-lg transition-all text-xs font-medium border"
+          [style.background]="isFilterActive('label', label._id) ? (label.color || '#3B82F6') : 'rgb(249, 250, 251)'"
+          [style.color]="isFilterActive('label', label._id) ? '#fff' : (label.color || '#3B82F6')"
+          [style.borderColor]="isFilterActive('label', label._id) ? (label.color || '#3B82F6') : 'rgb(229, 231, 235)'"
+          [class.hover:bg-gray-100]="!isFilterActive('label', label._id)"
+        >
+          <i *ngIf="label.icon" [class]="label.icon + ' mr-1'"></i>
+          <span>{{ label.name }}</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Type Filters -->
     <div class="flex items-center gap-2">
       <span class="text-xs font-medium text-gray-500">Type:</span>
@@ -31,9 +63,9 @@
           (touchstart)="toggleFilter('type', type.value)"
           type="button"
           class="touch-manipulation px-2.5 py-1 rounded-lg transition-all text-xs font-medium border"
-          [class.bg-blue-500]="isFilterActive('type', type.value)"
-          [class.text-white]="isFilterActive('type', type.value)"
-          [class.border-blue-500]="isFilterActive('type', type.value)"
+          [class.bg-rep-lime]="isFilterActive('type', type.value)"
+          [class.text-rep-black]="isFilterActive('type', type.value)"
+          [class.border-rep-lime]="isFilterActive('type', type.value)"
           [class.bg-gray-50]="!isFilterActive('type', type.value)"
           [class.text-gray-700]="!isFilterActive('type', type.value)"
           [class.border-gray-200]="!isFilterActive('type', type.value)"
@@ -55,11 +87,12 @@
           (touchstart)="toggleFilter('sentiment', sentiment.value)"
           type="button"
           class="touch-manipulation px-2.5 py-1 rounded-lg transition-all text-xs font-medium border"
-          [class.bg-green-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive'"
+          [class.bg-rep-lime]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive'"
           [class.bg-gray-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'neutral'"
           [class.bg-red-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'negative'"
-          [class.text-white]="isFilterActive('sentiment', sentiment.value)"
-          [class.border-green-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive'"
+          [class.text-rep-black]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive'"
+          [class.text-white]="isFilterActive('sentiment', sentiment.value) && sentiment.value !== 'positive'"
+          [class.border-rep-lime]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive'"
           [class.border-gray-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'neutral'"
           [class.border-red-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'negative'"
           [class.bg-gray-50]="!isFilterActive('sentiment', sentiment.value)"
@@ -83,13 +116,13 @@
           (touchstart)="toggleFilter('status', status.value)"
           type="button"
           class="touch-manipulation px-2.5 py-1 rounded-lg transition-all text-xs font-medium border"
-          [class.bg-yellow-500]="isFilterActive('status', status.value) && status.value === 'unread'"
-          [class.bg-blue-500]="isFilterActive('status', status.value) && status.value === 'read'"
-          [class.bg-green-500]="isFilterActive('status', status.value) && (status.value === 'replied' || status.value === 'resolved')"
+          [class.bg-amber-500]="isFilterActive('status', status.value) && status.value === 'unread'"
+          [class.bg-gray-600]="isFilterActive('status', status.value) && status.value === 'read'"
+          [class.bg-rep-black]="isFilterActive('status', status.value) && (status.value === 'replied' || status.value === 'resolved')"
           [class.text-white]="isFilterActive('status', status.value)"
-          [class.border-yellow-500]="isFilterActive('status', status.value) && status.value === 'unread'"
-          [class.border-blue-500]="isFilterActive('status', status.value) && status.value === 'read'"
-          [class.border-green-500]="isFilterActive('status', status.value) && (status.value === 'replied' || status.value === 'resolved')"
+          [class.border-amber-500]="isFilterActive('status', status.value) && status.value === 'unread'"
+          [class.border-gray-600]="isFilterActive('status', status.value) && status.value === 'read'"
+          [class.border-rep-black]="isFilterActive('status', status.value) && (status.value === 'replied' || status.value === 'resolved')"
           [class.bg-gray-50]="!isFilterActive('status', status.value)"
           [class.text-gray-700]="!isFilterActive('status', status.value)"
           [class.border-gray-200]="!isFilterActive('status', status.value)"

@@ -1,0 +1,148 @@
+<div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="closeModal()">
+  <div class="bg-gray-900 rounded-2xl border border-gray-800 w-full max-w-5xl max-h-[90vh] overflow-y-auto animate-scale-up" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-800">
+      <div>
+        <h2 class="text-2xl font-bold text-rep-white flex items-center gap-2">
+          <i class="fas fa-photo-video text-rep-lime"></i>
+          Select Media
+        </h2>
+        <p class="text-gray-400 text-sm mt-1">
+          {{ allowMultiple ? 'Select one or more media items' : 'Select one media item' }}
+          <span *ngIf="selectedMedia.length > 0" class="text-rep-lime font-medium ml-2">
+            ({{ selectedMedia.length }} selected)
+          </span>
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition flex items-center gap-2" (click)="openUploadModal()">
+          <i class="fas fa-upload"></i>
+          Upload New
+        </button>
+        <button class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-rep-white transition flex items-center justify-center" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters & Sort -->
+    <div class="p-4 border-b border-gray-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div class="flex gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800">
+        <button class="px-4 py-2 rounded-lg font-medium transition" [class.bg-rep-lime]="filterType === 'all'" [class.text-rep-black]="filterType === 'all'" [class.text-gray-400]="filterType !== 'all'" [class.hover:text-rep-white]="filterType !== 'all'" (click)="onFilterChange('all')">
+          All
+        </button>
+        <button class="px-4 py-2 rounded-lg font-medium transition flex items-center gap-2" [class.bg-rep-lime]="filterType === 'image'" [class.text-rep-black]="filterType === 'image'" [class.text-gray-400]="filterType !== 'image'" [class.hover:text-rep-white]="filterType !== 'image'" (click)="onFilterChange('image')">
+          <i class="fas fa-image"></i>
+          Images
+        </button>
+        <button class="px-4 py-2 rounded-lg font-medium transition flex items-center gap-2" [class.bg-rep-lime]="filterType === 'video'" [class.text-rep-black]="filterType === 'video'" [class.text-gray-400]="filterType !== 'video'" [class.hover:text-rep-white]="filterType !== 'video'" (click)="onFilterChange('video')">
+          <i class="fas fa-video"></i>
+          Videos
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-800">
+          <label class="text-gray-400 text-sm font-medium">Sort:</label>
+          <select [(ngModel)]="sortBy" (change)="onSortChange(sortBy)" class="bg-transparent text-rep-white font-medium focus:outline-none cursor-pointer">
+            <option value="-createdAt" class="bg-gray-900">Newest First</option>
+            <option value="createdAt" class="bg-gray-900">Oldest First</option>
+            <option value="-usageCount" class="bg-gray-900">Most Used</option>
+          </select>
+        </div>
+        <button class="px-4 py-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-xl text-gray-400 hover:text-rep-lime hover:border-rep-lime transition flex items-center gap-2" (click)="loadMedia()" [disabled]="loading" title="Refresh">
+          <i class="fas" [class.fa-sync-alt]="!loading" [class.fa-spinner]="loading" [class.fa-spin]="loading"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Media Grid -->
+    <div class="p-6">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" *ngIf="!loading && mediaItems.length > 0">
+        <div *ngFor="let media of mediaItems" class="relative bg-gray-900/50 backdrop-blur-sm rounded-xl overflow-hidden border transition cursor-pointer group" [ngClass]="{'border-rep-lime ring-2 ring-rep-lime': isSelected(media), 'border-gray-800/50': !isSelected(media)}" (click)="toggleMedia(media)">
+          
+          <!-- Selection Indicator -->
+          <div class="absolute top-2 left-2 w-8 h-8 rounded-lg flex items-center justify-center z-10 transition" [ngClass]="{'bg-rep-lime': isSelected(media), 'bg-gray-800/70': !isSelected(media)}">
+            <i class="fas transition" [ngClass]="{'fa-check text-rep-black': isSelected(media), 'fa-circle text-gray-500': !isSelected(media)}"></i>
+          </div>
+
+          <!-- Media Preview -->
+          <div class="relative aspect-square bg-gray-800 overflow-hidden">
+            <img *ngIf="isImage(media)" [src]="media.publicUrl" [alt]="media.originalName" class="w-full h-full object-cover">
+            <video *ngIf="isVideo(media)" [src]="media.publicUrl" preload="metadata" class="w-full h-full object-cover"></video>
+            
+            <!-- Type Badge -->
+            <div class="absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold" [ngClass]="{'bg-blue-500': isImage(media), 'bg-purple-500': isVideo(media)}">
+              <i [class]="isImage(media) ? 'fas fa-image text-white' : 'fas fa-video text-white'"></i>
+            </div>
+
+            <!-- Usage Badge -->
+            <div class="absolute bottom-2 left-2 px-2 py-1 bg-green-500 rounded-md text-xs font-semibold text-white flex items-center gap-1" *ngIf="media.usageCount > 0">
+              {{ media.usageCount }}x
+            </div>
+          </div>
+
+          <!-- Media Info -->
+          <div class="p-3">
+            <div class="text-rep-white font-medium text-sm truncate" [title]="media.originalName">
+              {{ media.originalName }}
+            </div>
+            <div class="text-gray-400 text-xs mt-1">{{ formatSize(media.size) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="py-12 text-center" *ngIf="!loading && mediaItems.length === 0">
+        <i class="fas fa-folder-open text-6xl text-gray-700 mb-4"></i>
+        <h3 class="text-xl font-bold text-rep-white mb-2">No media found</h3>
+        <p class="text-gray-400">Try adjusting your filters or upload new media</p>
+      </div>
+
+      <!-- Loading State -->
+      <div class="py-12 text-center" *ngIf="loading">
+        <i class="fas fa-spinner fa-spin text-5xl text-rep-lime mb-4"></i>
+        <p class="text-gray-400">Loading media...</p>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex justify-center items-center gap-3 mt-6" *ngIf="totalPages > 1">
+        <button class="px-4 py-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-lg text-gray-400 hover:text-rep-white hover:border-rep-lime disabled:opacity-50 disabled:cursor-not-allowed transition" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <span class="text-rep-white font-medium">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        
+        <button class="px-4 py-2 bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-lg text-gray-400 hover:text-rep-white hover:border-rep-lime disabled:opacity-50 disabled:cursor-not-allowed transition" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-6 border-t border-gray-800 flex justify-between items-center">
+      <div class="text-gray-400 text-sm">
+        {{ selectedMedia.length }} {{ allowMultiple ? 'item(s)' : 'item' }} selected
+      </div>
+      <div class="flex gap-3">
+        <button class="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-rep-white rounded-lg font-semibold transition" (click)="closeModal()">
+          Cancel
+        </button>
+        <button class="px-6 py-2.5 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" (click)="confirmSelection()" [disabled]="selectedMedia.length === 0">
+          <i class="fas fa-check"></i>
+          Select {{ selectedMedia.length > 0 ? '(' + selectedMedia.length + ')' : '' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<app-media-upload-modal
+  *ngIf="showUploadModal"
+  (close)="closeUploadModal()"
+  (uploadSuccess)="onUploadSuccess($any($event))">
+</app-media-upload-modal>

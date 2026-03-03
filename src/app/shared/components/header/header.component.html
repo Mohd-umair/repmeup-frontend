@@ -109,6 +109,7 @@
         <!-- Footer -->
         <div *ngIf="notifications.length > 0" class="p-3 border-t border-gray-800 bg-gray-900/50">
           <button 
+            (click)="navigateToNotifications()"
             class="w-full text-center text-sm text-rep-lime hover:text-rep-lime/80 font-semibold"
           >
             View all notifications
@@ -118,6 +119,14 @@
     </div>
 
     <!-- AI Credits Badge -->
+    <a
+      routerLink="/app/content-studio"
+      class="flex items-center gap-2 px-3 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition cursor-pointer"
+      title="Create post (Content Studio)"
+    >
+      <i class="fas fa-wand-magic-sparkles"></i>
+      <span class="hidden sm:inline">Generate</span>
+    </a>
     <button 
       *ngIf="aiCredits"
       (click)="navigateToCredits()"

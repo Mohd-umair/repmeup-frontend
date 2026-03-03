@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { StorageService } from '../../../core/services/storage.service';
 
 @Component({
   selector: 'app-google-callback',
+  standalone: false,
   template: `
     <div class="flex items-center justify-center min-h-screen bg-rep-black">
       <div class="text-center">
@@ -26,14 +28,14 @@ export class GoogleCallbackComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private storageService: StorageService
   ) {}
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       const token = params['token'];
       const refreshToken = params['refreshToken'];
-      const isNewUser = params['isNewUser'] === 'true';
       const status = params['status'];
       const message = params['message'];
 
@@ -48,16 +50,15 @@ export class GoogleCallbackComponent implements OnInit {
       }
 
       if (token) {
-        // Save tokens
-        localStorage.setItem('token', token);
+        // Save tokens using StorageService (keys: orm_token, orm_refresh_token)
+        this.storageService.saveToken(token);
         if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
+          this.storageService.saveRefreshToken(refreshToken);
         }
 
         // Redirect to dashboard
         this.router.navigate(['/app/dashboard']);
       } else {
-        // Error
         this.error = 'Authentication failed - no token received';
         setTimeout(() => {
           this.router.navigate(['/auth/login'], {

@@ -1,4 +1,5 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -42,6 +43,8 @@ interface FacebookPage {
  */
 @Component({
   selector: 'app-page-manager',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './page-manager.component.html',
   styleUrls: ['./page-manager.component.scss']
 })

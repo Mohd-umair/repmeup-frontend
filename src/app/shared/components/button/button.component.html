@@ -1,0 +1,11 @@
+<button
+  [type]="type"
+  [disabled]="disabled || loading"
+  [ngClass]="buttonClasses"
+  (click)="onClick()"
+>
+  <i *ngIf="loading" class="fas fa-spinner fa-spin mr-2"></i>
+  <i *ngIf="!loading && iconLeft" [class]="iconLeft + ' mr-2'"></i>
+  <ng-content></ng-content>
+  <i *ngIf="!loading && iconRight" [class]="iconRight + ' ml-2'"></i>
+</button>

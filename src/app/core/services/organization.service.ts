@@ -25,6 +25,14 @@ export interface AutoReplySettings {
   lastScheduledRun?: Date;
 }
 
+export interface InboxSettings {
+  autoSyncEnabled: boolean;
+}
+
+export interface EscalationSettings {
+  autoAssign?: boolean;
+}
+
 export interface IOrganization {
   _id: string;
   name: string;
@@ -38,6 +46,8 @@ export interface IOrganization {
   usage?: any;
   whiteLabel?: any;
   autoReplySettings?: AutoReplySettings;
+  inboxSettings?: InboxSettings;
+  escalationSettings?: EscalationSettings;
   owner: string;
   isActive: boolean;
   createdAt: Date;
@@ -80,6 +90,13 @@ export class OrganizationService {
    */
   getAutoReplySettings(id: string): Observable<IApiResponse<AutoReplySettings>> {
     return this.apiService.get<IApiResponse<AutoReplySettings>>(`/organizations/${id}/auto-reply-settings`);
+  }
+
+  /**
+   * Update inbox UI settings (autoSyncEnabled, etc.)
+   */
+  updateInboxSettings(id: string, settings: Partial<InboxSettings>): Observable<IApiResponse<IOrganization>> {
+    return this.updateOrganization(id, { inboxSettings: settings as any });
   }
 }
 

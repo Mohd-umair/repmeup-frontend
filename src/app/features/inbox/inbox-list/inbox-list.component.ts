@@ -1,4 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
@@ -10,6 +13,8 @@ import { ThemeService } from '../../../core/services/theme.service';
  */
 @Component({
   selector: 'app-inbox-list',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './inbox-list.component.html',
   styleUrls: ['./inbox-list.component.scss']
 })
@@ -17,8 +22,10 @@ export class InboxListComponent implements OnInit, OnDestroy {
   @Input() interactions: IInteraction[] = [];
   @Input() loading = false;
   @Input() selectedInteraction: IInteraction | null = null;
+  @Input() selectedIds: Set<string> = new Set();
   @Output() interactionSelect = new EventEmitter<IInteraction>();
   @Output() searchChange = new EventEmitter<string>();
+  @Output() selectionChange = new EventEmitter<Set<string>>();
 
   searchTerm = '';
   private searchSubject = new Subject<string>();
@@ -27,11 +34,23 @@ export class InboxListComponent implements OnInit, OnDestroy {
   avatarFallback: Record<string, boolean> = {};
 
   constructor(
-    public themeService: ThemeService
+    public themeService: ThemeService,
+    private sanitizer: DomSanitizer
   ) {}
 
   onAvatarError(key: string): void {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
+  }
+
+  /** Profile picture URL for author (avatarUrl or profilePicture). */
+  getAuthorAvatarUrl(author: IInteraction['author']): string | null {
+    return author?.avatarUrl || author?.profilePicture || null;
+  }
+
+  /** Safe URL for img [src] so external CDN avatars load. */
+  getAuthorAvatarSafeUrl(author: IInteraction['author']): SafeUrl | null {
+    const url = this.getAuthorAvatarUrl(author);
+    return url ? this.sanitizer.bypassSecurityTrustUrl(url) : null;
   }
 
   ngOnInit(): void {
@@ -50,6 +69,30 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   selectInteraction(interaction: IInteraction): void {
     this.interactionSelect.emit(interaction);
+  }
+
+  isBulkSelected(interaction: IInteraction): boolean {
+    return this.selectedIds.has(interaction._id);
+  }
+
+  toggleBulkSelection(interaction: IInteraction, event: Event): void {
+    event.stopPropagation();
+    const next = new Set(this.selectedIds);
+    if (next.has(interaction._id)) {
+      next.delete(interaction._id);
+    } else {
+      next.add(interaction._id);
+    }
+    this.selectionChange.emit(next);
+  }
+
+  selectAllOnPage(): void {
+    const next = new Set(this.interactions.map(i => i._id));
+    this.selectionChange.emit(next);
+  }
+
+  clearSelection(): void {
+    this.selectionChange.emit(new Set());
   }
 
   onSearchInput(event: Event): void {
@@ -112,6 +155,43 @@ export class InboxListComponent implements OnInit, OnDestroy {
     const r = (interaction as any).rating ?? interaction.metadata?.starRating;
     if (r == null || typeof r !== 'number') return undefined;
     return Math.min(5, Math.max(1, Math.round(r)));
+  }
+
+  /** Default SLA: 24 hours. Show "Not Replied", "Overdue by Xh/Xd", or "Replied in Xm/Xd" */
+  getSlaLabel(interaction: IInteraction): string | null {
+    const SLA_MINUTES = 24 * 60;
+    const MINS_PER_DAY = 24 * 60;
+    const created = new Date(interaction.platformCreatedAt).getTime();
+    const now = Date.now();
+    const elapsedMs = now - created;
+    const elapsedMins = Math.floor(elapsedMs / 60000);
+
+    const formatDuration = (mins: number): string => {
+      if (mins < 60) return `${mins}m`;
+      if (mins < MINS_PER_DAY) return `${Math.floor(mins / 60)}h`;
+      return `${Math.floor(mins / MINS_PER_DAY)}d`;
+    };
+
+    if (interaction.respondedAt) {
+      const responseMins = Math.floor((new Date(interaction.respondedAt).getTime() - created) / 60000);
+      return `Replied in ${formatDuration(responseMins)}`;
+    }
+
+    if (elapsedMins >= SLA_MINUTES) {
+      const overdueMins = elapsedMins - SLA_MINUTES;
+      return `Overdue by ${formatDuration(overdueMins)}`;
+    }
+
+    return 'Not Replied';
+  }
+
+  /** True if interaction is overdue (unreplied, past SLA) */
+  isOverdue(interaction: IInteraction): boolean {
+    const SLA_MINUTES = 24 * 60;
+    if (interaction.respondedAt) return false;
+    const created = new Date(interaction.platformCreatedAt).getTime();
+    const elapsedMins = (Date.now() - created) / 60000;
+    return elapsedMins >= SLA_MINUTES;
   }
 
   formatTime(date: Date): string {

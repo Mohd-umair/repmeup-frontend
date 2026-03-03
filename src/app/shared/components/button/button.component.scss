@@ -1,0 +1,105 @@
+:host {
+  display: inline-block;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: 1px solid transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Sizes */
+button.size-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+button.size-md {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+button.size-lg {
+  padding: 0.625rem 1.25rem;
+  font-size: 1rem;
+}
+
+/* Primary */
+button.variant-primary {
+  background: linear-gradient(to right, var(--rep-lime, #b8f567), #86efac);
+  color: var(--rep-black, #0f0f0f);
+  border-color: transparent;
+}
+
+button.variant-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow: 0 2px 8px rgba(184, 245, 103, 0.3);
+}
+
+button.variant-primary:active:not(:disabled) {
+  filter: brightness(0.98);
+}
+
+/* Secondary */
+button.variant-secondary {
+  background: transparent;
+  color: var(--rep-lime, #b8f567);
+  border-color: var(--rep-lime, #b8f567);
+}
+
+button.variant-secondary:hover:not(:disabled) {
+  background: rgba(184, 245, 103, 0.1);
+}
+
+button.variant-secondary:active:not(:disabled) {
+  background: rgba(184, 245, 103, 0.2);
+}
+
+/* Ghost */
+button.variant-ghost {
+  background: transparent;
+  color: rgb(156, 163, 175);
+  border-color: transparent;
+}
+
+button.variant-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgb(243, 244, 246);
+}
+
+button.variant-ghost:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Danger */
+button.variant-danger {
+  background: rgb(239, 68, 68);
+  color: white;
+  border-color: transparent;
+}
+
+button.variant-danger:hover:not(:disabled) {
+  background: rgb(220, 38, 38);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+button.variant-danger:active:not(:disabled) {
+  background: rgb(185, 28, 28);
+}
+
+/* Full width */
+button.full-width {
+  width: 100%;
+}

@@ -123,3 +123,57 @@ export interface IComparisonMetrics {
   changePercentage: number;
 }
 
+// Agent analytics
+export interface IAgentStats {
+  userId: string;
+  name: string;
+  totalAssigned: number;
+  totalResolved: number;
+  avgResponseTime: number;
+  sentimentBreakdown: ISentimentBreakdown;
+  performanceScore: number;
+}
+
+export interface IAgentAnalytics {
+  agents: IAgentStats[];
+  teamAverages: {
+    avgResponseTime: number;
+    resolutionRate: number;
+  };
+}
+
+// Engagement analytics
+export interface IEngagementOverview {
+  totalLikes: number;
+  totalShares: number;
+  totalViews: number;
+  totalInteractions: number;
+  avgEngagementRate: number;
+}
+
+export interface IEngagementByPlatform {
+  platform: string;
+  likes: number;
+  shares: number;
+  views: number;
+  engagementRate: number;
+}
+
+export interface IEngagementTimeSeries {
+  date: string;
+  likes: number;
+  shares: number;
+  views: number;
+}
+
+export interface IEngagementAnalytics {
+  overview: IEngagementOverview;
+  byPlatform: IEngagementByPlatform[];
+  topInteractions: any[];
+  timeSeries: IEngagementTimeSeries[];
+}
+
+// Report types
+export type ReportType = 'sentiment' | 'response' | 'autoreply' | 'platform' | 'agent' | 'engagement';
+export type ExportFormat = 'csv' | 'xlsx' | 'pdf';
+

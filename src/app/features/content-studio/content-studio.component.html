@@ -1,0 +1,162 @@
+<div class="min-h-screen bg-rep-black p-4 md:p-6">
+  <div class="mb-6">
+    <h1 class="text-2xl md:text-3xl font-bold text-rep-white flex items-center gap-2">
+      <i class="fas fa-paper-plane text-rep-lime"></i>
+      Content Studio
+    </h1>
+    <p class="text-gray-400 mt-1">Generate multiple variants and add to calendar or send to approval.</p>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Left: inputs -->
+    <div class="space-y-4">
+      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+        <label class="block text-sm font-medium text-gray-400 mb-2">Topic</label>
+        <input
+          type="text"
+          [(ngModel)]="topic"
+          placeholder="What's the post about?"
+          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
+        />
+      </div>
+      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+        <label class="block text-sm font-medium text-gray-400 mb-2">Target audience</label>
+        <input
+          type="text"
+          [(ngModel)]="audience"
+          placeholder="e.g. Small business owners"
+          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
+        />
+      </div>
+      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+        <label class="block text-sm font-medium text-gray-400 mb-2">Intent</label>
+        <select
+          [(ngModel)]="intent"
+          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
+        >
+          <option value="">Select</option>
+          <option *ngFor="let o of intentOptions" [value]="o.value">{{ o.label }}</option>
+        </select>
+      </div>
+      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+        <label class="block text-sm font-medium text-gray-400 mb-2">Platform</label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            *ngFor="let p of platforms"
+            type="button"
+            (click)="togglePlatform(p.id)"
+            [class]="selectedPlatformIds.includes(p.id) ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400'"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
+          >
+            <i [class]="p.icon + ' text-sm'"></i>
+            {{ p.name }}
+          </button>
+        </div>
+      </div>
+      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" [(ngModel)]="includeTrend" class="w-4 h-4 text-rep-lime rounded" />
+          <span class="text-sm text-gray-300">Include trend</span>
+        </label>
+      </div>
+      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" [(ngModel)]="includeImage" class="w-4 h-4 text-rep-lime rounded" />
+          <span class="text-sm text-gray-300">Generate image for each variant</span>
+        </label>
+        <p class="text-xs text-gray-500 mt-1">Uses extra credits (OpenAI DALL·E). Requires OpenAI API key.</p>
+      </div>
+      <app-button
+        variant="primary"
+        fullWidth
+        [loading]="generating"
+        [disabled]="!topic.trim() || selectedPlatformIds.length === 0"
+        (buttonClick)="generateVariants()"
+      >
+        Generate variants
+      </app-button>
+      <div *ngIf="aiCredits" class="text-xs text-gray-500">
+        Credits: {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
+      </div>
+    </div>
+
+    <!-- Middle: variants -->
+    <div class="space-y-4">
+      <h2 class="text-lg font-bold text-rep-white">Variants</h2>
+      <div *ngIf="variants.length === 0 && !generating" class="text-gray-500 text-sm">Generate to see variants.</div>
+      <div *ngIf="generating" class="flex justify-center py-8">
+        <i class="fas fa-spinner fa-spin text-2xl text-rep-lime"></i>
+      </div>
+      <div *ngFor="let v of variants; let i = index" class="cursor-pointer" (click)="selectVariant(i)">
+        <app-post-card
+          [content]="v.content"
+          [platform]="getPreviewPlatform()"
+          [media]="v.imageUrl ? [{ preview: v.imageUrl, type: 'image' }] : []"
+          status="pending"
+          generatedBy="ai"
+          [showActions]="selectedVariantIndex === i"
+          (approve)="openAddToCalendar()"
+          (schedule)="openAddToCalendar()"
+          (edit)="selectVariant(i)"
+        />
+        <div *ngIf="selectedVariantIndex === i" class="mt-2">
+          <textarea
+            [(ngModel)]="editedContent"
+            rows="4"
+            class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm resize-none"
+            placeholder="Edit content..."
+          ></textarea>
+        </div>
+      </div>
+      <div *ngIf="variants.length > 0" class="flex flex-wrap gap-2 pt-2">
+        <app-button variant="primary" size="sm" (buttonClick)="openAddToCalendar()">Add to Calendar</app-button>
+        <app-button variant="secondary" size="sm" (buttonClick)="sendToApproval()" [loading]="sendingToApproval">Send to Approval</app-button>
+      </div>
+    </div>
+
+    <!-- Right: platform preview -->
+    <div class="space-y-4">
+      <h2 class="text-lg font-bold text-rep-white">Preview</h2>
+      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
+        <div class="flex gap-2 mb-3">
+          <button
+            *ngFor="let p of platforms"
+            type="button"
+            (click)="previewPlatform = p"
+            [class]="previewPlatform?.id === p.id ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400'"
+            class="px-2 py-1 rounded-lg text-xs font-medium transition"
+          >
+            <i [class]="p.icon + ' mr-1'"></i>
+            {{ p.name }}
+          </button>
+        </div>
+        <app-social-preview
+          [platform]="getPreviewPlatform()"
+          [content]="selectedContent"
+          [mediaFiles]="getSelectedVariantMedia()"
+        ></app-social-preview>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Schedule modal -->
+<div *ngIf="showScheduleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" (click)="showScheduleModal = false">
+  <div class="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md" (click)="$event.stopPropagation()">
+    <h3 class="text-lg font-bold text-rep-white mb-4">Add to Calendar</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Date</label>
+        <input type="date" [(ngModel)]="scheduleDate" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg" />
+      </div>
+      <div>
+        <label class="block text-sm text-gray-400 mb-1">Time</label>
+        <input type="time" [(ngModel)]="scheduleTime" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg" />
+      </div>
+    </div>
+    <div class="flex gap-2 mt-6">
+      <app-button variant="primary" [loading]="scheduling" (buttonClick)="addToCalendar()">Schedule</app-button>
+      <app-button variant="ghost" (buttonClick)="showScheduleModal = false">Cancel</app-button>
+    </div>
+  </div>
+</div>

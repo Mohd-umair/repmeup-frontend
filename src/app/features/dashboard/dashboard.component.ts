@@ -1,18 +1,19 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { InboxService } from '../../core/services/inbox.service';
 import { AuthService } from '../../core/services/auth.service';
 import { IInboxStats } from '../../core/models/interaction.model';
 import { environment } from '../../../environments/environment';
-import { Subscription, interval } from 'rxjs';
+import { Subscription } from 'rxjs';
 
-/**
- * Dashboard Component - Single Responsibility Principle
- * Displays interactive overview of system metrics and statistics
- */
+
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -79,13 +80,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
     avgResponseTime: '0h',
     resolutionRate: 0,
     satisfactionScore: 0,
-    activeAgents: 0
+    activeAgents: 0,
+    overdueCount: 0
   };
   loadingPerformance = true;
 
   // Growth metrics
   growthPercentage = 0;
   loadingGrowth = true;
+
+  // Dashboard KPIs (Social Autopilot)
+  kpi = {
+    postsScheduled: 0,
+    pendingApprovals: 0,
+    engagement30d: 0,
+    aiGeneratedPercent: 0
+  };
+  loadingKpi = true;
+  upcomingPosts: any[] = [];
+  loadingUpcoming = true;
+  trendInsights: any[] = [];
+  loadingTrends = true;
+  calendarMonth: Date = new Date();
 
   // Recent Activity
   recentActivity: any[] = [];
@@ -106,12 +122,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
     this.loadAllData();
-
-    // Refresh data every 30 seconds
-    const refreshSub = interval(30000).subscribe(() => {
-      this.loadAllData();
-    });
-    this.subscriptions.push(refreshSub);
   }
 
   ngOnDestroy(): void {
@@ -127,6 +137,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadPerformanceMetrics();
     this.loadGrowthStats();
     this.loadScheduledPosts();
+    this.loadDashboardKpi();
+    this.loadUpcomingPosts();
+    this.loadTrendInsights();
   }
 
   checkPlatformConnections(): void {
@@ -153,11 +166,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success && response.data) {
           this.stats = response.data;
+          this.kpi.engagement30d = response.data.total ?? 0;
           // Update quick action stats
           const inboxAction = this.quickActions.find(action => action.title === 'Inbox');
           if (inboxAction) {
             inboxAction.stats = response.data.unread || 0;
           }
+          // Update SLA metrics from stats (avg response time, overdue count)
+          const avgMin = response.data.avgResponseTimeMinutes;
+          if (avgMin != null && avgMin > 0) {
+            this.performanceMetrics.avgResponseTime = this.formatTime(avgMin);
+          }
+          this.performanceMetrics.overdueCount = response.data.overdueCount ?? 0;
         } else {
           this.stats = { total: 0, unread: 0, positive: 0, negative: 0, neutral: 0 } as any;
         }
@@ -283,8 +303,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
 
-  navigateTo(route: string): void {
-    this.router.navigate([route]);
+  navigateTo(route: string, queryParams?: Record<string, string>): void {
+    if (queryParams) {
+      this.router.navigate([route], { queryParams });
+    } else {
+      this.router.navigate([route]);
+    }
   }
 
   viewInteraction(id: string): void {
@@ -309,10 +333,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   loadTasks(): void {
     this.loadingTasks = true;
     
-    // Get all interactions (tasks) for the current user's organization
+    // Get only interactions assigned to the current user (agent tasks)
+    if (!this.currentUser || !this.currentUser._id) {
+      this.tasks = { total: 0, pending: 0, completed: 0, completionRate: 0 };
+      this.loadingTasks = false;
+      return;
+    }
+    
     this.inboxService.getInteractions({ 
       page: 1,
-      limit: 1000 // Get all interactions
+      limit: 1000, // Get all assigned interactions
+      assignedTo: this.currentUser._id // Filter by current user
     }).subscribe({
       next: (response) => {
         if (response.success && response.data) {
@@ -320,15 +351,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const interactions = response.data.interactions || response.data;
           const interactionArray = Array.isArray(interactions) ? interactions : [];
           
-          this.tasks.total = interactionArray.length;
+          // Filter to only show interactions assigned to current user
+          const myTasks = interactionArray.filter((int: any) => 
+            int.assignedTo === this.currentUser._id || 
+            (int.assignedTo && int.assignedTo._id === this.currentUser._id)
+          );
+          
+          this.tasks.total = myTasks.length;
           
           // Count pending (not resolved)
-          this.tasks.pending = interactionArray.filter((int: any) => 
+          this.tasks.pending = myTasks.filter((int: any) => 
             int.status !== 'resolved' && int.status !== 'closed'
           ).length;
           
           // Count completed (resolved or closed)
-          this.tasks.completed = interactionArray.filter((int: any) => 
+          this.tasks.completed = myTasks.filter((int: any) => 
             int.status === 'resolved' || int.status === 'closed'
           ).length;
           
@@ -353,15 +390,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getTasksStatusMessage(): string {
     if (this.tasks.pending === 0 && this.tasks.total > 0) {
-      return '🎉 Amazing! All tasks completed!';
+      return '🎉 Amazing! All assigned tasks completed!';
     } else if (this.tasks.pending === 0) {
-      return '👍 No tasks assigned yet';
+      return '👍 No tasks assigned to you yet';
     } else if (this.tasks.pending <= 5) {
-      return '💪 Almost there! Just a few more tasks';
+      return '💪 Almost there! Just a few more assigned tasks';
     } else if (this.tasks.pending <= 10) {
       return '⚡ Keep going! You\'re making great progress';
     } else {
-      return '🚀 Let\'s tackle these tasks!';
+      return '🚀 Let\'s tackle your assigned tasks!';
     }
   }
 
@@ -388,17 +425,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const interactions = response.data.interactions || response.data;
           const interactionArray = Array.isArray(interactions) ? interactions : [];
           
-          // Calculate average response time
-          const respondedInteractions = interactionArray.filter((int: any) => int.respondedAt && int.createdAt);
-          if (respondedInteractions.length > 0) {
-            const totalResponseTime = respondedInteractions.reduce((sum: number, int: any) => {
-              const responseTime = new Date(int.respondedAt).getTime() - new Date(int.createdAt).getTime();
-              return sum + responseTime;
-            }, 0);
-            const avgMinutes = totalResponseTime / respondedInteractions.length / 60000; // Convert to minutes
-            this.performanceMetrics.avgResponseTime = this.formatTime(avgMinutes);
-          } else {
-            this.performanceMetrics.avgResponseTime = 'N/A';
+          // Avg response time comes from stats (backend aggregation); only set N/A here if stats didn't
+          if (this.performanceMetrics.avgResponseTime === '0h') {
+            const respondedInteractions = interactionArray.filter((int: any) => int.respondedAt && (int.platformCreatedAt || int.createdAt));
+            if (respondedInteractions.length > 0) {
+              const totalResponseTime = respondedInteractions.reduce((sum: number, int: any) => {
+                const created = int.platformCreatedAt || int.createdAt;
+                return sum + (new Date(int.respondedAt).getTime() - new Date(created).getTime());
+              }, 0);
+              const avgMinutes = totalResponseTime / respondedInteractions.length / 60000;
+              this.performanceMetrics.avgResponseTime = this.formatTime(avgMinutes);
+            } else {
+              this.performanceMetrics.avgResponseTime = 'N/A';
+            }
           }
           
           // Calculate resolution rate
@@ -565,5 +604,97 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getTotalInteractionsProgress(): number {
     return this.Math.min(100, ((this.stats?.total || 0) / 100) * 100);
+  }
+
+  loadDashboardKpi(): void {
+    this.loadingKpi = true;
+    this.http.get<any>(`${environment.apiUrl}/posts/dashboard-counts`).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.kpi.postsScheduled = res.data.scheduled ?? 0;
+          this.kpi.pendingApprovals = res.data.pendingApproval ?? 0;
+          this.kpi.aiGeneratedPercent = res.data.aiGeneratedPercent ?? 0;
+        }
+        this.kpi.engagement30d = this.stats?.total ?? 0;
+        this.loadingKpi = false;
+      },
+      error: () => {
+        this.loadingKpi = false;
+      }
+    });
+  }
+
+  loadUpcomingPosts(): void {
+    this.loadingUpcoming = true;
+    this.http.get<any>(`${environment.apiUrl}/posts/scheduled`).subscribe({
+      next: (res) => {
+        if (res.success && res.data && Array.isArray(res.data)) {
+          this.upcomingPosts = res.data.slice(0, 10);
+        } else {
+          this.upcomingPosts = [];
+        }
+        this.loadingUpcoming = false;
+      },
+      error: () => {
+        this.upcomingPosts = [];
+        this.loadingUpcoming = false;
+      }
+    });
+  }
+
+  loadTrendInsights(): void {
+    this.loadingTrends = true;
+    this.http.get<any>(`${environment.apiUrl}/trends`).subscribe({
+      next: (res) => {
+        if (res.success && res.data && Array.isArray(res.data)) {
+          this.trendInsights = res.data.slice(0, 5);
+        } else {
+          this.trendInsights = [];
+        }
+        this.loadingTrends = false;
+      },
+      error: () => {
+        this.trendInsights = [];
+        this.loadingTrends = false;
+      }
+    });
+  }
+
+  getCalendarDays(): { date: Date; day: number; isCurrentMonth: boolean; isToday: boolean }[] {
+    const year = this.calendarMonth.getFullYear();
+    const month = this.calendarMonth.getMonth();
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const startPad = first.getDay();
+    const days: { date: Date; day: number; isCurrentMonth: boolean; isToday: boolean }[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < startPad; i++) {
+      const d = new Date(year, month, -startPad + i + 1);
+      days.push({ date: d, day: d.getDate(), isCurrentMonth: false, isToday: false });
+    }
+    for (let d = 1; d <= last.getDate(); d++) {
+      const date = new Date(year, month, d);
+      date.setHours(0, 0, 0, 0);
+      days.push({ date, day: d, isCurrentMonth: true, isToday: date.getTime() === today.getTime() });
+    }
+    const remaining = 42 - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      const d = new Date(year, month + 1, i);
+      days.push({ date: d, day: d.getDate(), isCurrentMonth: false, isToday: false });
+    }
+    return days.slice(0, 42);
+  }
+
+  prevMonth(): void {
+    this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() - 1);
+  }
+
+  nextMonth(): void {
+    this.calendarMonth = new Date(this.calendarMonth.getFullYear(), this.calendarMonth.getMonth() + 1);
+  }
+
+  calendarMonthLabel(): string {
+    return this.calendarMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
   }
 }

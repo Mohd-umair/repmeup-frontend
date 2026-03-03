@@ -1,50 +1,168 @@
-<div class="p-6">
-  <!-- Header -->
-  <div class="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
-    <h3 class="text-sm font-bold text-rep-black uppercase tracking-wide">Platforms</h3>
-    <button 
-      (click)="clearPlatformFilters()"
-      class="text-sm text-rep-black hover:text-rep-lime font-bold transition flex items-center"
-    >
-      <i class="fas fa-times-circle mr-1"></i>
-      Clear
-    </button>
-  </div>
-
-  <!-- Platform Filter Only -->
-  <div class="space-y-2">
+<!-- Quick Filters Section -->
+<div [class]="inline ? 'flex items-center gap-2 flex-wrap' : 'p-3'">
+  <span *ngIf="showLabel" class="text-xs font-semibold text-gray-500 uppercase tracking-wide" [class.mr-2]="inline" [class.mb-3]="!inline" [class.block]="!inline">
+    Quick Filters
+  </span>
+  <button 
+    *ngIf="filters.platform"
+    (click)="clearPlatformFilters()"
+    class="text-xs text-gray-500 hover:text-rep-lime font-medium transition p-1 -mr-1"
+    title="Clear platform filter"
+  >
+    <i class="fas fa-times"></i>
+  </button>
+  <div class="flex flex-wrap gap-1.5" [class.flex-1]="inline">
     <button
       *ngFor="let platform of platforms"
       (click)="toggleFilter('platform', platform.value)"
-      [class]="isFilterActive('platform', platform.value) 
-        ? 'shadow-lg transform scale-105' 
-        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:scale-102'"
+      [attr.title]="platform.label"
+      type="button"
+      class="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 text-sm"
       [style.background]="isFilterActive('platform', platform.value) 
-        ? 'linear-gradient(135deg, ' + platform.gradientFrom + '15, ' + platform.gradientTo + '15)' 
-        : ''"
-      [style.borderColor]="isFilterActive('platform', platform.value) 
-        ? platform.bgColor 
-        : '#E5E7EB'"
-      class="w-full flex items-center justify-between px-4 py-3 border-2 rounded-xl transition-all duration-300 font-medium"
+        ? 'linear-gradient(135deg, ' + platform.gradientFrom + ', ' + platform.gradientTo + ')' 
+        : 'rgba(0,0,0,0.04)'"
+      [style.color]="isFilterActive('platform', platform.value) ? 'white' : platform.bgColor"
+      [style.border]="'1px solid ' + (isFilterActive('platform', platform.value) ? platform.bgColor : 'rgba(0,0,0,0.08)')"
     >
-      <div class="flex items-center space-x-3">
-        <div 
-          class="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300"
-          [style.background]="isFilterActive('platform', platform.value)
-            ? 'linear-gradient(135deg, ' + platform.gradientFrom + ', ' + platform.gradientTo + ')'
-            : platform.bgColor + '15'"
-          [style.border]="'2px solid ' + (isFilterActive('platform', platform.value) ? platform.bgColor : platform.bgColor + '30')">
-          <i [class]="platform.icon + ' text-lg'" 
-             [style.color]="isFilterActive('platform', platform.value) ? 'white' : platform.bgColor"></i>
-        </div>
-        <span class="text-sm font-bold" 
-              [style.color]="isFilterActive('platform', platform.value) ? platform.bgColor : ''">
-          {{ platform.label }}
-        </span>
-      </div>
-      <i *ngIf="isFilterActive('platform', platform.value)" 
-         class="fas fa-check-circle text-lg" 
-         [style.color]="platform.bgColor"></i>
+      <i [class]="platform.icon + ' text-base'"></i>
     </button>
   </div>
+</div>
+
+<!-- More Filters Toggle Button (hidden when platformOnly) -->
+<div *ngIf="!platformOnly" [class]="inline ? 'flex items-center gap-2' : 'px-3 pb-2'">
+  <button
+    (click)="toggleMoreFilters()"
+    type="button"
+    class="text-xs font-medium text-gray-600 hover:text-rep-lime transition-colors flex items-center gap-2 py-2"
+  >
+    <i class="fas" [class.fa-chevron-down]="!showMoreFilters" [class.fa-chevron-up]="showMoreFilters"></i>
+    <span>More Filters</span>
+    <span *ngIf="hasActiveAdvancedFilters() && !showMoreFilters" class="w-2 h-2 rounded-full bg-rep-lime"></span>
+  </button>
+</div>
+
+<!-- Advanced Filters Section (Collapsible, hidden when platformOnly) -->
+<div *ngIf="!platformOnly && showMoreFilters" class="animate-slideDown">
+  
+  <!-- Labels Filter -->
+  <div *ngIf="labels && labels.length > 0" [class]="inline ? 'flex items-center gap-2 flex-wrap' : 'p-3 border-t border-gray-100'">
+    <span *ngIf="showLabel" class="text-xs font-semibold text-gray-500 uppercase tracking-wide" [class.mr-2]="inline" [class.mb-2]="!inline" [class.block]="!inline">
+      Labels
+    </span>
+    <button 
+      *ngIf="filters.label"
+      (click)="clearLabelFilters()"
+      class="text-xs text-gray-500 hover:text-rep-lime font-medium transition p-1 -mr-1"
+      title="Clear label filter"
+    >
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="flex flex-wrap gap-1.5" [class.flex-1]="inline">
+      <button
+        *ngFor="let label of labels"
+        (click)="toggleFilter('label', label._id)"
+        [attr.title]="label.name"
+        type="button"
+        class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-200 text-xs font-medium border"
+        [ngClass]="{
+          'shadow-md': isFilterActive('label', label._id)
+        }"
+        [style.background]="isFilterActive('label', label._id) ? (label.color || '#3B82F6') : 'rgba(0,0,0,0.04)'"
+        [style.color]="isFilterActive('label', label._id) ? '#fff' : (label.color || '#3B82F6')"
+        [style.borderColor]="isFilterActive('label', label._id) ? (label.color || '#3B82F6') : 'rgba(0,0,0,0.08)'"
+      >
+        <i *ngIf="label.icon" [class]="label.icon"></i>
+        <span>{{ label.name }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Type Filter -->
+  <div [class]="inline ? 'flex items-center gap-2 flex-wrap' : 'p-3 border-t border-gray-100'">
+    <span *ngIf="showLabel" class="text-xs font-semibold text-gray-500 uppercase tracking-wide" [class.mr-2]="inline" [class.mb-2]="!inline" [class.block]="!inline">
+      Type
+    </span>
+    <button 
+      *ngIf="filters.type"
+      (click)="toggleFilter('type', null)"
+      class="text-xs text-gray-500 hover:text-rep-lime font-medium transition p-1 -mr-1"
+      title="Clear type filter"
+    >
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="flex flex-wrap gap-1.5" [class.flex-1]="inline">
+      <button
+        *ngFor="let type of types"
+        (click)="toggleFilter('type', type.value)"
+        [attr.title]="type.label"
+        type="button"
+        class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-200 text-xs font-medium border"
+        [ngClass]="{
+          'bg-rep-lime text-white border-rep-lime shadow-md': isFilterActive('type', type.value),
+          'bg-gray-50 text-gray-700 border-gray-200 hover:border-rep-lime': !isFilterActive('type', type.value)
+        }"
+      >
+        <span>{{ type.icon }}</span>
+        <span>{{ type.label }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sentiment Filter -->
+  <div [class]="inline ? 'flex items-center gap-2 flex-wrap' : 'p-3 border-t border-gray-100'">
+    <span *ngIf="showLabel" class="text-xs font-semibold text-gray-500 uppercase tracking-wide" [class.mr-2]="inline" [class.mb-2]="!inline" [class.block]="!inline">
+      Sentiment
+    </span>
+    <button 
+      *ngIf="filters.sentiment"
+      (click)="toggleFilter('sentiment', null)"
+      class="text-xs text-gray-500 hover:text-rep-lime font-medium transition p-1 -mr-1"
+      title="Clear sentiment filter"
+    >
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="flex flex-wrap gap-1.5" [class.flex-1]="inline">
+      <button
+        *ngFor="let sentiment of sentiments"
+        (click)="toggleFilter('sentiment', sentiment.value)"
+        [attr.title]="sentiment.label"
+        type="button"
+        class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-200 text-xs font-medium border"
+        [ngClass]="isFilterActive('sentiment', sentiment.value) ? getSentimentActiveClass(sentiment.value) : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400'"
+      >
+        <span>{{ sentiment.icon }}</span>
+        <span>{{ sentiment.label }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Filter -->
+  <div [class]="inline ? 'flex items-center gap-2 flex-wrap' : 'p-3 border-t border-gray-100'">
+    <span *ngIf="showLabel" class="text-xs font-semibold text-gray-500 uppercase tracking-wide" [class.mr-2]="inline" [class.mb-2]="!inline" [class.block]="!inline">
+      Status
+    </span>
+    <button 
+      *ngIf="filters.status"
+      (click)="toggleFilter('status', null)"
+      class="text-xs text-gray-500 hover:text-rep-lime font-medium transition p-1 -mr-1"
+      title="Clear status filter"
+    >
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="flex flex-wrap gap-1.5" [class.flex-1]="inline">
+      <button
+        *ngFor="let status of statuses"
+        (click)="toggleFilter('status', status.value)"
+        [attr.title]="status.label"
+        type="button"
+        class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-200 text-xs font-medium border"
+        [ngClass]="isFilterActive('status', status.value) ? getStatusActiveClass(status.value) : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400'"
+      >
+        <span>{{ status.icon }}</span>
+        <span>{{ status.label }}</span>
+      </button>
+    </div>
+  </div>
+
 </div>

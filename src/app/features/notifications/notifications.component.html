@@ -1,0 +1,224 @@
+<div class="min-h-screen bg-rep-black p-4 sm:p-6 overflow-y-auto">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div class="flex items-center gap-3">
+      <h1 class="text-3xl font-bold text-rep-white flex items-center gap-2">
+        <i class="fas fa-bell text-rep-lime"></i>
+        Notifications
+      </h1>
+      <span *ngIf="unreadCount > 0" class="px-3 py-1 bg-rep-lime text-rep-black text-sm font-bold rounded-full">
+        {{ unreadCount }} unread
+      </span>
+    </div>
+    
+    <div class="flex flex-wrap gap-2">
+      <button 
+        (click)="refresh()"
+        [disabled]="isLoading"
+        class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      >
+        <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+        Refresh
+      </button>
+      
+      <button 
+        (click)="markAllAsRead()"
+        [disabled]="unreadCount === 0 || isLoading"
+        class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      >
+        <i class="fas fa-check"></i>
+        Mark All Read
+      </button>
+      
+      <button 
+        (click)="clearAllRead()"
+        [disabled]="isLoading"
+        class="px-4 py-2 border border-red-500/50 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/10 transition disabled:opacity-50 flex items-center gap-2"
+      >
+        <i class="fas fa-trash-alt"></i>
+        Clear Read
+      </button>
+    </div>
+  </div>
+  
+  <!-- Filters -->
+  <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-4 mb-6 flex flex-col md:flex-row gap-4 flex-wrap">
+    <div class="flex items-center gap-3 flex-wrap">
+      <label class="text-sm font-semibold text-gray-400">Status:</label>
+      <div class="flex gap-2">
+        <button 
+          [class.bg-rep-lime]="selectedFilter === 'all'"
+          [class.text-rep-black]="selectedFilter === 'all'"
+          [class.bg-gray-800]="selectedFilter !== 'all'"
+          [class.text-gray-300]="selectedFilter !== 'all'"
+          (click)="onFilterChange('all')"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-700 hover:bg-gray-700 transition"
+        >
+          All ({{ notifications.length }})
+        </button>
+        <button 
+          [class.bg-rep-lime]="selectedFilter === 'unread'"
+          [class.text-rep-black]="selectedFilter === 'unread'"
+          [class.bg-gray-800]="selectedFilter !== 'unread'"
+          [class.text-gray-300]="selectedFilter !== 'unread'"
+          (click)="onFilterChange('unread')"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-700 hover:bg-gray-700 transition"
+        >
+          Unread ({{ unreadCount }})
+        </button>
+        <button 
+          [class.bg-rep-lime]="selectedFilter === 'read'"
+          [class.text-rep-black]="selectedFilter === 'read'"
+          [class.bg-gray-800]="selectedFilter !== 'read'"
+          [class.text-gray-300]="selectedFilter !== 'read'"
+          (click)="onFilterChange('read')"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-700 hover:bg-gray-700 transition"
+        >
+          Read
+        </button>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <label class="text-sm font-semibold text-gray-400">Type:</label>
+      <select 
+        [(ngModel)]="selectedType"
+        (change)="onTypeFilterChange()"
+        class="px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-300 focus:ring-2 focus:ring-rep-lime focus:border-rep-lime min-w-[180px]"
+      >
+        <option *ngFor="let type of notificationTypes" [value]="type.value">
+          {{ type.label }}
+        </option>
+      </select>
+    </div>
+    
+    <div class="flex-1 min-w-[200px]">
+      <div class="relative">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+        <input 
+          type="text" 
+          placeholder="Search notifications..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          class="w-full pl-10 pr-10 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-rep-lime focus:border-rep-lime text-sm"
+        >
+        <button 
+          *ngIf="searchQuery"
+          (click)="clearSearch()"
+          class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-600 text-lg leading-none"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex flex-col justify-center items-center py-20">
+    <div class="w-16 h-16 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mb-4"></div>
+    <p class="text-gray-400">Loading notifications...</p>
+  </div>
+  
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredNotifications.length === 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-12 text-center">
+    <i class="fas fa-bell-slash text-5xl text-gray-600 mb-4"></i>
+    <h3 class="text-xl font-bold text-white mb-2">No notifications</h3>
+    <p *ngIf="selectedFilter === 'all'" class="text-gray-400">You're all caught up!</p>
+    <p *ngIf="selectedFilter === 'unread'" class="text-gray-400">No unread notifications</p>
+    <p *ngIf="selectedFilter === 'read'" class="text-gray-400">No read notifications yet</p>
+    <p *ngIf="searchQuery" class="text-gray-400">No notifications match your search</p>
+  </div>
+  
+  <!-- Notifications List -->
+  <div *ngIf="!isLoading && filteredNotifications.length > 0" class="space-y-3">
+    <div 
+      *ngFor="let notification of getPaginatedNotifications()"
+      (click)="onNotificationClick(notification)"
+      [ngClass]="{
+        'bg-rep-lime/5 border-l-4 border-l-rep-lime': !notification.isRead,
+        'bg-gray-900/50': notification.isRead
+      }"
+      class="relative flex gap-4 p-4 rounded-xl border border-gray-800 transition cursor-pointer hover:bg-gray-800/50"
+    >
+      <!-- Notification Icon -->
+      <div class="flex-shrink-0 w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center text-2xl">
+        {{ getNotificationIcon(notification.type) }}
+      </div>
+      
+      <!-- Content -->
+      <div class="flex-1 min-w-0">
+        <div class="flex flex-wrap items-start justify-between gap-2 mb-1">
+          <h4 class="text-sm font-semibold text-white" [class.font-bold]="!notification.isRead">{{ notification.title }}</h4>
+          <span class="px-2 py-0.5 bg-gray-800 text-gray-400 rounded text-xs font-medium">{{ getTypeLabel(notification.type) }}</span>
+        </div>
+        
+        <p class="text-sm text-gray-400 line-clamp-2 mb-2">{{ notification.message }}</p>
+        
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-gray-500">{{ formatDate(notification.createdAt) }}</span>
+          
+          <div class="flex gap-1">
+            <button 
+              *ngIf="!notification.isRead"
+              (click)="markAsRead(notification, $event)"
+              title="Mark as read"
+              class="w-8 h-8 flex items-center justify-center rounded bg-gray-800 text-gray-400 hover:bg-rep-lime hover:text-rep-black transition"
+            >
+              <i class="fas fa-check text-xs"></i>
+            </button>
+            
+            <button 
+              (click)="deleteNotification(notification, $event)"
+              title="Delete"
+              class="w-8 h-8 flex items-center justify-center rounded bg-gray-800 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition"
+            >
+              <i class="fas fa-trash-alt text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Pagination -->
+  <div *ngIf="!isLoading && filteredNotifications.length > itemsPerPage" class="mt-6 flex items-center justify-center gap-2 flex-wrap">
+    <button 
+      (click)="previousPage()"
+      [disabled]="currentPage === 1"
+      class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <i class="fas fa-chevron-left mr-2"></i>Previous
+    </button>
+    
+    <div class="flex gap-1">
+      <button 
+        *ngFor="let page of getPageNumbers()"
+        [class.bg-rep-lime]="page === currentPage"
+        [class.text-rep-black]="page === currentPage"
+        [class.bg-gray-800]="page !== currentPage"
+        [class.text-gray-300]="page !== currentPage"
+        (click)="goToPage(page)"
+        class="min-w-[2.5rem] px-3 py-2 rounded-lg text-sm font-medium border border-gray-700 hover:bg-gray-700 transition"
+      >
+        {{ page }}
+      </button>
+    </div>
+    
+    <button 
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages"
+      class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Next<i class="fas fa-chevron-right ml-2"></i>
+    </button>
+  </div>
+  
+  <!-- Stats Footer -->
+  <div *ngIf="!isLoading && filteredNotifications.length > 0" class="mt-4 text-center">
+    <p class="text-sm text-gray-500">
+      Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - 
+      {{ Math.min(currentPage * itemsPerPage, filteredNotifications.length) }} 
+      of {{ filteredNotifications.length }} notifications
+    </p>
+  </div>
+</div>

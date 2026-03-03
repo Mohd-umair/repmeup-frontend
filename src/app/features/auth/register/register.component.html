@@ -162,12 +162,20 @@
                 </div>
                 <input
                   id="password"
-                  type="password"
+                  [type]="showPassword ? 'text' : 'password'"
                   formControlName="password"
-                  class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime focus:bg-white transition"
+                  class="w-full pl-11 pr-12 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime focus:bg-white transition"
                   [class.border-red-500]="hasError('password', 'required') || hasError('password', 'minlength')"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility()"
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-rep-black transition"
+                  [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+                >
+                  <i class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                </button>
               </div>
               <p *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="mt-2 text-sm text-gray-700 flex items-center">
                 <i class="fas fa-exclamation-circle mr-1"></i>
@@ -187,12 +195,20 @@
                 </div>
                 <input
                   id="confirmPassword"
-                  type="password"
+                  [type]="showConfirmPassword ? 'text' : 'password'"
                   formControlName="confirmPassword"
-                  class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime focus:bg-white transition"
+                  class="w-full pl-11 pr-12 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime focus:bg-white transition"
                   [class.border-red-500]="hasError('confirmPassword', 'required') || hasError('confirmPassword', 'passwordMismatch')"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  (click)="toggleConfirmPasswordVisibility()"
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-rep-black transition"
+                  [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'"
+                >
+                  <i class="fas" [ngClass]="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                </button>
               </div>
               <p *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched" class="mt-2 text-sm text-gray-700 flex items-center">
                 <i class="fas fa-exclamation-circle mr-1"></i>
