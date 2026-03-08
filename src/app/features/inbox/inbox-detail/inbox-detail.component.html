@@ -68,7 +68,7 @@
             <div *ngIf="!getAuthorAvatarUrl(interaction.author) || avatarFallback[interaction.platformId]"
                  class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg transition-all duration-500"
                  [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : '#000000'">
-              {{ interaction.author.name?.charAt(0)?.toUpperCase() || '?' }}
+              {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
             </div>
             <div class="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-white rounded-lg flex items-center justify-center shadow-md border-2 transition-all duration-500"
                  [style.borderColor]="getPlatformColors() ? getPlatformColors().primary : '#D0FF00'">
@@ -78,10 +78,10 @@
           
           <!-- User Info -->
           <div class="min-w-0 flex-1">
-            <h2 class="text-lg sm:text-xl font-bold text-rep-black mb-1 truncate">{{ interaction.author.name }}</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-rep-black mb-1 truncate">{{ getAuthorDisplayName(interaction) }}</h2>
             <p class="text-xs sm:text-sm text-gray-600 flex items-center truncate">
               <i class="fas fa-at mr-1 flex-shrink-0"></i>
-              <span class="truncate">{{ interaction.author.username || 'user' }}</span>
+              <span class="truncate">{{ interaction.author?.username || 'user' }}</span>
             </p>
           </div>
         </div>
@@ -113,6 +113,31 @@
             title="Reopen conversation">
             <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-redo'"></i>
           </button>
+          <!-- Three-dots menu: Edit & Delete (Facebook comments) -->
+          <div *ngIf="showActionsMenuForInteraction()" class="relative" #actionsMenuContainer>
+            <button
+              type="button"
+              (click)="toggleActionsMenu($event)"
+              class="p-2 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition"
+              title="More actions"
+              aria-haspopup="true"
+              [attr.aria-expanded]="showActionsMenu">
+              <i class="fas fa-ellipsis-v text-sm"></i>
+            </button>
+            <div
+              *ngIf="showActionsMenu"
+              class="absolute right-0 top-full mt-1 py-1 min-w-[140px] bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+              (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                (click)="deleteComment(); closeActionsMenu()"
+                [disabled]="deletingComment"
+                class="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 disabled:opacity-50">
+                <i [class]="deletingComment ? 'fas fa-spinner fa-spin' : 'fas fa-trash-alt'"></i>
+                Delete comment
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -157,10 +182,10 @@
                        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
                   <div *ngIf="!getAuthorAvatarUrl(item.data.author) || avatarFallback[item.data.platformId + '_msg']"
                        class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm flex-shrink-0">
-                    {{ item.data.author.name?.charAt(0)?.toUpperCase() || '?' }}
+                    {{ getAuthorDisplayName(item.data).charAt(0).toUpperCase() }}
                   </div>
                   <div>
-                    <p class="font-bold text-xs sm:text-sm text-rep-black">{{ item.data.author.name }}</p>
+                    <p class="font-bold text-xs sm:text-sm text-rep-black">{{ getAuthorDisplayName(item.data) }}</p>
                     <p class="text-xs text-gray-500">{{ formatDate(item.data.platformCreatedAt) }}</p>
                   </div>
                 </div>

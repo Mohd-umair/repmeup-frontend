@@ -87,7 +87,7 @@
           <div *ngIf="!getAuthorAvatarUrl(interaction.author) || avatarFallback[interaction.platformId]"
                class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md transition-all duration-300"
                [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
-            {{ interaction.author.name?.charAt(0)?.toUpperCase() || '?' }}
+            {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
           </div>
           <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-md border-2 transition-all duration-300"
                [style.borderColor]="getPlatformColors(interaction.platform).primary">
@@ -101,7 +101,7 @@
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2 flex-1 min-w-0">
               <h3 class="text-sm font-semibold text-gray-900 truncate">
-                {{ interaction.author.name }}
+                {{ getAuthorDisplayName(interaction) }}
               </h3>
               <!-- Unread dot -->
               <span *ngIf="interaction.status === 'unread'" 

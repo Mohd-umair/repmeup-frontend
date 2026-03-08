@@ -327,17 +327,31 @@
           <i class="fas fa-info-circle mr-1"></i>
           {{ canAddConnection ? 'Select a platform to connect' : connectionLimitMessage }}
         </p>
-        <p class="text-xs text-gray-500 mt-2 text-center">
-          Recording for App Review?
-          <button type="button" (click)="connectInstagramForceConsent()" class="text-blue-600 hover:underline ml-1">
-            Force consent screen (Instagram)
-          </button>
-          or
-          <button type="button" (click)="connectFacebookForceConsent()" class="text-blue-600 hover:underline ml-1">
-            Force consent screen (Facebook)
-          </button>
-          to show Meta's permission screen when connecting.
-        </p>
+        <!-- Consent screen not showing? Revoke our app first, then connect. -->
+        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-left">
+          <p class="text-sm font-semibold text-amber-900 mb-2">
+            <i class="fas fa-video mr-1"></i> Recording for App Review? Consent page not showing?
+          </p>
+          <p class="text-xs text-amber-800 mb-2">
+            Meta often skips the permission screen if you already authorized the app. To see it again:
+          </p>
+          <ol class="text-xs text-amber-800 list-decimal list-inside space-y-1 mb-2">
+            <li>
+              <a [href]="facebookAppSettingsUrl" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">
+                Open Facebook App Settings
+              </a>
+              → find this app → <strong>Remove</strong>.
+            </li>
+            <li>Return here and click <strong>Connect Instagram</strong> or <strong>Connect Facebook</strong> above.</li>
+          </ol>
+          <p class="text-xs text-amber-700">
+            Then use
+            <button type="button" (click)="connectInstagramForceConsent()" class="text-blue-600 hover:underline font-medium mx-0.5">Connect Instagram</button>
+            or
+            <button type="button" (click)="connectFacebookForceConsent()" class="text-blue-600 hover:underline font-medium mx-0.5">Connect Facebook</button>
+            — the consent screen should appear.
+          </p>
+        </div>
       </div>
 
       <!-- NEW: Available Accounts Section -->

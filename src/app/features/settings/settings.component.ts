@@ -309,9 +309,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
           
           if (errorMessage.includes('No pages found')) {
             const details = [
-              '1. Make sure you have a Facebook Page',
-              '2. Ensure you have Admin/Editor role on the Page',
-              '3. Grant all requested permissions during OAuth'
+              '1. Make sure you have a Facebook Page (create one at facebook.com/pages if needed)',
+              '2. Ensure you have Admin or Editor role on the Page',
+              '3. Grant all requested permissions during OAuth (including Business Account access if your Page is linked to a Business)',
+              '4. If your Page is under a Facebook Business Account, ensure you granted business_management when connecting'
             ];
             this.notificationService.showWithDetails(
               'error',
@@ -1014,6 +1015,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
   connectInstagramForceConsent(): void {
     this.platformService.connectInstagram(true);
   }
+
+  /** URL for Facebook App Settings so the user can revoke our app (to force consent screen on next connect). */
+  readonly facebookAppSettingsUrl = 'https://www.facebook.com/settings?tab=applications';
 
   /**
    * Start Facebook OAuth with auth_type=reauthorize so Meta shows the permission consent screen.

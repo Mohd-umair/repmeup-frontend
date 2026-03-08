@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, NgZone, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -62,6 +62,12 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   
   // Resolution
   resolvingInteraction = false;
+
+  /** Deleting Facebook comment (on platform + DB) */
+  deletingComment = false;
+
+  /** Three-dots actions menu open state */
+  showActionsMenu = false;
 
   // Subscriptions
   private subscriptions: Subscription[] = [];
@@ -145,6 +151,15 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   /** Profile picture URL for author (avatarUrl or profilePicture). */
   getAuthorAvatarUrl(author: IInteraction['author']): string | null {
     return author?.avatarUrl || author?.profilePicture || null;
+  }
+
+  /** Display name with platform fallback when profile isn't available (e.g. Instagram without Advanced Access). */
+  getAuthorDisplayName(obj: { author?: IInteraction['author']; platform?: string } | null): string {
+    if (!obj) return 'Unknown';
+    const name = obj.author?.name || obj.author?.username;
+    if (name) return name;
+    if (obj.platform === 'instagram') return 'Instagram User';
+    return 'Unknown';
   }
 
   /** Safe URL for img [src] so external CDN avatars load. */
@@ -745,6 +760,75 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
    */
   isResolved(): boolean {
     return this.interaction?.status === InteractionStatus.RESOLVED;
+  }
+
+  /**
+   * Whether this interaction is a Facebook comment that can be deleted (on Facebook and from inbox).
+   */
+  canDeleteComment(): boolean {
+    return !!(this.interaction?.platform === 'facebook' && this.interaction?.type === 'comment');
+  }
+
+  /**
+   * Whether to show the three-dots menu (Edit & Delete) — e.g. for Facebook comments.
+   */
+  showActionsMenuForInteraction(): boolean {
+    return this.canDeleteComment();
+  }
+
+  toggleActionsMenu(event: Event): void {
+    event.stopPropagation();
+    this.showActionsMenu = !this.showActionsMenu;
+  }
+
+  closeActionsMenu(): void {
+    this.showActionsMenu = false;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeActionsMenu();
+  }
+
+  /**
+   * Delete Facebook comment (on Facebook and from our DB), then close detail and refresh list.
+   */
+  deleteComment(): void {
+    if (!this.interaction || !this.interaction._id || !this.canDeleteComment()) {
+      return;
+    }
+
+    this.sweetAlertService.confirm(
+      'Delete comment?',
+      'This will remove the comment from Facebook and from your inbox. This cannot be undone.',
+      'Yes, Delete',
+      'Cancel'
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.deletingComment = true;
+        this.sweetAlertService.showLoading('Deleting...', 'Removing comment from Facebook and inbox');
+
+        this.inboxService.deleteInteraction(this.interaction!._id).subscribe({
+          next: (response) => {
+            this.sweetAlertService.close();
+            this.deletingComment = false;
+            if (response.success) {
+              this.inboxService.setSelectedInteraction(null);
+              this.interactionUpdate.emit();
+              this.sweetAlertService.toast('success', 'Comment deleted from Facebook and inbox.');
+            } else {
+              this.sweetAlertService.error('Error', (response as any).error || 'Failed to delete comment.');
+            }
+          },
+          error: (err) => {
+            this.sweetAlertService.close();
+            this.deletingComment = false;
+            const msg = err.error?.error || err.message || 'Failed to delete comment.';
+            this.sweetAlertService.error('Error', msg);
+          }
+        });
+      }
+    });
   }
 
   /**

@@ -138,6 +138,13 @@ export class InboxService {
   }
 
   /**
+   * Delete interaction. For Facebook comments, deletes on Facebook and in DB; otherwise removes from DB only.
+   */
+  deleteInteraction(id: string): Observable<IApiResponse> {
+    return this.apiService.delete<IApiResponse>(`/inbox/${id}`);
+  }
+
+  /**
    * Manually escalate interaction to human agent
    */
   escalate(id: string, reason?: string): Observable<IApiResponse> {

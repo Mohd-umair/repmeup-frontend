@@ -47,6 +47,14 @@ export class InboxListComponent implements OnInit, OnDestroy {
     return author?.avatarUrl || author?.profilePicture || null;
   }
 
+  /** Display name with platform fallback when profile isn't available (e.g. Instagram without Advanced Access). */
+  getAuthorDisplayName(interaction: IInteraction): string {
+    const name = interaction?.author?.name || interaction?.author?.username;
+    if (name) return name;
+    if (interaction?.platform === 'instagram') return 'Instagram User';
+    return 'Unknown';
+  }
+
   /** Safe URL for img [src] so external CDN avatars load. */
   getAuthorAvatarSafeUrl(author: IInteraction['author']): SafeUrl | null {
     const url = this.getAuthorAvatarUrl(author);
@@ -174,6 +182,7 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
     if (interaction.respondedAt) {
       const responseMins = Math.floor((new Date(interaction.respondedAt).getTime() - created) / 60000);
+      if (responseMins < 0) return 'Replied'; // reply was before displayed thread time (e.g. new message updated thread)
       return `Replied in ${formatDuration(responseMins)}`;
     }
 
