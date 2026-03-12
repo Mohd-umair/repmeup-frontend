@@ -159,6 +159,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const name = obj.author?.name || obj.author?.username;
     if (name) return name;
     if (obj.platform === 'instagram') return 'Instagram User';
+    if (obj.platform === 'facebook') return 'Messenger User';
     return 'Unknown';
   }
 
@@ -217,13 +218,17 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         } else {
           optimistic.status = 'failed';
           this.optimisticReplies = [...this.optimisticReplies];
+          const msg = (response as any).error || 'Reply could not be sent to the platform.';
+          this.sweetAlertService.toast('error', msg);
           this.cdr.markForCheck();
         }
       },
-      error: () => {
+      error: (err) => {
         optimistic.status = 'failed';
         this.optimisticReplies = [...this.optimisticReplies];
         this.submittingReply = false;
+        const msg = err?.error?.error || err?.error?.message || err?.message || 'Reply could not be sent. Check your connection and platform settings.';
+        this.sweetAlertService.toast('error', msg);
         this.cdr.markForCheck();
       }
     });
@@ -243,12 +248,16 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         } else {
           optimistic.status = 'failed';
           this.optimisticReplies = [...this.optimisticReplies];
+          const msg = (response as any).error || 'Reply could not be sent to the platform.';
+          this.sweetAlertService.toast('error', msg);
         }
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
         optimistic.status = 'failed';
         this.optimisticReplies = [...this.optimisticReplies];
+        const msg = err?.error?.error || err?.error?.message || err?.message || 'Reply could not be sent.';
+        this.sweetAlertService.toast('error', msg);
         this.cdr.markForCheck();
       }
     });
@@ -951,7 +960,16 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const timeline: Array<{type: 'message' | 'reply' | 'assignment' | 'note', data: any, timestamp: Date}> = [];
 
     // Incoming messages: use full history for DM threads (e.g. Instagram), else single original message
-    const incoming = (this.interaction as any).metadata?.incomingMessages;
+    const rawIncoming = (this.interaction as any).metadata?.incomingMessages;
+    // Deduplicate by mid so a retried webhook never shows the same message twice
+    const seen = new Set<string>();
+    const incoming = Array.isArray(rawIncoming)
+      ? rawIncoming.filter((m: any) => {
+          if (!m.mid || seen.has(m.mid)) return false;
+          seen.add(m.mid);
+          return true;
+        })
+      : rawIncoming;
     if (incoming && Array.isArray(incoming) && incoming.length > 0) {
       incoming.forEach((msg: { text?: string; timestamp?: number }) => {
         const ts = msg.timestamp ? new Date(msg.timestamp) : new Date(this.interaction!.platformCreatedAt);

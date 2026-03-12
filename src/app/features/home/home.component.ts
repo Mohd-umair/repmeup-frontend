@@ -19,6 +19,7 @@ import { Subscription } from 'rxjs';
 export class HomeComponent implements OnInit, OnDestroy {
   currentUser: IUser | null = null;
   showUserMenu = false;
+  showMobileMenu = false;
   private userSubscription?: Subscription;
 
   constructor(

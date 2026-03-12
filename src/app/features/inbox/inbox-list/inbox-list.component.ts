@@ -52,6 +52,7 @@ export class InboxListComponent implements OnInit, OnDestroy {
     const name = interaction?.author?.name || interaction?.author?.username;
     if (name) return name;
     if (interaction?.platform === 'instagram') return 'Instagram User';
+    if (interaction?.platform === 'facebook') return 'Messenger User';
     return 'Unknown';
   }
 
