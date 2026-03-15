@@ -79,16 +79,18 @@
         />
         <!-- Avatar with Platform Badge -->
         <div class="relative flex-shrink-0">
-          <img *ngIf="getAuthorAvatarUrl(interaction.author, interaction.platform) && !avatarFallback[interaction.platformId]"
-               [src]="getAuthorAvatarSafeUrl(interaction.author, interaction.platform)"
-               (error)="onAvatarError(interaction.platformId)"
-               alt=""
-               class="w-12 h-12 rounded-xl object-cover shadow-md flex-shrink-0">
-          <div *ngIf="!getAuthorAvatarUrl(interaction.author, interaction.platform) || avatarFallback[interaction.platformId]"
-               class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md transition-all duration-300"
-               [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
-            {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
-          </div>
+          <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
+            <img *ngIf="avatarUrl && !avatarFallback[interaction.platformId]"
+                 [src]="avatarUrl"
+                 (error)="onAvatarError(interaction.platformId)"
+                 alt=""
+                 class="w-12 h-12 rounded-xl object-cover shadow-md flex-shrink-0">
+            <div *ngIf="!avatarUrl || avatarFallback[interaction.platformId]"
+                 class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md transition-all duration-300"
+                 [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
+              {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
+            </div>
+          </ng-container>
           <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-lg flex items-center justify-center shadow-md border-2 transition-all duration-300"
                [style.borderColor]="getPlatformColors(interaction.platform).primary">
             <span class="text-sm">{{ getPlatformIcon(interaction.platform) }}</span>

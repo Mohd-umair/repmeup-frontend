@@ -60,16 +60,18 @@
         <div class="flex items-center space-x-4 min-w-0 flex-shrink">
           <!-- Avatar -->
           <div class="relative flex-shrink-0">
-            <img *ngIf="getAuthorAvatarUrl(interaction.author, interaction.platform) && !avatarFallback[interaction.platformId]"
-                 [src]="getAuthorAvatarSafeUrl(interaction.author, interaction.platform)"
-                 (error)="onAvatarError(interaction.platformId)"
-                 alt=""
-                 class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-lg border-2 border-white">
-            <div *ngIf="!getAuthorAvatarUrl(interaction.author, interaction.platform) || avatarFallback[interaction.platformId]"
-                 class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg transition-all duration-500"
-                 [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : '#000000'">
-              {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
-            </div>
+            <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
+              <img *ngIf="avatarUrl && !avatarFallback[interaction.platformId]"
+                   [src]="avatarUrl"
+                   (error)="onAvatarError(interaction.platformId)"
+                   alt=""
+                   class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-lg border-2 border-white">
+              <div *ngIf="!avatarUrl || avatarFallback[interaction.platformId]"
+                   class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg transition-all duration-500"
+                   [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : '#000000'">
+                {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
+              </div>
+            </ng-container>
             <div class="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-white rounded-lg flex items-center justify-center shadow-md border-2 transition-all duration-500"
                  [style.borderColor]="getPlatformColors() ? getPlatformColors().primary : '#D0FF00'">
               <span class="text-xs sm:text-sm">{{ getPlatformIcon(interaction.platform) }}</span>
@@ -175,15 +177,17 @@
             <div class="max-w-[85%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
-                  <img *ngIf="getAuthorAvatarUrl(item.data.author, item.data.platform) && !avatarFallback[item.data.platformId + '_msg']"
-                       [src]="getAuthorAvatarSafeUrl(item.data.author, item.data.platform)"
-                       (error)="onAvatarError(item.data.platformId + '_msg')"
-                       alt=""
-                       class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
-                  <div *ngIf="!getAuthorAvatarUrl(item.data.author, item.data.platform) || avatarFallback[item.data.platformId + '_msg']"
-                       class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm flex-shrink-0">
-                    {{ getAuthorDisplayName(item.data).charAt(0).toUpperCase() }}
-                  </div>
+                  <ng-container *ngIf="(getAuthorAvatar$(item.data.author, item.data.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
+                    <img *ngIf="avatarUrl && !avatarFallback[item.data.platformId + '_msg']"
+                         [src]="avatarUrl"
+                         (error)="onAvatarError(item.data.platformId + '_msg')"
+                         alt=""
+                         class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
+                    <div *ngIf="!avatarUrl || avatarFallback[item.data.platformId + '_msg']"
+                         class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm flex-shrink-0">
+                      {{ getAuthorDisplayName(item.data).charAt(0).toUpperCase() }}
+                    </div>
+                  </ng-container>
                   <div>
                     <p class="font-bold text-xs sm:text-sm text-rep-black">{{ getAuthorDisplayName(item.data) }}</p>
                     <p class="text-xs text-gray-500">{{ formatDate(item.data.platformCreatedAt) }}</p>
@@ -195,7 +199,18 @@
                   </span>
                   <span class="text-xs text-gray-600 font-medium">{{ getReviewRating() }}/5</span>
                 </div>
-                <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
+                <!-- Facebook/Instagram DM image attachment (Facebook uses proxy so image loads with auth) -->
+                <div *ngIf="item.data.attachmentType === 'image' && (item.data.attachmentUrl || (item.data.mid && item.data._id))" class="mb-2">
+                  <ng-container *ngIf="(getAttachmentUrl$(item.data._id, item.data.mid, item.data.platform, item.data.attachmentUrl) | async) as attachmentImgUrl">
+                    <img *ngIf="attachmentImgUrl"
+                         [src]="attachmentImgUrl"
+                         alt="Attachment"
+                         class="max-w-full max-h-64 rounded-lg object-contain border border-gray-200"
+                         loading="lazy"
+                         (error)="$event.target.style.display='none'">
+                  </ng-container>
+                </div>
+                <p *ngIf="item.data.content" class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
               </div>
             </div>
           </div>
@@ -245,15 +260,17 @@
             <div class="max-w-[85%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
-                  <img *ngIf="getAuthorAvatarUrl(item.data.author, item.data.platform) && !avatarFallback[item.data.platformId + '_platform']"
-                       [src]="getAuthorAvatarSafeUrl(item.data.author, item.data.platform)"
-                       (error)="onAvatarError(item.data.platformId + '_platform')"
-                       alt=""
-                       class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
-                  <div *ngIf="!getAuthorAvatarUrl(item.data.author, item.data.platform) || avatarFallback[item.data.platformId + '_platform']"
-                       class="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                    {{ (item.data.author?.name || '?').charAt(0).toUpperCase() }}
-                  </div>
+                  <ng-container *ngIf="(getAuthorAvatar$(item.data.author, item.data.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
+                    <img *ngIf="avatarUrl && !avatarFallback[item.data.platformId + '_platform']"
+                         [src]="avatarUrl"
+                         (error)="onAvatarError(item.data.platformId + '_platform')"
+                         alt=""
+                         class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
+                    <div *ngIf="!avatarUrl || avatarFallback[item.data.platformId + '_platform']"
+                         class="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs sm:text-sm">
+                      {{ (item.data.author?.name || '?').charAt(0).toUpperCase() }}
+                    </div>
+                  </ng-container>
                   <div>
                     <p class="font-bold text-xs text-rep-black">
                       {{ item.data.author?.name || item.data.sentBy || 'Unknown User' }}
@@ -267,7 +284,7 @@
             </div>
           </div>
 
-          <!-- App Replies (sent from your app) - Right Side -->
+          <!-- App Replies (sent from your app) - Right Side: show account/page name and image (e.g. rep_me_up) -->
           <div *ngIf="!item.data.isPlatformReply" class="flex justify-end mb-3">
             <div class="max-w-[85%]">
               <!-- Bubble: dimmed while pending, normal when sent/failed -->
@@ -286,21 +303,25 @@
                     <p class="font-bold text-xs"
                        [class.text-rep-black]="item.data.status !== 'failed'"
                        [class.text-red-700]="item.data.status === 'failed'">
-                      {{ getUserFullName(item.data.sentBy) }}
+                      {{ getReplySenderDisplayName() }}
                       <span *ngIf="item.data.wasAutoGenerated" class="ml-1 text-[10px] text-gray-500">Auto</span>
                     </p>
                     <p class="text-xs" [class.text-gray-700]="item.data.status !== 'failed'" [class.text-red-500]="item.data.status === 'failed'">
                       {{ formatDate(item.data.sentAt) }}
                     </p>
                   </div>
-                  <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm"
+                  <img *ngIf="getReplySenderAvatarUrl() as avatarUrl"
+                       [src]="avatarUrl"
+                       alt=""
+                       class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
+                  <div *ngIf="!getReplySenderAvatarUrl()"
+                       class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm"
                        [class.bg-rep-black]="item.data.status !== 'failed'"
                        [class.text-rep-lime]="item.data.status !== 'failed'"
                        [class.bg-red-200]="item.data.status === 'failed'"
                        [class.text-red-700]="item.data.status === 'failed'">
                     <i *ngIf="item.data.status === 'pending'" class="fas fa-spinner fa-spin text-xs"></i>
-                    <span *ngIf="item.data.status !== 'pending'">{{ getInitials(getUserFirstName(item.data.sentBy), getUserLastName(item.data.sentBy)) }}</span>
-
+                    <span *ngIf="item.data.status !== 'pending'">{{ getReplySenderInitials() }}</span>
                   </div>
                 </div>
 
@@ -431,8 +452,25 @@
           </button>
         </div>
         <!-- Quick actions -->
-        <div class="flex items-center justify-between mt-1.5">
+        <div class="flex items-center justify-between mt-1.5 relative inbox-emoji-picker-container">
           <div class="flex items-center gap-0.5">
+            <button type="button"
+              class="inbox-emoji-trigger-btn p-1.5 rounded text-gray-500 hover:bg-gray-100 transition"
+              [ngClass]="showEmojiPicker ? 'bg-rep-lime/20 text-rep-black' : ''"
+              (click)="toggleEmojiPicker()"
+              title="Insert emoji">
+              <i class="far fa-smile text-base"></i>
+            </button>
+            <!-- Emoji picker panel -->
+            <ng-container *ngIf="showEmojiPicker">
+              <div class="absolute bottom-full left-0 mb-1 w-72 max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg p-2 z-50 grid grid-cols-8 gap-0.5">
+                <button type="button"
+                  *ngFor="let em of emojiList"
+                  (click)="insertEmoji(em)"
+                  class="p-1.5 rounded hover:bg-gray-100 text-lg leading-none transition"
+                  [attr.aria-label]="'Insert ' + em">{{ em }}</button>
+              </div>
+            </ng-container>
             <button type="button" (click)="generateAISuggestion()" [disabled]="generatingSuggestion || !interaction"
               class="p-1.5 rounded text-gray-600 hover:bg-rep-lime/20 hover:text-rep-black transition disabled:opacity-50"
               title="AI suggestion">

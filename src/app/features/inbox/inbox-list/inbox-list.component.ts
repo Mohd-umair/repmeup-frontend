@@ -2,11 +2,13 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
-import { environment } from '../../../../environments/environment';
+import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 
 /**
  * Inbox List Component - Single Responsibility Principle
@@ -36,19 +38,19 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   constructor(
     public themeService: ThemeService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private avatarService: InboxAvatarService
   ) {}
 
   onAvatarError(key: string): void {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
   }
 
-  /** Profile picture URL for author. For Facebook, use proxy so image loads with token. */
-  getAuthorAvatarUrl(author: IInteraction['author'], platform?: string): string | null {
-    if (platform === 'facebook' && author?.platformId) {
-      return `${environment.apiUrl}/inbox/avatar/facebook/${author.platformId}`;
-    }
-    return author?.avatarUrl || author?.profilePicture || null;
+  /** Observable avatar URL (fetched with auth for Facebook so img can display). */
+  getAuthorAvatar$(author: IInteraction['author'], platform?: string, pageId?: string): Observable<SafeUrl | null> {
+    return this.avatarService.getAvatarUrl(platform ?? '', author, pageId).pipe(
+      map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
+    );
   }
 
   /** Display name with platform fallback when profile isn't available (e.g. Instagram without Advanced Access). */
@@ -58,12 +60,6 @@ export class InboxListComponent implements OnInit, OnDestroy {
     if (interaction?.platform === 'instagram') return 'Instagram User';
     if (interaction?.platform === 'facebook') return 'Messenger User';
     return 'Unknown';
-  }
-
-  /** Safe URL for img [src] so external CDN avatars load. */
-  getAuthorAvatarSafeUrl(author: IInteraction['author'], platform?: string): SafeUrl | null {
-    const url = this.getAuthorAvatarUrl(author, platform);
-    return url ? this.sanitizer.bypassSecurityTrustUrl(url) : null;
   }
 
   ngOnInit(): void {
