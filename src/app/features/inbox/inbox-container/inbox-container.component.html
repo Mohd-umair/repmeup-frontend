@@ -80,15 +80,16 @@
           </div>
         </div>
         
-        <!-- Sync button (compact) -->
+        <!-- Sync button — syncs active platform only, or all if none selected -->
         <button 
           (click)="onSyncClick()"
           type="button"
           [disabled]="syncing || loading"
           class="px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 text-white flex items-center gap-1.5"
-          [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'">
+          [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
+          [title]="platformFilters.platform ? 'Sync ' + platformFilters.platform : 'Sync all platforms'">
           <i class="fas text-xs" [class.fa-sync-alt]="!syncing" [class.fa-spinner]="syncing" [class.fa-spin]="syncing"></i>
-          <span class="hidden sm:inline">Sync</span>
+          <span class="hidden sm:inline">{{ platformFilters.platform ? 'Sync ' + (platformFilters.platform | titlecase) : 'Sync All' }}</span>
         </button>
       </div>
     </div>

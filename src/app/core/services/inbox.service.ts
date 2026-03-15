@@ -28,17 +28,49 @@ export class InboxService {
   constructor(private apiService: ApiService) {}
 
   /**
-   * Get all interactions with filters
+   * Get all interactions with filters.
+   * Merges API response with current list so real-time socket updates are not overwritten
+   * by an in-flight or stale API response. Keeps newer version per id and sorts by updatedAt desc.
    */
   getInteractions(filters?: IInboxFilters): Observable<IApiResponse<any>> {
     return this.apiService.get<IApiResponse<any>>('/inbox', filters)
       .pipe(
         tap(response => {
           if (response.success && response.data) {
-            this.interactionsSubject.next(response.data.interactions || []);
+            const fromApi = response.data.interactions || [];
+            // When API returns empty (e.g. no accounts connected), show empty inbox
+            if (fromApi.length === 0) {
+              this.interactionsSubject.next([]);
+              return;
+            }
+            const current = this.interactionsSubject.value;
+            // When filtering by platform, replace list so we don't carry over other platforms from a previous load
+            if (filters?.platform) {
+              this.interactionsSubject.next(fromApi);
+              return;
+            }
+            const merged = this.mergeInteractionsByNewest(current, fromApi);
+            this.interactionsSubject.next(merged);
           }
         })
       );
+  }
+
+  /**
+   * Merge two lists by _id, keeping the version with the latest updatedAt.
+   * Returns merged list sorted by updatedAt desc (latest first).
+   */
+  private mergeInteractionsByNewest(current: IInteraction[], fromApi: IInteraction[]): IInteraction[] {
+    const byId = new Map<string, IInteraction>();
+    const updatedAt = (i: IInteraction) => new Date(i.updatedAt || i.platformCreatedAt || 0).getTime();
+    current.forEach(i => byId.set(i._id, i));
+    fromApi.forEach(i => {
+      const existing = byId.get(i._id);
+      if (!existing || updatedAt(i) >= updatedAt(existing)) {
+        byId.set(i._id, i);
+      }
+    });
+    return Array.from(byId.values()).sort((a, b) => updatedAt(b) - updatedAt(a));
   }
 
   /**
@@ -177,6 +209,29 @@ export class InboxService {
    */
   setSelectedInteraction(interaction: IInteraction | null): void {
     this.selectedInteractionSubject.next(interaction);
+  }
+
+  /**
+   * Prepend or move an interaction to the top (e.g. from real-time socket).
+   */
+  prependOrUpdateInteraction(interaction: IInteraction): void {
+    const current = this.interactionsSubject.value;
+    const idx = current.findIndex(i => i._id === interaction._id);
+    const next = idx !== -1
+      ? [interaction, ...current.filter((_, i) => i !== idx)]
+      : [interaction, ...current];
+    this.interactionsSubject.next(next);
+  }
+
+  /**
+   * Clear all in-memory inbox state.
+   * Call on inbox component destroy (route leave) and on logout so stale
+   * conversations never appear when a different user opens the inbox.
+   */
+  clearState(): void {
+    this.selectedInteractionSubject.next(null);
+    this.interactionsSubject.next([]);
+    this.statsSubject.next(null);
   }
 
   /**

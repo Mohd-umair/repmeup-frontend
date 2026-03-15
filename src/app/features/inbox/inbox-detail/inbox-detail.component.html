@@ -60,12 +60,12 @@
         <div class="flex items-center space-x-4 min-w-0 flex-shrink">
           <!-- Avatar -->
           <div class="relative flex-shrink-0">
-            <img *ngIf="getAuthorAvatarUrl(interaction.author) && !avatarFallback[interaction.platformId]"
-                 [src]="getAuthorAvatarSafeUrl(interaction.author)"
+            <img *ngIf="getAuthorAvatarUrl(interaction.author, interaction.platform) && !avatarFallback[interaction.platformId]"
+                 [src]="getAuthorAvatarSafeUrl(interaction.author, interaction.platform)"
                  (error)="onAvatarError(interaction.platformId)"
                  alt=""
                  class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-lg border-2 border-white">
-            <div *ngIf="!getAuthorAvatarUrl(interaction.author) || avatarFallback[interaction.platformId]"
+            <div *ngIf="!getAuthorAvatarUrl(interaction.author, interaction.platform) || avatarFallback[interaction.platformId]"
                  class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg transition-all duration-500"
                  [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : '#000000'">
               {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
@@ -175,12 +175,12 @@
             <div class="max-w-[85%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
-                  <img *ngIf="getAuthorAvatarUrl(item.data.author) && !avatarFallback[item.data.platformId + '_msg']"
-                       [src]="getAuthorAvatarSafeUrl(item.data.author)"
+                  <img *ngIf="getAuthorAvatarUrl(item.data.author, item.data.platform) && !avatarFallback[item.data.platformId + '_msg']"
+                       [src]="getAuthorAvatarSafeUrl(item.data.author, item.data.platform)"
                        (error)="onAvatarError(item.data.platformId + '_msg')"
                        alt=""
                        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
-                  <div *ngIf="!getAuthorAvatarUrl(item.data.author) || avatarFallback[item.data.platformId + '_msg']"
+                  <div *ngIf="!getAuthorAvatarUrl(item.data.author, item.data.platform) || avatarFallback[item.data.platformId + '_msg']"
                        class="w-7 h-7 sm:w-8 sm:h-8 bg-rep-lime rounded-lg flex items-center justify-center text-rep-black font-bold text-xs sm:text-sm flex-shrink-0">
                     {{ getAuthorDisplayName(item.data).charAt(0).toUpperCase() }}
                   </div>
@@ -245,12 +245,12 @@
             <div class="max-w-[85%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
-                  <img *ngIf="getAuthorAvatarUrl(item.data.author) && !avatarFallback[item.data.platformId + '_platform']"
-                       [src]="getAuthorAvatarSafeUrl(item.data.author)"
+                  <img *ngIf="getAuthorAvatarUrl(item.data.author, item.data.platform) && !avatarFallback[item.data.platformId + '_platform']"
+                       [src]="getAuthorAvatarSafeUrl(item.data.author, item.data.platform)"
                        (error)="onAvatarError(item.data.platformId + '_platform')"
                        alt=""
                        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover flex-shrink-0">
-                  <div *ngIf="!getAuthorAvatarUrl(item.data.author) || avatarFallback[item.data.platformId + '_platform']"
+                  <div *ngIf="!getAuthorAvatarUrl(item.data.author, item.data.platform) || avatarFallback[item.data.platformId + '_platform']"
                        class="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs sm:text-sm">
                     {{ (item.data.author?.name || '?').charAt(0).toUpperCase() }}
                   </div>

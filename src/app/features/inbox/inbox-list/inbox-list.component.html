@@ -79,12 +79,12 @@
         />
         <!-- Avatar with Platform Badge -->
         <div class="relative flex-shrink-0">
-          <img *ngIf="getAuthorAvatarUrl(interaction.author) && !avatarFallback[interaction.platformId]"
-               [src]="getAuthorAvatarSafeUrl(interaction.author)"
+          <img *ngIf="getAuthorAvatarUrl(interaction.author, interaction.platform) && !avatarFallback[interaction.platformId]"
+               [src]="getAuthorAvatarSafeUrl(interaction.author, interaction.platform)"
                (error)="onAvatarError(interaction.platformId)"
                alt=""
                class="w-12 h-12 rounded-xl object-cover shadow-md flex-shrink-0">
-          <div *ngIf="!getAuthorAvatarUrl(interaction.author) || avatarFallback[interaction.platformId]"
+          <div *ngIf="!getAuthorAvatarUrl(interaction.author, interaction.platform) || avatarFallback[interaction.platformId]"
                class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md transition-all duration-300"
                [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
             {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}

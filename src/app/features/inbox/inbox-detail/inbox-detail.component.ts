@@ -10,6 +10,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { NotificationDataService } from '../../../core/services/notification-data.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { Subscription } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 /** An in-flight or failed reply injected optimistically into the timeline */
 interface IOptimisticReply {
@@ -148,8 +149,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
   }
 
-  /** Profile picture URL for author (avatarUrl or profilePicture). */
-  getAuthorAvatarUrl(author: IInteraction['author']): string | null {
+  /** Profile picture URL for author. For Facebook, use proxy so image loads with token. */
+  getAuthorAvatarUrl(author: IInteraction['author'], platform?: string): string | null {
+    if (platform === 'facebook' && author?.platformId) {
+      return `${environment.apiUrl}/inbox/avatar/facebook/${author.platformId}`;
+    }
     return author?.avatarUrl || author?.profilePicture || null;
   }
 
@@ -164,8 +168,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /** Safe URL for img [src] so external CDN avatars load. */
-  getAuthorAvatarSafeUrl(author: IInteraction['author']): SafeUrl | null {
-    const url = this.getAuthorAvatarUrl(author);
+  getAuthorAvatarSafeUrl(author: IInteraction['author'], platform?: string): SafeUrl | null {
+    const url = this.getAuthorAvatarUrl(author, platform);
     return url ? this.sanitizer.bypassSecurityTrustUrl(url) : null;
   }
 

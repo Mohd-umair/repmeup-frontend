@@ -31,11 +31,12 @@ export class SocketService {
 
     const token = this.storageService.getToken();
     
-    this.socket = io(environment.socketUrl, {
-      auth: {
-        token: token
-      },
-      transports: ['websocket', 'polling']
+    const url = environment.socketUrl || window.location.origin;
+    this.socket = io(url, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 10,
+      reconnectionDelay: 2000
     });
 
     // Connection event handlers

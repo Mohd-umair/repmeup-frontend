@@ -6,6 +6,7 @@ import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Inbox List Component - Single Responsibility Principle
@@ -42,8 +43,11 @@ export class InboxListComponent implements OnInit, OnDestroy {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
   }
 
-  /** Profile picture URL for author (avatarUrl or profilePicture). */
-  getAuthorAvatarUrl(author: IInteraction['author']): string | null {
+  /** Profile picture URL for author. For Facebook, use proxy so image loads with token. */
+  getAuthorAvatarUrl(author: IInteraction['author'], platform?: string): string | null {
+    if (platform === 'facebook' && author?.platformId) {
+      return `${environment.apiUrl}/inbox/avatar/facebook/${author.platformId}`;
+    }
     return author?.avatarUrl || author?.profilePicture || null;
   }
 
@@ -57,8 +61,8 @@ export class InboxListComponent implements OnInit, OnDestroy {
   }
 
   /** Safe URL for img [src] so external CDN avatars load. */
-  getAuthorAvatarSafeUrl(author: IInteraction['author']): SafeUrl | null {
-    const url = this.getAuthorAvatarUrl(author);
+  getAuthorAvatarSafeUrl(author: IInteraction['author'], platform?: string): SafeUrl | null {
+    const url = this.getAuthorAvatarUrl(author, platform);
     return url ? this.sanitizer.bypassSecurityTrustUrl(url) : null;
   }
 

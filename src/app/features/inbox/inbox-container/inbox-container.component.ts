@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { InboxService } from '../../../core/services/inbox.service';
@@ -9,6 +9,7 @@ import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { SocketService } from '../../../core/services/socket.service';
 import { IInteraction, IInboxFilters, InboxViewMode, ILabel } from '../../../core/models/interaction.model';
 import { InboxDetailComponent } from '../inbox-detail/inbox-detail.component';
 import { InboxFiltersComponent } from '../inbox-filters/inbox-filters.component';
@@ -26,7 +27,7 @@ import { exhaustMap, catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-inbox-container',
   standalone: true,
-  imports: [CommonModule, FormsModule, InboxDetailComponent, InboxFiltersComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent],
+  imports: [CommonModule, TitleCasePipe, FormsModule, InboxDetailComponent, InboxFiltersComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent],
   templateUrl: './inbox-container.component.html',
   styleUrls: ['./inbox-container.component.scss']
 })
@@ -75,6 +76,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private authService: AuthService,
     private organizationService: OrganizationService,
+    private socketService: SocketService,
     private route: ActivatedRoute
   ) {}
 
@@ -117,8 +119,41 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     this.loadInteractions();
     this.loadInboxStats();
 
-    // Poll inbox list every 10s so new DMs (saved by webhook worker) appear without clicking Sync
-    this.inboxPollSubscription = interval(10000).subscribe(() => {
+    // Connect socket and join organisation room for real-time DM/comment updates
+    this.socketService.connect();
+    const orgId = this.getOrgId();
+    const joinOrgRoom = () => { if (orgId) this.socketService.joinOrganization(orgId); };
+    joinOrgRoom();
+
+    // Re-join the org room after reconnects (e.g. network hiccup)
+    this.subscriptions.push(
+      this.socketService.connectionStatus$.subscribe(connected => {
+        if (connected) joinOrgRoom();
+      })
+    );
+
+    // Real-time: new message arrives → update service so list stays at top and isn't overwritten by next API response
+    this.subscriptions.push(
+      this.socketService.onNewInteraction().subscribe((data: any) => {
+        const incoming: IInteraction = data?.interaction;
+        if (!incoming) return;
+
+        // Filter: only show if it matches active platform/type filters
+        if (this.platformFilters.platform && incoming.platform !== this.platformFilters.platform) return;
+        if (this.topFilters.type && incoming.type !== this.topFilters.type) return;
+
+        // Update service so merged list keeps this at top when poll/API returns
+        this.inboxService.prependOrUpdateInteraction(incoming);
+
+        // If the currently open detail is this thread, refresh it too
+        if (this.selectedInteraction?._id === incoming._id) {
+          this.inboxService.setSelectedInteraction(incoming);
+        }
+      })
+    );
+
+    // Fallback poll every 30s in case socket misses an event (tab was backgrounded, etc.)
+    this.inboxPollSubscription = interval(30000).subscribe(() => {
       if (typeof document !== 'undefined' && !document.hidden) {
         this.refreshInboxListSilent();
       }
@@ -487,7 +522,10 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       this.inboxPollSubscription.unsubscribe();
     }
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.socketService.disconnect();
     this.themeService.resetTheme();
+    // Clear selected chat and cached list so they never bleed into the next visit
+    this.inboxService.clearState();
   }
 
   /**
@@ -670,7 +708,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Manually sync all connected platforms
+   * Manually sync platforms.
+   * When a platform filter is active, only that platform is synced.
+   * When no filter is active (Unified Inbox), all connected platforms are synced.
    */
   syncAllPlatforms(silent = false): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -681,27 +721,34 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       // First, get all connected platforms
       this.platformService.getPlatformConnections().subscribe({
         next: (response) => {
-          const connectedPlatforms = response.data.filter(
+          let connectedPlatforms = response.data.filter(
             (p: any) => p.status === 'connected' && p.isActive
           );
+
+          // If a platform filter is active, only sync that platform
+          if (this.platformFilters.platform) {
+            connectedPlatforms = connectedPlatforms.filter(
+              (p: any) => p.platform?.toLowerCase() === this.platformFilters.platform!.toLowerCase()
+            );
+          }
 
           if (connectedPlatforms.length === 0) {
             if (!silent) {
               this.syncing = false;
-              this.notificationService.warning('No Platforms Connected', 'Please connect at least one platform to sync interactions.');
+              const msg = this.platformFilters.platform
+                ? `No active ${this.platformFilters.platform} connection found. Connect it in Settings → Platforms.`
+                : 'Please connect at least one platform to sync interactions.';
+              this.notificationService.warning('No Platforms Connected', msg);
             }
             resolve();
             return;
           }
 
-          // Sync all platforms in parallel with error handling
-          // Use silent variant for background auto-sync to avoid loader flicker
+          // Sync in parallel; use silent variant for background auto-sync to avoid loader flicker
           const syncObservables = connectedPlatforms.map((platform: any) =>
             (silent ? this.platformService.syncPlatformSilent(platform._id) : this.platformService.syncPlatform(platform._id)).pipe(
-              // Catch errors for individual platforms so one failure doesn't break all
               catchError((error) => {
                 console.error(`Error syncing ${platform.platform}:`, error);
-                // Return a failed result instead of throwing
                 return of({
                   success: false,
                   platform: platform.platform,

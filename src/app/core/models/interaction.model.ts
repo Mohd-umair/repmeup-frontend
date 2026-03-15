@@ -176,6 +176,9 @@ export interface IInboxFilters {
   label?: string; // Label ID for filtering
   /** Filter by post (e.g. from Content page "Comments" – show only comments for this post) */
   postId?: string;
+  /** Date range filters (ISO date strings YYYY-MM-DD) */
+  dateFrom?: string;
+  dateTo?: string;
   page?: number;
   limit?: number;
   sortBy?: string;

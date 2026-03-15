@@ -5,6 +5,7 @@ import { StorageService } from './storage.service';
 import { IApiResponse, IAuthResponse } from '../models/api-response.model';
 import { IUser } from '../models/user.model';
 import { Router } from '@angular/router';
+import { InboxService } from './inbox.service';
 
 /**
  * Auth Service - Single Responsibility Principle
@@ -26,7 +27,8 @@ export class AuthService {
   constructor(
     private apiService: ApiService,
     private storageService: StorageService,
-    private router: Router
+    private router: Router,
+    private inboxService: InboxService
   ) {
     this.checkAuth();
   }
@@ -76,6 +78,7 @@ export class AuthService {
    * Logout user
    */
   logout(): void {
+    this.inboxService.clearState();
     this.storageService.clearAll();
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);

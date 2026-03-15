@@ -69,6 +69,30 @@ export class InboxTopFiltersComponent implements OnChanges {
     return this.filters[filterType] === value;
   }
 
+  onDateFromChange(value: string): void {
+    if (value) {
+      this.filters.dateFrom = value;
+    } else {
+      delete this.filters.dateFrom;
+    }
+    this.emitFilters();
+  }
+
+  onDateToChange(value: string): void {
+    if (value) {
+      this.filters.dateTo = value;
+    } else {
+      delete this.filters.dateTo;
+    }
+    this.emitFilters();
+  }
+
+  clearDateRange(): void {
+    delete this.filters.dateFrom;
+    delete this.filters.dateTo;
+    this.emitFilters();
+  }
+
   clearFilters(): void {
     this.filters = {};
     this.emitFilters();
