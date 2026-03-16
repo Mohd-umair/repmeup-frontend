@@ -134,13 +134,19 @@
           [src]="media.publicUrl" 
           preload="metadata"
           class="w-full h-full object-cover"></video>
+        <div 
+          *ngIf="isAudio(media)" 
+          class="w-full h-full flex items-center justify-center bg-gray-700">
+          <i class="fas fa-music text-4xl text-amber-500"></i>
+        </div>
         
         <!-- Type Badge -->
         <div 
           class="absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1"
           [class.bg-blue-500]="isImage(media)"
-          [class.bg-purple-500]="isVideo(media)">
-          <i [class]="isImage(media) ? 'fas fa-image' : 'fas fa-video'"></i>
+          [class.bg-purple-500]="isVideo(media)"
+          [class.bg-amber-500]="isAudio(media)">
+          <i [class]="isImage(media) ? 'fas fa-image' : (isVideo(media) ? 'fas fa-video' : 'fas fa-music')"></i>
           <span class="text-white uppercase">{{ media.mediaType }}</span>
         </div>
 
@@ -287,6 +293,9 @@
           [src]="selectedMedia.publicUrl" 
           controls
           class="w-full max-h-96 object-contain"></video>
+        <div *ngIf="isAudio(selectedMedia)" class="p-6 flex items-center justify-center">
+          <audio [src]="selectedMedia.publicUrl" controls class="w-full max-w-md"></audio>
+        </div>
       </div>
 
       <!-- Media Info -->
@@ -298,7 +307,7 @@
         <div class="flex gap-4">
           <span class="text-gray-400 w-32 flex-shrink-0">Type:</span>
           <span class="text-rep-white flex items-center gap-2">
-            <i [class]="isImage(selectedMedia) ? 'fas fa-image text-blue-500' : 'fas fa-video text-purple-500'"></i>
+            <i [class]="isImage(selectedMedia) ? 'fas fa-image text-blue-500' : (isVideo(selectedMedia) ? 'fas fa-video text-purple-500' : 'fas fa-music text-amber-500')"></i>
             {{ selectedMedia.mediaType | titlecase }}
           </span>
         </div>

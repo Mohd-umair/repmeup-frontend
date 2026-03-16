@@ -24,7 +24,7 @@ interface Platform {
 interface MediaFile {
   file?: File;
   preview: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio';
   order: number;
   libraryMediaId?: string; // ID from media library
   publicUrl?: string; // URL from media library

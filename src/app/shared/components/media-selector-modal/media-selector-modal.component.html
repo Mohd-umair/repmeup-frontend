@@ -40,6 +40,10 @@
           <i class="fas fa-video"></i>
           Videos
         </button>
+        <button class="px-4 py-2 rounded-lg font-medium transition flex items-center gap-2" [class.bg-rep-lime]="filterType === 'audio'" [class.text-rep-black]="filterType === 'audio'" [class.text-gray-400]="filterType !== 'audio'" [class.hover:text-rep-white]="filterType !== 'audio'" (click)="onFilterChange('audio')">
+          <i class="fas fa-microphone"></i>
+          Audio
+        </button>
       </div>
 
       <div class="flex items-center gap-2">
@@ -71,10 +75,13 @@
           <div class="relative aspect-square bg-gray-800 overflow-hidden">
             <img *ngIf="isImage(media)" [src]="media.publicUrl" [alt]="media.originalName" class="w-full h-full object-cover">
             <video *ngIf="isVideo(media)" [src]="media.publicUrl" preload="metadata" class="w-full h-full object-cover"></video>
+            <div *ngIf="isAudio(media)" class="w-full h-full flex items-center justify-center bg-gray-700">
+              <i class="fas fa-music text-4xl text-gray-400"></i>
+            </div>
             
             <!-- Type Badge -->
-            <div class="absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold" [ngClass]="{'bg-blue-500': isImage(media), 'bg-purple-500': isVideo(media)}">
-              <i [class]="isImage(media) ? 'fas fa-image text-white' : 'fas fa-video text-white'"></i>
+            <div class="absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold" [ngClass]="{'bg-blue-500': isImage(media), 'bg-purple-500': isVideo(media), 'bg-amber-500': isAudio(media)}">
+              <i [class]="isImage(media) ? 'fas fa-image text-white' : (isVideo(media) ? 'fas fa-video text-white' : 'fas fa-music text-white')"></i>
             </div>
 
             <!-- Usage Badge -->

@@ -13,7 +13,7 @@ import { MediaLibraryService } from '../../../core/services/media-library.servic
 })
 export class MediaSelectorModalComponent implements OnInit {
   @Input() allowMultiple = false; // Allow selecting multiple media for carousel
-  @Input() mediaType: 'image' | 'video' | 'all' = 'all'; // Filter by type
+  @Input() mediaType: 'image' | 'video' | 'audio' | 'all' = 'all'; // Filter by type
   @Output() close = new EventEmitter<void>();
   @Output() select = new EventEmitter<Media | Media[]>();
 
@@ -22,7 +22,7 @@ export class MediaSelectorModalComponent implements OnInit {
   loading = false;
   currentPage = 1;
   totalPages = 1;
-  filterType: 'all' | 'image' | 'video' = 'all';
+  filterType: 'all' | 'image' | 'video' | 'audio' = 'all';
   sortBy = '-createdAt';
   showUploadModal = false;
 
@@ -79,7 +79,7 @@ export class MediaSelectorModalComponent implements OnInit {
     return this.selectedMedia.some(m => m._id === media._id);
   }
 
-  onFilterChange(type: 'all' | 'image' | 'video'): void {
+  onFilterChange(type: 'all' | 'image' | 'video' | 'audio'): void {
     this.filterType = type;
     this.currentPage = 1;
     this.loadMedia();
@@ -118,6 +118,10 @@ export class MediaSelectorModalComponent implements OnInit {
 
   isVideo(media: Media): boolean {
     return media.mediaType === 'video';
+  }
+
+  isAudio(media: Media): boolean {
+    return media.mediaType === 'audio';
   }
 
   formatSize(bytes: number): string {

@@ -232,10 +232,11 @@ export class MediaLibraryComponent implements OnInit {
   getMediaThumbnail(media: Media): string {
     if (media.mediaType === 'image') {
       return media.publicUrl;
-    } else {
-      // For videos, you could generate thumbnails or use a placeholder
+    }
+    if (media.mediaType === 'video') {
       return '/assets/video-placeholder.png';
     }
+    return '';
   }
 
   /**
@@ -250,6 +251,13 @@ export class MediaLibraryComponent implements OnInit {
    */
   isVideo(media: Media): boolean {
     return media.mediaType === 'video';
+  }
+
+  /**
+   * Check if media is audio
+   */
+  isAudio(media: Media): boolean {
+    return media.mediaType === 'audio';
   }
 
   /**

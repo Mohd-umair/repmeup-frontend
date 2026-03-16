@@ -72,10 +72,6 @@
                 {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
               </div>
             </ng-container>
-            <div class="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 bg-white rounded-lg flex items-center justify-center shadow-md border-2 transition-all duration-500"
-                 [style.borderColor]="getPlatformColors() ? getPlatformColors().primary : '#D0FF00'">
-              <span class="text-xs sm:text-sm">{{ getPlatformIcon(interaction.platform) }}</span>
-            </div>
           </div>
           
           <!-- User Info -->
@@ -163,14 +159,14 @@
       </div>
     </div>
 
-    <!-- Conversation Thread with Reply Form at End -->
-    <div class="flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 bg-gradient-to-b from-gray-50 to-gray-100"
+    <!-- Conversation Thread with Reply Form at End (overflow-anchor: none prevents scroll jump when audio/media loads) -->
+    <div class="flex-1 overflow-y-auto min-h-0 p-3 sm:p-4 bg-gradient-to-b from-gray-50 to-gray-100 conversation-thread-scroll"
          #conversationThread
          (scroll)="onThreadScroll($event)">
       <div class="max-w-4xl mx-auto space-y-3 pb-4">
         
         <!-- Chronological Timeline (Messages, Replies, Assignment) -->
-        <ng-container *ngFor="let item of getConversationTimeline()">
+        <ng-container *ngFor="let item of conversationTimeline">
           
           <!-- Original Customer Message -->
           <div *ngIf="item.type === 'message'" class="flex justify-start">
@@ -199,8 +195,8 @@
                   </span>
                   <span class="text-xs text-gray-600 font-medium">{{ getReviewRating() }}/5</span>
                 </div>
-                <!-- Facebook/Instagram DM image attachment (Facebook uses proxy so image loads with auth) -->
-                <div *ngIf="item.data.attachmentType === 'image' && (item.data.attachmentUrl || (item.data.mid && item.data._id))" class="mb-2">
+                <!-- Facebook/Instagram DM image attachment (min-height reserves space so scroll doesn't jump when image loads) -->
+                <div *ngIf="item.data.attachmentType === 'image' && (item.data.attachmentUrl || (item.data.mid && item.data._id))" class="mb-2 min-h-[200px]">
                   <ng-container *ngIf="(getAttachmentUrl$(item.data._id, item.data.mid, item.data.platform, item.data.attachmentUrl) | async) as attachmentImgUrl">
                     <img *ngIf="attachmentImgUrl"
                          [src]="attachmentImgUrl"
@@ -210,7 +206,19 @@
                          (error)="$event.target.style.display='none'">
                   </ng-container>
                 </div>
-                <p *ngIf="item.data.content" class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
+                <!-- Incoming audio attachment -->
+                <div *ngIf="item.data.attachmentType === 'audio' && item.data.attachmentUrl" class="mb-2 inbox-audio-message inbox-audio-message--incoming">
+                  <div class="inbox-audio-bar">
+                    <div class="inbox-audio-bar__icon">
+                      <i class="fas fa-microphone-alt text-white text-sm"></i>
+                    </div>
+                    <div class="inbox-audio-bar__content">
+                      <span class="inbox-audio-bar__label">Voice message</span>
+                      <audio [src]="item.data.attachmentUrl" controls class="inbox-audio-bar__player" preload="metadata"></audio>
+                    </div>
+                  </div>
+                </div>
+                <p *ngIf="item.data.content && !(item.data.attachmentType === 'image' && isImagePlaceholder(item.data.content)) && !(item.data.attachmentType === 'audio' && item.data.content === '[audio]')" class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
               </div>
             </div>
           </div>
@@ -325,7 +333,30 @@
                   </div>
                 </div>
 
-                <p class="text-sm sm:text-base leading-relaxed whitespace-pre-wrap"
+                <!-- Attachment (image, video, or audio) sent with this reply -->
+                <div *ngIf="item.data.attachmentUrl && (item.data.attachmentType === 'image' || item.data.attachmentType === 'video' || item.data.attachmentType === 'audio')" class="mb-2">
+                  <img *ngIf="item.data.attachmentType === 'image'"
+                       [src]="item.data.attachmentUrl"
+                       alt="Attachment"
+                       class="rounded-lg max-w-full max-h-64 object-cover border border-black/10" />
+                  <div *ngIf="item.data.attachmentType === 'video'" class="rounded-lg overflow-hidden border border-black/10 bg-black/5 max-w-full max-h-48 flex items-center justify-center">
+                    <video [src]="item.data.attachmentUrl" controls class="max-w-full max-h-48" preload="metadata"></video>
+                  </div>
+                  <div *ngIf="item.data.attachmentType === 'audio'" class="inbox-audio-message inbox-audio-message--sent">
+                    <div class="inbox-audio-bar inbox-audio-bar--sent">
+                      <div class="inbox-audio-bar__icon inbox-audio-bar__icon--sent">
+                        <i class="fas fa-microphone-alt text-white text-sm"></i>
+                      </div>
+                      <div class="inbox-audio-bar__content">
+                        <span class="inbox-audio-bar__label">Voice message</span>
+                        <audio [src]="item.data.attachmentUrl" controls class="inbox-audio-bar__player" preload="metadata"></audio>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Caption: hide when it's only the placeholder for attachment (e.g. "[image]", "[audio]") -->
+                <p *ngIf="item.data.content && !(item.data.attachmentUrl && (item.data.content === '[image]' || item.data.content === '[video]' || item.data.content === '[audio]'))" class="text-sm sm:text-base leading-relaxed whitespace-pre-wrap"
                    [class.text-rep-black]="item.data.status !== 'failed'"
                    [class.text-red-800]="item.data.status === 'failed'">{{ item.data.content }}</p>
 
@@ -430,6 +461,27 @@
       </div>
 
       <form *ngIf="canReply()" [formGroup]="replyForm" (ngSubmit)="submitReply()">
+        <!-- Pending attachment thumbnail: add caption then Send -->
+        <div *ngIf="pendingAttachment" class="mb-2 flex items-center gap-3 p-3 rounded-xl border border-gray-200 inbox-pending-attachment">
+          <div class="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gray-200 shadow-inner">
+            <img *ngIf="pendingAttachment.mediaType === 'image'" [src]="pendingAttachment.publicUrl" alt="Attachment" class="w-full h-full object-cover" />
+            <div *ngIf="pendingAttachment.mediaType === 'video'" class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400">
+              <i class="fas fa-video text-white text-xl drop-shadow"></i>
+            </div>
+            <div *ngIf="pendingAttachment.mediaType === 'audio'" class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-400 to-purple-500">
+              <i class="fas fa-microphone-alt text-white text-xl drop-shadow"></i>
+            </div>
+            <button type="button" (click)="removePendingAttachment()" class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center text-xs transition shadow" title="Remove">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-gray-700" *ngIf="pendingAttachment.mediaType === 'audio'">Voice message</p>
+            <p class="text-xs font-medium text-gray-700" *ngIf="pendingAttachment.mediaType === 'video'">Video</p>
+            <p class="text-xs font-medium text-gray-700" *ngIf="pendingAttachment.mediaType === 'image'">Image</p>
+            <span class="text-[11px] text-gray-500">Add a caption (optional) and click Send.</span>
+          </div>
+        </div>
         <!-- Textarea + Send button -->
         <div class="flex items-start space-x-2">
           <textarea
@@ -442,7 +494,7 @@
           ></textarea>
           <button
             type="submit"
-            [disabled]="replyForm.invalid || submittingReply"
+            [disabled]="submittingReply || (!(replyForm.get('content')?.value?.trim()) && !pendingAttachment)"
             class="px-3 sm:px-4 py-2 h-full rounded-xl font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[70px] sm:min-w-[80px] text-white"
             [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : 'linear-gradient(135deg, #D0FF00, #B8E600)'"
             [style.boxShadow]="getPlatformColors() ? '0 4px 16px ' + getPlatformColors().primary + '40' : '0 4px 16px #D0FF0040'"
@@ -479,9 +531,26 @@
             <button type="button" class="p-1.5 rounded text-gray-500 hover:bg-gray-100 transition" title="Template">
               <i class="fas fa-file-alt text-xs"></i>
             </button>
-            <button type="button" class="p-1.5 rounded text-gray-500 hover:bg-gray-100 transition" title="Attach">
+            <button type="button" (click)="openMediaSelector()" [disabled]="!interaction || isRecording"
+              class="p-1.5 rounded text-gray-500 hover:bg-gray-100 transition disabled:opacity-50" title="Attach image or video">
               <i class="fas fa-paperclip text-xs"></i>
             </button>
+            <!-- Record voice: tap to start, tap again to stop -->
+            <button type="button"
+              (click)="isRecording ? stopVoiceRecording() : startVoiceRecording()"
+              [disabled]="!interaction || isUploadingRecording || !!pendingAttachment"
+              class="p-1.5 rounded transition disabled:opacity-50 flex items-center gap-1"
+              [class.bg-red-100]="isRecording"
+              [class.text-red-600]="isRecording"
+              [class.animate-pulse]="isRecording"
+              [class.text-gray-500]="!isRecording"
+              [class.hover:bg-gray-100]="!isRecording"
+              [title]="isRecording ? 'Stop recording' : 'Record voice message'">
+              <i *ngIf="isUploadingRecording" class="fas fa-spinner fa-spin text-xs"></i>
+              <i *ngIf="!isUploadingRecording && !isRecording" class="fas fa-microphone text-xs"></i>
+              <i *ngIf="!isUploadingRecording && isRecording" class="fas fa-stop text-xs"></i>
+            </button>
+            <span *ngIf="isRecording" class="text-[10px] text-red-600 font-medium">{{ recordingDurationSec }}s</span>
           </div>
           <span class="text-[10px] text-gray-400">{{ interaction.replies?.length || 0 }} replies</span>
         </div>
@@ -490,3 +559,12 @@
 
   </div>
 </div>
+
+<!-- Media selector modal: send image or video with reply -->
+<app-media-selector-modal
+  *ngIf="showMediaModal"
+  [allowMultiple]="false"
+  mediaType="all"
+  (close)="closeMediaSelector()"
+  (select)="onMediaSelect($any($event))">
+</app-media-selector-modal>

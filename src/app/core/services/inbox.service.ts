@@ -113,12 +113,18 @@ export class InboxService {
   /**
    * Reply to an interaction
    */
-  replyToInteraction(id: string, content: string, useTemplate?: boolean, templateId?: string): Observable<IApiResponse> {
-    return this.apiService.post<IApiResponse>(`/inbox/${id}/reply`, {
-      content,
-      useTemplate,
-      templateId
-    });
+  replyToInteraction(
+    id: string,
+    content: string,
+    useTemplate?: boolean,
+    templateId?: string,
+    attachmentUrl?: string,
+    attachmentType?: 'image' | 'video' | 'file' | 'audio'
+  ): Observable<IApiResponse> {
+    const body: Record<string, unknown> = { content, useTemplate, templateId };
+    if (attachmentUrl) body['attachmentUrl'] = attachmentUrl;
+    if (attachmentType) body['attachmentType'] = attachmentType;
+    return this.apiService.post<IApiResponse>(`/inbox/${id}/reply`, body);
   }
 
   /**

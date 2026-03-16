@@ -21,9 +21,9 @@
         <div *ngIf="!selectedFile">
           <i class="fas fa-cloud-upload-alt text-6xl text-gray-600 mb-4"></i>
           <h3 class="text-xl font-bold text-rep-white mb-2">Drag & Drop or Click to Upload</h3>
-          <p class="text-gray-400 mb-1">Images: JPG, PNG, GIF, WEBP | Videos: MP4, MOV, AVI</p>
+          <p class="text-gray-400 mb-1">Images: JPG, PNG, GIF, WEBP | Videos: MP4, MOV, AVI | Audio: MP3, OGG, WAV, M4A</p>
           <p class="text-gray-500 text-sm mb-4">Max size: 100MB</p>
-          <input type="file" #fileInput hidden accept="image/*,video/*" (change)="onFileSelected($event)">
+          <input type="file" #fileInput hidden accept="image/*,video/*,audio/*" (change)="onFileSelected($event)">
           <label for="fileInput" class="inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition cursor-pointer" (click)="fileInput.click(); $event.preventDefault()">
             <i class="fas fa-file-upload"></i>
             Choose File
@@ -46,10 +46,15 @@
             <video [src]="filePreview" controls class="w-full max-h-64 object-contain"></video>
           </div>
 
+          <!-- Audio Preview -->
+          <div class="rounded-xl overflow-hidden bg-gray-800 max-h-32 flex items-center justify-center mb-4" *ngIf="fileType === 'audio'">
+            <i class="fas fa-music text-5xl text-amber-500"></i>
+          </div>
+
           <!-- File Info -->
           <div class="flex items-center gap-3 p-4 bg-gray-800/50 rounded-xl">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" [ngClass]="{'bg-blue-500': fileType === 'image', 'bg-purple-500': fileType === 'video'}">
-              <i [class]="fileType === 'image' ? 'fas fa-image text-white' : 'fas fa-video text-white'"></i>
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" [ngClass]="{'bg-blue-500': fileType === 'image', 'bg-purple-500': fileType === 'video', 'bg-amber-500': fileType === 'audio'}">
+              <i [class]="fileType === 'image' ? 'fas fa-image text-white' : (fileType === 'video' ? 'fas fa-video text-white' : 'fas fa-music text-white')"></i>
             </div>
             <div class="flex-1 min-w-0">
               <div class="text-rep-white font-medium truncate">{{ selectedFile.name }}</div>
