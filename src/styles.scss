@@ -39,44 +39,31 @@
 }
 
 /* Mobile Responsive - Sidebar Transform Fix */
-@media (max-width: 1023px) {
-  /* Hide sidebar off-screen by default on mobile */
-  app-sidebar.sidebar-closed aside {
-    transform: translateX(-100%) !important;
-  }
-  
-  /* Show sidebar when open */
-  app-sidebar.sidebar-open aside {
-    transform: translateX(0) !important;
-  }
-  
-  /* Default state for mobile sidebar */
-  app-sidebar aside {
-    transform: translateX(-100%);
-  }
-}
+/* Transform is now applied on the host <app-sidebar> element via Angular
+   class bindings (-translate-x-full / translate-x-0) so the entire component
+   moves off-screen and no longer intercepts clicks. The inner <aside> always
+   stays at translateX(0). */
 
-/* Desktop - always show sidebar */
 @media (min-width: 1024px) {
-  app-sidebar aside {
+  /* Desktop — always visible regardless of class bindings */
+  app-sidebar {
     transform: translateX(0) !important;
   }
 }
 
 /* Smooth transitions for mobile sidebar */
-app-sidebar aside {
+app-sidebar {
   transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
+}
+
+app-sidebar aside {
+  transform: translateX(0) !important;
 }
 
 /* Prevent body scroll when mobile menu is open */
 body.menu-open {
   overflow: hidden;
-}
-
-/* Ensure proper stacking context */
-app-sidebar {
-  z-index: 40;
 }
 
 .bg-opacity-50 {

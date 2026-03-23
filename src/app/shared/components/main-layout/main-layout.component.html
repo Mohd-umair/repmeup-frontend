@@ -14,9 +14,11 @@
 
   <!-- Sidebar -->
   <app-sidebar 
-    [ngClass]="{'sidebar-open': sidebarOpen, 'sidebar-closed': !sidebarOpen}"
     (menuItemClicked)="closeSidebar()"
-    class="fixed lg:static inset-y-0 left-0 z-40 lg:translate-x-0"
+    class="fixed lg:static inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out"
+    [class.-translate-x-full]="!sidebarOpen"
+    [class.translate-x-0]="sidebarOpen"
+    [ngClass]="{'lg:translate-x-0': true}"
   ></app-sidebar>
 
   <!-- Main Content Area -->

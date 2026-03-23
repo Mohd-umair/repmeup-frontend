@@ -36,91 +36,27 @@
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800 relative z-50">
-      <nav class="flex gap-1 sm:gap-2 min-w-max sm:min-w-0 overflow-x-auto overflow-y-visible touch-pan-x">
-        <button
+    <!-- Tabs — grid on mobile, horizontal row on desktop -->
+    <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800 relative z-10">
+      <nav class="grid grid-cols-3 sm:grid-cols-4 md:flex gap-1 sm:gap-1.5">
+        <button *ngFor="let tab of [
+          { id: 'platforms',     icon: 'fas fa-plug',       label: 'Platforms' },
+          { id: 'profile',      icon: 'fas fa-user',       label: 'Profile' },
+          { id: 'organization', icon: 'fas fa-building',   label: 'Organization' },
+          { id: 'notifications',icon: 'fas fa-bell',       label: 'Notifications' },
+          { id: 'auto-reply',   icon: 'fas fa-robot',      label: 'Auto-Reply' },
+          { id: 'brand-rules',  icon: 'fas fa-palette',    label: 'Brand Rules' },
+          { id: 'compliance',   icon: 'fas fa-shield-alt', label: 'Compliance' }
+        ]"
           type="button"
-          (click)="setActiveTab('platforms')"
-          [class]="activeTab === 'platforms' 
-            ? 'bg-rep-lime text-rep-black shadow-lg' 
+          (click)="setActiveTab($any(tab.id))"
+          [class]="activeTab === tab.id
+            ? 'bg-rep-lime text-rep-black shadow-lg'
             : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
+          class="md:flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-2 md:px-3 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs md:text-sm transition-all duration-200 cursor-pointer touch-manipulation min-h-[42px] select-none active:scale-95"
         >
-          <i class="fas fa-plug mr-1 sm:mr-2 pointer-events-none"></i>
-          <span class="hidden xs:inline pointer-events-none">Platforms</span>
-          <span class="xs:hidden pointer-events-none">Plat.</span>
-        </button>
-        <button
-          type="button"
-          (click)="setActiveTab('profile')"
-          [class]="activeTab === 'profile' 
-            ? 'bg-rep-lime text-rep-black shadow-lg' 
-            : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
-        >
-          <i class="fas fa-user mr-1 sm:mr-2 pointer-events-none"></i>
-          <span class="pointer-events-none">Profile</span>
-        </button>
-        <button
-          type="button"
-          (click)="setActiveTab('organization')"
-          [class]="activeTab === 'organization' 
-            ? 'bg-rep-lime text-rep-black shadow-lg' 
-            : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
-        >
-          <i class="fas fa-building mr-1 sm:mr-2 pointer-events-none"></i>
-          <span class="hidden xs:inline pointer-events-none">Organization</span>
-          <span class="xs:hidden pointer-events-none">Org</span>
-        </button>
-        <button
-          type="button"
-          (click)="setActiveTab('notifications')"
-          [class]="activeTab === 'notifications' 
-            ? 'bg-rep-lime text-rep-black shadow-lg' 
-            : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
-        >
-          <i class="fas fa-bell mr-1 sm:mr-2 pointer-events-none"></i>
-          <span class="hidden xs:inline pointer-events-none">Notifications</span>
-          <span class="xs:hidden pointer-events-none">Notif</span>
-        </button>
-        <button
-          type="button"
-          (click)="setActiveTab('auto-reply')"
-          [class]="activeTab === 'auto-reply' 
-            ? 'bg-rep-lime text-rep-black shadow-lg' 
-            : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
-        >
-          <i class="fas fa-robot mr-1 sm:mr-2 pointer-events-none"></i>
-          <span class="hidden sm:inline pointer-events-none">Auto-Reply</span>
-          <span class="sm:hidden pointer-events-none">Auto</span>
-        </button>
-        <button
-          type="button"
-          (click)="setActiveTab('brand-rules')"
-          [class]="activeTab === 'brand-rules' 
-            ? 'bg-rep-lime text-rep-black shadow-lg' 
-            : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
-        >
-          <i class="fas fa-palette mr-1 sm:mr-2 pointer-events-none"></i>
-          <span class="hidden sm:inline pointer-events-none">Brand Rules</span>
-          <span class="sm:hidden pointer-events-none">Brand</span>
-        </button>
-        <button
-          type="button"
-          (click)="setActiveTab('compliance')"
-          [class]="activeTab === 'compliance' 
-            ? 'bg-rep-lime text-rep-black shadow-lg' 
-            : 'text-gray-600 hover:bg-gray-100'"
-          class="flex-1 group inline-flex items-center justify-center py-3 sm:py-3 px-3 sm:px-3 md:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap cursor-pointer touch-manipulation min-h-[44px] relative z-10 select-none active:scale-95"
-        >
-          <i class="fas fa-shield-alt mr-1 sm:mr-2 pointer-events-none"></i>
-          <span class="hidden sm:inline pointer-events-none">Compliance</span>
-          <span class="sm:hidden pointer-events-none">Comp.</span>
+          <i [class]="tab.icon + ' text-xs md:text-sm pointer-events-none'"></i>
+          <span class="pointer-events-none">{{ tab.label }}</span>
         </button>
       </nav>
     </div>

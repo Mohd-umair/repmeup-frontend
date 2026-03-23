@@ -1,3 +1,9 @@
+export interface IUserGroup {
+  _id: string;
+  name: string;
+  slug: string;
+}
+
 export interface IUser {
   _id: string;
   email: string;
@@ -10,6 +16,8 @@ export interface IUser {
   isEmailVerified: boolean;
   lastLogin?: Date;
   preferences: IUserPreferences;
+  group?: IUserGroup | null;
+  resolvedPermissions?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { NotificationDataService } from '../../../core/services/notification-data.service';
 import { MenuService, IMenuItem } from '../../../core/services/menu.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { Subscription } from 'rxjs';
 
 /**
@@ -44,7 +45,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private router: Router,
     private notificationDataService: NotificationDataService,
     private menuService: MenuService,
-    private authService: AuthService
+    private authService: AuthService,
+    private permissionService: PermissionService
   ) {}
 
   ngOnInit(): void {
@@ -66,19 +68,23 @@ export class SidebarComponent implements OnInit, OnDestroy {
     });
     this.subscriptions.push(unreadSub);
 
-    // Subscribe to grouped menu changes (new menus from API)
     const menuSub = this.menuService.groupedMenus$.subscribe(grouped => {
       if (!grouped || (grouped.main?.length === 0 && grouped.management?.length === 0 && grouped.settings?.length === 0)) {
-        return; // Keep current or fallback
+        return;
       }
-      this.groupedItems = {
+      this.groupedItems = this.filterByPermissions({
         main: (grouped.main || []).map((m: IMenuItem) => this.menuToItem(m)),
         management: (grouped.management || []).map((m: IMenuItem) => this.menuToItem(m)),
         settings: (grouped.settings || []).map((m: IMenuItem) => this.menuToItem(m))
-      };
+      });
       this.applyInboxBadge(this.notificationDataService.unreadCountValue);
     });
     this.subscriptions.push(menuSub);
+
+    const permSub = this.permissionService.permissions$.subscribe(() => {
+      this.groupedItems = this.filterByPermissions(this.groupedItems);
+    });
+    this.subscriptions.push(permSub);
   }
 
   private menuToItem(menu: IMenuItem): MenuItem {
@@ -136,7 +142,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
    * Set default menus as fallback (grouped to match new menu structure)
    */
   private setDefaultMenus(): void {
-    this.groupedItems = {
+    this.groupedItems = this.filterByPermissions({
       main: [
         { label: 'Home', icon: '🏠', route: '/' },
         { label: 'Dashboard', icon: '📊', route: '/app/dashboard' },
@@ -158,6 +164,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
         { label: 'Plans', icon: '💎', route: '/app/plans' },
         { label: 'Settings', icon: '⚙️', route: '/app/settings' }
       ]
+    });
+  }
+
+  private filterByPermissions(items: GroupedMenuItems): GroupedMenuItems {
+    const filter = (list: MenuItem[]) =>
+      list.filter(item => this.permissionService.canAccessRoute(item.route));
+    return {
+      main: filter(items.main),
+      management: filter(items.management),
+      settings: filter(items.settings)
     };
   }
 

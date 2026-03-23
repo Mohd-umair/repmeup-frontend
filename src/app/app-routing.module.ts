@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
+import { PermissionGuard } from './core/guards/permission.guard';
 
 // Auth Components
 import { LoginComponent } from './features/auth/login/login.component';
@@ -81,23 +82,23 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent },
-      { path: 'inbox', component: InboxContainerComponent },
-      { path: 'publish', component: PublishComponent },
-      { path: 'publish/calendar', component: CalendarComponent },
-      { path: 'publish/published', component: PublishedPostsComponent },
-      { path: 'calendar', component: CalendarComponent },
-      { path: 'content', component: ContentComponent },
-      { path: 'brand-hub', component: BrandHubComponent },
-      { path: 'content-studio', component: ContentStudioComponent },
-      { path: 'approval-queue', component: ApprovalQueueComponent },
-      { path: 'trend-explorer', component: TrendExplorerComponent },
-      { path: 'analytics', component: AnalyticsComponent },
-      { path: 'knowledge-base', component: KnowledgeBaseComponent },
-      { path: 'settings', component: SettingsComponent },
-      { path: 'agents', component: AgentsComponent },
-      { path: 'plans', component: PlansComponent },
-      { path: 'ai-credits', component: AiCreditsComponent },
-      { path: 'notifications', component: NotificationsComponent }
+      { path: 'inbox', component: InboxContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
+      { path: 'publish', component: PublishComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
+      { path: 'publish/calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'publish/published', component: PublishedPostsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'content', component: ContentComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'brand-hub', component: BrandHubComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'content-studio', component: ContentStudioComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
+      { path: 'approval-queue', component: ApprovalQueueComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.manage'] } },
+      { path: 'trend-explorer', component: TrendExplorerComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.read'] } },
+      { path: 'analytics', component: AnalyticsComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.read'] } },
+      { path: 'knowledge-base', component: KnowledgeBaseComponent, canActivate: [PermissionGuard], data: { permissions: ['knowledge_base.read'] } },
+      { path: 'settings', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'agents', component: AgentsComponent, canActivate: [PermissionGuard], data: { permissions: ['users.read'] } },
+      { path: 'plans', component: PlansComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
+      { path: 'ai-credits', component: AiCreditsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
+      { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } }
     ]
   },
 

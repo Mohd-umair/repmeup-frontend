@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { ClientActivityService } from './core/services/client-activity.service';
 
 /**
  * App Component - Root component
@@ -11,4 +12,7 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'ORM System';
+
+  /** Subscribes to router; injected for side effect only */
+  constructor(_clientActivity: ClientActivityService) {}
 }
