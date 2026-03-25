@@ -38,14 +38,18 @@ export class InboxService {
         tap(response => {
           if (response.success && response.data) {
             const fromApi = response.data.interactions || [];
+            const requestedPage = Number(filters?.page || 1);
             // When API returns empty (e.g. no accounts connected), show empty inbox
             if (fromApi.length === 0) {
-              this.interactionsSubject.next([]);
+              // Only clear on first page. For lazy loading (page > 1), keep existing list.
+              if (requestedPage <= 1) {
+                this.interactionsSubject.next([]);
+              }
               return;
             }
             const current = this.interactionsSubject.value;
             // When filtering by platform, replace list so we don't carry over other platforms from a previous load
-            if (filters?.platform) {
+            if (filters?.platform || requestedPage <= 1) {
               this.interactionsSubject.next(fromApi);
               return;
             }
@@ -57,20 +61,21 @@ export class InboxService {
   }
 
   /**
-   * Merge two lists by _id, keeping the version with the latest updatedAt.
-   * Returns merged list sorted by updatedAt desc (latest first).
+   * Merge two lists by _id, keeping the freshest document per id.
+   * Inbox ordering is by newest platform comment/message first.
    */
   private mergeInteractionsByNewest(current: IInteraction[], fromApi: IInteraction[]): IInteraction[] {
     const byId = new Map<string, IInteraction>();
-    const updatedAt = (i: IInteraction) => new Date(i.updatedAt || i.platformCreatedAt || 0).getTime();
+    const freshnessTs = (i: IInteraction) => new Date(i.updatedAt || i.platformCreatedAt || 0).getTime();
+    const commentTs = (i: IInteraction) => new Date(i.platformCreatedAt || i.updatedAt || 0).getTime();
     current.forEach(i => byId.set(i._id, i));
     fromApi.forEach(i => {
       const existing = byId.get(i._id);
-      if (!existing || updatedAt(i) >= updatedAt(existing)) {
+      if (!existing || freshnessTs(i) >= freshnessTs(existing)) {
         byId.set(i._id, i);
       }
     });
-    return Array.from(byId.values()).sort((a, b) => updatedAt(b) - updatedAt(a));
+    return Array.from(byId.values()).sort((a, b) => commentTs(b) - commentTs(a));
   }
 
   /**
@@ -83,8 +88,8 @@ export class InboxService {
   /**
    * Get single interaction by ID
    */
-  getInteraction(id: string): Observable<IApiResponse<IInteraction>> {
-    return this.apiService.get<IApiResponse<IInteraction>>(`/inbox/${id}`)
+  getInteraction(id: string, params?: { sortOrder?: 'asc' | 'desc' }): Observable<IApiResponse<IInteraction>> {
+    return this.apiService.get<IApiResponse<IInteraction>>(`/inbox/${id}`, params)
       .pipe(
         tap(response => {
           if (response.success && response.data) {
@@ -127,11 +132,23 @@ export class InboxService {
     return this.apiService.post<IApiResponse>(`/inbox/${id}/reply`, body);
   }
 
+  deleteReply(interactionId: string, replyId: string): Observable<IApiResponse> {
+    return this.apiService.delete<IApiResponse>(`/inbox/${interactionId}/replies/${replyId}`);
+  }
+
   /**
    * Generate AI suggested reply for an interaction
    */
   suggestReply(id: string): Observable<IApiResponse<any>> {
     return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/suggest-reply`, {});
+  }
+
+  aiAssist(id: string): Observable<IApiResponse<{ short: string; detailed: string; sales: string; usedKnowledgeBase: boolean; knowledgeBaseCount: number }>> {
+    return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/ai-assist`, {});
+  }
+
+  aiAssistRegenerate(id: string, type: 'short' | 'detailed' | 'sales'): Observable<IApiResponse<{ type: string; content: string }>> {
+    return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/ai-assist/regenerate`, { type });
   }
 
   /**
@@ -259,6 +276,20 @@ export class InboxService {
    */
   get statsValue(): IInboxStats | null {
     return this.statsSubject.value;
+  }
+
+  /**
+   * Get interactions grouped by intent bucket (kanban board view)
+   */
+  getBucketView(filters?: any): Observable<IApiResponse<any>> {
+    return this.apiService.get<IApiResponse<any>>('/inbox/bucket-view', filters);
+  }
+
+  /**
+   * Update an interaction's intent bucket (drag-and-drop)
+   */
+  updateInteractionBucket(interactionId: string, intentBucket: string | null): Observable<IApiResponse<any>> {
+    return this.apiService.put<IApiResponse<any>>(`/inbox/${interactionId}/bucket`, { intentBucket });
   }
 }
 

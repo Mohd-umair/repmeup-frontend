@@ -1,0 +1,136 @@
+@mixin light-mode-overrides {
+  :host-context(html:not(.dark)) {
+    .bg-rep-black {
+      background-color: var(--surface-primary) !important;
+    }
+
+    .bg-gray-900\/50 {
+      background-color: var(--card-bg) !important;
+    }
+
+    .bg-gray-900 {
+      background-color: var(--surface-secondary) !important;
+    }
+
+    .bg-gray-800 {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .bg-gray-800\/50 {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .bg-gray-800\/30 {
+      background-color: var(--surface-secondary) !important;
+    }
+
+    .bg-gray-700 {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .border-gray-800 {
+      border-color: var(--card-border) !important;
+    }
+
+    .border-gray-700 {
+      border-color: var(--border-secondary) !important;
+    }
+
+    .border-gray-600 {
+      border-color: var(--border-secondary) !important;
+    }
+
+    .text-rep-white {
+      color: var(--text-primary) !important;
+    }
+
+    .text-gray-400 {
+      color: var(--text-secondary) !important;
+    }
+
+    .text-gray-300 {
+      color: var(--text-secondary) !important;
+    }
+
+    .text-gray-500 {
+      color: var(--text-muted) !important;
+    }
+
+    /* Fix light mode contrast where gray backgrounds are remapped to light tokens */
+    .bg-gray-900.text-white,
+    .bg-gray-800.text-white,
+    .bg-gray-700.text-white,
+    .bg-gray-900\/50.text-white,
+    .bg-gray-800\/50.text-white {
+      color: var(--text-primary) !important;
+    }
+
+    .hover\:text-white:hover {
+      color: var(--text-primary) !important;
+    }
+
+    /* Calendar/Publish select dropdown readability in light mode */
+    select.text-white {
+      color: var(--text-primary) !important;
+    }
+
+    select.bg-gray-900,
+    select.bg-gray-800 {
+      background-color: var(--input-bg) !important;
+      border-color: var(--input-border) !important;
+    }
+
+    select option {
+      color: var(--text-primary) !important;
+      background-color: var(--surface-primary) !important;
+    }
+
+    .hover\:bg-gray-800:hover {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .hover\:bg-gray-700:hover {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .hover\:text-rep-white:hover {
+      color: var(--text-primary) !important;
+    }
+
+    .hover\:text-gray-300:hover {
+      color: var(--text-secondary) !important;
+    }
+
+    .dark\:bg-gray-900 {
+      background-color: var(--surface-secondary) !important;
+    }
+
+    .dark\:bg-gray-800 {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .dark\:border-gray-600 {
+      border-color: var(--border-secondary) !important;
+    }
+
+    .dark\:border-gray-700 {
+      border-color: var(--border-secondary) !important;
+    }
+
+    .dark\:text-gray-300 {
+      color: var(--text-secondary) !important;
+    }
+
+    .dark\:text-gray-400 {
+      color: var(--text-secondary) !important;
+    }
+
+    .dark\:hover\:bg-gray-800:hover {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .placeholder-gray-400::placeholder {
+      color: var(--input-placeholder) !important;
+    }
+  }
+}

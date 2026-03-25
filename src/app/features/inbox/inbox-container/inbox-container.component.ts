@@ -12,10 +12,11 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SocketService } from '../../../core/services/socket.service';
 import { IInteraction, IInboxFilters, InboxViewMode, ILabel } from '../../../core/models/interaction.model';
 import { InboxDetailComponent } from '../inbox-detail/inbox-detail.component';
-import { InboxFiltersComponent } from '../inbox-filters/inbox-filters.component';
 import { InboxListComponent } from '../inbox-list/inbox-list.component';
 import { InboxTopFiltersComponent } from '../inbox-top-filters/inbox-top-filters.component';
 import { InboxActionsComponent } from '../inbox-actions/inbox-actions.component';
+import { InboxAiAssistantComponent } from '../inbox-ai-assistant/inbox-ai-assistant.component';
+import { InboxBucketViewComponent } from '../inbox-bucket-view/inbox-bucket-view.component';
 import { OrganizationService } from '../../../core/services/organization.service';
 import { forkJoin, timer, Subscription, of, from, interval } from 'rxjs';
 import { exhaustMap, catchError } from 'rxjs/operators';
@@ -27,17 +28,29 @@ import { exhaustMap, catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-inbox-container',
   standalone: true,
-  imports: [CommonModule, TitleCasePipe, FormsModule, InboxDetailComponent, InboxFiltersComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent],
+  imports: [CommonModule, TitleCasePipe, FormsModule, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent],
   templateUrl: './inbox-container.component.html',
   styleUrls: ['./inbox-container.component.scss']
 })
 export class InboxContainerComponent implements OnInit, OnDestroy {
+  currentPage = 1;
+  hasMoreConversations = false;
+  loadingMoreConversations = false;
+  totalConversations = 0;
+  showConversationSearch = false;
+  conversationQuickFilter: 'all' | 'unread' | 'leads' | 'platforms' = 'all';
+  showConversationPlatformDropdown = false;
+  conversationPlatformOptions: string[] = [];
+  rightPanelTab: 'actions' | 'suggestions' = 'suggestions';
+
   interactions: IInteraction[] = [];
   selectedInteraction: IInteraction | null = null;
   filters: IInboxFilters = {};
   platformFilters: IInboxFilters = {};
   topFilters: IInboxFilters = {};
   viewMode: InboxViewMode = 'all';
+  /** Restored when switching from intent buckets back to list view */
+  lastListViewMode: InboxViewMode = 'all';
   loading = false;
   syncing = false;
   analyzingSentiment = false;
@@ -112,11 +125,16 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     if (params['type']) {
       this.topFilters = { ...this.topFilters, type: params['type'] as any };
     }
+    if (this.viewMode !== 'buckets') {
+      this.lastListViewMode = this.viewMode;
+    }
 
     // Load saved auto-sync preference from the organisation
     this.loadAutoSyncSetting();
+    this.loadConversationPlatformOptions();
 
-    this.loadInteractions();
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
     this.loadInboxStats();
 
     // Connect socket and join organisation room for real-time DM/comment updates
@@ -281,7 +299,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         if (res.success) {
           this.notificationService.success('Bulk update', `Marked ${(res as any).data?.updated || ids.length} as read`);
           this.clearBulkSelection();
-          this.loadInteractions();
+          this.loadInteractions(true);
           this.refreshSelectedIfAffected(ids);
         }
         this.bulkProcessing = false;
@@ -317,7 +335,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
                 `Resolved ${updatedCount} conversation(s)`
               );
               this.clearBulkSelection();
-              this.loadInteractions();
+              this.loadInteractions(true);
               this.refreshSelectedIfAffected(ids);
             }
             this.bulkProcessing = false;
@@ -349,7 +367,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           this.notificationService.success('Assigned', `${count} conversation(s) assigned to ${agentName}`);
           this.clearBulkSelection();
           this.bulkAssignAgentId = '';
-          this.loadInteractions();
+          this.loadInteractions(true);
           // Refresh agent workload counts
           this.refreshAgentWorkloads();
         }
@@ -376,7 +394,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           this.notificationService.success('Assigned', `${count} conversation(s) assigned to ${agentName}`);
           this.clearBulkSelection();
           this.bulkAssignAgentId = '';
-          this.loadInteractions();
+          this.loadInteractions(true);
           this.refreshAgentWorkloads();
           // Re-fetch the open detail panel so the "Assigned to…" banner appears immediately
           this.refreshSelectedIfAffected(ids);
@@ -414,7 +432,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           this.notificationService.success('Bulk label', `Added label to ${(res as any).data?.updated || ids.length} conversation(s)`);
           this.clearBulkSelection();
           this.bulkLabelId = '';
-          this.loadInteractions();
+          this.loadInteractions(true);
           this.refreshSelectedIfAffected(ids);
         }
         this.bulkProcessing = false;
@@ -450,7 +468,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
                 `Archived ${updatedCount} conversation(s)`
               );
               this.clearBulkSelection();
-              this.loadInteractions();
+              this.loadInteractions(true);
               this.refreshSelectedIfAffected(ids);
             }
             this.bulkProcessing = false;
@@ -495,7 +513,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
                 `Unarchived ${updatedCount} conversation(s)`
               );
               this.clearBulkSelection();
-              this.loadInteractions();
+              this.loadInteractions(true);
               this.refreshSelectedIfAffected(ids);
             }
             this.bulkProcessing = false;
@@ -835,30 +853,46 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    * Refresh inbox list without showing loading spinner (for polling so new DMs appear like chat).
    */
   private refreshInboxListSilent(): void {
-    const mergedFilters = {
+    const mergedFilters = this.stripEmptyDateRange({
       ...this.platformFilters,
       ...this.topFilters,
+      page: 1,
       viewMode: this.viewMode === 'all' ? undefined : this.viewMode,
       status: this.topFilters.status || undefined
-    };
+    });
     this.filters = Object.fromEntries(
       Object.entries(mergedFilters).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     ) as IInboxFilters;
-    this.inboxService.getInteractions(this.filters).subscribe();
+    this.inboxService.getInteractions(this.filters).subscribe({
+      next: (response) => {
+        this.totalConversations = response?.data?.pagination?.total ?? this.totalConversations;
+      }
+    });
     this.loadInboxStats();
   }
 
-  loadInteractions(): void {
-    this.loading = true;
+  loadInteractions(reset = true): void {
+    if (reset) {
+      this.currentPage = 1;
+      this.hasMoreConversations = false;
+      this.inboxService.clearState();
+      this.loading = true;
+      this.loadingMoreConversations = false;
+    } else {
+      if (this.loading || this.loadingMoreConversations || !this.hasMoreConversations) return;
+      this.loadingMoreConversations = true;
+    }
+
     // Merge filters: viewMode affects assignedTo and status/sort
     // Clean undefined values to prevent wrong cache keys
-    const mergedFilters = {
+    const mergedFilters = this.stripEmptyDateRange({
       ...this.platformFilters,
       ...this.topFilters,
+      page: this.currentPage,
       viewMode: this.viewMode === 'all' ? undefined : this.viewMode,
       // Pass status from topFilters unless we're in archived view
       status: this.topFilters.status || undefined
-    };
+    });
     
     // Remove undefined/null/empty values from filters
     this.filters = Object.fromEntries(
@@ -866,19 +900,49 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     ) as IInboxFilters;
     
     this.inboxService.getInteractions(this.filters).subscribe({
-      next: () => {
+      next: (response) => {
+        // Backend sends hasMore — no need to know page size on the frontend
+        this.hasMoreConversations = response?.data?.pagination?.hasMore === true;
+        this.totalConversations = response?.data?.pagination?.total ?? this.totalConversations;
+
+        // Advance to the next page after any successful fetch.
+        // On reset, page 1 was just loaded, so next request must be page 2.
+        this.currentPage += 1;
+
         this.loading = false;
+        this.loadingMoreConversations = false;
       },
       error: () => {
         this.loading = false;
+        this.loadingMoreConversations = false;
       }
     });
     this.loadInboxStats();
   }
 
   setViewMode(mode: InboxViewMode): void {
+    if (mode !== 'buckets') {
+      this.lastListViewMode = mode;
+    }
     this.viewMode = mode;
-    this.loadInteractions();
+    if (mode !== 'buckets') {
+      this.loadInteractions(true);
+    }
+  }
+
+  /** Segmented control: list inbox vs intent bucket board */
+  setInboxLayout(layout: 'list' | 'buckets'): void {
+    if (layout === 'buckets') {
+      if (this.viewMode !== 'buckets') {
+        this.viewMode = 'buckets';
+      }
+    } else if (this.viewMode === 'buckets') {
+      this.bucketSearchTerm = '';
+      this.bucketSortBy = 'newest';
+      this.viewMode = this.lastListViewMode;
+      this.loadInteractions(true);
+    }
+    this.updateMergedBucketFilters();
   }
 
   /**
@@ -928,18 +992,121 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       this.themeService.resetTheme();
     }
     
-    this.loadInteractions();
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
   }
 
   onTopFilterChange(filters: IInboxFilters): void {
-    this.topFilters = filters;
-    this.loadInteractions();
+    this.topFilters = this.stripEmptyDateRange(filters);
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
+  }
+
+  /** Drop date range keys when empty so cleared dates never stay in API requests */
+  private stripEmptyDateRange(f: IInboxFilters): IInboxFilters {
+    const next = { ...f };
+    if (!next.dateFrom?.toString().trim()) delete next.dateFrom;
+    if (!next.dateTo?.toString().trim()) delete next.dateTo;
+    return next;
+  }
+
+  applyConversationQuickFilter(filter: 'all' | 'unread' | 'leads' | 'platforms'): void {
+    this.conversationQuickFilter = filter;
+
+    // Keep existing filters, but control status/type/platform from quick chips.
+    const nextTopFilters: IInboxFilters = { ...this.topFilters };
+    const nextPlatformFilters: IInboxFilters = { ...this.platformFilters };
+
+    delete nextTopFilters.status;
+    delete nextTopFilters.type;
+    delete nextPlatformFilters.platform;
+
+    if (filter === 'unread') {
+      nextTopFilters.status = 'unread' as any;
+      this.showConversationPlatformDropdown = false;
+    } else if (filter === 'leads') {
+      // Treat DMs as lead-oriented conversations in inbox quick filter.
+      nextTopFilters.type = 'dm' as any;
+      this.showConversationPlatformDropdown = false;
+    } else if (filter === 'platforms') {
+      // Platforms is handled by its own dropdown trigger.
+      return;
+    } else {
+      this.showConversationPlatformDropdown = false;
+    }
+
+    this.topFilters = nextTopFilters;
+    this.platformFilters = nextPlatformFilters;
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
+  }
+
+  toggleConversationPlatformDropdown(): void {
+    this.showConversationPlatformDropdown = !this.showConversationPlatformDropdown;
+  }
+
+  selectConversationPlatform(platform?: string): void {
+    this.conversationQuickFilter = 'platforms';
+    this.showConversationPlatformDropdown = false;
+
+    const nextTopFilters: IInboxFilters = { ...this.topFilters };
+    const nextPlatformFilters: IInboxFilters = { ...this.platformFilters };
+    delete nextTopFilters.status;
+    delete nextTopFilters.type;
+    delete nextPlatformFilters.platform;
+
+    if (platform) {
+      nextPlatformFilters.platform = platform as any;
+      this.themeService.setPlatformTheme(platform);
+    } else {
+      this.themeService.resetTheme();
+    }
+
+    this.topFilters = nextTopFilters;
+    this.platformFilters = nextPlatformFilters;
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
+  }
+
+  private loadConversationPlatformOptions(): void {
+    this.platformService.getPlatformConnections().subscribe({
+      next: (response) => {
+        const list = (response?.data || [])
+          .filter((p: any) => p?.isActive && p?.status === 'connected' && !!p?.platform)
+          .map((p: any) => String(p.platform).toLowerCase().trim());
+        this.conversationPlatformOptions = [...new Set(list)];
+      },
+      error: () => {
+        this.conversationPlatformOptions = [];
+      }
+    });
+  }
+
+  getPlatformIconClass(platform: string): string {
+    const p = (platform || '').toLowerCase().trim();
+    const icons: Record<string, string> = {
+      instagram: 'fab fa-instagram',
+      facebook: 'fab fa-facebook-f',
+      youtube: 'fab fa-youtube',
+      google: 'fab fa-google',
+      google_my_business: 'fab fa-google',
+      linkedin: 'fab fa-linkedin-in',
+      whatsapp: 'fab fa-whatsapp',
+      website: 'fas fa-globe'
+    };
+    return icons[p] || 'fas fa-share-alt';
+  }
+
+  formatPlatformLabel(platform: string): string {
+    const p = (platform || '').toLowerCase().trim();
+    if (p === 'google_my_business') return 'Google My Business';
+    return p.charAt(0).toUpperCase() + p.slice(1);
   }
 
   onFilterChange(filters: IInboxFilters): void {
     // Legacy support - merge with existing filters
     this.filters = { ...this.filters, ...filters };
-    this.loadInteractions();
+    this.loadInteractions(true);
   }
 
   onSearchChange(searchTerm: string): void {
@@ -951,7 +1118,40 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       const { search, ...rest } = this.topFilters;
       this.topFilters = rest;
     }
-    this.loadInteractions();
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
+  }
+
+  onLoadMoreConversations(): void {
+    if (!this.hasMoreConversations) return;
+    this.loadInteractions(false);
+  }
+
+  mergedBucketFilters: IInboxFilters = {};
+  bucketSearchTerm = '';
+  bucketSortBy: 'newest' | 'oldest' | 'sentiment' = 'newest';
+
+  private updateMergedBucketFilters(): void {
+    const extra: any = {};
+    if (this.bucketSearchTerm?.trim()) extra.search = this.bucketSearchTerm.trim();
+    if (this.bucketSortBy === 'oldest') { extra.sortBy = 'platformCreatedAt'; extra.sortOrder = 'asc'; }
+    else if (this.bucketSortBy === 'sentiment') { extra.sortBy = 'sentiment'; extra.sortOrder = 'asc'; }
+    else { extra.sortBy = 'platformCreatedAt'; extra.sortOrder = 'desc'; }
+    this.mergedBucketFilters = { ...this.platformFilters, ...this.topFilters, ...extra };
+  }
+
+  onBucketSearchChange(term: string): void {
+    this.bucketSearchTerm = term;
+    this.updateMergedBucketFilters();
+  }
+
+  onBucketSortChange(sort: 'newest' | 'oldest' | 'sentiment'): void {
+    this.bucketSortBy = sort;
+    this.updateMergedBucketFilters();
+  }
+
+  onBucketInteractionSelect(interaction: IInteraction): void {
+    this.onInteractionSelect(interaction);
   }
 
   onInteractionSelect(interaction: IInteraction): void {
@@ -979,17 +1179,26 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   }
 
   onInteractionUpdate(): void {
-    this.loadInteractions();
-
-    // Re-fetch the open conversation so new replies appear immediately
+    // Lightweight refresh: only update the open conversation.
+    // Avoid full list reload so chat list doesn't refresh/flicker on send.
     if (this.selectedInteraction?._id) {
       this.inboxService.getInteraction(this.selectedInteraction._id).subscribe({
         next: (res) => {
           if (res.success && res.data) {
             this.inboxService.setSelectedInteraction(res.data);
+            const idx = this.interactions.findIndex(i => i._id === res.data!._id);
+            if (idx !== -1) {
+              this.interactions[idx] = res.data!;
+            }
           }
         }
       });
+    }
+  }
+
+  onAiSendReply(content: string): void {
+    if (this.inboxDetail) {
+      this.inboxDetail.insertReplyContent(content);
     }
   }
 

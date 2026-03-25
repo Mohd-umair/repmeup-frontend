@@ -1,3 +1,5 @@
+@use '../../shared/styles/theme-overrides' as theme;
+
 // Plans Component Styles
 
 // Smooth animations
@@ -30,3 +32,6 @@
     transform: scale(1.1);
   }
 }
+
+@include theme.light-mode-overrides;
+

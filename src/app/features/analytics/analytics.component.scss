@@ -1,9 +1,14 @@
+@use '../../shared/styles/theme-overrides' as theme;
+
 // Analytics Component Styles
 // Modern, responsive analytics dashboard
 
 :host {
   display: block;
 }
+
+@include theme.light-mode-overrides;
+
 
 // Smooth transitions for all interactive elements
 * {

@@ -1,166 +1,41 @@
 <div class="h-full flex flex-col px-3 py-2 sm:px-4 sm:py-2 md:px-5 md:py-3 transition-colors duration-500 overflow-y-auto lg:overflow-hidden" 
      [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #000000)08, var(--platform-gradient-to, #000000)08)'">
-  <!-- Compact Header - Platform Themed -->
-  <div class="mb-2 flex-shrink-0">
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl backdrop-blur-sm border transition-all duration-300"
-         [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #D0FF00)08, var(--platform-gradient-to, #B8E600)08)'"
-         [style.borderColor]="'var(--platform-primary, #D0FF00)20'">
-      <div class="flex items-center gap-3 flex-1 min-w-0">
-        <div class="w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-             [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'">
-          <i [class]="getHeaderIcon() + ' text-base text-white'"></i>
-        </div>
-        <div class="min-w-0 flex-1">
-          <h1 class="text-base sm:text-lg font-bold transition-all duration-300 truncate" 
-              [style.color]="'var(--platform-primary, #1F2937)'">
-            {{ getHeaderTitle() }}
-          </h1>
-          <div class="flex items-center gap-2 text-xs text-gray-600 mt-0.5">
-            <span class="flex items-center gap-1">
-              <i class="fas fa-comments text-[10px]"></i>
-              {{ interactions.length }}
-            </span>
-            <span *ngIf="getUnreadCount() > 0" class="flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full animate-pulse bg-amber-500"></span>
-              {{ getUnreadCount() }}
-            </span>
-            <span *ngIf="inboxStats?.priorityCount > 0" class="flex items-center gap-1 text-red-600">
-              <i class="fas fa-fire-alt text-[10px]"></i>
-              {{ inboxStats.priorityCount }}
-            </span>
-            <span *ngIf="inboxStats?.overdueCount > 0" class="flex items-center gap-1 text-orange-600">
-              <i class="fas fa-exclamation-triangle text-[10px]"></i>
-              {{ inboxStats.overdueCount }}
-            </span>
-          </div>
-        </div>
-      </div>
-      <div class="flex items-center gap-1.5 flex-shrink-0">
-        <!-- Auto-sync toggle -->
-        <button 
-          (click)="toggleAutoSync()"
-          type="button"
-          class="px-3 py-2 rounded-lg text-xs font-medium transition-all duration-300 flex items-center gap-1.5"
-          [style.background]="autoSyncEnabled ? 'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))' : 'rgba(75, 85, 99, 0.2)'"
-          [class.text-white]="autoSyncEnabled"
-          [class.text-gray-600]="!autoSyncEnabled"
-          [class.hover:bg-gray-100]="!autoSyncEnabled"
-          [attr.aria-pressed]="autoSyncEnabled"
-          title="{{ autoSyncEnabled ? 'Auto-sync ON – syncing every 5 min' : 'Auto-sync OFF – click to enable' }}">
-          <i class="fas" [class.fa-toggle-on]="autoSyncEnabled" [class.fa-toggle-off]="!autoSyncEnabled"></i>
-          <span>{{ autoSyncEnabled ? 'Auto-sync ON' : 'Auto-sync OFF' }}</span>
-        </button>
-        
-        <!-- More options dropdown -->
-        <div class="relative">
-          <button 
-            (click)="showMoreOptions = !showMoreOptions"
-            type="button"
-            class="w-8 h-8 rounded-lg text-xs transition-all bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center justify-center"
-            title="More options">
-            <i class="fas fa-ellipsis-v"></i>
-          </button>
-          <div *ngIf="showMoreOptions" 
-               (click)="showMoreOptions = false"
-               class="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-            <button 
-              (click)="showStats = !showStats"
-              type="button"
-              class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              <i class="fas fa-chart-bar w-4"></i>
-              {{ showStats ? 'Hide Stats' : 'Show Stats' }}
-            </button>
-            <button 
-              (click)="showShortcutsOverlay = true"
-              type="button"
-              class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
-              <i class="fas fa-keyboard w-4"></i>
-              Keyboard Shortcuts
-            </button>
-          </div>
-        </div>
-        
-        <!-- Sync button — syncs active platform only, or all if none selected -->
-        <button 
-          (click)="onSyncClick()"
-          type="button"
-          [disabled]="syncing || loading"
-          class="px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 text-white flex items-center gap-1.5"
-          [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-          [title]="platformFilters.platform ? 'Sync ' + platformFilters.platform : 'Sync all platforms'">
-          <i class="fas text-xs" [class.fa-sync-alt]="!syncing" [class.fa-spinner]="syncing" [class.fa-spin]="syncing"></i>
-          <span class="hidden sm:inline">{{ platformFilters.platform ? 'Sync ' + (platformFilters.platform | titlecase) : 'Sync All' }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Collapsible Stats Cards -->
-    <div *ngIf="showStats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-3 animate-slideDown">
-      <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
-           style="border-color: rgba(75, 85, 99, 0.15);">
-        <div class="flex items-center justify-between">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-gray-500 truncate">Total</p>
-            <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
-               [style.color]="'var(--platform-primary, #1F2937)'">{{ interactions.length }}</p>
-          </div>
-          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-               [style.background]="'var(--platform-primary, #4B5563)' + '15'">
-            <i class="fas fa-inbox text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
-           style="border-color: rgba(75, 85, 99, 0.15);">
-        <div class="flex items-center justify-between">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-gray-500 truncate">Unread</p>
-            <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
-               [style.color]="'var(--platform-primary, #1F2937)'">{{ getUnreadCount() }}</p>
-          </div>
-          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-               [style.background]="'var(--platform-primary, #4B5563)' + '15'">
-            <i class="fas fa-envelope text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
-           style="border-color: rgba(75, 85, 99, 0.15);">
-        <div class="flex items-center justify-between">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-gray-500 truncate">Today</p>
-            <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
-               [style.color]="'var(--platform-primary, #1F2937)'">{{ getTodayCount() }}</p>
-          </div>
-          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-               [style.background]="'var(--platform-primary, #4B5563)' + '15'">
-            <i class="fas fa-calendar-day text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
-           style="border-color: rgba(75, 85, 99, 0.15);">
-        <div class="flex items-center justify-between">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-gray-500 truncate">Response</p>
-            <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
-               [style.color]="'var(--platform-primary, #1F2937)'">{{ inboxStats?.responseRate ?? 0 }}%</p>
-          </div>
-          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-               [style.background]="'var(--platform-primary, #4B5563)' + '15'">
-            <i class="fas fa-chart-line text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- View Mode + Platform Filter (compact) -->
-  <div class="mb-2 flex-shrink-0 flex flex-wrap items-center gap-2 p-2 bg-white rounded-xl border" style="border-color: rgba(0,0,0,0.08);">
+  <div class="mb-2 flex-shrink-0 flex flex-wrap items-center gap-2 p-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
     <div class="flex flex-wrap gap-1.5 items-center flex-1">
+      <!-- List vs intent buckets -->
+      <div
+        class="inline-flex rounded-lg border border-gray-200 dark:border-gray-600 p-0.5 bg-gray-100 dark:bg-gray-800 shrink-0"
+        role="group"
+        aria-label="Inbox layout">
+        <button
+          type="button"
+          (click)="setInboxLayout('list')"
+          class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5"
+          [ngClass]="viewMode !== 'buckets'
+            ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
+            : 'text-gray-500 dark:text-gray-400'"
+          [attr.aria-pressed]="viewMode !== 'buckets'"
+          title="Classic inbox list">
+          <i class="fas fa-list-ul"></i>
+          <span class="hidden sm:inline">List</span>
+        </button>
+        <button
+          type="button"
+          (click)="setInboxLayout('buckets')"
+          class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5"
+          [ngClass]="viewMode === 'buckets'
+            ? 'bg-rep-lime text-rep-black shadow-sm'
+            : 'text-gray-500 dark:text-gray-400'"
+          [attr.aria-pressed]="viewMode === 'buckets'"
+          title="Intent bucket board">
+          <i class="fas fa-columns"></i>
+          <span class="hidden sm:inline">Buckets</span>
+        </button>
+      </div>
+
+      <span class="w-px h-5 bg-gray-200 dark:bg-gray-600 mx-0.5 hidden sm:block shrink-0"></span>
+
       <button
         (click)="setViewMode('all')"
         type="button"
@@ -240,8 +115,123 @@
         <span class="ml-1.5 hidden lg:inline">Archived</span>
       </button>
     </div>
-    <div class="flex items-center gap-2 flex-shrink-0 border-l border-gray-200 pl-2">
-      <app-inbox-filters [inline]="true" [showLabel]="false" [platformOnly]="true" (filtersChange)="onPlatformFilterChange($event)"></app-inbox-filters>
+
+    <div class="ml-auto flex items-center gap-1.5">
+      <button
+        (click)="toggleAutoSync()"
+        type="button"
+        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 flex items-center gap-1.5"
+        [style.background]="autoSyncEnabled ? 'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))' : 'rgba(75, 85, 99, 0.2)'"
+        [class.text-white]="autoSyncEnabled"
+        [class.text-gray-600]="!autoSyncEnabled"
+        [class.hover:bg-gray-100]="!autoSyncEnabled"
+        [attr.aria-pressed]="autoSyncEnabled"
+        title="{{ autoSyncEnabled ? 'Auto-sync ON – syncing every 5 min' : 'Auto-sync OFF – click to enable' }}">
+        <i class="fas" [class.fa-toggle-on]="autoSyncEnabled" [class.fa-toggle-off]="!autoSyncEnabled"></i>
+        <span class="hidden md:inline">{{ autoSyncEnabled ? 'Auto-sync ON' : 'Auto-sync OFF' }}</span>
+      </button>
+
+      <button
+        (click)="onSyncClick()"
+        type="button"
+        [disabled]="syncing || loading"
+        class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 text-white flex items-center gap-1.5"
+        [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
+        [title]="platformFilters.platform ? 'Sync ' + platformFilters.platform : 'Sync all platforms'">
+        <i class="fas text-xs" [class.fa-sync-alt]="!syncing" [class.fa-spinner]="syncing" [class.fa-spin]="syncing"></i>
+        <span class="hidden md:inline">{{ platformFilters.platform ? 'Sync ' + (platformFilters.platform | titlecase) : 'Sync All' }}</span>
+      </button>
+
+      <div class="relative">
+        <button
+          (click)="showMoreOptions = !showMoreOptions"
+          type="button"
+          class="w-8 h-8 rounded-lg text-xs transition-all bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center justify-center"
+          title="More options">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div *ngIf="showMoreOptions"
+             (click)="showMoreOptions = false"
+             class="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+          <button
+            (click)="showStats = !showStats"
+            type="button"
+            class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+            <i class="fas fa-chart-bar w-4"></i>
+            {{ showStats ? 'Hide Stats' : 'Show Stats' }}
+          </button>
+          <button
+            (click)="showShortcutsOverlay = true"
+            type="button"
+            class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 text-gray-700">
+            <i class="fas fa-keyboard w-4"></i>
+            Keyboard Shortcuts
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collapsible Stats Cards -->
+  <div *ngIf="showStats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2 flex-shrink-0 animate-slideDown">
+    <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
+         style="border-color: rgba(75, 85, 99, 0.15);">
+      <div class="flex items-center justify-between">
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-medium text-gray-500 truncate">Total</p>
+          <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
+             [style.color]="'var(--platform-primary, #1F2937)'">{{ totalConversations }}</p>
+        </div>
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+             [style.background]="'var(--platform-primary, #4B5563)' + '15'">
+          <i class="fas fa-inbox text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
+         style="border-color: rgba(75, 85, 99, 0.15);">
+      <div class="flex items-center justify-between">
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-medium text-gray-500 truncate">Unread</p>
+          <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
+             [style.color]="'var(--platform-primary, #1F2937)'">{{ getUnreadCount() }}</p>
+        </div>
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+             [style.background]="'var(--platform-primary, #4B5563)' + '15'">
+          <i class="fas fa-envelope text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
+         style="border-color: rgba(75, 85, 99, 0.15);">
+      <div class="flex items-center justify-between">
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-medium text-gray-500 truncate">Today</p>
+          <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
+             [style.color]="'var(--platform-primary, #1F2937)'">{{ getTodayCount() }}</p>
+        </div>
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+             [style.background]="'var(--platform-primary, #4B5563)' + '15'">
+          <i class="fas fa-calendar-day text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg p-3 sm:p-4 border transition-all duration-300 hover:shadow-md"
+         style="border-color: rgba(75, 85, 99, 0.15);">
+      <div class="flex items-center justify-between">
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-medium text-gray-500 truncate">Response</p>
+          <p class="text-xl sm:text-2xl font-bold transition-colors duration-300"
+             [style.color]="'var(--platform-primary, #1F2937)'">{{ inboxStats?.responseRate ?? 0 }}%</p>
+        </div>
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
+             [style.background]="'var(--platform-primary, #4B5563)' + '15'">
+          <i class="fas fa-chart-line text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -276,14 +266,82 @@
     </button>
   </div>
 
+  <!-- Bucket search + sort bar (only in buckets view) -->
+  <div *ngIf="viewMode === 'buckets'" class="mb-2 flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-gray-200 shadow-sm">
+    <!-- Search -->
+    <div class="relative flex-1 min-w-0">
+      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+      <input
+        type="text"
+        placeholder="Search conversations…"
+        class="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:bg-white transition-all"
+        [value]="bucketSearchTerm"
+        (input)="onBucketSearchChange($any($event.target).value)"
+      />
+      <button
+        *ngIf="bucketSearchTerm"
+        type="button"
+        (click)="onBucketSearchChange('')"
+        class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors">
+        <i class="fas fa-times" style="font-size: 9px;"></i>
+      </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="w-px h-5 bg-gray-200 flex-shrink-0"></div>
+
+    <!-- Sort -->
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <i class="fas fa-sort-amount-down text-gray-400 text-xs"></i>
+      <span class="text-xs text-gray-500 font-medium hidden sm:inline">Sort:</span>
+      <div class="flex gap-1">
+        <button
+          type="button"
+          (click)="onBucketSortChange('newest')"
+          class="px-2 py-1 rounded-md text-xs font-medium transition-all"
+          [ngClass]="bucketSortBy === 'newest' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+          title="Newest first">
+          <i class="fas fa-arrow-down"></i>
+          <span class="ml-1 hidden md:inline">Newest</span>
+        </button>
+        <button
+          type="button"
+          (click)="onBucketSortChange('oldest')"
+          class="px-2 py-1 rounded-md text-xs font-medium transition-all"
+          [ngClass]="bucketSortBy === 'oldest' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+          title="Oldest first">
+          <i class="fas fa-arrow-up"></i>
+          <span class="ml-1 hidden md:inline">Oldest</span>
+        </button>
+        <button
+          type="button"
+          (click)="onBucketSortChange('sentiment')"
+          class="px-2 py-1 rounded-md text-xs font-medium transition-all"
+          [ngClass]="bucketSortBy === 'sentiment' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+          title="By sentiment">
+          <i class="fas fa-heart"></i>
+          <span class="ml-1 hidden md:inline">Sentiment</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bucket Kanban View -->
+  <div *ngIf="viewMode === 'buckets'" class="flex-1 lg:min-h-0 lg:overflow-hidden">
+    <app-inbox-bucket-view
+      [filters]="mergedBucketFilters"
+      (interactionSelect)="onBucketInteractionSelect($event)">
+    </app-inbox-bucket-view>
+  </div>
+
   <!-- Three Column Layout - List + Detail + Actions -->
-  <div class="flex flex-col lg:flex-row gap-2 sm:gap-3 flex-1 lg:min-h-0 lg:overflow-hidden">
+  <div *ngIf="viewMode !== 'buckets'" class="flex flex-col lg:flex-row gap-2 sm:gap-3 flex-1 lg:min-h-0 lg:overflow-hidden">
     <!-- Left: Interaction List or Empty State -->
-    <div class="lg:flex-1 bg-white rounded-xl shadow-md border transition-all duration-300 lg:overflow-visible min-h-[300px] lg:min-h-0"
+    <div class="lg:w-[360px] lg:flex-shrink-0 bg-white rounded-xl shadow-md border transition-all duration-300 lg:overflow-visible min-h-[300px] lg:min-h-0"
          style="border-color: rgba(0,0,0,0.08);">
       
-      <!-- Show conversations only when platform is selected -->
-      <div *ngIf="platformFilters.platform" class="h-full flex flex-col">
+      <!-- All conversations (no platform gate) -->
+      <div class="h-full flex flex-col">
         <div class="p-4 border-b"
              style="border-color: rgba(0,0,0,0.05);">
           <h2 class="text-sm font-bold flex items-center justify-between text-gray-900">
@@ -291,8 +349,87 @@
               <i class="fas fa-comments mr-2"></i>
               Conversations
             </span>
-            <span class="text-xs font-normal text-gray-500">{{ interactions.length }}</span>
+            <button
+              type="button"
+              class="text-xs font-normal text-gray-500 inline-flex items-center gap-1 hover:text-gray-700 transition-colors"
+              (click)="showConversationSearch = !showConversationSearch"
+              [attr.aria-expanded]="showConversationSearch"
+              title="Toggle conversation search"
+            >
+              <span>{{ totalConversations }}</span>
+              <i class="fas text-[10px]" [class.fa-chevron-down]="!showConversationSearch" [class.fa-chevron-up]="showConversationSearch"></i>
+            </button>
           </h2>
+          <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gray-100 text-gray-600">
+              <i class="fas fa-filter text-[10px]"></i>
+            </span>
+            <button
+              type="button"
+              (click)="applyConversationQuickFilter('all')"
+              class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
+              [class.bg-gray-900]="conversationQuickFilter === 'all'"
+              [class.text-white]="conversationQuickFilter === 'all'"
+              [class.bg-gray-100]="conversationQuickFilter !== 'all'"
+              [class.text-gray-700]="conversationQuickFilter !== 'all'">
+              All
+            </button>
+            <button
+              type="button"
+              (click)="applyConversationQuickFilter('unread')"
+              class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
+              [class.bg-amber-600]="conversationQuickFilter === 'unread'"
+              [class.text-white]="conversationQuickFilter === 'unread'"
+              [class.bg-amber-50]="conversationQuickFilter !== 'unread'"
+              [class.text-amber-700]="conversationQuickFilter !== 'unread'">
+              Unread
+            </button>
+            <button
+              type="button"
+              (click)="applyConversationQuickFilter('leads')"
+              class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
+              [class.bg-blue-600]="conversationQuickFilter === 'leads'"
+              [class.text-white]="conversationQuickFilter === 'leads'"
+              [class.bg-blue-50]="conversationQuickFilter !== 'leads'"
+              [class.text-blue-700]="conversationQuickFilter !== 'leads'">
+              Leads
+            </button>
+            <div class="relative">
+              <button
+                type="button"
+                (click)="toggleConversationPlatformDropdown()"
+                class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
+                [class.bg-violet-600]="showConversationPlatformDropdown || !!platformFilters.platform"
+                [class.text-white]="showConversationPlatformDropdown || !!platformFilters.platform"
+                [class.bg-violet-50]="!showConversationPlatformDropdown && !platformFilters.platform"
+                [class.text-violet-700]="!showConversationPlatformDropdown && !platformFilters.platform">
+                <span>Platforms</span>
+                <i class="fas fa-chevron-down text-[9px]"></i>
+              </button>
+              <div
+                *ngIf="showConversationPlatformDropdown"
+                class="absolute left-0 top-full mt-1 min-w-[160px] bg-white border border-gray-200 rounded-lg shadow-lg z-40 py-1"
+              >
+                <button
+                  type="button"
+                  (click)="selectConversationPlatform()"
+                  class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2"
+                >
+                  <i class="fas fa-layer-group text-[11px] text-gray-500"></i>
+                  All platforms
+                </button>
+                <button
+                  *ngFor="let platform of conversationPlatformOptions"
+                  type="button"
+                  (click)="selectConversationPlatform(platform)"
+                  class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2"
+                >
+                  <i [class]="getPlatformIconClass(platform) + ' text-[11px] text-gray-500 w-3'"></i>
+                  {{ formatPlatformLabel(platform) }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
         <!-- Bulk actions bar (z-50 so dropdowns render above the list) -->
         <div *ngIf="selectedIds.size > 0" 
@@ -483,54 +620,20 @@
             [selectedInteraction]="selectedInteraction"
             [selectedIds]="selectedIds"
             [loading]="loading"
+            [loadingMore]="loadingMoreConversations"
+            [hasMore]="hasMoreConversations"
+            [showSearch]="showConversationSearch"
             (interactionSelect)="onInteractionSelect($event)"
             (searchChange)="onSearchChange($event)"
             (selectionChange)="onSelectionChange($event)"
+            (loadMore)="onLoadMoreConversations()"
           ></app-inbox-list>
-        </div>
-      </div>
-
-      <!-- Empty state when no platform selected - Light Black/Gray Theme -->
-      <div *ngIf="!platformFilters.platform" class="h-full flex items-center justify-center p-8 bg-gradient-to-br from-gray-100 via-white to-gray-50">
-        <div class="text-center max-w-md animate-fade-in">
-          <!-- Icon -->
-          <div class="relative mb-6">
-            <div class="w-40 h-40 mx-auto relative">
-              <!-- Animated rings - Light Black/Gray Theme -->
-              <div class="absolute inset-0 rounded-full opacity-20 animate-ping"
-                   style="background: linear-gradient(135deg, #4B5563, #6B7280);"></div>
-              <div class="absolute inset-4 rounded-full opacity-30 animate-pulse"
-                   style="background: linear-gradient(135deg, #6B7280, #9CA3AF);"></div>
-              
-              <!-- Center icon -->
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl"
-                     style="background: linear-gradient(135deg, #4B5563, #6B7280); box-shadow: 0 20px 60px rgba(75, 85, 99, 0.4);">
-                  <i class="fas fa-filter text-4xl text-white"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Text -->
-          <h3 class="text-2xl font-bold text-gray-800 mb-3">
-            Select a Platform
-          </h3>
-          <p class="text-gray-600 text-base leading-relaxed mb-4">
-            Select a platform from the options above to view and manage conversations
-          </p>
-
-          <!-- Arrow indicator -->
-          <div class="flex items-center justify-center space-x-2 text-gray-400 animate-bounce">
-            <i class="fas fa-arrow-up"></i>
-            <span class="text-sm font-medium">Choose a platform</span>
-          </div>
         </div>
       </div>
     </div>
 
     <!-- Middle: Detail View -->
-    <div class="lg:flex-1 lg:min-h-0 bg-white rounded-xl shadow-md border min-w-0 max-w-full transition-all duration-300 overflow-hidden flex flex-col min-h-[400px]"
+    <div class="lg:w-[46%] lg:flex-shrink-0 lg:min-h-0 bg-white rounded-xl shadow-md border min-w-0 max-w-full transition-all duration-300 overflow-hidden flex flex-col min-h-[400px]"
          style="border-color: rgba(0,0,0,0.08);">
       <div class="flex-1 min-h-0 w-full overflow-hidden flex flex-col">
         <app-inbox-detail 
@@ -541,21 +644,53 @@
       </div>
     </div>
 
-    <!-- Right: Actions Panel -->
+    <!-- Right: Actions / AI Assistant Panel -->
     <div *ngIf="selectedInteraction" 
-         class="w-full lg:w-64 lg:flex-shrink-0 bg-white rounded-xl shadow-md border transition-all duration-300 lg:overflow-hidden"
+         class="w-full lg:flex-1 lg:min-w-0 bg-white rounded-xl shadow-md border transition-all duration-300 lg:overflow-hidden flex flex-col"
          style="border-color: rgba(0,0,0,0.08);">
-      <div class="p-4 border-b" style="border-color: rgba(0,0,0,0.05);">
-        <h2 class="text-sm font-bold text-gray-900">
-          <i class="fas fa-bolt text-rep-lime mr-2"></i>
+      <!-- Tab headers -->
+      <div class="flex border-b" style="border-color: rgba(0,0,0,0.06);">
+        <button
+          (click)="rightPanelTab = 'suggestions'"
+          class="flex-1 px-3 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5"
+          [class.text-rep-black]="rightPanelTab === 'suggestions'"
+          [class.bg-rep-lime]="rightPanelTab === 'suggestions'"
+          [class.rounded-t-md]="rightPanelTab === 'suggestions'"
+          [class.border-b-2]="rightPanelTab === 'suggestions'"
+          [class.border-rep-lime]="rightPanelTab === 'suggestions'"
+          [class.text-gray-500]="rightPanelTab !== 'suggestions'"
+          [class.hover:text-gray-700]="rightPanelTab !== 'suggestions'">
+          <i class="fas fa-robot text-[10px]"></i>
+          AI Assistance
+        </button>
+        <button
+          (click)="rightPanelTab = 'actions'"
+          class="flex-1 px-3 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5"
+          [class.text-rep-black]="rightPanelTab === 'actions'"
+          [class.bg-rep-lime]="rightPanelTab === 'actions'"
+          [class.rounded-t-md]="rightPanelTab === 'actions'"
+          [class.border-b-2]="rightPanelTab === 'actions'"
+          [class.border-rep-lime]="rightPanelTab === 'actions'"
+          [class.text-gray-500]="rightPanelTab !== 'actions'"
+          [class.hover:text-gray-700]="rightPanelTab !== 'actions'">
+          <i class="fas fa-bolt text-[10px]"></i>
           Actions
-        </h2>
+        </button>
       </div>
-      <div class="h-[calc(100%-52px)] overflow-hidden">
-        <app-inbox-actions 
+      <!-- Tab body: keep both panels mounted so AI suggestions survive tab switches -->
+      <div class="flex-1 min-h-0 overflow-hidden flex flex-col relative">
+        <app-inbox-actions
+          class="flex-1 min-h-0 overflow-hidden"
+          [style.display]="rightPanelTab === 'actions' ? 'block' : 'none'"
           [interaction]="selectedInteraction"
           (updated)="onInteractionUpdate()">
         </app-inbox-actions>
+        <app-inbox-ai-assistant
+          class="flex-1 min-h-0 overflow-hidden"
+          [style.display]="rightPanelTab === 'suggestions' ? 'block' : 'none'"
+          [interaction]="selectedInteraction"
+          (sendReply)="onAiSendReply($event)">
+        </app-inbox-ai-assistant>
       </div>
     </div>
   </div>

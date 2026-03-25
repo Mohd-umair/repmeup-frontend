@@ -62,6 +62,14 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
   /** Cached timeline so *ngFor gets a stable reference (stops scroll jump when audio/timeupdate triggers CD) */
   conversationTimeline: Array<{ type: 'message' | 'reply' | 'assignment' | 'note'; data: any; timestamp: Date }> = [];
+  visibleConversationTimeline: Array<{ type: 'message' | 'reply' | 'assignment' | 'note'; data: any; timestamp: Date }> = [];
+  private readonly timelinePageSize = 20;
+  private visibleTimelineCount = 20;
+  loadingOlderMessages = false;
+  private readonly messagePreviewLimit = 160;
+  private readonly expandedMessageKeys = new Set<string>();
+  /** Timeline order for chat thread. */
+  timelineSortOrder: 'asc' | 'desc' = 'asc';
 
   /** Whether the thread is scrolled near the bottom (controls FAB visibility) */
   isScrolledToBottom = true;
@@ -77,6 +85,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
   /** Deleting Facebook comment (on platform + DB) */
   deletingComment = false;
+  deletingReplyId: string | null = null;
+  openReplyActionsForId: string | null = null;
 
   /** Three-dots actions menu open state */
   showActionsMenu = false;
@@ -141,9 +151,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         if (!isSameConversation) {
           // Switched to a different conversation — reset everything
           this.replyForm.reset();
+          this.resetReplyTextareaHeight();
           this.pendingAttachment = null;
           this.stopRecordingStream();
           this.optimisticReplies = [];
+          this.visibleTimelineCount = this.timelinePageSize;
         } else if (next?.replies?.length) {
           // Same conversation refreshed — drop optimistic entries that now
           // exist as confirmed replies in the server response
@@ -184,6 +196,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   /** Recompute and assign cached timeline (call when interaction or optimisticReplies change only) */
   private updateTimeline(): void {
     this.conversationTimeline = this.getConversationTimeline();
+    this.updateVisibleTimeline();
   }
 
   ngOnDestroy(): void {
@@ -318,6 +331,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.optimisticReplies = [...this.optimisticReplies, optimistic];
     this.updateTimeline();
     this.replyForm.reset();
+    this.resetReplyTextareaHeight();
     this.pendingAttachment = null;
     this.submittingReply = true;
     this.replySuccess = false;
@@ -360,6 +374,22 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  onReplyTextareaKeydown(event: KeyboardEvent): void {
+    // Enter sends message, Shift+Enter keeps newline behavior.
+    if (event.key !== 'Enter' || event.shiftKey || event.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (this.submittingReply) return;
+    const content = (this.replyForm.value.content || '').trim();
+    const hasAttachment = !!this.pendingAttachment;
+    if (!content && !hasAttachment) return;
+
+    this.submitReply();
   }
 
   openMediaSelector(): void {
@@ -560,6 +590,86 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const el = event.target as HTMLDivElement;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     this.isScrolledToBottom = distanceFromBottom < 80;
+
+    // Lazy-load older timeline items when user scrolls near top.
+    if (el.scrollTop < 80 && this.visibleTimelineCount < this.conversationTimeline.length) {
+      this.loadingOlderMessages = true;
+      const previousHeight = el.scrollHeight;
+      this.visibleTimelineCount = Math.min(
+        this.visibleTimelineCount + this.timelinePageSize,
+        this.conversationTimeline.length
+      );
+      this.updateVisibleTimeline();
+      // Preserve visual position after prepending older items.
+      this.ngZone.runOutsideAngular(() => {
+        requestAnimationFrame(() => {
+          const newHeight = el.scrollHeight;
+          el.scrollTop += (newHeight - previousHeight);
+          this.loadingOlderMessages = false;
+          this.cdr.markForCheck();
+        });
+      });
+    }
+  }
+
+  toggleTimelineSort(): void {
+    this.timelineSortOrder = this.timelineSortOrder === 'asc' ? 'desc' : 'asc';
+    if (this.interaction?._id) {
+      // Sorting source-of-truth from backend.
+      this.inboxService.getInteraction(this.interaction._id, { sortOrder: this.timelineSortOrder }).subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.interaction = response.data;
+            this.visibleTimelineCount = this.timelinePageSize;
+            this.updateTimeline();
+            this.scheduleScrollToBottom('instant');
+          }
+        },
+        error: () => {
+          // Fallback to current local timeline if backend call fails.
+          this.updateTimeline();
+        }
+      });
+      return;
+    }
+    this.updateTimeline();
+  }
+
+  private updateVisibleTimeline(): void {
+    if (!this.conversationTimeline.length) {
+      this.visibleConversationTimeline = [];
+      return;
+    }
+    if (this.timelineSortOrder === 'asc') {
+      // Show latest N while keeping chronological order.
+      this.visibleConversationTimeline = this.conversationTimeline.slice(-this.visibleTimelineCount);
+    } else {
+      // Descending list starts with newest; expand downward.
+      this.visibleConversationTimeline = this.conversationTimeline.slice(0, this.visibleTimelineCount);
+    }
+  }
+
+  getTimelineMessageKey(item: { type: 'message' | 'reply' | 'assignment' | 'note'; data: any; timestamp: Date }, index: number): string {
+    const id = item?.data?._id || item?.data?.mid || `idx-${index}`;
+    return `${item.type}-${id}-${new Date(item.timestamp).getTime()}`;
+  }
+
+  shouldShowLoadMore(content: string | undefined | null): boolean {
+    return !!content && content.length > this.messagePreviewLimit;
+  }
+
+  isMessageExpanded(key: string): boolean {
+    return this.expandedMessageKeys.has(key);
+  }
+
+  expandMessage(key: string): void {
+    this.expandedMessageKeys.add(key);
+  }
+
+  getMessagePreview(content: string | undefined | null): string {
+    if (!content) return '';
+    if (content.length <= this.messagePreviewLimit) return content;
+    return content.slice(0, this.messagePreviewLimit).trimEnd() + '...';
   }
 
   /**
@@ -827,7 +937,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     // Only mark as read if it's currently unread
     if (this.interaction.status === 'unread') {
       // Call the backend to mark as read (this will also update the status)
-      this.inboxService.getInteraction(this.interaction._id).subscribe({
+      this.inboxService.getInteraction(this.interaction._id, { sortOrder: this.timelineSortOrder }).subscribe({
         next: (response) => {
           if (response.success && response.data) {
             // Update the local interaction with the new status
@@ -881,7 +991,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         if (response.success) {
           console.log('✅ Interaction assigned successfully');
           // Refresh the interaction to get updated assignedTo data
-          this.inboxService.getInteraction(this.interaction!._id).subscribe({
+          this.inboxService.getInteraction(this.interaction!._id, { sortOrder: this.timelineSortOrder }).subscribe({
             next: (refreshResponse) => {
               if (refreshResponse.success && refreshResponse.data) {
                 this.interaction = refreshResponse.data;
@@ -923,7 +1033,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
             if (response.success) {
               console.log('✅ Interaction unassigned successfully');
               // Refresh the interaction
-              this.inboxService.getInteraction(this.interaction!._id).subscribe({
+              this.inboxService.getInteraction(this.interaction!._id, { sortOrder: this.timelineSortOrder }).subscribe({
                 next: (refreshResponse) => {
                   this.sweetAlertService.close();
                   if (refreshResponse.success && refreshResponse.data) {
@@ -1030,7 +1140,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
             if (response.success) {
               console.log('✅ Interaction resolved successfully');
               // Refresh the interaction
-              this.inboxService.getInteraction(this.interaction!._id).subscribe({
+              this.inboxService.getInteraction(this.interaction!._id, { sortOrder: this.timelineSortOrder }).subscribe({
                 next: (refreshResponse) => {
                   this.sweetAlertService.close();
                   if (refreshResponse.success && refreshResponse.data) {
@@ -1072,7 +1182,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         if (response.success) {
           console.log('✅ Interaction reopened successfully');
           // Refresh the interaction
-          this.inboxService.getInteraction(this.interaction!._id).subscribe({
+          this.inboxService.getInteraction(this.interaction!._id, { sortOrder: this.timelineSortOrder }).subscribe({
             next: (refreshResponse) => {
               if (refreshResponse.success && refreshResponse.data) {
                 this.interaction = refreshResponse.data;
@@ -1178,11 +1288,73 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
+  deleteReplyMessage(reply: any): void {
+    if (!this.interaction?._id || !reply?._id || this.deletingReplyId) return;
+    if (reply.status !== 'failed') return;
+
+    this.sweetAlertService.confirm(
+      'Hide Failed Reply?',
+      'This will hide only this failed (unsent) reply from conversation view. It will remain in the database.',
+      'Yes, hide it',
+      'Cancel'
+    ).then((result) => {
+      if (!result.isConfirmed) return;
+
+      this.openReplyActionsForId = null;
+      this.deletingReplyId = String(reply._id);
+      this.inboxService.deleteReply(this.interaction!._id, String(reply._id)).subscribe({
+        next: (response) => {
+          this.deletingReplyId = null;
+          if (response.success) {
+            // Remove only this failed reply from local chat state (no full refresh).
+            if (this.interaction?.replies) {
+              this.interaction.replies = this.interaction.replies.filter(
+                (r: any) => String(r?._id) !== String(reply._id)
+              );
+            }
+            this.updateTimeline();
+            this.cdr.markForCheck();
+            this.sweetAlertService.toast('success', 'Reply hidden');
+          } else {
+            this.sweetAlertService.toast('error', (response as any).error || 'Failed to hide reply.');
+          }
+        },
+        error: (err) => {
+          this.deletingReplyId = null;
+          const msg = err?.error?.error || err?.error?.message || 'Failed to hide reply.';
+          this.sweetAlertService.toast('error', msg);
+        }
+      });
+    });
+  }
+
+  toggleReplyActions(replyId: string): void {
+    this.openReplyActionsForId = this.openReplyActionsForId === replyId ? null : replyId;
+  }
+
   /**
    * Focus the reply textarea (used by keyboard shortcut R)
    */
   focusReplyBox(): void {
     setTimeout(() => this.replyTextarea?.nativeElement?.focus(), 0);
+  }
+
+  insertReplyContent(content: string): void {
+    this.replyForm.patchValue({ content });
+    setTimeout(() => {
+      const el = this.replyTextarea?.nativeElement;
+      if (el) {
+        el.focus();
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+      }
+    }, 0);
+  }
+
+  private resetReplyTextareaHeight(): void {
+    const el = this.replyTextarea?.nativeElement;
+    if (!el) return;
+    el.style.height = '';
   }
 
   /**
@@ -1440,7 +1612,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       });
     }
 
-    // Sort by timestamp
-    return timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    // Sort by timestamp based on selected order.
+    const sorted = timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    return this.timelineSortOrder === 'asc' ? sorted : sorted.reverse();
   }
 }

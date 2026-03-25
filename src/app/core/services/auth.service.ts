@@ -40,10 +40,29 @@ export class AuthService {
     const token = this.storageService.getToken();
     const user = this.storageService.getUser();
     
-    if (token && user) {
-      this.currentUserSubject.next(user);
+    if (token) {
+      if (user) {
+        this.currentUserSubject.next(user);
+      }
       this.isAuthenticatedSubject.next(true);
+      this.refreshCurrentUserSilently();
     }
+  }
+
+  /**
+   * Refresh current user from backend without interrupting UI flow.
+   * Ensures latest group/permissions are reflected after admin updates.
+   */
+  private refreshCurrentUserSilently(): void {
+    this.getCurrentUser().subscribe({
+      next: () => {},
+      error: (error) => {
+        const status = error?.status ?? error?.error?.statusCode;
+        if (status === 401) {
+          this.logout();
+        }
+      }
+    });
   }
 
   /**

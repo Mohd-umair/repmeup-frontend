@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 
@@ -54,7 +54,6 @@ export class CalendarComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private router: Router,
     private notificationService: NotificationService
   ) {}
 
@@ -62,14 +61,6 @@ export class CalendarComponent implements OnInit {
     this.generateCalendarDates();
     this.loadScheduledPosts();
     this.loadPublishedPosts();
-  }
-
-  navigateToComposer(): void {
-    this.router.navigate(['/app/publish']);
-  }
-
-  navigateToPublished(): void {
-    this.router.navigate(['/app/publish/published']);
   }
 
   generateCalendarDates(): void {

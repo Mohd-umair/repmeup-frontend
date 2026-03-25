@@ -1,0 +1,7 @@
+@use '../../../shared/styles/theme-overrides' as theme;
+
+.kb-setup {
+  min-height: 100%;
+}
+
+@include theme.light-mode-overrides;

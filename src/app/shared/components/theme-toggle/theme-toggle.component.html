@@ -1,0 +1,13 @@
+<button
+  type="button"
+  class="theme-toggle-fab"
+  (click)="theme.toggle()"
+  [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+  [title]="theme.isDark() ? 'Light mode' : 'Dark mode'"
+>
+  @if (theme.isDark()) {
+    <span class="text-lg leading-none" aria-hidden="true">☀️</span>
+  } @else {
+    <span class="text-lg leading-none" aria-hidden="true">🌙</span>
+  }
+</button>

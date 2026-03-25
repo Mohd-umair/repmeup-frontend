@@ -146,8 +146,8 @@
           <input
             type="date"
             class="text-xs text-gray-700 bg-transparent border-none outline-none cursor-pointer"
-            [value]="filters.dateFrom || ''"
-            [max]="filters.dateTo || ''"
+            [value]="dateFromModel"
+            [max]="dateToModel || ''"
             (change)="onDateFromChange($any($event.target).value)"
           />
         </div>
@@ -157,14 +157,14 @@
           <input
             type="date"
             class="text-xs text-gray-700 bg-transparent border-none outline-none cursor-pointer"
-            [value]="filters.dateTo || ''"
-            [min]="filters.dateFrom || ''"
+            [value]="dateToModel"
+            [min]="dateFromModel || ''"
             (change)="onDateToChange($any($event.target).value)"
           />
         </div>
         <button
-          *ngIf="filters.dateFrom || filters.dateTo"
-          (click)="clearDateRange()"
+          *ngIf="dateFromModel || dateToModel"
+          (click)="clearDateRange(); $event.stopPropagation()"
           type="button"
           class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors"
           title="Clear date range">
@@ -172,5 +172,6 @@
         </button>
       </div>
     </div>
+
   </div>
 </div>

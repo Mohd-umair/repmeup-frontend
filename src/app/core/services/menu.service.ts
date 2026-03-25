@@ -19,6 +19,10 @@ export interface IMenuItem {
   };
   group: 'main' | 'management' | 'settings';
   parentId?: string;
+  /** Nested items when API returns a tree under `grouped` */
+  children?: IMenuItem[];
+  /** Router query params (e.g. Analytics tabs on one route) */
+  queryParams?: Record<string, string>;
   description?: string;
   tooltip?: string;
   requiresFeature?: string;
@@ -64,11 +68,19 @@ export class MenuService {
     
     return this.apiService.get<IApiResponse<IMenuResponse>>('/menus')
       .pipe(
-        tap(response => {
+        tap((response) => {
           if (response.success && response.data) {
             let menus = response.data.menus || [];
-            // Ensure Content menu is always present (backward compatibility)
-            if (!menus.some((m: IMenuItem) => m.route === '/app/content')) {
+            /** Use API tree — do not rebuild grouped from flat `menus` (would duplicate child rows). */
+            let grouped = response.data.grouped;
+            if (!grouped || typeof grouped !== 'object') {
+              grouped = { main: [], management: [], settings: [] };
+            }
+
+            const hasContentTop = menus.some(
+              (m: IMenuItem) => m.route === '/app/content' && !m.parentId
+            );
+            if (!hasContentTop) {
               const contentMenu: IMenuItem = {
                 _id: 'content-default',
                 label: 'Content',
@@ -80,17 +92,17 @@ export class MenuService {
                 isActive: true,
                 group: 'main'
               };
-              menus = [...menus, contentMenu].sort((a, b) => {
-                const g = (m: IMenuItem) => (m.group === 'main' ? 0 : m.group === 'management' ? 1 : 2);
-                return g(a) - g(b) || (a.order ?? 0) - (b.order ?? 0);
-              });
+              menus = [...menus, contentMenu];
+              grouped = {
+                main: [...(grouped.main || [])],
+                management: [...(grouped.management || [])],
+                settings: [...(grouped.settings || [])]
+              };
+              grouped.main.push(contentMenu);
+              grouped.main.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
             }
+
             this.menusSubject.next(menus);
-            // Rebuild grouped so Content appears in main
-            const grouped = { main: [] as IMenuItem[], management: [] as IMenuItem[], settings: [] as IMenuItem[] };
-            menus.forEach((m: IMenuItem) => {
-              if (grouped[m.group]) grouped[m.group].push(m);
-            });
             this.groupedMenusSubject.next(grouped);
           }
           this.loadingSubject.next(false);

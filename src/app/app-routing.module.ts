@@ -21,10 +21,11 @@ import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
 import { AnalyticsComponent } from './features/analytics/analytics.component';
+import { AnalyticsLegacyTabRedirectComponent } from './features/analytics/analytics-legacy-tab-redirect.component';
 import { PublishComponent } from './features/publish/publish.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
-import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
 import { ContentComponent } from './features/content/content.component';
+import { PublishPublishedRedirectComponent } from './features/content/publish-published-redirect.component';
 import { PlansComponent } from './features/plans/plans.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
@@ -81,22 +82,41 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: DashboardComponent },
+      { path: 'dashboard', component: DashboardComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.read'] } },
       { path: 'inbox', component: InboxContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
       { path: 'publish', component: PublishComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
       { path: 'publish/calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
-      { path: 'publish/published', component: PublishedPostsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'publish/published', component: PublishPublishedRedirectComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'content', component: ContentComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'brand-hub', component: BrandHubComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'content-studio', component: ContentStudioComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
       { path: 'approval-queue', component: ApprovalQueueComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.manage'] } },
-      { path: 'trend-explorer', component: TrendExplorerComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.read'] } },
-      { path: 'analytics', component: AnalyticsComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.read'] } },
+      { path: 'trend-explorer', component: TrendExplorerComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.export'] } },
+      {
+        path: 'analytics/:legacyTab',
+        component: AnalyticsLegacyTabRedirectComponent,
+        canActivate: [PermissionGuard],
+        data: { permissions: ['analytics.read'] }
+      },
+      {
+        path: 'analytics',
+        component: AnalyticsComponent,
+        canActivate: [PermissionGuard],
+        data: { permissions: ['analytics.read'] }
+      },
       { path: 'knowledge-base', component: KnowledgeBaseComponent, canActivate: [PermissionGuard], data: { permissions: ['knowledge_base.read'] } },
-      { path: 'settings', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings', redirectTo: 'settings/platforms', pathMatch: 'full' },
+      { path: 'settings/platforms', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/profile', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/organization', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['organization.read'] } },
+      { path: 'settings/notifications', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/auto-reply', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/brand-rules', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/compliance', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/intent-buckets', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'agents', component: AgentsComponent, canActivate: [PermissionGuard], data: { permissions: ['users.read'] } },
-      { path: 'plans', component: PlansComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
+      { path: 'plans', component: PlansComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.manage'] } },
       { path: 'ai-credits', component: AiCreditsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
       { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } }
     ]

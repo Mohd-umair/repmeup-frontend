@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { Subscription, interval } from 'rxjs';
+import { Subscription, interval, Subject } from 'rxjs';
+import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { NotificationService } from '../../core/services/notification.service';
 import {
@@ -65,6 +67,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   activeView: 'overview' | 'platforms' | 'trends' | 'performance' | 'reports' = 'overview';
   refreshInterval = 5 * 60 * 1000;
   private refreshSubscription?: Subscription;
+  private readonly destroyTab$ = new Subject<void>();
 
   // Reports state
   selectedReportType: ReportType = 'platform';
@@ -97,13 +100,24 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   constructor(
     private analyticsService: AnalyticsService,
     private notificationService: NotificationService,
-    private http: HttpClient
+    private http: HttpClient,
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     // Default to last 30 days
     this.selectedDateRange = this.analyticsService.getDateRangePreset('30days');
   }
 
   ngOnInit(): void {
+    /** Single route `/app/analytics` — tab via query only; component is not recreated on tab change */
+    this.route.queryParamMap
+      .pipe(
+        map((p) => p.get('tab') || 'overview'),
+        distinctUntilChanged(),
+        takeUntil(this.destroyTab$)
+      )
+      .subscribe((tab) => this.applyActiveTab(tab));
+
     this.loadDashboard();
     this.loadAgentAnalytics();
     this.loadContentPerformance();
@@ -112,9 +126,22 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyTab$.next();
+    this.destroyTab$.complete();
     if (this.refreshSubscription) {
       this.refreshSubscription.unsubscribe();
     }
+  }
+
+  private applyActiveTab(tab: string): void {
+    const allowed: Array<'overview' | 'platforms' | 'trends' | 'performance' | 'reports'> = [
+      'overview',
+      'platforms',
+      'trends',
+      'performance',
+      'reports'
+    ];
+    this.activeView = (allowed.includes(tab as typeof allowed[number]) ? tab : 'overview') as typeof this.activeView;
   }
 
   /**
@@ -176,10 +203,13 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Change active view
+   * Switch tab without destroying the page — only updates query param
    */
   setActiveView(view: 'overview' | 'platforms' | 'trends' | 'performance' | 'reports'): void {
-    this.activeView = view;
+    void this.router.navigate(['/app/analytics'], {
+      queryParams: { tab: view },
+      replaceUrl: true
+    });
   }
 
   loadContentPerformance(): void {

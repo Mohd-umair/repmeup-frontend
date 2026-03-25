@@ -22,6 +22,8 @@ export interface IInteraction {
   assignedAt?: Date;
   assignmentReason?: string;
   assignmentHistory?: IAssignmentHistory[];
+  intentBucket?: any;
+  bucketAssignedBy?: 'keyword' | 'ai' | 'manual';
   labels?: ILabel[];
   priority?: Priority;
   tags?: string[];
@@ -166,7 +168,7 @@ export interface ILabel {
   icon?: string;
 }
 
-export type InboxViewMode = 'all' | 'priority' | 'assigned' | 'needs_response' | 'overdue' | 'archived';
+export type InboxViewMode = 'all' | 'priority' | 'assigned' | 'needs_response' | 'overdue' | 'archived' | 'buckets';
 
 export interface IInboxFilters {
   platform?: Platform;
@@ -176,7 +178,8 @@ export interface IInboxFilters {
   assignedTo?: string;
   viewMode?: InboxViewMode;
   search?: string;
-  label?: string; // Label ID for filtering
+  label?: string;
+  intentBucket?: string;
   /** Filter by post (e.g. from Content page "Comments" – show only comments for this post) */
   postId?: string;
   /** Date range filters (ISO date strings YYYY-MM-DD) */

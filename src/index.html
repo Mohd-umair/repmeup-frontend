@@ -12,6 +12,21 @@
   <link rel="icon" type="image/jpeg" href="assets/Images/logo.jpeg">
   <link rel="apple-touch-icon" href="assets/Images/logo.jpeg">
   <link rel="stylesheet" href="assets/css/fontawesome.min.css">
+  <script>
+    (function () {
+      try {
+        var k = 'orm-theme';
+        var v = localStorage.getItem(k);
+        var dark = false;
+        if (v === 'light') dark = false;
+        else if (v === 'dark') dark = true;
+        else if (v === 'system')
+          dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.classList.toggle('dark', dark);
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

@@ -24,11 +24,15 @@ import { InboxAvatarService } from '../../../core/services/inbox-avatar.service'
 export class InboxListComponent implements OnInit, OnDestroy {
   @Input() interactions: IInteraction[] = [];
   @Input() loading = false;
+  @Input() loadingMore = false;
+  @Input() hasMore = false;
+  @Input() showSearch = false;
   @Input() selectedInteraction: IInteraction | null = null;
   @Input() selectedIds: Set<string> = new Set();
   @Output() interactionSelect = new EventEmitter<IInteraction>();
   @Output() searchChange = new EventEmitter<string>();
   @Output() selectionChange = new EventEmitter<Set<string>>();
+  @Output() loadMore = new EventEmitter<void>();
 
   searchTerm = '';
   private searchSubject = new Subject<string>();
@@ -116,6 +120,16 @@ export class InboxListComponent implements OnInit, OnDestroy {
     this.searchSubject.next('');
   }
 
+  onListScroll(event: Event): void {
+    if (this.loading || this.loadingMore || !this.hasMore) return;
+    const el = event.target as HTMLElement;
+    const thresholdPx = 120;
+    const remaining = el.scrollHeight - (el.scrollTop + el.clientHeight);
+    if (remaining <= thresholdPx) {
+      this.loadMore.emit();
+    }
+  }
+
   isSelected(interaction: IInteraction): boolean {
     return this.selectedInteraction?._id === interaction._id;
   }
@@ -142,17 +156,22 @@ export class InboxListComponent implements OnInit, OnDestroy {
     }
   }
 
-  getPlatformIcon(platform: Platform): string {
-    const icons: { [key in Platform]: string } = {
-      [Platform.INSTAGRAM]: '📷',
-      [Platform.FACEBOOK]: '👍',
-      [Platform.YOUTUBE]: '🎥',
-      [Platform.GOOGLE]: '🔍',
-      [Platform.LINKEDIN]: '💼',
-      [Platform.WHATSAPP]: '💬',
-      [Platform.WEBSITE]: '🌐'
+  /**
+   * Font Awesome brand / platform icon (matches list + detail elsewhere).
+   */
+  getPlatformFaClass(platform: string | undefined | null): string {
+    const p = (platform || '').toLowerCase().trim();
+    const icons: Record<string, string> = {
+      [Platform.INSTAGRAM]: 'fab fa-instagram',
+      [Platform.FACEBOOK]: 'fab fa-facebook-f',
+      [Platform.YOUTUBE]: 'fab fa-youtube',
+      [Platform.GOOGLE]: 'fab fa-google',
+      'google_my_business': 'fab fa-google',
+      [Platform.LINKEDIN]: 'fab fa-linkedin-in',
+      [Platform.WHATSAPP]: 'fab fa-whatsapp',
+      [Platform.WEBSITE]: 'fas fa-globe'
     };
-    return icons[platform] || '📱';
+    return icons[p] || 'fas fa-share-alt';
   }
 
   getTypeLabel(type: string): string {
@@ -166,7 +185,7 @@ export class InboxListComponent implements OnInit, OnDestroy {
     return Math.min(5, Math.max(1, Math.round(r)));
   }
 
-  /** Default SLA: 24 hours. Show "Not Replied", "Overdue by Xh/Xd", or "Replied in Xm/Xd" */
+  /** Default SLA: 24 hours. Show unreplied/overdue and replied timing. */
   getSlaLabel(interaction: IInteraction): string | null {
     const SLA_MINUTES = 24 * 60;
     const MINS_PER_DAY = 24 * 60;
@@ -181,9 +200,10 @@ export class InboxListComponent implements OnInit, OnDestroy {
       return `${Math.floor(mins / MINS_PER_DAY)}d`;
     };
 
-    if (interaction.respondedAt) {
+    const isLatestReplied = interaction.status === 'replied' || interaction.status === 'resolved';
+    if (isLatestReplied && interaction.respondedAt) {
       const responseMins = Math.floor((new Date(interaction.respondedAt).getTime() - created) / 60000);
-      if (responseMins < 0) return 'Replied'; // reply was before displayed thread time (e.g. new message updated thread)
+      if (responseMins < 0) return 'Replied';
       return `Replied in ${formatDuration(responseMins)}`;
     }
 
@@ -198,10 +218,15 @@ export class InboxListComponent implements OnInit, OnDestroy {
   /** True if interaction is overdue (unreplied, past SLA) */
   isOverdue(interaction: IInteraction): boolean {
     const SLA_MINUTES = 24 * 60;
-    if (interaction.respondedAt) return false;
+    if (interaction.status === 'replied' || interaction.status === 'resolved') return false;
     const created = new Date(interaction.platformCreatedAt).getTime();
     const elapsedMins = (Date.now() - created) / 60000;
     return elapsedMins >= SLA_MINUTES;
+  }
+
+  /** True when the latest message in the thread is already replied/resolved. */
+  isLatestReplied(interaction: IInteraction): boolean {
+    return interaction.status === 'replied' || interaction.status === 'resolved';
   }
 
   formatTime(date: Date): string {

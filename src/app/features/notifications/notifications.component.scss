@@ -1,1 +1,5 @@
+@use '../../shared/styles/theme-overrides' as theme;
+
 /* Notifications - Uses app theme (Tailwind) - minimal component-specific overrides only */
+
+@include theme.light-mode-overrides;

@@ -1,0 +1,7 @@
+@use '../../../../shared/styles/theme-overrides' as theme;
+
+:host {
+  display: block;
+}
+
+@include theme.light-mode-overrides;

@@ -1,0 +1,199 @@
+<div class="max-w-4xl mx-auto">
+  <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl md:text-2xl font-bold text-rep-black flex items-center gap-2">
+          <i class="fas fa-columns text-rep-lime"></i>
+          Intent Buckets
+        </h2>
+        <p class="text-gray-600 text-sm mt-1">Define categories for auto-classifying incoming messages. Drag to reorder columns in the kanban view.</p>
+      </div>
+      <button
+        (click)="openCreate()"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:shadow-lg transition">
+        <i class="fas fa-plus"></i>
+        Add Bucket
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex justify-center py-12">
+      <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+    </div>
+
+    <!-- Bucket List -->
+    <div *ngIf="!loading" class="space-y-3">
+      <div
+        *ngFor="let bucket of buckets; let i = index"
+        draggable="true"
+        (dragstart)="onDragStart(i)"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop(i)"
+        class="flex items-center gap-4 p-4 rounded-xl border transition group cursor-grab active:cursor-grabbing"
+        [class.border-gray-200]="dragIndex !== i"
+        [class.border-rep-lime]="dragIndex === i"
+        [class.bg-gray-50]="dragIndex !== i"
+        [class.bg-rep-lime]="dragIndex === i"
+        [class.bg-opacity-10]="dragIndex === i">
+
+        <!-- Drag Handle -->
+        <i class="fas fa-grip-vertical text-gray-400 group-hover:text-gray-600"></i>
+
+        <!-- Color dot -->
+        <span class="w-4 h-4 rounded-full flex-shrink-0" [style.backgroundColor]="bucket.color"></span>
+
+        <!-- Icon + Name -->
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <i [class]="bucket.icon" [style.color]="bucket.color"></i>
+          <span class="font-semibold text-rep-black truncate">{{ bucket.name }}</span>
+          <span *ngIf="bucket.isDefault" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium ml-1">Default</span>
+        </div>
+
+        <!-- Keywords count -->
+        <span class="text-xs text-gray-500 hidden sm:inline">{{ bucket.keywords?.length || 0 }} keywords</span>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-1">
+          <button *ngIf="!bucket.isDefault"
+            (click)="toggleDefault(bucket)"
+            class="p-2 text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-blue-50"
+            title="Set as default (catch-all)">
+            <i class="fas fa-flag text-sm"></i>
+          </button>
+          <button
+            (click)="openEdit(bucket)"
+            class="p-2 text-gray-400 hover:text-rep-black transition rounded-lg hover:bg-gray-100"
+            title="Edit bucket">
+            <i class="fas fa-pen text-sm"></i>
+          </button>
+          <button
+            (click)="deleteBucket(bucket)"
+            class="p-2 text-gray-400 hover:text-red-600 transition rounded-lg hover:bg-red-50"
+            title="Delete bucket">
+            <i class="fas fa-trash text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="buckets.length === 0" class="text-center py-12 text-gray-500">
+        <i class="fas fa-columns text-4xl mb-3 block text-gray-300"></i>
+        <p class="font-medium">No buckets configured</p>
+        <p class="text-sm mt-1">Click "Add Bucket" to create your first category.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="closeModal()">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6" (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold text-rep-black">{{ isEditing ? 'Edit' : 'Create' }} Bucket</h3>
+      <button (click)="closeModal()" class="p-2 text-gray-400 hover:text-gray-600 transition rounded-lg hover:bg-gray-100">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="space-y-4">
+      <!-- Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Bucket Name</label>
+        <input
+          [(ngModel)]="form.name"
+          placeholder="e.g. Hot Leads"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-rep-lime focus:border-rep-lime" />
+      </div>
+
+      <!-- Color -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            *ngFor="let c of colorPresets"
+            (click)="selectColor(c)"
+            class="w-8 h-8 rounded-full border-2 transition hover:scale-110"
+            [style.backgroundColor]="c"
+            [class.border-rep-black]="form.color === c"
+            [class.border-transparent]="form.color !== c">
+          </button>
+        </div>
+      </div>
+
+      <!-- Icon -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+        <div class="flex flex-wrap gap-2">
+          <button
+            *ngFor="let ic of iconPresets"
+            (click)="selectIcon(ic)"
+            class="w-9 h-9 rounded-lg border-2 flex items-center justify-center transition hover:scale-110"
+            [class.border-rep-lime]="form.icon === ic"
+            [class.bg-rep-lime]="form.icon === ic"
+            [class.bg-opacity-10]="form.icon === ic"
+            [class.border-gray-200]="form.icon !== ic">
+            <i [class]="ic" class="text-sm" [class.text-rep-black]="form.icon === ic" [class.text-gray-500]="form.icon !== ic"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Keywords -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Trigger Keywords</label>
+        <p class="text-xs text-gray-500 mb-2">Messages containing these words will be auto-assigned to this bucket.</p>
+        <div class="flex gap-2 mb-2">
+          <input
+            [(ngModel)]="keywordInput"
+            (keydown.enter)="addKeyword(); $event.preventDefault()"
+            placeholder="Add keyword"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-rep-lime focus:border-rep-lime" />
+          <button
+            (click)="addKeyword()"
+            class="px-3 py-2 bg-rep-lime text-rep-black rounded-lg text-sm font-semibold hover:shadow transition">
+            Add
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          <span
+            *ngFor="let kw of form.keywords"
+            class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+            {{ kw }}
+            <button (click)="removeKeyword(kw)" class="hover:text-red-600 transition">&times;</button>
+          </span>
+        </div>
+      </div>
+
+      <!-- AI Prompt Hint -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">AI Classification Hint</label>
+        <p class="text-xs text-gray-500 mb-2">Describe what kind of messages belong in this bucket. AI will use this when no keywords match.</p>
+        <textarea
+          [(ngModel)]="form.aiPromptHint"
+          rows="3"
+          placeholder="e.g. Messages asking about pricing, deals, or showing purchase intent"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-rep-lime focus:border-rep-lime resize-none">
+        </textarea>
+      </div>
+
+      <!-- Default toggle -->
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" [(ngModel)]="form.isDefault" class="w-4 h-4 accent-[#BFFF00] rounded" />
+        <span class="text-sm text-gray-700">Default bucket (catch-all for unclassified messages)</span>
+      </label>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+      <button (click)="closeModal()" class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium text-sm transition">
+        Cancel
+      </button>
+      <button
+        (click)="saveBucket()"
+        [disabled]="saving"
+        class="px-5 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:shadow-lg transition disabled:opacity-50">
+        <i *ngIf="saving" class="fas fa-spinner fa-spin mr-1"></i>
+        {{ isEditing ? 'Update' : 'Create' }}
+      </button>
+    </div>
+  </div>
+</div>

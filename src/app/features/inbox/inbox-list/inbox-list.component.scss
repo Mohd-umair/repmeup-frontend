@@ -1,3 +1,5 @@
+@use '../../../shared/styles/theme-overrides' as theme;
+
 // Inbox List Component Styles
 // Platform-themed interaction cards
 
@@ -6,6 +8,8 @@
   height: 100%;
   overflow: hidden;
 }
+
+@include theme.light-mode-overrides;
 
 // Custom scrollbar styling for conversation list
 .overflow-y-auto {

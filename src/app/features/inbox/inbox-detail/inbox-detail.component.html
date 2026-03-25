@@ -1,63 +1,19 @@
 <div class="h-full flex flex-col overflow-hidden min-h-0">
-  <!-- Empty State with Light Black/Gray Theme -->
-  <div *ngIf="!interaction" class="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-100 via-white to-gray-50 p-8">
-    <div class="text-center max-w-lg animate-fade-in">
-      <!-- Modern Illustration -->
-      <div class="relative mb-8">
-        <!-- Main Circle -->
-        <div class="w-64 h-64 mx-auto relative">
-          <!-- Background Circles - Light Black/Gray -->
-          <div class="absolute inset-0 rounded-full opacity-20 animate-pulse"
-               style="background: linear-gradient(135deg, #4B5563, #6B7280);"></div>
-          <div class="absolute inset-4 rounded-full opacity-30 animate-pulse" 
-               style="animation-delay: 0.5s; background: linear-gradient(135deg, #6B7280, #9CA3AF);"></div>
-          
-          <!-- Center Icon - Light Black/Gray -->
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-32 h-32 rounded-3xl flex items-center justify-center transform hover:scale-110 transition-transform duration-300"
-                 style="background: linear-gradient(135deg, #4B5563, #6B7280); box-shadow: 0 20px 60px rgba(75, 85, 99, 0.4);">
-              <i class="fas fa-comments text-5xl text-white"></i>
-            </div>
-          </div>
-          
-          <!-- Floating Icons - Light Black/Gray -->
-          <div class="absolute top-0 right-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg animate-float"
-               style="background: linear-gradient(135deg, #4B5563, #6B7280);">
-            <i class="fab fa-instagram text-white text-xl"></i>
-          </div>
-          <div class="absolute bottom-0 left-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg animate-float" 
-               style="animation-delay: 0.3s; background: linear-gradient(135deg, #4B5563, #6B7280);">
-            <i class="fab fa-facebook-f text-white text-xl"></i>
-          </div>
-          <div class="absolute top-1/4 left-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg animate-float" 
-               style="animation-delay: 0.6s; background: linear-gradient(135deg, #4B5563, #6B7280);">
-            <i class="fab fa-whatsapp text-white text-lg"></i>
-          </div>
-          <div class="absolute bottom-1/4 right-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg animate-float" 
-               style="animation-delay: 0.9s; background: linear-gradient(135deg, #4B5563, #6B7280);">
-            <i class="fab fa-youtube text-white text-lg"></i>
-          </div>
-        </div>
-      </div>
-
-      <!-- Text Content -->
-      <h3 class="text-3xl font-bold mb-4 text-gray-800">
-        Select a Conversation
-      </h3>
-      <p class="text-gray-600 text-base leading-relaxed">
-        Choose a conversation from the list to view details and engage with your customers.
-      </p>
-    </div>
+  <!-- No conversation selected: minimal placeholder (list shows all threads on load) -->
+  <div *ngIf="!interaction" class="flex-1 flex items-center justify-center bg-gray-50 p-6">
+    <p class="text-sm text-gray-500 text-center max-w-sm">
+      Select a conversation from the list to open it.
+    </p>
   </div>
 
   <!-- Interaction Detail -->
   <div *ngIf="interaction" class="flex-1 flex flex-col overflow-hidden h-full min-h-0 relative">
     <!-- Header -->
-    <div class="p-3 sm:p-4 border-b flex-shrink-0 transition-all duration-500"
+    <div class="px-3 py-1.5 sm:px-3.5 sm:py-2 border-b flex-shrink-0 transition-all duration-500"
          [style.background]="getPlatformColors() ? 'linear-gradient(to right, ' + getPlatformColors().gradientFrom + '10, ' + getPlatformColors().gradientTo + '10)' : 'white'"
          [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '30' : '#E5E7EB'">
-      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
-        <div class="flex items-center space-x-4 min-w-0 flex-shrink">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-1.5">
+        <div class="flex items-center space-x-3 min-w-0 flex-shrink">
           <!-- Avatar -->
           <div class="relative flex-shrink-0">
             <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
@@ -65,9 +21,9 @@
                    [src]="avatarUrl"
                    (error)="onAvatarError(interaction.platformId)"
                    alt=""
-                   class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover shadow-lg border-2 border-white">
+                   class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover shadow-md border border-white">
               <div *ngIf="!avatarUrl || avatarFallback[interaction.platformId]"
-                   class="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white font-bold text-xl sm:text-2xl shadow-lg transition-all duration-500"
+                   class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md transition-all duration-500"
                    [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : '#000000'">
                 {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
               </div>
@@ -76,8 +32,8 @@
           
           <!-- User Info -->
           <div class="min-w-0 flex-1">
-            <h2 class="text-lg sm:text-xl font-bold text-rep-black mb-1 truncate">{{ getAuthorDisplayName(interaction) }}</h2>
-            <p class="text-xs sm:text-sm text-gray-600 flex items-center truncate">
+            <h2 class="text-base sm:text-lg font-bold text-rep-black mb-0.5 truncate">{{ getAuthorDisplayName(interaction) }}</h2>
+            <p class="text-xs text-gray-600 flex items-center truncate">
               <i class="fas fa-at mr-1 flex-shrink-0"></i>
               <span class="truncate">{{ interaction.author?.username || 'user' }}</span>
             </p>
@@ -85,21 +41,24 @@
         </div>
 
         <div class="flex items-center flex-wrap gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            (click)="toggleTimelineSort()"
+            class="p-1.5 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition"
+            [title]="timelineSortOrder === 'asc' ? 'Sort: oldest first (click for newest first)' : 'Sort: newest first (click for oldest first)'"
+            [attr.aria-label]="timelineSortOrder === 'asc' ? 'Sort oldest first' : 'Sort newest first'">
+            <i class="fas text-xs" [class.fa-sort-amount-down]="timelineSortOrder === 'asc'" [class.fa-sort-amount-up]="timelineSortOrder === 'desc'"></i>
+          </button>
           <span 
-            [class]="'px-2 py-1 rounded-md text-[10px] sm:text-xs font-medium flex items-center gap-1 ' + getSentimentClass(interaction.sentiment)"
-            [attr.title]="'Sentiment: ' + (interaction.sentiment || 'neutral')">
-            <span>{{ getSentimentIcon(interaction.sentiment) }}</span>
-            <span class="hidden sm:inline">{{ interaction.sentiment || 'neutral' }}</span>
-          </span>
-          <span 
-            [class]="'px-2 py-1 rounded-md text-[10px] sm:text-xs font-medium ' + getStatusColor(interaction.status)">
+            *ngIf="interaction.status !== 'replied'"
+            [class]="'px-1.5 py-0.5 rounded-md text-[10px] font-medium ' + getStatusColor(interaction.status)">
             {{ interaction.status }}
           </span>
           <button 
             *ngIf="canResolve()"
             (click)="resolveInteraction()"
             [disabled]="resolvingInteraction"
-            class="px-2.5 py-1 rounded-md text-xs font-semibold bg-rep-lime hover:bg-rep-lime/80 text-rep-black transition disabled:opacity-50"
+            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rep-lime hover:bg-rep-lime/80 text-rep-black transition disabled:opacity-50"
             title="Mark as resolved">
             <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-check-circle'"></i>
           </button>
@@ -107,7 +66,7 @@
             *ngIf="isResolved()"
             (click)="reopenInteraction()"
             [disabled]="resolvingInteraction"
-            class="px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-500 hover:bg-gray-600 text-white transition disabled:opacity-50"
+            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-500 hover:bg-gray-600 text-white transition disabled:opacity-50"
             title="Reopen conversation">
             <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-redo'"></i>
           </button>
@@ -116,7 +75,7 @@
             <button
               type="button"
               (click)="toggleActionsMenu($event)"
-              class="p-2 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition"
+              class="p-1.5 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition"
               title="More actions"
               aria-haspopup="true"
               [attr.aria-expanded]="showActionsMenu">
@@ -140,13 +99,11 @@
       </div>
 
       <!-- Compact metadata line -->
-      <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-2">
-        <span class="px-2 py-0.5 rounded bg-gray-100">{{ interaction.type }}</span>
+      <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600 mt-1.5">
         <span *ngIf="interaction.type === 'review' && getReviewRating()" class="flex items-center gap-0.5">
           <i class="fas fa-star text-amber-500 text-[10px]"></i>
           {{ getReviewRating() }}/5
         </span>
-        <span>{{ formatDate(interaction.platformCreatedAt) }}</span>
         <span *ngIf="interaction.labels && interaction.labels.length > 0" class="flex flex-wrap gap-1 ml-1">
           <span 
             *ngFor="let label of interaction.labels"
@@ -164,13 +121,19 @@
          #conversationThread
          (scroll)="onThreadScroll($event)">
       <div class="max-w-4xl mx-auto space-y-3 pb-4">
+        <div *ngIf="loadingOlderMessages" class="flex items-center justify-center py-1">
+          <span class="inline-flex items-center gap-1.5 text-[11px] text-gray-500 bg-white/80 border border-gray-200 rounded-full px-2.5 py-1">
+            <i class="fas fa-spinner fa-spin text-[10px]"></i>
+            Loading older messages...
+          </span>
+        </div>
         
         <!-- Chronological Timeline (Messages, Replies, Assignment) -->
-        <ng-container *ngFor="let item of conversationTimeline">
+        <ng-container *ngFor="let item of visibleConversationTimeline; let i = index">
           
           <!-- Original Customer Message -->
           <div *ngIf="item.type === 'message'" class="flex justify-start">
-            <div class="max-w-[85%]">
+            <div class="max-w-[72%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
                   <ng-container *ngIf="(getAuthorAvatar$(item.data.author, item.data.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
@@ -225,7 +188,7 @@
 
           <!-- Internal Note -->
           <div *ngIf="item.type === 'note'" class="flex justify-center my-3">
-            <div class="max-w-[85%] bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <div class="max-w-[72%] bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
               <span class="text-[11px] text-amber-800">{{ item.data.addedByName }} · {{ formatDate(item.data.addedAt) }}{{ item.data.isPrivate ? ' (Private)' : '' }}</span>
               <p class="text-xs text-amber-900 whitespace-pre-wrap mt-0.5">{{ item.data.note }}</p>
             </div>
@@ -265,7 +228,7 @@
           
           <!-- Platform Replies (from other users on YouTube/Instagram/etc) - Left Side -->
           <div *ngIf="item.data.isPlatformReply" class="flex justify-start mb-3">
-            <div class="max-w-[85%]">
+            <div class="max-w-[72%]">
               <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-3 sm:p-4">
                 <div class="flex items-center space-x-2 mb-2">
                   <ng-container *ngIf="(getAuthorAvatar$(item.data.author, item.data.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
@@ -287,16 +250,28 @@
                     <p class="text-xs text-gray-500">{{ formatDate(item.data.sentAt) }}</p>
                   </div>
                 </div>
-                <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">{{ item.data.content }}</p>
+                <ng-container *ngIf="getTimelineMessageKey(item, i) as msgKey">
+                  <p class="text-sm sm:text-base text-gray-800 leading-relaxed whitespace-pre-wrap">
+                    {{ isMessageExpanded(msgKey) ? item.data.content : getMessagePreview(item.data.content) }}
+                  </p>
+                  <button
+                    *ngIf="!isMessageExpanded(msgKey) && shouldShowLoadMore(item.data.content)"
+                    type="button"
+                    (click)="expandMessage(msgKey)"
+                    class="mt-1 text-xs font-semibold text-blue-600 hover:text-blue-800"
+                  >
+                    Load more
+                  </button>
+                </ng-container>
               </div>
             </div>
           </div>
 
           <!-- App Replies (sent from your app) - Right Side: show account/page name and image (e.g. rep_me_up) -->
           <div *ngIf="!item.data.isPlatformReply" class="flex justify-end mb-3">
-            <div class="max-w-[85%]">
+            <div class="max-w-[72%]">
               <!-- Bubble: dimmed while pending, normal when sent/failed -->
-              <div class="rounded-2xl shadow-md p-3 sm:p-4 transition-opacity duration-300"
+              <div class="relative rounded-2xl shadow-md p-3 sm:p-4 transition-opacity duration-300"
                    [class.opacity-60]="item.data.status === 'pending' && !item.data._optimistic"
                    [class.bg-rep-lime]="item.data.status !== 'failed'"
                    [class.border-2]="item.data.status !== 'failed'"
@@ -306,18 +281,7 @@
                    [class.bg-red-50]="item.data.status === 'failed'"
                    [class.border-red-300]="item.data.status === 'failed'"
                    [class.border-2]="item.data.status === 'failed'">
-                <div class="flex items-center justify-end space-x-2 mb-2">
-                  <div class="text-right">
-                    <p class="font-bold text-xs"
-                       [class.text-rep-black]="item.data.status !== 'failed'"
-                       [class.text-red-700]="item.data.status === 'failed'">
-                      {{ getReplySenderDisplayName() }}
-                      <span *ngIf="item.data.wasAutoGenerated" class="ml-1 text-[10px] text-gray-500">Auto</span>
-                    </p>
-                    <p class="text-xs" [class.text-gray-700]="item.data.status !== 'failed'" [class.text-red-500]="item.data.status === 'failed'">
-                      {{ formatDate(item.data.sentAt) }}
-                    </p>
-                  </div>
+                <div class="flex items-center justify-start space-x-2 mb-2">
                   <img *ngIf="getReplySenderAvatarUrl() as avatarUrl"
                        [src]="avatarUrl"
                        alt=""
@@ -330,6 +294,17 @@
                        [class.text-red-700]="item.data.status === 'failed'">
                     <i *ngIf="item.data.status === 'pending'" class="fas fa-spinner fa-spin text-xs"></i>
                     <span *ngIf="item.data.status !== 'pending'">{{ getReplySenderInitials() }}</span>
+                  </div>
+                  <div class="text-left">
+                    <p class="font-bold text-xs"
+                       [class.text-rep-black]="item.data.status !== 'failed'"
+                       [class.text-red-700]="item.data.status === 'failed'">
+                      {{ getReplySenderDisplayName() }}
+                      <span *ngIf="item.data.wasAutoGenerated" class="ml-1 text-[10px] text-gray-500">Auto</span>
+                    </p>
+                    <p class="text-xs" [class.text-gray-700]="item.data.status !== 'failed'" [class.text-red-500]="item.data.status === 'failed'">
+                      {{ formatDate(item.data.sentAt) }}
+                    </p>
                   </div>
                 </div>
 
@@ -356,9 +331,51 @@
                 </div>
 
                 <!-- Caption: hide when it's only the placeholder for attachment (e.g. "[image]", "[audio]") -->
-                <p *ngIf="item.data.content && !(item.data.attachmentUrl && (item.data.content === '[image]' || item.data.content === '[video]' || item.data.content === '[audio]'))" class="text-sm sm:text-base leading-relaxed whitespace-pre-wrap"
-                   [class.text-rep-black]="item.data.status !== 'failed'"
-                   [class.text-red-800]="item.data.status === 'failed'">{{ item.data.content }}</p>
+                <ng-container *ngIf="item.data.content && !(item.data.attachmentUrl && (item.data.content === '[image]' || item.data.content === '[video]' || item.data.content === '[audio]')) && getTimelineMessageKey(item, i) as msgKey">
+                  <p class="text-sm sm:text-base leading-relaxed whitespace-pre-wrap"
+                     [class.text-rep-black]="item.data.status !== 'failed'"
+                     [class.text-red-800]="item.data.status === 'failed'">
+                    {{ isMessageExpanded(msgKey) ? item.data.content : getMessagePreview(item.data.content) }}
+                  </p>
+                  <button
+                    *ngIf="!isMessageExpanded(msgKey) && shouldShowLoadMore(item.data.content)"
+                    type="button"
+                    (click)="expandMessage(msgKey)"
+                    class="mt-1 text-xs font-semibold"
+                    [class.text-rep-black]="item.data.status !== 'failed'"
+                    [class.text-red-700]="item.data.status === 'failed'"
+                  >
+                    Load more
+                  </button>
+                </ng-container>
+
+                <!-- Item actions -->
+                <div *ngIf="!item.data.isPlatformReply && item.data._id && item.data.status === 'failed'" class="absolute top-2 right-2">
+                  <div class="relative">
+                    <button
+                      type="button"
+                      (click)="toggleReplyActions(item.data._id)"
+                      class="w-6 h-6 rounded-md text-gray-600 hover:bg-black/10 transition inline-flex items-center justify-center"
+                      title="More options"
+                    >
+                      <i class="fas fa-ellipsis-v text-[11px]"></i>
+                    </button>
+                    <div
+                      *ngIf="openReplyActionsForId === item.data._id"
+                      class="absolute right-0 top-full mt-1 min-w-[110px] bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1"
+                    >
+                      <button
+                        type="button"
+                        (click)="deleteReplyMessage(item.data)"
+                        [disabled]="deletingReplyId === item.data._id"
+                        class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-50 inline-flex items-center gap-2"
+                      >
+                        <i [class]="deletingReplyId === item.data._id ? 'fas fa-spinner fa-spin' : 'fas fa-eye-slash'"></i>
+                        Hide
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
                 <!-- Pending label -->
                 <div *ngIf="item.data.status === 'pending' || item.data.status === 'sent'" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-600">
@@ -461,7 +478,7 @@
       </div>
 
       <form *ngIf="canReply()" [formGroup]="replyForm" (ngSubmit)="submitReply()">
-        <!-- Pending attachment thumbnail: add caption then Send -->
+        <!-- Pending attachment thumbnail: add optional caption, then Enter to send -->
         <div *ngIf="pendingAttachment" class="mb-2 flex items-center gap-3 p-3 rounded-xl border border-gray-200 inbox-pending-attachment">
           <div class="relative flex-shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gray-200 shadow-inner">
             <img *ngIf="pendingAttachment.mediaType === 'image'" [src]="pendingAttachment.publicUrl" alt="Attachment" class="w-full h-full object-cover" />
@@ -479,39 +496,30 @@
             <p class="text-xs font-medium text-gray-700" *ngIf="pendingAttachment.mediaType === 'audio'">Voice message</p>
             <p class="text-xs font-medium text-gray-700" *ngIf="pendingAttachment.mediaType === 'video'">Video</p>
             <p class="text-xs font-medium text-gray-700" *ngIf="pendingAttachment.mediaType === 'image'">Image</p>
-            <span class="text-[11px] text-gray-500">Add a caption (optional) and click Send.</span>
+            <span class="text-[11px] text-gray-500">Add a caption (optional), then press Enter to send.</span>
           </div>
         </div>
-        <!-- Textarea + Send button -->
-        <div class="flex items-start space-x-2">
+        <div>
           <textarea
             #replyTextarea
             formControlName="content"
             rows="2"
-            class="flex-1 px-3 py-2 text-sm bg-gray-50 rounded-xl focus:bg-white transition-all duration-300 resize-none border-2"
-            placeholder="Type your reply..."
+            (keydown)="onReplyTextareaKeydown($event)"
+            class="w-full px-3 py-2 text-sm bg-gray-50 rounded-xl focus:bg-white transition-all duration-300 resize-none border-2"
+            placeholder="Type your reply… Enter to send · Shift+Enter for new line"
             [style.borderColor]="getPlatformColors() ? getPlatformColors().primary + '30' : '#E5E7EB'"
+            [attr.aria-busy]="submittingReply"
           ></textarea>
-          <button
-            type="submit"
-            [disabled]="submittingReply || (!(replyForm.get('content')?.value?.trim()) && !pendingAttachment)"
-            class="px-3 sm:px-4 py-2 h-full rounded-xl font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[70px] sm:min-w-[80px] text-white"
-            [style.background]="getPlatformColors() ? 'linear-gradient(135deg, ' + getPlatformColors().gradientFrom + ', ' + getPlatformColors().gradientTo + ')' : 'linear-gradient(135deg, #D0FF00, #B8E600)'"
-            [style.boxShadow]="getPlatformColors() ? '0 4px 16px ' + getPlatformColors().primary + '40' : '0 4px 16px #D0FF0040'"
-          >
-            <span *ngIf="!submittingReply"><i class="fas fa-paper-plane mr-1"></i><span class="hidden sm:inline">Send</span></span>
-            <span *ngIf="submittingReply"><i class="fas fa-spinner fa-spin"></i></span>
-          </button>
         </div>
-        <!-- Quick actions -->
-        <div class="flex items-center justify-between mt-1.5 relative inbox-emoji-picker-container">
-          <div class="flex items-center gap-0.5">
+        <!-- Quick actions: bordered icon buttons, uniform size -->
+        <div class="flex items-center justify-between mt-2 relative inbox-emoji-picker-container">
+          <div class="flex items-center gap-1.5 flex-wrap">
             <button type="button"
-              class="inbox-emoji-trigger-btn p-1.5 rounded text-gray-500 hover:bg-gray-100 transition"
-              [ngClass]="showEmojiPicker ? 'bg-rep-lime/20 text-rep-black' : ''"
+              class="inbox-emoji-trigger-btn inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 bg-white text-gray-600 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:border-gray-500 shrink-0"
+              [ngClass]="showEmojiPicker ? 'border-rep-lime bg-rep-lime/15 text-rep-black ring-1 ring-rep-lime/30 dark:bg-rep-lime/20 dark:border-rep-lime' : ''"
               (click)="toggleEmojiPicker()"
               title="Insert emoji">
-              <i class="far fa-smile text-base"></i>
+              <i class="far fa-smile text-sm leading-none"></i>
             </button>
             <!-- Emoji picker panel -->
             <ng-container *ngIf="showEmojiPicker">
@@ -524,31 +532,40 @@
               </div>
             </ng-container>
             <button type="button" (click)="generateAISuggestion()" [disabled]="generatingSuggestion || !interaction"
-              class="p-1.5 rounded text-gray-600 hover:bg-rep-lime/20 hover:text-rep-black transition disabled:opacity-50"
+              class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 bg-white text-gray-600 shadow-sm hover:bg-rep-lime/10 hover:border-rep-lime/50 hover:text-rep-black transition-all disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 shrink-0"
               title="AI suggestion">
-              <i [class]="generatingSuggestion ? 'fas fa-spinner fa-spin text-xs' : 'fas fa-robot text-xs'"></i>
-            </button>
-            <button type="button" class="p-1.5 rounded text-gray-500 hover:bg-gray-100 transition" title="Template">
-              <i class="fas fa-file-alt text-xs"></i>
+              <i *ngIf="generatingSuggestion" class="fas fa-spinner fa-spin text-sm leading-none"></i>
+              <i *ngIf="!generatingSuggestion" class="fas fa-robot text-sm leading-none"></i>
             </button>
             <button type="button" (click)="openMediaSelector()" [disabled]="!interaction || isRecording"
-              class="p-1.5 rounded text-gray-500 hover:bg-gray-100 transition disabled:opacity-50" title="Attach image or video">
-              <i class="fas fa-paperclip text-xs"></i>
+              class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 bg-white text-gray-600 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 shrink-0"
+              title="Attach image or video">
+              <i class="fas fa-paperclip text-sm leading-none"></i>
             </button>
             <!-- Record voice: tap to start, tap again to stop -->
             <button type="button"
               (click)="isRecording ? stopVoiceRecording() : startVoiceRecording()"
               [disabled]="!interaction || isUploadingRecording || !!pendingAttachment"
-              class="p-1.5 rounded transition disabled:opacity-50 flex items-center gap-1"
-              [class.bg-red-100]="isRecording"
+              class="inline-flex items-center justify-center w-9 h-9 rounded-lg border shadow-sm transition-all disabled:opacity-50 shrink-0"
+              [class.border-red-400]="isRecording"
+              [class.bg-red-50]="isRecording"
               [class.text-red-600]="isRecording"
+              [class.ring-1]="isRecording"
+              [class.ring-red-200]="isRecording"
               [class.animate-pulse]="isRecording"
-              [class.text-gray-500]="!isRecording"
-              [class.hover:bg-gray-100]="!isRecording"
+              [class.border-gray-300]="!isRecording"
+              [class.bg-white]="!isRecording"
+              [class.text-gray-600]="!isRecording"
+              [class.hover:bg-gray-50]="!isRecording"
+              [class.hover:border-gray-400]="!isRecording"
+              [class.dark:border-gray-600]="!isRecording"
+              [class.dark:bg-gray-900]="!isRecording"
+              [class.dark:text-gray-300]="!isRecording"
+              [class.dark:hover:bg-gray-800]="!isRecording"
               [title]="isRecording ? 'Stop recording' : 'Record voice message'">
-              <i *ngIf="isUploadingRecording" class="fas fa-spinner fa-spin text-xs"></i>
-              <i *ngIf="!isUploadingRecording && !isRecording" class="fas fa-microphone text-xs"></i>
-              <i *ngIf="!isUploadingRecording && isRecording" class="fas fa-stop text-xs"></i>
+              <i *ngIf="isUploadingRecording" class="fas fa-spinner fa-spin text-sm leading-none"></i>
+              <i *ngIf="!isUploadingRecording && !isRecording" class="fas fa-microphone text-sm leading-none"></i>
+              <i *ngIf="!isUploadingRecording && isRecording" class="fas fa-stop text-sm leading-none"></i>
             </button>
             <span *ngIf="isRecording" class="text-[10px] text-red-600 font-medium">{{ recordingDurationSec }}s</span>
           </div>

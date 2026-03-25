@@ -1,9 +1,13 @@
+@use '../../../shared/styles/theme-overrides' as theme;
+
 // Modern Quick Filters - Enhanced UI/UX
 // Pill-based design with smooth animations
 
 :host {
   display: block;
 }
+
+@include theme.light-mode-overrides;
 
 // Filter buttons - pill style
 button {

@@ -8,7 +8,7 @@ import { IUser } from '../models/user.model';
  * Listens to the current user and exposes helpers to check
  * permission codes that come from the user's assigned Group.
  *
- * Super-admin / admin roles bypass all permission checks.
+ * super_admin bypasses permission checks.
  */
 @Injectable({ providedIn: 'root' })
 export class PermissionService {
@@ -16,8 +16,12 @@ export class PermissionService {
   permissions$ = this.permissionsSubject.asObservable();
 
   private currentRole: string | null = null;
+  private hasResolvedPermissions = false;
 
-  private readonly BYPASS_ROLES = ['admin', 'super_admin'];
+  /** Avoid emitting identical permission sets (new Set() every time was retriggering sidebar rebuilds in a tight loop). */
+  private lastSyncedUserPermissionKey: string | null = null;
+
+  private readonly BYPASS_ROLES = ['super_admin'];
 
   /** Route → minimum permission code mapping used by sidebar filtering */
   static readonly ROUTE_PERMISSION_MAP: Record<string, string> = {
@@ -31,12 +35,19 @@ export class PermissionService {
     '/app/brand-hub':       'posts.read',
     '/app/content-studio':  'posts.create',
     '/app/approval-queue':  'posts.manage',
-    '/app/trend-explorer':  'analytics.read',
-    '/app/analytics':       'analytics.read',
+    '/app/trend-explorer':  'analytics.export',
+    '/app/analytics': 'analytics.read',
     '/app/knowledge-base':  'knowledge_base.read',
-    '/app/settings':        'settings.read',
+    '/app/settings':                    'settings.read',
+    '/app/settings/platforms':        'settings.read',
+    '/app/settings/profile':          'settings.read',
+    '/app/settings/organization':     'organization.read',
+    '/app/settings/notifications':    'settings.read',
+    '/app/settings/auto-reply':       'settings.read',
+    '/app/settings/brand-rules':      'settings.read',
+    '/app/settings/compliance':       'settings.read',
     '/app/agents':          'users.read',
-    '/app/plans':           'billing.read',
+    '/app/plans':           'billing.manage',
     '/app/ai-credits':      'billing.read',
     '/app/notifications':   'settings.read',
     '/app/media-library':   'media.read'
@@ -48,16 +59,29 @@ export class PermissionService {
 
   private syncPermissions(user: IUser | null): void {
     if (!user) {
+      if (this.lastSyncedUserPermissionKey === '__logged_out__') {
+        return;
+      }
+      this.lastSyncedUserPermissionKey = '__logged_out__';
       this.currentRole = null;
+      this.hasResolvedPermissions = false;
       this.permissionsSubject.next(new Set());
       return;
     }
-    this.currentRole = user.role;
+
     const codes = user.resolvedPermissions ?? [];
+    const key = `${String(user._id ?? '')}|${user.role ?? ''}|${[...codes].sort().join('\u001f')}`;
+    if (key === this.lastSyncedUserPermissionKey) {
+      return;
+    }
+    this.lastSyncedUserPermissionKey = key;
+
+    this.currentRole = user.role;
+    this.hasResolvedPermissions = codes.length > 0;
     this.permissionsSubject.next(new Set(codes));
   }
 
-  /** True if the user's group grants this permission code, or user is admin/super_admin. */
+  /** True if the user's group grants this permission code, or user is super_admin. */
   hasPermission(code: string): boolean {
     if (this.isBypassRole()) return true;
     return this.permissionsSubject.value.has(code);
@@ -80,12 +104,28 @@ export class PermissionService {
   /** Whether the user's route is allowed (for sidebar filtering and guard). */
   canAccessRoute(route: string): boolean {
     if (this.isBypassRole()) return true;
-    const required = PermissionService.ROUTE_PERMISSION_MAP[route];
+    const normalizedRoute = this.normalizeRoute(route);
+    const required = PermissionService.ROUTE_PERMISSION_MAP[normalizedRoute];
     if (!required) return true;
     return this.hasPermission(required);
   }
 
+  private normalizeRoute(route: string): string {
+    if (!route) return route;
+    const [pathOnly] = route.split(/[?#]/);
+    if (!pathOnly) return route;
+    if (pathOnly.length > 1 && pathOnly.endsWith('/')) {
+      return pathOnly.slice(0, -1);
+    }
+    return pathOnly;
+  }
+
   private isBypassRole(): boolean {
-    return !!this.currentRole && this.BYPASS_ROLES.includes(this.currentRole);
+    if (!this.currentRole) return false;
+    if (this.BYPASS_ROLES.includes(this.currentRole)) return true;
+    // Safety fallback: avoid locking out legacy admin users
+    // who are not assigned to a group yet.
+    if (this.currentRole === 'admin' && !this.hasResolvedPermissions) return true;
+    return false;
   }
 }

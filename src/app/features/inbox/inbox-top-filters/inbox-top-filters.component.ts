@@ -21,6 +21,9 @@ export class InboxTopFiltersComponent implements OnChanges {
   @Input() labels: ILabel[] = [];
 
   filters: IInboxFilters = {};
+  /** Separate from `filters` so date inputs stay stable with ngModel + parent sync */
+  dateFromModel = '';
+  dateToModel = '';
   expanded = false;
 
   constructor(public themeService: ThemeService) {}
@@ -30,9 +33,11 @@ export class InboxTopFiltersComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['initialFilters'] && this.initialFilters && Object.keys(this.initialFilters).length > 0) {
-      this.filters = { ...this.initialFilters };
-    }
+    if (!changes['initialFilters']) return;
+    // Always mirror parent — including {} when filters are cleared (previously we only synced non-empty objects).
+    this.filters = { ...(this.initialFilters || {}) };
+    this.dateFromModel = this.filters.dateFrom || '';
+    this.dateToModel = this.filters.dateTo || '';
   }
 
   types = [
@@ -69,18 +74,22 @@ export class InboxTopFiltersComponent implements OnChanges {
     return this.filters[filterType] === value;
   }
 
-  onDateFromChange(value: string): void {
-    if (value) {
-      this.filters.dateFrom = value;
+  onDateFromChange(value: string | null | undefined): void {
+    const v = (value ?? '').toString().trim();
+    this.dateFromModel = v;
+    if (v) {
+      this.filters.dateFrom = v;
     } else {
       delete this.filters.dateFrom;
     }
     this.emitFilters();
   }
 
-  onDateToChange(value: string): void {
-    if (value) {
-      this.filters.dateTo = value;
+  onDateToChange(value: string | null | undefined): void {
+    const v = (value ?? '').toString().trim();
+    this.dateToModel = v;
+    if (v) {
+      this.filters.dateTo = v;
     } else {
       delete this.filters.dateTo;
     }
@@ -90,15 +99,21 @@ export class InboxTopFiltersComponent implements OnChanges {
   clearDateRange(): void {
     delete this.filters.dateFrom;
     delete this.filters.dateTo;
+    this.dateFromModel = '';
+    this.dateToModel = '';
     this.emitFilters();
   }
 
   clearFilters(): void {
     this.filters = {};
+    this.dateFromModel = '';
+    this.dateToModel = '';
     this.emitFilters();
   }
 
   private emitFilters(): void {
+    if (!this.filters.dateFrom?.toString().trim()) delete this.filters.dateFrom;
+    if (!this.filters.dateTo?.toString().trim()) delete this.filters.dateTo;
     this.filtersChange.emit({ ...this.filters });
   }
 

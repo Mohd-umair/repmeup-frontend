@@ -187,15 +187,15 @@
       </div>
     </div>
 
-    <!-- View Tabs -->
-    <div class="flex gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-fit">
+    <!-- View Tabs (synced with URL / sidebar via setActiveView → router) -->
+    <div class="flex flex-wrap gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-full sm:w-fit mb-6">
       <button
         (click)="setActiveView('overview')"
         [class.bg-rep-lime]="activeView === 'overview'"
         [class.text-rep-black]="activeView === 'overview'"
         [class.text-gray-400]="activeView !== 'overview'"
         type="button"
-        class="px-4 py-2 rounded-lg font-medium transition"
+        class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
         <i class="fas fa-chart-line mr-2"></i>
         Overview
@@ -206,7 +206,7 @@
         [class.text-rep-black]="activeView === 'platforms'"
         [class.text-gray-400]="activeView !== 'platforms'"
         type="button"
-        class="px-4 py-2 rounded-lg font-medium transition"
+        class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
         <i class="fas fa-layer-group mr-2"></i>
         Platforms
@@ -217,7 +217,7 @@
         [class.text-rep-black]="activeView === 'trends'"
         [class.text-gray-400]="activeView !== 'trends'"
         type="button"
-        class="px-4 py-2 rounded-lg font-medium transition"
+        class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
         <i class="fas fa-chart-area mr-2"></i>
         Trends
@@ -228,7 +228,7 @@
         [class.text-rep-black]="activeView === 'performance'"
         [class.text-gray-400]="activeView !== 'performance'"
         type="button"
-        class="px-4 py-2 rounded-lg font-medium transition"
+        class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
         <i class="fas fa-tachometer-alt mr-2"></i>
         Performance
@@ -239,7 +239,7 @@
         [class.text-rep-black]="activeView === 'reports'"
         [class.text-gray-400]="activeView !== 'reports'"
         type="button"
-        class="px-4 py-2 rounded-lg font-medium transition"
+        class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
         <i class="fas fa-file-download mr-2"></i>
         Reports

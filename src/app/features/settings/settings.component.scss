@@ -1,3 +1,5 @@
+@use '../../shared/styles/theme-overrides' as theme;
+
 // Premium Modern Design - Settings Component
 
 // Platform card animations
@@ -204,3 +206,6 @@ textarea:focus {
 .preload * {
   transition: none !important;
 }
+
+@include theme.light-mode-overrides;
+

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 import { Media } from '../../core/models/media.model';
@@ -138,7 +138,6 @@ export class PublishComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private router: Router,
     private notificationService: NotificationService
   ) {}
 
@@ -257,14 +256,6 @@ export class PublishComponent implements OnInit {
     return this.aiMode === 'same' ? 1 : this.selectedPlatforms.length;
   }
   
-  navigateToCalendar(): void {
-    this.router.navigate(['/app/publish/calendar']);
-  }
-  
-  navigateToPublished(): void {
-    this.router.navigate(['/app/publish/published']);
-  }
-
   /**
    * Load connected platforms
    */

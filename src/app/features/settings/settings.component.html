@@ -39,15 +39,8 @@
     <!-- Tabs — grid on mobile, horizontal row on desktop -->
     <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800 relative z-10">
       <nav class="grid grid-cols-3 sm:grid-cols-4 md:flex gap-1 sm:gap-1.5">
-        <button *ngFor="let tab of [
-          { id: 'platforms',     icon: 'fas fa-plug',       label: 'Platforms' },
-          { id: 'profile',      icon: 'fas fa-user',       label: 'Profile' },
-          { id: 'organization', icon: 'fas fa-building',   label: 'Organization' },
-          { id: 'notifications',icon: 'fas fa-bell',       label: 'Notifications' },
-          { id: 'auto-reply',   icon: 'fas fa-robot',      label: 'Auto-Reply' },
-          { id: 'brand-rules',  icon: 'fas fa-palette',    label: 'Brand Rules' },
-          { id: 'compliance',   icon: 'fas fa-shield-alt', label: 'Compliance' }
-        ]"
+        <button *ngFor="let tab of tabs"
+          [hidden]="!canViewTab($any(tab.id))"
           type="button"
           (click)="setActiveTab($any(tab.id))"
           [class]="activeTab === tab.id
@@ -532,7 +525,7 @@
     </div>
 
     <!-- Organization Tab -->
-    <div *ngIf="activeTab === 'organization'" class="max-w-4xl mx-auto">
+    <div *ngIf="activeTab === 'organization' && canViewTab('organization')" class="max-w-4xl mx-auto">
       <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
         <div class="flex items-center space-x-6 mb-8">
           <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black">
@@ -555,6 +548,7 @@
               [(ngModel)]="organizationData.name" 
               name="name"
               required
+              [disabled]="!permissionService.hasPermission('organization.update')"
               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
           </div>
 
@@ -568,6 +562,7 @@
               [(ngModel)]="organizationData.website" 
               name="website"
               placeholder="https://example.com"
+              [disabled]="!permissionService.hasPermission('organization.update')"
               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
           </div>
 
@@ -580,6 +575,7 @@
               <select 
                 [(ngModel)]="organizationData.industry" 
                 name="industry"
+                [disabled]="!permissionService.hasPermission('organization.update')"
                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white">
                 <option value="">Select Industry</option>
                 <option value="technology">Technology</option>
@@ -604,6 +600,7 @@
               <select 
                 [(ngModel)]="organizationData.size" 
                 name="size"
+                [disabled]="!permissionService.hasPermission('organization.update')"
                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white">
                 <option value="">Select Size</option>
                 <option value="1-10">1-10 employees</option>
@@ -633,7 +630,7 @@
                 </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" [(ngModel)]="organizationData.escalationSettings.autoAssign" name="autoAssign" class="sr-only peer">
+                <input type="checkbox" [(ngModel)]="organizationData.escalationSettings.autoAssign" name="autoAssign" class="sr-only peer" [disabled]="!permissionService.hasPermission('organization.update')">
                 <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
               </label>
             </div>
@@ -642,7 +639,7 @@
           <div class="pt-6">
             <button 
               type="submit" 
-              [disabled]="savingOrganization"
+              [disabled]="savingOrganization || !permissionService.hasPermission('organization.update')"
               class="px-8 py-4 bg-rep-lime text-rep-black rounded-xl font-bold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
               <i [class]="savingOrganization ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-save mr-2'"></i>
               {{ savingOrganization ? 'Saving...' : 'Save Changes' }}
@@ -784,7 +781,7 @@
         <form class="space-y-6 sm:space-y-8">
           <!-- Master Enable/Disable -->
           <div class="bg-gradient-to-r from-rep-lime/10 to-green-50 border-2 border-rep-lime/30 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6">
-            <div class="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 xs:gap-4">
+            <div class="flex items-center justify-between gap-3 sm:gap-4">
               <div class="flex items-center gap-3 sm:gap-4 min-w-0">
                 <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-rep-lime rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                   <i class="fas fa-power-off text-lg sm:text-xl md:text-2xl text-rep-black"></i>
@@ -794,7 +791,7 @@
                   <p class="text-gray-700 text-xs sm:text-sm mt-0.5 sm:mt-1">Turn on AI-powered automatic responses</p>
                 </div>
               </div>
-              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-2">
                 <input type="checkbox" [(ngModel)]="autoReplySettings.enabled" name="enabled" class="sr-only peer">
                 <div class="w-16 h-8 sm:w-20 sm:h-10 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 sm:peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 sm:after:top-1 after:left-0.5 sm:after:left-1 after:bg-white after:rounded-full after:h-7 after:w-7 sm:after:h-8 sm:after:w-8 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
               </label>
@@ -809,7 +806,12 @@
                 <i class="fas fa-percentage mr-1 sm:mr-2 text-gray-600"></i>
                 Confidence Threshold
               </label>
-              <p class="text-xs text-gray-600 mb-3 sm:mb-4">Minimum AI confidence to generate replies (0-100%)</p>
+              <p class="text-xs text-gray-600 mb-2 sm:mb-3">Minimum AI confidence required to auto-send a reply (0-100%).</p>
+              <p class="text-xs text-blue-900 bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3 mb-3 sm:mb-4">
+                AI confidence = how sure the model is that the generated reply is relevant and accurate for this message.
+                If AI confidence is below this value, the message is not auto-sent and is kept for manual handling.
+                Lower threshold = more automation; higher threshold = safer, stricter replies.
+              </p>
               <input 
                 type="range" 
                 [(ngModel)]="autoReplySettings.minConfidence" 
@@ -928,6 +930,9 @@
               Enabled Interaction Types
             </h3>
             <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Select which types of interactions should receive auto-replies</p>
+            <p class="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
+              <strong>Instagram / Messenger DMs:</strong> enable <strong>DMs</strong> here. “Reply to all sentiments” does not include direct messages unless this type is checked.
+            </p>
             <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
                 <input 
@@ -1128,6 +1133,11 @@
                 </label>
               </div>
 
+              <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-950 mb-4">
+                <strong>Messages won’t appear in Instagram until both:</strong> <strong>Auto-Send Replies</strong> is ON and <strong>Require Approval</strong> is OFF.
+                Otherwise the AI may still run, but nothing is posted to the user.
+              </div>
+
               <div class="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200">
                 <div class="flex items-center space-x-4">
                   <i class="fas fa-paper-plane text-2xl text-blue-500"></i>
@@ -1152,7 +1162,7 @@
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" [(ngModel)]="autoReplySettings.requireApproval" name="requireApproval" class="sr-only peer">
-                  <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner">                  </div>
+                  <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
                 </label>
               </div>
             </div>
@@ -1351,6 +1361,11 @@
     </div>
 
     <!-- Compliance Rules Tab -->
+    <!-- Intent Buckets Tab -->
+    <div *ngIf="activeTab === 'intent-buckets'">
+      <app-bucket-settings></app-bucket-settings>
+    </div>
+
     <div *ngIf="activeTab === 'compliance'" class="max-w-4xl mx-auto">
       <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
         <h2 class="text-xl md:text-2xl font-bold text-rep-black mb-2 flex items-center gap-2">

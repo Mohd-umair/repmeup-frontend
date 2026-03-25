@@ -1,8 +1,13 @@
+@use '../../../../shared/styles/theme-overrides' as theme;
+
 // Page Manager Component Styles
 
 :host {
   display: block;
 }
+
+@include theme.light-mode-overrides;
+
 
 // Animations
 @keyframes fadeIn {

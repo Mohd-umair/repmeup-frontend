@@ -9,9 +9,11 @@ import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
+import { PermissionService } from '../../core/services/permission.service';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
 import { ConnectionUsageBarComponent } from '../../shared/components/connection-usage-bar/connection-usage-bar.component';
+import { BucketSettingsComponent } from './components/bucket-settings/bucket-settings.component';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 
@@ -21,7 +23,7 @@ import { Observable, Subscription } from 'rxjs';
  */
 
 // All available settings tabs
-type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply' | 'brand-rules' | 'compliance';
+type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply' | 'brand-rules' | 'compliance' | 'intent-buckets';
 
 interface Platform {
   id: string;
@@ -39,10 +41,18 @@ interface Platform {
   loading?: boolean; // Loading state for connect/disconnect
 }
 
+interface SettingsNavTab {
+  id: SettingsTab;
+  icon: string;
+  label: string;
+  requiredPermission?: string | string[];
+  routeSegment: string;
+}
+
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, ConnectionUsageBarComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, ConnectionUsageBarComponent, BucketSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
@@ -93,13 +103,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
   };
   savingOrganization = false;
 
+  readonly tabs: SettingsNavTab[] = [
+    { id: 'platforms', icon: 'fas fa-plug', label: 'Platforms', routeSegment: 'platforms', requiredPermission: 'settings.read' },
+    { id: 'profile', icon: 'fas fa-user', label: 'Profile', routeSegment: 'profile', requiredPermission: 'settings.read' },
+    { id: 'organization', icon: 'fas fa-building', label: 'Organization', routeSegment: 'organization', requiredPermission: 'organization.read' },
+    { id: 'notifications', icon: 'fas fa-bell', label: 'Notifications', routeSegment: 'notifications', requiredPermission: 'settings.read' },
+    { id: 'auto-reply', icon: 'fas fa-robot', label: 'Auto-Reply', routeSegment: 'auto-reply', requiredPermission: 'settings.read' },
+    { id: 'brand-rules', icon: 'fas fa-palette', label: 'Brand Rules', routeSegment: 'brand-rules', requiredPermission: 'settings.read' },
+    { id: 'compliance', icon: 'fas fa-shield-alt', label: 'Compliance', routeSegment: 'compliance', requiredPermission: 'settings.read' },
+    { id: 'intent-buckets', icon: 'fas fa-columns', label: 'Buckets', routeSegment: 'intent-buckets', requiredPermission: 'settings.read' }
+  ];
+
   private subscriptions: Subscription[] = [];
 
   // Auto-reply settings
   autoReplySettings: AutoReplySettings = {
     enabled: false,
     enabledPlatforms: ['youtube', 'instagram', 'facebook', 'google', 'linkedin', 'whatsapp'],
-    enabledTypes: ['comment', 'review'],
+    enabledTypes: ['comment', 'review', 'dm'],
     sentimentFilter: 'all',
     replyToNegative: false,
     replyToComplaints: false,
@@ -192,6 +213,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private route: ActivatedRoute,
     private router: Router,
+    public permissionService: PermissionService,
     public platformConnectionService: PlatformConnectionService, // SOLID: Dependency Injection
     private subscriptionService: SubscriptionService,
     private socialAccountsService: SocialAccountsService
@@ -203,6 +225,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.subscriptions.push(
+      this.route.url.subscribe(() => this.syncActiveTabFromUrl())
+    );
+
     this.subscriptions.push(
       this.authService.currentUser$.subscribe(user => {
         if (user && user.organization) {
@@ -532,7 +558,38 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   setActiveTab(tab: SettingsTab): void {
-    this.activeTab = tab;
+    if (!this.canViewTab(tab)) {
+      return;
+    }
+    const target = this.tabs.find(t => t.id === tab);
+    if (!target) return;
+    this.router.navigate(['/app/settings', target.routeSegment], { queryParamsHandling: 'preserve' });
+  }
+
+  canViewTab(tab: SettingsTab): boolean {
+    const tabConfig = this.tabs.find(t => t.id === tab);
+    if (!tabConfig || !tabConfig.requiredPermission) return true;
+
+    if (Array.isArray(tabConfig.requiredPermission)) {
+      return this.permissionService.hasAnyPermission(tabConfig.requiredPermission);
+    }
+
+    return this.permissionService.hasPermission(tabConfig.requiredPermission);
+  }
+
+  private syncActiveTabFromUrl(): void {
+    const routeTab = this.route.snapshot.url[this.route.snapshot.url.length - 1]?.path;
+    const matchedTab = this.tabs.find(tab => tab.routeSegment === routeTab);
+
+    if (matchedTab && this.canViewTab(matchedTab.id)) {
+      this.activeTab = matchedTab.id;
+      return;
+    }
+
+    const fallback = this.tabs.find(tab => this.canViewTab(tab.id));
+    if (fallback) {
+      this.activeTab = fallback.id;
+    }
   }
 
   /**
@@ -1384,6 +1441,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
    * Save organization changes
    */
   saveOrganization(): void {
+    if (!this.permissionService.hasPermission('organization.update')) {
+      this.notificationService.error(
+        'Permission Denied',
+        'You do not have permission to update organization settings.'
+      );
+      return;
+    }
+
     if (!this.organizationId) {
       this.notificationService.error(
         'Organization Not Found',

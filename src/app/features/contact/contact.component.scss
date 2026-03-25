@@ -1,3 +1,5 @@
+@use '../../shared/styles/theme-overrides' as theme;
+
 .contact {
   // Custom scrollbar
   &::-webkit-scrollbar {
@@ -30,7 +32,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
   font-size: 1rem;
-  transition: all 0.3s ease;   
+  transition: all 0.3s ease;
 
   &::placeholder {
     color: rgba(156, 163, 175, 0.8);
@@ -79,3 +81,5 @@
   cursor: not-allowed;
   border: none;
 }
+
+@include theme.light-mode-overrides;

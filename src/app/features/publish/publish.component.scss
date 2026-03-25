@@ -1,3 +1,5 @@
+@use '../../shared/styles/theme-overrides' as theme;
+
 /* Compose / caption textarea and inputs - ensure text is visible */
 .compose-textarea,
 input.bg-gray-800 {
@@ -13,6 +15,25 @@ input.bg-gray-800 {
   &::-moz-placeholder {
     color: #9ca3af;
     opacity: 1;
+  }
+}
+
+/* Light mode: keep caption/input placeholder readable */
+:host-context(html:not(.dark)) {
+  .compose-textarea,
+  input.bg-gray-800,
+  textarea.bg-gray-800 {
+    color: var(--input-text) !important;
+    -webkit-text-fill-color: var(--input-text) !important;
+    background-color: var(--input-bg) !important;
+    border-color: var(--input-border) !important;
+
+    &::placeholder,
+    &::-webkit-input-placeholder,
+    &::-moz-placeholder {
+      color: var(--input-placeholder) !important;
+      opacity: 1;
+    }
   }
 }
 
@@ -245,3 +266,6 @@ button:active {
     padding: 0.75rem;
   }
 }
+
+@include theme.light-mode-overrides;
+

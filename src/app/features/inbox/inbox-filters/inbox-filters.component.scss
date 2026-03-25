@@ -1,9 +1,13 @@
+@use '../../../shared/styles/theme-overrides' as theme;
+
 // Inbox Filters Component Styles
 // Beautiful platform-themed filters
 
 :host {
   display: block;
 }
+
+@include theme.light-mode-overrides;
 
 // Smooth hover effect
 button {

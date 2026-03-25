@@ -1,6 +1,6 @@
 <div class="h-full flex flex-col">
   <!-- Search Header -->
-  <div class="p-4 border-b border-gray-200">
+  <div *ngIf="showSearch" class="p-4 border-b border-gray-200">
     <div class="relative">
       <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
         <i class="fas fa-search text-gray-400"></i>
@@ -54,11 +54,16 @@
   </div>
 
   <!-- Interaction List - Fixed Height with Scroll -->
-  <div *ngIf="!loading && interactions.length > 0" class="flex-1 overflow-y-auto p-3" style="max-height: calc(100vh - 300px);">
+  <div
+    *ngIf="!loading && interactions.length > 0"
+    class="flex-1 overflow-y-auto p-3"
+    style="max-height: calc(100vh - 300px);"
+    (scroll)="onListScroll($event)"
+  >
     <div
       *ngFor="let interaction of interactions; let i = index"
       (click)="selectInteraction(interaction)"
-      class="p-4 mb-4 rounded-xl cursor-pointer transition-all duration-300 border-l-4 border"
+      class="p-3 mb-2 rounded-xl cursor-pointer transition-all duration-300 border-l-4 border"
       [class.shadow-lg]="isSelected(interaction)"
       [style.borderLeftColor]="getPlatformColors(interaction.platform).primary"
       [style.borderColor]="isSelected(interaction) ? getPlatformColors(interaction.platform).primary + '40' : 'rgba(0,0,0,0.05)'"
@@ -77,20 +82,27 @@
           (click)="toggleBulkSelection(interaction, $event)"
           class="mt-1 w-4 h-4 rounded border-gray-300 text-rep-lime focus:ring-rep-lime flex-shrink-0"
         />
-        <!-- Avatar with Platform Badge -->
-        <div class="relative flex-shrink-0">
+        <!-- Avatar + platform icon badge -->
+        <div class="relative flex-shrink-0 self-start flex justify-center">
           <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
             <img *ngIf="avatarUrl && !avatarFallback[interaction.platformId]"
                  [src]="avatarUrl"
                  (error)="onAvatarError(interaction.platformId)"
                  alt=""
-                 class="w-12 h-12 rounded-xl object-cover shadow-md flex-shrink-0">
+                 class="w-11 h-11 rounded-lg object-cover shadow-md flex-shrink-0 mx-auto">
             <div *ngIf="!avatarUrl || avatarFallback[interaction.platformId]"
-                 class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md transition-all duration-300"
+                 class="w-11 h-11 rounded-lg flex items-center justify-center text-white font-bold text-base shadow-md transition-all duration-300 mx-auto"
                  [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
               {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
             </div>
-            </ng-container>
+          </ng-container>
+          <div
+            class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white"
+            [style.background]="getPlatformColors(interaction.platform).primary"
+            [title]="interaction.platform || 'Platform'"
+          >
+            <i [class]="getPlatformFaClass(interaction.platform) + ' text-white text-[9px] leading-none'"></i>
+          </div>
         </div>
 
         <!-- Content -->
@@ -98,7 +110,7 @@
           <!-- Header Row -->
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2 flex-1 min-w-0">
-              <h3 class="text-sm font-semibold text-gray-900 truncate">
+              <h3 class="text-sm font-bold text-gray-900 truncate">
                 {{ getAuthorDisplayName(interaction) }}
               </h3>
               <!-- Unread dot -->
@@ -111,50 +123,46 @@
             </span>
           </div>
 
-          <!-- Simplified Badges - Only Essential Info -->
-          <div class="flex items-center flex-wrap gap-1.5 mb-2">
-            <span class="text-xs flex items-center gap-1"
-                  [style.color]="getPlatformColors(interaction.platform).primary">
-              <span>{{ getPlatformIcon(interaction.platform) }}</span>
-              <span class="font-medium">{{ getTypeLabel(interaction.type) }}</span>
-            </span>
-            <span *ngIf="interaction.type === 'review' && getReviewRating(interaction)"
-                  class="text-xs flex items-center gap-1 text-amber-600">
-              <i class="fas fa-star"></i>{{ getReviewRating(interaction) }}
-            </span>
-            <span *ngIf="interaction.sentiment" class="text-xs">
-              {{ getSentimentIcon(interaction.sentiment) }}
-            </span>
-            <!-- SLA indicator: Response in X / Overdue / Replied in X -->
+          <!-- Message Preview -->
+          <p class="text-sm font-semibold text-gray-700 line-clamp-2 leading-snug mb-1.5">
+            {{ interaction.content }}
+          </p>
+
+          <!-- Meta Row: details on left, replied/not-replied status at row end -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center flex-wrap gap-1.5 min-w-0">
+              <span class="text-xs flex items-center gap-1"
+                    [style.color]="getPlatformColors(interaction.platform).primary">
+                <span class="font-medium">{{ getTypeLabel(interaction.type) }}</span>
+              </span>
+              <span *ngIf="interaction.type === 'review' && getReviewRating(interaction)"
+                    class="text-xs flex items-center gap-1 text-amber-600">
+                <i class="fas fa-star"></i>{{ getReviewRating(interaction) }}
+              </span>
+              <span *ngIf="interaction.sentiment" class="text-xs">
+                {{ getSentimentIcon(interaction.sentiment) }}
+              </span>
+            </div>
+
             <span *ngIf="getSlaLabel(interaction) as sla"
-                  class="text-xs px-2 py-0.5 rounded font-medium"
+                  class="text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap flex-shrink-0"
                   [class.bg-red-100]="isOverdue(interaction)"
                   [class.text-red-700]="isOverdue(interaction)"
-                  [class.bg-amber-100]="!isOverdue(interaction) && !interaction.respondedAt"
-                  [class.text-amber-800]="!isOverdue(interaction) && !interaction.respondedAt"
-                  [class.bg-gray-100]="interaction.respondedAt"
-                  [class.text-gray-700]="interaction.respondedAt">
-              <i class="fas fa-clock mr-1" [class.text-red-500]="isOverdue(interaction)"></i>
+                  [class.bg-amber-100]="!isOverdue(interaction) && !isLatestReplied(interaction)"
+                  [class.text-amber-800]="!isOverdue(interaction) && !isLatestReplied(interaction)"
+                  [class.bg-emerald-100]="isLatestReplied(interaction)"
+                  [class.text-emerald-700]="isLatestReplied(interaction)">
+              <i class="fas mr-1"
+                 [class.fa-clock]="!isLatestReplied(interaction)"
+                 [class.fa-check-circle]="isLatestReplied(interaction)"
+                 [class.text-red-500]="isOverdue(interaction)"></i>
               {{ sla }}
             </span>
           </div>
 
-          <!-- Message Preview -->
-          <p class="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-            {{ interaction.content }}
-          </p>
-
-          <!-- Footer - Only show if replied or has labels -->
-          <div *ngIf="interaction.status === 'replied' || (interaction.labels && interaction.labels.length > 0)" 
-               class="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
-            <!-- Replied Badge -->
-            <span *ngIf="interaction.status === 'replied'"
-                  class="text-xs flex items-center gap-1"
-                  [style.color]="getPlatformColors(interaction.platform).primary">
-              <i class="fas fa-check-circle"></i>
-              <span class="font-medium">Replied</span>
-            </span>
-
+          <!-- Footer - Only show labels -->
+          <div *ngIf="interaction.labels && interaction.labels.length > 0" 
+               class="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-gray-100">
             <!-- Labels (First 2) -->
             <span 
               *ngFor="let label of interaction.labels?.slice(0, 2)"
@@ -175,6 +183,10 @@
           </div>
         </div>
       </div>
+    </div>
+    <div *ngIf="loadingMore" class="py-3 text-center">
+      <i class="fas fa-spinner fa-spin text-rep-lime mr-2"></i>
+      <span class="text-xs text-gray-500">Loading more conversations...</span>
     </div>
   </div>
 </div>

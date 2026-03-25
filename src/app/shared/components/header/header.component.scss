@@ -1,0 +1,13 @@
+@use '../../styles/theme-overrides' as theme;
+
+:host {
+  display: block;
+}
+
+@include theme.light-mode-overrides;
+
+:host-context(html:not(.dark)) {
+  header {
+    box-shadow: var(--card-shadow);
+  }
+}

@@ -113,6 +113,92 @@ nav.overflow-x-auto {
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════
+   GLOBAL THEME CSS VARIABLES
+   Light = default, Dark = html.dark
+   ═══════════════════════════════════════════ */
+:root {
+  /* Surfaces */
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #F9FAFB;
+  --surface-tertiary: #F3F4F6;
+  --surface-elevated: #FFFFFF;
+
+  /* Sidebar & header chrome */
+  --chrome-bg: #0B0B0B;
+  --chrome-border: #1F2937;
+  --chrome-text: #D1D5DB;
+  --chrome-text-muted: #6B7280;
+  --chrome-hover: #1F2937;
+
+  /* Text */
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #9CA3AF;
+  --text-inverse: #FFFFFF;
+
+  /* Borders */
+  --border-primary: #E5E7EB;
+  --border-secondary: #D1D5DB;
+
+  /* Cards */
+  --card-bg: #FFFFFF;
+  --card-border: #E5E7EB;
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+
+  /* Inputs */
+  --input-bg: #FFFFFF;
+  --input-border: #D1D5DB;
+  --input-text: #111827;
+  --input-placeholder: #6B7280;
+
+  /* Scrollbar */
+  --scrollbar-track: #F3F4F6;
+  --scrollbar-thumb: #D1D5DB;
+  --scrollbar-thumb-hover: #9CA3AF;
+}
+
+html.dark {
+  /* Surfaces */
+  --surface-primary: #0F1117;
+  --surface-secondary: #1A1D27;
+  --surface-tertiary: #252833;
+  --surface-elevated: #1E2130;
+
+  /* Sidebar & header chrome */
+  --chrome-bg: #0B0B0B;
+  --chrome-border: #1F2937;
+  --chrome-text: #D1D5DB;
+  --chrome-text-muted: #6B7280;
+  --chrome-hover: #1F2937;
+
+  /* Text */
+  --text-primary: #F9FAFB;
+  --text-secondary: #D1D5DB;
+  --text-muted: #6B7280;
+  --text-inverse: #0B0B0B;
+
+  /* Borders */
+  --border-primary: #252833;
+  --border-secondary: #374151;
+
+  /* Cards */
+  --card-bg: #1A1D27;
+  --card-border: #252833;
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+
+  /* Inputs */
+  --input-bg: #1A1D27;
+  --input-border: #374151;
+  --input-text: #F9FAFB;
+  --input-placeholder: #6B7280;
+
+  /* Scrollbar */
+  --scrollbar-track: #1A1D27;
+  --scrollbar-thumb: #374151;
+  --scrollbar-thumb-hover: #4B5563;
+}
+
 /* Custom global styles */
 * {
   margin: 0;
@@ -126,6 +212,23 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Global form controls use CSS variables */
+input:not([type='checkbox']):not([type='radio']),
+textarea,
+select {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+}
+
+input:not([type='checkbox']):not([type='radio'])::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
 }
 
 /* Custom scrollbar */
@@ -135,15 +238,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded;
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Custom utilities */

@@ -42,7 +42,8 @@ import { AboutComponent } from './features/about/about.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 import { PublishComponent } from './features/publish/publish.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
-import { PublishedPostsComponent } from './features/published-posts/published-posts.component';
+import { PublishPublishedRedirectComponent } from './features/content/publish-published-redirect.component';
+import { AnalyticsLegacyTabRedirectComponent } from './features/analytics/analytics-legacy-tab-redirect.component';
 import { PlansComponent } from './features/plans/plans.component';
 import { PageManagerComponent } from './features/settings/components/page-manager/page-manager.component';
 import { SocialPreviewComponent } from './features/publish/social-preview/social-preview.component';
@@ -76,6 +77,7 @@ import { MediaLibraryComponent } from './features/media-library/media-library.co
     RegisterComponent,
     DashboardComponent,
     AnalyticsComponent,
+    AnalyticsLegacyTabRedirectComponent,
     HomeComponent,
     ContactComponent,
     DataDeletionStatusComponent,
@@ -86,7 +88,7 @@ import { MediaLibraryComponent } from './features/media-library/media-library.co
     MainLayoutComponent,
     SettingsComponent,
     PublishComponent,
-    PublishedPostsComponent,
+    PublishPublishedRedirectComponent,
     PageManagerComponent,
     InboxContainerComponent,
     KnowledgeBaseComponent,

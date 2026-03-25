@@ -1,3 +1,5 @@
+@use '../../../shared/styles/theme-overrides' as theme;
+
 // Inbox Container Component Styles
 // Dynamic theming based on selected platform
 
@@ -5,6 +7,8 @@
   display: block;
   height: 100%;
 }
+
+@include theme.light-mode-overrides;
 
 // Smooth transitions for theme changes
 * {
@@ -95,3 +99,4 @@
 .animate-slideDown {
   animation: slideDown 0.3s ease-out;
 }
+

@@ -10,33 +10,6 @@
       <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Create, schedule, and manage your social media content</p>
     </div>
 
-    <!-- View Tabs -->
-    <div class="mb-6 flex gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-full sm:w-fit relative z-50">
-      <button
-        type="button"
-        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition bg-rep-lime text-rep-black cursor-pointer touch-manipulation select-none"
-      >
-        <i class="fas fa-edit mr-2"></i>
-        Composer
-      </button>
-      <button
-        routerLink="/app/publish/calendar"
-        type="button"
-        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition text-gray-400 cursor-pointer touch-manipulation select-none hover:text-rep-white active:bg-gray-700"
-      >
-        <i class="fas fa-calendar-alt mr-2"></i>
-        Calendar
-      </button>
-      <button
-        routerLink="/app/publish/published"
-        type="button"
-        class="flex-1 sm:flex-none min-h-[44px] px-4 py-3 sm:py-2 rounded-lg font-medium transition text-gray-400 cursor-pointer touch-manipulation select-none hover:text-rep-white active:bg-gray-700"
-      >
-        <i class="fas fa-history mr-2"></i>
-        Published
-      </button>
-    </div>
-
     <!-- COMPOSER VIEW -->
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
       
@@ -157,13 +130,13 @@
           <button
             type="button"
             (click)="showAIWriter = !showAIWriter"
-            class="w-full p-4 flex items-center justify-between hover:bg-gray-800/50 transition cursor-pointer"
+            class="w-full p-4 flex items-center justify-between transition cursor-pointer"
           >
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
                 <i class="fas fa-magic text-purple-400"></i>
               </div>
-              <span class="font-semibold text-white text-sm">Write with AI</span>
+              <span class="font-semibold text-rep-white text-sm">Write with AI</span>
               <div *ngIf="aiCredits" class="flex items-center gap-1.5 bg-purple-500/10 px-2.5 py-1 rounded-md border border-purple-500/20">
                 <i class="fas fa-bolt text-purple-400 text-xs"></i>
                 <span class="text-xs font-medium text-purple-300">
