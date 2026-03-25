@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { NotificationDataService, INotification } from '../../core/services/notification-data.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { SweetAlertService } from '../../core/services/sweet-alert.service';
 
 /**
  * Notifications Component - View All Notifications Page
@@ -58,6 +59,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   constructor(
     private notificationDataService: NotificationDataService,
     private notificationService: NotificationService,
+    private sweetAlert: SweetAlertService,
     private router: Router
   ) {}
   
@@ -232,11 +234,15 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   /**
    * Delete notification
    */
-  deleteNotification(notification: INotification, event: Event): void {
+  async deleteNotification(notification: INotification, event: Event): Promise<void> {
     event.stopPropagation();
-    
-    if (!confirm('Delete this notification?')) return;
-    
+
+    const result = await this.sweetAlert.confirmDelete(
+      'Delete this notification?',
+      'This notification will be removed permanently.'
+    );
+    if (!result.isConfirmed) return;
+
     this.notificationDataService.deleteNotification(notification._id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -255,23 +261,32 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   /**
    * Clear all read notifications
    */
-  clearAllRead(): void {
+  async clearAllRead(): Promise<void> {
     const readCount = this.notifications.filter(n => n.isRead).length;
-    
+
     if (readCount === 0) {
-      this.notificationService.info('No read notifications to clear');
+      await this.sweetAlert.info('Nothing to clear', 'There are no read notifications to remove.');
       return;
     }
-    
-    if (!confirm(`Clear ${readCount} read notification(s)?`)) return;
-    
+
+    const result = await this.sweetAlert.confirm(
+      'Clear read notifications?',
+      `This will permanently delete ${readCount} read notification(s). Unread items will stay.`,
+      'Clear all read',
+      'Cancel'
+    );
+    if (!result.isConfirmed) return;
+
     this.notificationDataService.clearReadNotifications()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
+        next: (response: { success?: boolean; deletedCount?: number; message?: string }) => {
           this.notifications = this.notifications.filter(n => !n.isRead);
           this.applyFilters();
-          this.notificationService.success(`${readCount} notification(s) cleared`);
+          const cleared = response?.deletedCount ?? readCount;
+          this.notificationService.success(
+            response?.message || `${cleared} notification(s) cleared`
+          );
         },
         error: (error) => {
           console.error('Error clearing notifications:', error);

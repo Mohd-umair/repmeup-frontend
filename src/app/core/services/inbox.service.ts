@@ -291,5 +291,9 @@ export class InboxService {
   updateInteractionBucket(interactionId: string, intentBucket: string | null): Observable<IApiResponse<any>> {
     return this.apiService.put<IApiResponse<any>>(`/inbox/${interactionId}/bucket`, { intentBucket });
   }
+
+  getTopicInsights(filters?: any): Observable<IApiResponse<any>> {
+    return this.apiService.get<IApiResponse<any>>('/inbox/topic-insights', filters);
+  }
 }
 

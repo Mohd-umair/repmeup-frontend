@@ -433,7 +433,8 @@
         </div>
         <!-- Bulk actions bar (z-50 so dropdowns render above the list) -->
         <div *ngIf="selectedIds.size > 0" 
-             class="relative z-50 px-3 py-2 border-b flex items-center gap-2 bg-gray-50"
+             class="relative z-50 px-3 py-2 border-b flex flex-wrap items-center gap-x-2 gap-y-2 w-full min-w-0 bg-gray-50"
+             [class.pr-10]="bulkProcessing"
              style="border-color: rgba(0,0,0,0.06);">
           
           <!-- Selection count + controls -->
@@ -451,14 +452,14 @@
           </div>
 
           <!-- Separator -->
-          <div class="w-px h-4 bg-gray-200 mx-0.5 flex-shrink-0"></div>
+          <div class="hidden sm:block w-px h-4 bg-gray-200 flex-shrink-0 self-center"></div>
 
-          <!-- Action buttons -->
-          <div class="flex items-center gap-1.5 flex-1 flex-wrap">
+          <!-- Action buttons: wrap to extra rows when the list column is narrow (no horizontal scroll) -->
+          <div class="flex flex-wrap items-center gap-1.5 flex-1 min-w-0 sm:min-w-[12rem]">
 
             <!-- Mark as Read -->
             <button (click)="bulkMarkAsRead()" [disabled]="bulkProcessing" type="button" 
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                    class="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors whitespace-nowrap"
                     title="Mark selected as read">
               <i class="fas fa-envelope-open text-[10px]"></i>
               <span>Read</span>
@@ -466,7 +467,7 @@
 
             <!-- Resolve -->
             <button (click)="bulkResolve()" [disabled]="bulkProcessing" type="button" 
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-40 transition-colors"
+                    class="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-40 transition-colors whitespace-nowrap"
                     title="Resolve selected">
               <i class="fas fa-check-circle text-[10px]"></i>
               <span>Resolve</span>
@@ -475,14 +476,14 @@
             <!-- Archive / Unarchive -->
             <button *ngIf="viewMode !== 'archived'" 
                     (click)="bulkArchive()" [disabled]="bulkProcessing" type="button" 
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                    class="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors whitespace-nowrap"
                     title="Archive selected">
               <i class="fas fa-archive text-[10px]"></i>
               <span class="hidden md:inline">Archive</span>
             </button>
             <button *ngIf="viewMode === 'archived'" 
                     (click)="bulkUnarchive()" [disabled]="bulkProcessing" type="button" 
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
+                    class="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors whitespace-nowrap"
                     title="Unarchive selected">
               <i class="fas fa-box-open text-[10px]"></i>
               <span class="hidden md:inline">Unarchive</span>
@@ -494,7 +495,7 @@
                 (click)="toggleAssignDropdown($event); $event.stopPropagation()"
                 [disabled]="bulkProcessing"
                 type="button" 
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                class="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors whitespace-nowrap"
                 title="Assign to agent">
                 <i class="fas fa-user-plus text-[10px]"></i>
                 <span class="hidden sm:inline">Assign</span>
@@ -570,7 +571,7 @@
                 (click)="toggleLabelDropdown($event); $event.stopPropagation()"
                 [disabled]="bulkProcessing"
                 type="button" 
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                class="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors whitespace-nowrap"
                 title="Add label">
                 <i class="fas fa-tag text-[10px]"></i>
                 <span class="hidden sm:inline">Label</span>
@@ -609,8 +610,8 @@
 
           </div>
 
-          <!-- Loading indicator -->
-          <div *ngIf="bulkProcessing" class="flex-shrink-0 ml-auto">
+          <!-- Loading indicator (fixed corner so wrapping actions stay full-width) -->
+          <div *ngIf="bulkProcessing" class="absolute top-2 right-3 flex items-center justify-center">
             <i class="fas fa-spinner fa-spin text-xs text-gray-400"></i>
           </div>
         </div>

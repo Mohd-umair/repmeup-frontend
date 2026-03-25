@@ -55,13 +55,14 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   /** At most this many bucket columns may be expanded at once (unassigned counts as one column). */
   private readonly maxExpandedBuckets = 3;
 
-  // ── Cached insight properties (computed once after data loads, never in getters) ──
+  // ── Cached insight properties ──
   totalColumns = 0;
   sentimentBreakdownInput: ISentimentBreakdown = { positive: 0, neutral: 0, negative: 0, total: 0 };
-  commonComments: { keyword: string; count: number; sample: IInteraction }[] = [];
+  commonComments: { keyword: string; count: number; sample: any }[] = [];
   bucketTotal = 0;
   bucketTopics: { name: string; color: string; count: number; percent: number }[] = [];
   aiRecommendation = '';
+  totalMessagesAnalysed = 0;
 
   constructor(
     private inboxService: InboxService,
@@ -115,8 +116,9 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
           }
         }
         this.loading = false;
-        this.computeInsights();   // initial render with interaction data
-        this.loadInsightStats();  // then refresh with full server stats
+        this.computeLocalInsights();
+        this.loadInsightStats();
+        this.loadTopicInsights();
       },
       error: () => {
         this.notify.error('Error', 'Failed to load bucket view');
@@ -134,30 +136,59 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
           this.inboxStats = res.data;
         }
         this.insightsLoading = false;
-        this.computeInsights();
+        this.computeLocalInsights();
       },
       error: () => { this.insightsLoading = false; }
     });
   }
 
-  /** Compute all insight values once and cache them as plain properties.
-   *  Never use expensive computations inside Angular template-bound getters. */
-  private computeInsights(): void {
-    // ── Collect all loaded interactions ──
-    const all: IInteraction[] = [];
-    this.columns.forEach(col => all.push(...col.interactions));
-    all.push(...this.unassignedColumn.interactions);
+  loadTopicInsights(): void {
+    const params: any = {};
+    if (this.filters.platform) params.platform = this.filters.platform;
+    if (this.filters.type) params.type = this.filters.type;
+    if (this.filters.sentiment) params.sentiment = this.filters.sentiment;
+    if (this.filters.status) params.status = this.filters.status;
+    if (this.filters.search) params.search = this.filters.search;
+    if (this.filters.dateFrom) params.dateFrom = this.filters.dateFrom;
+    if (this.filters.dateTo) params.dateTo = this.filters.dateTo;
 
-    // ── totalColumns ──
+    this.inboxService.getTopicInsights(params).subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.commonComments = (res.data.commonTopics || []).map((t: any) => ({
+            keyword: t.keyword,
+            count: t.count,
+            sample: t.sample
+          }));
+          this.aiRecommendation = res.data.recommendation || '';
+          this.totalMessagesAnalysed = res.data.totalMessages || 0;
+          if (res.data.sentiment) {
+            const s = res.data.sentiment;
+            this.sentimentBreakdownInput = {
+              positive: s.positive, neutral: s.neutral, negative: s.negative, total: s.total
+            };
+          }
+        }
+      },
+      error: () => {
+        this.commonComments = [];
+        this.aiRecommendation = 'Unable to load topic insights.';
+      }
+    });
+  }
+
+  private computeLocalInsights(): void {
     this.totalColumns = this.columns.length + (this.unassignedColumn.total > 0 ? 1 : 0);
 
-    // ── Sentiment breakdown (prefer server stats for full dataset) ──
     let positive = 0, neutral = 0, negative = 0;
     if (this.inboxStats) {
       positive = this.inboxStats.positive || 0;
       neutral  = this.inboxStats.neutral  || 0;
       negative = this.inboxStats.negative || 0;
     } else {
+      const all: IInteraction[] = [];
+      this.columns.forEach(col => all.push(...col.interactions));
+      all.push(...this.unassignedColumn.interactions);
       all.forEach(i => {
         if (i.sentiment === 'positive') positive++;
         else if (i.sentiment === 'negative') negative++;
@@ -167,7 +198,6 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     const sentTotal = positive + neutral + negative || 1;
     this.sentimentBreakdownInput = { positive, neutral, negative, total: sentTotal };
 
-    // ── Bucket totals ──
     this.bucketTotal = this.columns.reduce((s, c) => s + c.total, 0) + this.unassignedColumn.total;
     const btTotal = this.bucketTotal || 1;
     this.bucketTopics = [...this.columns.map(col => ({
@@ -176,58 +206,6 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
       count: col.total,
       percent: Math.round((col.total / btTotal) * 100)
     }))].sort((a, b) => b.count - a.count);
-
-    // ── Most common topics (keyword frequency) ──
-    const STOP = new Set([
-      'i','me','my','we','our','you','your','he','she','it','they','them',
-      'is','am','are','was','were','be','been','being','have','has','had',
-      'do','does','did','will','would','could','should','may','might','shall',
-      'a','an','the','and','but','or','so','if','in','on','at','to','for',
-      'of','with','by','from','up','about','into','than','then','that','this',
-      'what','which','who','how','when','where','why','not','no','yes','can',
-      'just','get','got','also','very','more','some','any','all','there','here'
-    ]);
-    const kmap = new Map<string, { count: number; sample: IInteraction }>();
-    all.forEach(interaction => {
-      const seen = new Set<string>();
-      (interaction.content || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 3 && !STOP.has(w))
-        .forEach(word => {
-          if (seen.has(word)) return;
-          seen.add(word);
-          const e = kmap.get(word);
-          if (e) { e.count++; }
-          else { kmap.set(word, { count: 1, sample: interaction }); }
-        });
-    });
-    this.commonComments = Array.from(kmap.entries())
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 5)
-      .map(([keyword, { count, sample }]) => ({ keyword, count, sample }));
-
-    // ── AI Recommendation ──
-    const positivePercent = Math.round((positive / sentTotal) * 100);
-    const negativePercent = Math.round((negative / sentTotal) * 100);
-    let worstBucket = '', worstCount = 0;
-    this.columns.forEach(col => {
-      const neg = col.interactions.filter(i => i.sentiment === 'negative').length;
-      if (neg > worstCount) { worstCount = neg; worstBucket = col.bucket.name; }
-    });
-    const unreadCount = all.filter(i => i.status === 'unread').length;
-    if (sentTotal <= 1) {
-      this.aiRecommendation = 'Load your inbox data to generate AI insights for your conversations.';
-    } else if (negativePercent >= 20 && worstBucket) {
-      this.aiRecommendation = `${worstCount} negative conversation${worstCount > 1 ? 's' : ''} in "${worstBucket}". Prioritise responses there to improve satisfaction.`;
-    } else if (unreadCount > 10) {
-      this.aiRecommendation = `You have ${unreadCount} unread conversations. Consider assigning them to team members to reduce response times.`;
-    } else if (positivePercent >= 60) {
-      this.aiRecommendation = 'Great sentiment overall! Consider sharing positive testimonials to boost brand trust.';
-    } else {
-      this.aiRecommendation = 'Engage consistently with your audience to maintain healthy sentiment scores across all channels.';
-    }
   }
 
   onDrop(event: CdkDragDrop<IInteraction[]>, targetBucketId: string | null): void {

@@ -44,62 +44,68 @@
         </span>
       </button>
 
-      <!-- Notification Dropdown -->
+      <!-- Notification Dropdown (explicit light + dark tokens) -->
       <div 
         *ngIf="showNotifications"
-        class="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] bg-rep-black rounded-lg shadow-2xl border border-gray-800 z-50 max-h-[80vh] overflow-hidden flex flex-col"
+        class="absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] rounded-xl shadow-2xl z-50 max-h-[80vh] overflow-hidden flex flex-col
+               bg-white border border-gray-200 text-gray-900
+               dark:bg-rep-black dark:border-gray-800 dark:text-rep-white"
       >
         <!-- Header -->
-        <div class="flex items-center justify-between p-4 border-b border-gray-800">
-          <h3 class="text-lg font-bold text-rep-white flex items-center">
-            <span class="mr-2">🔔</span>
+        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-transparent">
+          <h3 class="text-base font-bold text-gray-900 dark:text-rep-white flex items-center">
+            <span class="mr-2" aria-hidden="true">🔔</span>
             Notifications
           </h3>
           <button 
             *ngIf="notificationCount > 0"
             (click)="markAllAsRead()"
-            class="text-xs text-rep-lime hover:text-rep-lime/80 font-semibold"
+            type="button"
+            class="text-xs font-semibold text-rep-black dark:text-rep-lime hover:opacity-80"
           >
             Mark all read
           </button>
         </div>
 
         <!-- Notifications List -->
-        <div class="overflow-y-auto flex-1">
+        <div class="overflow-y-auto flex-1 bg-white dark:bg-rep-black">
           <!-- Loading State -->
           <div *ngIf="loadingNotifications" class="p-8 text-center">
             <i class="fas fa-spinner fa-spin text-3xl text-rep-lime mb-2"></i>
-            <p class="text-gray-400 text-sm">Loading notifications...</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Loading notifications...</p>
           </div>
 
           <!-- Empty State -->
           <div *ngIf="!loadingNotifications && notifications.length === 0" class="p-8 text-center">
-            <span class="text-5xl mb-3 block">🎉</span>
-            <p class="text-gray-400 font-medium">All caught up!</p>
-            <p class="text-gray-500 text-sm mt-1">No new notifications</p>
+            <span class="text-5xl mb-3 block" aria-hidden="true">🎉</span>
+            <p class="font-medium text-gray-700 dark:text-gray-300">All caught up!</p>
+            <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">No new notifications</p>
           </div>
 
           <!-- Notification Items -->
           <div *ngIf="!loadingNotifications && notifications.length > 0">
             <button
               *ngFor="let notification of notifications"
+              type="button"
               (click)="markAsRead(notification)"
-              [class]="'w-full text-left p-4 border-b border-gray-800 hover:bg-gray-900 transition ' + (notification.isRead ? 'opacity-60' : 'bg-gray-900/30')"
+              class="w-full text-left p-4 border-b border-gray-100 dark:border-gray-800 transition
+                     hover:bg-gray-100 dark:hover:bg-gray-900"
+              [ngClass]="{
+                'opacity-60': notification.isRead,
+                'bg-rep-lime/10 dark:bg-gray-900/40': !notification.isRead
+              }"
             >
               <div class="flex items-start space-x-3">
-                <!-- Icon -->
                 <div class="flex-shrink-0 mt-1">
                   <span class="text-2xl">{{ getNotificationIcon(notification.type) }}</span>
                 </div>
-
-                <!-- Content -->
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-start justify-between">
-                    <p class="text-sm font-bold text-rep-white">{{ notification.title }}</p>
-                    <span *ngIf="!notification.isRead" class="ml-2 w-2 h-2 bg-rep-lime rounded-full flex-shrink-0 mt-1"></span>
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="text-sm font-bold text-gray-900 dark:text-rep-white">{{ notification.title }}</p>
+                    <span *ngIf="!notification.isRead" class="w-2 h-2 bg-rep-lime rounded-full flex-shrink-0 mt-1.5" aria-hidden="true"></span>
                   </div>
-                  <p class="text-sm text-gray-400 mt-1 line-clamp-2">{{ notification.message }}</p>
-                  <p class="text-xs text-gray-500 mt-2">{{ getTimeAgo(notification.createdAt) }}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">{{ notification.message }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">{{ getTimeAgo(notification.createdAt) }}</p>
                 </div>
               </div>
             </button>
@@ -107,10 +113,11 @@
         </div>
 
         <!-- Footer -->
-        <div *ngIf="notifications.length > 0" class="p-3 border-t border-gray-800 bg-gray-900/50">
+        <div *ngIf="notifications.length > 0" class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
           <button 
+            type="button"
             (click)="navigateToNotifications()"
-            class="w-full text-center text-sm text-rep-lime hover:text-rep-lime/80 font-semibold"
+            class="w-full text-center text-sm font-semibold text-rep-black dark:text-rep-lime hover:opacity-80"
           >
             View all notifications
           </button>

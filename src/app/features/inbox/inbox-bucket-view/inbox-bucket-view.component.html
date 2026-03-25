@@ -28,7 +28,7 @@
                [style.backgroundColor]="col.bucket.color + '22'">
             <i [class]="col.bucket.icon" [style.color]="col.bucket.color" class="text-xs"></i>
           </div>
-          <span class="font-bold text-[12px] text-gray-800 dark:text-white truncate">{{ col.bucket.name }}</span>
+          <span class="font-bold text-sm text-gray-900 dark:text-white truncate">{{ col.bucket.name }}</span>
         </div>
         <div class="flex items-center gap-1 flex-shrink-0">
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -66,9 +66,6 @@
         <i class="fas fa-chevron-down text-[9px] text-gray-400 mt-auto mb-1"></i>
       </div>
 
-      <!-- Accent line -->
-      <div *ngIf="!isCollapsed(col.bucket._id)" class="h-[3px] w-full flex-shrink-0" [style.background]="col.bucket.color"></div>
-
       <!-- Drop Zone -->
       <div *ngIf="!isCollapsed(col.bucket._id)"
            cdkDropList
@@ -92,42 +89,42 @@
           <span *ngIf="interaction.status === 'unread'" class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-800 z-10"></span>
 
           <div class="card-content px-3 pt-3 pb-2.5">
-            <div class="flex items-start gap-2.5">
-              <div class="relative flex-shrink-0">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden ring-2 ring-white dark:ring-gray-800"
+            <div class="flex items-start gap-3">
+              <div class="relative flex-shrink-0 self-start">
+                <div class="w-11 h-11 rounded-lg flex items-center justify-center text-base font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800"
                      [style.backgroundColor]="getPlatformColor(interaction.platform)">
-                  <img *ngIf="getAvatarUrl(interaction)" [src]="getAvatarUrl(interaction)" class="w-full h-full object-cover rounded-full" (error)="$any($event.target).style.display='none'" />
+                  <img *ngIf="getAvatarUrl(interaction)" [src]="getAvatarUrl(interaction)" class="w-full h-full object-cover rounded-lg" (error)="$any($event.target).style.display='none'" />
                   <span *ngIf="!getAvatarUrl(interaction)">{{ getInitials(interaction.author?.name) }}</span>
                 </div>
-                <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center ring-1 ring-white dark:ring-gray-800"
+                <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800"
                      [style.backgroundColor]="getPlatformColor(interaction.platform)">
-                  <i [class]="getPlatformIcon(interaction.platform)" class="text-white" style="font-size:6px;"></i>
+                  <i [class]="getPlatformIcon(interaction.platform) + ' text-white text-[9px] leading-none'"></i>
                 </div>
               </div>
-              <div class="flex-1 min-w-0 pt-0.5">
-                <div class="flex items-center justify-between gap-1">
-                  <span class="text-[12px] font-bold text-gray-900 dark:text-white truncate">{{ interaction.author?.name || 'Unknown' }}</span>
-                  <span class="text-[10px] text-gray-400 flex-shrink-0">{{ getRelativeTime(interaction.platformCreatedAt || interaction.createdAt) }}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ interaction.author?.name || 'Unknown' }}</span>
+                  <span class="text-xs text-gray-400 flex-shrink-0 ml-2">{{ getRelativeTime(interaction.platformCreatedAt || interaction.createdAt) }}</span>
                 </div>
-                <p class="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5 leading-relaxed">{{ interaction.content }}</p>
+                <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 line-clamp-2 leading-snug mb-1.5">{{ interaction.content }}</p>
               </div>
             </div>
             <div class="flex items-center gap-1 flex-wrap mt-2">
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold capitalize"
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold capitalize"
                     [class.type-dm]="interaction.type==='dm'"
                     [class.type-comment]="interaction.type==='comment'"
                     [class.type-review]="interaction.type==='review'"
                     [class.type-default]="interaction.type!=='dm'&&interaction.type!=='comment'&&interaction.type!=='review'">
                 {{ interaction.type }}
               </span>
-              <span *ngIf="interaction.sentiment==='positive'" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                <i class="fas fa-smile" style="font-size:8px;"></i> Positive
+              <span *ngIf="interaction.sentiment==='positive'" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                <i class="fas fa-smile text-[10px]"></i> Positive
               </span>
-              <span *ngIf="interaction.sentiment==='negative'" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
-                <i class="fas fa-frown" style="font-size:8px;"></i> Negative
+              <span *ngIf="interaction.sentiment==='negative'" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
+                <i class="fas fa-frown text-[10px]"></i> Negative
               </span>
-              <span *ngIf="interaction.sentiment==='neutral'" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                <i class="fas fa-meh" style="font-size:8px;"></i> Neutral
+              <span *ngIf="interaction.sentiment==='neutral'" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                <i class="fas fa-meh text-[10px]"></i> Neutral
               </span>
             </div>
           </div>
@@ -160,7 +157,7 @@
           <div class="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-200/70 dark:bg-gray-700 flex-shrink-0">
             <i class="fas fa-layer-group text-xs text-gray-400"></i>
           </div>
-          <span class="font-bold text-[12px] text-gray-700 dark:text-white">Uncategorized</span>
+          <span class="font-bold text-sm text-gray-900 dark:text-white">Uncategorized</span>
         </div>
         <div class="flex items-center gap-1">
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-400 text-white">{{ unassignedColumn.total }}</span>
@@ -191,8 +188,6 @@
         <i class="fas fa-chevron-down text-[9px] text-gray-400 mt-auto mb-1"></i>
       </div>
 
-      <div *ngIf="!isCollapsed('__unassigned__')" class="h-[3px] w-full flex-shrink-0 bg-gray-300 dark:bg-gray-600"></div>
-
       <div *ngIf="!isCollapsed('__unassigned__')"
            cdkDropList id="unassigned-list"
            [cdkDropListData]="unassignedColumn.interactions"
@@ -210,27 +205,27 @@
           <div *cdkDragPlaceholder class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50" style="min-height:90px;"></div>
           <span *ngIf="interaction.status === 'unread'" class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white z-10"></span>
           <div class="card-content px-3 pt-3 pb-2.5">
-            <div class="flex items-start gap-2.5">
-              <div class="relative flex-shrink-0">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white overflow-hidden ring-2 ring-white dark:ring-gray-800"
+            <div class="flex items-start gap-3">
+              <div class="relative flex-shrink-0 self-start">
+                <div class="w-11 h-11 rounded-lg flex items-center justify-center text-base font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800"
                      [style.backgroundColor]="getPlatformColor(interaction.platform)">
-                  <img *ngIf="getAvatarUrl(interaction)" [src]="getAvatarUrl(interaction)" class="w-full h-full object-cover rounded-full" (error)="$any($event.target).style.display='none'" />
+                  <img *ngIf="getAvatarUrl(interaction)" [src]="getAvatarUrl(interaction)" class="w-full h-full object-cover rounded-lg" (error)="$any($event.target).style.display='none'" />
                   <span *ngIf="!getAvatarUrl(interaction)">{{ getInitials(interaction.author?.name) }}</span>
                 </div>
-                <div class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center ring-1 ring-white" [style.backgroundColor]="getPlatformColor(interaction.platform)">
-                  <i [class]="getPlatformIcon(interaction.platform)" class="text-white" style="font-size:6px;"></i>
+                <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800" [style.backgroundColor]="getPlatformColor(interaction.platform)">
+                  <i [class]="getPlatformIcon(interaction.platform) + ' text-white text-[9px] leading-none'"></i>
                 </div>
               </div>
-              <div class="flex-1 min-w-0 pt-0.5">
-                <div class="flex items-center justify-between gap-1">
-                  <span class="text-[12px] font-bold text-gray-900 dark:text-white truncate">{{ interaction.author?.name || 'Unknown' }}</span>
-                  <span class="text-[10px] text-gray-400 flex-shrink-0">{{ getRelativeTime(interaction.platformCreatedAt || interaction.createdAt) }}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ interaction.author?.name || 'Unknown' }}</span>
+                  <span class="text-xs text-gray-400 flex-shrink-0 ml-2">{{ getRelativeTime(interaction.platformCreatedAt || interaction.createdAt) }}</span>
                 </div>
-                <p class="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5 leading-relaxed">{{ interaction.content }}</p>
+                <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 line-clamp-2 leading-snug mb-1.5">{{ interaction.content }}</p>
               </div>
             </div>
             <div class="flex items-center gap-1 flex-wrap mt-2">
-              <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold capitalize"
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-semibold capitalize"
                     [class.type-dm]="interaction.type==='dm'" [class.type-comment]="interaction.type==='comment'"
                     [class.type-review]="interaction.type==='review'" [class.type-default]="interaction.type!=='dm'&&interaction.type!=='comment'&&interaction.type!=='review'">
                 {{ interaction.type }}
@@ -270,7 +265,7 @@
         </div>
         <span class="font-bold text-[13px] text-gray-800 dark:text-white">AI Insights</span>
       </div>
-      <button type="button" (click)="loadInsightStats()" title="Refresh insights"
+      <button type="button" (click)="loadInsightStats(); loadTopicInsights()" title="Refresh insights"
               class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-rep-black hover:bg-rep-lime/20 transition-colors">
         <i class="fas fa-sync-alt text-[10px]" [class.fa-spin]="insightsLoading"></i>
       </button>
@@ -327,11 +322,11 @@
             <p class="text-[11px] font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
               Most Common Topics
             </p>
+            <span *ngIf="totalMessagesAnalysed" class="text-[9px] text-gray-400 ml-auto">{{ totalMessagesAnalysed }} msgs</span>
           </div>
           <div *ngIf="commonComments.length === 0" class="px-4 pb-4 text-center text-[11px] text-gray-400">No data yet</div>
           <div *ngFor="let item of commonComments; let last = last"
-               (click)="selectInteraction(item.sample)"
-               class="px-4 py-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+               class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                [class.border-b]="!last"
                [class.border-gray-100]="!last">
             <div class="flex items-center justify-between gap-2 mb-1">
