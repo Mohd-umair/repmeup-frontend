@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
-import { CommonModule, TitleCasePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { InboxService } from '../../../core/services/inbox.service';
@@ -11,6 +11,8 @@ import { UserService, IAvailableAgent } from '../../../core/services/user.servic
 import { AuthService } from '../../../core/services/auth.service';
 import { SocketService } from '../../../core/services/socket.service';
 import { IInteraction, IInboxFilters, InboxViewMode, ILabel } from '../../../core/models/interaction.model';
+import { inboxFilterToArray, inboxFilterMatches, inboxIntentBucketMatches } from '../../../core/utils/inbox-filter-values';
+import { IntentBucketService, IIntentBucket } from '../../../core/services/intent-bucket.service';
 import { InboxDetailComponent } from '../inbox-detail/inbox-detail.component';
 import { InboxListComponent } from '../inbox-list/inbox-list.component';
 import { InboxTopFiltersComponent } from '../inbox-top-filters/inbox-top-filters.component';
@@ -28,7 +30,7 @@ import { exhaustMap, catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-inbox-container',
   standalone: true,
-  imports: [CommonModule, TitleCasePipe, FormsModule, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent],
+  imports: [CommonModule, FormsModule, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent],
   templateUrl: './inbox-container.component.html',
   styleUrls: ['./inbox-container.component.scss']
 })
@@ -38,9 +40,13 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   loadingMoreConversations = false;
   totalConversations = 0;
   showConversationSearch = false;
-  conversationQuickFilter: 'all' | 'unread' | 'leads' | 'platforms' = 'all';
+  /** No longer drives active states — kept only so old template bindings compile. Use isXxxActive() helpers instead. */
+  conversationQuickFilter: 'all' | 'unread' | 'platforms' | 'intent' = 'all';
   showConversationPlatformDropdown = false;
+  showConversationIntentDropdown = false;
+  showBucketSentimentDropdown = false;
   conversationPlatformOptions: string[] = [];
+  conversationIntentBuckets: IIntentBucket[] = [];
   rightPanelTab: 'actions' | 'suggestions' = 'suggestions';
 
   interactions: IInteraction[] = [];
@@ -89,6 +95,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private authService: AuthService,
     private organizationService: OrganizationService,
+    private intentBucketService: IntentBucketService,
     private socketService: SocketService,
     private route: ActivatedRoute
   ) {}
@@ -100,10 +107,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     // Reset theme to default (light black/gray) when entering inbox
     this.themeService.resetTheme();
     
-    // Apply theme based on current platform filter if exists
-    if (this.platformFilters.platform) {
-      this.themeService.setPlatformTheme(this.platformFilters.platform);
-    }
+    this.applyThemeForPlatformFilters();
     
     // Apply initial filters from route query params (e.g. ?sentiment=negative, ?status=unread, ?postId=... from Content)
     const params = this.route.snapshot.queryParams;
@@ -132,6 +136,18 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     // Load saved auto-sync preference from the organisation
     this.loadAutoSyncSetting();
     this.loadConversationPlatformOptions();
+    this.intentBucketService.getBuckets().subscribe({
+      next: (res) => {
+        if (res.success && Array.isArray(res.data)) {
+          this.conversationIntentBuckets = [...res.data].sort(
+            (a: IIntentBucket, b: IIntentBucket) => (a.order ?? 0) - (b.order ?? 0)
+          );
+        }
+      },
+      error: () => {
+        this.conversationIntentBuckets = [];
+      }
+    });
 
     this.updateMergedBucketFilters();
     this.loadInteractions(true);
@@ -156,9 +172,13 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         const incoming: IInteraction = data?.interaction;
         if (!incoming) return;
 
-        // Filter: only show if it matches active platform/type filters
-        if (this.platformFilters.platform && incoming.platform !== this.platformFilters.platform) return;
-        if (this.topFilters.type && incoming.type !== this.topFilters.type) return;
+        if (!inboxFilterMatches(this.platformFilters.platform as any, incoming.platform)) return;
+        if (!inboxFilterMatches(this.topFilters.type as any, incoming.type)) return;
+        if (!inboxIntentBucketMatches(this.topFilters.intentBucket, incoming)) return;
+        // New messages are always unread — so if the unread filter is active they qualify.
+        // If a non-unread status filter is active (e.g. resolved), skip new incoming messages.
+        const statusFilter = (this.topFilters.status as string) || '';
+        if (statusFilter && statusFilter !== 'unread') return;
 
         // Update service so merged list keeps this at top when poll/API returns
         this.inboxService.prependOrUpdateInteraction(incoming);
@@ -554,9 +574,13 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     if (this.viewMode === 'archived') {
       return 'fas fa-archive';
     }
-    
-    if (!this.platformFilters.platform) {
-      return 'fas fa-inbox'; // Default unified inbox icon
+
+    const plats = inboxFilterToArray(this.platformFilters.platform as any);
+    if (plats.length === 0) {
+      return 'fas fa-inbox';
+    }
+    if (plats.length > 1) {
+      return 'fas fa-layer-group';
     }
 
     const platformIcons: { [key: string]: string } = {
@@ -569,7 +593,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       'website': 'fas fa-globe'
     };
 
-    return platformIcons[this.platformFilters.platform.toLowerCase()] || 'fas fa-inbox';
+    return platformIcons[plats[0].toLowerCase()] || 'fas fa-inbox';
   }
 
   /**
@@ -581,13 +605,14 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       return 'Archived Conversations';
     }
     
-    if (!this.platformFilters.platform) {
+    const plats = inboxFilterToArray(this.platformFilters.platform as any);
+    if (plats.length === 0) {
       return 'Unified Inbox';
     }
-
-    // Capitalize first letter of platform name
-    const platformName = this.platformFilters.platform.charAt(0).toUpperCase() + 
-                         this.platformFilters.platform.slice(1);
+    if (plats.length > 1) {
+      return 'Filtered Inbox';
+    }
+    const platformName = plats[0].charAt(0).toUpperCase() + plats[0].slice(1);
     return `${platformName} Inbox`;
   }
 
@@ -595,8 +620,12 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    * Get platform-specific subtitle for the header
    */
   getHeaderSubtitle(): string {
-    if (!this.platformFilters.platform) {
+    const plats = inboxFilterToArray(this.platformFilters.platform as any);
+    if (plats.length === 0) {
       return 'Manage all your interactions in one place';
+    }
+    if (plats.length > 1) {
+      return `Showing ${plats.length} selected platforms`;
     }
 
     const platformSubtitles: { [key: string]: string } = {
@@ -609,8 +638,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       'website': 'Manage your website interactions'
     };
 
-    return platformSubtitles[this.platformFilters.platform.toLowerCase()] || 
-           `Manage your ${this.platformFilters.platform} interactions`;
+    const p = plats[0].toLowerCase();
+    return platformSubtitles[p] || `Manage your ${plats[0]} interactions`;
   }
 
   /**
@@ -743,19 +772,22 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
             (p: any) => p.status === 'connected' && p.isActive
           );
 
-          // If a platform filter is active, only sync that platform
-          if (this.platformFilters.platform) {
-            connectedPlatforms = connectedPlatforms.filter(
-              (p: any) => p.platform?.toLowerCase() === this.platformFilters.platform!.toLowerCase()
+          const selectedPlats = inboxFilterToArray(this.platformFilters.platform as any).map((s) =>
+            String(s).toLowerCase()
+          );
+          if (selectedPlats.length > 0) {
+            connectedPlatforms = connectedPlatforms.filter((p: any) =>
+              selectedPlats.includes(String(p.platform || '').toLowerCase())
             );
           }
 
           if (connectedPlatforms.length === 0) {
             if (!silent) {
               this.syncing = false;
-              const msg = this.platformFilters.platform
-                ? `No active ${this.platformFilters.platform} connection found. Connect it in Settings → Platforms.`
-                : 'Please connect at least one platform to sync interactions.';
+              const msg =
+                selectedPlats.length > 0
+                  ? `No active connection found for the selected platform(s). Connect them in Settings → Platforms.`
+                  : 'Please connect at least one platform to sync interactions.';
               this.notificationService.warning('No Platforms Connected', msg);
             }
             resolve();
@@ -969,7 +1001,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   }
 
   loadInboxStats(): void {
-    const filters = this.platformFilters.platform ? { platform: this.platformFilters.platform } : undefined;
+    const plats = inboxFilterToArray(this.platformFilters.platform as any);
+    const filters = plats.length > 0 ? { platform: plats.length === 1 ? plats[0] : plats } : undefined;
     this.inboxService.getStats(filters).subscribe({
       next: (response) => {
         if (response.success && response.data) {
@@ -981,17 +1014,11 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   onPlatformFilterChange(filters: IInboxFilters): void {
     this.platformFilters = filters;
-    
-    // Clear selected interaction when switching platforms
+
     this.selectedInteraction = null;
-    
-    // Apply platform theme when platform filter is selected
-    if (filters.platform) {
-      this.themeService.setPlatformTheme(filters.platform);
-    } else {
-      this.themeService.resetTheme();
-    }
-    
+
+    this.applyThemeForPlatformFilters();
+
     this.updateMergedBucketFilters();
     this.loadInteractions(true);
   }
@@ -1010,62 +1037,209 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     return next;
   }
 
-  applyConversationQuickFilter(filter: 'all' | 'unread' | 'leads' | 'platforms'): void {
-    this.conversationQuickFilter = filter;
+  // ── Quick-filter active-state helpers (each filter is independent) ──────────
 
-    // Keep existing filters, but control status/type/platform from quick chips.
+  /** "All" chip is active only when no quick filters are set. */
+  isAllConversationFilterActive(): boolean {
+    const noStatus = !this.topFilters.status;
+    const noIntent = !this.topFilters.intentBucket;
+    const noPlatform = inboxFilterToArray(this.platformFilters.platform as any).length === 0;
+    return noStatus && noIntent && noPlatform;
+  }
+
+  isUnreadFilterActive(): boolean {
+    return (this.topFilters.status as string) === 'unread';
+  }
+
+  conversationIntentFilterActive(): boolean {
+    const ib = this.topFilters.intentBucket;
+    return ib != null && String(ib).trim() !== '';
+  }
+
+  isConversationIntentBucketActive(bucketKey: string): boolean {
+    return this.topFilters.intentBucket === bucketKey;
+  }
+
+  // ── Quick-filter actions ─────────────────────────────────────────────────────
+
+  /** "All" resets every quick filter at once. */
+  clearAllConversationFilters(): void {
+    this.topFilters = { ...this.topFilters };
+    delete (this.topFilters as any).status;
+    delete (this.topFilters as any).intentBucket;
+    this.platformFilters = { ...this.platformFilters };
+    delete (this.platformFilters as any).platform;
+
+    this.showConversationPlatformDropdown = false;
+    this.showConversationIntentDropdown = false;
+    this.showBucketSentimentDropdown = false;
+    this.themeService.resetTheme();
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
+  }
+
+  /** Unread toggles status independently — platform/intent are preserved. */
+  toggleUnreadFilter(): void {
     const nextTopFilters: IInboxFilters = { ...this.topFilters };
-    const nextPlatformFilters: IInboxFilters = { ...this.platformFilters };
-
-    delete nextTopFilters.status;
-    delete nextTopFilters.type;
-    delete nextPlatformFilters.platform;
-
-    if (filter === 'unread') {
-      nextTopFilters.status = 'unread' as any;
-      this.showConversationPlatformDropdown = false;
-    } else if (filter === 'leads') {
-      // Treat DMs as lead-oriented conversations in inbox quick filter.
-      nextTopFilters.type = 'dm' as any;
-      this.showConversationPlatformDropdown = false;
-    } else if (filter === 'platforms') {
-      // Platforms is handled by its own dropdown trigger.
-      return;
+    if ((nextTopFilters.status as string) === 'unread') {
+      delete nextTopFilters.status;
     } else {
-      this.showConversationPlatformDropdown = false;
+      nextTopFilters.status = 'unread' as any;
     }
-
     this.topFilters = nextTopFilters;
-    this.platformFilters = nextPlatformFilters;
+    this.showConversationPlatformDropdown = false;
+    this.showConversationIntentDropdown = false;
+    this.showBucketSentimentDropdown = false;
     this.updateMergedBucketFilters();
     this.loadInteractions(true);
   }
 
   toggleConversationPlatformDropdown(): void {
     this.showConversationPlatformDropdown = !this.showConversationPlatformDropdown;
+    if (this.showConversationPlatformDropdown) {
+      this.showConversationIntentDropdown = false;
+      this.showBucketSentimentDropdown = false;
+    }
   }
 
-  selectConversationPlatform(platform?: string): void {
-    this.conversationQuickFilter = 'platforms';
-    this.showConversationPlatformDropdown = false;
+  toggleConversationIntentDropdown(): void {
+    this.showConversationIntentDropdown = !this.showConversationIntentDropdown;
+    if (this.showConversationIntentDropdown) {
+      this.showConversationPlatformDropdown = false;
+      this.showBucketSentimentDropdown = false;
+    }
+  }
 
+  toggleBucketSentimentDropdown(): void {
+    this.showBucketSentimentDropdown = !this.showBucketSentimentDropdown;
+    if (this.showBucketSentimentDropdown) {
+      this.showConversationPlatformDropdown = false;
+      this.showConversationIntentDropdown = false;
+    }
+  }
+
+  bucketSentimentFilterActive(): boolean {
+    return inboxFilterToArray(this.topFilters.sentiment as any).length > 0;
+  }
+
+  isBucketSentimentValue(value: 'positive' | 'negative' | 'neutral'): boolean {
+    const arr = inboxFilterToArray(this.topFilters.sentiment as any);
+    return arr.length === 1 && arr[0] === value;
+  }
+
+  setBucketSentimentFilter(value?: 'positive' | 'negative' | 'neutral'): void {
     const nextTopFilters: IInboxFilters = { ...this.topFilters };
-    const nextPlatformFilters: IInboxFilters = { ...this.platformFilters };
-    delete nextTopFilters.status;
-    delete nextTopFilters.type;
-    delete nextPlatformFilters.platform;
-
-    if (platform) {
-      nextPlatformFilters.platform = platform as any;
-      this.themeService.setPlatformTheme(platform);
+    if (value) {
+      nextTopFilters.sentiment = value as any;
     } else {
-      this.themeService.resetTheme();
+      delete nextTopFilters.sentiment;
+    }
+    this.topFilters = this.stripEmptyDateRange(nextTopFilters);
+    this.showBucketSentimentDropdown = false;
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
+  }
+
+  /** Single-select intent — platform/status are preserved. Clicking the active bucket clears it. */
+  toggleConversationIntentFilter(bucketKey?: string): void {
+    const nextTopFilters: IInboxFilters = { ...this.topFilters };
+
+    if (!bucketKey) {
+      delete nextTopFilters.intentBucket;
+      this.showConversationIntentDropdown = false;
+    } else if (nextTopFilters.intentBucket === bucketKey) {
+      delete nextTopFilters.intentBucket;
+    } else {
+      nextTopFilters.intentBucket = bucketKey;
+      this.showConversationIntentDropdown = false;
     }
 
     this.topFilters = nextTopFilters;
+    this.updateMergedBucketFilters();
+    this.loadInteractions(true);
+  }
+
+  /** Multiselect platform — intent/status are preserved. */
+  toggleConversationPlatformFilter(platform?: string): void {
+    const nextPlatformFilters: IInboxFilters = { ...this.platformFilters };
+
+    let nextPlatforms = inboxFilterToArray(this.platformFilters.platform as any);
+
+    if (!platform) {
+      nextPlatforms = [];
+      this.showConversationPlatformDropdown = false;
+      this.themeService.resetTheme();
+    } else {
+      const p = platform.toLowerCase();
+      const has = nextPlatforms.some((x) => x.toLowerCase() === p);
+      nextPlatforms = has
+        ? nextPlatforms.filter((x) => x.toLowerCase() !== p)
+        : [...nextPlatforms, platform];
+      this.applyThemeForPlatformFiltersWithList(nextPlatforms);
+    }
+
+    delete nextPlatformFilters.platform;
+    if (nextPlatforms.length === 1) nextPlatformFilters.platform = nextPlatforms[0] as any;
+    else if (nextPlatforms.length > 1) nextPlatformFilters.platform = nextPlatforms as any;
+
     this.platformFilters = nextPlatformFilters;
     this.updateMergedBucketFilters();
     this.loadInteractions(true);
+  }
+
+  /** @deprecated kept so existing calls compile — use clearAllConversationFilters/toggleUnreadFilter. */
+  applyConversationQuickFilter(filter: 'all' | 'unread'): void {
+    if (filter === 'all') this.clearAllConversationFilters();
+    else this.toggleUnreadFilter();
+  }
+
+  conversationPlatformFilterCount(): number {
+    return inboxFilterToArray(this.platformFilters.platform as any).length;
+  }
+
+  isConversationPlatformActive(platform: string): boolean {
+    return inboxFilterToArray(this.platformFilters.platform as any).some(
+      (x) => x.toLowerCase() === platform.toLowerCase()
+    );
+  }
+
+  getSyncButtonTitle(): string {
+    const n = this.conversationPlatformFilterCount();
+    if (n === 0) return 'Sync all platforms';
+    if (n === 1) return `Sync ${inboxFilterToArray(this.platformFilters.platform as any)[0]}`;
+    return `Sync ${n} platforms`;
+  }
+
+  getSyncButtonLabel(): string {
+    const n = this.conversationPlatformFilterCount();
+    if (n === 0) return 'Sync All';
+    if (n === 1) {
+      const p = inboxFilterToArray(this.platformFilters.platform as any)[0];
+      return 'Sync ' + p.charAt(0).toUpperCase() + p.slice(1);
+    }
+    return `Sync (${n})`;
+  }
+
+  hasTopSentimentFilter(): boolean {
+    return inboxFilterToArray(this.topFilters.sentiment as any).length > 0;
+  }
+
+  topSentimentFilterSummary(): string {
+    return inboxFilterToArray(this.topFilters.sentiment as any).join(', ');
+  }
+
+  private applyThemeForPlatformFilters(): void {
+    this.applyThemeForPlatformFiltersWithList(
+      inboxFilterToArray(this.platformFilters.platform as any)
+    );
+  }
+
+  private applyThemeForPlatformFiltersWithList(platforms: string[]): void {
+    if (platforms.length === 1) {
+      this.themeService.setPlatformTheme(platforms[0] as any);
+    } else {
+      this.themeService.resetTheme();
+    }
   }
 
   private loadConversationPlatformOptions(): void {
@@ -1103,6 +1277,14 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     return p.charAt(0).toUpperCase() + p.slice(1);
   }
 
+  getActiveIntentBucketLabel(): string {
+    const key = this.topFilters.intentBucket;
+    if (!key) return '';
+    if (key === 'none') return 'Unassigned';
+    const found = this.conversationIntentBuckets.find(b => b._id === key);
+    return found ? found.name : key;
+  }
+
   onFilterChange(filters: IInboxFilters): void {
     // Legacy support - merge with existing filters
     this.filters = { ...this.filters, ...filters };
@@ -1129,13 +1311,12 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   mergedBucketFilters: IInboxFilters = {};
   bucketSearchTerm = '';
-  bucketSortBy: 'newest' | 'oldest' | 'sentiment' = 'newest';
+  bucketSortBy: 'newest' | 'oldest' = 'newest';
 
   private updateMergedBucketFilters(): void {
     const extra: any = {};
     if (this.bucketSearchTerm?.trim()) extra.search = this.bucketSearchTerm.trim();
     if (this.bucketSortBy === 'oldest') { extra.sortBy = 'platformCreatedAt'; extra.sortOrder = 'asc'; }
-    else if (this.bucketSortBy === 'sentiment') { extra.sortBy = 'sentiment'; extra.sortOrder = 'asc'; }
     else { extra.sortBy = 'platformCreatedAt'; extra.sortOrder = 'desc'; }
     this.mergedBucketFilters = { ...this.platformFilters, ...this.topFilters, ...extra };
   }
@@ -1145,7 +1326,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     this.updateMergedBucketFilters();
   }
 
-  onBucketSortChange(sort: 'newest' | 'oldest' | 'sentiment'): void {
+  onBucketSortChange(sort: 'newest' | 'oldest'): void {
     this.bucketSortBy = sort;
     this.updateMergedBucketFilters();
   }

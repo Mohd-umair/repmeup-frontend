@@ -13,6 +13,10 @@ export interface IIntentBucket {
   aiPromptHint: string;
   isDefault: boolean;
   isActive: boolean;
+  replyEnabled: boolean;
+  replyTone?: string;
+  replyLanguage?: string;
+  replyPrompt?: string;
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;

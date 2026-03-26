@@ -170,15 +170,18 @@ export interface ILabel {
 
 export type InboxViewMode = 'all' | 'priority' | 'assigned' | 'needs_response' | 'overdue' | 'archived' | 'buckets';
 
+/** Single value or multi-select (OR) — serialized as comma-separated query params. */
+export type InboxFilterMulti<T extends string> = T | T[] | undefined;
+
 export interface IInboxFilters {
-  platform?: Platform;
-  type?: InteractionType;
-  sentiment?: Sentiment;
-  status?: InteractionStatus;
+  platform?: InboxFilterMulti<Platform>;
+  type?: InboxFilterMulti<InteractionType>;
+  sentiment?: InboxFilterMulti<Sentiment>;
+  status?: InboxFilterMulti<InteractionStatus>;
   assignedTo?: string;
   viewMode?: InboxViewMode;
   search?: string;
-  label?: string;
+  label?: InboxFilterMulti<string>;
   intentBucket?: string;
   /** Filter by post (e.g. from Content page "Comments" – show only comments for this post) */
   postId?: string;

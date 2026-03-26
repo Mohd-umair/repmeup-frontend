@@ -1,11 +1,11 @@
-<div class="min-h-screen bg-rep-black p-4 sm:p-6">
+<div class="min-h-screen bg-rep-white dark:bg-rep-black p-4 sm:p-6">
   <!-- Header -->
   <div class="mb-6">
-    <h1 class="text-3xl font-bold text-rep-white flex items-center gap-3">
+    <h1 class="text-3xl font-bold text-rep-black dark:text-rep-white flex items-center gap-3">
       <i class="fas fa-bolt text-purple-500"></i>
       AI Credits
     </h1>
-    <p class="text-gray-400 mt-2">Monitor your AI credit usage and history</p>
+    <p class="text-gray-500 dark:text-gray-400 mt-2">Monitor your AI credit usage and history</p>
   </div>
 
   <!-- Loading State -->
@@ -14,9 +14,9 @@
   </div>
 
   <!-- Error State -->
-  <div *ngIf="error && !loading" class="bg-red-500/10 border border-red-500/30 rounded-xl p-6 text-center">
+  <div *ngIf="error && !loading" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl p-6 text-center">
     <i class="fas fa-exclamation-circle text-red-500 text-4xl mb-3"></i>
-    <p class="text-red-400 font-medium">{{ error }}</p>
+    <p class="text-red-600 dark:text-red-400 font-medium">{{ error }}</p>
   </div>
 
   <!-- Content -->
@@ -24,82 +24,82 @@
     <!-- Credits Overview Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- Total Credits Card -->
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+      <div class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-            <i class="fas fa-infinity text-purple-400 text-xl"></i>
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
+            <i class="fas fa-infinity text-purple-600 dark:text-purple-400 text-xl"></i>
           </div>
-          <span class="text-xs text-gray-400 font-medium">Monthly Limit</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Monthly Limit</span>
         </div>
-        <div class="text-3xl font-bold text-white mb-1">
+        <div class="text-3xl font-bold text-rep-black dark:text-white mb-1">
           {{ credits.isUnlimited ? '∞' : credits.limit }}
         </div>
-        <p class="text-sm text-gray-400">Total available credits</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Total available credits</p>
       </div>
 
       <!-- Used Credits Card -->
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+      <div class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-            <i class="fas fa-chart-line text-blue-400 text-xl"></i>
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
+            <i class="fas fa-chart-line text-blue-600 dark:text-blue-400 text-xl"></i>
           </div>
-          <span class="text-xs text-gray-400 font-medium">This Month</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">This Month</span>
         </div>
-        <div class="text-3xl font-bold text-white mb-1">
+        <div class="text-3xl font-bold text-rep-black dark:text-white mb-1">
           {{ credits.current }}
         </div>
-        <p class="text-sm text-gray-400">Credits used</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Credits used</p>
       </div>
 
       <!-- Remaining Credits Card -->
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+      <div class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-            <i class="fas fa-bolt text-green-400 text-xl"></i>
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
+            <i class="fas fa-bolt text-green-600 dark:text-green-400 text-xl"></i>
           </div>
-          <span class="text-xs text-gray-400 font-medium">Available</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Available</span>
         </div>
         <div class="text-3xl font-bold" [class]="credits.isNearLimit ? 'text-yellow-500' : credits.isAtLimit ? 'text-red-500' : 'text-rep-lime'">
           {{ credits.isUnlimited ? '∞' : credits.remaining }}
         </div>
-        <p class="text-sm text-gray-400">Credits remaining</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Credits remaining</p>
       </div>
     </div>
 
     <!-- Progress Bar -->
-    <div *ngIf="!credits.isUnlimited" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+    <div *ngIf="!credits.isUnlimited" class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
       <div class="flex items-center justify-between mb-3">
-        <span class="text-sm font-semibold text-gray-300">Usage Progress</span>
+        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Usage Progress</span>
         <span class="text-sm font-bold" [class]="credits.isNearLimit ? 'text-yellow-500' : credits.isAtLimit ? 'text-red-500' : 'text-rep-lime'">
           {{ credits.percentage }}%
         </span>
       </div>
-      <div class="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+      <div class="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
         <div 
           [class]="getProgressBarColor()"
           class="h-full rounded-full transition-all duration-500"
           [style.width.%]="credits.percentage"
         ></div>
       </div>
-      <p class="text-xs text-gray-400 mt-2">
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
         {{ credits.current }} of {{ credits.limit }} credits used this month
       </p>
     </div>
 
     <!-- Warning Messages -->
-    <div *ngIf="credits.isNearLimit && !credits.isUnlimited" class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-start gap-3">
+    <div *ngIf="credits.isNearLimit && !credits.isUnlimited" class="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 rounded-xl p-4 flex items-start gap-3">
       <i class="fas fa-exclamation-triangle text-yellow-500 text-xl mt-0.5"></i>
       <div>
-        <p class="text-yellow-400 font-semibold mb-1">Approaching Credit Limit</p>
-        <p class="text-yellow-400/80 text-sm">You're running low on AI credits. Consider upgrading your plan for more credits.</p>
+        <p class="text-yellow-700 dark:text-yellow-400 font-semibold mb-1">Approaching Credit Limit</p>
+        <p class="text-yellow-600 dark:text-yellow-400/80 text-sm">You're running low on AI credits. Consider upgrading your plan for more credits.</p>
       </div>
     </div>
 
-    <div *ngIf="credits.isAtLimit && !credits.isUnlimited" class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-start gap-3">
+    <div *ngIf="credits.isAtLimit && !credits.isUnlimited" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl p-4 flex items-start gap-3">
       <i class="fas fa-exclamation-circle text-red-500 text-xl mt-0.5"></i>
       <div>
-        <p class="text-red-400 font-semibold mb-1">Credit Limit Reached</p>
-        <p class="text-red-400/80 text-sm">You've used all your AI credits for this month. Upgrade your plan to continue using AI features.</p>
+        <p class="text-red-700 dark:text-red-400 font-semibold mb-1">Credit Limit Reached</p>
+        <p class="text-red-600 dark:text-red-400/80 text-sm">You've used all your AI credits for this month. Upgrade your plan to continue using AI features.</p>
         <button routerLink="/app/plans" class="mt-3 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition">
           Upgrade Plan
         </button>
@@ -107,51 +107,51 @@
     </div>
 
     <!-- Usage History -->
-    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 overflow-hidden">
-      <div class="p-6 border-b border-gray-800">
-        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-          <i class="fas fa-history text-purple-400"></i>
+    <div class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+      <div class="p-6 border-b border-gray-100 dark:border-gray-800">
+        <h2 class="text-xl font-bold text-rep-black dark:text-white flex items-center gap-2">
+          <i class="fas fa-history text-purple-500 dark:text-purple-400"></i>
           Usage History
         </h2>
-        <p class="text-sm text-gray-400 mt-1">Detailed breakdown of your AI credit usage</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Detailed breakdown of your AI credit usage</p>
       </div>
 
-      <!-- Usage List -->
+      <!-- Empty State -->
       <div *ngIf="usageHistory.length === 0" class="p-12 text-center">
-        <i class="fas fa-inbox text-5xl text-gray-600 mb-4"></i>
-        <p class="text-gray-400 font-medium">No usage history yet</p>
-        <p class="text-gray-500 text-sm mt-1">Start using AI features to see your credit usage here</p>
+        <i class="fas fa-inbox text-5xl text-gray-300 dark:text-gray-600 mb-4"></i>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">No usage history yet</p>
+        <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">Start using AI features to see your credit usage here</p>
       </div>
 
-      <div *ngIf="usageHistory.length > 0" class="divide-y divide-gray-800">
-        <div *ngFor="let usage of usageHistory" class="p-4 hover:bg-gray-800/50 transition">
+      <div *ngIf="usageHistory.length > 0" class="divide-y divide-gray-100 dark:divide-gray-800">
+        <div *ngFor="let usage of usageHistory" class="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
           <div class="flex items-start justify-between">
             <div class="flex items-start gap-3 flex-1">
               <!-- Icon -->
-              <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <i [class]="getOperationIcon(usage.operation) + ' text-purple-400'"></i>
+              <div class="w-10 h-10 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <i [class]="getOperationIcon(usage.operation) + ' text-purple-600 dark:text-purple-400'"></i>
               </div>
 
               <!-- Details -->
               <div class="flex-1 min-w-0">
-                <h3 class="text-sm font-semibold text-white">{{ getOperationLabel(usage.operation) }}</h3>
-                <p class="text-xs text-gray-400 mt-1">{{ formatDate(usage.createdAt) }}</p>
+                <h3 class="text-sm font-semibold text-rep-black dark:text-white">{{ getOperationLabel(usage.operation) }}</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ formatDate(usage.createdAt) }}</p>
                 
                 <!-- Metadata -->
                 <div *ngIf="usage.metadata" class="mt-2 flex flex-wrap gap-2">
-                  <span *ngIf="usage.metadata.mode" class="px-2 py-0.5 bg-gray-800 text-gray-300 rounded text-xs">
+                  <span *ngIf="usage.metadata.mode" class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded text-xs">
                     Mode: {{ usage.metadata.mode }}
                   </span>
-                  <span *ngIf="usage.metadata.platforms" class="px-2 py-0.5 bg-gray-800 text-gray-300 rounded text-xs">
+                  <span *ngIf="usage.metadata.platforms" class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded text-xs">
                     {{ usage.metadata.platforms.length }} platforms
                   </span>
-                  <span *ngIf="usage.metadata.postType" class="px-2 py-0.5 bg-gray-800 text-gray-300 rounded text-xs">
+                  <span *ngIf="usage.metadata.postType" class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded text-xs">
                     Type: {{ usage.metadata.postType }}
                   </span>
                 </div>
                 
                 <!-- Prompt Preview -->
-                <p *ngIf="usage.metadata?.prompt" class="text-xs text-gray-500 mt-2 line-clamp-2">
+                <p *ngIf="usage.metadata?.prompt" class="text-xs text-gray-400 dark:text-gray-500 mt-2 line-clamp-2">
                   "{{ usage.metadata.prompt }}"
                 </p>
               </div>
@@ -159,9 +159,9 @@
 
             <!-- Credits Used Badge -->
             <div class="flex-shrink-0 ml-4">
-              <div class="flex items-center gap-1.5 bg-purple-500/20 px-3 py-1.5 rounded-lg border border-purple-500/30">
-                <i class="fas fa-bolt text-purple-400 text-xs"></i>
-                <span class="text-sm font-bold text-purple-300">-{{ usage.creditsUsed }}</span>
+              <div class="flex items-center gap-1.5 bg-purple-100 dark:bg-purple-500/20 px-3 py-1.5 rounded-lg border border-purple-200 dark:border-purple-500/30">
+                <i class="fas fa-bolt text-purple-500 dark:text-purple-400 text-xs"></i>
+                <span class="text-sm font-bold text-purple-700 dark:text-purple-300">-{{ usage.creditsUsed }}</span>
               </div>
             </div>
           </div>
@@ -169,24 +169,24 @@
       </div>
 
       <!-- Pagination -->
-      <div *ngIf="totalPages > 1" class="p-4 border-t border-gray-800 flex items-center justify-between bg-gray-800/30">
+      <div *ngIf="totalPages > 1" class="p-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gray-50 dark:bg-gray-800/30">
         <button
           (click)="prevPage()"
           [disabled]="page === 1"
-          class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <i class="fas fa-chevron-left mr-2"></i>
           Previous
         </button>
         
-        <span class="text-sm text-gray-400">
+        <span class="text-sm text-gray-500 dark:text-gray-400">
           Page {{ page }} of {{ totalPages }}
         </span>
         
         <button
           (click)="nextPage()"
           [disabled]="page === totalPages"
-          class="px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next
           <i class="fas fa-chevron-right ml-2"></i>

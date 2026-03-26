@@ -32,6 +32,24 @@ export class BucketSettingsComponent implements OnInit {
     'fas fa-handshake', 'fas fa-headset', 'fas fa-question-circle', 'fas fa-bullhorn'
   ];
 
+  toneOptions = [
+    { value: '', label: 'Org Default' },
+    { value: 'professional', label: 'Professional' },
+    { value: 'casual', label: 'Casual' },
+    { value: 'friendly', label: 'Friendly' },
+    { value: 'authoritative', label: 'Authoritative' },
+    { value: 'playful', label: 'Playful' },
+    { value: 'inspirational', label: 'Inspirational' },
+    { value: 'neutral', label: 'Neutral' }
+  ];
+
+  languageOptions = [
+    { value: 'auto', label: 'Auto-detect' },
+    { value: 'english', label: 'English' },
+    { value: 'hindi', label: 'Hindi' },
+    { value: 'hinglish', label: 'Hinglish' }
+  ];
+
   dragIndex: number | null = null;
 
   constructor(
@@ -104,7 +122,11 @@ export class BucketSettingsComponent implements OnInit {
       icon: this.form.icon || 'fas fa-tag',
       keywords: this.form.keywords || [],
       aiPromptHint: this.form.aiPromptHint || '',
-      isDefault: this.form.isDefault || false
+      isDefault: this.form.isDefault || false,
+      replyEnabled: this.form.replyEnabled !== false,
+      replyTone: this.form.replyTone || '',
+      replyLanguage: this.form.replyLanguage || 'auto',
+      replyPrompt: this.form.replyPrompt || ''
     };
 
     const obs = this.isEditing && this.editingBucket?._id
@@ -196,7 +218,11 @@ export class BucketSettingsComponent implements OnInit {
       icon: 'fas fa-tag',
       keywords: [],
       aiPromptHint: '',
-      isDefault: false
+      isDefault: false,
+      replyEnabled: true,
+      replyTone: '',
+      replyLanguage: 'auto',
+      replyPrompt: ''
     };
   }
 }

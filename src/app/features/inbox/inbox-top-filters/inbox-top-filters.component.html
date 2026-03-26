@@ -1,177 +1,133 @@
-<div class="bg-white rounded-xl shadow-sm p-4 border" style="border-color: rgba(0,0,0,0.08);">
+<div class="bg-white dark:bg-gray-900/90 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-800">
   <!-- Header (clickable to collapse/expand) -->
-  <div 
+  <div
     (click)="toggleExpanded()"
     class="flex items-center justify-between cursor-pointer select-none group"
   >
-    <h3 class="text-sm font-semibold text-gray-900 flex items-center gap-2 group-hover:text-gray-700">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 group-hover:text-gray-700 dark:group-hover:text-gray-200">
       <i class="fas fa-sliders-h text-gray-400"></i>
       <span>Quick Filters</span>
-      <span *ngIf="hasActiveFilters() && !expanded" class="text-xs font-normal text-rep-lime">({{ getActiveFilterCount() }} active)</span>
     </h3>
     <div class="flex items-center gap-2">
-      <button 
+      <button
         *ngIf="hasActiveFilters() && expanded"
         (click)="clearFilters(); $event.stopPropagation()"
         (touchstart)="clearFilters(); $event.stopPropagation()"
         type="button"
-        class="touch-manipulation flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-xs font-medium"
+        class="touch-manipulation flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg transition-colors text-xs font-medium"
         title="Clear all filters"
       >
         <i class="fas fa-times text-xs"></i>
         Clear
       </button>
-      <i class="fas transition-transform duration-200 text-gray-400 text-sm" 
-         [class.fa-chevron-down]="expanded" 
+      <i class="fas transition-transform duration-200 text-gray-400 text-sm"
+         [class.fa-chevron-down]="expanded"
          [class.fa-chevron-right]="!expanded"
          [class.rotate-0]="expanded"
          title="{{ expanded ? 'Collapse' : 'Expand' }}"></i>
     </div>
   </div>
 
-  <!-- Filters Row (collapsible) -->
-  <div *ngIf="expanded" class="flex flex-wrap gap-4 mt-3 animate-slideDown">
-    
-    <!-- Labels Filter -->
-    <div *ngIf="labels && labels.length > 0" class="flex items-center gap-2">
-      <span class="text-xs font-medium text-gray-500">Labels:</span>
-      <div class="flex gap-1.5">
-        <button
-          *ngFor="let label of labels"
-          (click)="toggleFilter('label', label._id)"
-          (touchstart)="toggleFilter('label', label._id)"
-          type="button"
-          class="touch-manipulation px-2.5 py-1 rounded-lg transition-all text-xs font-medium border"
-          [style.background]="isFilterActive('label', label._id) ? (label.color || '#3B82F6') : 'rgb(249, 250, 251)'"
-          [style.color]="isFilterActive('label', label._id) ? '#fff' : (label.color || '#3B82F6')"
-          [style.borderColor]="isFilterActive('label', label._id) ? (label.color || '#3B82F6') : 'rgb(229, 231, 235)'"
-          [class.hover:bg-gray-100]="!isFilterActive('label', label._id)"
-        >
-          <i *ngIf="label.icon" [class]="label.icon + ' mr-1'"></i>
-          <span>{{ label.name }}</span>
-        </button>
+  <!-- Filters row (collapsible) — multiselects + date on one row -->
+  <div *ngIf="expanded" class="mt-3 animate-slideDown">
+    <div class="flex flex-wrap gap-3 items-end">
+      <app-inbox-multiselect-filter
+        *ngIf="labels && labels.length > 0"
+        class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
+        label="Labels"
+        [options]="labelOptions"
+        [selected]="selectedLabelIds"
+        placeholder="Any label"
+        (selectedChange)="onLabelsChange($event)"
+      />
+      <app-inbox-multiselect-filter
+        class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
+        label="Type"
+        [options]="typeOptions"
+        [selected]="selectedTypes"
+        placeholder="Any type"
+        (selectedChange)="onTypesChange($event)"
+      />
+      <app-inbox-multiselect-filter
+        class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
+        label="Sentiment"
+        [options]="sentimentOptions"
+        [selected]="selectedSentiments"
+        placeholder="Any sentiment"
+        (selectedChange)="onSentimentsChange($event)"
+      />
+      <app-inbox-multiselect-filter
+        class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
+        label="Status"
+        [options]="statusOptions"
+        [selected]="selectedStatuses"
+        placeholder="Any status"
+        (selectedChange)="onStatusesChange($event)"
+      />
+
+      <!-- Date range (same row, label aligned with other filters) -->
+      <div class="min-w-0 flex-1 sm:flex-initial flex flex-col gap-1">
+        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <i class="fas fa-calendar-alt text-gray-400"></i>
+          Date
+        </span>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <div class="flex items-center gap-1 bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-2">
+            <span class="text-xs text-gray-400">From</span>
+            <input
+              type="date"
+              class="text-xs text-gray-700 dark:text-gray-200 bg-transparent border-none outline-none cursor-pointer min-w-0"
+              [value]="dateFromModel"
+              [max]="dateToModel || ''"
+              (change)="onDateFromChange($any($event.target).value)"
+            />
+          </div>
+          <span class="text-gray-400 text-xs self-center">—</span>
+          <div class="flex items-center gap-1 bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-2">
+            <span class="text-xs text-gray-400">To</span>
+            <input
+              type="date"
+              class="text-xs text-gray-700 dark:text-gray-200 bg-transparent border-none outline-none cursor-pointer min-w-0"
+              [value]="dateToModel"
+              [min]="dateFromModel || ''"
+              (change)="onDateToChange($any($event.target).value)"
+            />
+          </div>
+          <button
+            *ngIf="dateFromModel || dateToModel"
+            (click)="clearDateRange(); $event.stopPropagation()"
+            type="button"
+            class="w-8 h-8 shrink-0 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 flex items-center justify-center transition-colors"
+            title="Clear date range">
+            <i class="fas fa-times text-xs"></i>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Type Filters -->
-    <div class="flex items-center gap-2">
-      <span class="text-xs font-medium text-gray-500">Type:</span>
-      <div class="flex gap-1.5">
-        <button
-          *ngFor="let type of types"
-          (click)="toggleFilter('type', type.value)"
-          (touchstart)="toggleFilter('type', type.value)"
-          type="button"
-          class="touch-manipulation px-2.5 py-1 rounded-lg transition-all text-xs font-medium border"
-          [class.bg-rep-lime]="isFilterActive('type', type.value)"
-          [class.text-rep-black]="isFilterActive('type', type.value)"
-          [class.border-rep-lime]="isFilterActive('type', type.value)"
-          [class.bg-gray-50]="!isFilterActive('type', type.value)"
-          [class.text-gray-700]="!isFilterActive('type', type.value)"
-          [class.border-gray-200]="!isFilterActive('type', type.value)"
-          [class.hover:bg-gray-100]="!isFilterActive('type', type.value)"
-        >
-          <span class="mr-1">{{ type.icon }}</span>
-          <span>{{ type.label }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Sentiment Filters -->
-    <div class="flex items-center gap-2">
-      <span class="text-xs font-medium text-gray-500">Sentiment:</span>
-      <div class="flex gap-1.5">
-        <button
-          *ngFor="let sentiment of sentiments"
-          (click)="toggleFilter('sentiment', sentiment.value)"
-          (touchstart)="toggleFilter('sentiment', sentiment.value)"
-          type="button"
-          class="touch-manipulation px-2.5 py-1 rounded-lg transition-all text-xs font-medium border"
-          [class.bg-rep-lime]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive'"
-          [class.bg-gray-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'neutral'"
-          [class.bg-red-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'negative'"
-          [class.text-rep-black]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive'"
-          [class.text-white]="isFilterActive('sentiment', sentiment.value) && sentiment.value !== 'positive'"
-          [class.border-rep-lime]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'positive'"
-          [class.border-gray-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'neutral'"
-          [class.border-red-500]="isFilterActive('sentiment', sentiment.value) && sentiment.value === 'negative'"
-          [class.bg-gray-50]="!isFilterActive('sentiment', sentiment.value)"
-          [class.text-gray-700]="!isFilterActive('sentiment', sentiment.value)"
-          [class.border-gray-200]="!isFilterActive('sentiment', sentiment.value)"
-          [class.hover:bg-gray-100]="!isFilterActive('sentiment', sentiment.value)"
-        >
-          <span class="mr-1">{{ sentiment.icon }}</span>
-          <span>{{ sentiment.label }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Status Filters -->
-    <div class="flex items-center gap-2">
-      <span class="text-xs font-medium text-gray-500">Status:</span>
-      <div class="flex gap-1.5">
-        <button
-          *ngFor="let status of statuses"
-          (click)="toggleFilter('status', status.value)"
-          (touchstart)="toggleFilter('status', status.value)"
-          type="button"
-          class="touch-manipulation px-2.5 py-1 rounded-lg transition-all text-xs font-medium border"
-          [class.bg-amber-500]="isFilterActive('status', status.value) && status.value === 'unread'"
-          [class.bg-gray-600]="isFilterActive('status', status.value) && status.value === 'read'"
-          [class.bg-rep-black]="isFilterActive('status', status.value) && (status.value === 'replied' || status.value === 'resolved')"
-          [class.text-white]="isFilterActive('status', status.value)"
-          [class.border-amber-500]="isFilterActive('status', status.value) && status.value === 'unread'"
-          [class.border-gray-600]="isFilterActive('status', status.value) && status.value === 'read'"
-          [class.border-rep-black]="isFilterActive('status', status.value) && (status.value === 'replied' || status.value === 'resolved')"
-          [class.bg-gray-50]="!isFilterActive('status', status.value)"
-          [class.text-gray-700]="!isFilterActive('status', status.value)"
-          [class.border-gray-200]="!isFilterActive('status', status.value)"
-          [class.hover:bg-gray-100]="!isFilterActive('status', status.value)"
-        >
-          <span class="mr-1">{{ status.icon }}</span>
-          <span>{{ status.label }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Date Range Filter -->
-    <div class="flex items-center gap-2 flex-wrap">
-      <span class="text-xs font-medium text-gray-500 flex items-center gap-1">
-        <i class="fas fa-calendar-alt text-gray-400"></i>
-        Date:
+    <!-- Small applied-filter badges (directly under filter controls) -->
+    <div
+      *ngIf="hasActiveFilters()"
+      class="mt-2.5 pt-2 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-1"
+      (click)="$event.stopPropagation()">
+      <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0 mr-0.5">
+        Applied
       </span>
-      <div class="flex items-center gap-1.5">
-        <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
-          <span class="text-xs text-gray-400">From</span>
-          <input
-            type="date"
-            class="text-xs text-gray-700 bg-transparent border-none outline-none cursor-pointer"
-            [value]="dateFromModel"
-            [max]="dateToModel || ''"
-            (change)="onDateFromChange($any($event.target).value)"
-          />
-        </div>
-        <span class="text-gray-400 text-xs">—</span>
-        <div class="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
-          <span class="text-xs text-gray-400">To</span>
-          <input
-            type="date"
-            class="text-xs text-gray-700 bg-transparent border-none outline-none cursor-pointer"
-            [value]="dateToModel"
-            [min]="dateFromModel || ''"
-            (change)="onDateToChange($any($event.target).value)"
-          />
-        </div>
+      <span
+        *ngFor="let chip of appliedFilterChips; trackBy: trackByChip"
+        class="inline-flex items-center gap-0.5 max-w-full pl-1.5 pr-0.5 py-0.5 rounded-full text-[10px] font-medium leading-none
+          bg-gray-100/90 dark:bg-gray-800 text-gray-700 dark:text-gray-200
+          border border-gray-200/80 dark:border-gray-600">
+        <span class="text-gray-500 dark:text-gray-400 shrink-0 font-normal">{{ chipCategoryLabel(chip) }}:</span>
+        <span class="truncate max-w-[7.5rem] sm:max-w-[11rem]" [title]="chip.display">{{ chip.display }}</span>
         <button
-          *ngIf="dateFromModel || dateToModel"
-          (click)="clearDateRange(); $event.stopPropagation()"
           type="button"
-          class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors"
-          title="Clear date range">
-          <i class="fas fa-times text-xs"></i>
+          (click)="removeAppliedChip(chip, $event)"
+          class="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 dark:hover:bg-red-600 transition-colors"
+          [attr.aria-label]="'Remove ' + chipCategoryLabel(chip) + ' ' + chip.display">
+          <i class="fas fa-times text-[7px]"></i>
         </button>
-      </div>
+      </span>
     </div>
-
   </div>
 </div>

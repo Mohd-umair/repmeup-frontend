@@ -3,15 +3,22 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IInboxFilters, InteractionType, Sentiment, InteractionStatus, ILabel } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
+import { inboxFilterToArray } from '../../../core/utils/inbox-filter-values';
+import {
+  InboxMultiselectFilterComponent,
+  InboxMultiselectOption
+} from '../inbox-multiselect-filter/inbox-multiselect-filter.component';
 
-/**
- * Inbox Top Filters Component
- * Handles Type, Sentiment, Status, and Labels filters in the top bar
- */
+export interface AppliedFilterChip {
+  category: 'label' | 'type' | 'sentiment' | 'status' | 'date';
+  value: string;
+  display: string;
+}
+
 @Component({
   selector: 'app-inbox-top-filters',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InboxMultiselectFilterComponent],
   templateUrl: './inbox-top-filters.component.html',
   styleUrls: ['./inbox-top-filters.component.scss']
 })
@@ -21,10 +28,43 @@ export class InboxTopFiltersComponent implements OnChanges {
   @Input() labels: ILabel[] = [];
 
   filters: IInboxFilters = {};
-  /** Separate from `filters` so date inputs stay stable with ngModel + parent sync */
   dateFromModel = '';
   dateToModel = '';
   expanded = false;
+
+  selectedLabelIds: string[] = [];
+  selectedTypes: string[] = [];
+  selectedSentiments: string[] = [];
+  selectedStatuses: string[] = [];
+
+  typeOptions: InboxMultiselectOption[] = [
+    { value: InteractionType.COMMENT, label: 'Comments', icon: '💬' },
+    { value: InteractionType.DM, label: 'Direct Messages', icon: '📧' },
+    { value: InteractionType.REVIEW, label: 'Reviews', icon: '⭐' },
+    { value: InteractionType.MENTION, label: 'Mentions', icon: '@' }
+  ];
+
+  sentimentOptions: InboxMultiselectOption[] = [
+    { value: Sentiment.POSITIVE, label: 'Positive', icon: '😊' },
+    { value: Sentiment.NEUTRAL, label: 'Neutral', icon: '😐' },
+    { value: Sentiment.NEGATIVE, label: 'Negative', icon: '😟' }
+  ];
+
+  statusOptions: InboxMultiselectOption[] = [
+    { value: InteractionStatus.UNREAD, label: 'Unread', icon: '📩' },
+    { value: InteractionStatus.READ, label: 'Read', icon: '📖' },
+    { value: InteractionStatus.REPLIED, label: 'Replied', icon: '✅' },
+    { value: InteractionStatus.ASSIGNED, label: 'Assigned', icon: '👤' },
+    { value: InteractionStatus.RESOLVED, label: 'Resolved', icon: '✔️' }
+  ];
+
+  get labelOptions(): InboxMultiselectOption[] {
+    return (this.labels || []).map((l) => ({
+      value: l._id,
+      label: l.name,
+      icon: l.icon
+    }));
+  }
 
   constructor(public themeService: ThemeService) {}
 
@@ -34,44 +74,56 @@ export class InboxTopFiltersComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes['initialFilters']) return;
-    // Always mirror parent — including {} when filters are cleared (previously we only synced non-empty objects).
     this.filters = { ...(this.initialFilters || {}) };
     this.dateFromModel = this.filters.dateFrom || '';
     this.dateToModel = this.filters.dateTo || '';
+    this.syncSelectionsFromFilters();
   }
 
-  types = [
-    { value: InteractionType.COMMENT, label: 'Comments', icon: '💬' },
-    { value: InteractionType.DM, label: 'Direct Messages', icon: '📧' },
-    { value: InteractionType.REVIEW, label: 'Reviews', icon: '⭐' },
-    { value: InteractionType.MENTION, label: 'Mentions', icon: '@' }
-  ];
+  private syncSelectionsFromFilters(): void {
+    this.selectedTypes = inboxFilterToArray(this.filters.type as any);
+    this.selectedSentiments = inboxFilterToArray(this.filters.sentiment as any);
+    this.selectedStatuses = inboxFilterToArray(this.filters.status as any);
+    this.selectedLabelIds = inboxFilterToArray(this.filters.label as any);
+  }
 
-  sentiments = [
-    { value: Sentiment.POSITIVE, label: 'Positive', color: 'bg-green-100 text-green-800', icon: '😊' },
-    { value: Sentiment.NEUTRAL, label: 'Neutral', color: 'bg-gray-100 text-gray-800', icon: '😐' },
-    { value: Sentiment.NEGATIVE, label: 'Negative', color: 'bg-red-100 text-red-800', icon: '😟' }
-  ];
-
-  statuses = [
-    { value: InteractionStatus.UNREAD, label: 'Unread', icon: '📩' },
-    { value: InteractionStatus.READ, label: 'Read', icon: '📖' },
-    { value: InteractionStatus.REPLIED, label: 'Replied', icon: '✅' },
-    { value: InteractionStatus.ASSIGNED, label: 'Assigned', icon: '👤' },
-    { value: InteractionStatus.RESOLVED, label: 'Resolved', icon: '✔️' }
-  ];
-
-  toggleFilter(filterType: keyof IInboxFilters, value: any): void {
-    if (this.filters[filterType] === value) {
-      delete this.filters[filterType];
-    } else {
-      this.filters[filterType] = value;
+  private setMultiField<K extends keyof IInboxFilters>(key: K, values: string[]): void {
+    if (values.length === 0) {
+      delete this.filters[key];
+      return;
     }
+    if (values.length === 1) {
+      (this.filters as any)[key] = values[0];
+    } else {
+      (this.filters as any)[key] = [...values];
+    }
+  }
+
+  private applySelectionsToFilters(): void {
+    this.setMultiField('type', this.selectedTypes);
+    this.setMultiField('sentiment', this.selectedSentiments);
+    this.setMultiField('status', this.selectedStatuses);
+    this.setMultiField('label', this.selectedLabelIds);
+  }
+
+  onLabelsChange(vals: string[]): void {
+    this.selectedLabelIds = vals;
     this.emitFilters();
   }
 
-  isFilterActive(filterType: keyof IInboxFilters, value: any): boolean {
-    return this.filters[filterType] === value;
+  onTypesChange(vals: string[]): void {
+    this.selectedTypes = vals;
+    this.emitFilters();
+  }
+
+  onSentimentsChange(vals: string[]): void {
+    this.selectedSentiments = vals;
+    this.emitFilters();
+  }
+
+  onStatusesChange(vals: string[]): void {
+    this.selectedStatuses = vals;
+    this.emitFilters();
   }
 
   onDateFromChange(value: string | null | undefined): void {
@@ -108,48 +160,122 @@ export class InboxTopFiltersComponent implements OnChanges {
     this.filters = {};
     this.dateFromModel = '';
     this.dateToModel = '';
+    this.selectedLabelIds = [];
+    this.selectedTypes = [];
+    this.selectedSentiments = [];
+    this.selectedStatuses = [];
     this.emitFilters();
   }
 
   private emitFilters(): void {
+    this.applySelectionsToFilters();
     if (!this.filters.dateFrom?.toString().trim()) delete this.filters.dateFrom;
     if (!this.filters.dateTo?.toString().trim()) delete this.filters.dateTo;
     this.filtersChange.emit({ ...this.filters });
   }
 
-  /**
-   * Check if any filters are active
-   */
   hasActiveFilters(): boolean {
-    return Object.keys(this.filters).length > 0;
+    return (
+      this.selectedTypes.length > 0 ||
+      this.selectedSentiments.length > 0 ||
+      this.selectedStatuses.length > 0 ||
+      this.selectedLabelIds.length > 0 ||
+      !!(this.filters.dateFrom || this.filters.dateTo)
+    );
   }
 
-  /**
-   * Get count of active filters (for collapsed badge)
-   */
-  getActiveFilterCount(): number {
-    return Object.keys(this.filters).length;
+  /** Pills shown under the header so applied filters stay visible (collapsed or expanded). */
+  get appliedFilterChips(): AppliedFilterChip[] {
+    const chips: AppliedFilterChip[] = [];
+    for (const id of this.selectedLabelIds) {
+      const lab = (this.labels || []).find((l) => l._id === id);
+      chips.push({
+        category: 'label',
+        value: id,
+        display: lab?.name || id
+      });
+    }
+    for (const v of this.selectedTypes) {
+      const o = this.typeOptions.find((t) => t.value === v);
+      chips.push({ category: 'type', value: v, display: o?.label || v });
+    }
+    for (const v of this.selectedSentiments) {
+      const o = this.sentimentOptions.find((s) => s.value === v);
+      chips.push({ category: 'sentiment', value: v, display: o?.label || v });
+    }
+    for (const v of this.selectedStatuses) {
+      const o = this.statusOptions.find((s) => s.value === v);
+      chips.push({ category: 'status', value: v, display: o?.label || v });
+    }
+    if (this.dateFromModel || this.dateToModel) {
+      let display = '';
+      if (this.dateFromModel && this.dateToModel) {
+        display = `${this.dateFromModel} → ${this.dateToModel}`;
+      } else if (this.dateFromModel) {
+        display = `From ${this.dateFromModel}`;
+      } else {
+        display = `To ${this.dateToModel}`;
+      }
+      chips.push({ category: 'date', value: 'range', display });
+    }
+    return chips;
   }
 
-  /**
-   * Get sentiment background gradient
-   */
-  getSentimentBackground(sentiment: string, isActive: boolean): string {
-    if (!isActive) return 'white';
-    
-    switch (sentiment) {
-      case Sentiment.POSITIVE:
-        return 'linear-gradient(135deg, #10B981, #059669)'; // Green
-      case Sentiment.NEGATIVE:
-        return 'linear-gradient(135deg, #EF4444, #DC2626)'; // Red
+  trackByChip(_index: number, chip: AppliedFilterChip): string {
+    return `${chip.category}:${chip.value}`;
+  }
+
+  chipCategoryLabel(chip: AppliedFilterChip): string {
+    switch (chip.category) {
+      case 'label':
+        return 'Label';
+      case 'type':
+        return 'Type';
+      case 'sentiment':
+        return 'Sentiment';
+      case 'status':
+        return 'Status';
+      case 'date':
+        return 'Date';
       default:
-        return 'linear-gradient(135deg, #6B7280, #4B5563)'; // Gray
+        return '';
     }
   }
 
-  /**
-   * Get sentiment hover background
-   */
+  removeAppliedChip(chip: AppliedFilterChip, ev?: Event): void {
+    ev?.stopPropagation();
+    switch (chip.category) {
+      case 'label':
+        this.selectedLabelIds = this.selectedLabelIds.filter((x) => x !== chip.value);
+        break;
+      case 'type':
+        this.selectedTypes = this.selectedTypes.filter((x) => x !== chip.value);
+        break;
+      case 'sentiment':
+        this.selectedSentiments = this.selectedSentiments.filter((x) => x !== chip.value);
+        break;
+      case 'status':
+        this.selectedStatuses = this.selectedStatuses.filter((x) => x !== chip.value);
+        break;
+      case 'date':
+        this.clearDateRange();
+        return;
+    }
+    this.emitFilters();
+  }
+
+  getSentimentBackground(sentiment: string, isActive: boolean): string {
+    if (!isActive) return 'white';
+    switch (sentiment) {
+      case Sentiment.POSITIVE:
+        return 'linear-gradient(135deg, #10B981, #059669)';
+      case Sentiment.NEGATIVE:
+        return 'linear-gradient(135deg, #EF4444, #DC2626)';
+      default:
+        return 'linear-gradient(135deg, #6B7280, #4B5563)';
+    }
+  }
+
   getSentimentHoverBackground(sentiment: string): string {
     switch (sentiment) {
       case Sentiment.POSITIVE:
@@ -161,12 +287,8 @@ export class InboxTopFiltersComponent implements OnChanges {
     }
   }
 
-  /**
-   * Get sentiment shadow
-   */
   getSentimentShadow(sentiment: string, isActive: boolean): string {
     if (!isActive) return '0 1px 3px rgba(0,0,0,0.1)';
-    
     switch (sentiment) {
       case Sentiment.POSITIVE:
         return '0 4px 12px rgba(16, 185, 129, 0.4)';
@@ -177,31 +299,24 @@ export class InboxTopFiltersComponent implements OnChanges {
     }
   }
 
-  /**
-   * Get status background gradient
-   */
   getStatusBackground(status: string, isActive: boolean): string {
     if (!isActive) return 'white';
-    
     switch (status) {
       case InteractionStatus.UNREAD:
-        return 'linear-gradient(135deg, #F59E0B, #D97706)'; // Amber
+        return 'linear-gradient(135deg, #F59E0B, #D97706)';
       case InteractionStatus.READ:
-        return 'linear-gradient(135deg, #3B82F6, #2563EB)'; // Blue
+        return 'linear-gradient(135deg, #3B82F6, #2563EB)';
       case InteractionStatus.REPLIED:
-        return 'linear-gradient(135deg, #10B981, #059669)'; // Green
+        return 'linear-gradient(135deg, #10B981, #059669)';
       case InteractionStatus.ASSIGNED:
-        return 'linear-gradient(135deg, #8B5CF6, #7C3AED)'; // Purple
+        return 'linear-gradient(135deg, #8B5CF6, #7C3AED)';
       case InteractionStatus.RESOLVED:
-        return 'linear-gradient(135deg, #14B8A6, #0D9488)'; // Teal
+        return 'linear-gradient(135deg, #14B8A6, #0D9488)';
       default:
-        return 'linear-gradient(135deg, #6B7280, #4B5563)'; // Gray
+        return 'linear-gradient(135deg, #6B7280, #4B5563)';
     }
   }
 
-  /**
-   * Get status hover background
-   */
   getStatusHoverBackground(status: string): string {
     switch (status) {
       case InteractionStatus.UNREAD:
@@ -219,12 +334,8 @@ export class InboxTopFiltersComponent implements OnChanges {
     }
   }
 
-  /**
-   * Get status shadow
-   */
   getStatusShadow(status: string, isActive: boolean): string {
     if (!isActive) return '0 1px 3px rgba(0,0,0,0.1)';
-    
     switch (status) {
       case InteractionStatus.UNREAD:
         return '0 4px 12px rgba(245, 158, 11, 0.4)';
@@ -241,4 +352,3 @@ export class InboxTopFiltersComponent implements OnChanges {
     }
   }
 }
-

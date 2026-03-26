@@ -137,17 +137,25 @@
     <button 
       *ngIf="aiCredits"
       (click)="navigateToCredits()"
-      class="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg transition cursor-pointer"
+      class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition cursor-pointer border"
+      [ngClass]="aiCredits.isAtLimit
+        ? 'bg-red-100 dark:bg-red-500/20 border-red-300 dark:border-red-500/40 hover:bg-red-200 dark:hover:bg-red-500/30'
+        : aiCredits.isNearLimit
+          ? 'bg-amber-100 dark:bg-amber-500/20 border-amber-300 dark:border-amber-500/40 hover:bg-amber-200 dark:hover:bg-amber-500/30'
+          : 'bg-purple-100 dark:bg-purple-500/20 border-purple-300 dark:border-purple-500/30 hover:bg-purple-200 dark:hover:bg-purple-500/30'"
       title="View AI Credits Usage"
     >
-      <i class="fas fa-bolt" [class]="getCreditStatusColor()"></i>
+      <i class="fas fa-bolt"
+         [ngClass]="aiCredits.isAtLimit ? 'text-red-600 dark:text-red-400' : aiCredits.isNearLimit ? 'text-amber-600 dark:text-amber-400' : 'text-purple-600 dark:text-purple-400'"></i>
       <div class="hidden sm:flex flex-col items-start">
-        <span class="text-xs font-semibold" [class]="getCreditStatusColor()">
+        <span class="text-xs font-semibold leading-none"
+              [ngClass]="aiCredits.isAtLimit ? 'text-red-700 dark:text-red-400' : aiCredits.isNearLimit ? 'text-amber-700 dark:text-amber-400' : 'text-purple-700 dark:text-purple-300'">
           {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
         </span>
-        <span class="text-xs text-gray-500">credits</span>
+        <span class="text-[10px] text-gray-500 dark:text-gray-400 leading-none mt-0.5">credits</span>
       </div>
-      <span class="text-xs font-bold sm:hidden" [class]="getCreditStatusColor()">
+      <span class="text-xs font-bold sm:hidden"
+            [ngClass]="aiCredits.isAtLimit ? 'text-red-700 dark:text-red-400' : aiCredits.isNearLimit ? 'text-amber-700 dark:text-amber-400' : 'text-purple-700 dark:text-purple-300'">
         {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
       </span>
     </button>

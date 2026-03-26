@@ -12,7 +12,6 @@ import { SocialAccountsService, ISocialAccount } from '../../core/services/socia
 import { PermissionService } from '../../core/services/permission.service';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
-import { ConnectionUsageBarComponent } from '../../shared/components/connection-usage-bar/connection-usage-bar.component';
 import { BucketSettingsComponent } from './components/bucket-settings/bucket-settings.component';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
@@ -52,7 +51,7 @@ interface SettingsNavTab {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, ConnectionUsageBarComponent, BucketSettingsComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BucketSettingsComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
@@ -60,6 +59,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   activeTab: SettingsTab = 'platforms';
   loading = false;
   savingSettings = false;
+  showTimingAdvanced = false;
   organizationId: string = '';
   
   // New: Connection usage and limits (SOLID: Single Responsibility)

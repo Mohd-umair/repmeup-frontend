@@ -205,10 +205,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   getCreditStatusColor(): string {
-    if (!this.aiCredits) return 'text-gray-400';
-    if (this.aiCredits.isUnlimited) return 'text-purple-400';
-    if (this.aiCredits.isAtLimit) return 'text-red-400';
-    if (this.aiCredits.isNearLimit) return 'text-yellow-400';
-    return 'text-purple-400';
+    if (!this.aiCredits) return 'text-gray-500 dark:text-gray-400';
+    if (this.aiCredits.isAtLimit) return 'text-red-700 dark:text-red-400';
+    if (this.aiCredits.isNearLimit) return 'text-amber-700 dark:text-amber-400';
+    return 'text-purple-700 dark:text-purple-300';
   }
 }

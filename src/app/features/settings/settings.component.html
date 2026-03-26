@@ -57,54 +57,62 @@
     <!-- Platform Connections Tab -->
     <div *ngIf="activeTab === 'platforms'" class="space-y-4 sm:space-y-6 md:space-y-8">
       
-      <!-- NEW: Connection Usage Bar (SOLID: Single Responsibility) -->
-      <app-connection-usage-bar
-        [current]="(usage$ | async)?.current || 0"
-        [max]="(usage$ | async)?.max || 0"
-        [showUpgrade]="true">
-      </app-connection-usage-bar>
-
-      <!-- AI Credits Usage Bar -->
-      <div *ngIf="subscriptionLimits" class="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-magic text-purple-600 text-xl"></i>
-            <h3 class="text-lg font-semibold text-rep-black">AI Credits This Month</h3>
+      <!-- Usage Badges Row -->
+      <div class="flex flex-wrap items-center gap-3">
+        <!-- Connected Accounts Badge -->
+        <ng-container *ngIf="usage$ | async as usage">
+          <div class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 bg-rep-white dark:bg-gray-900"
+               [ngClass]="usage.current >= usage.max
+                 ? 'border-red-300 dark:border-red-700'
+                 : usage.current / usage.max >= 0.9
+                   ? 'border-amber-300 dark:border-amber-700'
+                   : 'border-gray-200 dark:border-gray-700'">
+            <i class="fas fa-link text-sm"
+               [ngClass]="usage.current >= usage.max ? 'text-red-500' : usage.current / usage.max >= 0.9 ? 'text-amber-500' : 'text-gray-500 dark:text-gray-400'"></i>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Connected Accounts</span>
+            <span class="text-sm font-bold"
+                  [ngClass]="usage.current >= usage.max ? 'text-red-600 dark:text-red-400' : usage.current / usage.max >= 0.9 ? 'text-amber-600 dark:text-amber-400' : 'text-rep-black dark:text-white'">
+              {{ usage.current }}<span class="text-gray-400 dark:text-gray-500 font-normal">/{{ usage.max }}</span>
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                  [ngClass]="usage.current >= usage.max
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                    : usage.current / usage.max >= 0.9
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                      : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'">
+              {{ usage.current >= usage.max ? 'Limit Reached' : usage.current / usage.max >= 0.9 ? 'Near Limit' : 'OK' }}
+            </span>
           </div>
-          <span class="text-sm text-gray-600">
-            {{ subscriptionLimits.usage.aiCreditsThisMonth || 0 }} / 
-            {{ subscriptionLimits.limits.maxAICreditsPerMonth === -1 ? 'Unlimited' : subscriptionLimits.limits.maxAICreditsPerMonth }}
-          </span>
-        </div>
-        
-        <!-- Progress bar -->
-        <div *ngIf="subscriptionLimits.limits.maxAICreditsPerMonth !== -1" class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div 
-            class="h-full transition-all duration-300 rounded-full"
-            [ngClass]="{
-              'bg-green-500': getAICreditsPercentage() < 70,
-              'bg-amber-500': getAICreditsPercentage() >= 70 && getAICreditsPercentage() < 90,
-              'bg-red-500': getAICreditsPercentage() >= 90
-            }"
-            [style.width.%]="getAICreditsPercentage()">
-          </div>
-        </div>
+        </ng-container>
 
-        <p class="text-xs text-gray-500 mt-2">
-          <i class="fas fa-info-circle mr-1"></i>
-          AI credits are used for Knowledge Base generation (1-10 credits) and Auto-Replies (1 credit each)
-        </p>
-
-        <!-- Near limit warning -->
-        <div *ngIf="getAICreditsPercentage() >= 90 && subscriptionLimits.limits.maxAICreditsPerMonth !== -1" 
-             class="mt-3 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <i class="fas fa-exclamation-triangle text-red-600 mt-0.5"></i>
-          <div class="flex-1">
-            <p class="text-sm text-red-800">
-              <strong>AI Credits Running Low!</strong> You've used {{ subscriptionLimits.usage.aiCreditsThisMonth || 0 }} of {{ subscriptionLimits.limits.maxAICreditsPerMonth }} credits this month.
-            </p>
+        <!-- AI Credits Badge -->
+        <ng-container *ngIf="subscriptionLimits">
+          <div class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 bg-rep-white dark:bg-gray-900"
+               [ngClass]="getAICreditsPercentage() >= 90
+                 ? 'border-red-300 dark:border-red-700'
+                 : getAICreditsPercentage() >= 70
+                   ? 'border-amber-300 dark:border-amber-700'
+                   : 'border-gray-200 dark:border-gray-700'">
+            <i class="fas fa-magic text-sm"
+               [ngClass]="getAICreditsPercentage() >= 90 ? 'text-red-500' : getAICreditsPercentage() >= 70 ? 'text-amber-500' : 'text-purple-500'"></i>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-300">AI Credits</span>
+            <span class="text-sm font-bold"
+                  [ngClass]="getAICreditsPercentage() >= 90 ? 'text-red-600 dark:text-red-400' : getAICreditsPercentage() >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-rep-black dark:text-white'">
+              {{ subscriptionLimits.usage.aiCreditsThisMonth || 0 }}<span class="text-gray-400 dark:text-gray-500 font-normal">/{{ subscriptionLimits.limits.maxAICreditsPerMonth === -1 ? '∞' : subscriptionLimits.limits.maxAICreditsPerMonth }}</span>
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold"
+                  [ngClass]="getAICreditsPercentage() >= 90
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                    : getAICreditsPercentage() >= 70
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                      : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'">
+              {{ subscriptionLimits.limits.maxAICreditsPerMonth === -1 ? 'Unlimited' : getAICreditsPercentage() >= 90 ? 'Low' : getAICreditsPercentage() >= 70 ? 'Moderate' : 'Healthy' }}
+            </span>
+            <a routerLink="/app/ai-credits" class="text-[11px] text-gray-400 dark:text-gray-500 hover:text-purple-500 dark:hover:text-purple-400 transition ml-1">
+              <i class="fas fa-arrow-right"></i>
+            </a>
           </div>
-        </div>
+        </ng-container>
       </div>
 
       <!-- 90% Capacity Warning Banner -->
@@ -453,7 +461,7 @@
 
 
     <!-- Profile Tab -->
-    <div *ngIf="activeTab === 'profile'" class="max-w-4xl mx-auto">
+    <div *ngIf="activeTab === 'profile'" class="w-full">
       <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
         <div class="flex items-center space-x-6 mb-8">
           <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black font-bold text-3xl">
@@ -525,7 +533,7 @@
     </div>
 
     <!-- Organization Tab -->
-    <div *ngIf="activeTab === 'organization' && canViewTab('organization')" class="max-w-4xl mx-auto">
+    <div *ngIf="activeTab === 'organization' && canViewTab('organization')" class="w-full">
       <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
         <div class="flex items-center space-x-6 mb-8">
           <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black">
@@ -650,7 +658,7 @@
     </div>
 
     <!-- Notifications Tab -->
-    <div *ngIf="activeTab === 'notifications'" class="max-w-4xl mx-auto">
+    <div *ngIf="activeTab === 'notifications'" class="w-full">
       <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
         <div class="flex items-center space-x-6 mb-8">
           <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black">
@@ -731,50 +739,22 @@
     </div>
 
     <!-- Auto-Reply Tab -->
-    <div *ngIf="activeTab === 'auto-reply'" class="max-w-5xl mx-auto">
+    <div *ngIf="activeTab === 'auto-reply'" class="w-full">
       <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-800">
-        <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-rep-lime rounded-xl sm:rounded-2xl flex items-center justify-center text-rep-black flex-shrink-0">
-            <i class="fas fa-robot text-xl sm:text-2xl md:text-3xl"></i>
+        <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 mb-5 sm:mb-6">
+          <div class="w-12 h-12 bg-rep-lime rounded-xl flex items-center justify-center text-rep-black flex-shrink-0">
+            <i class="fas fa-robot text-xl"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <h2 class="text-xl sm:text-2xl md:text-3xl font-bold text-rep-black">AI Auto-Reply Settings</h2>
-            <p class="text-sm sm:text-base text-gray-600 mt-1">Configure automatic AI-powered responses using your knowledge base</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-rep-black">AI Auto-Reply Settings</h2>
+            <p class="text-sm text-gray-600 mt-0.5">Configure automatic AI-powered responses using your knowledge base</p>
           </div>
-          <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <span class="text-xs sm:text-sm text-gray-600">Status:</span>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <span class="text-xs text-gray-600">Status:</span>
             <span [class]="autoReplySettings.enabled ? 'bg-rep-lime text-rep-black' : 'bg-gray-200 text-gray-600'" 
-                  class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm whitespace-nowrap">
+                  class="px-3 py-1 rounded-full font-semibold text-xs whitespace-nowrap">
               {{ autoReplySettings.enabled ? 'Enabled' : 'Disabled' }}
             </span>
-          </div>
-        </div>
-
-        <!-- Info Banner -->
-        <div class="bg-blue-50 border-2 border-blue-200 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 mb-6 sm:mb-8">
-          <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-            <div class="flex-shrink-0">
-              <i class="fas fa-info-circle text-2xl sm:text-3xl text-blue-600"></i>
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base sm:text-lg font-bold text-blue-900 mb-1.5 sm:mb-2">How Auto-Reply Works</h3>
-              <p class="text-blue-800 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3">
-                AI Auto-Reply uses OpenAI GPT-4 combined with your uploaded Knowledge Base to generate intelligent, 
-                context-aware responses to customer interactions. The system searches your knowledge base for relevant 
-                information and creates professional replies automatically.
-              </p>
-              <div class="flex flex-wrap gap-1.5 sm:gap-2">
-                <span class="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900 whitespace-nowrap">
-                  <i class="fas fa-brain mr-1"></i> AI-Powered
-                </span>
-                <span class="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900 whitespace-nowrap">
-                  <i class="fas fa-book mr-1"></i> Knowledge Base
-                </span>
-                <span class="inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-900 whitespace-nowrap">
-                  <i class="fas fa-shield-alt mr-1"></i> Safe & Controlled
-                </span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -798,20 +778,15 @@
             </div>
           </div>
 
-          <!-- Settings Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+          <!-- Settings Grid Row 1: Confidence + Daily Limit -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Confidence Threshold -->
-            <div class="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-gray-200">
-              <label class="block text-xs sm:text-sm font-bold text-rep-black mb-2 sm:mb-3">
-                <i class="fas fa-percentage mr-1 sm:mr-2 text-gray-600"></i>
+            <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+              <label class="block text-xs sm:text-sm font-bold text-rep-black mb-2">
+                <i class="fas fa-percentage mr-1 text-gray-600"></i>
                 Confidence Threshold
               </label>
-              <p class="text-xs text-gray-600 mb-2 sm:mb-3">Minimum AI confidence required to auto-send a reply (0-100%).</p>
-              <p class="text-xs text-blue-900 bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3 mb-3 sm:mb-4">
-                AI confidence = how sure the model is that the generated reply is relevant and accurate for this message.
-                If AI confidence is below this value, the message is not auto-sent and is kept for manual handling.
-                Lower threshold = more automation; higher threshold = safer, stricter replies.
-              </p>
+              <p class="text-xs text-gray-600 mb-2">Minimum AI confidence to auto-send (0-100%). Lower = more automation; higher = safer replies.</p>
               <input 
                 type="range" 
                 [(ngModel)]="autoReplySettings.minConfidence" 
@@ -821,30 +796,28 @@
                 step="0.05"
                 class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-rep-lime"
               >
-              <div class="flex justify-between items-center mt-2 sm:mt-3">
+              <div class="flex justify-between items-center mt-2">
                 <span class="text-xs text-gray-600">Low</span>
-                <span class="text-xl sm:text-2xl font-bold text-rep-black">{{ (autoReplySettings.minConfidence * 100) | number:'1.0-0' }}%</span>
+                <span class="text-lg font-bold text-rep-black">{{ (autoReplySettings.minConfidence * 100) | number:'1.0-0' }}%</span>
                 <span class="text-xs text-gray-600">High</span>
               </div>
-              <p class="text-xs text-gray-500 mt-2 italic">
-                Recommended: 75-85% for safety
-              </p>
+              <p class="text-xs text-gray-500 mt-1 italic">Recommended: 75-85%</p>
             </div>
 
             <!-- Daily Limit -->
-            <div class="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-gray-200">
-              <label class="block text-xs sm:text-sm font-bold text-rep-black mb-2 sm:mb-3">
-                <i class="fas fa-tachometer-alt mr-1 sm:mr-2 text-gray-600"></i>
+            <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+              <label class="block text-xs sm:text-sm font-bold text-rep-black mb-2">
+                <i class="fas fa-tachometer-alt mr-1 text-gray-600"></i>
                 Daily Reply Limit
               </label>
-              <p class="text-xs text-gray-600 mb-3 sm:mb-4">Maximum auto-replies per day</p>
+              <p class="text-xs text-gray-600 mb-2">Maximum auto-replies per day</p>
               <input 
                 type="number" 
                 [(ngModel)]="autoReplySettings.maxRepliesPerDay" 
                 name="maxRepliesPerDay"
                 min="1" 
                 max="500"
-                class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-300 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-base sm:text-lg font-semibold"
+                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-base font-semibold"
               >
               <p class="text-xs text-gray-500 mt-2">
                 Today's usage: <span class="font-semibold">{{ autoReplySettings.repliesCountToday || 0 }}</span> / {{ autoReplySettings.maxRepliesPerDay }}
@@ -852,445 +825,271 @@
             </div>
           </div>
 
+          <!-- Settings Grid Row 2: Auto-Send + Require Approval -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-paper-plane text-base text-blue-500"></i>
+                </div>
+                <div class="min-w-0">
+                  <h4 class="text-sm font-semibold text-gray-800">Auto-Send Replies</h4>
+                  <p class="text-xs text-gray-500">Send without approval (use with caution)</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-3">
+                <input type="checkbox" [(ngModel)]="autoReplySettings.autoSend" name="autoSend" class="sr-only peer">
+                <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-user-check text-base text-green-600"></i>
+                </div>
+                <div class="min-w-0">
+                  <h4 class="text-sm font-semibold text-gray-800">Require Approval</h4>
+                  <p class="text-xs text-gray-500">Human review before sending (recommended)</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-3">
+                <input type="checkbox" [(ngModel)]="autoReplySettings.requireApproval" name="requireApproval" class="sr-only peer">
+                <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
+              </label>
+            </div>
+          </div>
+          <p class="text-xs text-blue-900 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 -mt-2">
+            <i class="fas fa-info-circle mr-1"></i>
+            Messages won't post to Instagram until <strong>Auto-Send</strong> is ON and <strong>Require Approval</strong> is OFF.
+          </p>
+
           <!-- Platform Filters -->
-          <div class="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-gray-200">
-            <h3 class="text-base sm:text-lg font-bold text-rep-black mb-3 sm:mb-4">
-              <i class="fas fa-filter mr-1 sm:mr-2 text-gray-600"></i>
+          <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+            <h3 class="text-sm font-bold text-rep-black mb-1">
+              <i class="fas fa-filter mr-1.5 text-gray-600"></i>
               Enabled Platforms
             </h3>
-            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Select which platforms should have auto-reply enabled</p>
-            <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledPlatforms.includes('youtube')"
-                  (change)="togglePlatform('youtube')"
-                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
-                >
-                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <i class="fab fa-youtube text-red-600 text-base sm:text-xl flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">YouTube</span>
+            <p class="text-xs text-gray-600 mb-3">Select which platforms should have auto-reply enabled</p>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('youtube')" (change)="togglePlatform('youtube')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fab fa-youtube text-red-600 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">YouTube</span>
                 </div>
               </label>
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledPlatforms.includes('instagram')"
-                  (change)="togglePlatform('instagram')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
-                >
-                <div class="flex items-center space-x-2">
-                  <i class="fab fa-instagram text-pink-600 text-xl"></i>
-                  <span class="font-semibold text-gray-800">Instagram</span>
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('instagram')" (change)="togglePlatform('instagram')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fab fa-instagram text-pink-600 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">Instagram</span>
                 </div>
               </label>
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledPlatforms.includes('facebook')"
-                  (change)="togglePlatform('facebook')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
-                >
-                <div class="flex items-center space-x-2">
-                  <i class="fab fa-facebook text-blue-600 text-xl"></i>
-                  <span class="font-semibold text-gray-800">Facebook</span>
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('facebook')" (change)="togglePlatform('facebook')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fab fa-facebook text-blue-600 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">Facebook</span>
                 </div>
               </label>
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledPlatforms.includes('google')"
-                  (change)="togglePlatform('google')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
-                >
-                <div class="flex items-center space-x-2">
-                  <i class="fab fa-google text-green-600 text-xl"></i>
-                  <span class="font-semibold text-gray-800">Google</span>
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('google')" (change)="togglePlatform('google')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fab fa-google text-green-600 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">Google</span>
                 </div>
               </label>
-              <label class="flex items-center space-x-3 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledPlatforms.includes('linkedin')"
-                  (change)="togglePlatform('linkedin')"
-                  class="w-5 h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime"
-                >
-                <div class="flex items-center space-x-2">
-                  <i class="fab fa-linkedin text-blue-700 text-xl"></i>
-                  <span class="font-semibold text-gray-800">LinkedIn</span>
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('linkedin')" (change)="togglePlatform('linkedin')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fab fa-linkedin text-blue-700 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">LinkedIn</span>
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Interaction Type Filters -->
-          <div class="bg-gray-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-gray-200">
-            <h3 class="text-base sm:text-lg font-bold text-rep-black mb-3 sm:mb-4">
-              <i class="fas fa-list mr-1 sm:mr-2 text-gray-600"></i>
+          <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+            <h3 class="text-sm font-bold text-rep-black mb-1">
+              <i class="fas fa-list mr-1.5 text-gray-600"></i>
               Enabled Interaction Types
             </h3>
-            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Select which types of interactions should receive auto-replies</p>
-            <p class="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
-              <strong>Instagram / Messenger DMs:</strong> enable <strong>DMs</strong> here. “Reply to all sentiments” does not include direct messages unless this type is checked.
+            <p class="text-xs text-gray-600 mb-2">Select which types of interactions should receive auto-replies</p>
+            <p class="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+              <strong>Instagram / Messenger DMs:</strong> enable <strong>DMs</strong> here.
             </p>
-            <div class="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledTypes.includes('comment')"
-                  (change)="toggleType('comment')"
-                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
-                >
-                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <i class="fas fa-comment text-blue-600 text-base sm:text-lg flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">Comments</span>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('comment')" (change)="toggleType('comment')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fas fa-comment text-blue-600 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">Comments</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledTypes.includes('review')"
-                  (change)="toggleType('review')"
-                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
-                >
-                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <i class="fas fa-star text-yellow-500 text-base sm:text-lg flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">Reviews</span>
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('review')" (change)="toggleType('review')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fas fa-star text-yellow-500 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">Reviews</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledTypes.includes('dm')"
-                  (change)="toggleType('dm')"
-                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
-                >
-                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <i class="fas fa-envelope text-purple-600 text-base sm:text-lg flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">DMs</span>
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('dm')" (change)="toggleType('dm')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fas fa-envelope text-purple-600 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">DMs</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input 
-                  type="checkbox" 
-                  [checked]="autoReplySettings.enabledTypes.includes('mention')"
-                  (change)="toggleType('mention')"
-                  class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0"
-                >
-                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <i class="fas fa-at text-green-600 text-base sm:text-lg flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs sm:text-sm truncate">Mentions</span>
+              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('mention')" (change)="toggleType('mention')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fas fa-at text-green-600 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 text-xs truncate">Mentions</span>
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Sentiment Filter -->
-          <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6 border-2 border-purple-200">
-            <h3 class="text-base sm:text-lg font-bold text-rep-black mb-3 sm:mb-4">
-              <i class="fas fa-smile mr-1 sm:mr-2 text-purple-600"></i>
+          <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
+            <h3 class="text-sm font-bold text-rep-black mb-1">
+              <i class="fas fa-smile mr-1.5 text-purple-600"></i>
               Sentiment Filter
             </h3>
-            <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">Choose which sentiment types should receive auto-replies</p>
-            <div class="space-y-2 sm:space-y-3">
-              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+            <p class="text-xs text-gray-600 mb-3">Choose which sentiment types should receive auto-replies</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'all'"
-                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'all'"
-                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'all'">
-                <input 
-                  type="radio" 
-                  name="sentimentFilter" 
-                  value="all"
-                  [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
-                >
-                <div class="flex-1 min-w-0">
-                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
-                    <i class="fas fa-circle text-gray-400 mr-1 sm:mr-2"></i>Reply to All Sentiments
-                  </span>
-                  <span class="text-xs text-gray-700">Auto-reply to positive, neutral, and negative comments (default)</span>
+                     [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'all'">
+                <input type="radio" name="sentimentFilter" value="all" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-circle text-gray-400 mr-1"></i>All Sentiments</span>
+                  <span class="text-[11px] text-gray-600">Positive, neutral &amp; negative</span>
                 </div>
               </label>
-              
-              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'positive_neutral'"
-                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'positive_neutral'"
-                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'positive_neutral'">
-                <input 
-                  type="radio" 
-                  name="sentimentFilter" 
-                  value="positive_neutral"
-                  [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
-                >
-                <div class="flex-1 min-w-0">
-                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
-                    <i class="fas fa-smile text-green-500 mr-1 sm:mr-2"></i>Positive & Neutral Only
-                  </span>
-                  <span class="text-xs text-gray-700">Skip negative comments (recommended for most brands)</span>
+                     [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'positive_neutral'">
+                <input type="radio" name="sentimentFilter" value="positive_neutral" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-smile text-green-500 mr-1"></i>Positive &amp; Neutral</span>
+                  <span class="text-[11px] text-gray-600">Recommended for most brands</span>
                 </div>
               </label>
-              
-              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'negative_only'"
-                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'negative_only'"
-                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'negative_only'">
-                <input 
-                  type="radio" 
-                  name="sentimentFilter" 
-                  value="negative_only"
-                  [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
-                >
-                <div class="flex-1 min-w-0">
-                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
-                    <i class="fas fa-frown text-red-500 mr-1 sm:mr-2"></i>Negative Only
-                  </span>
-                  <span class="text-xs text-gray-700">Only auto-reply to negative comments for damage control</span>
+                     [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'negative_only'">
+                <input type="radio" name="sentimentFilter" value="negative_only" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-frown text-red-500 mr-1"></i>Negative Only</span>
+                  <span class="text-[11px] text-gray-600">Damage control focus</span>
                 </div>
               </label>
-              
-              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'positive_only'"
-                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'positive_only'"
-                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'positive_only'">
-                <input 
-                  type="radio" 
-                  name="sentimentFilter" 
-                  value="positive_only"
-                  [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
-                >
-                <div class="flex-1 min-w-0">
-                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
-                    <i class="fas fa-laugh-beam text-green-500 mr-1 sm:mr-2"></i>Positive Only
-                  </span>
-                  <span class="text-xs text-gray-700">Only auto-reply to positive comments to engage fans</span>
+                     [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'positive_only'">
+                <input type="radio" name="sentimentFilter" value="positive_only" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-laugh-beam text-green-500 mr-1"></i>Positive Only</span>
+                  <span class="text-[11px] text-gray-600">Engage fans only</span>
                 </div>
               </label>
-              
-              <label class="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'neutral_only'"
-                     [class.border-transparent]="autoReplySettings.sentimentFilter !== 'neutral_only'"
-                     [class.hover:border-purple-300]="autoReplySettings.sentimentFilter !== 'neutral_only'">
-                <input 
-                  type="radio" 
-                  name="sentimentFilter" 
-                  value="neutral_only"
-                  [(ngModel)]="autoReplySettings.sentimentFilter"
-                  class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0"
-                >
-                <div class="flex-1 min-w-0">
-                  <span class="text-xs sm:text-sm font-bold text-rep-black block mb-0.5 sm:mb-1">
-                    <i class="fas fa-meh text-gray-500 mr-1 sm:mr-2"></i>Neutral Only
-                  </span>
-                  <span class="text-xs text-gray-700">Only auto-reply to neutral comments and questions</span>
+                     [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'neutral_only'">
+                <input type="radio" name="sentimentFilter" value="neutral_only" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-meh text-gray-500 mr-1"></i>Neutral Only</span>
+                  <span class="text-[11px] text-gray-600">Questions &amp; informational</span>
                 </div>
               </label>
             </div>
-            <div class="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-purple-100 border border-purple-300 rounded-lg">
-              <p class="text-xs text-purple-900 flex items-start">
-                <i class="fas fa-info-circle mr-2 mt-0.5"></i>
-                <span>
-                  <strong>Tip:</strong> Most brands use "Positive & Neutral Only" to avoid escalating negative situations with automated replies.
+          </div>
+
+          <!-- Auto-Reply Timing Settings (Collapsible) -->
+          <div class="border-2 border-gray-200 rounded-lg overflow-hidden">
+            <button type="button" (click)="showTimingAdvanced = !showTimingAdvanced"
+              class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition text-left">
+              <span class="flex items-center gap-2 text-sm font-semibold text-rep-black">
+                <i class="fas fa-clock text-blue-600"></i>
+                Advanced: Reply Timing
+                <span class="text-xs font-normal text-gray-500 ml-1">
+                  ({{ autoReplySettings.triggerMode || 'hybrid' }})
                 </span>
-              </p>
-            </div>
-          </div>
-
-          <!-- Advanced Options -->
-          <div class="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-            <h3 class="text-lg font-bold text-rep-black mb-4">
-              <i class="fas fa-cog mr-2 text-gray-600"></i>
-              Advanced Options
-            </h3>
-            <div class="space-y-4">
-              <div class="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200">
-                <div class="flex items-center space-x-4">
-                  <i class="fas fa-angry text-2xl text-red-500"></i>
-                  <div>
-                    <h4 class="font-semibold text-gray-800">Reply to Negative Sentiment</h4>
-                    <p class="text-xs text-gray-600">Auto-reply to negative comments (not recommended)</p>
-                  </div>
+              </span>
+              <i class="fas text-gray-500 text-xs transition-transform"
+                 [class.fa-chevron-down]="!showTimingAdvanced"
+                 [class.fa-chevron-up]="showTimingAdvanced"></i>
+            </button>
+            <div *ngIf="showTimingAdvanced" class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 space-y-5">
+              <!-- Trigger Mode -->
+              <div>
+                <label class="block text-sm font-semibold text-rep-black mb-2">When to Send Auto-Replies</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 transition bg-white/50 border-2"
+                         [class.border-blue-300]="autoReplySettings.triggerMode === 'webhook'"
+                         [class.border-gray-200]="autoReplySettings.triggerMode !== 'webhook'">
+                    <input type="radio" name="triggerMode" value="webhook" [(ngModel)]="autoReplySettings.triggerMode" class="mt-0.5 w-4 h-4 text-blue-600 flex-shrink-0">
+                    <div>
+                      <span class="text-xs font-bold text-rep-black block">⚡ Immediate (Webhook)</span>
+                      <span class="text-[11px] text-gray-600">Reply as soon as comments arrive</span>
+                    </div>
+                  </label>
+                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 transition bg-white/50 border-2"
+                         [class.border-blue-300]="autoReplySettings.triggerMode === 'scheduled'"
+                         [class.border-gray-200]="autoReplySettings.triggerMode !== 'scheduled'">
+                    <input type="radio" name="triggerMode" value="scheduled" [(ngModel)]="autoReplySettings.triggerMode" class="mt-0.5 w-4 h-4 text-blue-600 flex-shrink-0">
+                    <div>
+                      <span class="text-xs font-bold text-rep-black block">📅 Scheduled (Periodic)</span>
+                      <span class="text-[11px] text-gray-600">Check at regular intervals</span>
+                    </div>
+                  </label>
+                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 transition bg-white/50 border-2"
+                         [class.border-blue-300]="autoReplySettings.triggerMode === 'hybrid'"
+                         [class.border-gray-200]="autoReplySettings.triggerMode !== 'hybrid'">
+                    <input type="radio" name="triggerMode" value="hybrid" [(ngModel)]="autoReplySettings.triggerMode" class="mt-0.5 w-4 h-4 text-blue-600 flex-shrink-0">
+                    <div>
+                      <span class="text-xs font-bold text-rep-black block">🚀 Hybrid (Recommended)</span>
+                      <span class="text-[11px] text-gray-600">Immediate + scheduled fallback</span>
+                    </div>
+                  </label>
+                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 transition bg-white/50 border-2"
+                         [class.border-blue-300]="autoReplySettings.triggerMode === 'manual'"
+                         [class.border-gray-200]="autoReplySettings.triggerMode !== 'manual'">
+                    <input type="radio" name="triggerMode" value="manual" [(ngModel)]="autoReplySettings.triggerMode" class="mt-0.5 w-4 h-4 text-blue-600 flex-shrink-0">
+                    <div>
+                      <span class="text-xs font-bold text-rep-black block">👤 Manual Only</span>
+                      <span class="text-[11px] text-gray-600">Via API or button click only</span>
+                    </div>
+                  </label>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" [(ngModel)]="autoReplySettings.replyToNegative" name="replyToNegative" class="sr-only peer">
-                  <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
-                </label>
               </div>
-
-              <div class="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200">
-                <div class="flex items-center space-x-4">
-                  <i class="fas fa-exclamation-triangle text-2xl text-orange-500"></i>
-                  <div>
-                    <h4 class="font-semibold text-gray-800">Reply to Complaints</h4>
-                    <p class="text-xs text-gray-600">Auto-reply to complaint interactions (not recommended)</p>
-                  </div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" [(ngModel)]="autoReplySettings.replyToComplaints" name="replyToComplaints" class="sr-only peer">
-                  <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
+              <!-- Schedule Interval -->
+              <div *ngIf="autoReplySettings.triggerMode === 'scheduled' || autoReplySettings.triggerMode === 'hybrid'">
+                <label class="block text-xs font-semibold text-rep-black mb-1.5">
+                  <i class="fas fa-calendar-alt mr-1"></i> Check for Auto-Replies Every
                 </label>
+                <select name="scheduleInterval" [(ngModel)]="autoReplySettings.scheduleInterval"
+                  class="w-full px-3 py-2 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white text-sm font-medium">
+                  <option value="15min">Every 15 Minutes</option>
+                  <option value="30min">Every 30 Minutes</option>
+                  <option value="1hour">Every Hour</option>
+                  <option value="6hours">Every 6 Hours</option>
+                  <option value="12hours">Every 12 Hours</option>
+                  <option value="24hours">Every 24 Hours (Recommended)</option>
+                </select>
+                <p class="text-[11px] text-gray-600 mt-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Processes up to 20 interactions per run</p>
               </div>
-
-              <div class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-950 mb-4">
-                <strong>Messages won’t appear in Instagram until both:</strong> <strong>Auto-Send Replies</strong> is ON and <strong>Require Approval</strong> is OFF.
-                Otherwise the AI may still run, but nothing is posted to the user.
+              <!-- Webhook Delay -->
+              <div *ngIf="autoReplySettings.triggerMode === 'webhook' || autoReplySettings.triggerMode === 'hybrid'">
+                <label class="block text-xs font-semibold text-rep-black mb-1.5">
+                  <i class="fas fa-hourglass-half mr-1"></i> Webhook Reply Delay (minutes)
+                </label>
+                <input type="number" name="webhookDelay" [(ngModel)]="autoReplySettings.webhookDelay" min="1" max="60"
+                  class="w-full px-3 py-2 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 text-sm font-medium">
+                <p class="text-[11px] text-gray-600 mt-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Allows AI processing to complete before sending</p>
               </div>
-
-              <div class="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200">
-                <div class="flex items-center space-x-4">
-                  <i class="fas fa-paper-plane text-2xl text-blue-500"></i>
-                  <div>
-                    <h4 class="font-semibold text-gray-800">Auto-Send Replies</h4>
-                    <p class="text-xs text-gray-600">Automatically send replies without approval (use with caution)</p>
-                  </div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" [(ngModel)]="autoReplySettings.autoSend" name="autoSend" class="sr-only peer">
-                  <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
-                </label>
-              </div>
-
-              <div class="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200">
-                <div class="flex items-center space-x-4">
-                  <i class="fas fa-user-check text-2xl text-green-500"></i>
-                  <div>
-                    <h4 class="font-semibold text-gray-800">Require Approval</h4>
-                    <p class="text-xs text-gray-600">Require human approval before sending (recommended)</p>
-                  </div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" [(ngModel)]="autoReplySettings.requireApproval" name="requireApproval" class="sr-only peer">
-                  <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Auto-Reply Timing Settings -->
-          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200 mt-6">
-            <h3 class="text-lg font-bold text-rep-black mb-4 flex items-center">
-              <i class="fas fa-clock mr-2 text-blue-600"></i>
-              Auto-Reply Timing
-            </h3>
-            
-            <!-- Trigger Mode -->
-            <div class="mb-6">
-              <label class="block text-sm font-semibold text-rep-black mb-3">
-                When to Send Auto-Replies
-              </label>
-              <div class="space-y-3">
-                <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2" 
-                       [class.border-blue-300]="autoReplySettings.triggerMode === 'webhook'"
-                       [class.border-transparent]="autoReplySettings.triggerMode !== 'webhook'"
-                       [class.hover:border-blue-300]="autoReplySettings.triggerMode !== 'webhook'">
-                  <input 
-                    type="radio" 
-                    name="triggerMode" 
-                    value="webhook"
-                    [(ngModel)]="autoReplySettings.triggerMode"
-                    id="triggerMode-webhook"
-                    class="mt-1 w-5 h-5 text-blue-600"
-                  >
-                  <div class="flex-1">
-                    <span class="text-sm font-bold text-rep-black block mb-1">⚡ Immediate (Webhook)</span>
-                    <span class="text-xs text-gray-700">Reply as soon as comments arrive (5-10 min delay)</span>
-                  </div>
-                </label>
-                <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2"
-                       [class.border-blue-300]="autoReplySettings.triggerMode === 'scheduled'"
-                       [class.border-transparent]="autoReplySettings.triggerMode !== 'scheduled'"
-                       [class.hover:border-blue-300]="autoReplySettings.triggerMode !== 'scheduled'">
-                  <input 
-                    type="radio" 
-                    name="triggerMode" 
-                    value="scheduled"
-                    [(ngModel)]="autoReplySettings.triggerMode"
-                    class="mt-1 w-5 h-5 text-blue-600"
-                  >
-                  <div class="flex-1">
-                    <span class="text-sm font-bold text-rep-black block mb-1">📅 Scheduled (Periodic)</span>
-                    <span class="text-xs text-gray-700">Check and reply at regular intervals</span>
-                  </div>
-                </label>
-                <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2"
-                       [class.border-blue-300]="autoReplySettings.triggerMode === 'hybrid'"
-                       [class.border-transparent]="autoReplySettings.triggerMode !== 'hybrid'"
-                       [class.hover:border-blue-300]="autoReplySettings.triggerMode !== 'hybrid'">
-                  <input 
-                    type="radio" 
-                    name="triggerMode" 
-                    value="hybrid"
-                    [(ngModel)]="autoReplySettings.triggerMode"
-                    class="mt-1 w-5 h-5 text-blue-600"
-                  >
-                  <div class="flex-1">
-                    <span class="text-sm font-bold text-rep-black block mb-1">🚀 Hybrid (Recommended)</span>
-                    <span class="text-xs text-gray-700">Immediate + scheduled fallback for reliability</span>
-                  </div>
-                </label>
-                <label class="flex items-start space-x-3 cursor-pointer p-4 rounded-xl hover:bg-white/70 transition bg-white/50 border-2"
-                       [class.border-blue-300]="autoReplySettings.triggerMode === 'manual'"
-                       [class.border-transparent]="autoReplySettings.triggerMode !== 'manual'"
-                       [class.hover:border-blue-300]="autoReplySettings.triggerMode !== 'manual'">
-                  <input 
-                    type="radio" 
-                    name="triggerMode" 
-                    value="manual"
-                    [(ngModel)]="autoReplySettings.triggerMode"
-                    class="mt-1 w-5 h-5 text-blue-600"
-                  >
-                  <div class="flex-1">
-                    <span class="text-sm font-bold text-rep-black block mb-1">👤 Manual Only</span>
-                    <span class="text-xs text-gray-700">Only trigger via API or button click</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <!-- Schedule Interval -->
-            <div *ngIf="autoReplySettings.triggerMode === 'scheduled' || autoReplySettings.triggerMode === 'hybrid'" class="mb-6">
-              <label class="block text-sm font-semibold text-rep-black mb-2">
-                <i class="fas fa-calendar-alt mr-1"></i>
-                Check for Auto-Replies Every
-              </label>
-              <select 
-                name="scheduleInterval"
-                [(ngModel)]="autoReplySettings.scheduleInterval"
-                class="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white font-medium"
-              >
-                <option value="15min">Every 15 Minutes</option>
-                <option value="30min">Every 30 Minutes</option>
-                <option value="1hour">Every Hour</option>
-                <option value="6hours">Every 6 Hours</option>
-                <option value="12hours">Every 12 Hours</option>
-                <option value="24hours">Every 24 Hours (Recommended)</option>
-              </select>
-              <p class="text-xs text-gray-700 mt-2 flex items-center">
-                <i class="fas fa-info-circle mr-1 text-blue-600"></i>
-                Scheduled jobs will process up to 20 eligible interactions per run
-              </p>
-            </div>
-
-            <!-- Webhook Delay -->
-            <div *ngIf="autoReplySettings.triggerMode === 'webhook' || autoReplySettings.triggerMode === 'hybrid'" class="mb-6">
-              <label class="block text-sm font-semibold text-rep-black mb-2">
-                <i class="fas fa-hourglass-half mr-1"></i>
-                Webhook Reply Delay (minutes)
-              </label>
-              <input 
-                type="number" 
-                name="webhookDelay"
-                [(ngModel)]="autoReplySettings.webhookDelay"
-                min="1"
-                max="60"
-                class="w-full px-4 py-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-blue-400 font-medium"
-              >
-              <p class="text-xs text-gray-700 mt-2 flex items-center">
-                <i class="fas fa-info-circle mr-1 text-blue-600"></i>
-                Delay allows AI processing to complete before generating reply
-              </p>
             </div>
           </div>
 
@@ -1311,42 +1110,11 @@
             </button>
           </div>
         </form>
-
-        <!-- Quick Links -->
-        <div class="mt-8 pt-8 border-t-2 border-gray-200">
-          <h3 class="text-lg font-bold text-rep-black mb-4">
-            <i class="fas fa-link mr-2"></i>
-            Quick Links
-          </h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a routerLink="/knowledge-base" class="flex items-center space-x-3 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 transition">
-              <i class="fas fa-book text-2xl text-blue-600"></i>
-              <div>
-                <h4 class="font-semibold text-blue-900">Knowledge Base</h4>
-                <p class="text-xs text-blue-700">Manage your content</p>
-              </div>
-            </a>
-            <a routerLink="/inbox" class="flex items-center space-x-3 p-4 bg-green-50 border-2 border-green-200 rounded-xl hover:bg-green-100 transition">
-              <i class="fas fa-inbox text-2xl text-green-600"></i>
-              <div>
-                <h4 class="font-semibold text-green-900">Test in Inbox</h4>
-                <p class="text-xs text-green-700">Try auto-reply</p>
-              </div>
-            </a>
-            <a href="/AUTO_REPLY_FEATURE.md" target="_blank" class="flex items-center space-x-3 p-4 bg-purple-50 border-2 border-purple-200 rounded-xl hover:bg-purple-100 transition">
-              <i class="fas fa-file-alt text-2xl text-purple-600"></i>
-              <div>
-                <h4 class="font-semibold text-purple-900">Documentation</h4>
-                <p class="text-xs text-purple-700">Learn more</p>
-              </div>
-            </a>
-          </div>
-        </div>
       </div>
     </div>
 
     <!-- Brand Rules Tab -->
-    <div *ngIf="activeTab === 'brand-rules'" class="max-w-4xl mx-auto">
+    <div *ngIf="activeTab === 'brand-rules'" class="w-full">
       <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
         <h2 class="text-xl md:text-2xl font-bold text-rep-black mb-2 flex items-center gap-2">
           <i class="fas fa-palette text-rep-lime"></i>
@@ -1366,7 +1134,7 @@
       <app-bucket-settings></app-bucket-settings>
     </div>
 
-    <div *ngIf="activeTab === 'compliance'" class="max-w-4xl mx-auto">
+    <div *ngIf="activeTab === 'compliance'" class="w-full">
       <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
         <h2 class="text-xl md:text-2xl font-bold text-rep-black mb-2 flex items-center gap-2">
           <i class="fas fa-shield-alt text-rep-lime"></i>

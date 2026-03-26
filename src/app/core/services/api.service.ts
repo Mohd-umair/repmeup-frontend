@@ -74,6 +74,14 @@ export class ApiService {
   }
 
   /**
+   * POST with FormData (file uploads) — does NOT set Content-Type so the
+   * browser can include the multipart boundary automatically.
+   */
+  postForm<T>(endpoint: string, formData: FormData): Observable<T> {
+    return this.http.post<T>(`${this.apiUrl}${endpoint}`, formData);
+  }
+
+  /**
    * Build HTTP params from object
    */
   private buildParams(params?: any): HttpParams {
@@ -81,9 +89,15 @@ export class ApiService {
     
     if (params) {
       Object.keys(params).forEach(key => {
-        if (params[key] !== null && params[key] !== undefined) {
-          httpParams = httpParams.set(key, params[key].toString());
+        const val = params[key];
+        if (val === null || val === undefined) return;
+        if (Array.isArray(val)) {
+          const joined = val.filter((x) => x !== null && x !== undefined && String(x).trim() !== '').join(',');
+          if (joined) httpParams = httpParams.set(key, joined);
+          return;
         }
+        const s = String(val).trim();
+        if (s !== '') httpParams = httpParams.set(key, s);
       });
     }
     

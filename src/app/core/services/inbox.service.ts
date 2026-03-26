@@ -103,8 +103,11 @@ export class InboxService {
    * Get inbox statistics
    * @param filters Optional filters (e.g. platform) for per-platform stats
    */
-  getStats(filters?: { platform?: string }): Observable<IApiResponse<IInboxStats>> {
-    const params = filters?.platform ? { platform: filters.platform } : undefined;
+  getStats(filters?: { platform?: string | string[] }): Observable<IApiResponse<IInboxStats>> {
+    const params =
+      filters?.platform != null && filters.platform !== ''
+        ? { platform: filters.platform }
+        : undefined;
     return this.apiService.get<IApiResponse<IInboxStats>>('/inbox/stats', params)
       .pipe(
         tap(response => {
@@ -130,6 +133,17 @@ export class InboxService {
     if (attachmentUrl) body['attachmentUrl'] = attachmentUrl;
     if (attachmentType) body['attachmentType'] = attachmentType;
     return this.apiService.post<IApiResponse>(`/inbox/${id}/reply`, body);
+  }
+
+  /**
+   * Upload a media file (image or audio blob) and return its public URL.
+   * Uses the existing /media-library/upload endpoint which stores files on disk
+   * and returns a persistent public URL safe to send to the backend.
+   */
+  uploadAttachment(blob: Blob, filename: string): Observable<IApiResponse> {
+    const form = new FormData();
+    form.append('media', blob, filename);
+    return this.apiService.postForm<IApiResponse>('/media-library/upload', form);
   }
 
   deleteReply(interactionId: string, replyId: string): Observable<IApiResponse> {

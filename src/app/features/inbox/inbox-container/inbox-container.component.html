@@ -137,9 +137,9 @@
         [disabled]="syncing || loading"
         class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 text-white flex items-center gap-1.5"
         [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-        [title]="platformFilters.platform ? 'Sync ' + platformFilters.platform : 'Sync all platforms'">
+        [title]="getSyncButtonTitle()">
         <i class="fas text-xs" [class.fa-sync-alt]="!syncing" [class.fa-spinner]="syncing" [class.fa-spin]="syncing"></i>
-        <span class="hidden md:inline">{{ platformFilters.platform ? 'Sync ' + (platformFilters.platform | titlecase) : 'Sync All' }}</span>
+        <span class="hidden md:inline">{{ getSyncButtonLabel() }}</span>
       </button>
 
       <div class="relative">
@@ -245,14 +245,14 @@
   </div>
 
   <!-- Sentiment filter active but no results: offer to analyze sentiment -->
-  <div *ngIf="topFilters.sentiment && !loading && interactions.length === 0" 
+  <div *ngIf="hasTopSentimentFilter() && !loading && interactions.length === 0" 
        class="mb-4 flex-shrink-0 p-4 rounded-xl border-2 border-amber-200 bg-amber-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
     <div class="flex items-start gap-3">
       <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
         <i class="fas fa-smile text-amber-600"></i>
       </div>
       <div>
-        <h3 class="font-bold text-amber-900">No comments with "{{ topFilters.sentiment }}" sentiment yet</h3>
+        <h3 class="font-bold text-amber-900">No comments with "{{ topSentimentFilterSummary() }}" sentiment yet</h3>
         <p class="text-sm text-amber-800 mt-1">Comments are not analyzed for sentiment by default. Run analysis once so Positive / Negative / Neutral filters work.</p>
       </div>
     </div>
@@ -267,7 +267,134 @@
   </div>
 
   <!-- Bucket search + sort bar (only in buckets view) -->
-  <div *ngIf="viewMode === 'buckets'" class="mb-2 flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-gray-200 shadow-sm">
+  <div *ngIf="viewMode === 'buckets'" class="mb-2 flex-shrink-0 flex flex-col gap-2 px-3 py-2 bg-white rounded-xl border border-gray-200 shadow-sm">
+
+    <!-- Quick filters row (same chips as list view) -->
+    <div class="flex items-center gap-1.5 flex-wrap">
+      <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gray-100 text-gray-600 flex-shrink-0">
+        <i class="fas fa-filter text-[10px]"></i>
+      </span>
+      <!-- All -->
+      <button
+        type="button"
+        (click)="clearAllConversationFilters()"
+        class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
+        [class.bg-gray-900]="isAllConversationFilterActive()"
+        [class.text-white]="isAllConversationFilterActive()"
+        [class.bg-gray-100]="!isAllConversationFilterActive()"
+        [class.text-gray-700]="!isAllConversationFilterActive()">
+        All
+      </button>
+      <!-- Unread -->
+      <button
+        type="button"
+        (click)="toggleUnreadFilter()"
+        class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
+        [class.bg-amber-600]="isUnreadFilterActive()"
+        [class.text-white]="isUnreadFilterActive()"
+        [class.bg-amber-50]="!isUnreadFilterActive()"
+        [class.text-amber-700]="!isUnreadFilterActive()">
+        Unread
+      </button>
+      <!-- Intent dropdown -->
+      <div class="relative">
+        <button
+          type="button"
+          (click)="toggleConversationIntentDropdown()"
+          class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
+          [ngClass]="(showConversationIntentDropdown || conversationIntentFilterActive())
+            ? 'bg-emerald-600 text-white'
+            : 'bg-emerald-50 text-emerald-800'"
+        >
+          <span>Intent</span>
+          <i class="fas fa-chevron-down text-[9px]"></i>
+        </button>
+        <div
+          *ngIf="showConversationIntentDropdown"
+          class="absolute left-0 top-full mt-1 min-w-[188px] max-h-[240px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-40 py-1"
+        >
+          <button type="button" (click)="toggleConversationIntentFilter()"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2">
+            <i class="fas fa-layer-group text-[11px] text-gray-500"></i>
+            All intents
+          </button>
+          <button type="button" (click)="toggleConversationIntentFilter('none')"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center justify-between gap-2">
+            <span class="inline-flex items-center gap-2">
+              <i class="fas fa-inbox text-[11px] text-gray-500 w-3 flex-shrink-0"></i>
+              Unassigned
+            </span>
+            <i *ngIf="isConversationIntentBucketActive('none')" class="fas fa-check text-emerald-600 text-[10px] flex-shrink-0"></i>
+          </button>
+          <button *ngFor="let bucket of conversationIntentBuckets" type="button"
+            (click)="toggleConversationIntentFilter(bucket._id)"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center justify-between gap-2">
+            <span class="inline-flex items-center gap-2 min-w-0">
+              <i *ngIf="bucket.icon" [class]="bucket.icon + ' text-[11px] w-3 flex-shrink-0'" [style.color]="bucket.color"></i>
+              <span class="truncate">{{ bucket.name }}</span>
+            </span>
+            <i *ngIf="isConversationIntentBucketActive(bucket._id)" class="fas fa-check text-emerald-600 text-[10px] flex-shrink-0"></i>
+          </button>
+        </div>
+      </div>
+      <!-- Platforms dropdown -->
+      <div class="relative">
+        <button
+          type="button"
+          (click)="toggleConversationPlatformDropdown()"
+          class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
+          [class.bg-violet-600]="showConversationPlatformDropdown || conversationPlatformFilterCount() > 0"
+          [class.text-white]="showConversationPlatformDropdown || conversationPlatformFilterCount() > 0"
+          [class.bg-violet-50]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0"
+          [class.text-violet-700]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0">
+          <span>Platforms</span>
+          <i class="fas fa-chevron-down text-[9px]"></i>
+        </button>
+        <div *ngIf="showConversationPlatformDropdown"
+          class="absolute left-0 top-full mt-1 min-w-[160px] bg-white border border-gray-200 rounded-lg shadow-lg z-40 py-1">
+          <button type="button" (click)="toggleConversationPlatformFilter()"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2">
+            <i class="fas fa-layer-group text-[11px] text-gray-500"></i>
+            All platforms
+          </button>
+          <button *ngFor="let platform of conversationPlatformOptions" type="button"
+            (click)="toggleConversationPlatformFilter(platform)"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center justify-between gap-2">
+            <span class="inline-flex items-center gap-2 min-w-0">
+              <i [class]="getPlatformIconClass(platform) + ' text-[11px] text-gray-500 w-3 flex-shrink-0'"></i>
+              {{ formatPlatformLabel(platform) }}
+            </span>
+            <i *ngIf="isConversationPlatformActive(platform)" class="fas fa-check text-violet-600 text-[10px] flex-shrink-0"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active filter badges -->
+      <ng-container *ngIf="!isAllConversationFilterActive()">
+        <span class="ml-1 w-px h-4 bg-gray-200 flex-shrink-0"></span>
+        <span *ngIf="isUnreadFilterActive()"
+          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-medium">
+          Unread
+          <button type="button" (click)="toggleUnreadFilter()" class="hover:text-amber-900 leading-none">×</button>
+        </span>
+        <span *ngIf="conversationIntentFilterActive()"
+          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-medium max-w-[100px]">
+          <span class="truncate">{{ getActiveIntentBucketLabel() }}</span>
+          <button type="button" (click)="toggleConversationIntentFilter()" class="hover:text-emerald-900 leading-none flex-shrink-0">×</button>
+        </span>
+        <span *ngIf="conversationPlatformFilterCount() > 0"
+          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-100 text-violet-800 text-[10px] font-medium">
+          {{ conversationPlatformFilterCount() === 1 ? formatPlatformLabel(platformFilters.platform + '') : conversationPlatformFilterCount() + ' platforms' }}
+          <button type="button" (click)="toggleConversationPlatformFilter()" class="hover:text-violet-900 leading-none">×</button>
+        </span>
+      </ng-container>
+    </div>
+
+    <!-- Divider between filters and search/sort -->
+    <div class="w-full h-px bg-gray-100"></div>
+
+    <!-- Search + Sort -->
+    <div class="flex items-center gap-2">
     <!-- Search -->
     <div class="relative flex-1 min-w-0">
       <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
@@ -313,18 +440,68 @@
           <i class="fas fa-arrow-up"></i>
           <span class="ml-1 hidden md:inline">Oldest</span>
         </button>
+      </div>
+
+      <!-- Sentiment filter dropdown -->
+      <div class="w-px h-5 bg-gray-200 dark:bg-gray-600 flex-shrink-0"></div>
+      <div class="relative flex-shrink-0">
         <button
           type="button"
-          (click)="onBucketSortChange('sentiment')"
-          class="px-2 py-1 rounded-md text-xs font-medium transition-all"
-          [ngClass]="bucketSortBy === 'sentiment' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-          title="By sentiment">
-          <i class="fas fa-heart"></i>
-          <span class="ml-1 hidden md:inline">Sentiment</span>
+          (click)="toggleBucketSentimentDropdown()"
+          class="px-2 py-1 rounded-md text-xs font-medium transition-all inline-flex items-center gap-1"
+          [ngClass]="(showBucketSentimentDropdown || bucketSentimentFilterActive())
+            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'">
+          <i class="fas fa-heart text-[10px]"></i>
+          <span class="hidden sm:inline">Sentiment</span>
+          <i class="fas fa-chevron-down text-[9px] opacity-70"></i>
         </button>
+        <div
+          *ngIf="showBucketSentimentDropdown"
+          class="absolute right-0 top-full mt-1 min-w-[160px] z-40 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg"
+        >
+          <button
+            type="button"
+            (click)="setBucketSentimentFilter()"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center gap-2">
+            <i class="fas fa-layer-group text-[11px] text-gray-500 dark:text-gray-400 w-3.5"></i>
+            All sentiments
+          </button>
+          <button
+            type="button"
+            (click)="setBucketSentimentFilter('positive')"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
+            <span class="inline-flex items-center gap-2">
+              <i class="fas fa-smile text-emerald-500 text-[11px] w-3.5"></i>
+              Positive
+            </span>
+            <i *ngIf="isBucketSentimentValue('positive')" class="fas fa-check text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
+          </button>
+          <button
+            type="button"
+            (click)="setBucketSentimentFilter('negative')"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
+            <span class="inline-flex items-center gap-2">
+              <i class="fas fa-frown text-rose-500 text-[11px] w-3.5"></i>
+              Negative
+            </span>
+            <i *ngIf="isBucketSentimentValue('negative')" class="fas fa-check text-rose-600 dark:text-rose-400 text-[10px]"></i>
+          </button>
+          <button
+            type="button"
+            (click)="setBucketSentimentFilter('neutral')"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
+            <span class="inline-flex items-center gap-2">
+              <i class="fas fa-meh text-gray-400 text-[11px] w-3.5"></i>
+              Neutral
+            </span>
+            <i *ngIf="isBucketSentimentValue('neutral')" class="fas fa-check text-gray-500 dark:text-gray-400 text-[10px]"></i>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+    </div><!-- end Search + Sort row -->
+  </div><!-- end bucket controls card -->
 
   <!-- Bucket Kanban View -->
   <div *ngIf="viewMode === 'buckets'" class="flex-1 lg:min-h-0 lg:overflow-hidden">
@@ -366,43 +543,86 @@
             </span>
             <button
               type="button"
-              (click)="applyConversationQuickFilter('all')"
+              (click)="clearAllConversationFilters()"
               class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
-              [class.bg-gray-900]="conversationQuickFilter === 'all'"
-              [class.text-white]="conversationQuickFilter === 'all'"
-              [class.bg-gray-100]="conversationQuickFilter !== 'all'"
-              [class.text-gray-700]="conversationQuickFilter !== 'all'">
+              [class.bg-gray-900]="isAllConversationFilterActive()"
+              [class.text-white]="isAllConversationFilterActive()"
+              [class.bg-gray-100]="!isAllConversationFilterActive()"
+              [class.text-gray-700]="!isAllConversationFilterActive()">
               All
             </button>
             <button
               type="button"
-              (click)="applyConversationQuickFilter('unread')"
+              (click)="toggleUnreadFilter()"
               class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
-              [class.bg-amber-600]="conversationQuickFilter === 'unread'"
-              [class.text-white]="conversationQuickFilter === 'unread'"
-              [class.bg-amber-50]="conversationQuickFilter !== 'unread'"
-              [class.text-amber-700]="conversationQuickFilter !== 'unread'">
+              [class.bg-amber-600]="isUnreadFilterActive()"
+              [class.text-white]="isUnreadFilterActive()"
+              [class.bg-amber-50]="!isUnreadFilterActive()"
+              [class.text-amber-700]="!isUnreadFilterActive()">
               Unread
             </button>
-            <button
-              type="button"
-              (click)="applyConversationQuickFilter('leads')"
-              class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
-              [class.bg-blue-600]="conversationQuickFilter === 'leads'"
-              [class.text-white]="conversationQuickFilter === 'leads'"
-              [class.bg-blue-50]="conversationQuickFilter !== 'leads'"
-              [class.text-blue-700]="conversationQuickFilter !== 'leads'">
-              Leads
-            </button>
+            <div class="relative">
+              <button
+                type="button"
+                (click)="toggleConversationIntentDropdown()"
+                class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
+                [ngClass]="(showConversationIntentDropdown || conversationIntentFilterActive())
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'"
+              >
+                <span>Intent</span>
+                <i class="fas fa-chevron-down text-[9px]"></i>
+              </button>
+              <div
+                *ngIf="showConversationIntentDropdown"
+                class="absolute left-0 top-full mt-1 min-w-[188px] max-h-[240px] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-40 py-1"
+              >
+                <button
+                  type="button"
+                  (click)="toggleConversationIntentFilter()"
+                  class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center gap-2"
+                >
+                  <i class="fas fa-layer-group text-[11px] text-gray-500 dark:text-gray-400"></i>
+                  All intents
+                </button>
+                <button
+                  type="button"
+                  (click)="toggleConversationIntentFilter('none')"
+                  class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2"
+                >
+                  <span class="inline-flex items-center gap-2 min-w-0">
+                    <i class="fas fa-inbox text-[11px] text-gray-500 dark:text-gray-400 w-3 flex-shrink-0"></i>
+                    Unassigned
+                  </span>
+                  <i *ngIf="isConversationIntentBucketActive('none')" class="fas fa-check text-emerald-600 dark:text-emerald-400 text-[10px] flex-shrink-0"></i>
+                </button>
+                <button
+                  *ngFor="let bucket of conversationIntentBuckets"
+                  type="button"
+                  (click)="toggleConversationIntentFilter(bucket._id)"
+                  class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2"
+                >
+                  <span class="inline-flex items-center gap-2 min-w-0">
+                    <i
+                      *ngIf="bucket.icon"
+                      [class]="bucket.icon + ' text-[11px] w-3 flex-shrink-0'"
+                      [style.color]="bucket.color"
+                    ></i>
+                    <span class="truncate">{{ bucket.name }}</span>
+                  </span>
+                  <i *ngIf="isConversationIntentBucketActive(bucket._id)" class="fas fa-check text-emerald-600 dark:text-emerald-400 text-[10px] flex-shrink-0"></i>
+                </button>
+              </div>
+            </div>
             <div class="relative">
               <button
                 type="button"
                 (click)="toggleConversationPlatformDropdown()"
                 class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
-                [class.bg-violet-600]="showConversationPlatformDropdown || !!platformFilters.platform"
-                [class.text-white]="showConversationPlatformDropdown || !!platformFilters.platform"
-                [class.bg-violet-50]="!showConversationPlatformDropdown && !platformFilters.platform"
-                [class.text-violet-700]="!showConversationPlatformDropdown && !platformFilters.platform">
+                [class.bg-violet-600]="showConversationPlatformDropdown || conversationPlatformFilterCount() > 0"
+                [class.text-white]="showConversationPlatformDropdown || conversationPlatformFilterCount() > 0"
+                [class.bg-violet-50]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0"
+                [class.text-violet-700]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0">
                 <span>Platforms</span>
                 <i class="fas fa-chevron-down text-[9px]"></i>
               </button>
@@ -412,7 +632,7 @@
               >
                 <button
                   type="button"
-                  (click)="selectConversationPlatform()"
+                  (click)="toggleConversationPlatformFilter()"
                   class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2"
                 >
                   <i class="fas fa-layer-group text-[11px] text-gray-500"></i>
@@ -421,11 +641,14 @@
                 <button
                   *ngFor="let platform of conversationPlatformOptions"
                   type="button"
-                  (click)="selectConversationPlatform(platform)"
-                  class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2"
+                  (click)="toggleConversationPlatformFilter(platform)"
+                  class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 inline-flex items-center justify-between gap-2"
                 >
-                  <i [class]="getPlatformIconClass(platform) + ' text-[11px] text-gray-500 w-3'"></i>
-                  {{ formatPlatformLabel(platform) }}
+                  <span class="inline-flex items-center gap-2 min-w-0">
+                    <i [class]="getPlatformIconClass(platform) + ' text-[11px] text-gray-500 w-3 flex-shrink-0'"></i>
+                    {{ formatPlatformLabel(platform) }}
+                  </span>
+                  <i *ngIf="isConversationPlatformActive(platform)" class="fas fa-check text-violet-600 text-[10px] flex-shrink-0"></i>
                 </button>
               </div>
             </div>

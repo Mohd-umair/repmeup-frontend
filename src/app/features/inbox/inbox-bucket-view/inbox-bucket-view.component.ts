@@ -1,10 +1,12 @@
-import { Component, OnInit, OnDestroy, OnChanges, SimpleChanges, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, OnChanges, SimpleChanges, Input, Output, EventEmitter, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { InboxService } from '../../../core/services/inbox.service';
 import { IIntentBucket } from '../../../core/services/intent-bucket.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { IInteraction, IInboxFilters } from '../../../core/models/interaction.model';
+import { IInteraction, IInboxFilters, IReply, InteractionStatus } from '../../../core/models/interaction.model';
+import { inboxFilterSerialize } from '../../../core/utils/inbox-filter-values';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
 import { SentimentDonutChartComponent } from '../../../shared/components/charts/sentiment-donut-chart.component';
 import { Subscription } from 'rxjs';
@@ -29,13 +31,17 @@ interface SentimentStats {
 @Component({
   selector: 'app-inbox-bucket-view',
   standalone: true,
-  imports: [CommonModule, DragDropModule, SentimentDonutChartComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, SentimentDonutChartComponent],
   templateUrl: './inbox-bucket-view.component.html',
   styleUrls: ['./inbox-bucket-view.component.scss']
 })
 export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   @Input() filters: IInboxFilters = {};
   @Output() interactionSelect = new EventEmitter<IInteraction>();
+
+  @ViewChild('chatThreadRef') chatThreadRef?: ElementRef<HTMLElement>;
+  @ViewChild('fileInputRef') fileInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('composeRef') composeRef?: ElementRef<HTMLTextAreaElement>;
 
   columns: BucketColumn[] = [];
   unassignedColumn: { interactions: IInteraction[]; total: number; loading: boolean } = {
@@ -50,6 +56,35 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   insightsTab: 'sentiment' | 'topics' = 'sentiment';
   inboxStats: any = null;
   insightsLoading = false;
+
+  // ── Inline chat panel ──
+  activeChatInteraction: IInteraction | null = null;
+  chatLoading = false;
+  replyText = '';
+  replying = false;
+  resolving = false;
+  private savedCollapsedColumns = new Set<string>();
+
+  // ── Compose toolbar extras ──
+  showEmojiPicker = false;
+  attachedFile: File | null = null;
+  attachedFilePreview: string | null = null;
+  attachedFileType: 'image' | 'audio' | null = null;
+  isRecording = false;
+  recordingSeconds = 0;
+  recordedAudioUrl: string | null = null;
+  private recordedBlob: Blob | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordingTimer: any = null;
+
+  readonly emojiRows: string[][] = [
+    ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😍','🥰','😘'],
+    ['🤔','🤗','😤','😠','😡','🥺','😢','😭','😱','😨','😰','😥','🤤'],
+    ['👍','👎','👌','✌️','🤞','🤙','👏','🙌','🤝','🫶','💪','🫂','🙏'],
+    ['❤️','🧡','💛','💚','💙','💜','🖤','💔','💕','💞','💓','💗','💖'],
+    ['🔥','✨','💫','⭐','🌟','🎉','🎊','🎁','🏆','🎯','🚀','💡','🌈'],
+    ['😺','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🦁','🐯','🦄'],
+  ];
 
   private subscriptions: Subscription[] = [];
   /** At most this many bucket columns may be expanded at once (unassigned counts as one column). */
@@ -83,16 +118,26 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
+  private mergeListFiltersIntoParams(target: Record<string, unknown>): void {
+    const pl = inboxFilterSerialize(this.filters.platform as any);
+    if (pl) target['platform'] = pl;
+    const t = inboxFilterSerialize(this.filters.type as any);
+    if (t) target['type'] = t;
+    const s = inboxFilterSerialize(this.filters.sentiment as any);
+    if (s) target['sentiment'] = s;
+    const st = inboxFilterSerialize(this.filters.status as any);
+    if (st) target['status'] = st;
+    const lbl = inboxFilterSerialize(this.filters.label as any);
+    if (lbl) target['label'] = lbl;
+    if (this.filters.search) target['search'] = this.filters.search;
+    if (this.filters.dateFrom) target['dateFrom'] = this.filters.dateFrom;
+    if (this.filters.dateTo) target['dateTo'] = this.filters.dateTo;
+  }
+
   loadBucketView(): void {
     this.loading = true;
-    const params: any = { limit: 20 };
-    if (this.filters.platform) params.platform = this.filters.platform;
-    if (this.filters.type) params.type = this.filters.type;
-    if (this.filters.sentiment) params.sentiment = this.filters.sentiment;
-    if (this.filters.status) params.status = this.filters.status;
-    if (this.filters.search) params.search = this.filters.search;
-    if (this.filters.dateFrom) params.dateFrom = this.filters.dateFrom;
-    if (this.filters.dateTo) params.dateTo = this.filters.dateTo;
+    const params: Record<string, unknown> = { limit: 20 };
+    this.mergeListFiltersIntoParams(params);
 
     this.inboxService.getBucketView(params).subscribe({
       next: (res: any) => {
@@ -129,7 +174,8 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
 
   loadInsightStats(): void {
     this.insightsLoading = true;
-    const statsFilters = this.filters.platform ? { platform: this.filters.platform as any } : undefined;
+    const pl = inboxFilterSerialize(this.filters.platform as any);
+    const statsFilters = pl ? { platform: this.filters.platform as any } : undefined;
     this.inboxService.getStats(statsFilters).subscribe({
       next: (res: any) => {
         if (res.success && res.data) {
@@ -143,14 +189,8 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   loadTopicInsights(): void {
-    const params: any = {};
-    if (this.filters.platform) params.platform = this.filters.platform;
-    if (this.filters.type) params.type = this.filters.type;
-    if (this.filters.sentiment) params.sentiment = this.filters.sentiment;
-    if (this.filters.status) params.status = this.filters.status;
-    if (this.filters.search) params.search = this.filters.search;
-    if (this.filters.dateFrom) params.dateFrom = this.filters.dateFrom;
-    if (this.filters.dateTo) params.dateTo = this.filters.dateTo;
+    const params: Record<string, unknown> = {};
+    this.mergeListFiltersIntoParams(params);
 
     this.inboxService.getTopicInsights(params).subscribe({
       next: (res: any) => {
@@ -225,20 +265,345 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   selectInteraction(interaction: IInteraction): void {
+    if (this.activeChatInteraction?._id === interaction._id) {
+      this.closeChat();
+      return;
+    }
+    this.openChat(interaction);
+  }
+
+  // ── Inline chat ──────────────────────────────────────────────────────────────
+
+  openChat(interaction: IInteraction): void {
+    // Save current collapsed state so we can restore it on close
+    this.savedCollapsedColumns = new Set(this.collapsedColumns);
+
+    // Determine which column owns this card
+    const ownerColumnId = this.findColumnIdForInteraction(interaction);
+
+    // Collapse every column except the owner
+    this.columns.forEach(c => {
+      if (c.bucket._id !== ownerColumnId) {
+        this.collapsedColumns.add(c.bucket._id);
+      } else {
+        this.collapsedColumns.delete(c.bucket._id);
+      }
+    });
+    // Collapse unassigned unless the card came from there
+    if (ownerColumnId === '__unassigned__') {
+      this.collapsedColumns.delete('__unassigned__');
+    } else {
+      this.collapsedColumns.add('__unassigned__');
+    }
+
+    this.activeChatInteraction = interaction;
     this.selectedInteractionId = interaction._id;
-    this.interactionSelect.emit(interaction);
+    this.replyText = '';
+    this.loadChatDetail(interaction._id);
+  }
+
+  private findColumnIdForInteraction(interaction: IInteraction): string | null {
+    for (const col of this.columns) {
+      if (col.interactions.some(i => i._id === interaction._id)) {
+        return col.bucket._id;
+      }
+    }
+    if (this.unassignedColumn.interactions.some(i => i._id === interaction._id)) {
+      return '__unassigned__';
+    }
+    return null;
+  }
+
+  closeChat(): void {
+    this.activeChatInteraction = null;
+    this.selectedInteractionId = null;
+    this.replyText = '';
+    this.replying = false;
+    this.resolving = false;
+    this.showEmojiPicker = false;
+    this.clearAttachment();
+    this.cancelRecording();
+    // Restore the layout that existed before opening
+    this.collapsedColumns = new Set(this.savedCollapsedColumns);
+  }
+
+  private loadChatDetail(id: string): void {
+    this.chatLoading = true;
+    this.inboxService.getInteraction(id).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.activeChatInteraction = res.data;
+        }
+        this.chatLoading = false;
+        this.scrollChatToBottom();
+      },
+      error: () => {
+        this.chatLoading = false;
+      }
+    });
+  }
+
+  private scrollChatToBottom(): void {
+    setTimeout(() => {
+      if (this.chatThreadRef?.nativeElement) {
+        this.chatThreadRef.nativeElement.scrollTop = this.chatThreadRef.nativeElement.scrollHeight;
+      }
+    }, 50);
+  }
+
+  submitReply(): void {
+    const hasText = this.replyText.trim().length > 0;
+    const hasBlob = !!this.recordedBlob;
+    const hasImage = !!this.attachedFile;
+    if (!this.activeChatInteraction || (!hasText && !hasBlob && !hasImage) || this.replying) return;
+
+    this.replying = true;
+    const id = this.activeChatInteraction._id;
+    const text = this.replyText.trim();
+
+    // If there's an attachment (audio blob or image file), upload it first to get a real public URL.
+    if (hasBlob || hasImage) {
+      const blob: Blob = hasBlob
+        ? this.recordedBlob!
+        : this.attachedFile!;
+      const filename = hasBlob
+        ? `voice-${Date.now()}.webm`
+        : (this.attachedFile?.name ?? `image-${Date.now()}.png`);
+      const attachType: 'audio' | 'image' = hasBlob ? 'audio' : 'image';
+      const replyContent = text || (attachType === 'audio' ? '🎤 Voice message' : '🖼️ Image');
+
+      this.inboxService.uploadAttachment(blob, filename).subscribe({
+        next: (res: any) => {
+          const publicUrl: string = res?.data?.publicUrl;
+          if (!publicUrl) {
+            this.notify.error('Upload failed', 'Could not get a URL for the attachment.');
+            this.replying = false;
+            return;
+          }
+          this.inboxService.replyToInteraction(id, replyContent, false, undefined, publicUrl, attachType).subscribe({
+            next: () => this.onReplySent(id),
+            error: () => {
+              this.notify.error('Error', 'Failed to send reply. Please try again.');
+              this.replying = false;
+            }
+          });
+        },
+        error: () => {
+          this.notify.error('Upload failed', 'Could not upload the attachment. Please try again.');
+          this.replying = false;
+        }
+      });
+    } else {
+      // Text-only reply
+      this.inboxService.replyToInteraction(id, text).subscribe({
+        next: () => this.onReplySent(id),
+        error: () => {
+          this.notify.error('Error', 'Failed to send reply. Please try again.');
+          this.replying = false;
+        }
+      });
+    }
+  }
+
+  private onReplySent(id: string): void {
+    this.notify.success('Reply sent', 'Your reply has been sent successfully.');
+    this.replyText = '';
+    this.clearAttachment();
+    this.cancelRecording();
+    this.showEmojiPicker = false;
+    this.updateCardInColumn(id, { status: InteractionStatus.REPLIED as any });
+    this.replying = false;
+    this.loadChatDetail(id);
+  }
+
+  // ── Emoji picker ──────────────────────────────────────────────────────────
+  toggleEmojiPicker(): void {
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+
+  insertEmoji(emoji: string): void {
+    this.replyText += emoji;
+    this.showEmojiPicker = false;
+    setTimeout(() => this.composeRef?.nativeElement.focus(), 0);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.emoji-panel') && !target.closest('.emoji-toggle-btn')) {
+      this.showEmojiPicker = false;
+    }
+  }
+
+  // ── Image attachment ──────────────────────────────────────────────────────
+  openFilePicker(): void {
+    this.fileInputRef?.nativeElement.click();
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.notify.error('Invalid file', 'Only image files are supported.');
+      return;
+    }
+    this.attachedFile = file;
+    this.attachedFileType = 'image';
+    const reader = new FileReader();
+    reader.onload = (e) => { this.attachedFilePreview = e.target?.result as string; };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  clearAttachment(): void {
+    this.attachedFile = null;
+    this.attachedFilePreview = null;
+    this.attachedFileType = null;
+  }
+
+  // ── Voice recording ───────────────────────────────────────────────────────
+  startRecording(): void {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      this.notify.error('Not supported', 'Voice recording is not supported in this browser.');
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const chunks: Blob[] = [];
+      this.mediaRecorder = new MediaRecorder(stream);
+      this.mediaRecorder.ondataavailable = (e: BlobEvent) => { if (e.data.size > 0) chunks.push(e.data); };
+      this.mediaRecorder.onstop = () => {
+        this.recordedBlob = new Blob(chunks, { type: 'audio/webm' });
+        this.recordedAudioUrl = URL.createObjectURL(this.recordedBlob);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      this.mediaRecorder.start();
+      this.isRecording = true;
+      this.recordingSeconds = 0;
+      this.recordingTimer = setInterval(() => this.recordingSeconds++, 1000);
+    }).catch(() => {
+      this.notify.error('Microphone denied', 'Please allow microphone access to record voice messages.');
+    });
+  }
+
+  stopRecording(): void {
+    if (this.mediaRecorder && this.isRecording) {
+      this.mediaRecorder.stop();
+    }
+    this.isRecording = false;
+    clearInterval(this.recordingTimer);
+  }
+
+  cancelRecording(): void {
+    if (this.mediaRecorder && this.isRecording) {
+      this.mediaRecorder.stop();
+    }
+    this.isRecording = false;
+    clearInterval(this.recordingTimer);
+    this.recordedBlob = null;
+    this.recordedAudioUrl = null;
+    this.recordingSeconds = 0;
+  }
+
+  formatRecordingTime(seconds: number): string {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  resolveChat(): void {
+    if (!this.activeChatInteraction || this.resolving) return;
+    this.resolving = true;
+    const id = this.activeChatInteraction._id;
+
+    this.inboxService.updateStatus(id, InteractionStatus.RESOLVED).subscribe({
+      next: () => {
+        this.notify.success('Resolved', 'Conversation marked as resolved.');
+        this.updateCardInColumn(id, { status: InteractionStatus.RESOLVED as any });
+        if (this.activeChatInteraction) {
+          this.activeChatInteraction = { ...this.activeChatInteraction, status: InteractionStatus.RESOLVED as any };
+        }
+        this.resolving = false;
+      },
+      error: () => {
+        this.notify.error('Error', 'Failed to resolve conversation.');
+        this.resolving = false;
+      }
+    });
+  }
+
+  reopenChat(): void {
+    if (!this.activeChatInteraction || this.resolving) return;
+    this.resolving = true;
+    const id = this.activeChatInteraction._id;
+
+    this.inboxService.updateStatus(id, InteractionStatus.UNREAD).subscribe({
+      next: () => {
+        this.notify.success('Reopened', 'Conversation reopened.');
+        this.updateCardInColumn(id, { status: InteractionStatus.UNREAD as any });
+        if (this.activeChatInteraction) {
+          this.activeChatInteraction = { ...this.activeChatInteraction, status: InteractionStatus.UNREAD as any };
+        }
+        this.resolving = false;
+      },
+      error: () => {
+        this.notify.error('Error', 'Failed to reopen conversation.');
+        this.resolving = false;
+      }
+    });
+  }
+
+  onReplyKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.submitReply();
+    }
+  }
+
+  isResolved(): boolean {
+    return (this.activeChatInteraction?.status as string) === InteractionStatus.RESOLVED;
+  }
+
+  isSentByTeam(reply: IReply): boolean {
+    return !reply.isPlatformReply;
+  }
+
+  getReplyAuthorInitials(reply: IReply): string {
+    if (reply.isPlatformReply) {
+      const name = reply.author?.name || this.activeChatInteraction?.author?.name || '?';
+      return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2);
+    }
+    // Team reply — use sentBy name if populated
+    const sentBy = reply.sentBy as any;
+    if (sentBy?.firstName || sentBy?.lastName) {
+      return ((sentBy.firstName?.[0] || '') + (sentBy.lastName?.[0] || '')).toUpperCase();
+    }
+    return 'ME';
+  }
+
+  private updateCardInColumn(id: string, patch: Partial<IInteraction>): void {
+    for (const col of this.columns) {
+      const idx = col.interactions.findIndex(i => i._id === id);
+      if (idx !== -1) {
+        col.interactions[idx] = { ...col.interactions[idx], ...patch };
+        return;
+      }
+    }
+    const idx = this.unassignedColumn.interactions.findIndex(i => i._id === id);
+    if (idx !== -1) {
+      this.unassignedColumn.interactions[idx] = { ...this.unassignedColumn.interactions[idx], ...patch };
+    }
   }
 
   loadMore(column: BucketColumn): void {
     if (column.loading || column.interactions.length >= column.total) return;
     column.loading = true;
-    const params: any = {
+    const params: Record<string, unknown> = {
       intentBucket: column.bucket._id,
       limit: 20,
       page: Math.floor(column.interactions.length / 20) + 1
     };
-    if (this.filters.platform) params.platform = this.filters.platform;
-    if (this.filters.sentiment) params.sentiment = this.filters.sentiment;
+    this.mergeListFiltersIntoParams(params);
     this.inboxService.getInteractions(params).subscribe({
       next: (res: any) => {
         if (res.success && res.data?.interactions) {
@@ -255,13 +620,12 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   loadMoreUnassigned(): void {
     if (this.unassignedColumn.loading || this.unassignedColumn.interactions.length >= this.unassignedColumn.total) return;
     this.unassignedColumn.loading = true;
-    const params: any = {
+    const params: Record<string, unknown> = {
       intentBucket: 'none',
       limit: 20,
       page: Math.floor(this.unassignedColumn.interactions.length / 20) + 1
     };
-    if (this.filters.platform) params.platform = this.filters.platform;
-    if (this.filters.sentiment) params.sentiment = this.filters.sentiment;
+    this.mergeListFiltersIntoParams(params);
     this.inboxService.getInteractions(params).subscribe({
       next: (res: any) => {
         if (res.success && res.data?.interactions) {
@@ -326,6 +690,10 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     if (sentiment === 'positive') return '😊';
     if (sentiment === 'negative') return '😠';
     return '';
+  }
+
+  getResolvedCount(col: BucketColumn): number {
+    return col.interactions.filter(i => (i.status as string) === InteractionStatus.RESOLVED).length;
   }
 
   trackByBucket(index: number, col: BucketColumn): string { return col.bucket._id; }

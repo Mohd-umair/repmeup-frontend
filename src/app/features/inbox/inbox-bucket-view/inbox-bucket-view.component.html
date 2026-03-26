@@ -31,9 +31,15 @@
           <span class="font-bold text-sm text-gray-900 dark:text-white truncate">{{ col.bucket.name }}</span>
         </div>
         <div class="flex items-center gap-1 flex-shrink-0">
+          <!-- Total / resolved count -->
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
                 [style.backgroundColor]="col.bucket.color"
                 style="color: #fff;">{{ col.total }}</span>
+          <span *ngIf="getResolvedCount(col) > 0"
+                class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 whitespace-nowrap"
+                [title]="getResolvedCount(col) + ' resolved'">
+            <i class="fas fa-check text-[8px] mr-0.5"></i>{{ getResolvedCount(col) }}/{{ col.total }}
+          </span>
           <button type="button" (click)="toggleCollapse(col.bucket._id)"
                   class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-black/5 transition-colors"
                   title="Collapse column">
@@ -86,9 +92,17 @@
              [style.--accent-color]="col.bucket.color">
 
           <div *cdkDragPlaceholder class="rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50" style="min-height:90px;"></div>
+          <!-- Unread dot -->
           <span *ngIf="interaction.status === 'unread'" class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-800 z-10"></span>
+          <!-- Resolved overlay -->
+          <div *ngIf="interaction.status === 'resolved'"
+               class="absolute inset-0 rounded-xl z-10 flex items-center justify-center pointer-events-none card-resolved-overlay">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white shadow-sm">
+              <i class="fas fa-check-circle text-[10px]"></i> Resolved
+            </span>
+          </div>
 
-          <div class="card-content px-3 pt-3 pb-2.5">
+          <div class="card-content px-3 pt-3 pb-2.5" [class.opacity-50]="interaction.status === 'resolved'">
             <div class="flex items-start gap-3">
               <div class="relative flex-shrink-0 self-start">
                 <div class="w-11 h-11 rounded-lg flex items-center justify-center text-base font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800"
@@ -204,7 +218,13 @@
              style="--accent-color: #9CA3AF">
           <div *cdkDragPlaceholder class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50" style="min-height:90px;"></div>
           <span *ngIf="interaction.status === 'unread'" class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white z-10"></span>
-          <div class="card-content px-3 pt-3 pb-2.5">
+          <div *ngIf="interaction.status === 'resolved'"
+               class="absolute inset-0 rounded-xl z-10 flex items-center justify-center pointer-events-none card-resolved-overlay">
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white shadow-sm">
+              <i class="fas fa-check-circle text-[10px]"></i> Resolved
+            </span>
+          </div>
+          <div class="card-content px-3 pt-3 pb-2.5" [class.opacity-50]="interaction.status === 'resolved'">
             <div class="flex items-start gap-3">
               <div class="relative flex-shrink-0 self-start">
                 <div class="w-11 h-11 rounded-lg flex items-center justify-center text-base font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800"
@@ -251,7 +271,289 @@
     </div>
   </div>
 
-  <!-- ──────────────────── RIGHT: AI Insights Panel (flex-[4]) ──────────────────── -->
+  <!-- ──────────────────── RIGHT: Chat Panel OR AI Insights ──────────────────── -->
+  <ng-container *ngIf="activeChatInteraction; else insightsPanel">
+  <!-- ── Mini Inline Chat Panel ── -->
+  <div class="chat-panel flex flex-col rounded-2xl overflow-hidden flex-shrink-0 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 shadow-md"
+       style="flex: 0 0 380px; width: 380px;">
+
+    <!-- Chat Header -->
+    <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0"
+         [style.background]="'linear-gradient(135deg,' + (activeChatInteraction.intentBucket?.color || '#6B7280') + '18,' + (activeChatInteraction.intentBucket?.color || '#6B7280') + '06)'">
+      <!-- Avatar -->
+      <div class="relative flex-shrink-0">
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800"
+             [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
+          <img *ngIf="getAvatarUrl(activeChatInteraction)"
+               [src]="getAvatarUrl(activeChatInteraction)"
+               class="w-full h-full object-cover rounded-lg"
+               (error)="$any($event.target).style.display='none'" />
+          <span *ngIf="!getAvatarUrl(activeChatInteraction)">{{ getInitials(activeChatInteraction.author?.name) }}</span>
+        </div>
+        <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-md flex items-center justify-center shadow-sm border border-white dark:border-gray-800"
+             [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
+          <i [class]="getPlatformIcon(activeChatInteraction.platform) + ' text-white leading-none'" style="font-size:8px;"></i>
+        </div>
+      </div>
+      <!-- Name + meta -->
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-bold text-gray-900 dark:text-white truncate leading-tight">
+          {{ activeChatInteraction.author?.name || 'Unknown' }}
+        </p>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="text-[10px] font-semibold capitalize px-1.5 py-0.5 rounded-full"
+                [class.type-dm]="activeChatInteraction.type==='dm'"
+                [class.type-comment]="activeChatInteraction.type==='comment'"
+                [class.type-review]="activeChatInteraction.type==='review'"
+                [class.type-default]="activeChatInteraction.type!=='dm'&&activeChatInteraction.type!=='comment'&&activeChatInteraction.type!=='review'">
+            {{ activeChatInteraction.type }}
+          </span>
+          <span class="text-[10px] text-gray-400">{{ getRelativeTime(activeChatInteraction.platformCreatedAt || activeChatInteraction.createdAt) }}</span>
+          <span *ngIf="isResolved()"
+                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+            <i class="fas fa-check-circle" style="font-size:8px;"></i> Resolved
+          </span>
+        </div>
+      </div>
+      <!-- Close button -->
+      <button type="button" (click)="closeChat()"
+              class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+              title="Close">
+        <i class="fas fa-times text-xs"></i>
+      </button>
+    </div>
+
+    <!-- Thread -->
+    <div #chatThreadRef class="flex-1 overflow-y-auto p-3 space-y-2 chat-thread"
+         style="min-height: 0;">
+
+      <!-- Loading skeleton -->
+      <div *ngIf="chatLoading" class="flex flex-col items-center justify-center py-10 gap-2">
+        <div class="w-6 h-6 rounded-full border-2 border-gray-200 border-t-gray-400 animate-spin"></div>
+        <span class="text-xs text-gray-400">Loading conversation…</span>
+      </div>
+
+      <ng-container *ngIf="!chatLoading">
+        <!-- Original message -->
+        <div class="flex gap-2.5 items-start">
+          <div class="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm"
+               [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
+            <span>{{ getInitials(activeChatInteraction.author?.name) }}</span>
+          </div>
+          <div class="chat-bubble-customer flex-1 min-w-0">
+            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+              {{ activeChatInteraction.author?.name || 'Customer' }}
+              <span class="font-normal ml-1">{{ getRelativeTime(activeChatInteraction.platformCreatedAt || activeChatInteraction.createdAt) }}</span>
+            </p>
+            <div class="bubble-left">
+              <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">{{ activeChatInteraction.content }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Replies -->
+        <ng-container *ngFor="let reply of activeChatInteraction.replies">
+          <!-- Platform / customer reply -->
+          <div *ngIf="!isSentByTeam(reply)" class="flex gap-2.5 items-start">
+            <div class="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm"
+                 [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
+              <span>{{ getReplyAuthorInitials(reply) }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                {{ reply.author?.name || activeChatInteraction.author?.name || 'Customer' }}
+                <span class="font-normal ml-1">{{ getRelativeTime(reply.sentAt) }}</span>
+              </p>
+              <div class="bubble-left">
+                <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">{{ reply.content }}</p>
+              </div>
+            </div>
+          </div>
+          <!-- Team reply -->
+          <div *ngIf="isSentByTeam(reply)" class="flex gap-2.5 items-start flex-row-reverse">
+            <div class="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold bg-rep-lime text-rep-black flex-shrink-0 shadow-sm">
+              <span>{{ getReplyAuthorInitials(reply) }}</span>
+            </div>
+            <div class="flex-1 min-w-0 flex flex-col items-end">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                You <span class="font-normal ml-1">{{ getRelativeTime(reply.sentAt) }}</span>
+                <span *ngIf="reply.wasAutoGenerated" class="ml-1 px-1 py-0.5 rounded text-[9px] bg-rep-lime/20 text-rep-black dark:text-rep-lime">AI</span>
+              </p>
+              <div class="bubble-right">
+                <p *ngIf="reply.content" class="text-sm leading-relaxed whitespace-pre-wrap break-words">{{ reply.content }}</p>
+                <img *ngIf="reply.attachmentType === 'image' && reply.attachmentUrl"
+                     [src]="reply.attachmentUrl" alt="Image attachment"
+                     class="mt-1 max-w-[180px] rounded-lg border border-white/20 object-cover cursor-pointer"
+                     (click)="$event.stopPropagation()"/>
+                <audio *ngIf="reply.attachmentType === 'audio' && reply.attachmentUrl"
+                       [src]="reply.attachmentUrl" controls
+                       class="mt-1 h-8 w-full max-w-[200px] rounded-lg"
+                       style="accent-color: var(--rep-lime, #c8f04e)"></audio>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Empty thread state -->
+        <div *ngIf="!activeChatInteraction.replies?.length"
+             class="text-center py-6 text-xs text-gray-400">
+          <i class="fas fa-comment-slash text-lg mb-2 block opacity-30"></i>
+          No replies yet
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- Resolved banner -->
+    <div *ngIf="isResolved()"
+         class="mx-3 mb-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 flex items-center justify-between gap-2 flex-shrink-0">
+      <div class="flex items-center gap-2 min-w-0">
+        <i class="fas fa-check-circle text-emerald-500 text-xs flex-shrink-0"></i>
+        <span class="text-xs text-emerald-700 dark:text-emerald-400 font-medium">This conversation is resolved.</span>
+      </div>
+      <button
+        type="button"
+        (click)="reopenChat()"
+        [disabled]="resolving"
+        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 flex-shrink-0 bg-white dark:bg-gray-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 disabled:opacity-40 disabled:cursor-not-allowed">
+        <i class="fas" [class.fa-undo]="!resolving" [class.fa-spinner]="resolving" [class.fa-spin]="resolving" style="font-size:10px;"></i>
+        {{ resolving ? 'Reopening…' : 'Reopen' }}
+      </button>
+    </div>
+
+    <!-- Compose area -->
+    <div class="border-t border-gray-100 dark:border-gray-700 flex-shrink-0 relative">
+
+      <!-- Hidden file input -->
+      <input #fileInputRef type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)">
+
+      <!-- ── Emoji picker panel ── -->
+      <div *ngIf="showEmojiPicker"
+           class="emoji-panel absolute bottom-full left-0 right-0 z-30 mx-3 mb-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-xl p-2"
+           (click)="$event.stopPropagation()">
+        <div *ngFor="let row of emojiRows" class="flex flex-wrap gap-0.5 mb-0.5">
+          <button *ngFor="let emoji of row" type="button"
+                  (click)="insertEmoji(emoji)"
+                  class="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
+            {{ emoji }}
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Image preview ── -->
+      <div *ngIf="attachedFilePreview && attachedFileType === 'image'"
+           class="flex items-center gap-2 px-3 pt-2.5">
+        <div class="relative inline-block">
+          <img [src]="attachedFilePreview" alt="Attachment" class="h-14 w-14 object-cover rounded-lg border border-gray-200 dark:border-gray-600"/>
+          <button type="button" (click)="clearAttachment()"
+                  class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gray-700 text-white flex items-center justify-center shadow">
+            <i class="fas fa-times text-[8px]"></i>
+          </button>
+        </div>
+        <span class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[140px]">{{ attachedFile?.name }}</span>
+      </div>
+
+      <!-- ── Voice recording bar ── -->
+      <div *ngIf="isRecording || recordedAudioUrl"
+           class="flex items-center gap-2 px-3 pt-2.5">
+        <!-- Recording pulse -->
+        <ng-container *ngIf="isRecording">
+          <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0"></div>
+          <span class="text-xs font-mono font-semibold text-red-500">{{ formatRecordingTime(recordingSeconds) }}</span>
+          <span class="text-[10px] text-gray-400 flex-1">Recording…</span>
+          <button type="button" (click)="stopRecording()"
+                  class="px-2 py-1 rounded-lg bg-rep-lime text-rep-black text-[11px] font-bold hover:bg-rep-lime/80 transition flex items-center gap-1">
+            <i class="fas fa-stop text-[9px]"></i> Done
+          </button>
+          <button type="button" (click)="cancelRecording()"
+                  class="px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[11px] font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+            Cancel
+          </button>
+        </ng-container>
+        <!-- Recorded preview -->
+        <ng-container *ngIf="!isRecording && recordedAudioUrl">
+          <i class="fas fa-microphone text-rep-lime text-xs flex-shrink-0"></i>
+          <audio [src]="recordedAudioUrl" controls class="h-7 flex-1 max-w-full rounded-lg"
+                 style="accent-color: var(--rep-lime, #c8f04e)"></audio>
+          <button type="button" (click)="cancelRecording()"
+                  class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-red-100 hover:text-red-500 transition flex-shrink-0">
+            <i class="fas fa-trash text-[9px]"></i>
+          </button>
+        </ng-container>
+      </div>
+
+      <!-- ── Textarea ── -->
+      <div class="px-3 pt-2 pb-0">
+        <textarea
+          #composeRef
+          [(ngModel)]="replyText"
+          (keydown)="onReplyKeydown($event)"
+          [disabled]="isResolved() || replying || isRecording"
+          rows="2"
+          placeholder="{{ isResolved() ? 'Reopen the conversation to reply…' : 'Write a reply… (Enter ↵ to send)' }}"
+          class="w-full resize-none text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime/60 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        ></textarea>
+      </div>
+
+      <!-- ── Bottom toolbar ── -->
+      <div class="flex items-center justify-between px-3 py-2 gap-2">
+        <!-- Left: tool buttons -->
+        <div class="flex items-center gap-1">
+          <!-- Emoji -->
+          <button type="button"
+                  (click)="toggleEmojiPicker(); $event.stopPropagation()"
+                  [disabled]="isResolved()"
+                  class="emoji-toggle-btn w-8 h-8 rounded-lg flex items-center justify-center text-base transition-colors disabled:opacity-40"
+                  [ngClass]="showEmojiPicker ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'"
+                  title="Emoji">
+            😊
+          </button>
+          <!-- Image -->
+          <button type="button"
+                  (click)="openFilePicker()"
+                  [disabled]="isResolved() || !!attachedFilePreview"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-40"
+                  title="Attach image">
+            <i class="fas fa-image text-sm"></i>
+          </button>
+          <!-- Voice -->
+          <button type="button"
+                  (click)="isRecording ? stopRecording() : startRecording()"
+                  [disabled]="isResolved() || !!recordedAudioUrl"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40"
+                  [ngClass]="isRecording ? 'bg-red-100 dark:bg-red-900/30 text-red-500 animate-pulse' : 'text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'"
+                  title="{{ isRecording ? 'Stop recording' : 'Record voice message' }}">
+            <i class="fas fa-microphone text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Right: hint + resolve -->
+        <div class="flex items-center gap-2">
+          <span *ngIf="replying" class="flex items-center gap-1 text-[10px] text-gray-400">
+            <i class="fas fa-spinner fa-spin text-rep-lime text-xs"></i>
+            Sending…
+          </span>
+          <span *ngIf="!replying && !isResolved()" class="text-[10px] text-gray-400 hidden sm:flex items-center gap-1">
+            <kbd class="px-1 py-0.5 rounded text-[9px] border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 font-mono">↵</kbd>
+            to send
+          </span>
+          <button
+            *ngIf="!isResolved()"
+            type="button"
+            (click)="resolveChat()"
+            [disabled]="resolving"
+            class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50">
+            <i class="fas" [class.fa-check-circle]="!resolving" [class.fa-spinner]="resolving" [class.fa-spin]="resolving" style="font-size:10px;"></i>
+            {{ resolving ? 'Resolving…' : 'Resolve' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </ng-container>
+
+  <ng-template #insightsPanel>
+  <!-- ──────────────────── AI Insights Panel ──────────────────── -->
   <div class="insights-panel flex flex-col rounded-2xl overflow-hidden flex-shrink-0" style="flex: 0 0 300px; width: 300px;">
 
     <!-- Panel header -->
@@ -403,6 +705,7 @@
       </div>
 
     </div>
-  </div>
+  </div><!-- end insights-panel -->
+  </ng-template><!-- end #insightsPanel -->
 
 </div>
