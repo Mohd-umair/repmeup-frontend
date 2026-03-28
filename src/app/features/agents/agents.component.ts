@@ -1,11 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService, IUser, ICreateUserDto, IUpdateUserDto } from '../../core/services/user.service';
+import { IntentBucketService, IIntentBucket } from '../../core/services/intent-bucket.service';
 
-/**
- * Agents Component - Single Responsibility Principle
- * Manages team members and agent assignment
- */
 @Component({
   selector: 'app-agents',
   standalone: false,
@@ -16,8 +13,7 @@ export class AgentsComponent implements OnInit {
   agents: IUser[] = [];
   loading = false;
   error: string | null = null;
-  
-  // Modal states
+
   showAddModal = false;
   showEditModal = false;
   showDeleteModal = false;
@@ -25,19 +21,34 @@ export class AgentsComponent implements OnInit {
   selectedAgent: IUser | null = null;
   selectedAgentStats: any = null;
   loadingStats = false;
-  
-  // Forms
+
   addAgentForm: FormGroup;
   editAgentForm: FormGroup;
-  
-  // Filters
+
   roleFilter: string = '';
   statusFilter: string = '';
   searchQuery: string = '';
 
+  buckets: IIntentBucket[] = [];
+
+  readonly platformOptions: { value: string; label: string; icon: string }[] = [
+    { value: 'instagram', label: 'Instagram', icon: 'fab fa-instagram' },
+    { value: 'facebook', label: 'Facebook', icon: 'fab fa-facebook' },
+    { value: 'youtube', label: 'YouTube', icon: 'fab fa-youtube' },
+    { value: 'google', label: 'Google', icon: 'fab fa-google' },
+    { value: 'whatsapp', label: 'WhatsApp', icon: 'fab fa-whatsapp' },
+    { value: 'linkedin', label: 'LinkedIn', icon: 'fab fa-linkedin' }
+  ];
+
+  addSelectedBuckets: Set<string> = new Set();
+  addSelectedPlatforms: Set<string> = new Set();
+  editSelectedBuckets: Set<string> = new Set();
+  editSelectedPlatforms: Set<string> = new Set();
+
   constructor(
     private userService: UserService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private intentBucketService: IntentBucketService
   ) {
     this.addAgentForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -57,6 +68,17 @@ export class AgentsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAgents();
+    this.loadBuckets();
+  }
+
+  loadBuckets(): void {
+    this.intentBucketService.getBuckets().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.buckets = res.data;
+        }
+      }
+    });
   }
 
   loadAgents(): void {
@@ -83,15 +105,18 @@ export class AgentsComponent implements OnInit {
     });
   }
 
-  // Modal actions
   openAddModal(): void {
     this.showAddModal = true;
     this.addAgentForm.reset({ role: 'agent' });
+    this.addSelectedBuckets.clear();
+    this.addSelectedPlatforms.clear();
   }
 
   closeAddModal(): void {
     this.showAddModal = false;
     this.addAgentForm.reset();
+    this.addSelectedBuckets.clear();
+    this.addSelectedPlatforms.clear();
   }
 
   openEditModal(agent: IUser): void {
@@ -103,12 +128,19 @@ export class AgentsComponent implements OnInit {
       role: agent.role,
       isActive: agent.isActive
     });
+
+    this.editSelectedBuckets = new Set(
+      (agent.assignedBuckets || []).map(b => typeof b === 'string' ? b : b._id)
+    );
+    this.editSelectedPlatforms = new Set(agent.assignedPlatforms || []);
   }
 
   closeEditModal(): void {
     this.showEditModal = false;
     this.selectedAgent = null;
     this.editAgentForm.reset();
+    this.editSelectedBuckets.clear();
+    this.editSelectedPlatforms.clear();
   }
 
   openDeleteModal(agent: IUser): void {
@@ -121,13 +153,14 @@ export class AgentsComponent implements OnInit {
     this.selectedAgent = null;
   }
 
-  // CRUD operations
   submitAddAgent(): void {
-    if (this.addAgentForm.invalid) {
-      return;
-    }
+    if (this.addAgentForm.invalid) return;
 
-    const data: ICreateUserDto = this.addAgentForm.value;
+    const data: ICreateUserDto = {
+      ...this.addAgentForm.value,
+      assignedBuckets: Array.from(this.addSelectedBuckets),
+      assignedPlatforms: Array.from(this.addSelectedPlatforms)
+    };
 
     this.userService.createUser(data).subscribe({
       next: (response) => {
@@ -144,11 +177,13 @@ export class AgentsComponent implements OnInit {
   }
 
   submitEditAgent(): void {
-    if (this.editAgentForm.invalid || !this.selectedAgent) {
-      return;
-    }
+    if (this.editAgentForm.invalid || !this.selectedAgent) return;
 
-    const data: IUpdateUserDto = this.editAgentForm.value;
+    const data: IUpdateUserDto = {
+      ...this.editAgentForm.value,
+      assignedBuckets: Array.from(this.editSelectedBuckets),
+      assignedPlatforms: Array.from(this.editSelectedPlatforms)
+    };
 
     this.userService.updateUser(this.selectedAgent._id, data).subscribe({
       next: (response) => {
@@ -235,9 +270,37 @@ export class AgentsComponent implements OnInit {
     return this.agents.filter(agent => agent.isActive).length;
   }
 
-  /**
-   * Open performance modal and load stats
-   */
+  toggleBucket(set: Set<string>, bucketId: string): void {
+    set.has(bucketId) ? set.delete(bucketId) : set.add(bucketId);
+  }
+
+  togglePlatform(set: Set<string>, platform: string): void {
+    set.has(platform) ? set.delete(platform) : set.add(platform);
+  }
+
+  getBucketName(id: string): string {
+    return this.buckets.find(b => b._id === id)?.name || id;
+  }
+
+  getBucketColor(id: string): string {
+    return this.buckets.find(b => b._id === id)?.color || '#6b7280';
+  }
+
+  getPlatformIcon(platform: string): string {
+    return this.platformOptions.find(p => p.value === platform)?.icon || 'fas fa-globe';
+  }
+
+  getPlatformLabel(platform: string): string {
+    return this.platformOptions.find(p => p.value === platform)?.label || platform;
+  }
+
+  getAgentBuckets(agent: IUser): { _id: string; name: string; color?: string }[] {
+    if (!agent.assignedBuckets || agent.assignedBuckets.length === 0) return [];
+    return (agent.assignedBuckets as any[]).map(b =>
+      typeof b === 'string' ? { _id: b, name: this.getBucketName(b), color: this.getBucketColor(b) } : b
+    );
+  }
+
   openPerformanceModal(agent: IUser): void {
     this.selectedAgent = agent;
     this.showPerformanceModal = true;

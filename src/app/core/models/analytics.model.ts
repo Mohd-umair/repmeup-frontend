@@ -85,6 +85,33 @@ export interface ITopPerformers {
   }>;
 }
 
+export interface IIntentBreakdown {
+  data: { [key: string]: number };
+  total: number;
+}
+
+export interface IAiVsHuman {
+  aiReplies: number;
+  humanReplies: number;
+  totalReplies: number;
+  aiPercent: number;
+}
+
+export interface ITopInteraction {
+  postId: string;
+  platform: string;
+  postUrl?: string | null;
+  content?: string | null;
+  mediaUrl?: string | null;
+  commentCount: number;
+  totalLikes: number;
+  totalViews: number;
+  positiveCount: number;
+  negativeCount: number;
+  sentiment: 'positive' | 'negative';
+  latestDate: string;
+}
+
 export interface IAnalyticsDashboard {
   dateRange: IAnalyticsDateRange;
   overview: {
@@ -99,6 +126,9 @@ export interface IAnalyticsDashboard {
   autoReplyMetrics?: IAutoReplyMetrics;
   responseTimeMetrics: IResponseTimeMetrics;
   topPerformers?: ITopPerformers;
+  intentBreakdown?: IIntentBreakdown;
+  aiVsHuman?: IAiVsHuman;
+  topInteractions?: ITopInteraction[];
 }
 
 export interface IAnalyticsFilters {

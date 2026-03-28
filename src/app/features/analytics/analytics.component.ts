@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subscription, interval, Subject } from 'rxjs';
 import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -23,7 +22,6 @@ import { SentimentDonutChartComponent } from '../../shared/components/charts/sen
 import { PlatformBarChartComponent } from '../../shared/components/charts/platform-bar-chart.component';
 import { ResponseTimeHistogramComponent } from '../../shared/components/charts/response-time-histogram.component';
 import { AgentPerformanceChartComponent } from '../../shared/components/charts/agent-performance-chart.component';
-import { environment } from '../../../environments/environment';
 
 /**
  * Analytics Component - Scalable analytics dashboard
@@ -50,8 +48,7 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   agentLoading = false;
   engagementLoading = false;
   exportLoading = false;
-  contentPerformance: { aiCount: number; humanCount: number; total: number; aiPercent: number } | null = null;
-  suggestedImprovements: { id: string; type: string; title: string; description: string }[] = [];
+  sentimentChartDays: '7days' | '30days' = '7days';
 
   // Filters
   selectedDateRange: IAnalyticsDateRange;
@@ -100,7 +97,6 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   constructor(
     private analyticsService: AnalyticsService,
     private notificationService: NotificationService,
-    private http: HttpClient,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -120,8 +116,6 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
 
     this.loadDashboard();
     this.loadAgentAnalytics();
-    this.loadContentPerformance();
-    this.loadSuggestedImprovements();
     this.setupAutoRefresh();
   }
 
@@ -212,22 +206,6 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadContentPerformance(): void {
-    this.http.get<{ success: boolean; data: any }>(`${environment.apiUrl}/analytics/content-performance`).subscribe({
-      next: (res) => {
-        if (res.success && res.data) this.contentPerformance = res.data;
-      }
-    });
-  }
-
-  loadSuggestedImprovements(): void {
-    this.http.get<{ success: boolean; data: any[] }>(`${environment.apiUrl}/analytics/suggested-improvements`).subscribe({
-      next: (res) => {
-        if (res.success && res.data) this.suggestedImprovements = res.data;
-      }
-    });
-  }
-
   /**
    * Load agent analytics
    */
@@ -254,8 +232,6 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     this.agentAnalytics = null;
     this.loadDashboard();
     this.loadAgentAnalytics();
-    this.loadContentPerformance();
-    this.loadSuggestedImprovements();
     this.notificationService.info('Refreshing Analytics', 'Loading latest data...');
   }
 
@@ -378,9 +354,59 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
       instagram: '#E4405F',
       facebook: '#1877F2',
       google: '#4285F4',
-      linkedin: '#0A66C2'
+      linkedin: '#0A66C2',
+      whatsapp: '#25D366'
     };
     return colors[platform] || '#6B7280';
+  }
+
+  getIntentEntries(): { key: string; value: number; percent: number; color: string }[] {
+    const ib = this.dashboard?.intentBreakdown;
+    if (!ib || !ib.data || ib.total === 0) return [];
+    const intentColors: { [key: string]: string } = {
+      inquiry: '#3B82F6',
+      complaint: '#EF4444',
+      praise: '#10B981',
+      feedback: '#F59E0B',
+      support: '#8B5CF6',
+      other: '#6B7280'
+    };
+    return Object.entries(ib.data).map(([key, value]) => ({
+      key,
+      value,
+      percent: Math.round((value / ib.total) * 100),
+      color: intentColors[key] || '#6B7280'
+    }));
+  }
+
+  getIntentIcon(intent: string): string {
+    const icons: { [key: string]: string } = {
+      inquiry: 'fas fa-question-circle',
+      complaint: 'fas fa-exclamation-triangle',
+      praise: 'fas fa-thumbs-up',
+      feedback: 'fas fa-comment-dots',
+      support: 'fas fa-headset',
+      other: 'fas fa-ellipsis-h'
+    };
+    return icons[intent] || 'fas fa-tag';
+  }
+
+  getPositivePercent(): number {
+    const sb = this.dashboard?.sentimentBreakdown;
+    if (!sb || sb.total === 0) return 0;
+    return Math.round((sb.positive / sb.total) * 100);
+  }
+
+  getNegativePercent(): number {
+    const sb = this.dashboard?.sentimentBreakdown;
+    if (!sb || sb.total === 0) return 0;
+    return Math.round((sb.negative / sb.total) * 100);
+  }
+
+  getNeutralPercent(): number {
+    const sb = this.dashboard?.sentimentBreakdown;
+    if (!sb || sb.total === 0) return 0;
+    return Math.round((sb.neutral / sb.total) * 100);
   }
 }
 

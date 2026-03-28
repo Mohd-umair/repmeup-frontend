@@ -3,11 +3,10 @@
   <div class="mb-6">
     <div class="flex items-center justify-between mb-4">
       <div>
-        <h1 class="text-3xl font-bold text-rep-white">Analytics Dashboard</h1>
+        <h1 class="text-3xl font-bold text-rep-white">Sentiment &amp; Insights Dashboard</h1>
         <p class="text-gray-400 mt-1">Track performance and insights across all platforms</p>
       </div>
       
-      <!-- Actions -->
       <div class="flex items-center gap-3">
         <button
           (click)="refreshData()"
@@ -27,28 +26,14 @@
             <i class="fas fa-download mr-2"></i>
             Export
           </button>
-          
-          <!-- Dropdown -->
           <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl z-10">
-            <button
-              (click)="exportData('csv')"
-              type="button"
-              class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-t-xl text-gray-700"
-            >
+            <button (click)="exportData('csv')" type="button" class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-t-xl text-gray-700">
               <i class="fas fa-file-csv mr-2"></i> Export as CSV
             </button>
-            <button
-              (click)="exportData('xlsx')"
-              type="button"
-              class="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700"
-            >
+            <button (click)="exportData('xlsx')" type="button" class="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700">
               <i class="fas fa-file-excel mr-2"></i> Export as Excel
             </button>
-            <button
-              (click)="exportData('pdf')"
-              type="button"
-              class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-b-xl text-gray-700"
-            >
+            <button (click)="exportData('pdf')" type="button" class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-b-xl text-gray-700">
               <i class="fas fa-file-pdf mr-2"></i> Export as PDF
             </button>
           </div>
@@ -56,13 +41,38 @@
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="flex items-center gap-4 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
-      <!-- Date Range -->
+    <!-- Filters Row -->
+    <div class="flex flex-wrap items-center gap-4 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
+      <!-- Intent Filter -->
       <div class="flex items-center gap-2">
+        <i class="fas fa-bullseye text-rep-lime"></i>
+        <span class="text-gray-400 text-sm">Intent</span>
+        <span class="text-rep-white text-sm bg-gray-800 px-3 py-1.5 rounded-lg">All</span>
+      </div>
+
+      <!-- Platform Filters -->
+      <div class="flex items-center gap-2">
+        <i class="fas fa-filter text-rep-lime"></i>
+        <span class="text-gray-400 text-sm">Platform</span>
+        <button
+          *ngFor="let platform of ['whatsapp', 'instagram', 'facebook', 'google', 'youtube']"
+          (click)="togglePlatform(platform)"
+          [class.bg-rep-lime]="selectedPlatforms.includes(platform)"
+          [class.text-rep-black]="selectedPlatforms.includes(platform)"
+          [class.bg-gray-800]="!selectedPlatforms.includes(platform)"
+          [class.text-gray-400]="!selectedPlatforms.includes(platform)"
+          type="button"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
+        >
+          <i [class]="getPlatformIcon(platform)"></i>
+          <span class="capitalize hidden sm:inline">{{ platform }}</span>
+        </button>
+      </div>
+
+      <!-- Date Range -->
+      <div class="flex items-center gap-2 ml-auto">
         <i class="fas fa-calendar text-rep-lime"></i>
-        <span class="text-gray-400 text-sm">Period:</span>
-        <div class="flex gap-2">
+        <div class="flex gap-1">
           <button
             *ngFor="let preset of dateRangePresets"
             (click)="onDateRangeChange(preset.value)"
@@ -77,24 +87,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Platform Filters -->
-      <div class="flex items-center gap-2 ml-auto">
-        <i class="fas fa-filter text-rep-lime"></i>
-        <span class="text-gray-400 text-sm">Platforms:</span>
-        <button
-          *ngFor="let platform of ['youtube', 'instagram', 'facebook', 'google', 'linkedin']"
-          (click)="togglePlatform(platform)"
-          [class.bg-rep-lime]="selectedPlatforms.includes(platform)"
-          [class.text-rep-black]="selectedPlatforms.includes(platform)"
-          [class.bg-gray-800]="!selectedPlatforms.includes(platform)"
-          [class.text-gray-400]="!selectedPlatforms.includes(platform)"
-          type="button"
-          class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
-        >
-          <i [class]="getPlatformIcon(platform)"></i>
-        </button>
-      </div>
     </div>
   </div>
 
@@ -108,87 +100,452 @@
 
   <!-- Dashboard Content -->
   <div *ngIf="dashboard" class="space-y-6">
-    <!-- Metric Cards -->
+
+    <!-- ═══════ Metric Cards Row ═══════ -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div
-        *ngFor="let metric of getMetricCards()"
-        class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800 hover:border-rep-lime/30 transition"
-      >
-        <div class="flex items-start justify-between mb-4">
+      <!-- Total Interactions -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-rep-lime/30 transition">
+        <div class="flex items-start justify-between mb-3">
           <div>
-            <p class="text-gray-400 text-sm mb-1">{{ metric.label }}</p>
-            <h3 class="text-3xl font-bold text-rep-white">{{ formatNumber(metric.value) }}</h3>
+            <p class="text-gray-400 text-xs mb-1">Total Interactions</p>
+            <h3 class="text-3xl font-bold text-rep-white">{{ formatNumber(dashboard.overview.totalInteractions.value) }}</h3>
           </div>
-          <div
-            class="w-12 h-12 rounded-xl flex items-center justify-center"
-            [style.background-color]="metric.color + '20'"
-          >
-            <i [class]="metric.icon + ' text-xl'" [style.color]="metric.color"></i>
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/20">
+            <i class="fas fa-comments text-blue-400"></i>
           </div>
         </div>
-
-        <!-- Change Indicator -->
-        <div *ngIf="metric.change !== undefined" class="flex items-center gap-2">
+        <div class="flex items-center gap-2">
           <span
-            [class.text-green-500]="metric.changeType === 'increase'"
-            [class.text-red-500]="metric.changeType === 'decrease'"
-            class="text-sm font-medium"
+            [class.text-green-400]="dashboard.overview.totalInteractions.changeType === 'increase'"
+            [class.text-red-400]="dashboard.overview.totalInteractions.changeType === 'decrease'"
+            class="text-sm font-semibold flex items-center gap-1"
           >
-            <i
-              [class.fa-arrow-up]="metric.changeType === 'increase'"
-              [class.fa-arrow-down]="metric.changeType === 'decrease'"
-              class="fas mr-1"
-            ></i>
-            {{ formatPercentage(Math.abs(metric.change)) }}
+            <i class="fas" [class.fa-arrow-up]="dashboard.overview.totalInteractions.changeType === 'increase'" [class.fa-arrow-down]="dashboard.overview.totalInteractions.changeType === 'decrease'"></i>
+            {{ dashboard.overview.totalInteractions.change }}%
           </span>
           <span class="text-gray-500 text-xs">vs previous period</span>
         </div>
       </div>
+
+      <!-- Positive -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-green-500/30 transition">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1.5">
+              <span class="w-2 h-2 bg-green-500 rounded-full inline-block"></span> Positive
+            </p>
+            <h3 class="text-3xl font-bold text-rep-white">{{ formatNumber(dashboard.sentimentBreakdown.positive) }}</h3>
+          </div>
+          <span class="text-yellow-400 text-2xl">
+            <i class="fas fa-smile"></i>
+          </span>
+        </div>
+        <p class="text-gray-500 text-xs">{{ getPositivePercent() }}% Positive</p>
+      </div>
+
+      <!-- Negative -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-red-500/30 transition">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1.5">
+              <span class="w-2 h-2 bg-red-500 rounded-full inline-block"></span> Negative
+            </p>
+            <h3 class="text-3xl font-bold text-rep-white">{{ formatNumber(dashboard.sentimentBreakdown.negative) }}</h3>
+          </div>
+          <span class="text-red-400 text-2xl">
+            <i class="fas fa-frown"></i>
+          </span>
+        </div>
+        <p class="text-gray-500 text-xs">{{ getNegativePercent() }}% Negative</p>
+      </div>
+
+      <!-- Without Response -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-yellow-500/30 transition">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <p class="text-gray-400 text-xs mb-1">Without Response</p>
+            <h3 class="text-3xl font-bold text-rep-white">
+              {{ formatNumber(dashboard.overview.totalInteractions.value - dashboard.overview.responseRate.value * dashboard.overview.totalInteractions.value / 100) }}
+            </h3>
+          </div>
+          <span class="text-red-400 text-2xl">
+            <i class="fas fa-comment-slash"></i>
+          </span>
+        </div>
+        <p class="text-red-400 text-xs">Unaddressed</p>
+      </div>
     </div>
 
-    <!-- AI vs Human & Suggested Improvements -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
-        <h3 class="text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
-          <i class="fas fa-robot text-purple-400"></i>
-          AI vs Human (last 30 days)
-        </h3>
-        <div *ngIf="contentPerformance" class="flex gap-6">
-          <div class="text-center">
-            <p class="text-3xl font-bold text-purple-400">{{ contentPerformance.aiCount }}</p>
-            <p class="text-sm text-gray-400">AI generated</p>
+    <!-- ═══════ Main Content: 2-column layout ═══════ -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+      <!-- Left Column (2/3) -->
+      <div class="xl:col-span-2 space-y-6">
+
+        <!-- Sentiment Analysis Chart -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-rep-white flex items-center gap-2">
+              <i class="fas fa-chart-bar text-rep-lime"></i>
+              Sentiment Analysis
+            </h3>
+            <div class="flex gap-1">
+              <button
+                (click)="sentimentChartDays = '7days'"
+                [class.bg-rep-lime]="sentimentChartDays === '7days'"
+                [class.text-rep-black]="sentimentChartDays === '7days'"
+                [class.bg-gray-800]="sentimentChartDays !== '7days'"
+                [class.text-gray-400]="sentimentChartDays !== '7days'"
+                type="button"
+                class="px-3 py-1 rounded-lg text-xs font-medium transition"
+              >7 Days</button>
+              <button
+                (click)="sentimentChartDays = '30days'"
+                [class.bg-rep-lime]="sentimentChartDays === '30days'"
+                [class.text-rep-black]="sentimentChartDays === '30days'"
+                [class.bg-gray-800]="sentimentChartDays !== '30days'"
+                [class.text-gray-400]="sentimentChartDays !== '30days'"
+                type="button"
+                class="px-3 py-1 rounded-lg text-xs font-medium transition"
+              >30 Days</button>
+            </div>
           </div>
-          <div class="text-center">
-            <p class="text-3xl font-bold text-rep-lime">{{ contentPerformance.humanCount }}</p>
-            <p class="text-sm text-gray-400">Human written</p>
+
+          <!-- Sentiment Bars -->
+          <div class="space-y-4">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-green-400 font-medium text-sm flex items-center gap-2">
+                  <i class="fas fa-smile"></i> Positive
+                </span>
+                <span class="text-rep-white font-bold text-sm">{{ formatNumber(dashboard.sentimentBreakdown.positive) }}</span>
+              </div>
+              <div class="w-full bg-gray-800 rounded-full h-3">
+                <div
+                  class="bg-green-500 h-3 rounded-full transition-all"
+                  [style.width.%]="getPositivePercent()"
+                ></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-yellow-400 font-medium text-sm flex items-center gap-2">
+                  <i class="fas fa-meh"></i> Neutral
+                </span>
+                <span class="text-rep-white font-bold text-sm">{{ formatNumber(dashboard.sentimentBreakdown.neutral) }}</span>
+              </div>
+              <div class="w-full bg-gray-800 rounded-full h-3">
+                <div
+                  class="bg-yellow-500 h-3 rounded-full transition-all"
+                  [style.width.%]="getNeutralPercent()"
+                ></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-red-400 font-medium text-sm flex items-center gap-2">
+                  <i class="fas fa-frown"></i> Negative
+                </span>
+                <span class="text-rep-white font-bold text-sm">{{ formatNumber(dashboard.sentimentBreakdown.negative) }}</span>
+              </div>
+              <div class="w-full bg-gray-800 rounded-full h-3">
+                <div
+                  class="bg-red-500 h-3 rounded-full transition-all"
+                  [style.width.%]="getNegativePercent()"
+                ></div>
+              </div>
+            </div>
           </div>
-          <div class="text-center">
-            <p class="text-3xl font-bold text-gray-300">{{ contentPerformance.aiPercent }}%</p>
-            <p class="text-sm text-gray-400">AI share</p>
+
+          <!-- Summary Stats -->
+          <div class="flex flex-wrap gap-4 mt-5 pt-4 border-t border-gray-800">
+            <span class="flex items-center gap-2 text-xs">
+              <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+              <span class="text-gray-400">Positive: {{ formatNumber(dashboard.sentimentBreakdown.positive) }}</span>
+            </span>
+            <span class="flex items-center gap-2 text-xs">
+              <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+              <span class="text-gray-400">Neutral: {{ formatNumber(dashboard.sentimentBreakdown.neutral) }}</span>
+            </span>
+            <span class="flex items-center gap-2 text-xs">
+              <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+              <span class="text-gray-400">Negative: {{ formatNumber(dashboard.sentimentBreakdown.negative) }}</span>
+            </span>
+            <span class="text-xs text-gray-500 ml-auto">
+              Response Rate: <span class="text-rep-lime font-semibold">{{ dashboard.overview.responseRate.value }}%</span>
+            </span>
+            <span class="text-xs text-gray-500">
+              Avg Response: <span class="text-rep-white font-semibold">{{ formatTime(dashboard.responseTimeMetrics.avg) }}</span>
+            </span>
           </div>
         </div>
-        <p *ngIf="!contentPerformance" class="text-gray-500 text-sm">No published posts in the last 30 days.</p>
-      </div>
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
-        <h3 class="text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
-          <i class="fas fa-lightbulb text-rep-lime"></i>
-          Suggested improvements
-        </h3>
-        <ul class="space-y-3">
-          <li *ngFor="let s of suggestedImprovements" class="flex gap-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700">
-            <span class="text-rep-lime mt-0.5"><i class="fas fa-check-circle"></i></span>
-            <div>
-              <p class="font-medium text-rep-white">{{ s.title }}</p>
-              <p class="text-sm text-gray-400">{{ s.description }}</p>
+
+        <!-- ═══════ Top Performing Posts ═══════ -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <div class="flex items-center justify-between mb-5">
+            <h3 class="text-lg font-bold text-rep-white flex items-center gap-2">
+              <i class="fas fa-fire text-orange-400"></i>
+              Top Performing Posts
+            </h3>
+          </div>
+
+          <div *ngIf="dashboard.topInteractions && dashboard.topInteractions.length > 0">
+            <!-- Table Header -->
+            <div class="grid grid-cols-12 gap-3 px-3 pb-3 border-b border-gray-700/50 text-xs text-gray-500 font-medium">
+              <div class="col-span-5">Top Posts</div>
+              <div class="col-span-2 text-right">Reach</div>
+              <div class="col-span-2 text-right">Positive</div>
+              <div class="col-span-2 text-right">Interactions</div>
+              <div class="col-span-1"></div>
             </div>
-          </li>
-        </ul>
-        <p *ngIf="suggestedImprovements.length === 0" class="text-gray-500 text-sm">No suggestions yet.</p>
+
+            <!-- Post Rows -->
+            <div
+              *ngFor="let post of dashboard.topInteractions"
+              class="grid grid-cols-12 gap-3 items-center px-3 py-3 border-b border-gray-800/50 hover:bg-gray-800/30 transition"
+            >
+              <!-- Post Info (image + title + platform) -->
+              <div class="col-span-5 flex items-center gap-3 min-w-0">
+                <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 relative"
+                  [style.background-color]="getPlatformColor(post.platform) + '30'"
+                >
+                  <img
+                    *ngIf="post.mediaUrl"
+                    [src]="post.mediaUrl"
+                    alt="Post"
+                    class="w-full h-full object-cover"
+                  />
+                  <!-- Placeholder when no image: platform-coloured gradient + icon -->
+                  <div
+                    *ngIf="!post.mediaUrl"
+                    class="w-full h-full flex flex-col items-center justify-center gap-0.5"
+                    [style.background]="'linear-gradient(135deg,' + getPlatformColor(post.platform) + '25, ' + getPlatformColor(post.platform) + '10)'"
+                  >
+                    <i [class]="getPlatformIcon(post.platform) + ' text-base'" [style.color]="getPlatformColor(post.platform)"></i>
+                    <span class="text-gray-500 text-[9px] leading-none">No image</span>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-rep-white text-sm font-medium truncate">{{ post.content || 'Post' }}</p>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <i [class]="getPlatformIcon(post.platform) + ' text-xs'" [style.color]="getPlatformColor(post.platform)"></i>
+                    <span class="text-gray-500 text-xs capitalize">{{ post.platform }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reach (Views/Likes) -->
+              <div class="col-span-2 text-right">
+                <span class="text-rep-white text-sm font-semibold">{{ formatNumber(post.totalLikes + post.totalViews) }}</span>
+              </div>
+
+              <!-- Positive Count -->
+              <div class="col-span-2 text-right">
+                <span class="text-green-400 text-sm font-semibold flex items-center justify-end gap-1">
+                  <span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block"></span>
+                  {{ formatNumber(post.positiveCount) }}
+                </span>
+              </div>
+
+              <!-- Interactions (comment count) -->
+              <div class="col-span-2 text-right">
+                <span class="text-rep-white text-sm font-semibold">{{ formatNumber(post.commentCount) }}</span>
+              </div>
+
+              <!-- Sentiment + Link -->
+              <div class="col-span-1 flex items-center justify-end gap-2">
+                <span
+                  class="w-2 h-2 rounded-full shrink-0"
+                  [ngClass]="post.sentiment === 'positive' ? 'bg-green-500' : 'bg-red-500'"
+                ></span>
+                <a
+                  *ngIf="post.postUrl"
+                  [href]="post.postUrl"
+                  target="_blank"
+                  rel="noopener"
+                  class="text-gray-500 hover:text-rep-lime text-xs"
+                  title="View on platform"
+                >
+                  <i class="fas fa-chevron-right"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!dashboard.topInteractions || dashboard.topInteractions.length === 0" class="text-center py-8">
+            <i class="fas fa-chart-bar text-gray-700 text-3xl mb-2"></i>
+            <p class="text-gray-500 text-sm">No post engagement data in the selected period</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column (1/3) -->
+      <div class="space-y-6">
+
+        <!-- Impact Overview -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-rep-white">Impact Overview</h3>
+          </div>
+          
+          <!-- Donut-style visual -->
+          <div class="flex items-center gap-4 mb-4">
+            <div class="relative w-24 h-24">
+              <svg viewBox="0 0 36 36" class="w-24 h-24 -rotate-90">
+                <path
+                  class="text-gray-800"
+                  stroke="currentColor" stroke-width="3" fill="none"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                ></path>
+                <path
+                  class="text-green-500"
+                  stroke="currentColor" stroke-width="3" fill="none"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="getPositivePercent() + ', 100'"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                ></path>
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-xl font-bold text-rep-white">{{ getPositivePercent() }}%</span>
+              </div>
+            </div>
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span class="text-gray-400">Positive {{ formatNumber(dashboard.sentimentBreakdown.positive) }} ({{ getPositivePercent() }}%)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                <span class="text-gray-400">Neutral {{ formatNumber(dashboard.sentimentBreakdown.neutral) }} ({{ getNeutralPercent() }}%)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                <span class="text-gray-400">Negative {{ formatNumber(dashboard.sentimentBreakdown.negative) }} ({{ getNegativePercent() }}%)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Response stats -->
+          <div class="space-y-2 pt-3 border-t border-gray-800 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Response Rate</span>
+              <span class="text-rep-lime font-semibold">{{ dashboard.overview.responseRate.value }}%</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Avg Response</span>
+              <span class="text-rep-white font-semibold">{{ formatTime(dashboard.responseTimeMetrics.avg) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Intent Analytics -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <h3 class="text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
+            <i class="fas fa-bullseye text-rep-lime"></i>
+            Intent Analytics
+          </h3>
+
+          <div *ngIf="getIntentEntries().length > 0" class="space-y-3">
+            <div
+              *ngFor="let intent of getIntentEntries()"
+              class="flex items-center gap-3"
+            >
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                [style.background-color]="intent.color + '20'"
+              >
+                <i [class]="getIntentIcon(intent.key)" [style.color]="intent.color" class="text-xs"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-rep-white text-sm capitalize font-medium">{{ intent.key }}</span>
+                  <span class="text-gray-400 text-xs">{{ intent.value }} interactions ({{ intent.percent }}%)</span>
+                </div>
+                <div class="w-full bg-gray-800 rounded-full h-1.5">
+                  <div
+                    class="h-1.5 rounded-full transition-all"
+                    [style.width.%]="intent.percent"
+                    [style.background-color]="intent.color"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="getIntentEntries().length === 0" class="text-center py-6">
+            <i class="fas fa-bullseye text-gray-700 text-2xl mb-2"></i>
+            <p class="text-gray-500 text-sm">No intent data yet</p>
+          </div>
+        </div>
+
+        <!-- AI vs Human -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <h3 class="text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
+            <i class="fas fa-robot text-purple-400"></i>
+            AI vs Human Replies
+          </h3>
+          <div *ngIf="dashboard.aiVsHuman && dashboard.aiVsHuman.totalReplies > 0">
+            <div class="flex gap-4 mb-4">
+              <div class="flex-1 text-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <p class="text-2xl font-bold text-purple-400">{{ formatNumber(dashboard.aiVsHuman.aiReplies) }}</p>
+                <p class="text-xs text-gray-400 mt-1">AI Replies</p>
+              </div>
+              <div class="flex-1 text-center p-3 rounded-xl bg-rep-lime/10 border border-rep-lime/20">
+                <p class="text-2xl font-bold text-rep-lime">{{ formatNumber(dashboard.aiVsHuman.humanReplies) }}</p>
+                <p class="text-xs text-gray-400 mt-1">Human Replies</p>
+              </div>
+            </div>
+            <!-- AI share bar -->
+            <div class="mb-2">
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-purple-400">AI {{ dashboard.aiVsHuman.aiPercent }}%</span>
+                <span class="text-rep-lime">Human {{ 100 - dashboard.aiVsHuman.aiPercent }}%</span>
+              </div>
+              <div class="w-full h-2.5 bg-rep-lime/30 rounded-full overflow-hidden">
+                <div
+                  class="h-full bg-purple-500 rounded-full transition-all"
+                  [style.width.%]="dashboard.aiVsHuman.aiPercent"
+                ></div>
+              </div>
+            </div>
+            <p class="text-gray-500 text-xs text-center mt-2">
+              Total: {{ formatNumber(dashboard.aiVsHuman.totalReplies) }} replies in selected period
+            </p>
+          </div>
+          <div *ngIf="!dashboard.aiVsHuman || dashboard.aiVsHuman.totalReplies === 0" class="text-center py-4">
+            <i class="fas fa-robot text-gray-700 text-2xl mb-2"></i>
+            <p class="text-gray-500 text-sm">No reply data yet</p>
+          </div>
+        </div>
+
+        <!-- Download Report -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-bold text-rep-white">Download Report</h3>
+          </div>
+          <div class="flex gap-2">
+            <button
+              (click)="generateReport('xlsx', 'platform')"
+              [disabled]="exportLoading"
+              type="button"
+              class="flex-1 px-3 py-2.5 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 transition text-sm font-medium disabled:opacity-50"
+            >
+              <i class="fas fa-file-excel mr-1 text-green-400"></i> Weekly
+            </button>
+            <button
+              (click)="generateReport('pdf', 'platform')"
+              [disabled]="exportLoading"
+              type="button"
+              class="flex-1 px-3 py-2.5 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 transition text-sm font-medium disabled:opacity-50"
+            >
+              <i class="fas fa-file-pdf mr-1 text-red-400"></i> Monthly
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- View Tabs (synced with URL / sidebar via setActiveView → router) -->
-    <div class="flex flex-wrap gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-full sm:w-fit mb-6">
+    <!-- ═══════ Tabs for Deeper Views ═══════ -->
+    <div class="flex flex-wrap gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-full sm:w-fit">
       <button
         (click)="setActiveView('overview')"
         [class.bg-rep-lime]="activeView === 'overview'"
@@ -197,8 +554,7 @@
         type="button"
         class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
-        <i class="fas fa-chart-line mr-2"></i>
-        Overview
+        <i class="fas fa-chart-line mr-2"></i> Overview
       </button>
       <button
         (click)="setActiveView('platforms')"
@@ -208,8 +564,7 @@
         type="button"
         class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
-        <i class="fas fa-layer-group mr-2"></i>
-        Platforms
+        <i class="fas fa-layer-group mr-2"></i> Platforms
       </button>
       <button
         (click)="setActiveView('trends')"
@@ -219,8 +574,7 @@
         type="button"
         class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
-        <i class="fas fa-chart-area mr-2"></i>
-        Trends
+        <i class="fas fa-chart-area mr-2"></i> Trends
       </button>
       <button
         (click)="setActiveView('performance')"
@@ -230,8 +584,7 @@
         type="button"
         class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
-        <i class="fas fa-tachometer-alt mr-2"></i>
-        Performance
+        <i class="fas fa-tachometer-alt mr-2"></i> Performance
       </button>
       <button
         (click)="setActiveView('reports')"
@@ -241,77 +594,23 @@
         type="button"
         class="px-4 py-2 rounded-lg font-medium transition min-h-[44px]"
       >
-        <i class="fas fa-file-download mr-2"></i>
-        Reports
+        <i class="fas fa-file-download mr-2"></i> Reports
       </button>
     </div>
 
     <!-- Overview View -->
     <div *ngIf="activeView === 'overview'" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Sentiment Breakdown -->
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
         <h3 class="text-xl font-bold text-rep-white mb-4">
           <i class="fas fa-smile text-rep-lime mr-2"></i>
-          Sentiment Analysis
+          Sentiment Breakdown
         </h3>
-        <div class="space-y-4">
-          <!-- Positive -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-green-500 font-medium">
-                <i class="fas fa-smile mr-2"></i>Positive
-              </span>
-              <span class="text-rep-white font-bold">
-                {{ dashboard.sentimentBreakdown.positive }}
-              </span>
-            </div>
-            <div class="w-full bg-gray-800 rounded-full h-2">
-              <div
-                class="bg-green-500 h-2 rounded-full transition-all"
-                [style.width.%]="(dashboard.sentimentBreakdown.positive / dashboard.sentimentBreakdown.total) * 100"
-              ></div>
-            </div>
-          </div>
-
-          <!-- Neutral -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-yellow-500 font-medium">
-                <i class="fas fa-meh mr-2"></i>Neutral
-              </span>
-              <span class="text-rep-white font-bold">
-                {{ dashboard.sentimentBreakdown.neutral }}
-              </span>
-            </div>
-            <div class="w-full bg-gray-800 rounded-full h-2">
-              <div
-                class="bg-yellow-500 h-2 rounded-full transition-all"
-                [style.width.%]="(dashboard.sentimentBreakdown.neutral / dashboard.sentimentBreakdown.total) * 100"
-              ></div>
-            </div>
-          </div>
-
-          <!-- Negative -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-red-500 font-medium">
-                <i class="fas fa-frown mr-2"></i>Negative
-              </span>
-              <span class="text-rep-white font-bold">
-                {{ dashboard.sentimentBreakdown.negative }}
-              </span>
-            </div>
-            <div class="w-full bg-gray-800 rounded-full h-2">
-              <div
-                class="bg-red-500 h-2 rounded-full transition-all"
-                [style.width.%]="(dashboard.sentimentBreakdown.negative / dashboard.sentimentBreakdown.total) * 100"
-              ></div>
-            </div>
-          </div>
-        </div>
+        <app-sentiment-donut-chart
+          [sentimentData]="dashboard.sentimentBreakdown"
+          [height]="280"
+        ></app-sentiment-donut-chart>
       </div>
 
-      <!-- Response Time Breakdown -->
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
         <h3 class="text-xl font-bold text-rep-white mb-4">
           <i class="fas fa-clock text-rep-lime mr-2"></i>
@@ -320,33 +619,23 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <span class="text-gray-400">Average</span>
-            <span class="text-rep-white font-bold">
-              {{ formatTime(dashboard.responseTimeMetrics.avg) }}
-            </span>
+            <span class="text-rep-white font-bold">{{ formatTime(dashboard.responseTimeMetrics.avg) }}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-gray-400">Median</span>
-            <span class="text-rep-white font-bold">
-              {{ formatTime(dashboard.responseTimeMetrics.median) }}
-            </span>
+            <span class="text-rep-white font-bold">{{ formatTime(dashboard.responseTimeMetrics.median) }}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-green-500">Within 1 Hour</span>
-            <span class="text-rep-white font-bold">
-              {{ dashboard.responseTimeMetrics.within1Hour }}
-            </span>
+            <span class="text-rep-white font-bold">{{ dashboard.responseTimeMetrics.within1Hour }}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-yellow-500">Within 24 Hours</span>
-            <span class="text-rep-white font-bold">
-              {{ dashboard.responseTimeMetrics.within24Hours }}
-            </span>
+            <span class="text-rep-white font-bold">{{ dashboard.responseTimeMetrics.within24Hours }}</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-red-500">Over 24 Hours</span>
-            <span class="text-rep-white font-bold">
-              {{ dashboard.responseTimeMetrics.over24Hours }}
-            </span>
+            <span class="text-rep-white font-bold">{{ dashboard.responseTimeMetrics.over24Hours }}</span>
           </div>
         </div>
       </div>
@@ -371,10 +660,9 @@
             </div>
             <h3 class="text-xl font-bold text-rep-white capitalize">{{ platform.platform }}</h3>
           </div>
-
           <div class="space-y-3">
             <div class="flex items-center justify-between">
-              <span class="text-gray-400 text-sm">Total Interactions</span>
+              <span class="text-gray-400 text-sm">Total</span>
               <span class="text-rep-white font-bold">{{ formatNumber(platform.totalInteractions) }}</span>
             </div>
             <div class="flex items-center justify-between">
@@ -390,19 +678,17 @@
               <span class="text-rep-white font-bold">{{ formatTime(platform.avgResponseTime) }}</span>
             </div>
           </div>
-
-          <!-- Progress Bar -->
           <div class="mt-4 pt-4 border-t border-gray-800">
             <div class="flex items-center justify-between mb-2">
               <span class="text-gray-400 text-xs">Response Rate</span>
               <span class="text-rep-lime text-xs font-bold">
-                {{ formatPercentage((platform.responded / platform.totalInteractions) * 100) }}
+                {{ platform.totalInteractions ? formatPercentage((platform.responded / platform.totalInteractions) * 100) : '0.0%' }}
               </span>
             </div>
             <div class="w-full bg-gray-800 rounded-full h-2">
               <div
                 class="bg-rep-lime h-2 rounded-full transition-all"
-                [style.width.%]="(platform.responded / platform.totalInteractions) * 100"
+                [style.width.%]="platform.totalInteractions ? (platform.responded / platform.totalInteractions) * 100 : 0"
               ></div>
             </div>
           </div>
@@ -412,62 +698,40 @@
 
     <!-- Trends View -->
     <div *ngIf="activeView === 'trends'" class="space-y-6">
-      <!-- Interaction Volume Over Time -->
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-xl font-bold text-rep-white">
-            <i class="fas fa-chart-area text-rep-lime mr-2"></i>
-            Interaction Volume Over Time
-          </h3>
-          <span class="text-xs text-gray-500">Interactions &amp; Responses</span>
-        </div>
-        <app-time-series-chart
-          [data]="dashboard.timeSeries"
-          [height]="320"
-        ></app-time-series-chart>
+        <h3 class="text-xl font-bold text-rep-white mb-4">
+          <i class="fas fa-chart-area text-rep-lime mr-2"></i>
+          Interaction Volume Over Time
+        </h3>
+        <app-time-series-chart [data]="dashboard.timeSeries" [height]="320"></app-time-series-chart>
       </div>
-
-      <!-- Bottom row: Sentiment + Platform Bar -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
           <h3 class="text-xl font-bold text-rep-white mb-4">
             <i class="fas fa-heart text-rep-lime mr-2"></i>
             Sentiment Distribution
           </h3>
-          <app-sentiment-donut-chart
-            [sentimentData]="dashboard.sentimentBreakdown"
-            [height]="280"
-          ></app-sentiment-donut-chart>
+          <app-sentiment-donut-chart [sentimentData]="dashboard.sentimentBreakdown" [height]="280"></app-sentiment-donut-chart>
         </div>
-
         <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
           <h3 class="text-xl font-bold text-rep-white mb-4">
             <i class="fas fa-layer-group text-rep-lime mr-2"></i>
             Platform Comparison
           </h3>
-          <app-platform-bar-chart
-            [platforms]="dashboard.platformMetrics"
-            [height]="280"
-          ></app-platform-bar-chart>
+          <app-platform-bar-chart [platforms]="dashboard.platformMetrics" [height]="280"></app-platform-bar-chart>
         </div>
       </div>
-
-      <!-- Response Time Distribution -->
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
         <h3 class="text-xl font-bold text-rep-white mb-4">
           <i class="fas fa-stopwatch text-rep-lime mr-2"></i>
           Response Time Distribution
         </h3>
-        <app-response-time-histogram
-          [metrics]="dashboard.responseTimeMetrics"
-          [height]="260"
-        ></app-response-time-histogram>
+        <app-response-time-histogram [metrics]="dashboard.responseTimeMetrics" [height]="260"></app-response-time-histogram>
       </div>
     </div>
 
     <!-- Performance View -->
     <div *ngIf="activeView === 'performance'" class="space-y-6">
-      <!-- Auto-Reply Metrics -->
       <div *ngIf="dashboard.autoReplyMetrics" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
         <h3 class="text-xl font-bold text-rep-white mb-4">
           <i class="fas fa-robot text-rep-lime mr-2"></i>
@@ -475,27 +739,20 @@
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div class="text-center">
-            <div class="text-3xl font-bold text-rep-white mb-2">
-              {{ formatNumber(dashboard.autoReplyMetrics.totalAutoReplies) }}
-            </div>
+            <div class="text-3xl font-bold text-rep-white mb-2">{{ formatNumber(dashboard.autoReplyMetrics.totalAutoReplies) }}</div>
             <div class="text-gray-400 text-sm">Total Auto-Replies</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-green-500 mb-2">
-              {{ formatPercentage(dashboard.autoReplyMetrics.successRate) }}
-            </div>
-            <div class="text-gray-400 text-sm">Success Rate</div>
+            <div class="text-3xl font-bold text-green-500 mb-2">{{ formatPercentage(dashboard.autoReplyMetrics.successRate) }}</div>
+            <div class="text-gray-400 text-sm">AI Share</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl font-bold text-rep-lime mb-2">
-              {{ formatPercentage(dashboard.autoReplyMetrics.avgConfidence) }}
-            </div>
-            <div class="text-gray-400 text-sm">Avg Confidence</div>
+            <div class="text-3xl font-bold text-rep-lime mb-2">{{ formatNumber(dashboard.aiVsHuman?.totalReplies || 0) }}</div>
+            <div class="text-gray-400 text-sm">Total Replies</div>
           </div>
         </div>
       </div>
 
-      <!-- Agent Performance Chart -->
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
         <h3 class="text-xl font-bold text-rep-white mb-4">
           <i class="fas fa-users text-rep-lime mr-2"></i>
@@ -505,11 +762,7 @@
           <i class="fas fa-spinner fa-spin text-rep-lime text-3xl"></i>
         </div>
         <ng-container *ngIf="!agentLoading && agentAnalytics">
-          <app-agent-performance-chart
-            [agents]="agentAnalytics.agents"
-            [height]="300"
-          ></app-agent-performance-chart>
-          <!-- Team averages -->
+          <app-agent-performance-chart [agents]="agentAnalytics.agents" [height]="300"></app-agent-performance-chart>
           <div class="grid grid-cols-2 gap-4 mt-4">
             <div class="bg-gray-800/50 rounded-xl p-4 text-center">
               <div class="text-2xl font-bold text-rep-lime">{{ agentAnalytics.teamAverages.resolutionRate }}%</div>
@@ -527,16 +780,12 @@
         </div>
       </div>
 
-      <!-- Response Time metrics -->
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
         <h3 class="text-xl font-bold text-rep-white mb-4">
           <i class="fas fa-stopwatch text-rep-lime mr-2"></i>
           Response Time Analysis
         </h3>
-        <app-response-time-histogram
-          [metrics]="dashboard.responseTimeMetrics"
-          [height]="240"
-        ></app-response-time-histogram>
+        <app-response-time-histogram [metrics]="dashboard.responseTimeMetrics" [height]="240"></app-response-time-histogram>
         <div class="grid grid-cols-4 gap-3 mt-4">
           <div class="bg-gray-800/50 rounded-xl p-3 text-center">
             <div class="text-xl font-bold text-rep-lime">{{ formatTime(dashboard.responseTimeMetrics.avg) }}</div>
@@ -561,11 +810,7 @@
     <!-- Reports View -->
     <div *ngIf="activeView === 'reports'" class="space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Report Builder Panel -->
         <div class="lg:col-span-1 space-y-4">
-
-          <!-- Report Type -->
           <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
             <h3 class="text-lg font-bold text-rep-white mb-4">
               <i class="fas fa-file-alt text-rep-lime mr-2"></i>
@@ -587,8 +832,6 @@
               </button>
             </div>
           </div>
-
-          <!-- Export Format -->
           <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
             <h3 class="text-lg font-bold text-rep-white mb-4">
               <i class="fas fa-file-export text-rep-lime mr-2"></i>
@@ -610,8 +853,6 @@
               </button>
             </div>
           </div>
-
-          <!-- Generate Button -->
           <button
             (click)="generateReport()"
             [disabled]="exportLoading"
@@ -619,71 +860,34 @@
             class="w-full bg-rep-lime text-rep-black py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-rep-lime/50 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span *ngIf="!exportLoading" class="flex items-center justify-center gap-2">
-              <i class="fas fa-download"></i>
-              Generate &amp; Download
+              <i class="fas fa-download"></i> Generate &amp; Download
             </span>
             <span *ngIf="exportLoading" class="flex items-center justify-center gap-2">
-              <i class="fas fa-spinner fa-spin"></i>
-              Generating...
+              <i class="fas fa-spinner fa-spin"></i> Generating...
             </span>
           </button>
         </div>
-
-        <!-- Preview Panel -->
         <div class="lg:col-span-2 space-y-6">
-
-          <!-- Preview: Platform report -->
           <div *ngIf="selectedReportType === 'platform'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
-            <h3 class="text-lg font-bold text-rep-white mb-4">
-              <i class="fas fa-layer-group text-rep-lime mr-2"></i>
-              Platform Comparison Preview
-            </h3>
+            <h3 class="text-lg font-bold text-rep-white mb-4"><i class="fas fa-layer-group text-rep-lime mr-2"></i> Platform Preview</h3>
             <app-platform-bar-chart [platforms]="dashboard.platformMetrics" [height]="280"></app-platform-bar-chart>
           </div>
-
-          <!-- Preview: Sentiment -->
           <div *ngIf="selectedReportType === 'sentiment'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
-            <h3 class="text-lg font-bold text-rep-white mb-4">
-              <i class="fas fa-heart text-rep-lime mr-2"></i>
-              Sentiment Analysis Preview
-            </h3>
+            <h3 class="text-lg font-bold text-rep-white mb-4"><i class="fas fa-heart text-rep-lime mr-2"></i> Sentiment Preview</h3>
             <app-sentiment-donut-chart [sentimentData]="dashboard.sentimentBreakdown" [height]="280"></app-sentiment-donut-chart>
           </div>
-
-          <!-- Preview: Response -->
           <div *ngIf="selectedReportType === 'response'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
-            <h3 class="text-lg font-bold text-rep-white mb-4">
-              <i class="fas fa-stopwatch text-rep-lime mr-2"></i>
-              Response Performance Preview
-            </h3>
+            <h3 class="text-lg font-bold text-rep-white mb-4"><i class="fas fa-stopwatch text-rep-lime mr-2"></i> Response Preview</h3>
             <app-response-time-histogram [metrics]="dashboard.responseTimeMetrics" [height]="260"></app-response-time-histogram>
           </div>
-
-          <!-- Preview: Agent -->
           <div *ngIf="selectedReportType === 'agent'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
-            <h3 class="text-lg font-bold text-rep-white mb-4">
-              <i class="fas fa-users text-rep-lime mr-2"></i>
-              Agent Performance Preview
-            </h3>
-            <div *ngIf="agentLoading" class="flex justify-center items-center h-40">
-              <i class="fas fa-spinner fa-spin text-rep-lime text-3xl"></i>
-            </div>
-            <app-agent-performance-chart
-              *ngIf="!agentLoading && agentAnalytics"
-              [agents]="agentAnalytics.agents"
-              [height]="280"
-            ></app-agent-performance-chart>
-            <div *ngIf="!agentLoading && !agentAnalytics" class="text-center py-8 text-gray-500">
-              <p class="text-sm">No agent data available for this period</p>
-            </div>
+            <h3 class="text-lg font-bold text-rep-white mb-4"><i class="fas fa-users text-rep-lime mr-2"></i> Agent Preview</h3>
+            <div *ngIf="agentLoading" class="flex justify-center items-center h-40"><i class="fas fa-spinner fa-spin text-rep-lime text-3xl"></i></div>
+            <app-agent-performance-chart *ngIf="!agentLoading && agentAnalytics" [agents]="agentAnalytics.agents" [height]="280"></app-agent-performance-chart>
+            <div *ngIf="!agentLoading && !agentAnalytics" class="text-center py-8 text-gray-500"><p class="text-sm">No agent data</p></div>
           </div>
-
-          <!-- Metrics Summary Table -->
           <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
-            <h3 class="text-lg font-bold text-rep-white mb-4">
-              <i class="fas fa-table text-rep-lime mr-2"></i>
-              Platform Metrics Summary
-            </h3>
+            <h3 class="text-lg font-bold text-rep-white mb-4"><i class="fas fa-table text-rep-lime mr-2"></i> Platform Summary</h3>
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
                 <thead>
@@ -692,13 +896,12 @@
                     <th class="text-right text-gray-400 pb-3 px-4">Total</th>
                     <th class="text-right text-gray-400 pb-3 px-4">Responded</th>
                     <th class="text-right text-gray-400 pb-3 px-4">Pending</th>
-                    <th class="text-right text-gray-400 pb-3 px-4">Response Rate</th>
+                    <th class="text-right text-gray-400 pb-3 px-4">Rate</th>
                     <th class="text-right text-gray-400 pb-3 pl-4">Avg Time</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let p of dashboard.platformMetrics"
-                    class="border-b border-gray-800/50 hover:bg-gray-800/30 transition">
+                  <tr *ngFor="let p of dashboard.platformMetrics" class="border-b border-gray-800/50 hover:bg-gray-800/30 transition">
                     <td class="py-3 pr-4">
                       <div class="flex items-center gap-2">
                         <i [class]="getPlatformIcon(p.platform)" [style.color]="getPlatformColor(p.platform)"></i>
@@ -737,9 +940,7 @@
       type="button"
       class="px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg hover:shadow-rep-lime/50 transition"
     >
-      <i class="fas fa-sync-alt mr-2"></i>
-      Retry
+      <i class="fas fa-sync-alt mr-2"></i> Retry
     </button>
   </div>
 </div>
-

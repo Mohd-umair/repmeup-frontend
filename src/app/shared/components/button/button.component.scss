@@ -67,19 +67,32 @@ button.variant-secondary:active:not(:disabled) {
   background: rgba(184, 245, 103, 0.2);
 }
 
-/* Ghost */
+/* Ghost — light: dark text on hover; dark: light text (was invisible on light theme) */
 button.variant-ghost {
   background: transparent;
-  color: rgb(156, 163, 175);
+  color: #4b5563; /* gray-600 */
   border-color: transparent;
 }
 
 button.variant-ghost:hover:not(:disabled) {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+button.variant-ghost:active:not(:disabled) {
+  background: #d1d5db;
+}
+
+:host-context(html.dark) button.variant-ghost {
+  color: rgb(156, 163, 175);
+}
+
+:host-context(html.dark) button.variant-ghost:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.05);
   color: rgb(243, 244, 246);
 }
 
-button.variant-ghost:active:not(:disabled) {
+:host-context(html.dark) button.variant-ghost:active:not(:disabled) {
   background: rgba(255, 255, 255, 0.08);
 }
 

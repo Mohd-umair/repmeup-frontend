@@ -94,6 +94,8 @@
             <tr>
               <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Agent</th>
               <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Role</th>
+              <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Buckets</th>
+              <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Channels</th>
               <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Status</th>
               <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Assigned</th>
               <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Resolved Today</th>
@@ -102,13 +104,13 @@
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             <tr *ngIf="loading">
-              <td colspan="6" class="px-6 py-12 text-center">
+              <td colspan="8" class="px-6 py-12 text-center">
                 <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">Loading agents...</p>
               </td>
             </tr>
             <tr *ngIf="!loading && agents.length === 0">
-              <td colspan="6" class="px-6 py-12 text-center">
+              <td colspan="8" class="px-6 py-12 text-center">
                 <i class="fas fa-users text-4xl text-gray-400 mb-2"></i>
                 <p class="text-gray-600 dark:text-gray-300 font-medium">No team members found</p>
                 <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">Add your first team member to get started</p>
@@ -133,6 +135,38 @@
                 <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getRoleColor(agent.role)">
                   {{ agent.role }}
                 </span>
+              </td>
+
+              <!-- Buckets -->
+              <td class="px-6 py-4">
+                <div class="flex flex-wrap gap-1">
+                  <ng-container *ngIf="getAgentBuckets(agent).length; else noBuckets">
+                    <span *ngFor="let bucket of getAgentBuckets(agent)"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                      [style.background-color]="bucket.color || '#6b7280'">
+                      {{ bucket.name }}
+                    </span>
+                  </ng-container>
+                  <ng-template #noBuckets>
+                    <span class="text-xs text-gray-400 italic">All</span>
+                  </ng-template>
+                </div>
+              </td>
+
+              <!-- Channels -->
+              <td class="px-6 py-4">
+                <div class="flex flex-wrap gap-1">
+                  <ng-container *ngIf="agent.assignedPlatforms?.length; else noChannels">
+                    <span *ngFor="let p of agent.assignedPlatforms"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                      <i [class]="getPlatformIcon(p)"></i>
+                      {{ getPlatformLabel(p) }}
+                    </span>
+                  </ng-container>
+                  <ng-template #noChannels>
+                    <span class="text-xs text-gray-400 italic">All</span>
+                  </ng-template>
+                </div>
               </td>
 
               <!-- Status -->
@@ -191,7 +225,7 @@
 
   <!-- Add Agent Modal -->
   <div *ngIf="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-gray-900 dark:text-rep-white">Add Team Member</h2>
         <button (click)="closeAddModal()" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
@@ -255,6 +289,42 @@
               <option value="viewer">Viewer</option>
             </select>
           </div>
+
+          <!-- Assigned Buckets -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Assigned Buckets</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Leave empty to handle all buckets</p>
+            <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800">
+              <label *ngFor="let bucket of buckets"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg cursor-pointer text-xs font-medium transition border"
+                [class]="addSelectedBuckets.has(bucket._id)
+                  ? 'text-white border-transparent'
+                  : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
+                [style.background-color]="addSelectedBuckets.has(bucket._id) ? bucket.color : null"
+                (click)="toggleBucket(addSelectedBuckets, bucket._id)">
+                <i class="fas fa-check text-[10px]" *ngIf="addSelectedBuckets.has(bucket._id)"></i>
+                {{ bucket.name }}
+              </label>
+              <span *ngIf="buckets.length === 0" class="text-xs text-gray-400 italic p-1">No buckets configured</span>
+            </div>
+          </div>
+
+          <!-- Assigned Channels -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Assigned Channels</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Leave empty to handle all channels</p>
+            <div class="flex flex-wrap gap-2 p-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800">
+              <label *ngFor="let p of platformOptions"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg cursor-pointer text-xs font-medium transition border"
+                [class]="addSelectedPlatforms.has(p.value)
+                  ? 'bg-rep-lime text-rep-black border-rep-lime'
+                  : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
+                (click)="togglePlatform(addSelectedPlatforms, p.value)">
+                <i [class]="p.icon"></i>
+                {{ p.label }}
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="flex items-center space-x-3 mt-6">
@@ -280,7 +350,7 @@
 
   <!-- Edit Agent Modal -->
   <div *ngIf="showEditModal && selectedAgent" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-gray-900 dark:text-rep-white">Edit Team Member</h2>
         <button (click)="closeEditModal()" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
@@ -320,6 +390,42 @@
               <option value="admin">Admin</option>
               <option value="viewer">Viewer</option>
             </select>
+          </div>
+
+          <!-- Assigned Buckets -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Assigned Buckets</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Leave empty to handle all buckets</p>
+            <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800">
+              <label *ngFor="let bucket of buckets"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg cursor-pointer text-xs font-medium transition border"
+                [class]="editSelectedBuckets.has(bucket._id)
+                  ? 'text-white border-transparent'
+                  : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
+                [style.background-color]="editSelectedBuckets.has(bucket._id) ? bucket.color : null"
+                (click)="toggleBucket(editSelectedBuckets, bucket._id)">
+                <i class="fas fa-check text-[10px]" *ngIf="editSelectedBuckets.has(bucket._id)"></i>
+                {{ bucket.name }}
+              </label>
+              <span *ngIf="buckets.length === 0" class="text-xs text-gray-400 italic p-1">No buckets configured</span>
+            </div>
+          </div>
+
+          <!-- Assigned Channels -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Assigned Channels</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Leave empty to handle all channels</p>
+            <div class="flex flex-wrap gap-2 p-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800">
+              <label *ngFor="let p of platformOptions"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg cursor-pointer text-xs font-medium transition border"
+                [class]="editSelectedPlatforms.has(p.value)
+                  ? 'bg-rep-lime text-rep-black border-rep-lime'
+                  : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
+                (click)="togglePlatform(editSelectedPlatforms, p.value)">
+                <i [class]="p.icon"></i>
+                {{ p.label }}
+              </label>
+            </div>
           </div>
 
           <div class="flex items-center space-x-3">

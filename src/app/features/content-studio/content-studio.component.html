@@ -1,161 +1,362 @@
 <div class="min-h-screen bg-rep-black p-4 md:p-6">
-  <div class="mb-6">
-    <h1 class="text-2xl md:text-3xl font-bold text-rep-white flex items-center gap-2">
-      <i class="fas fa-paper-plane text-rep-lime"></i>
-      Content Studio
-    </h1>
-    <p class="text-gray-400 mt-1">Generate multiple variants and add to calendar or send to approval.</p>
+
+  <!-- ── Header ─────────────────────────────────────────────────────────── -->
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-rep-white flex items-center gap-2">
+        <i class="fas fa-wand-magic-sparkles text-rep-lime"></i>
+        Content Studio
+      </h1>
+      <p class="text-gray-400 mt-1 text-sm">
+        Pick the best
+        <span class="text-rep-lime font-medium">text</span> and
+        <span class="text-purple-400 font-medium">image</span>
+        from any variant, then preview and publish.
+      </p>
+    </div>
+    <a routerLink="/app/scheduled-posts"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition
+             bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-rep-white">
+      <i class="fas fa-calendar-check text-rep-lime"></i> View Scheduled
+    </a>
   </div>
 
-  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <!-- Left: inputs -->
-    <div class="space-y-4">
-      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-        <label class="block text-sm font-medium text-gray-400 mb-2">Topic</label>
-        <input
-          type="text"
-          [(ngModel)]="topic"
-          placeholder="What's the post about?"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
-        />
-      </div>
-      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-        <label class="block text-sm font-medium text-gray-400 mb-2">Target audience</label>
-        <input
-          type="text"
-          [(ngModel)]="audience"
-          placeholder="e.g. Small business owners"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
-        />
-      </div>
-      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-        <label class="block text-sm font-medium text-gray-400 mb-2">Intent</label>
-        <select
-          [(ngModel)]="intent"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-rep-lime"
-        >
-          <option value="">Select</option>
-          <option *ngFor="let o of intentOptions" [value]="o.value">{{ o.label }}</option>
-        </select>
-      </div>
-      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-        <label class="block text-sm font-medium text-gray-400 mb-2">Platform</label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            *ngFor="let p of platforms"
-            type="button"
-            (click)="togglePlatform(p.id)"
-            [class]="selectedPlatformIds.includes(p.id) ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400'"
-            class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
-          >
-            <i [class]="p.icon + ' text-sm'"></i>
-            {{ p.name }}
-          </button>
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+    <!-- ── LEFT: Generate Settings ─────────────────────────────────────── -->
+    <div class="xl:col-span-3 space-y-4">
+
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-4 space-y-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Post Settings</h2>
+
+        <!-- Topic -->
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">
+            Topic <span class="text-red-400">*</span>
+          </label>
+          <input type="text" [(ngModel)]="topic" placeholder="What's the post about?"
+            class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white placeholder-gray-500
+                   rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm" />
+        </div>
+
+        <!-- Audience -->
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Target Audience</label>
+          <input type="text" [(ngModel)]="audience" placeholder="e.g. Small business owners"
+            class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white placeholder-gray-500
+                   rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm" />
+        </div>
+
+        <!-- Intent -->
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Intent</label>
+          <select [(ngModel)]="intent"
+            class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg
+                   focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm">
+            <option value="">Select</option>
+            <option *ngFor="let o of intentOptions" [value]="o.value">{{ o.label }}</option>
+          </select>
+        </div>
+
+        <!-- Platforms -->
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">
+            Platforms <span class="text-red-400">*</span>
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button *ngFor="let p of platforms" type="button" (click)="togglePlatform(p.id)"
+              [class]="selectedPlatformIds.includes(p.id)
+                ? 'bg-rep-lime text-rep-black'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
+              class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
+              <i [class]="p.icon + ' text-sm'"></i>{{ p.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Options -->
+        <div class="space-y-2 pt-1">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" [(ngModel)]="includeTrend"
+              class="w-4 h-4 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20" />
+            <span class="text-sm text-gray-300">Include trend</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" [(ngModel)]="includeImage"
+              class="w-4 h-4 text-purple-500 border-gray-700 rounded focus:ring-purple-500/20" />
+            <span class="text-sm text-gray-300">Generate images</span>
+            <span class="text-xs text-purple-400 font-medium px-1.5 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">AI</span>
+          </label>
         </div>
       </div>
-      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" [(ngModel)]="includeTrend" class="w-4 h-4 text-rep-lime rounded" />
-          <span class="text-sm text-gray-300">Include trend</span>
-        </label>
-      </div>
-      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" [(ngModel)]="includeImage" class="w-4 h-4 text-rep-lime rounded" />
-          <span class="text-sm text-gray-300">Generate image for each variant</span>
-        </label>
-        <p class="text-xs text-gray-500 mt-1">Uses extra credits (OpenAI DALL·E). Requires OpenAI API key.</p>
-      </div>
-      <app-button
-        variant="primary"
-        fullWidth
-        [loading]="generating"
+
+      <!-- Generate Button -->
+      <app-button variant="primary" fullWidth [loading]="generating"
         [disabled]="!topic.trim() || selectedPlatformIds.length === 0"
-        (buttonClick)="generateVariants()"
-      >
-        Generate variants
+        (buttonClick)="generateVariants()">
+        <i class="fas fa-wand-magic-sparkles mr-2"></i>
+        Generate Variants
       </app-button>
-      <div *ngIf="aiCredits" class="text-xs text-gray-500">
-        Credits: {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
+
+      <!-- Credits -->
+      <div *ngIf="aiCredits"
+        class="flex items-center gap-2 px-3 py-2 bg-gray-900/50 rounded-xl border border-gray-800 text-xs text-gray-400">
+        <i class="fas fa-bolt text-rep-lime"></i>
+        AI Credits:
+        <span class="ml-auto font-semibold text-rep-white">
+          {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
+        </span>
       </div>
     </div>
 
-    <!-- Middle: variants -->
-    <div class="space-y-4">
-      <h2 class="text-lg font-bold text-rep-white">Variants</h2>
-      <div *ngIf="variants.length === 0 && !generating" class="text-gray-500 text-sm">Generate to see variants.</div>
-      <div *ngIf="generating" class="flex justify-center py-8">
-        <i class="fas fa-spinner fa-spin text-2xl text-rep-lime"></i>
-      </div>
-      <div *ngFor="let v of variants; let i = index" class="cursor-pointer" (click)="selectVariant(i)">
-        <app-post-card
-          [content]="v.content"
-          [platform]="getPreviewPlatform()"
-          [media]="v.imageUrl ? [{ preview: v.imageUrl, type: 'image' }] : []"
-          status="pending"
-          generatedBy="ai"
-          [showActions]="selectedVariantIndex === i"
-          (approve)="openAddToCalendar()"
-          (schedule)="openAddToCalendar()"
-          (edit)="selectVariant(i)"
-        />
-        <div *ngIf="selectedVariantIndex === i" class="mt-2">
-          <textarea
-            [(ngModel)]="editedContent"
-            rows="4"
-            class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg text-sm resize-none"
-            placeholder="Edit content..."
-          ></textarea>
+    <!-- ── MIDDLE: Variants List ────────────────────────────────────────── -->
+    <div class="xl:col-span-5 space-y-4">
+
+      <!-- Section Header -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <h2 class="text-base font-bold text-rep-white">Variants</h2>
+          <span *ngIf="generatingImages"
+            class="inline-flex items-center gap-1 text-xs text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
+            <i class="fas fa-spinner fa-spin text-[10px]"></i> Generating images…
+          </span>
+        </div>
+        <!-- Legend -->
+        <div *ngIf="variants.length > 0" class="hidden sm:flex items-center gap-3 text-xs text-gray-500">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rep-lime"></span> Text
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span> Image
+          </span>
         </div>
       </div>
-      <div *ngIf="variants.length > 0" class="flex flex-wrap gap-2 pt-2">
-        <app-button variant="primary" size="sm" (buttonClick)="openAddToCalendar()">Add to Calendar</app-button>
-        <app-button variant="secondary" size="sm" (buttonClick)="sendToApproval()" [loading]="sendingToApproval">Send to Approval</app-button>
+
+      <!-- Skeleton while generating text -->
+      <div *ngIf="generating" class="space-y-3">
+        <div *ngFor="let s of [0,1,2]"
+          class="bg-gray-900/50 rounded-xl border border-gray-800 p-4 animate-pulse">
+          <div class="h-2.5 bg-gray-700 rounded w-1/4 mb-3"></div>
+          <div class="space-y-2">
+            <div class="h-2 bg-gray-700 rounded w-full"></div>
+            <div class="h-2 bg-gray-700 rounded w-5/6"></div>
+            <div class="h-2 bg-gray-700 rounded w-4/6"></div>
+          </div>
+          <div class="h-7 bg-gray-700 rounded-lg mt-4"></div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="variants.length === 0 && !generating"
+        class="flex flex-col items-center justify-center py-16 gap-3">
+        <div class="w-16 h-16 rounded-xl bg-gray-900/50 border border-gray-800 flex items-center justify-center">
+          <i class="fas fa-layer-group text-2xl text-gray-600"></i>
+        </div>
+        <p class="text-sm text-gray-500">Set a topic and hit <strong class="text-gray-300">Generate Variants</strong></p>
+      </div>
+
+      <!-- Variant Cards -->
+      <div *ngFor="let v of variants; let i = index"
+        class="bg-gray-900/50 backdrop-blur-sm rounded-xl border transition-all duration-200 overflow-hidden"
+        [ngClass]="{
+          'border-rep-lime/50': selectedTextIndex === i && selectedImageIndex !== i,
+          'border-purple-500/50': selectedImageIndex === i && selectedTextIndex !== i,
+          'border-rep-lime/50 shadow-[0_0_0_1px_rgba(192,255,0,0.15)]': selectedTextIndex === i && selectedImageIndex === i,
+          'border-gray-800': selectedTextIndex !== i && selectedImageIndex !== i
+        }">
+
+        <!-- Card Header -->
+        <div class="flex items-center justify-between px-4 pt-3 pb-1">
+          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Variant {{ i + 1 }}
+          </span>
+          <div class="flex items-center gap-1.5">
+            <span *ngIf="selectedTextIndex === i"
+              class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-rep-lime/15 text-rep-lime border border-rep-lime/30">
+              <i class="fas fa-check mr-0.5 text-[8px]"></i>Text
+            </span>
+            <span *ngIf="selectedImageIndex === i"
+              class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30">
+              <i class="fas fa-check mr-0.5 text-[8px]"></i>Image
+            </span>
+          </div>
+        </div>
+
+        <!-- Text Content -->
+        <div class="px-4 pt-2 pb-3">
+          <p class="text-sm text-gray-300 leading-relaxed line-clamp-4">{{ v.content }}</p>
+
+          <!-- Use Text Button -->
+          <button type="button" (click)="selectText(i)"
+            [class]="selectedTextIndex === i
+              ? 'bg-rep-lime text-rep-black'
+              : 'bg-gray-800 text-gray-400 hover:bg-rep-lime/20 hover:text-rep-lime'"
+            class="mt-3 w-full py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
+            <i [class]="selectedTextIndex === i ? 'fas fa-check' : 'fas fa-align-left'"></i>
+            {{ selectedTextIndex === i ? 'Text Selected' : 'Use this Text' }}
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="h-px bg-gray-800 mx-4"></div>
+
+        <!-- Image Section -->
+        <div class="px-4 pt-3 pb-4">
+
+          <!-- Loading -->
+          <div *ngIf="v.loadingImage"
+            class="w-full h-28 rounded-lg bg-gray-800/60 border border-gray-700 flex flex-col items-center justify-center gap-1.5 mb-3">
+            <i class="fas fa-spinner fa-spin text-purple-400"></i>
+            <span class="text-xs text-gray-500">Generating image…</span>
+          </div>
+
+          <!-- Image Preview -->
+          <div *ngIf="!v.loadingImage && v.imageUrl" class="mb-3">
+            <img [src]="v.imageUrl" alt="Generated image"
+              class="w-full h-36 object-cover rounded-lg border border-gray-700" />
+          </div>
+
+          <!-- Waiting for auto-generation -->
+          <div *ngIf="!v.loadingImage && !v.imageUrl && includeImage && !generating"
+            class="w-full h-16 rounded-lg bg-gray-800/40 border border-dashed border-gray-700
+                   flex items-center justify-center mb-3">
+            <span class="text-xs text-gray-500">Image pending…</span>
+          </div>
+
+          <!-- On-demand generate (when includeImage is OFF) -->
+          <div *ngIf="!v.loadingImage && !v.imageUrl && !includeImage && !generating" class="mb-3">
+            <button type="button" (click)="generateImageForVariant(i)"
+              class="w-full h-16 rounded-lg bg-purple-500/10 border border-dashed border-purple-500/30
+                     text-xs text-purple-400 hover:bg-purple-500/20 transition flex items-center justify-center gap-1.5">
+              <i class="fas fa-image"></i> Generate Image
+            </button>
+          </div>
+
+          <!-- Use Image Button -->
+          <button *ngIf="!v.loadingImage && v.imageUrl" type="button" (click)="selectImage(i)"
+            [class]="selectedImageIndex === i
+              ? 'bg-purple-500 text-white'
+              : 'bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400'"
+            class="w-full py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
+            <i [class]="selectedImageIndex === i ? 'fas fa-check' : 'fas fa-image'"></i>
+            {{ selectedImageIndex === i ? 'Image Selected' : 'Use this Image' }}
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Right: platform preview -->
-    <div class="space-y-4">
-      <h2 class="text-lg font-bold text-rep-white">Preview</h2>
-      <div class="bg-gray-900/50 rounded-xl border border-gray-800 p-4">
-        <div class="flex gap-2 mb-3">
-          <button
-            *ngFor="let p of platforms"
-            type="button"
-            (click)="previewPlatform = p"
-            [class]="previewPlatform?.id === p.id ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400'"
-            class="px-2 py-1 rounded-lg text-xs font-medium transition"
-          >
-            <i [class]="p.icon + ' mr-1'"></i>
-            {{ p.name }}
-          </button>
+    <!-- ── RIGHT: Preview & Publish ────────────────────────────────────── -->
+    <div class="xl:col-span-4 space-y-4">
+      <h2 class="text-base font-bold text-gray-900 dark:text-rep-white">Preview & Publish</h2>
+
+      <!-- Selection Chips -->
+      <div *ngIf="variants.length > 0" class="flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full
+                     bg-rep-lime/10 text-rep-lime border border-rep-lime/20 font-medium">
+          <i class="fas fa-align-left text-[10px]"></i>
+          Text: Variant {{ selectedTextIndex + 1 }}
+        </span>
+        <span *ngIf="selectedImageIndex !== null"
+          class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full
+                 bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">
+          <i class="fas fa-image text-[10px]"></i>
+          Image: Variant {{ selectedImageIndex + 1 }}
+        </span>
+        <span *ngIf="selectedImageIndex === null && hasAnyImage"
+          class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full
+                 bg-gray-800 text-gray-500 border border-gray-700">
+          <i class="fas fa-image text-[10px]"></i>
+          No image
+        </span>
+      </div>
+
+      <!-- Platform tabs -->
+      <div *ngIf="platforms.length > 0" class="flex flex-wrap gap-1.5">
+        <button *ngFor="let p of platforms" type="button" (click)="previewPlatform = p"
+          [class]="previewPlatform?.id === p.id
+            ? 'bg-rep-lime text-rep-black'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+          <i [class]="p.icon"></i>{{ p.name }}
+        </button>
+      </div>
+
+      <!-- Social Preview -->
+      <div class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm dark:shadow-none">
+        <div *ngIf="variants.length === 0" class="py-12 flex flex-col items-center gap-2">
+          <i class="fas fa-mobile-screen text-3xl text-gray-300 dark:text-gray-700"></i>
+          <span class="text-sm text-gray-500">Preview will appear here</span>
         </div>
         <app-social-preview
+          *ngIf="variants.length > 0"
           [platform]="getPreviewPlatform()"
           [content]="selectedContent"
-          [mediaFiles]="getSelectedVariantMedia()"
+          [mediaFiles]="getPreviewMedia()"
         ></app-social-preview>
       </div>
+
+      <!-- Edit Text -->
+      <div *ngIf="variants.length > 0"
+        class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm dark:shadow-none">
+        <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-800">
+          <span class="text-xs font-semibold text-gray-700 dark:text-gray-400">Edit Text</span>
+          <span class="text-xs px-2 py-0.5 rounded-full font-semibold border
+                     bg-rep-lime/25 text-gray-900 border-rep-lime/50
+                     dark:bg-rep-lime/10 dark:text-rep-lime dark:border-rep-lime/20">
+            Variant {{ selectedTextIndex + 1 }}
+          </span>
+        </div>
+        <textarea [(ngModel)]="editedContent" rows="5"
+          class="w-full px-4 py-3 text-sm resize-none bg-white dark:bg-transparent
+                 text-gray-900 dark:text-gray-200
+                 placeholder:text-gray-500 dark:placeholder:text-gray-500
+                 focus:outline-none focus:ring-2 focus:ring-rep-lime/30 focus:ring-inset"
+          placeholder="Your post text will appear here…"></textarea>
+      </div>
+
+      <!-- Action Buttons — single row -->
+      <div *ngIf="variants.length > 0" class="grid grid-cols-3 gap-2 w-full min-w-0">
+        <app-button variant="primary" size="sm" fullWidth [loading]="publishing" (buttonClick)="publishNow()">
+          <i class="fas fa-paper-plane mr-1 shrink-0"></i><span class="min-w-0 truncate">Post Now</span>
+        </app-button>
+        <app-button variant="secondary" size="sm" fullWidth (buttonClick)="openAddToCalendar()">
+          <i class="fas fa-calendar-plus mr-1 shrink-0"></i><span class="min-w-0 truncate">Schedule</span>
+        </app-button>
+        <app-button variant="ghost" size="sm" fullWidth [loading]="sendingToApproval" (buttonClick)="sendToApproval()">
+          <i class="fas fa-check-circle mr-1 shrink-0"></i><span class="min-w-0 truncate">Approval</span>
+        </app-button>
+      </div>
     </div>
+
   </div>
 </div>
 
-<!-- Schedule modal -->
-<div *ngIf="showScheduleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" (click)="showScheduleModal = false">
-  <div class="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-md" (click)="$event.stopPropagation()">
-    <h3 class="text-lg font-bold text-rep-white mb-4">Add to Calendar</h3>
+<!-- ── Schedule Modal ─────────────────────────────────────────────────────── -->
+<div *ngIf="showScheduleModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  (click)="showScheduleModal = false">
+  <div class="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-sm shadow-2xl"
+       (click)="$event.stopPropagation()">
+    <h3 class="text-lg font-bold text-rep-white mb-1">Schedule Post</h3>
+    <p class="text-xs text-gray-400 mb-5">Choose when this post should go live.</p>
     <div class="space-y-4">
       <div>
-        <label class="block text-sm text-gray-400 mb-1">Date</label>
-        <input type="date" [(ngModel)]="scheduleDate" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg" />
+        <label class="block text-sm font-medium text-gray-400 mb-2">Date</label>
+        <input type="date" [(ngModel)]="scheduleDate"
+          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg
+                 focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm" />
       </div>
       <div>
-        <label class="block text-sm text-gray-400 mb-1">Time</label>
-        <input type="time" [(ngModel)]="scheduleTime" class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg" />
+        <label class="block text-sm font-medium text-gray-400 mb-2">Time</label>
+        <input type="time" [(ngModel)]="scheduleTime"
+          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg
+                 focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm" />
       </div>
     </div>
     <div class="flex gap-2 mt-6">
-      <app-button variant="primary" [loading]="scheduling" (buttonClick)="addToCalendar()">Schedule</app-button>
+      <app-button variant="primary" [loading]="scheduling" (buttonClick)="addToCalendar()">
+        <i class="fas fa-calendar-check mr-1.5"></i> Confirm
+      </app-button>
       <app-button variant="ghost" (buttonClick)="showScheduleModal = false">Cancel</app-button>
     </div>
   </div>

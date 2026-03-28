@@ -56,10 +56,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   loadingMenus = true;
   currentUser: IUser | null = null;
 
-  userDisplayName = 'User';
-  userEmailDisplay = 'user@example.com';
-  userInitials = 'U';
-
   /** Stable refs for routerLinkActiveOptions — avoids new object allocation each CD */
   readonly routerActiveExact = { exact: true };
   readonly routerActivePrefix = { exact: false };
@@ -92,7 +88,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((user) => {
         this.currentUser = user;
-        this.syncUserDisplayFields();
         this.cdr.markForCheck();
       });
 
@@ -206,13 +201,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     return `submenu-${section.id}-${item.route.replace(/\//g, '-')}`;
   }
 
-  logout(): void {
-    if (confirm('Are you sure you want to logout?')) {
-      this.authService.logout();
-      this.router.navigate(['/login']);
-    }
-  }
-
   private loadMenus(): void {
     this.loadingMenus = true;
     this.cdr.markForCheck();
@@ -242,32 +230,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
     const codes = [...(user?.resolvedPermissions ?? [])].sort().join('\u001f');
     const p = [...perms].sort().join('\u001f');
     return `${uid}|${role}|${codes}|${p}`;
-  }
-
-  private syncUserDisplayFields(): void {
-    const u = this.currentUser;
-    if (!u) {
-      this.userDisplayName = 'User';
-      this.userEmailDisplay = 'user@example.com';
-      this.userInitials = 'U';
-      return;
-    }
-    const firstName = u.firstName || '';
-    const lastName = u.lastName || '';
-    if (firstName && lastName) {
-      this.userDisplayName = `${firstName} ${lastName}`;
-      this.userInitials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-    } else if (firstName) {
-      this.userDisplayName = firstName;
-      this.userInitials = firstName.charAt(0).toUpperCase();
-    } else if (u.email) {
-      this.userDisplayName = u.email.split('@')[0];
-      this.userInitials = u.email.charAt(0).toUpperCase();
-    } else {
-      this.userDisplayName = 'User';
-      this.userInitials = 'U';
-    }
-    this.userEmailDisplay = u.email || 'user@example.com';
   }
 
   private isGroupedEmpty(grouped: {

@@ -85,6 +85,8 @@
         <!-- Card -->
         <div *ngFor="let interaction of col.interactions; trackBy: trackByInteraction"
              cdkDrag
+             (cdkDragStarted)="onBucketCardDragStarted(interaction)"
+             (cdkDragEnded)="onBucketCardDragEnded()"
              (click)="selectInteraction(interaction)"
              class="bucket-card group relative rounded-xl border cursor-pointer"
              [class.card-selected]="selectedInteractionId === interaction._id"
@@ -211,7 +213,10 @@
            class="flex-1 overflow-y-auto p-2 space-y-2 min-h-[120px] bucket-drop-zone column-body">
 
         <div *ngFor="let interaction of unassignedColumn.interactions; trackBy: trackByInteraction"
-             cdkDrag (click)="selectInteraction(interaction)"
+             cdkDrag
+             (cdkDragStarted)="onBucketCardDragStarted(interaction)"
+             (cdkDragEnded)="onBucketCardDragEnded()"
+             (click)="selectInteraction(interaction)"
              class="bucket-card group relative rounded-xl border cursor-pointer"
              [class.card-selected]="selectedInteractionId === interaction._id"
              [class.card-unselected]="selectedInteractionId !== interaction._id"
@@ -428,14 +433,13 @@
 
       <!-- ── Emoji picker panel ── -->
       <div *ngIf="showEmojiPicker"
-           class="emoji-panel absolute bottom-full left-0 right-0 z-30 mx-3 mb-1 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-xl p-2"
+           class="emoji-panel absolute bottom-full left-0 right-0 z-30 mx-3 mb-1 w-auto max-w-[min(100%,18rem)] max-h-64 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-xl p-2"
            (click)="$event.stopPropagation()">
-        <div *ngFor="let row of emojiRows" class="flex flex-wrap gap-0.5 mb-0.5">
-          <button *ngFor="let emoji of row" type="button"
-                  (click)="insertEmoji(emoji)"
-                  class="w-8 h-8 flex items-center justify-center text-lg hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer">
-            {{ emoji }}
-          </button>
+        <div class="grid grid-cols-8 gap-0.5">
+          <button *ngFor="let em of emojiList" type="button"
+                  (click)="insertEmoji(em)"
+                  class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-lg leading-none transition-colors cursor-pointer"
+                  [attr.aria-label]="'Insert ' + em">{{ em }}</button>
         </div>
       </div>
 

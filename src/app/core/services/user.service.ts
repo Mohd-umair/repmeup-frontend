@@ -24,6 +24,8 @@ export interface IUser {
   };
   createdAt: Date;
   updatedAt: Date;
+  assignedBuckets?: { _id: string; name: string; color?: string }[] | string[];
+  assignedPlatforms?: string[];
   assignedTasks?: number;
   resolvedToday?: number;
 }
@@ -61,6 +63,8 @@ export interface ICreateUserDto {
   firstName: string;
   lastName: string;
   role?: 'admin' | 'manager' | 'agent' | 'viewer';
+  assignedBuckets?: string[];
+  assignedPlatforms?: string[];
 }
 
 export interface IUpdateUserDto {
@@ -68,6 +72,8 @@ export interface IUpdateUserDto {
   lastName?: string;
   role?: 'admin' | 'manager' | 'agent' | 'viewer';
   isActive?: boolean;
+  assignedBuckets?: string[];
+  assignedPlatforms?: string[];
   preferences?: {
     notifications?: boolean;
     emailDigest?: boolean;

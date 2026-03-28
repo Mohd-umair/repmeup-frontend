@@ -184,7 +184,9 @@
               <button
                 type="button"
                 (click)="openPostComments(post)"
-                class="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-700 text-gray-200 rounded-lg font-semibold text-xs hover:bg-gray-600 transition"
+                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold text-xs transition
+                  bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 hover:border-gray-400
+                  dark:bg-gray-700 dark:text-gray-200 dark:border-transparent dark:hover:bg-gray-600"
               >
                 <i class="fas fa-comments"></i>
                 Comments ({{ post.commentCount ?? 0 }})

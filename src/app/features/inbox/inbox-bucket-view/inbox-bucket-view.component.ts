@@ -7,6 +7,7 @@ import { IIntentBucket } from '../../../core/services/intent-bucket.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { IInteraction, IInboxFilters, IReply, InteractionStatus } from '../../../core/models/interaction.model';
 import { inboxFilterSerialize } from '../../../core/utils/inbox-filter-values';
+import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
 import { SentimentDonutChartComponent } from '../../../shared/components/charts/sentiment-donut-chart.component';
 import { Subscription } from 'rxjs';
@@ -77,14 +78,12 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   private mediaRecorder: MediaRecorder | null = null;
   private recordingTimer: any = null;
 
-  readonly emojiRows: string[][] = [
-    ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😍','🥰','😘'],
-    ['🤔','🤗','😤','😠','😡','🥺','😢','😭','😱','😨','😰','😥','🤤'],
-    ['👍','👎','👌','✌️','🤞','🤙','👏','🙌','🤝','🫶','💪','🫂','🙏'],
-    ['❤️','🧡','💛','💚','💙','💜','🖤','💔','💕','💞','💓','💗','💖'],
-    ['🔥','✨','💫','⭐','🌟','🎉','🎊','🎁','🏆','🎯','🚀','💡','🌈'],
-    ['😺','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🦁','🐯','🦄'],
-  ];
+  /** After a real CDK drag, the browser often fires a click — suppress opening chat for that card only. */
+  private pendingSuppressClickForInteractionId: string | null = null;
+  private pendingDragClickClearHandle: ReturnType<typeof setTimeout> | null = null;
+
+  /** Same emoji picker as list inbox (`inbox-detail`) */
+  readonly emojiList: readonly string[] = INBOX_EMOJI_LIST;
 
   private subscriptions: Subscription[] = [];
   /** At most this many bucket columns may be expanded at once (unassigned counts as one column). */
@@ -115,7 +114,28 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnDestroy(): void {
+    this.clearPendingDragClickTimer();
     this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  private clearPendingDragClickTimer(): void {
+    if (this.pendingDragClickClearHandle !== null) {
+      clearTimeout(this.pendingDragClickClearHandle);
+      this.pendingDragClickClearHandle = null;
+    }
+  }
+
+  onBucketCardDragStarted(interaction: IInteraction): void {
+    this.clearPendingDragClickTimer();
+    this.pendingSuppressClickForInteractionId = interaction._id;
+  }
+
+  onBucketCardDragEnded(): void {
+    this.clearPendingDragClickTimer();
+    this.pendingDragClickClearHandle = setTimeout(() => {
+      this.pendingDragClickClearHandle = null;
+      this.pendingSuppressClickForInteractionId = null;
+    }, 400);
   }
 
   private mergeListFiltersIntoParams(target: Record<string, unknown>): void {
@@ -265,6 +285,11 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   selectInteraction(interaction: IInteraction): void {
+    if (this.pendingSuppressClickForInteractionId === interaction._id) {
+      this.clearPendingDragClickTimer();
+      this.pendingSuppressClickForInteractionId = null;
+      return;
+    }
     if (this.activeChatInteraction?._id === interaction._id) {
       this.closeChat();
       return;
