@@ -1,393 +1,617 @@
-<div class="min-h-screen bg-rep-black p-4 md:p-6">
+<div class="min-h-screen bg-gray-50 text-gray-900 dark:bg-rep-black dark:text-gray-100 p-4 md:p-6">
 
   <!-- ── Header ─────────────────────────────────────────────────────────── -->
   <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div>
-      <h1 class="text-2xl md:text-3xl font-bold text-rep-white flex items-center gap-2">
-        <i class="fas fa-wand-magic-sparkles text-rep-lime"></i>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-rep-white flex items-center gap-2">
+        <i class="fas fa-wand-magic-sparkles text-rep-black dark:text-rep-lime"></i>
         Content Studio
       </h1>
-      <p class="text-gray-400 mt-1 text-sm">
-        Pick the best
-        <span class="text-rep-lime font-medium">text</span> and
-        <span class="text-purple-400 font-medium">image</span>
-        from any variant, then preview and publish.
-      </p>
+      <p class="text-gray-600 dark:text-gray-400 mt-1 text-sm">Create and publish social media content with AI or manually.</p>
     </div>
     <a routerLink="/app/scheduled-posts"
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition
-             bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-rep-white">
-      <i class="fas fa-calendar-check text-rep-lime"></i> View Scheduled
+             bg-white border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900
+             dark:bg-gray-800 dark:border-transparent dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-rep-white">
+      <i class="fas fa-calendar-check text-rep-black dark:text-rep-lime"></i> View Scheduled
     </a>
+  </div>
+
+  <!-- ── Mode Selector ───────────────────────────────────────────────────── -->
+  <div class="mb-6 flex flex-wrap items-center gap-3">
+    <button type="button" (click)="contentMode = 'ai'"
+      [class]="contentMode === 'ai'
+        ? 'bg-rep-lime text-rep-black shadow-md shadow-rep-lime/20'
+        : 'bg-white text-gray-600 border border-gray-200 shadow-sm hover:bg-gray-50 hover:text-gray-900 dark:bg-gray-800 dark:border-transparent dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'"
+      class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all">
+      <i class="fas fa-wand-magic-sparkles text-sm"></i>
+      AI Generate
+    </button>
+    <button type="button" (click)="goToCustom()"
+      class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all
+             bg-white text-gray-600 border border-gray-200 shadow-sm hover:bg-gray-50 hover:text-gray-900
+             dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-700 dark:hover:text-white">
+      <i class="fas fa-pen-to-square text-sm"></i>
+      Custom Post
+      <i class="fas fa-arrow-right text-xs opacity-60 ml-1"></i>
+    </button>
+    <span class="text-xs text-gray-500 dark:text-gray-600 hidden sm:inline">
+      Custom Post uses the full Compose editor →
+    </span>
   </div>
 
   <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-    <!-- ── LEFT: Generate Settings ─────────────────────────────────────── -->
-    <div class="xl:col-span-3 space-y-4">
+    <!-- ── LEFT: Wizard Steps ──────────────────────────────────────────── -->
+    <div class="xl:col-span-3 space-y-3">
 
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-4 space-y-4">
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Post Settings</h2>
+      <!-- ── Compact Summary Bar (shown after generation) ──────────────── -->
+      <div *ngIf="showWizardSummary"
+        class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-gray-900/60 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-none">
+        <i class="fas fa-check-circle text-rep-black dark:text-rep-lime text-sm shrink-0"></i>
+        <span class="text-xs text-gray-700 dark:text-gray-300 flex-1 leading-snug truncate">{{ wizardSummaryLine }}</span>
+        <button type="button" (click)="editFromSummary()"
+          class="shrink-0 text-xs font-medium text-rep-black dark:text-rep-lime hover:underline flex items-center gap-1">
+          <i class="fas fa-pencil text-[10px]"></i> Edit
+        </button>
+      </div>
 
-        <!-- Topic -->
-        <div>
-          <label class="block text-sm font-medium text-gray-400 mb-2">
-            Topic <span class="text-red-400">*</span>
-          </label>
-          <input type="text" [(ngModel)]="topic" placeholder="What's the post about?"
-            class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white placeholder-gray-500
-                   rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm" />
-        </div>
+      <!-- ── Wizard (hidden when summary bar is shown) ───────────────────── -->
+      <ng-container *ngIf="!showWizardSummary">
 
-        <!-- Audience -->
-        <div>
-          <label class="block text-sm font-medium text-gray-400 mb-2">Target Audience</label>
-          <input type="text" [(ngModel)]="audience" placeholder="e.g. Small business owners"
-            class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white placeholder-gray-500
-                   rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm" />
-        </div>
+        <!-- ═══ STEP 1: Platform & Format ═══════════════════════════════════ -->
+        <div [class]="currentStep === 1
+              ? 'ring-2 ring-rep-lime/60 shadow-md shadow-rep-lime/10'
+              : completedSteps.has(1)
+                ? 'opacity-90'
+                : 'opacity-50 pointer-events-none'"
+          class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-none transition-all duration-200">
 
-        <!-- Intent -->
-        <div>
-          <label class="block text-sm font-medium text-gray-400 mb-2">Intent</label>
-          <select [(ngModel)]="intent"
-            class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg
-                   focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm">
-            <option value="">Select</option>
-            <option *ngFor="let o of intentOptions" [value]="o.value">{{ o.label }}</option>
-          </select>
-        </div>
+          <!-- Step header -->
+          <div class="flex items-center gap-2.5 px-4 py-3 cursor-pointer select-none"
+            (click)="goToStep(1)">
+            <span [class]="(currentStep === 1 || completedSteps.has(1))
+                  ? 'bg-rep-lime text-rep-black'
+                  : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+              class="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold shrink-0 transition-colors">
+              <i *ngIf="completedSteps.has(1) && currentStep !== 1" class="fas fa-check text-[10px]"></i>
+              <span *ngIf="!completedSteps.has(1) || currentStep === 1">1</span>
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-900 dark:text-gray-100">Platform &amp; Format</p>
+              <p *ngIf="currentStep !== 1" class="text-[10px] text-gray-500 dark:text-gray-500 truncate">
+                {{ selectedPlatformIds.length > 0 ? selectedPlatformIds.join(', ') + ' · ' + postFormat : 'Where will this post be published?' }}
+              </p>
+              <p *ngIf="currentStep === 1" class="text-[10px] text-gray-500 dark:text-gray-500">Where will this post be published?</p>
+            </div>
+            <i *ngIf="completedSteps.has(1) && currentStep !== 1"
+              [class]="currentStep === 1 ? 'fa-chevron-up' : 'fa-chevron-down'"
+              class="fas text-[10px] text-gray-400 shrink-0"></i>
+          </div>
 
-        <!-- Platforms -->
-        <div>
-          <label class="block text-sm font-medium text-gray-400 mb-2">
-            Platforms <span class="text-red-400">*</span>
-          </label>
-          <div class="flex flex-wrap gap-2">
-            <button *ngFor="let p of platforms" type="button" (click)="togglePlatform(p.id)"
-              [class]="selectedPlatformIds.includes(p.id)
-                ? 'bg-rep-lime text-rep-black'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
-              class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
-              <i [class]="p.icon + ' text-sm'"></i>{{ p.name }}
+          <!-- Step body -->
+          <div *ngIf="currentStep === 1" class="px-4 pb-4 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-3">
+
+            <!-- Platforms -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-2">
+                Select Platforms <span class="text-red-500 dark:text-red-400">*</span>
+              </label>
+              <div class="flex flex-wrap gap-2">
+                <button *ngFor="let p of platforms" type="button" (click)="togglePlatform(p.id)"
+                  [class]="selectedPlatformIds.includes(p.id)
+                    ? 'bg-rep-lime text-rep-black shadow-sm shadow-rep-lime/30'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'"
+                  class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
+                  <i [class]="p.icon + ' text-sm'"></i>{{ p.name }}
+                </button>
+                <a *ngIf="platforms.length === 0" routerLink="/app/settings"
+                  class="text-xs text-rep-black dark:text-rep-lime underline italic">
+                  No platforms — connect one
+                </a>
+              </div>
+            </div>
+
+            <!-- Post Format -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-2">Post Format</label>
+              <div class="grid grid-cols-4 gap-1.5">
+                <button *ngFor="let f of postFormatOptions" type="button"
+                  (click)="postFormat = f.id"
+                  [class]="postFormat === f.id
+                    ? 'border-rep-lime bg-rep-lime/15 text-gray-900 dark:bg-rep-lime/10 dark:text-rep-lime'
+                    : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-gray-600'"
+                  class="flex flex-col items-center gap-1 py-2.5 rounded-lg border transition text-center">
+                  <i [class]="'fas ' + f.icon + ' text-sm'"></i>
+                  <span class="text-[10px] font-medium">{{ f.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Next button -->
+            <button type="button"
+              [disabled]="selectedPlatformIds.length === 0"
+              (click)="advanceStep()"
+              class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition
+                     bg-rep-lime text-rep-black hover:bg-rep-lime/90 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
+              Next <i class="fas fa-arrow-right text-xs"></i>
             </button>
           </div>
         </div>
 
-        <!-- Options -->
-        <div class="space-y-2 pt-1">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" [(ngModel)]="includeTrend"
-              class="w-4 h-4 text-rep-lime border-gray-700 rounded focus:ring-rep-lime/20" />
-            <span class="text-sm text-gray-300">Include trend</span>
-          </label>
-          <!-- Generate images toggle -->
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" [(ngModel)]="includeImage"
-              class="w-4 h-4 text-purple-500 border-gray-700 rounded focus:ring-purple-500/20" />
-            <span class="text-sm text-gray-300">Generate images</span>
-            <span class="text-xs text-purple-400 font-medium px-1.5 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">AI</span>
-          </label>
+        <!-- ═══ STEP 2: Content Type ════════════════════════════════════════ -->
+        <div [class]="currentStep === 2
+              ? 'ring-2 ring-rep-lime/60 shadow-md shadow-rep-lime/10'
+              : completedSteps.has(2)
+                ? 'opacity-90'
+                : maxReachedStep < 2 ? 'opacity-40 pointer-events-none' : 'opacity-90'"
+          class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-none transition-all duration-200">
 
-          <!-- ── Image style controls (chips, format, advanced) ──────────────── -->
-          <div *ngIf="includeImage" class="mt-2">
+          <div class="flex items-center gap-2.5 px-4 py-3 cursor-pointer select-none"
+            (click)="goToStep(2)">
+            <span [class]="(currentStep === 2 || completedSteps.has(2))
+                  ? 'bg-rep-lime text-rep-black'
+                  : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+              class="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold shrink-0 transition-colors">
+              <i *ngIf="completedSteps.has(2) && currentStep !== 2" class="fas fa-check text-[10px]"></i>
+              <span *ngIf="!completedSteps.has(2) || currentStep === 2">2</span>
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-900 dark:text-gray-100">Content Type</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-500 truncate">
+                {{ completedSteps.has(2) && currentStep !== 2
+                  ? contentTypeLabel
+                  : 'What kind of content should AI create?' }}
+              </p>
+            </div>
+          </div>
 
-            <!-- Controls box -->
-            <div class="rounded-xl border border-purple-200/90 bg-purple-50/90 dark:border-purple-500/25 dark:bg-purple-500/5 p-3 space-y-3">
-
-              <!-- Header -->
-              <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-semibold text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
-                  <i class="fas fa-palette text-[10px]"></i> Visual Style
-                  <span *ngIf="hasImageConfig"
-                    class="ml-1 px-1.5 py-0.5 rounded-full bg-purple-200 text-purple-900 dark:bg-purple-500/30 dark:text-purple-200 text-[9px] font-semibold">
-                    Custom
-                  </span>
-                </span>
+          <div *ngIf="currentStep === 2" class="px-4 pb-4 space-y-3 border-t border-gray-100 dark:border-gray-800 pt-3">
+            <div class="grid grid-cols-2 gap-2">
+              <button *ngFor="let ct of contentTypeOptions" type="button"
+                (click)="setContentType(ct.id)"
+                [class]="contentType === ct.id
+                  ? 'border-rep-lime bg-rep-lime/15 text-gray-900 dark:bg-rep-lime/10 dark:text-white'
+                  : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-gray-300'"
+                class="flex flex-col items-start gap-1.5 p-3 rounded-xl border transition text-left">
                 <div class="flex items-center gap-1.5">
-                  <button type="button" (click)="randomizeImageConfig()"
-                    class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-purple-200/90 text-purple-900 hover:bg-purple-300/90 dark:bg-purple-500/20 dark:text-purple-300 dark:hover:bg-purple-500/35 transition"
-                    title="Surprise me — randomize all options">
-                    <i class="fas fa-shuffle text-[9px]"></i> Surprise me
-                  </button>
-                  <button *ngIf="hasImageConfig" type="button" (click)="clearImageConfig()"
-                    class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition"
-                    title="Reset to auto">
-                    <i class="fas fa-times text-[9px]"></i> Clear
-                  </button>
+                  <i [class]="'fas ' + ct.icon"
+                    [ngClass]="contentType === ct.id ? 'text-rep-black dark:text-rep-lime' : 'text-gray-500 dark:text-gray-400'"
+                    class="text-sm shrink-0"></i>
+                  <span class="text-xs font-semibold leading-tight">{{ ct.label }}</span>
                 </div>
-              </div>
+                <span class="text-[10px] leading-snug opacity-75">{{ ct.desc }}</span>
+              </button>
+            </div>
+            <p *ngIf="contentType === 'text-video'"
+              class="text-[10px] text-blue-800 bg-blue-50 border border-blue-200 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 dark:text-blue-400/90 dark:bg-blue-500/10 dark:border-blue-500/20">
+              <i class="fas fa-info-circle text-[9px]"></i>
+              Video generation produces <strong>1 variant</strong> due to Sora processing time.
+            </p>
+            <!-- Tap a card above to auto-advance; fallback next button -->
+            <button type="button" (click)="advanceStep()"
+              class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition
+                     bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm">
+              Next <i class="fas fa-arrow-right text-xs"></i>
+            </button>
+          </div>
+        </div>
 
-              <!-- Style chips — 3-col grid. Each wrapped for hover tooltip -->
-              <div class="grid grid-cols-3 gap-1.5">
-                <div *ngFor="let s of imageStyles" class="relative group/chip">
+        <!-- ═══ STEP 3: Details & Style ═════════════════════════════════════ -->
+        <div [class]="currentStep === 3
+              ? 'ring-2 ring-rep-lime/60 shadow-md shadow-rep-lime/10'
+              : completedSteps.has(3)
+                ? 'opacity-90'
+                : maxReachedStep < 3 ? 'opacity-40 pointer-events-none' : 'opacity-90'"
+          class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-none transition-all duration-200">
 
-                  <!-- Chip button -->
-                  <button type="button"
-                    (click)="selectVisualStyle(s.id)"
-                    (mouseenter)="hoverStyle(s.id)"
-                    (mouseleave)="unhoverStyle()"
-                    [class]="imageConfig.style === s.id
-                      ? 'border-purple-600 bg-purple-100 text-purple-950 dark:border-purple-400 dark:bg-purple-500/25 dark:text-purple-200 shadow-sm shadow-purple-300/40'
-                      : 'border-gray-300 bg-white text-gray-800 hover:border-purple-400 hover:text-purple-900 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
-                    class="w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition-all duration-150 text-center">
-                    <i [class]="'fas ' + s.icon + ' text-sm'"></i>
-                    <span class="text-[10px] font-medium leading-tight">{{ s.label }}</span>
-                    <span *ngIf="imageConfig.style === s.id"
-                      class="w-1 h-1 rounded-full bg-purple-600 dark:bg-purple-400"></span>
-                  </button>
+          <div class="flex items-center gap-2.5 px-4 py-3 cursor-pointer select-none"
+            (click)="goToStep(3)">
+            <span [class]="(currentStep === 3 || completedSteps.has(3))
+                  ? 'bg-rep-lime text-rep-black'
+                  : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+              class="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold shrink-0 transition-colors">
+              <i *ngIf="completedSteps.has(3) && currentStep !== 3" class="fas fa-check text-[10px]"></i>
+              <span *ngIf="!completedSteps.has(3) || currentStep === 3">3</span>
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-900 dark:text-gray-100">Details &amp; Style</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-500 truncate">
+                {{ topic.trim() ? '"' + topic.trim().slice(0,30) + (topic.trim().length>30?'…':'') + '"' : 'What\'s your post about?' }}
+              </p>
+            </div>
+          </div>
 
-                  <!-- Hover tooltip: 3 mini thumbnails + style desc -->
-                  <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[300] w-44
-                              opacity-0 pointer-events-none
-                              group-hover/chip:opacity-100 group-hover/chip:pointer-events-auto
-                              transition-all duration-150 ease-out scale-95 group-hover/chip:scale-100
-                              bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600
-                              rounded-xl shadow-xl shadow-black/20 dark:shadow-black/50 p-2"
-                    role="tooltip">
-                    <!-- caret -->
-                    <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0
-                                border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent
-                                border-t-[6px] border-t-white dark:border-t-gray-900"></div>
-                    <!-- 3 thumbnails -->
-                    <div class="grid grid-cols-3 gap-1 mb-1.5">
-                      <div *ngFor="let sUrl of s.samples; let si = index"
-                        class="aspect-square rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
-                        <img *ngIf="!isSampleFailed(sUrl)"
-                          [src]="sUrl.replace('/480/480','/120/120')"
-                          [alt]="s.label + ' sample ' + (si+1)"
-                          class="w-full h-full object-cover" loading="lazy"
-                          (error)="markSampleFailed(sUrl)" />
-                        <div *ngIf="isSampleFailed(sUrl)"
-                          class="w-full h-full flex items-center justify-center">
-                          <i class="fas fa-image text-gray-400 text-xs opacity-60"></i>
+          <div *ngIf="currentStep === 3" class="px-4 pb-4 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-3">
+
+            <!-- Topic -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1.5">
+                Topic <span class="text-red-500 dark:text-red-400">*</span>
+              </label>
+              <input type="text" [(ngModel)]="topic" placeholder="What's the post about?"
+                class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg
+                       focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm
+                       dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-500" />
+            </div>
+
+            <!-- Audience -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1.5">Target Audience</label>
+              <input type="text" [(ngModel)]="audience" placeholder="e.g. Small business owners"
+                class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg
+                       focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm
+                       dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-500" />
+            </div>
+
+            <!-- Intent -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1.5">Intent</label>
+              <select [(ngModel)]="intent" (ngModelChange)="onIntentChange($event)"
+                class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg
+                       focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm
+                       dark:bg-gray-800 dark:border-gray-700 dark:text-white">
+                <option value="">Select</option>
+                <option *ngFor="let o of intentOptions" [value]="o.value">{{ o.label }}</option>
+              </select>
+            </div>
+
+            <!-- Include Trend -->
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="includeTrend"
+                class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime/20 dark:border-gray-700" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Include trend</span>
+            </label>
+
+            <!-- Image / video style controls — hidden for Text-only content type -->
+            <div *ngIf="contentType !== 'text'" class="space-y-2 pt-1">
+              <!-- Generate images toggle -->
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="includeImage"
+                  [disabled]="contentType !== 'text-image' && contentType !== 'image-layover'"
+                  class="w-4 h-4 text-purple-500 border-gray-300 rounded focus:ring-purple-500/20 disabled:opacity-40 dark:border-gray-700" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Generate images</span>
+                <span class="text-xs text-purple-400 font-medium px-1.5 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">AI</span>
+              </label>
+
+              <!-- Image style controls -->
+              <div *ngIf="includeImage" class="mt-2">
+                <div class="rounded-xl border border-purple-200/90 bg-purple-50/90 dark:border-purple-500/25 dark:bg-purple-500/5 p-3 space-y-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-semibold text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                      <i class="fas fa-palette text-[10px]"></i> Visual Style
+                      <span *ngIf="hasImageConfig"
+                        class="ml-1 px-1.5 py-0.5 rounded-full bg-purple-200 text-purple-900 dark:bg-purple-500/30 dark:text-purple-200 text-[9px] font-semibold">Custom</span>
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" (click)="randomizeImageConfig()"
+                        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-purple-200/90 text-purple-900 hover:bg-purple-300/90 dark:bg-purple-500/20 dark:text-purple-300 dark:hover:bg-purple-500/35 transition"
+                        title="Surprise me">
+                        <i class="fas fa-shuffle text-[9px]"></i> Surprise me
+                      </button>
+                      <button *ngIf="hasImageConfig" type="button" (click)="clearImageConfig()"
+                        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition">
+                        <i class="fas fa-times text-[9px]"></i> Clear
+                      </button>
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-3 gap-1.5">
+                    <div *ngFor="let s of imageStyles" class="relative group/chip">
+                      <button type="button"
+                        (click)="selectVisualStyle(s.id)"
+                        (mouseenter)="hoverStyle(s.id)"
+                        (mouseleave)="unhoverStyle()"
+                        [class]="imageConfig.style === s.id
+                          ? 'border-purple-600 bg-purple-100 text-purple-950 dark:border-purple-400 dark:bg-purple-500/25 dark:text-purple-200 shadow-sm shadow-purple-300/40'
+                          : 'border-gray-300 bg-white text-gray-800 hover:border-purple-400 hover:text-purple-900 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
+                        class="w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition-all duration-150 text-center">
+                        <i [class]="'fas ' + s.icon + ' text-sm'"></i>
+                        <span class="text-[10px] font-medium leading-tight">{{ s.label }}</span>
+                        <span *ngIf="imageConfig.style === s.id" class="w-1 h-1 rounded-full bg-purple-600 dark:bg-purple-400"></span>
+                      </button>
+                      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[300] w-44
+                                  opacity-0 pointer-events-none group-hover/chip:opacity-100 group-hover/chip:pointer-events-auto
+                                  transition-all duration-150 ease-out scale-95 group-hover/chip:scale-100
+                                  bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600
+                                  rounded-xl shadow-xl shadow-black/20 dark:shadow-black/50 p-2" role="tooltip">
+                        <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0
+                                    border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent
+                                    border-t-[6px] border-t-white dark:border-t-gray-900"></div>
+                        <div class="grid grid-cols-3 gap-1 mb-1.5">
+                          <div *ngFor="let sUrl of s.samples; let si = index"
+                            class="aspect-square rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
+                            <img *ngIf="!isSampleFailed(sUrl)" [src]="sUrl.replace('/480/480','/120/120')"
+                              [alt]="s.label + ' sample ' + (si+1)" class="w-full h-full object-cover" loading="lazy"
+                              (error)="markSampleFailed(sUrl)" />
+                            <div *ngIf="isSampleFailed(sUrl)" class="w-full h-full flex items-center justify-center">
+                              <i class="fas fa-image text-gray-400 text-xs opacity-60"></i>
+                            </div>
+                          </div>
                         </div>
+                        <p class="text-[10px] font-semibold text-gray-900 dark:text-gray-100 leading-none mb-0.5">{{ s.label }}</p>
+                        <p class="text-[9px] text-gray-500 dark:text-gray-400 leading-snug">{{ s.desc }}</p>
                       </div>
                     </div>
-                    <p class="text-[10px] font-semibold text-gray-900 dark:text-gray-100 leading-none mb-0.5">{{ s.label }}</p>
-                    <p class="text-[9px] text-gray-500 dark:text-gray-400 leading-snug">{{ s.desc }}</p>
                   </div>
-
-                </div>
-              </div>
-
-              <!-- No-style hint -->
-              <p *ngIf="!imageConfig.style" class="text-[10px] text-gray-600 dark:text-gray-500 text-center -mt-1">
-                <i class="fas fa-info-circle mr-1"></i>No style = auto. Pick one or hover to preview.
-              </p>
-
-              <!-- Format selector -->
-              <div>
-                <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Format</label>
-                <div class="grid grid-cols-4 gap-1">
-                  <button *ngFor="let f of formatOptions" type="button"
-                    (click)="imageConfig.format = f.id"
-                    [class]="imageConfig.format === f.id
-                      ? 'border-purple-600 bg-purple-100 text-purple-950 dark:border-purple-400 dark:bg-purple-500/20 dark:text-purple-200'
-                      : 'border-gray-300 bg-white text-gray-800 hover:border-purple-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-purple-500/40'"
-                    class="py-1.5 rounded-lg border text-[10px] font-semibold transition text-center"
-                    [title]="f.tooltip">
-                    {{ f.label }}
+                  <p *ngIf="!imageConfig.style" class="text-[10px] text-gray-600 dark:text-gray-500 text-center -mt-1">
+                    <i class="fas fa-info-circle mr-1"></i>No style = auto. Pick one or hover to preview.
+                  </p>
+                  <div>
+                    <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Format</label>
+                    <div class="grid grid-cols-4 gap-1">
+                      <button *ngFor="let f of formatOptions" type="button"
+                        (click)="imageConfig.format = f.id"
+                        [class]="imageConfig.format === f.id
+                          ? 'border-purple-600 bg-purple-100 text-purple-950 dark:border-purple-400 dark:bg-purple-500/20 dark:text-purple-200'
+                          : 'border-gray-300 bg-white text-gray-800 hover:border-purple-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-purple-500/40'"
+                        class="py-1.5 rounded-lg border text-[10px] font-semibold transition text-center"
+                        [title]="f.tooltip">{{ f.label }}</button>
+                    </div>
+                  </div>
+                  <button type="button" (click)="showAdvancedImageConfig = !showAdvancedImageConfig"
+                    class="w-full flex items-center justify-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-900 dark:text-gray-500 dark:hover:text-gray-300 transition py-0.5">
+                    <i [class]="showAdvancedImageConfig ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-[9px]"></i>
+                    {{ showAdvancedImageConfig ? 'Hide advanced' : 'Advanced options' }}
                   </button>
-                </div>
-              </div>
-
-              <!-- Advanced toggle -->
-              <button type="button" (click)="showAdvancedImageConfig = !showAdvancedImageConfig"
-                class="w-full flex items-center justify-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-900 dark:text-gray-500 dark:hover:text-gray-300 transition py-0.5">
-                <i [class]="showAdvancedImageConfig ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-[9px]"></i>
-                {{ showAdvancedImageConfig ? 'Hide advanced' : 'Advanced options' }}
-              </button>
-
-              <!-- Advanced -->
-              <div *ngIf="showAdvancedImageConfig" class="space-y-3 border-t border-purple-200/80 dark:border-purple-500/15 pt-3">
-                <div>
-                  <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Mood</label>
-                  <div class="flex flex-wrap gap-1">
-                    <button *ngFor="let m of moodOptions" type="button"
-                      (click)="imageConfig.mood = imageConfig.mood === m ? '' : m"
-                      [class]="imageConfig.mood === m
-                        ? 'bg-purple-200 text-purple-950 border-purple-500 dark:bg-purple-500/30 dark:text-purple-200 dark:border-purple-500/50'
-                        : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-purple-400 hover:text-purple-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
-                      class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ m }}</button>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Lighting</label>
-                  <select [(ngModel)]="imageConfig.lighting"
-                    class="w-full px-2 py-1.5 rounded-lg text-xs border transition
-                           bg-white border-gray-300 text-gray-900
-                           dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300
-                           focus:ring-1 focus:ring-purple-500/40 dark:focus:ring-purple-500/30 focus:border-purple-500">
-                    <option value="">Auto</option>
-                    <option *ngFor="let l of lightingOptions" [value]="l">{{ l }}</option>
-                  </select>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <div>
-                    <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Composition</label>
-                    <select [(ngModel)]="imageConfig.composition"
-                      class="w-full px-2 py-1.5 rounded-lg text-xs border transition
-                             bg-white border-gray-300 text-gray-900
-                             dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300
-                             focus:ring-1 focus:ring-purple-500/40 dark:focus:ring-purple-500/30 focus:border-purple-500">
-                      <option value="">Auto</option>
-                      <option *ngFor="let c of compositionOptions" [value]="c">{{ c }}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Color Palette</label>
-                    <select [(ngModel)]="imageConfig.colorPalette"
-                      class="w-full px-2 py-1.5 rounded-lg text-xs border transition
-                             bg-white border-gray-300 text-gray-900
-                             dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300
-                             focus:ring-1 focus:ring-purple-500/40 dark:focus:ring-purple-500/30 focus:border-purple-500">
-                      <option value="">Auto</option>
-                      <option *ngFor="let p of colorPaletteOptions" [value]="p">{{ p }}</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Camera Angle</label>
-                  <div class="flex flex-wrap gap-1">
-                    <button *ngFor="let a of cameraAngleOptions" type="button"
-                      (click)="imageConfig.cameraAngle = imageConfig.cameraAngle === a ? '' : a"
-                      [class]="imageConfig.cameraAngle === a
-                        ? 'bg-purple-200 text-purple-950 border-purple-500 dark:bg-purple-500/30 dark:text-purple-200 dark:border-purple-500/50'
-                        : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-purple-400 hover:text-purple-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
-                      class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ a }}</button>
+                  <div *ngIf="showAdvancedImageConfig" class="space-y-3 border-t border-purple-200/80 dark:border-purple-500/15 pt-3">
+                    <div>
+                      <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">
+                        Mood <span *ngIf="intent" class="text-purple-600 dark:text-purple-400 font-normal"> · {{ intent }}</span>
+                      </label>
+                      <p *ngIf="!intent" class="text-[9px] text-gray-500 dark:text-gray-500 leading-snug mb-1">
+                        Pick an <strong class="text-gray-700 dark:text-gray-400">Intent</strong> above — mood options update for that goal.
+                      </p>
+                      <div *ngIf="intent" class="flex flex-wrap gap-1">
+                        <button *ngFor="let o of intentMoodOptions; trackBy: trackMoodOption" type="button"
+                          (click)="imageConfig.mood = imageConfig.mood === o.value ? '' : o.value"
+                          [class]="imageConfig.mood === o.value
+                            ? 'bg-purple-200 text-purple-950 border-purple-500 dark:bg-purple-500/30 dark:text-purple-200 dark:border-purple-500/50'
+                            : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-purple-400 hover:text-purple-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
+                          class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ o.label }}</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Lighting</label>
+                      <select [(ngModel)]="imageConfig.lighting"
+                        class="w-full px-2 py-1.5 rounded-lg text-xs border transition bg-white border-gray-300 text-gray-900
+                               dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-purple-500/40 focus:border-purple-500">
+                        <option value="">Auto</option>
+                        <option *ngFor="let l of lightingOptions" [value]="l">{{ l }}</option>
+                      </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div>
+                        <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Composition</label>
+                        <select [(ngModel)]="imageConfig.composition"
+                          class="w-full px-2 py-1.5 rounded-lg text-xs border transition bg-white border-gray-300 text-gray-900
+                                 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-purple-500/40 focus:border-purple-500">
+                          <option value="">Auto</option>
+                          <option *ngFor="let c of compositionOptions" [value]="c">{{ c }}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Color Palette</label>
+                        <select [(ngModel)]="imageConfig.colorPalette"
+                          class="w-full px-2 py-1.5 rounded-lg text-xs border transition bg-white border-gray-300 text-gray-900
+                                 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-purple-500/40 focus:border-purple-500">
+                          <option value="">Auto</option>
+                          <option *ngFor="let p of colorPaletteOptions" [value]="p">{{ p }}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Camera Angle</label>
+                      <div class="flex flex-wrap gap-1">
+                        <button *ngFor="let a of cameraAngleOptions" type="button"
+                          (click)="imageConfig.cameraAngle = imageConfig.cameraAngle === a ? '' : a"
+                          [class]="imageConfig.cameraAngle === a
+                            ? 'bg-purple-200 text-purple-950 border-purple-500 dark:bg-purple-500/30 dark:text-purple-200 dark:border-purple-500/50'
+                            : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-purple-400 hover:text-purple-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
+                          class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ a }}</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <!-- /Advanced -->
 
+              <!-- Video config panel -->
+              <div *ngIf="includeVideo" class="mt-2">
+                <div class="rounded-xl border border-blue-200/90 bg-blue-50/90 dark:border-blue-500/25 dark:bg-blue-500/5 p-3 space-y-3">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-semibold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                      <i class="fas fa-film text-[10px]"></i> Video Style
+                      <span *ngIf="hasVideoConfig"
+                        class="ml-1 px-1.5 py-0.5 rounded-full bg-blue-200 text-blue-900 dark:bg-blue-500/30 dark:text-blue-200 text-[9px] font-semibold">Custom</span>
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                      <button type="button" (click)="randomizeVideoConfig()"
+                        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-blue-200/90 text-blue-900 hover:bg-blue-300/90 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/35 transition">
+                        <i class="fas fa-shuffle text-[9px]"></i> Surprise me
+                      </button>
+                      <button *ngIf="hasVideoConfig" type="button" (click)="clearVideoConfig()"
+                        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition">
+                        <i class="fas fa-times text-[9px]"></i> Clear
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Style</p>
+                    <div class="grid grid-cols-3 gap-1.5">
+                      <button *ngFor="let s of videoStyleOptions" type="button"
+                        (click)="videoConfig.style = s.id"
+                        [class]="videoConfig.style === s.id
+                          ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200 shadow-sm'
+                          : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-blue-500/40'"
+                        class="flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition text-center">
+                        <i [class]="'fas ' + s.icon + ' text-sm'"></i>
+                        <span class="text-[10px] font-medium leading-tight">{{ s.label }}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Format</p>
+                    <div class="flex gap-1.5 flex-wrap">
+                      <button *ngFor="let a of videoAspectOptions" type="button"
+                        (click)="videoConfig.aspect = a.id"
+                        [title]="a.tooltip"
+                        [class]="videoConfig.aspect === a.id
+                          ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200'
+                          : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400'"
+                        class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition">
+                        <i [class]="'fas ' + a.icon + ' text-[10px]'"></i> {{ a.label }}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Duration</p>
+                    <div class="flex gap-1.5">
+                      <button *ngFor="let d of videoDurations" type="button"
+                        (click)="videoConfig.duration = d"
+                        [class]="videoConfig.duration === d
+                          ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200'
+                          : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400'"
+                        class="px-3 py-1.5 rounded-lg border text-xs font-medium transition">{{ d }}s</button>
+                    </div>
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Tone</p>
+                    <div class="flex flex-wrap gap-1">
+                      <button *ngFor="let t of videoToneOptions" type="button"
+                        (click)="videoConfig.tone = videoConfig.tone === t ? 'energetic' : t"
+                        [class]="videoConfig.tone === t
+                          ? 'bg-blue-200 text-blue-950 border-blue-500 dark:bg-blue-500/30 dark:text-blue-200 dark:border-blue-500/50'
+                          : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-blue-400 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'"
+                        class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ t }}</button>
+                    </div>
+                  </div>
+                  <p class="text-[9px] text-blue-600/70 dark:text-blue-400/50 leading-snug">
+                    <i class="fas fa-circle-info mr-1"></i>
+                    Videos are generated by OpenAI Sora and may take up to 5 minutes. 1 credit per variant.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Generate videos toggle -->
+              <label class="flex items-center gap-2 cursor-pointer mt-1">
+                <input type="checkbox" [(ngModel)]="includeVideo"
+                  [disabled]="contentType !== 'text-video'"
+                  class="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500/20 disabled:opacity-40 dark:border-gray-700" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Generate videos / reels</span>
+              </label>
             </div>
-            <!-- /controls box -->
 
-          </div>
-          <!-- /Image style controls -->
-
-          <!-- Generate videos toggle -->
-          <label class="flex items-center gap-2 cursor-pointer mt-1">
-            <input type="checkbox" [(ngModel)]="includeVideo"
-              class="w-4 h-4 text-blue-500 border-gray-700 rounded focus:ring-blue-500/20" />
-            <span class="text-sm text-gray-300">Generate videos / reels</span>
-          </label>
-
-          <!-- ── Video config panel ────────────────────────────────────────────── -->
-          <div *ngIf="includeVideo" class="mt-2">
-            <div class="rounded-xl border border-blue-200/90 bg-blue-50/90 dark:border-blue-500/25 dark:bg-blue-500/5 p-3 space-y-3">
-
-              <!-- Header -->
-              <div class="flex items-center justify-between gap-2">
-                <span class="text-xs font-semibold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
-                  <i class="fas fa-film text-[10px]"></i> Video Style
-                  <span *ngIf="hasVideoConfig"
-                    class="ml-1 px-1.5 py-0.5 rounded-full bg-blue-200 text-blue-900 dark:bg-blue-500/30 dark:text-blue-200 text-[9px] font-semibold">
-                    Custom
-                  </span>
-                </span>
-                <div class="flex items-center gap-1.5">
-                  <button type="button" (click)="randomizeVideoConfig()"
-                    class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-blue-200/90 text-blue-900 hover:bg-blue-300/90 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/35 transition"
-                    title="Surprise me — randomize all options">
-                    <i class="fas fa-shuffle text-[9px]"></i> Surprise me
-                  </button>
-                  <button *ngIf="hasVideoConfig" type="button" (click)="clearVideoConfig()"
-                    class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition"
-                    title="Reset to default">
-                    <i class="fas fa-times text-[9px]"></i> Clear
-                  </button>
-                </div>
+            <!-- Logo Overlay -->
+            <div *ngIf="contentType !== 'text'" class="pt-3 border-t border-gray-200 dark:border-gray-800 space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" [(ngModel)]="logoOverlay"
+                    class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime/20 dark:border-gray-700" />
+                  <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">Add company logo</span>
+                </label>
+                <span *ngIf="orgLogo && logoOverlay"
+                  class="text-[10px] text-rep-black bg-gray-100 border border-gray-300 px-2 py-0.5 rounded-full dark:text-rep-lime/90 dark:bg-rep-lime/10 dark:border-rep-lime/20">Logo loaded</span>
+                <span *ngIf="!orgLogo && logoOverlay"
+                  class="text-[10px] text-amber-400/80 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">No logo on org profile</span>
               </div>
-
-              <!-- Style chips -->
-              <div>
-                <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Style</p>
+              <div *ngIf="logoOverlay" class="space-y-2">
+                <p class="text-[10px] text-gray-500 dark:text-gray-500 font-medium uppercase tracking-wide">Logo Position</p>
                 <div class="grid grid-cols-3 gap-1.5">
-                  <button *ngFor="let s of videoStyleOptions" type="button"
-                    (click)="videoConfig.style = s.id"
-                    [class]="videoConfig.style === s.id
-                      ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200 shadow-sm'
-                      : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-blue-500/40'"
-                    class="flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition-all duration-150 text-center">
-                    <i [class]="'fas ' + s.icon + ' text-sm'"></i>
-                    <span class="text-[10px] font-medium leading-tight">{{ s.label }}</span>
-                  </button>
+                  <button *ngFor="let pos of logoPositions" type="button"
+                    (click)="logoPosition = pos.id"
+                    [class]="logoPosition === pos.id
+                      ? 'border-rep-lime bg-rep-lime/15 text-gray-900 dark:bg-rep-lime/10 dark:text-rep-lime'
+                      : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-gray-600'"
+                    class="py-2 rounded-lg border text-sm font-medium transition text-center">{{ pos.label }}</button>
                 </div>
+                <p class="text-[10px] text-gray-500 dark:text-gray-600">
+                  <i class="fas fa-info-circle mr-1"></i>Logo is permanently embedded in the generated image.
+                </p>
               </div>
+            </div>
 
-              <!-- Aspect ratio -->
-              <div>
-                <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Format</p>
-                <div class="flex gap-1.5 flex-wrap">
-                  <button *ngFor="let a of videoAspectOptions" type="button"
-                    (click)="videoConfig.aspect = a.id"
-                    [title]="a.tooltip"
-                    [class]="videoConfig.aspect === a.id
-                      ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200'
-                      : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400'"
-                    class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition">
-                    <i [class]="'fas ' + a.icon + ' text-[10px]'"></i> {{ a.label }}
-                  </button>
-                </div>
-              </div>
+            <!-- Next button -->
+            <button type="button"
+              [disabled]="!topic.trim()"
+              (click)="advanceStep()"
+              class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition
+                     bg-rep-lime text-rep-black hover:bg-rep-lime/90 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
+              Next <i class="fas fa-arrow-right text-xs"></i>
+            </button>
+          </div>
+        </div>
 
-              <!-- Duration -->
-              <div>
-                <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Duration</p>
-                <div class="flex gap-1.5">
-                  <button *ngFor="let d of videoDurations" type="button"
-                    (click)="videoConfig.duration = d"
-                    [class]="videoConfig.duration === d
-                      ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200'
-                      : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400'"
-                    class="px-3 py-1.5 rounded-lg border text-xs font-medium transition">
-                    {{ d }}s
-                  </button>
-                </div>
-              </div>
+        <!-- ═══ STEP 4: Review & Generate ════════════════════════════════════ -->
+        <div [class]="currentStep === 4
+              ? 'ring-2 ring-rep-lime/60 shadow-md shadow-rep-lime/10'
+              : maxReachedStep < 4 ? 'opacity-40 pointer-events-none' : 'opacity-90'"
+          class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-none transition-all duration-200">
 
-              <!-- Tone -->
-              <div>
-                <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Tone</p>
-                <div class="flex flex-wrap gap-1">
-                  <button *ngFor="let t of videoToneOptions" type="button"
-                    (click)="videoConfig.tone = videoConfig.tone === t ? 'energetic' : t"
-                    [class]="videoConfig.tone === t
-                      ? 'bg-blue-200 text-blue-950 border-blue-500 dark:bg-blue-500/30 dark:text-blue-200 dark:border-blue-500/50'
-                      : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-blue-400 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'"
-                    class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ t }}</button>
-                </div>
-              </div>
-
-              <!-- Sora note -->
-              <p class="text-[9px] text-blue-600/70 dark:text-blue-400/50 leading-snug">
-                <i class="fas fa-circle-info mr-1"></i>
-                Videos are generated by OpenAI Sora and may take up to 5 minutes. 1 credit per variant.
-              </p>
-
+          <div class="flex items-center gap-2.5 px-4 py-3 cursor-pointer select-none"
+            (click)="goToStep(4)">
+            <span [class]="currentStep === 4 ? 'bg-rep-lime text-rep-black' : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+              class="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold shrink-0 transition-colors">4</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-900 dark:text-gray-100">Review &amp; Generate</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-500">Ready? Let AI do the work.</p>
             </div>
           </div>
-          <!-- /Video config panel -->
 
+          <div *ngIf="currentStep === 4" class="px-4 pb-4 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-3">
+
+            <!-- Mini summary -->
+            <div class="space-y-1.5 text-xs">
+              <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <i class="fas fa-share-nodes text-rep-black dark:text-rep-lime w-4 text-center text-[11px]"></i>
+                <span class="font-medium">Platforms:</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ selectedPlatformIds.join(', ') || '—' }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <i class="fas fa-layer-group text-rep-black dark:text-rep-lime w-4 text-center text-[11px]"></i>
+                <span class="font-medium">Format:</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ postFormat }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <i class="fas fa-wand-sparkles text-rep-black dark:text-rep-lime w-4 text-center text-[11px]"></i>
+                <span class="font-medium">Type:</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ contentTypeLabel }}</span>
+              </div>
+              <div class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                <i class="fas fa-align-left text-rep-black dark:text-rep-lime w-4 text-center text-[11px] mt-0.5"></i>
+                <span class="font-medium shrink-0">Topic:</span>
+                <span class="text-gray-500 dark:text-gray-400 break-words leading-snug">{{ topic.trim() || '—' }}</span>
+              </div>
+              <div *ngIf="aiCredits" class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <i class="fas fa-bolt text-rep-black dark:text-rep-lime w-4 text-center text-[11px]"></i>
+                <span class="font-medium">Credits:</span>
+                <span class="text-gray-500 dark:text-gray-400">{{ aiCredits.isUnlimited ? '∞ Unlimited' : aiCredits.remaining + ' remaining' }}</span>
+              </div>
+            </div>
+
+            <!-- Generate button -->
+            <app-button variant="primary" fullWidth [loading]="generating"
+              [disabled]="!topic.trim() || selectedPlatformIds.length === 0"
+              (buttonClick)="generateVariants()">
+              <i class="fas fa-wand-magic-sparkles mr-2"></i>
+              Generate {{ variantCount === 1 ? '1 Variant' : variantCount + ' Variants' }}
+            </app-button>
+
+            <!-- Hint -->
+            <p class="text-[10px] text-center text-gray-500 dark:text-gray-600 leading-snug">
+              <i class="fas fa-lock text-[9px] mr-1"></i>
+              AI-generated content is saved to your Media Library automatically.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <!-- Generate Button -->
-      <app-button variant="primary" fullWidth [loading]="generating"
-        [disabled]="!topic.trim() || selectedPlatformIds.length === 0"
-        (buttonClick)="generateVariants()">
-        <i class="fas fa-wand-magic-sparkles mr-2"></i>
-        Generate Variants
-      </app-button>
+      </ng-container>
+      <!-- /Wizard -->
 
-      <!-- Credits -->
-      <div *ngIf="aiCredits"
-        class="flex items-center gap-2 px-3 py-2 bg-gray-900/50 rounded-xl border border-gray-800 text-xs text-gray-400">
-        <i class="fas fa-bolt text-rep-lime"></i>
+      <!-- Credits (always visible at bottom when not in summary mode) -->
+      <div *ngIf="aiCredits && !showWizardSummary"
+        class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-400 shadow-sm dark:shadow-none">
+        <i class="fas fa-bolt text-rep-black dark:text-rep-lime"></i>
         AI Credits:
-        <span class="ml-auto font-semibold text-rep-white">
+        <span class="ml-auto font-semibold text-gray-900 dark:text-rep-white">
           {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
         </span>
       </div>
@@ -571,14 +795,14 @@
       <!-- Section Header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <h2 class="text-base font-bold text-rep-white">Variants</h2>
+          <h2 class="text-base font-bold text-gray-900 dark:text-rep-white">Variants</h2>
           <span *ngIf="generatingImages"
-            class="inline-flex items-center gap-1 text-xs text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
+            class="inline-flex items-center gap-1 text-xs text-purple-700 bg-purple-100 border border-purple-200 px-2 py-0.5 rounded-full dark:text-purple-400 dark:bg-purple-500/10 dark:border-purple-500/20">
             <i class="fas fa-spinner fa-spin text-[10px]"></i> Generating images…
           </span>
         </div>
         <!-- Legend -->
-        <div *ngIf="variants.length > 0" class="hidden sm:flex items-center gap-3 text-xs text-gray-500">
+        <div *ngIf="variants.length > 0" class="hidden sm:flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
           <span class="flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-rep-lime"></span> Text
           </span>
@@ -591,44 +815,44 @@
       <!-- Skeleton while generating text -->
       <div *ngIf="generating" class="space-y-3">
         <div *ngFor="let s of [0,1,2]"
-          class="bg-gray-900/50 rounded-xl border border-gray-800 p-4 animate-pulse">
-          <div class="h-2.5 bg-gray-700 rounded w-1/4 mb-3"></div>
+          class="bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-800 p-4 animate-pulse shadow-sm dark:shadow-none">
+          <div class="h-2.5 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-3"></div>
           <div class="space-y-2">
-            <div class="h-2 bg-gray-700 rounded w-full"></div>
-            <div class="h-2 bg-gray-700 rounded w-5/6"></div>
-            <div class="h-2 bg-gray-700 rounded w-4/6"></div>
+            <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+            <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+            <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded w-4/6"></div>
           </div>
-          <div class="h-7 bg-gray-700 rounded-lg mt-4"></div>
+          <div class="h-7 bg-gray-200 dark:bg-gray-700 rounded-lg mt-4"></div>
         </div>
       </div>
 
       <!-- Empty state -->
       <div *ngIf="variants.length === 0 && !generating"
         class="flex flex-col items-center justify-center py-16 gap-3">
-        <div class="w-16 h-16 rounded-xl bg-gray-900/50 border border-gray-800 flex items-center justify-center">
-          <i class="fas fa-layer-group text-2xl text-gray-600"></i>
+        <div class="w-16 h-16 rounded-xl bg-white border border-gray-200 dark:bg-gray-900/50 dark:border-gray-800 flex items-center justify-center shadow-sm dark:shadow-none">
+          <i class="fas fa-layer-group text-2xl text-gray-400 dark:text-gray-600"></i>
         </div>
-        <p class="text-sm text-gray-500">Set a topic and hit <strong class="text-gray-300">Generate Variants</strong></p>
+        <p class="text-sm text-gray-600 dark:text-gray-500">Set a topic and hit <strong class="text-gray-900 dark:text-gray-300">Generate Variants</strong></p>
       </div>
 
       <!-- Variant Cards -->
       <div *ngFor="let v of variants; let i = index"
-        class="bg-gray-900/50 backdrop-blur-sm rounded-xl border transition-all duration-200 overflow-hidden"
+        class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border transition-all duration-200 overflow-hidden shadow-sm dark:shadow-none"
         [ngClass]="{
           'border-rep-lime/50': selectedTextIndex === i && selectedImageIndex !== i,
           'border-purple-500/50': selectedImageIndex === i && selectedTextIndex !== i,
           'border-rep-lime/50 shadow-[0_0_0_1px_rgba(192,255,0,0.15)]': selectedTextIndex === i && selectedImageIndex === i,
-          'border-gray-800': selectedTextIndex !== i && selectedImageIndex !== i
+          'border-gray-200 dark:border-gray-800': selectedTextIndex !== i && selectedImageIndex !== i
         }">
 
         <!-- Card Header -->
         <div class="flex items-center justify-between px-4 pt-3 pb-1">
-          <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <span class="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider">
             Variant {{ i + 1 }}
           </span>
           <div class="flex items-center gap-1.5">
             <span *ngIf="selectedTextIndex === i"
-              class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-rep-lime/15 text-rep-lime border border-rep-lime/30">
+              class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-200 text-rep-black border border-gray-400/40 dark:bg-rep-lime/15 dark:text-rep-lime dark:border-rep-lime/30">
               <i class="fas fa-check mr-0.5 text-[8px]"></i>Text
             </span>
             <span *ngIf="selectedImageIndex === i"
@@ -640,30 +864,29 @@
 
         <!-- Text Content -->
         <div class="px-4 pt-2 pb-3">
-          <p class="text-sm text-gray-300 leading-relaxed line-clamp-4">{{ v.content }}</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed line-clamp-4">{{ v.content }}</p>
 
           <!-- Use Text Button -->
           <button type="button" (click)="selectText(i)"
             [class]="selectedTextIndex === i
               ? 'bg-rep-lime text-rep-black'
-              : 'bg-gray-800 text-gray-400 hover:bg-rep-lime/20 hover:text-rep-lime'"
+              : 'bg-gray-100 text-gray-700 hover:bg-rep-lime/15 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-rep-lime/20 dark:hover:text-rep-lime'"
             class="mt-3 w-full py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
             <i [class]="selectedTextIndex === i ? 'fas fa-check' : 'fas fa-align-left'"></i>
             {{ selectedTextIndex === i ? 'Text Selected' : 'Use this Text' }}
           </button>
         </div>
 
-        <!-- Divider -->
-        <div class="h-px bg-gray-800 mx-4"></div>
-
-        <!-- Image Section -->
+        <!-- Image Section (text-only content type: no AI Generate / Upload / Browse on variants) -->
+        <ng-container *ngIf="includeImage || v.imageUrl || v.loadingImage || v.imageError">
+        <div class="h-px bg-gray-200 dark:bg-gray-800 mx-4"></div>
         <div class="px-4 pt-3 pb-4">
 
           <!-- Loading -->
           <div *ngIf="v.loadingImage"
-            class="w-full h-28 rounded-lg bg-gray-800/60 border border-gray-700 flex flex-col items-center justify-center gap-1.5 mb-3">
-            <i class="fas fa-spinner fa-spin text-purple-400"></i>
-            <span class="text-xs text-gray-500">Generating image…</span>
+            class="w-full h-28 rounded-lg bg-gray-100 border border-gray-200 flex flex-col items-center justify-center gap-1.5 mb-3 dark:bg-gray-800/60 dark:border-gray-700">
+            <i class="fas fa-spinner fa-spin text-purple-500 dark:text-purple-400"></i>
+            <span class="text-xs text-gray-600 dark:text-gray-500">Generating image…</span>
           </div>
 
           <!-- ── Image Error State ─────────────────────────────────────────── -->
@@ -696,14 +919,14 @@
 
             <!-- Generic image generation error -->
             <div *ngIf="v.imageError.code !== 'CONTENT_POLICY'"
-              class="mb-3 rounded-xl border border-red-400/30 bg-red-500/10 p-3 space-y-2">
+              class="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 space-y-2 dark:border-red-400/30 dark:bg-red-500/10">
               <div class="flex items-start gap-2">
-                <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-400/20">
-                  <i class="fas fa-triangle-exclamation text-[11px] text-red-500 dark:text-red-400"></i>
+                <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-400/20">
+                  <i class="fas fa-triangle-exclamation text-[11px] text-red-600 dark:text-red-400"></i>
                 </span>
                 <div class="min-w-0">
-                  <p class="text-xs font-semibold text-red-700 dark:text-red-400 mb-0.5">Image Generation Failed</p>
-                  <p class="text-[11px] leading-snug text-red-600/90 dark:text-red-300/80">{{ v.imageError.message }}</p>
+                  <p class="text-xs font-semibold text-red-800 dark:text-red-400 mb-0.5">Image Generation Failed</p>
+                  <p class="text-[11px] leading-snug text-red-700 dark:text-red-300/80">{{ v.imageError.message }}</p>
                 </div>
               </div>
               <button type="button" (click)="generateImageForVariant(i)"
@@ -720,7 +943,29 @@
           <!-- Image Preview -->
           <div *ngIf="!v.loadingImage && v.imageUrl" class="mb-3 relative group/imgpreview">
             <img [src]="v.imageUrl" alt="Generated image"
-              class="w-full h-36 object-cover rounded-lg border border-gray-700" />
+              class="w-full h-36 object-cover rounded-lg border border-gray-200 dark:border-gray-700" />
+
+            <!-- Logo CSS preview overlay (before generation — shows where logo will be) -->
+            <ng-container *ngIf="logoOverlay && orgLogo">
+              <img [src]="orgLogo" alt="Logo preview"
+                class="absolute w-10 h-10 object-contain rounded-sm opacity-80 pointer-events-none"
+                [ngClass]="{
+                  'top-2 left-2':    logoPosition === 'top-left',
+                  'top-2 left-1/2 -translate-x-1/2': logoPosition === 'top-center',
+                  'top-2 right-2':   logoPosition === 'top-right',
+                  'bottom-2 left-2': logoPosition === 'bottom-left',
+                  'bottom-2 left-1/2 -translate-x-1/2': logoPosition === 'bottom-center',
+                  'bottom-2 right-2':logoPosition === 'bottom-right'
+                }" />
+            </ng-container>
+
+            <!-- Saved to Library badge -->
+            <span *ngIf="v.savedToLibrary"
+              class="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-semibold
+                     px-2 py-0.5 rounded-full bg-emerald-500/90 text-white shadow">
+              <i class="fas fa-check text-[8px]"></i> In Library
+            </span>
+
             <!-- Replace overlay -->
             <div class="absolute inset-0 rounded-lg flex items-center justify-center gap-2
                         bg-black/0 group-hover/imgpreview:bg-black/55 transition-all duration-200">
@@ -735,24 +980,24 @@
 
           <!-- Waiting for auto-generation -->
           <div *ngIf="!v.loadingImage && !v.imageUrl && !v.imageError && includeImage && !generating"
-            class="w-full h-16 rounded-lg bg-gray-800/40 border border-dashed border-gray-700
-                   flex items-center justify-center mb-3">
-            <span class="text-xs text-gray-500">Image pending…</span>
+            class="w-full h-16 rounded-lg bg-gray-50 border border-dashed border-gray-300
+                   flex items-center justify-center mb-3 dark:bg-gray-800/40 dark:border-gray-700">
+            <span class="text-xs text-gray-500 dark:text-gray-500">Image pending…</span>
           </div>
 
-          <!-- No image yet: two action buttons side-by-side -->
-          <div *ngIf="!v.loadingImage && !v.imageUrl && !v.imageError && !generating" class="mb-3 flex gap-2">
-            <!-- AI Generate (always available) -->
+          <!-- No image yet: AI Generate + Upload (only when this flow includes images — not Text Only) -->
+          <div *ngIf="includeImage && !v.loadingImage && !v.imageUrl && !v.imageError && !generating" class="mb-3 flex gap-2">
             <button type="button" (click)="generateImageForVariant(i)"
-              class="flex-1 h-16 rounded-lg bg-purple-500/10 border border-dashed border-purple-500/30
-                     text-xs text-purple-400 hover:bg-purple-500/20 transition flex flex-col items-center justify-center gap-1">
+              class="flex-1 h-16 rounded-lg bg-purple-50 border border-dashed border-purple-300
+                     text-xs text-purple-700 hover:bg-purple-100 transition flex flex-col items-center justify-center gap-1
+                     dark:bg-purple-500/10 dark:border-purple-500/30 dark:text-purple-400 dark:hover:bg-purple-500/20">
               <i class="fas fa-wand-magic-sparkles text-sm"></i>
               <span>AI Generate</span>
             </button>
-            <!-- Upload / Browse library -->
             <button type="button" (click)="openImagePicker(i)"
-              class="flex-1 h-16 rounded-lg bg-blue-500/10 border border-dashed border-blue-500/30
-                     text-xs text-blue-400 hover:bg-blue-500/20 transition flex flex-col items-center justify-center gap-1">
+              class="flex-1 h-16 rounded-lg bg-blue-50 border border-dashed border-blue-300
+                     text-xs text-blue-700 hover:bg-blue-100 transition flex flex-col items-center justify-center gap-1
+                     dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-500/20">
               <i class="fas fa-folder-open text-sm"></i>
               <span>Upload / Browse</span>
             </button>
@@ -763,24 +1008,29 @@
             <button type="button" (click)="selectImage(i)"
               [class]="selectedImageIndex === i
                 ? 'bg-purple-500 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400'"
+                : 'bg-gray-100 text-gray-700 hover:bg-purple-100 hover:text-purple-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-purple-500/20 dark:hover:text-purple-400'"
               class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
               <i [class]="selectedImageIndex === i ? 'fas fa-check' : 'fas fa-image'"></i>
               {{ selectedImageIndex === i ? 'Image Selected' : 'Use this Image' }}
             </button>
             <button type="button" (click)="openImagePicker(i)"
               class="px-3 py-1.5 rounded-lg text-xs font-medium transition
-                     bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-blue-400
+                     bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-blue-700
+                     dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-blue-400
                      flex items-center gap-1.5"
               title="Replace with library image">
               <i class="fas fa-folder-open text-[11px]"></i> Replace
             </button>
           </div>
 
-          <!-- ── Video Section ──────────────────────────────────────────────── -->
-          <ng-container *ngIf="includeVideo || v.videoUrl || v.loadingVideo || v.videoError">
+        </div>
+        </ng-container>
 
-            <div class="mt-3 pt-3 border-t border-gray-700/60">
+          <!-- ── Video Section (separate from image — hidden when not text-video flow) ── -->
+          <ng-container *ngIf="includeVideo || v.videoUrl || v.loadingVideo || v.videoError">
+          <div class="px-4 pb-4">
+
+            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700/60">
               <div class="flex items-center gap-1.5 mb-2">
                 <i class="fas fa-film text-[10px] text-blue-400"></i>
                 <span class="text-[10px] font-semibold text-blue-900 dark:text-blue-400 uppercase tracking-wide">Video / Reel</span>
@@ -792,10 +1042,10 @@
 
               <!-- Loading -->
               <div *ngIf="v.loadingVideo"
-                class="w-full h-28 rounded-lg bg-gray-800/60 border border-gray-700 flex flex-col items-center justify-center gap-2 mb-3">
-                <i class="fas fa-spinner fa-spin text-blue-400 text-lg"></i>
-                <span class="text-xs text-gray-400">Generating video with Sora…</span>
-                <span class="text-[10px] text-gray-600">This may take a few minutes</span>
+                class="w-full h-28 rounded-lg bg-gray-100 border border-gray-200 flex flex-col items-center justify-center gap-2 mb-3 dark:bg-gray-800/60 dark:border-gray-700">
+                <i class="fas fa-spinner fa-spin text-blue-600 dark:text-blue-400 text-lg"></i>
+                <span class="text-xs text-gray-700 dark:text-gray-400">Generating video with Sora…</span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-600">This may take a few minutes</span>
               </div>
 
               <!-- Video error: content policy -->
@@ -821,14 +1071,14 @@
 
               <!-- Video error: generic -->
               <div *ngIf="!v.loadingVideo && !v.videoUrl && v.videoError && v.videoError.code !== 'CONTENT_POLICY'"
-                class="mb-3 rounded-xl border border-red-400/30 bg-red-500/10 p-3 space-y-2">
+                class="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 space-y-2 dark:border-red-400/30 dark:bg-red-500/10">
                 <div class="flex items-start gap-2">
-                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-400/20">
-                    <i class="fas fa-triangle-exclamation text-[11px] text-red-500 dark:text-red-400"></i>
+                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-400/20">
+                    <i class="fas fa-triangle-exclamation text-[11px] text-red-600 dark:text-red-400"></i>
                   </span>
                   <div class="min-w-0">
-                    <p class="text-xs font-semibold text-red-700 dark:text-red-400 mb-0.5">Video Generation Failed</p>
-                    <p class="text-[11px] leading-snug text-red-600/90 dark:text-red-300/80">{{ v.videoError.message }}</p>
+                    <p class="text-xs font-semibold text-red-800 dark:text-red-400 mb-0.5">Video Generation Failed</p>
+                    <p class="text-[11px] leading-snug text-red-700 dark:text-red-300/80">{{ v.videoError.message }}</p>
                   </div>
                 </div>
                 <button type="button" (click)="generateVideoForVariant(i)"
@@ -843,15 +1093,16 @@
               <!-- Video player -->
               <div *ngIf="!v.loadingVideo && v.videoUrl" class="mb-3">
                 <video [src]="v.videoUrl" controls playsinline
-                  class="w-full rounded-lg border border-gray-700 bg-black max-h-48 object-contain">
+                  class="w-full rounded-lg border border-gray-200 bg-black max-h-48 object-contain dark:border-gray-700">
                 </video>
               </div>
 
               <!-- No video yet — two action buttons -->
               <div *ngIf="!v.loadingVideo && !v.videoUrl && !v.videoError" class="mb-3 flex gap-2">
                 <button type="button" (click)="generateVideoForVariant(i)"
-                  class="flex-1 h-14 rounded-lg bg-blue-500/10 border border-dashed border-blue-500/30
-                         text-xs text-blue-400 hover:bg-blue-500/20 transition flex flex-col items-center justify-center gap-1">
+                  class="flex-1 h-14 rounded-lg bg-blue-50 border border-dashed border-blue-300
+                         text-xs text-blue-700 hover:bg-blue-100 transition flex flex-col items-center justify-center gap-1
+                         dark:bg-blue-500/10 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-500/20">
                   <i class="fas fa-film text-sm"></i>
                   <span>Generate Video</span>
                 </button>
@@ -862,17 +1113,17 @@
                 <button type="button" (click)="selectVideo(i)"
                   [class]="selectedVideoIndex === i
                     ? 'bg-blue-500 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-blue-500/20 hover:text-blue-400'"
+                    : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-400'"
                   class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
                   <i [class]="selectedVideoIndex === i ? 'fas fa-check' : 'fas fa-film'"></i>
                   {{ selectedVideoIndex === i ? 'Video Selected' : 'Use this Video' }}
                 </button>
               </div>
             </div>
+          </div>
           </ng-container>
           <!-- /Video Section -->
 
-        </div>
       </div>
     </div>
 
@@ -883,25 +1134,25 @@
       <!-- Selection Chips -->
       <div *ngIf="variants.length > 0" class="flex flex-wrap gap-2">
         <span class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full
-                     bg-rep-lime/10 text-rep-lime border border-rep-lime/20 font-medium">
+                     bg-gray-200 text-rep-black border border-gray-400/40 font-medium dark:bg-rep-lime/10 dark:text-rep-lime dark:border-rep-lime/20">
           <i class="fas fa-align-left text-[10px]"></i>
           Text: Variant {{ selectedTextIndex + 1 }}
         </span>
         <span *ngIf="selectedImageIndex !== null"
           class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full
-                 bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">
+                 bg-purple-100 text-purple-800 border border-purple-200 font-medium dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20">
           <i class="fas fa-image text-[10px]"></i>
           Image: Variant {{ selectedImageIndex + 1 }}
         </span>
         <span *ngIf="selectedImageIndex === null && hasAnyImage"
           class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full
-                 bg-gray-800 text-gray-500 border border-gray-700">
+                 bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:border-gray-700">
           <i class="fas fa-image text-[10px]"></i>
           No image
         </span>
         <span *ngIf="selectedVideoIndex !== null"
           class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full
-                 bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">
+                 bg-blue-100 text-blue-800 border border-blue-200 font-medium dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20">
           <i class="fas fa-film text-[10px]"></i>
           Video: Variant {{ selectedVideoIndex + 1 }}
         </span>
@@ -934,19 +1185,42 @@
 
       <!-- Video Preview -->
       <div *ngIf="selectedVideoUrl"
-        class="bg-gray-900/60 backdrop-blur-sm rounded-xl border border-blue-500/20 overflow-hidden shadow-sm">
-        <div class="flex items-center gap-2 px-4 py-2.5 border-b border-blue-500/20">
-          <i class="fas fa-film text-xs text-blue-400"></i>
-          <span class="text-xs font-semibold text-blue-400">Selected Video — Variant {{ (selectedVideoIndex ?? 0) + 1 }}</span>
+        class="bg-white dark:bg-gray-900/60 backdrop-blur-sm rounded-xl border border-blue-200 dark:border-blue-500/20 overflow-hidden shadow-sm">
+        <div class="flex items-center gap-2 px-4 py-2.5 border-b border-blue-200 dark:border-blue-500/20">
+          <i class="fas fa-film text-xs text-blue-600 dark:text-blue-400"></i>
+          <span class="text-xs font-semibold text-blue-800 dark:text-blue-400">Selected Video — Variant {{ (selectedVideoIndex ?? 0) + 1 }}</span>
           <button type="button" (click)="selectVideo(selectedVideoIndex!)"
-            class="ml-auto text-[10px] text-gray-500 hover:text-red-400 transition flex items-center gap-1">
+            class="ml-auto text-[10px] text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition flex items-center gap-1">
             <i class="fas fa-times"></i> Deselect
           </button>
         </div>
-        <div class="p-3">
+        <div class="p-3 space-y-3">
           <video [src]="selectedVideoUrl" controls playsinline
-            class="w-full rounded-lg border border-gray-700 bg-black max-h-64 object-contain">
+            class="w-full rounded-lg border border-gray-200 bg-black max-h-52 object-contain dark:border-gray-700">
           </video>
+
+          <!-- ── Post Type Selector ────────────────────────────────────────── -->
+          <div>
+            <p class="text-[10px] font-semibold text-blue-800/90 dark:text-blue-400/80 uppercase tracking-wide mb-1.5">
+              <i class="fas fa-share-nodes mr-1"></i>Post as
+            </p>
+            <div class="flex flex-wrap gap-1.5">
+              <button *ngFor="let opt of videoPostTypeOptions" type="button"
+                (click)="videoPostType = opt.id"
+                [title]="opt.platforms.join(' · ')"
+                [class]="videoPostType === opt.id
+                  ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
+                  : 'bg-gray-100 text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:border-blue-500/50 dark:hover:text-blue-400'"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all">
+                <i [class]="'fas ' + opt.icon + ' text-[11px]'"></i>
+                {{ opt.label }}
+                <span *ngIf="opt.platforms.length"
+                  class="hidden sm:inline text-[9px] opacity-60 font-normal">
+                  · {{ opt.platforms.join(', ') }}
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -956,7 +1230,7 @@
         <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-800">
           <span class="text-xs font-semibold text-gray-700 dark:text-gray-400">Edit Text</span>
           <span class="text-xs px-2 py-0.5 rounded-full font-semibold border
-                     bg-rep-lime/25 text-gray-900 border-rep-lime/50
+                     bg-gray-200 text-rep-black border-gray-400/50
                      dark:bg-rep-lime/10 dark:text-rep-lime dark:border-rep-lime/20">
             Variant {{ selectedTextIndex + 1 }}
           </span>
@@ -969,17 +1243,54 @@
           placeholder="Your post text will appear here…"></textarea>
       </div>
 
-      <!-- Action Buttons — single row -->
-      <div *ngIf="variants.length > 0" class="grid grid-cols-3 gap-2 w-full min-w-0">
-        <app-button variant="primary" size="sm" fullWidth [loading]="publishing" (buttonClick)="publishNow()">
-          <i class="fas fa-paper-plane mr-1 shrink-0"></i><span class="min-w-0 truncate">Post Now</span>
-        </app-button>
-        <app-button variant="secondary" size="sm" fullWidth (buttonClick)="openAddToCalendar()">
-          <i class="fas fa-calendar-plus mr-1 shrink-0"></i><span class="min-w-0 truncate">Schedule</span>
-        </app-button>
-        <app-button variant="ghost" size="sm" fullWidth [loading]="sendingToApproval" (buttonClick)="sendToApproval()">
-          <i class="fas fa-check-circle mr-1 shrink-0"></i><span class="min-w-0 truncate">Approval</span>
-        </app-button>
+      <!-- Action Buttons — publish row -->
+      <div *ngIf="variants.length > 0" class="space-y-2">
+        <div class="grid grid-cols-3 gap-2 w-full min-w-0">
+          <app-button variant="primary" size="sm" fullWidth [loading]="publishing" (buttonClick)="publishNow()">
+            <i class="fas fa-paper-plane mr-1 shrink-0"></i><span class="min-w-0 truncate">Post Now</span>
+          </app-button>
+          <app-button variant="secondary" size="sm" fullWidth (buttonClick)="openAddToCalendar()">
+            <i class="fas fa-calendar-plus mr-1 shrink-0"></i><span class="min-w-0 truncate">Schedule</span>
+          </app-button>
+          <app-button variant="ghost" size="sm" fullWidth [loading]="sendingToApproval" (buttonClick)="sendToApproval()">
+            <i class="fas fa-check-circle mr-1 shrink-0"></i><span class="min-w-0 truncate">Approval</span>
+          </app-button>
+        </div>
+
+        <!-- Save row: selected variant draft + save all variants draft -->
+        <div class="grid grid-cols-2 gap-2">
+
+          <!-- Save selected variant as draft -->
+          <button type="button" (click)="saveDraft()" [disabled]="savingDraft || draftSaved"
+            class="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium border transition disabled:opacity-60"
+            [ngClass]="draftSaved
+              ? 'bg-gray-100 text-rep-black border-gray-300 cursor-default dark:bg-gray-800/60 dark:text-gray-300 dark:border-gray-700'
+              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 dark:bg-transparent dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-rep-lime'">
+            <i *ngIf="!savingDraft && !draftSaved" class="fas fa-floppy-disk text-[10px]"></i>
+            <i *ngIf="savingDraft" class="fas fa-spinner fa-spin text-[10px]"></i>
+            <i *ngIf="draftSaved && !savingDraft" class="fas fa-check text-[10px] text-rep-black dark:text-rep-lime"></i>
+            <span class="truncate">{{ draftSaved ? 'Draft Saved' : (savingDraft ? 'Saving…' : 'Save Selected') }}</span>
+          </button>
+
+          <!-- Save ALL variants as separate drafts -->
+          <button type="button" (click)="saveAllDrafts()" [disabled]="savingAllDrafts || allDraftsSaved"
+            class="flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium border transition disabled:opacity-60"
+            [ngClass]="allDraftsSaved
+              ? 'bg-gray-100 text-rep-black border-gray-300 cursor-default dark:bg-gray-800/60 dark:text-gray-300 dark:border-gray-700'
+              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 dark:bg-transparent dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-rep-lime'">
+            <i *ngIf="!savingAllDrafts && !allDraftsSaved" class="fas fa-layer-group text-[10px]"></i>
+            <i *ngIf="savingAllDrafts" class="fas fa-spinner fa-spin text-[10px]"></i>
+            <i *ngIf="allDraftsSaved && !savingAllDrafts" class="fas fa-check text-[10px] text-rep-black dark:text-rep-lime"></i>
+            <span class="truncate">{{ allDraftsSaved ? allDraftsSavedCount + ' Drafts Saved' : (savingAllDrafts ? 'Saving…' : 'Save All Variants') }}</span>
+          </button>
+        </div>
+
+        <!-- Link to Drafts page after any save -->
+        <a *ngIf="draftSaved || allDraftsSaved" routerLink="/app/drafts"
+          class="w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-semibold
+                 text-rep-black dark:text-rep-lime hover:underline transition">
+          <i class="fas fa-arrow-right text-[9px]"></i> View Drafts
+        </a>
       </div>
     </div>
 
@@ -988,24 +1299,26 @@
 
 <!-- ── Schedule Modal ─────────────────────────────────────────────────────── -->
 <div *ngIf="showScheduleModal"
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm p-4"
   (click)="showScheduleModal = false">
-  <div class="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-sm shadow-2xl"
+  <div class="bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700 rounded-xl p-6 w-full max-w-sm shadow-2xl"
        (click)="$event.stopPropagation()">
-    <h3 class="text-lg font-bold text-rep-white mb-1">Schedule Post</h3>
-    <p class="text-xs text-gray-400 mb-5">Choose when this post should go live.</p>
+    <h3 class="text-lg font-bold text-gray-900 dark:text-rep-white mb-1">Schedule Post</h3>
+    <p class="text-xs text-gray-600 dark:text-gray-400 mb-5">Choose when this post should go live.</p>
     <div class="space-y-4">
       <div>
-        <label class="block text-sm font-medium text-gray-400 mb-2">Date</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Date</label>
         <input type="date" [(ngModel)]="scheduleDate"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg
-                 focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm" />
+          class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg
+                 focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm
+                 dark:bg-gray-800 dark:border-gray-700 dark:text-white" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-400 mb-2">Time</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">Time</label>
         <input type="time" [(ngModel)]="scheduleTime"
-          class="w-full px-3 py-2 bg-gray-800 border border-gray-700 text-white rounded-lg
-                 focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm" />
+          class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg
+                 focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm
+                 dark:bg-gray-800 dark:border-gray-700 dark:text-white" />
       </div>
     </div>
     <div class="flex gap-2 mt-6">

@@ -98,5 +98,21 @@ export class OrganizationService {
   updateInboxSettings(id: string, settings: Partial<InboxSettings>): Observable<IApiResponse<IOrganization>> {
     return this.updateOrganization(id, { inboxSettings: settings as any });
   }
+
+  /**
+   * Upload organization logo (multipart/form-data)
+   */
+  uploadLogo(id: string, file: File): Observable<IApiResponse<{ logo: string }>> {
+    const form = new FormData();
+    form.append('logo', file);
+    return this.apiService.postForm<IApiResponse<{ logo: string }>>(`/organizations/${id}/logo`, form);
+  }
+
+  /**
+   * Remove organization logo
+   */
+  deleteLogo(id: string): Observable<IApiResponse<any>> {
+    return this.apiService.delete<IApiResponse<any>>(`/organizations/${id}/logo`);
+  }
 }
 

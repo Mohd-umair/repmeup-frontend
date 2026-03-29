@@ -1,0 +1,353 @@
+<div class="min-h-screen bg-white dark:bg-rep-black p-4 md:p-6">
+
+  <!-- Header -->
+  <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-rep-white flex items-center gap-2">
+        <i class="fas fa-file-pen text-rep-black dark:text-rep-lime"></i>
+        Drafts
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+        AI-generated posts saved as drafts — review, edit, schedule or publish directly.
+      </p>
+    </div>
+    <a routerLink="/app/content-studio"
+      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
+             bg-rep-black text-rep-white hover:bg-gray-900
+             dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 transition">
+      <i class="fas fa-plus"></i> New AI Post
+    </a>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center py-20">
+    <i class="fas fa-spinner fa-spin text-3xl text-rep-black dark:text-rep-lime"></i>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && drafts.length === 0"
+    class="flex flex-col items-center justify-center py-20 text-center">
+    <div class="w-20 h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-5">
+      <i class="fas fa-file-pen text-3xl text-gray-300 dark:text-gray-600"></i>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">No drafts yet</h3>
+    <p class="text-sm text-gray-400 dark:text-gray-500 max-w-xs">
+      When you click "Save as Draft" in Content Studio, the full post with all configuration will appear here — ready for you to review and publish.
+    </p>
+    <a routerLink="/app/content-studio"
+      class="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+             bg-rep-black text-rep-white hover:bg-gray-900
+             dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 transition">
+      <i class="fas fa-wand-magic-sparkles"></i> Go to Content Studio
+    </a>
+  </div>
+
+  <!-- Drafts grid -->
+  <div *ngIf="!loading && drafts.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div *ngFor="let draft of drafts"
+      class="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm
+             dark:border-gray-800 dark:bg-gray-900/50
+             hover:border-gray-300 dark:hover:border-gray-700 transition-all overflow-hidden">
+
+      <!-- Card header -->
+      <div class="flex items-center justify-between px-3 py-2.5 border-b border-gray-100 dark:border-gray-800">
+        <div class="flex items-center gap-2">
+          <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+            <i [class]="getPlatformIcon(draft.platform) + ' text-sm'"></i>
+          </span>
+          <div class="leading-tight">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getPlatformLabel(draft.platform) }}</p>
+            <p class="text-[11px] text-gray-400 dark:text-gray-500">{{ getPostTypeLabel(draft.postType) }}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span *ngIf="draft.generatedBy === 'ai'"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
+                   bg-gray-200 text-rep-black border border-gray-400/40 dark:bg-rep-lime/15 dark:text-rep-lime dark:border-rep-lime/30">
+            <i class="fas fa-wand-magic-sparkles text-[8px]"></i> AI
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
+                       bg-amber-50 text-amber-600 border border-amber-200
+                       dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700/30">
+            <i class="fas fa-circle-dot text-[8px]"></i> Draft
+          </span>
+        </div>
+      </div>
+
+      <!-- Config metadata chips (from the saved generation settings) -->
+      <div *ngIf="draft.metadata && (draft.metadata.topic || draft.metadata.intent || draft.metadata.contentType || draft.metadata.postFormat)"
+        class="flex flex-wrap gap-1 px-3 pt-2.5">
+        <span *ngIf="draft.metadata.topic"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium
+                 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 max-w-[140px] truncate"
+          [title]="draft.metadata.topic">
+          <i class="fas fa-lightbulb text-[8px]"></i>
+          <span class="truncate">{{ draft.metadata.topic }}</span>
+        </span>
+        <span *ngIf="draft.metadata.postFormat"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium
+                 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <i class="fas fa-layer-group text-[8px]"></i> {{ getPostTypeLabel(draft.metadata.postFormat) }}
+        </span>
+        <span *ngIf="draft.metadata.contentType"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium
+                 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <i class="fas fa-file-lines text-[8px]"></i> {{ getContentTypeLabel(draft.metadata.contentType) }}
+        </span>
+        <span *ngIf="draft.metadata.intent"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium
+                 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <i class="fas fa-bullseye text-[8px]"></i> {{ draft.metadata.intent }}
+        </span>
+        <span *ngIf="draft.metadata.mood"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium
+                 bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <i class="fas fa-face-smile text-[8px]"></i> {{ draft.metadata.mood }}
+        </span>
+      </div>
+
+      <!-- Media thumbnail (if any) -->
+      <div *ngIf="resolveMediaUrl(draft) && draft.mediaType === 'image'"
+        class="relative h-36 bg-gray-100 dark:bg-gray-800 overflow-hidden cursor-pointer group mx-3 mt-2 rounded-lg"
+        (click)="openPreview(draft)">
+        <img [src]="resolveMediaUrl(draft)!"
+          [alt]="draft.platform + ' draft image'"
+          class="w-full h-full object-cover transition group-hover:scale-105 duration-300" />
+        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
+          <i class="fas fa-expand text-white opacity-0 group-hover:opacity-100 transition text-xl drop-shadow"></i>
+        </div>
+      </div>
+
+      <!-- Video indicator -->
+      <div *ngIf="resolveMediaUrl(draft) && draft.mediaType === 'video'"
+        class="relative h-36 bg-gray-900 flex items-center justify-center cursor-pointer group overflow-hidden mx-3 mt-2 rounded-lg"
+        (click)="openPreview(draft)">
+        <div class="w-12 h-12 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center group-hover:bg-white/30 transition">
+          <i class="fas fa-play text-white text-xl ml-1"></i>
+        </div>
+        <span class="absolute bottom-2 right-2 text-[10px] text-white/70 bg-black/40 rounded px-1.5 py-0.5">Video</span>
+      </div>
+
+      <!-- Content (normal or edit mode) -->
+      <div class="flex-1 px-3 py-2">
+        <ng-container *ngIf="editingId !== draft._id; else editMode">
+          <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words leading-relaxed">
+            {{ truncate(draft.content) }}
+          </p>
+          <button *ngIf="draft.content.length > 120" (click)="openPreview(draft)"
+            class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 mt-1 transition">
+            Read more…
+          </button>
+        </ng-container>
+        <ng-template #editMode>
+          <textarea [(ngModel)]="editContent" rows="5"
+            class="w-full text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                   text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 resize-none
+                   focus:outline-none focus:ring-2 focus:ring-rep-black/20 dark:focus:ring-rep-lime/20
+                   focus:border-rep-black dark:focus:border-rep-lime transition"
+            placeholder="Edit your draft content…"></textarea>
+          <div class="flex items-center gap-2 mt-2">
+            <app-button variant="primary" size="sm" [loading]="savingEdit" (buttonClick)="saveEdit(draft)">
+              Save
+            </app-button>
+            <app-button variant="ghost" size="sm" (buttonClick)="cancelEdit()">Cancel</app-button>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Footer meta -->
+      <div class="px-3 pb-2">
+        <span class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-gray-500">
+          <i class="fas fa-clock text-[10px]"></i>
+          {{ draft.createdAt | date:'d MMM y, h:mm a' }}
+        </span>
+      </div>
+
+      <!-- Actions -->
+      <div *ngIf="editingId !== draft._id"
+        class="p-3 pt-0 border-t border-gray-100 dark:border-gray-800 space-y-2">
+
+        <!-- Primary actions row: Publish Now + Schedule -->
+        <div class="flex gap-1.5">
+          <button (click)="publishDraft(draft._id)" type="button"
+            [disabled]="publishingId === draft._id"
+            class="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition
+                   bg-rep-black text-rep-white hover:bg-gray-900
+                   dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 disabled:opacity-50">
+            <i [class]="publishingId === draft._id ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-paper-plane text-[10px]'"></i>
+            {{ publishingId === draft._id ? 'Publishing…' : 'Publish Now' }}
+          </button>
+          <button (click)="openSchedule(draft)" type="button"
+            class="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-xs font-medium transition
+                   bg-gray-100 text-gray-700 hover:bg-gray-200
+                   dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+            <i class="fas fa-calendar-plus text-[10px]"></i> Schedule
+          </button>
+        </div>
+
+        <!-- Secondary actions row: Edit + Delete -->
+        <div class="flex gap-1.5">
+          <button (click)="startEdit(draft)" type="button"
+            class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition
+                   bg-gray-100 text-gray-700 hover:bg-gray-200
+                   dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+            <i class="fas fa-pen-to-square text-[10px]"></i> Edit Text
+          </button>
+          <button (click)="deleteDraft(draft._id)" type="button"
+            [disabled]="deletingId === draft._id"
+            class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition
+                   bg-red-50 text-red-600 hover:bg-red-100
+                   dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 disabled:opacity-50">
+            <i [class]="deletingId === draft._id ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-trash-can text-[10px]'"></i>
+            {{ deletingId === draft._id ? '…' : 'Delete' }}
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── Schedule Modal ─────────────────────────────────────────────────────── -->
+<div *ngIf="schedulingId"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  (click)="closeSchedule()">
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700
+              rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+       (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-10 h-10 rounded-xl bg-gray-200 dark:bg-rep-lime/10 flex items-center justify-center">
+        <i class="fas fa-calendar-check text-rep-black dark:text-rep-lime"></i>
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-gray-900 dark:text-rep-white">Schedule Draft</h3>
+        <p class="text-xs text-gray-400 dark:text-gray-500">Pick a date and time to publish</p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Date</label>
+        <input type="date" [(ngModel)]="scheduleDate"
+          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                 text-gray-900 dark:text-white text-sm rounded-xl
+                 focus:outline-none focus:ring-2 focus:ring-rep-black/20 dark:focus:ring-rep-lime/20
+                 focus:border-rep-black dark:focus:border-rep-lime transition" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Time</label>
+        <input type="time" [(ngModel)]="scheduleTime"
+          class="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                 text-gray-900 dark:text-white text-sm rounded-xl
+                 focus:outline-none focus:ring-2 focus:ring-rep-black/20 dark:focus:ring-rep-lime/20
+                 focus:border-rep-black dark:focus:border-rep-lime transition" />
+      </div>
+    </div>
+
+    <div class="flex gap-2 mt-6">
+      <app-button variant="primary" [loading]="scheduling" (buttonClick)="submitSchedule()" class="flex-1">
+        Schedule Post
+      </app-button>
+      <app-button variant="ghost" (buttonClick)="closeSchedule()">Cancel</app-button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Preview Modal ──────────────────────────────────────────────────────── -->
+<div *ngIf="previewDraft"
+  class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+  (click)="closePreview()">
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700
+              rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+       (click)="$event.stopPropagation()">
+
+    <!-- Modal header -->
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+          <i [class]="getPlatformIcon(previewDraft.platform) + ' text-sm'"></i>
+        </span>
+        <div>
+          <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getPlatformLabel(previewDraft.platform) }}</p>
+          <p class="text-[11px] text-gray-400">{{ getPostTypeLabel(previewDraft.postType) }}</p>
+        </div>
+      </div>
+      <button (click)="closePreview()" class="w-8 h-8 rounded-full flex items-center justify-center
+        hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Config metadata in modal -->
+    <div *ngIf="previewDraft.metadata && (previewDraft.metadata.topic || previewDraft.metadata.intent)"
+      class="px-5 pt-3 pb-1 flex-shrink-0 flex flex-wrap gap-1.5">
+      <span *ngIf="previewDraft.metadata.topic"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium
+               bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        <i class="fas fa-lightbulb text-[9px]"></i> {{ previewDraft.metadata.topic }}
+      </span>
+      <span *ngIf="previewDraft.metadata.postFormat"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium
+               bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        <i class="fas fa-layer-group text-[9px]"></i> {{ getPostTypeLabel(previewDraft.metadata.postFormat) }}
+      </span>
+      <span *ngIf="previewDraft.metadata.contentType"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium
+               bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        <i class="fas fa-file-lines text-[9px]"></i> {{ getContentTypeLabel(previewDraft.metadata.contentType) }}
+      </span>
+      <span *ngIf="previewDraft.metadata.intent"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium
+               bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        <i class="fas fa-bullseye text-[9px]"></i> {{ previewDraft.metadata.intent }}
+      </span>
+      <span *ngIf="previewDraft.metadata.mood"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium
+               bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        <i class="fas fa-face-smile text-[9px]"></i> {{ previewDraft.metadata.mood }}
+      </span>
+    </div>
+
+    <!-- Media -->
+    <div *ngIf="resolveMediaUrl(previewDraft) && previewDraft.mediaType === 'image'"
+      class="flex-shrink-0 bg-gray-100 dark:bg-gray-800 max-h-72 overflow-hidden">
+      <img [src]="resolveMediaUrl(previewDraft)!" [alt]="'Preview'"
+        class="w-full h-full object-contain" />
+    </div>
+    <div *ngIf="resolveMediaUrl(previewDraft) && previewDraft.mediaType === 'video'"
+      class="flex-shrink-0 bg-gray-950 max-h-72 overflow-hidden">
+      <video [src]="resolveMediaUrl(previewDraft)!" controls
+        class="w-full max-h-72 object-contain"></video>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto px-5 py-3">
+      <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words leading-relaxed">
+        {{ previewDraft.content }}
+      </p>
+      <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-4 flex items-center gap-1">
+        <i class="fas fa-clock text-[10px]"></i>
+        Saved {{ previewDraft.createdAt | date:'d MMM y, h:mm a' }}
+      </p>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="flex items-center gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
+      <button (click)="closePreview(); publishDraft(previewDraft!._id)" type="button"
+        [disabled]="publishingId === previewDraft._id"
+        class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition
+               bg-rep-black text-rep-white hover:bg-gray-900
+               dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 disabled:opacity-50">
+        <i [class]="publishingId === previewDraft._id ? 'fas fa-spinner fa-spin' : 'fas fa-paper-plane'"></i>
+        {{ publishingId === previewDraft._id ? 'Publishing…' : 'Publish Now' }}
+      </button>
+      <app-button variant="secondary" (buttonClick)="closePreview(); openSchedule(previewDraft!)">
+        <i class="fas fa-calendar-plus mr-1.5"></i> Schedule
+      </app-button>
+      <app-button variant="ghost" (buttonClick)="closePreview(); startEdit(previewDraft!)">
+        <i class="fas fa-pen-to-square"></i>
+      </app-button>
+    </div>
+  </div>
+</div>

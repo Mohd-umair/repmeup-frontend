@@ -331,11 +331,11 @@
           <!-- Toggles -->
           <div class="flex flex-col xs:flex-row items-start xs:items-center gap-3 xs:gap-4 sm:gap-6">
             <label class="flex items-center gap-2 sm:gap-3 cursor-pointer">
-              <input type="checkbox" formControlName="isTrainingData" class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime rounded focus:ring-rep-lime/20 flex-shrink-0">
+              <input type="checkbox" formControlName="isTrainingData" class="w-4 h-4 sm:w-5 sm:h-5 text-rep-black rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime/20 flex-shrink-0">
               <span class="text-xs sm:text-sm font-medium text-rep-black">Use for AI Training</span>
             </label>
             <label class="flex items-center gap-2 sm:gap-3 cursor-pointer">
-              <input type="checkbox" formControlName="isActive" class="w-4 h-4 sm:w-5 sm:h-5 text-rep-lime rounded focus:ring-rep-lime/20 flex-shrink-0">
+              <input type="checkbox" formControlName="isActive" class="w-4 h-4 sm:w-5 sm:h-5 text-rep-black rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime/20 flex-shrink-0">
               <span class="text-xs sm:text-sm font-medium text-rep-black">Active</span>
             </label>
           </div>
@@ -695,7 +695,7 @@
 
       <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 md:p-6">
         <div *ngIf="readModalLoading" class="flex flex-col items-center justify-center py-16 gap-3 text-gray-500">
-          <i class="fas fa-spinner fa-spin text-2xl text-rep-lime"></i>
+          <i class="fas fa-spinner fa-spin text-2xl text-rep-black dark:text-rep-lime"></i>
           <span class="text-sm">Loading full content…</span>
         </div>
         <ng-container *ngIf="selectedEntry && !readModalLoading">

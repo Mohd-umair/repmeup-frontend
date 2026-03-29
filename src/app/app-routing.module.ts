@@ -39,6 +39,7 @@ import { ApprovalQueueComponent } from './features/approval-queue/approval-queue
 import { TrendExplorerComponent } from './features/trend-explorer/trend-explorer.component';
 import { ContentStudioComponent } from './features/content-studio/content-studio.component';
 import { ScheduledPostsComponent } from './features/scheduled-posts/scheduled-posts.component';
+import { DraftsComponent } from './features/drafts/drafts.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -93,6 +94,7 @@ const routes: Routes = [
       { path: 'brand-hub', component: BrandHubComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'content-studio', component: ContentStudioComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
       { path: 'scheduled-posts', component: ScheduledPostsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'drafts', component: DraftsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'approval-queue', component: ApprovalQueueComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.manage'] } },
       { path: 'trend-explorer', component: TrendExplorerComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.export'] } },
       {

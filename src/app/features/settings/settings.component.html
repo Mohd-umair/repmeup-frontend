@@ -374,35 +374,35 @@
                 <!-- Limits -->
                 <div class="space-y-3 mb-6">
                   <div class="flex items-center gap-2 text-sm">
-                    <i class="fas fa-plug text-rep-lime w-5"></i>
+                    <i class="fas fa-plug text-rep-black dark:text-rep-lime w-5"></i>
                     <span class="text-gray-700">
                       <strong>{{ allPlans[planKey].limits.maxAccounts === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAccounts }}</strong> 
                       Social Accounts
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
-                    <i class="fas fa-users text-rep-lime w-5"></i>
+                    <i class="fas fa-users text-rep-black dark:text-rep-lime w-5"></i>
                     <span class="text-gray-700">
                       <strong>{{ allPlans[planKey].limits.maxUsers === -1 ? 'Unlimited' : allPlans[planKey].limits.maxUsers }}</strong> 
                       Team Members
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
-                    <i class="fas fa-paper-plane text-rep-lime w-5"></i>
+                    <i class="fas fa-paper-plane text-rep-black dark:text-rep-lime w-5"></i>
                     <span class="text-gray-700">
                       <strong>{{ allPlans[planKey].limits.maxPostsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxPostsPerMonth }}</strong> 
                       Posts/Month
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
-                    <i class="fas fa-robot text-rep-lime w-5"></i>
+                    <i class="fas fa-robot text-rep-black dark:text-rep-lime w-5"></i>
                     <span class="text-gray-700">
                       <strong>{{ allPlans[planKey].limits.maxAutoRepliesPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAutoRepliesPerMonth }}</strong> 
                       Auto-Replies/Month
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
-                    <i class="fas fa-magic text-rep-lime w-5"></i>
+                    <i class="fas fa-magic text-rep-black dark:text-rep-lime w-5"></i>
                     <span class="text-gray-700">
                       <strong>{{ allPlans[planKey].limits.maxAICreditsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAICreditsPerMonth }}</strong> 
                       AI Credits/Month
@@ -546,6 +546,77 @@
         </div>
         
         <form (ngSubmit)="saveOrganization()" class="space-y-6">
+
+          <!-- ── Logo Upload ────────────────────────────────────────────── -->
+          <div>
+            <label class="block text-sm font-semibold text-rep-black mb-3">
+              <i class="fas fa-image mr-2 text-gray-400"></i>
+              Organisation Logo
+            </label>
+
+            <div class="flex items-start gap-6 flex-wrap">
+
+              <!-- Current logo / placeholder -->
+              <div class="shrink-0">
+                <div class="w-24 h-24 rounded-2xl border-2 border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden relative">
+                  <img *ngIf="logoPreview" [src]="logoPreview" alt="Organisation logo"
+                    class="w-full h-full object-contain p-1" />
+                  <i *ngIf="!logoPreview" class="fas fa-image text-3xl text-gray-300"></i>
+                  <!-- Loading overlay -->
+                  <div *ngIf="uploadingLogo" class="absolute inset-0 bg-white/80 flex items-center justify-center rounded-2xl">
+                    <i class="fas fa-spinner fa-spin text-rep-black text-xl"></i>
+                  </div>
+                </div>
+                <!-- Remove button -->
+                <button *ngIf="logoPreview && !uploadingLogo" type="button"
+                  (click)="removeOrgLogo()"
+                  [disabled]="removingLogo"
+                  class="mt-2 w-24 text-center text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 transition">
+                  <i class="fas fa-trash text-[10px] mr-1"></i>
+                  {{ removingLogo ? 'Removing…' : 'Remove' }}
+                </button>
+              </div>
+
+              <!-- Drop zone -->
+              <label
+                (dragover)="onLogoDragOver($event)"
+                (dragleave)="onLogoDragLeave()"
+                (drop)="onLogoDrop($event)"
+                [class]="logoDropOver
+                  ? 'border-rep-black bg-rep-black/5 scale-[1.01]'
+                  : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'"
+                class="flex-1 min-w-[180px] border-2 border-dashed rounded-2xl px-6 py-8 flex flex-col items-center justify-center gap-3
+                       cursor-pointer transition-all duration-150 select-none"
+                [attr.for]="'logo-file-input'">
+                <input id="logo-file-input" type="file" accept="image/*" class="sr-only"
+                  (change)="onLogoFileChange($event)"
+                  [disabled]="uploadingLogo" />
+                <div class="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center">
+                  <i class="fas fa-cloud-arrow-up text-xl text-gray-500"></i>
+                </div>
+                <div class="text-center">
+                  <p class="text-sm font-semibold text-rep-black">
+                    {{ uploadingLogo ? 'Uploading…' : 'Click or drag &amp; drop' }}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-0.5">PNG, JPG, SVG or WebP — max 2 MB</p>
+                </div>
+                <span *ngIf="!uploadingLogo"
+                  class="px-4 py-1.5 rounded-lg bg-rep-black text-rep-white text-xs font-semibold hover:bg-gray-800 transition">
+                  Choose File
+                </span>
+                <span *ngIf="uploadingLogo"
+                  class="px-4 py-1.5 rounded-lg bg-gray-300 text-gray-600 text-xs font-semibold cursor-default">
+                  <i class="fas fa-spinner fa-spin mr-1"></i> Uploading…
+                </span>
+              </label>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-2">
+              <i class="fas fa-info-circle mr-1"></i>
+              This logo is used as a watermark when generating AI posts in the Content Studio.
+            </p>
+          </div>
+
           <div>
             <label class="block text-sm font-semibold text-rep-black mb-2">
               <i class="fas fa-building mr-2 text-gray-400"></i>
@@ -872,35 +943,35 @@
             <p class="text-xs text-gray-600 mb-3">Select which platforms should have auto-reply enabled</p>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('youtube')" (change)="togglePlatform('youtube')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('youtube')" (change)="togglePlatform('youtube')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-youtube text-red-600 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">YouTube</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('instagram')" (change)="togglePlatform('instagram')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('instagram')" (change)="togglePlatform('instagram')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-instagram text-pink-600 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">Instagram</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('facebook')" (change)="togglePlatform('facebook')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('facebook')" (change)="togglePlatform('facebook')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-facebook text-blue-600 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">Facebook</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('google')" (change)="togglePlatform('google')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('google')" (change)="togglePlatform('google')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-google text-green-600 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">Google</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('linkedin')" (change)="togglePlatform('linkedin')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('linkedin')" (change)="togglePlatform('linkedin')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-linkedin text-blue-700 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">LinkedIn</span>
@@ -921,28 +992,28 @@
             </p>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('comment')" (change)="toggleType('comment')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('comment')" (change)="toggleType('comment')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fas fa-comment text-blue-600 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">Comments</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('review')" (change)="toggleType('review')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('review')" (change)="toggleType('review')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fas fa-star text-yellow-500 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">Reviews</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('dm')" (change)="toggleType('dm')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('dm')" (change)="toggleType('dm')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fas fa-envelope text-purple-600 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">DMs</span>
                 </div>
               </label>
               <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
-                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('mention')" (change)="toggleType('mention')" class="w-4 h-4 text-rep-lime border-gray-300 rounded focus:ring-rep-lime flex-shrink-0">
+                <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('mention')" (change)="toggleType('mention')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fas fa-at text-green-600 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 text-xs truncate">Mentions</span>
@@ -1117,7 +1188,7 @@
     <div *ngIf="activeTab === 'brand-rules'" class="w-full">
       <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
         <h2 class="text-xl md:text-2xl font-bold text-rep-black mb-2 flex items-center gap-2">
-          <i class="fas fa-palette text-rep-lime"></i>
+          <i class="fas fa-palette text-rep-black dark:text-rep-lime"></i>
           Brand Rules
         </h2>
         <p class="text-gray-600 mb-6">Tone of voice, personality tags, banned words, and approved hashtags. Manage in Brand Hub.</p>
@@ -1137,7 +1208,7 @@
     <div *ngIf="activeTab === 'compliance'" class="w-full">
       <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
         <h2 class="text-xl md:text-2xl font-bold text-rep-black mb-2 flex items-center gap-2">
-          <i class="fas fa-shield-alt text-rep-lime"></i>
+          <i class="fas fa-shield-alt text-rep-black dark:text-rep-lime"></i>
           Compliance Rules
         </h2>
         <p class="text-gray-600 mb-6">Required disclaimers, risk threshold, and content checks. Configure in Brand Hub (legal disclaimers) and review risk scores in the Approval Queue.</p>

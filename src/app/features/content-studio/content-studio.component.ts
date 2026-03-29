@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { forkJoin, Subject, takeUntil, interval } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -10,6 +10,26 @@ import { SocialPreviewComponent } from '../publish/social-preview/social-preview
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { MediaSelectorModalComponent } from '../../shared/components/media-selector-modal/media-selector-modal.component';
 import { Media } from '../../core/models/media.model';
+
+/** Moods shown per content intent (must match intent option values) */
+export const CONTENT_INTENT_MOODS: Record<string, string[]> = {
+  Awareness: ['Curious', 'Exciting', 'Trendy', 'Bold', 'Informative'],
+  Engagement: ['Playful', 'Questioning', 'Challenging', 'Relatable', 'Fun'],
+  Educational: ['Helpful', 'Clear', 'Structured', 'Insightful', 'Practical'],
+  Authority: ['Confident', 'Professional', 'Analytical', 'Data-driven', 'Thoughtful'],
+  Entertainment: ['Funny', 'Lighthearted', 'Dramatic', 'Energetic', 'Sarcastic'],
+  Emotional: ['Emotional', 'Personal', 'Deep', 'Vulnerable', 'Heartfelt'],
+  Promotional: ['Persuasive', 'Urgent', 'Exciting', 'Confident', 'Benefit-focused'],
+  Community: ['Inclusive', 'Friendly', 'Appreciative', 'Supportive', 'Warm'],
+  'Social Proof': ['Reassuring', 'Trustworthy', 'Credible', 'Positive', 'Authentic'],
+  'Lead Generation': ['Valuable', 'Exclusive', 'Helpful', 'Action-oriented', 'Incentivizing'],
+  Announcement: ['Exciting', 'Formal', 'Clear', 'Direct', 'Celebratory'],
+  'Problem-Solution': ['Empathetic', 'Understanding', 'Helpful', 'Solution-focused', 'Practical'],
+  Curiosity: ['Mysterious', 'Intriguing', 'Suspenseful', 'Bold', 'Teasing'],
+  'Behind-the-Scenes': ['Transparent', 'Casual', 'Honest', 'Raw', 'Relatable'],
+  Inspiration: ['Uplifting', 'Motivational', 'Hopeful', 'Positive', 'Energetic'],
+  Comparison: ['Analytical', 'Honest', 'Neutral', 'Practical', 'Insightful']
+};
 
 export interface PlatformOption {
   id: string;
@@ -21,6 +41,7 @@ export interface VariantItem {
   content: string;
   imageUrl?: string;
   loadingImage?: boolean;
+  savedToLibrary?: boolean;
   /** Set when image generation fails — drives the inline error card on the variant */
   imageError?: { code: string; message: string } | null;
   videoUrl?: string;
@@ -65,9 +86,122 @@ export interface ImageStyleOption {
   styleUrls: ['./content-studio.component.scss']
 })
 export class ContentStudioComponent implements OnInit, OnDestroy {
+  // ─── Mode & Flow State ───────────────────────────────────────────────────────
+  contentMode: 'ai' | 'custom' = 'ai';
+  postFormat: 'post' | 'story' | 'reel' | 'video' | 'short' = 'post';
+  contentType: 'text' | 'text-image' | 'text-video' | 'image-layover' = 'text';
+
+  // ─── Wizard Step State ───────────────────────────────────────────────────────
+  currentStep = 1;
+  completedSteps = new Set<number>();
+  /** Whether to show the compact summary bar (post-generation) */
+  showWizardSummary = false;
+
+  get maxReachedStep(): number {
+    if (this.selectedPlatformIds.length === 0) return 1;
+    if (!this.contentType) return 2;
+    if (!this.topic.trim()) return 3;
+    return 4;
+  }
+
+  get isStepActive(): (n: number) => boolean {
+    return (n: number) => this.currentStep === n;
+  }
+
+  get isStepDone(): (n: number) => boolean {
+    return (n: number) => this.completedSteps.has(n);
+  }
+
+  get isStepLocked(): (n: number) => boolean {
+    return (n: number) => n > this.maxReachedStep && !this.completedSteps.has(n) && this.currentStep !== n;
+  }
+
+  advanceStep(): void {
+    this.completedSteps.add(this.currentStep);
+    this.currentStep = Math.min(this.currentStep + 1, 4);
+  }
+
+  goToStep(n: number): void {
+    if (n <= this.maxReachedStep || this.completedSteps.has(n)) {
+      this.currentStep = n;
+    }
+  }
+
+  editFromSummary(): void {
+    if (this.variants.length > 0) {
+      if (!confirm('Editing your setup will clear the generated variants. Continue?')) return;
+      this.variants = [];
+      this.selectedTextIndex = 0;
+      this.selectedImageIndex = null;
+      this.selectedVideoIndex = null;
+      this.editedContent = '';
+    }
+    this.showWizardSummary = false;
+    this.currentStep = 1;
+  }
+
+  get contentTypeLabel(): string {
+    return this.contentTypeOptions.find(o => o.id === this.contentType)?.label ?? this.contentType;
+  }
+
+  get wizardSummaryLine(): string {
+    const platforms = this.selectedPlatformIds.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
+    const fmt = this.postFormat.charAt(0).toUpperCase() + this.postFormat.slice(1);
+    const ct = this.contentTypeOptions.find(o => o.id === this.contentType)?.label ?? this.contentType;
+    const tp = this.topic.trim() ? `"${this.topic.trim().slice(0, 30)}${this.topic.trim().length > 30 ? '…' : ''}"` : '';
+    return [platforms, fmt, ct, tp].filter(Boolean).join(' · ');
+  }
+
+  /** All possible post format options — filtered dynamically by selected platforms */
+  private readonly allPostFormatOptions = [
+    { id: 'post',  label: 'Post',  icon: 'fa-image',      platforms: ['instagram','facebook','linkedin'] },
+    { id: 'story', label: 'Story', icon: 'fa-circle-dot', platforms: ['instagram','facebook'] },
+    { id: 'reel',  label: 'Reel',  icon: 'fa-film',       platforms: ['instagram','facebook'] },
+    { id: 'video', label: 'Video', icon: 'fa-video',      platforms: ['instagram','facebook','linkedin','youtube'] },
+    { id: 'short', label: 'Short', icon: 'fa-bolt',       platforms: ['youtube'] },
+  ];
+
+  get postFormatOptions() {
+    const ids = this.selectedPlatformIds.map(p => p.toLowerCase());
+    let byPlatform = ids.length
+      ? this.allPostFormatOptions.filter(o => o.platforms.some(p => ids.includes(p)))
+      : this.allPostFormatOptions.filter(o => o.id !== 'short');
+    if (!byPlatform.length) byPlatform = this.allPostFormatOptions.filter(o => o.id !== 'short');
+
+    // Filter by content type: video/short only valid for text-video; exclude them otherwise
+    if (this.contentType === 'text-video') {
+      const videoFmts = byPlatform.filter(o => o.id === 'video' || o.id === 'reel' || o.id === 'short');
+      return videoFmts.length ? videoFmts : byPlatform;
+    } else {
+      const nonVideoFmts = byPlatform.filter(o => o.id !== 'video' && o.id !== 'short');
+      return nonVideoFmts.length ? nonVideoFmts : byPlatform;
+    }
+  }
+
+  contentTypeOptions = [
+    { id: 'text',          label: 'Text Only',              icon: 'fa-align-left',    desc: 'Pure text post, no media' },
+    { id: 'text-image',    label: 'Text + Image',           icon: 'fa-image',         desc: 'AI-generated image with your text' },
+    { id: 'text-video',    label: 'Text + Video',           icon: 'fa-video',         desc: 'AI-generated video reel (1 variant)' },
+    { id: 'image-layover', label: 'Image with Text Layover', icon: 'fa-font',         desc: 'AI renders your headline into the image' },
+  ];
+
+  // ─── Logo Overlay ─────────────────────────────────────────────────────────────
+  logoOverlay = false;
+  logoPosition: string = 'bottom-right';
+  orgLogo: string | null = null;
+
+  logoPositions = [
+    { id: 'top-left',      label: '↖', row: 1 },
+    { id: 'top-center',    label: '↑', row: 1 },
+    { id: 'top-right',     label: '↗', row: 1 },
+    { id: 'bottom-left',   label: '↙', row: 2 },
+    { id: 'bottom-center', label: '↓', row: 2 },
+    { id: 'bottom-right',  label: '↘', row: 2 },
+  ];
+
   topic = '';
   audience = '';
-  intent: 'Awareness' | 'Offer' | 'Education' | '' = '';
+  intent = '';
   platforms: PlatformOption[] = [];
   selectedPlatformIds: string[] = [];
   includeTrend = false;
@@ -86,6 +220,12 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   selectedImageIndex: number | null = null;
   /** Index of the variant whose VIDEO is selected (null = no video) */
   selectedVideoIndex: number | null = null;
+  /**
+   * How the video will be posted.
+   * Driven by the platform mix: Instagram/Facebook support reel|story|post,
+   * YouTube supports video|short, LinkedIn only supports post.
+   */
+  videoPostType: 'reel' | 'story' | 'post' | 'video' | 'short' = 'reel';
   /** Inline-editable copy of the chosen text */
   editedContent = '';
 
@@ -249,7 +389,8 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       samples: ['https://picsum.photos/seed/rop12a/480/480','https://picsum.photos/seed/rop12b/480/480','https://picsum.photos/seed/rop12c/480/480'] }
   ];
 
-  moodOptions       = ['Energetic', 'Calm', 'Inspiring', 'Professional', 'Playful', 'Mysterious', 'Luxurious', 'Friendly'];
+  /** Used for “Surprise me” random mood when no intent is selected */
+  moodOptions = ['Energetic', 'Calm', 'Inspiring', 'Professional', 'Playful', 'Mysterious', 'Luxurious', 'Friendly'];
   lightingOptions   = ['Natural Daylight', 'Golden Hour', 'Studio Lighting', 'Dramatic Shadows', 'Neon Glow', 'Soft Diffused', 'Backlit'];
   compositionOptions= ['Rule of Thirds', 'Centered Symmetry', 'Close-up Detail', 'Wide Shot', 'Flat Lay', 'Dynamic Diagonal'];
   colorPaletteOptions = ['Vibrant', 'Monochrome', 'Pastel & Soft', 'Earthy Tones', 'Cool Blues', 'Warm Oranges', 'High Contrast B&W'];
@@ -351,6 +492,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     const c = this.imageConfig;
     const parts: string[] = [];
     if (c.mood && moodFilters[c.mood])           parts.push(moodFilters[c.mood]);
+    else if (c.mood)                             parts.push('saturate(1.06) contrast(1.03)');
     if (c.lighting && lightingFilters[c.lighting]) parts.push(lightingFilters[c.lighting]);
     if (c.colorPalette && paletteFilters[c.colorPalette]) parts.push(paletteFilters[c.colorPalette]);
     return parts.filter(Boolean).join(' ') || 'none';
@@ -389,9 +531,13 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   randomizeImageConfig(): void {
     const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+    const moodPool =
+      this.intent && CONTENT_INTENT_MOODS[this.intent]?.length
+        ? CONTENT_INTENT_MOODS[this.intent]
+        : this.moodOptions;
     this.imageConfig = {
       style:        pick(this.imageStyles).id,
-      mood:         pick(this.moodOptions),
+      mood:         pick(moodPool),
       lighting:     pick(this.lightingOptions),
       composition:  pick(this.compositionOptions),
       colorPalette: pick(this.colorPaletteOptions),
@@ -414,11 +560,39 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  intentOptions = [
+  intentOptions: { value: string; label: string }[] = [
     { value: 'Awareness', label: 'Awareness' },
-    { value: 'Offer', label: 'Offer' },
-    { value: 'Education', label: 'Education' }
+    { value: 'Engagement', label: 'Engagement' },
+    { value: 'Educational', label: 'Educational' },
+    { value: 'Authority', label: 'Authority' },
+    { value: 'Entertainment', label: 'Entertainment' },
+    { value: 'Emotional', label: 'Emotional' },
+    { value: 'Promotional', label: 'Promotional' },
+    { value: 'Community', label: 'Community' },
+    { value: 'Social Proof', label: 'Social Proof' },
+    { value: 'Lead Generation', label: 'Lead Generation' },
+    { value: 'Announcement', label: 'Announcement' },
+    { value: 'Problem-Solution', label: 'Problem-Solution' },
+    { value: 'Curiosity', label: 'Curiosity' },
+    { value: 'Behind-the-Scenes', label: 'Behind-the-Scenes' },
+    { value: 'Inspiration', label: 'Inspiration' },
+    { value: 'Comparison', label: 'Comparison' }
   ];
+
+  get intentMoodOptions(): { value: string; label: string }[] {
+    const moods = this.intent ? CONTENT_INTENT_MOODS[this.intent] : undefined;
+    return (moods || []).map((m) => ({ value: m, label: m }));
+  }
+
+  /** Use $event from select so mood list matches the new intent immediately (avoids timing issues). */
+  onIntentChange(newIntent: string): void {
+    const allowed = newIntent ? CONTENT_INTENT_MOODS[newIntent] ?? [] : [];
+    if (!allowed.includes(this.imageConfig.mood)) this.imageConfig.mood = '';
+  }
+
+  trackMoodOption(_i: number, o: { value: string }): string {
+    return o.value;
+  }
 
   private destroy$ = new Subject<void>();
   /** Tracks active polling subscriptions per variant index so we can cancel them */
@@ -427,12 +601,14 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   constructor(
     private http: HttpClient,
     private route: ActivatedRoute,
+    private router: Router,
     private notify: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.loadPlatforms();
     this.loadCredits();
+    this.loadOrgLogo();
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(q => {
       if (q['topic']) this.topic = q['topic'];
       if (q['trend']) this.includeTrend = true;
@@ -454,12 +630,22 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           if (res.success && res.data) {
-            const nameMap: Record<string, string> = { instagram: 'Instagram', facebook: 'Facebook', linkedin: 'LinkedIn' };
-            const iconMap: Record<string, string> = { instagram: 'fab fa-instagram', facebook: 'fab fa-facebook', linkedin: 'fab fa-linkedin' };
+            const nameMap: Record<string, string> = {
+              instagram: 'Instagram', facebook: 'Facebook',
+              linkedin: 'LinkedIn', youtube: 'YouTube'
+            };
+            const iconMap: Record<string, string> = {
+              instagram: 'fab fa-instagram', facebook: 'fab fa-facebook',
+              linkedin: 'fab fa-linkedin',   youtube: 'fab fa-youtube'
+            };
+            // 'google' is excluded — not a social post platform
+            const excluded = new Set(['google', 'whatsapp']);
             const seen = new Map<string, PlatformOption>();
             for (const c of res.data.filter((c: any) => c.status === 'connected')) {
               const id = c.platform?.toLowerCase();
-              if (id && !seen.has(id)) seen.set(id, { id, name: nameMap[id] || c.platform, icon: iconMap[id] || 'fas fa-share-alt' });
+              if (id && !excluded.has(id) && !seen.has(id)) {
+                seen.set(id, { id, name: nameMap[id] || c.platform, icon: iconMap[id] || 'fas fa-share-alt' });
+              }
             }
             this.platforms = Array.from(seen.values());
             if (this.platforms.length && !this.previewPlatform) this.previewPlatform = this.platforms[0];
@@ -474,10 +660,67 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       .subscribe({ next: (res) => { this.aiCredits = res.credits || null; } });
   }
 
+  loadOrgLogo(): void {
+    this.http.get<any>(`${environment.apiUrl}/organizations/me`)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const org = res.data || res.organization || res;
+          this.orgLogo = org?.logo || org?.whiteLabel?.customLogo || null;
+        }
+      });
+  }
+
   togglePlatform(id: string): void {
     this.selectedPlatformIds = this.selectedPlatformIds.includes(id)
       ? this.selectedPlatformIds.filter(p => p !== id)
       : [...this.selectedPlatformIds, id];
+    this.normalisePostFormat();
+    // Auto-advance to step 2 when at least one platform is selected
+    if (this.selectedPlatformIds.length > 0 && this.currentStep === 1) {
+      this.completedSteps.add(1);
+    }
+  }
+
+  private normalisePostFormat(): void {
+    const available = this.postFormatOptions.map(o => o.id);
+    if (!available.includes(this.postFormat)) {
+      this.postFormat = (available[0] as any) ?? 'post';
+    }
+  }
+
+  // ─── Content Type & Mode ─────────────────────────────────────────────────────
+
+  setContentType(type: 'text' | 'text-image' | 'text-video' | 'image-layover'): void {
+    this.contentType = type;
+    this.includeImage = type === 'text-image' || type === 'image-layover';
+    this.includeVideo = type === 'text-video';
+
+    // Sync postFormat: video/short only valid for text-video; reset if switching away
+    const isVideoFormat = this.postFormat === 'video' || this.postFormat === 'short';
+    if (type === 'text-video' && !isVideoFormat) {
+      // Switching to video content type — default to 'video' format
+      const available = this.postFormatOptions.map(o => o.id);
+      this.postFormat = (available.find(id => id === 'video') ?? available[0] ?? 'video') as any;
+    } else if (type !== 'text-video' && isVideoFormat) {
+      // Switching away from video content type — reset to a non-video format
+      const available = this.postFormatOptions.map(o => o.id);
+      this.postFormat = (available.find(id => id === 'post') ?? available[0] ?? 'post') as any;
+    }
+
+    // Auto-advance to step 3 after picking content type
+    if (this.currentStep === 2) {
+      this.completedSteps.add(2);
+      this.currentStep = 3;
+    }
+  }
+
+  goToCustom(): void {
+    this.router.navigate(['/app/publish']);
+  }
+
+  get variantCount(): number {
+    return this.contentType === 'text-video' ? 1 : 3;
   }
 
   // ─── Generation ────────────────────────────────────────────────────────────
@@ -492,16 +735,23 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.selectedImageIndex = null;
     this.selectedVideoIndex = null;
     this.editedContent = '';
+    this.draftSaved = false;
+    this.draftId = '';
+    this.allDraftsSaved = false;
+    this.allDraftsSavedCount = 0;
 
     this.http.post<{ success: boolean; data: { variants: VariantItem[] } }>(
       `${environment.apiUrl}/posts/generate-variants`,
       {
         topic: this.topic.trim(),
         platforms: this.selectedPlatformIds,
-        count: 3,
+        count: this.variantCount,
         audience: this.audience.trim(),
         intent: this.intent || undefined,
-        includeTrend: this.includeTrend
+        mood: this.imageConfig.mood || undefined,
+        includeTrend: this.includeTrend,
+        postFormat: this.postFormat,
+        contentType: this.contentType
       }
     ).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
@@ -510,6 +760,9 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
           this.variants = res.data.variants.map(v => ({ ...v, loadingImage: false, loadingVideo: false }));
           this.selectedTextIndex = 0;
           this.editedContent = this.variants[0]?.content || '';
+          this.completedSteps.add(3);
+          this.completedSteps.add(4);
+          this.showWizardSummary = true;
           this.loadCredits();
           if (this.includeImage) this.fetchImagesForVariants();
           if (this.includeVideo) this.fetchVideosForVariants();
@@ -525,16 +778,23 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   fetchImagesForVariants(): void {
     this.generatingImages = true;
     const topic = this.topic.trim();
-    this.variants.forEach(v => { v.loadingImage = true; v.imageError = null; });
+    this.variants.forEach(v => { v.loadingImage = true; v.imageError = null; v.savedToLibrary = false; });
     let completed = 0;
 
     this.variants.forEach((v, idx) => {
-      this.http.post<{ success: boolean; imageUrl: string }>(
+      this.http.post<{ success: boolean; imageUrl: string; savedToLibrary?: boolean }>(
         `${environment.apiUrl}/posts/generate-variant-image`,
-        { topic, variantContent: v.content, imageConfig: this.imageConfig, variantIndex: idx }
+        {
+          topic, variantContent: v.content, imageConfig: this.imageConfig, variantIndex: idx,
+          contentType: this.contentType,
+          logoOverlay: this.logoOverlay && !!this.orgLogo,
+          logoPosition: this.logoPosition,
+          logoUrl: this.logoOverlay ? (this.orgLogo || undefined) : undefined
+        }
       ).pipe(takeUntil(this.destroy$)).subscribe({
         next: (res) => {
           if (res.success && res.imageUrl) this.variants[idx].imageUrl = res.imageUrl;
+          this.variants[idx].savedToLibrary = res.savedToLibrary ?? false;
           this.variants[idx].loadingImage = false;
           if (++completed === this.variants.length) { this.generatingImages = false; this.loadCredits(); }
         },
@@ -552,15 +812,24 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     if (this.variants[idx]?.loadingImage) return;
     this.variants[idx].loadingImage = true;
     this.variants[idx].imageError = null;
-    this.http.post<{ success: boolean; imageUrl: string }>(
+    this.variants[idx].savedToLibrary = false;
+    this.http.post<{ success: boolean; imageUrl: string; savedToLibrary?: boolean }>(
       `${environment.apiUrl}/posts/generate-variant-image`,
-      { topic: this.topic.trim(), variantContent: this.variants[idx].content, imageConfig: this.imageConfig, variantIndex: idx }
+      {
+        topic: this.topic.trim(), variantContent: this.variants[idx].content,
+        imageConfig: this.imageConfig, variantIndex: idx,
+        contentType: this.contentType,
+        logoOverlay: this.logoOverlay && !!this.orgLogo,
+        logoPosition: this.logoPosition,
+        logoUrl: this.logoOverlay ? (this.orgLogo || undefined) : undefined
+      }
     ).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         if (res.success && res.imageUrl) {
           this.variants[idx].imageUrl = res.imageUrl;
           if (this.selectedImageIndex === null) this.selectedImageIndex = idx;
         }
+        this.variants[idx].savedToLibrary = res.savedToLibrary ?? false;
         this.variants[idx].loadingImage = false;
         this.loadCredits();
       },
@@ -693,6 +962,31 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     return this.selectedVideoIndex !== null ? this.variants[this.selectedVideoIndex]?.videoUrl : undefined;
   }
 
+  /** Post-type options driven by which platforms are selected */
+  get videoPostTypeOptions(): { id: string; label: string; icon: string; platforms: string[] }[] {
+    const ids = this.selectedPlatformIds.map(p => p.toLowerCase());
+    const opts: { id: string; label: string; icon: string; platforms: string[] }[] = [];
+
+    const hasInstagram  = ids.includes('instagram');
+    const hasFacebook   = ids.includes('facebook');
+    const hasYouTube    = ids.includes('youtube');
+    const hasLinkedIn   = ids.includes('linkedin');
+
+    if (hasInstagram || hasFacebook) {
+      opts.push({ id: 'reel',  label: 'Reel',  icon: 'fa-film',         platforms: ['Instagram', 'Facebook'] });
+      opts.push({ id: 'story', label: 'Story', icon: 'fa-circle-dot',   platforms: ['Instagram', 'Facebook'] });
+      opts.push({ id: 'post',  label: 'Feed Post', icon: 'fa-image',    platforms: ['Instagram', 'Facebook'] });
+    }
+    if (hasYouTube) {
+      opts.push({ id: 'video', label: 'YouTube Video', icon: 'fa-youtube',   platforms: ['YouTube'] });
+      opts.push({ id: 'short', label: 'YouTube Short', icon: 'fa-bolt',      platforms: ['YouTube'] });
+    }
+    if (hasLinkedIn && !hasInstagram && !hasFacebook && !hasYouTube) {
+      opts.push({ id: 'post',  label: 'Video Post', icon: 'fa-linkedin', platforms: ['LinkedIn'] });
+    }
+    return opts.length ? opts : [{ id: 'reel', label: 'Reel', icon: 'fa-film', platforms: [] }];
+  }
+
   /** Normalise an HTTP error into a typed videoError object */
   private parseVideoError(err: any): { code: string; message: string } {
     const body = err?.error;
@@ -744,8 +1038,10 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       ? new Date(`${this.scheduleDate}T${this.scheduleTime}`).toISOString() : null;
     if (!scheduledFor) return;
     this.scheduling = true;
-    const body: any = { platform, content, scheduledFor, postType: 'post' };
-    if (this.selectedImageUrl) body.mediaUrl = this.selectedImageUrl;
+    const postType = this.selectedVideoUrl ? this.videoPostType : this.postFormat;
+    const body: any = { platform, content, scheduledFor, postType };
+    if (this.selectedVideoUrl) body.mediaUrl = this.selectedVideoUrl;
+    else if (this.selectedImageUrl) body.mediaUrl = this.selectedImageUrl;
     this.http.post<any>(`${environment.apiUrl}/posts/schedule`, body)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -762,14 +1058,130 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     const content = this.selectedContent;
     if (!content || !this.selectedPlatformIds.length) return;
     this.publishing = true;
+    const postType = this.selectedVideoUrl ? this.videoPostType : this.postFormat;
     const calls = this.selectedPlatformIds.map(platformId => {
-      const body: any = { platform: platformId, content, postType: 'post' };
-      if (this.selectedImageUrl) body.mediaUrl = this.selectedImageUrl;
+      const body: any = { platform: platformId, content, postType };
+      if (this.selectedVideoUrl) body.mediaUrl = this.selectedVideoUrl;
+      else if (this.selectedImageUrl) body.mediaUrl = this.selectedImageUrl;
       return this.http.post<any>(`${environment.apiUrl}/posts/publish`, body);
     });
     forkJoin(calls).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => { this.publishing = false; this.notify.success('Published', 'Post published successfully.'); },
-      error: (err) => { this.publishing = false; this.notify.error('Publish Failed', err?.error?.message || 'Failed to publish.'); }
+      error: (err) => {
+        this.publishing = false;
+        const body = err?.error;
+        if (body?.code === 'PLATFORM_NOT_CONNECTED' && body?.platform === 'youtube') {
+          this.notify.error('YouTube Not Connected', body.message);
+        } else if (body?.code === 'PLATFORM_NOT_IMPLEMENTED' && body?.platform === 'youtube') {
+          this.notify.info('YouTube — Download & Upload', body.message);
+        } else {
+          this.notify.error('Publish Failed', body?.message || 'Failed to publish.');
+        }
+      }
+    });
+  }
+
+  savingDraft = false;
+  draftSaved = false;
+  draftId = '';
+  savingAllDrafts = false;
+  allDraftsSaved = false;
+  allDraftsSavedCount = 0;
+
+  saveDraft(): void {
+    if (this.savingDraft) return;
+    const platform = this.selectedPlatformIds[0];
+    if (!platform) { this.notify.error('No Platform', 'Please select a platform first.'); return; }
+
+    const content = this.editedContent || this.variants[this.selectedTextIndex]?.content;
+    if (!content) { this.notify.error('No Content', 'Please generate content first.'); return; }
+
+    const selectedVariant = this.variants[this.selectedTextIndex];
+    const imageUrl = this.selectedImageIndex !== null ? this.variants[this.selectedImageIndex]?.imageUrl : undefined;
+    const videoUrl = this.selectedVideoIndex !== null ? this.variants[this.selectedVideoIndex]?.videoUrl : undefined;
+
+    this.savingDraft = true;
+    const body: any = {
+      platform,
+      content,
+      postType: this.postFormat,
+      generatedBy: 'ai',
+      topic: this.topic,
+      audience: this.audience,
+      intent: this.intent,
+      mood: this.imageConfig.mood,
+      contentType: this.contentType,
+      postFormat: this.postFormat,
+      visualStyle: this.imageConfig.style,
+      logoOverlay: this.logoOverlay,
+      logoPosition: this.logoPosition
+    };
+
+    if (videoUrl) body.mediaUrl = videoUrl;
+    else if (imageUrl) body.mediaUrl = imageUrl;
+    else if (selectedVariant?.videoUrl) body.mediaUrl = selectedVariant.videoUrl;
+    else if (selectedVariant?.imageUrl) body.mediaUrl = selectedVariant.imageUrl;
+
+    this.http.post<any>(`${environment.apiUrl}/posts/save-draft`, body)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.savingDraft = false;
+          this.draftSaved = true;
+          this.draftId = res.draft?._id ?? '';
+          this.notify.success('Draft Saved', 'Post saved as draft. You can resume from the Drafts page.');
+        },
+        error: (err) => {
+          this.savingDraft = false;
+          this.notify.error('Draft Failed', err?.error?.message || 'Could not save draft.');
+        }
+      });
+  }
+
+  saveAllDrafts(): void {
+    if (this.savingAllDrafts || !this.variants.length) return;
+    const platform = this.selectedPlatformIds[0];
+    if (!platform) { this.notify.error('No Platform', 'Please select a platform first.'); return; }
+
+    this.savingAllDrafts = true;
+    this.allDraftsSaved = false;
+    this.allDraftsSavedCount = 0;
+
+    const commonMeta = {
+      postType: this.postFormat,
+      generatedBy: 'ai',
+      topic: this.topic,
+      audience: this.audience,
+      intent: this.intent,
+      mood: this.imageConfig.mood,
+      contentType: this.contentType,
+      postFormat: this.postFormat,
+      visualStyle: this.imageConfig.style,
+      logoOverlay: this.logoOverlay,
+      logoPosition: this.logoPosition
+    };
+
+    const calls = this.variants.map(v => {
+      const body: any = { platform, content: v.content, ...commonMeta };
+      if (v.videoUrl) body.mediaUrl = v.videoUrl;
+      else if (v.imageUrl) body.mediaUrl = v.imageUrl;
+      return this.http.post<any>(`${environment.apiUrl}/posts/save-draft`, body);
+    });
+
+    forkJoin(calls).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.savingAllDrafts = false;
+        this.allDraftsSaved = true;
+        this.allDraftsSavedCount = this.variants.length;
+        this.notify.success(
+          'All Variants Saved',
+          `${this.variants.length} draft${this.variants.length > 1 ? 's' : ''} saved. View them on the Drafts page.`
+        );
+      },
+      error: (err) => {
+        this.savingAllDrafts = false;
+        this.notify.error('Draft Failed', err?.error?.message || 'Could not save all drafts.');
+      }
     });
   }
 

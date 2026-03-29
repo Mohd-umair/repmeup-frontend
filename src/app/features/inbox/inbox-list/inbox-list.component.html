@@ -13,7 +13,7 @@
         class="w-full pl-11 pr-20 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime focus:bg-white transition text-sm"
       />
       <div class="absolute inset-y-0 right-0 pr-4 flex items-center space-x-2">
-        <i *ngIf="loading && searchTerm" class="fas fa-spinner fa-spin text-rep-lime text-sm"></i>
+        <i *ngIf="loading && searchTerm" class="fas fa-spinner fa-spin text-rep-black dark:text-rep-lime text-sm"></i>
         <button
           *ngIf="searchTerm"
           (click)="clearSearch()"
@@ -42,7 +42,7 @@
   <div *ngIf="!loading && interactions.length === 0" class="flex-1 flex items-center justify-center p-8">
     <div class="text-center max-w-sm">
       <div class="w-24 h-24 bg-rep-lime/20 border border-rep-lime/30 rounded-full flex items-center justify-center mx-auto mb-4">
-        <i class="fas fa-inbox text-4xl text-rep-lime"></i>
+        <i class="fas fa-inbox text-4xl text-rep-black dark:text-rep-lime"></i>
       </div>
       <h3 class="text-xl font-bold text-rep-black mb-2">No conversations yet</h3>
       <p class="text-sm text-gray-600 mb-4">When customers interact with your platforms, they'll appear here</p>
@@ -190,7 +190,7 @@
       </div>
     </div>
     <div *ngIf="loadingMore" class="py-3 text-center">
-      <i class="fas fa-spinner fa-spin text-rep-lime mr-2"></i>
+      <i class="fas fa-spinner fa-spin text-rep-black dark:text-rep-lime mr-2"></i>
       <span class="text-xs text-gray-500">Loading more conversations...</span>
     </div>
   </div>

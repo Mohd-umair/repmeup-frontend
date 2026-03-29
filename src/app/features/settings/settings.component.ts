@@ -99,9 +99,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
     website: '',
     industry: '',
     size: '',
+    logo: '' as string | undefined,
     escalationSettings: { autoAssign: true } as { autoAssign: boolean }
   };
   savingOrganization = false;
+
+  // Logo upload state
+  logoPreview: string | null = null;
+  uploadingLogo = false;
+  removingLogo = false;
+  logoDropOver = false;
 
   readonly tabs: SettingsNavTab[] = [
     { id: 'platforms', icon: 'fas fa-plug', label: 'Platforms', routeSegment: 'platforms', requiredPermission: 'settings.read' },
@@ -1397,10 +1404,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
             website: data.website || '',
             industry: data.industry || '',
             size: data.size || '',
+            logo: data.logo || '',
             escalationSettings: {
               autoAssign: data.escalationSettings?.autoAssign !== false
             }
           };
+          this.logoPreview = data.logo ? this.resolveLogoUrl(data.logo) : null;
         }
       },
       error: (error) => {
@@ -1477,6 +1486,88 @@ export class SettingsComponent implements OnInit, OnDestroy {
           errorMessage
         );
         this.savingOrganization = false;
+      }
+    });
+  }
+
+  // ─── Logo upload helpers ───────────────────────────────────────────────────
+
+  /** Resolve a possibly-relative logo path to an absolute URL for display */
+  resolveLogoUrl(logo: string): string {
+    if (!logo) return '';
+    if (logo.startsWith('http')) return logo;
+    const base = (window as any).__env?.apiBase || window.location.origin.replace(':4200', ':5000');
+    return `${base}${logo}`;
+  }
+
+  onLogoDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.logoDropOver = true;
+  }
+
+  onLogoDragLeave(): void {
+    this.logoDropOver = false;
+  }
+
+  onLogoDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.logoDropOver = false;
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.uploadLogoFile(file);
+  }
+
+  onLogoFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) this.uploadLogoFile(file);
+    input.value = ''; // reset so same file can be re-selected
+  }
+
+  uploadLogoFile(file: File): void {
+    if (!file.type.startsWith('image/')) {
+      this.notificationService.error('Invalid File', 'Please select an image file.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      this.notificationService.error('File Too Large', 'Logo must be under 2 MB.');
+      return;
+    }
+
+    // Optimistic local preview
+    const reader = new FileReader();
+    reader.onload = (e) => { this.logoPreview = e.target?.result as string; };
+    reader.readAsDataURL(file);
+
+    this.uploadingLogo = true;
+    this.organizationService.uploadLogo(this.organizationId, file).subscribe({
+      next: (res) => {
+        if (res.success && res.data?.logo) {
+          this.organizationData.logo = res.data.logo;
+          this.logoPreview = this.resolveLogoUrl(res.data.logo);
+          this.notificationService.success('Logo Updated', 'Your organisation logo has been saved.');
+        }
+        this.uploadingLogo = false;
+      },
+      error: (err) => {
+        this.notificationService.error('Upload Failed', err?.error?.error || 'Could not upload logo.');
+        this.uploadingLogo = false;
+      }
+    });
+  }
+
+  removeOrgLogo(): void {
+    if (!this.organizationData.logo) return;
+    this.removingLogo = true;
+    this.organizationService.deleteLogo(this.organizationId).subscribe({
+      next: () => {
+        this.organizationData.logo = '';
+        this.logoPreview = null;
+        this.notificationService.success('Logo Removed', 'Organisation logo has been removed.');
+        this.removingLogo = false;
+      },
+      error: (err) => {
+        this.notificationService.error('Remove Failed', err?.error?.error || 'Could not remove logo.');
+        this.removingLogo = false;
       }
     });
   }

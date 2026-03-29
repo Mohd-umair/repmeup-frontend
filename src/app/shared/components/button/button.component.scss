@@ -52,18 +52,31 @@ button.variant-primary:active:not(:disabled) {
   filter: brightness(0.98);
 }
 
-/* Secondary */
+/* Secondary — light: dark text/border for contrast; dark: lime accent */
 button.variant-secondary {
   background: transparent;
+  color: var(--rep-black, #0f0f0f);
+  border-color: var(--rep-black, #0f0f0f);
+}
+
+button.variant-secondary:hover:not(:disabled) {
+  background: rgba(15, 15, 15, 0.06);
+}
+
+button.variant-secondary:active:not(:disabled) {
+  background: rgba(15, 15, 15, 0.1);
+}
+
+:host-context(html.dark) button.variant-secondary {
   color: var(--rep-lime, #b8f567);
   border-color: var(--rep-lime, #b8f567);
 }
 
-button.variant-secondary:hover:not(:disabled) {
+:host-context(html.dark) button.variant-secondary:hover:not(:disabled) {
   background: rgba(184, 245, 103, 0.1);
 }
 
-button.variant-secondary:active:not(:disabled) {
+:host-context(html.dark) button.variant-secondary:active:not(:disabled) {
   background: rgba(184, 245, 103, 0.2);
 }
 

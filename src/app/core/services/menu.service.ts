@@ -102,6 +102,32 @@ export class MenuService {
               grouped.main.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
             }
 
+            // Inject Drafts menu item if not already present
+            const hasDrafts = menus.some(
+              (m: IMenuItem) => m.route === '/app/drafts' && !m.parentId
+            );
+            if (!hasDrafts) {
+              const draftsMenu: IMenuItem = {
+                _id: 'drafts-default',
+                label: 'Drafts',
+                icon: '📝',
+                route: '/app/drafts',
+                requiredRoles: ['admin', 'manager', 'agent'],
+                requiredPermissions: ['posts.read'],
+                order: 72,
+                isActive: true,
+                group: 'main'
+              };
+              menus = [...menus, draftsMenu];
+              grouped = {
+                main: [...(grouped.main || [])],
+                management: [...(grouped.management || [])],
+                settings: [...(grouped.settings || [])]
+              };
+              grouped.main.push(draftsMenu);
+              grouped.main.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+            }
+
             this.menusSubject.next(menus);
             this.groupedMenusSubject.next(grouped);
           }
