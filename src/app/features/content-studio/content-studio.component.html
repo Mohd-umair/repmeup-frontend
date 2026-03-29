@@ -266,6 +266,111 @@
 
           </div>
           <!-- /Image style controls -->
+
+          <!-- Generate videos toggle -->
+          <label class="flex items-center gap-2 cursor-pointer mt-1">
+            <input type="checkbox" [(ngModel)]="includeVideo"
+              class="w-4 h-4 text-blue-500 border-gray-700 rounded focus:ring-blue-500/20" />
+            <span class="text-sm text-gray-300">Generate videos / reels</span>
+          </label>
+
+          <!-- ── Video config panel ────────────────────────────────────────────── -->
+          <div *ngIf="includeVideo" class="mt-2">
+            <div class="rounded-xl border border-blue-200/90 bg-blue-50/90 dark:border-blue-500/25 dark:bg-blue-500/5 p-3 space-y-3">
+
+              <!-- Header -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-semibold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                  <i class="fas fa-film text-[10px]"></i> Video Style
+                  <span *ngIf="hasVideoConfig"
+                    class="ml-1 px-1.5 py-0.5 rounded-full bg-blue-200 text-blue-900 dark:bg-blue-500/30 dark:text-blue-200 text-[9px] font-semibold">
+                    Custom
+                  </span>
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" (click)="randomizeVideoConfig()"
+                    class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-blue-200/90 text-blue-900 hover:bg-blue-300/90 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/35 transition"
+                    title="Surprise me — randomize all options">
+                    <i class="fas fa-shuffle text-[9px]"></i> Surprise me
+                  </button>
+                  <button *ngIf="hasVideoConfig" type="button" (click)="clearVideoConfig()"
+                    class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition"
+                    title="Reset to default">
+                    <i class="fas fa-times text-[9px]"></i> Clear
+                  </button>
+                </div>
+              </div>
+
+              <!-- Style chips -->
+              <div>
+                <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Style</p>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button *ngFor="let s of videoStyleOptions" type="button"
+                    (click)="videoConfig.style = s.id"
+                    [class]="videoConfig.style === s.id
+                      ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200 shadow-sm'
+                      : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-blue-500/40'"
+                    class="flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition-all duration-150 text-center">
+                    <i [class]="'fas ' + s.icon + ' text-sm'"></i>
+                    <span class="text-[10px] font-medium leading-tight">{{ s.label }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Aspect ratio -->
+              <div>
+                <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Format</p>
+                <div class="flex gap-1.5 flex-wrap">
+                  <button *ngFor="let a of videoAspectOptions" type="button"
+                    (click)="videoConfig.aspect = a.id"
+                    [title]="a.tooltip"
+                    [class]="videoConfig.aspect === a.id
+                      ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200'
+                      : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400'"
+                    class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition">
+                    <i [class]="'fas ' + a.icon + ' text-[10px]'"></i> {{ a.label }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Duration -->
+              <div>
+                <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Duration</p>
+                <div class="flex gap-1.5">
+                  <button *ngFor="let d of videoDurations" type="button"
+                    (click)="videoConfig.duration = d"
+                    [class]="videoConfig.duration === d
+                      ? 'border-blue-600 bg-blue-100 text-blue-950 dark:border-blue-400 dark:bg-blue-500/25 dark:text-blue-200'
+                      : 'border-gray-300 bg-white text-gray-800 hover:border-blue-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400'"
+                    class="px-3 py-1.5 rounded-lg border text-xs font-medium transition">
+                    {{ d }}s
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tone -->
+              <div>
+                <p class="text-[10px] text-blue-800 dark:text-blue-400/70 uppercase tracking-wide font-semibold mb-1.5">Tone</p>
+                <div class="flex flex-wrap gap-1">
+                  <button *ngFor="let t of videoToneOptions" type="button"
+                    (click)="videoConfig.tone = videoConfig.tone === t ? 'energetic' : t"
+                    [class]="videoConfig.tone === t
+                      ? 'bg-blue-200 text-blue-950 border-blue-500 dark:bg-blue-500/30 dark:text-blue-200 dark:border-blue-500/50'
+                      : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-blue-400 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'"
+                    class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ t }}</button>
+                </div>
+              </div>
+
+              <!-- Sora note -->
+              <p class="text-[9px] text-blue-600/70 dark:text-blue-400/50 leading-snug">
+                <i class="fas fa-circle-info mr-1"></i>
+                Videos are generated by OpenAI Sora and may take up to 5 minutes. 1 credit per variant.
+              </p>
+
+            </div>
+          </div>
+          <!-- /Video config panel -->
+
         </div>
       </div>
 
@@ -671,6 +776,102 @@
               <i class="fas fa-folder-open text-[11px]"></i> Replace
             </button>
           </div>
+
+          <!-- ── Video Section ──────────────────────────────────────────────── -->
+          <ng-container *ngIf="includeVideo || v.videoUrl || v.loadingVideo || v.videoError">
+
+            <div class="mt-3 pt-3 border-t border-gray-700/60">
+              <div class="flex items-center gap-1.5 mb-2">
+                <i class="fas fa-film text-[10px] text-blue-400"></i>
+                <span class="text-[10px] font-semibold text-blue-900 dark:text-blue-400 uppercase tracking-wide">Video / Reel</span>
+                <span *ngIf="generatingVideos && v.loadingVideo"
+                  class="inline-flex items-center gap-1 text-[9px] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded-full">
+                  <i class="fas fa-spinner fa-spin text-[8px]"></i> Generating…
+                </span>
+              </div>
+
+              <!-- Loading -->
+              <div *ngIf="v.loadingVideo"
+                class="w-full h-28 rounded-lg bg-gray-800/60 border border-gray-700 flex flex-col items-center justify-center gap-2 mb-3">
+                <i class="fas fa-spinner fa-spin text-blue-400 text-lg"></i>
+                <span class="text-xs text-gray-400">Generating video with Sora…</span>
+                <span class="text-[10px] text-gray-600">This may take a few minutes</span>
+              </div>
+
+              <!-- Video error: content policy -->
+              <div *ngIf="!v.loadingVideo && !v.videoUrl && v.videoError?.code === 'CONTENT_POLICY'"
+                class="mb-3 rounded-xl border border-amber-400/40 bg-amber-500/10 dark:border-amber-400/30 dark:bg-amber-500/10 p-3 space-y-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400/20">
+                    <i class="fas fa-shield-halved text-[11px] text-amber-600 dark:text-amber-400"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-semibold text-amber-800 dark:text-amber-400 mb-0.5">Content Policy — Video Blocked</p>
+                    <p class="text-[11px] leading-snug text-amber-700/90 dark:text-amber-300/80">{{ v.videoError!.message }}</p>
+                  </div>
+                </div>
+                <button type="button" (click)="generateVideoForVariant(i)"
+                  class="w-full py-1.5 rounded-lg text-[11px] font-medium transition
+                         bg-amber-100 text-amber-900 border border-amber-400/50 hover:bg-amber-200
+                         dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-400/30 dark:hover:bg-amber-500/25
+                         flex items-center justify-center gap-1.5">
+                  <i class="fas fa-rotate-right text-[10px]"></i> Retry
+                </button>
+              </div>
+
+              <!-- Video error: generic -->
+              <div *ngIf="!v.loadingVideo && !v.videoUrl && v.videoError && v.videoError.code !== 'CONTENT_POLICY'"
+                class="mb-3 rounded-xl border border-red-400/30 bg-red-500/10 p-3 space-y-2">
+                <div class="flex items-start gap-2">
+                  <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-400/20">
+                    <i class="fas fa-triangle-exclamation text-[11px] text-red-500 dark:text-red-400"></i>
+                  </span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-semibold text-red-700 dark:text-red-400 mb-0.5">Video Generation Failed</p>
+                    <p class="text-[11px] leading-snug text-red-600/90 dark:text-red-300/80">{{ v.videoError.message }}</p>
+                  </div>
+                </div>
+                <button type="button" (click)="generateVideoForVariant(i)"
+                  class="w-full py-1.5 rounded-lg text-[11px] font-medium transition
+                         bg-red-100 text-red-800 border border-red-400/40 hover:bg-red-200
+                         dark:bg-red-500/15 dark:text-red-300 dark:border-red-400/30 dark:hover:bg-red-500/25
+                         flex items-center justify-center gap-1.5">
+                  <i class="fas fa-rotate-right text-[10px]"></i> Try Again
+                </button>
+              </div>
+
+              <!-- Video player -->
+              <div *ngIf="!v.loadingVideo && v.videoUrl" class="mb-3">
+                <video [src]="v.videoUrl" controls playsinline
+                  class="w-full rounded-lg border border-gray-700 bg-black max-h-48 object-contain">
+                </video>
+              </div>
+
+              <!-- No video yet — two action buttons -->
+              <div *ngIf="!v.loadingVideo && !v.videoUrl && !v.videoError" class="mb-3 flex gap-2">
+                <button type="button" (click)="generateVideoForVariant(i)"
+                  class="flex-1 h-14 rounded-lg bg-blue-500/10 border border-dashed border-blue-500/30
+                         text-xs text-blue-400 hover:bg-blue-500/20 transition flex flex-col items-center justify-center gap-1">
+                  <i class="fas fa-film text-sm"></i>
+                  <span>Generate Video</span>
+                </button>
+              </div>
+
+              <!-- Use this Video row -->
+              <div *ngIf="!v.loadingVideo && v.videoUrl" class="flex gap-2">
+                <button type="button" (click)="selectVideo(i)"
+                  [class]="selectedVideoIndex === i
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-blue-500/20 hover:text-blue-400'"
+                  class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                  <i [class]="selectedVideoIndex === i ? 'fas fa-check' : 'fas fa-film'"></i>
+                  {{ selectedVideoIndex === i ? 'Video Selected' : 'Use this Video' }}
+                </button>
+              </div>
+            </div>
+          </ng-container>
+          <!-- /Video Section -->
+
         </div>
       </div>
     </div>
@@ -698,6 +899,12 @@
           <i class="fas fa-image text-[10px]"></i>
           No image
         </span>
+        <span *ngIf="selectedVideoIndex !== null"
+          class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full
+                 bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium">
+          <i class="fas fa-film text-[10px]"></i>
+          Video: Variant {{ selectedVideoIndex + 1 }}
+        </span>
       </div>
 
       <!-- Platform tabs -->
@@ -723,6 +930,24 @@
           [content]="selectedContent"
           [mediaFiles]="getPreviewMedia()"
         ></app-social-preview>
+      </div>
+
+      <!-- Video Preview -->
+      <div *ngIf="selectedVideoUrl"
+        class="bg-gray-900/60 backdrop-blur-sm rounded-xl border border-blue-500/20 overflow-hidden shadow-sm">
+        <div class="flex items-center gap-2 px-4 py-2.5 border-b border-blue-500/20">
+          <i class="fas fa-film text-xs text-blue-400"></i>
+          <span class="text-xs font-semibold text-blue-400">Selected Video — Variant {{ (selectedVideoIndex ?? 0) + 1 }}</span>
+          <button type="button" (click)="selectVideo(selectedVideoIndex!)"
+            class="ml-auto text-[10px] text-gray-500 hover:text-red-400 transition flex items-center gap-1">
+            <i class="fas fa-times"></i> Deselect
+          </button>
+        </div>
+        <div class="p-3">
+          <video [src]="selectedVideoUrl" controls playsinline
+            class="w-full rounded-lg border border-gray-700 bg-black max-h-64 object-contain">
+          </video>
+        </div>
       </div>
 
       <!-- Edit Text -->

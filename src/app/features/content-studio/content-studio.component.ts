@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, Subject, takeUntil } from 'rxjs';
+import { forkJoin, Subject, takeUntil, interval } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 import { SocialPreviewComponent } from '../publish/social-preview/social-preview.component';
@@ -23,6 +23,18 @@ export interface VariantItem {
   loadingImage?: boolean;
   /** Set when image generation fails — drives the inline error card on the variant */
   imageError?: { code: string; message: string } | null;
+  videoUrl?: string;
+  loadingVideo?: boolean;
+  videoJobId?: string;
+  videoProgress?: number;
+  videoError?: { code: string; message: string } | null;
+}
+
+export interface VideoConfig {
+  duration: 4 | 8 | 12;
+  aspect: '16:9' | '9:16';
+  style: string;
+  tone: string;
 }
 
 export interface ImageConfig {
@@ -60,9 +72,11 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   selectedPlatformIds: string[] = [];
   includeTrend = false;
   includeImage = false;
+  includeVideo = false;
 
   generating = false;
   generatingImages = false;
+  generatingVideos = false;
 
   variants: VariantItem[] = [];
 
@@ -70,6 +84,8 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   selectedTextIndex = 0;
   /** Index of the variant whose IMAGE is selected (null = no image) */
   selectedImageIndex: number | null = null;
+  /** Index of the variant whose VIDEO is selected (null = no video) */
+  selectedVideoIndex: number | null = null;
   /** Inline-editable copy of the chosen text */
   editedContent = '';
 
@@ -95,6 +111,30 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   };
 
   showAdvancedImageConfig = false;
+
+  // ─── Video Style System ──────────────────────────────────────────────────────
+
+  videoConfig: VideoConfig = {
+    duration: 4,
+    aspect: '9:16',
+    style: 'cinematic',
+    tone: 'energetic'
+  };
+
+  videoStyleOptions = [
+    { id: 'cinematic',    label: 'Cinematic',    icon: 'fa-film',          desc: 'Film-grade color grading, dramatic lighting' },
+    { id: 'realistic',    label: 'Realistic',    icon: 'fa-camera',        desc: 'Ultra-realistic live action footage' },
+    { id: 'animated',     label: 'Animated',     icon: 'fa-wand-sparkles', desc: 'Smooth 3D animation, modern motion graphics' },
+    { id: 'documentary',  label: 'Documentary',  icon: 'fa-video',         desc: 'Authentic documentary-style footage' },
+    { id: 'energetic',    label: 'Energetic',    icon: 'fa-bolt',          desc: 'Fast-paced dynamic edit, high energy motion' },
+  ];
+
+  videoToneOptions  = ['Energetic', 'Calm', 'Professional', 'Playful'];
+  videoDurations    = [4, 8, 12] as const;
+  videoAspectOptions = [
+    { id: '9:16',  label: '9:16',  icon: 'fa-mobile-screen', tooltip: 'Reel / Story (Portrait)' },
+    { id: '16:9',  label: '16:9',  icon: 'fa-display',       tooltip: 'Landscape' },
+  ];
 
   /** Style chip the user is currently hovering — drives live preview update instantly */
   hoveredStyleId: string | null = null;
@@ -381,6 +421,8 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   ];
 
   private destroy$ = new Subject<void>();
+  /** Tracks active polling subscriptions per variant index so we can cancel them */
+  private videoPolls = new Map<number, ReturnType<typeof setInterval>>();
 
   constructor(
     private http: HttpClient,
@@ -400,6 +442,8 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.videoPolls.forEach(t => clearInterval(t));
+    this.videoPolls.clear();
   }
 
   // ─── Data Loading ──────────────────────────────────────────────────────────
@@ -442,9 +486,11 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     if (!this.topic.trim() || this.selectedPlatformIds.length === 0) return;
     this.generating = true;
     this.generatingImages = false;
+    this.generatingVideos = false;
     this.variants = [];
     this.selectedTextIndex = 0;
     this.selectedImageIndex = null;
+    this.selectedVideoIndex = null;
     this.editedContent = '';
 
     this.http.post<{ success: boolean; data: { variants: VariantItem[] } }>(
@@ -461,11 +507,12 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.generating = false;
         if (res.success && res.data?.variants) {
-          this.variants = res.data.variants.map(v => ({ ...v, loadingImage: false }));
+          this.variants = res.data.variants.map(v => ({ ...v, loadingImage: false, loadingVideo: false }));
           this.selectedTextIndex = 0;
           this.editedContent = this.variants[0]?.content || '';
           this.loadCredits();
           if (this.includeImage) this.fetchImagesForVariants();
+          if (this.includeVideo) this.fetchVideosForVariants();
         }
       },
       error: (err) => {
@@ -529,6 +576,128 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     const body = err?.error;
     const code = body?.code || 'IMAGE_FAILED';
     const message = body?.message || 'Could not generate image for this variant. Please try again.';
+    return { code, message };
+  }
+
+  // ─── Video Generation ───────────────────────────────────────────────────────
+
+  fetchVideosForVariants(): void {
+    this.generatingVideos = true;
+    const topic = this.topic.trim();
+    this.variants.forEach(v => { v.loadingVideo = true; v.videoError = null; v.videoProgress = 0; });
+
+    this.variants.forEach((_v, idx) => {
+      this.submitVideoJob(topic, idx);
+    });
+  }
+
+  /** Generate a video for a single variant on demand */
+  generateVideoForVariant(idx: number): void {
+    if (this.variants[idx]?.loadingVideo) return;
+    this.variants[idx].loadingVideo = true;
+    this.variants[idx].videoError = null;
+    this.variants[idx].videoProgress = 0;
+    this.submitVideoJob(this.topic.trim(), idx);
+  }
+
+  /** Submit a video job and start polling for its status */
+  private submitVideoJob(topic: string, idx: number): void {
+    this.http.post<{ success: boolean; jobId: string }>(
+      `${environment.apiUrl}/posts/generate-variant-video`,
+      { topic, variantContent: this.variants[idx].content, videoConfig: this.videoConfig, variantIndex: idx }
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        if (res.success && res.jobId) {
+          this.variants[idx].videoJobId = res.jobId;
+          this.startVideoPolling(idx, res.jobId);
+        } else {
+          this.variants[idx].loadingVideo = false;
+          this.variants[idx].videoError = { code: 'VIDEO_FAILED', message: 'Could not start video generation.' };
+          this.checkAllVideosComplete();
+        }
+      },
+      error: (err) => {
+        this.variants[idx].loadingVideo = false;
+        this.variants[idx].videoError = this.parseVideoError(err);
+        this.checkAllVideosComplete();
+      }
+    });
+  }
+
+  /** Poll GET /video-job/:jobId every 4 s until completed or failed */
+  private startVideoPolling(idx: number, jobId: string): void {
+    // Clear any existing poll for this variant
+    if (this.videoPolls.has(idx)) clearInterval(this.videoPolls.get(idx)!);
+
+    const timer = setInterval(() => {
+      this.http.get<{ success: boolean; status: string; videoUrl: string | null; error: { code: string; message: string } | null }>(
+        `${environment.apiUrl}/posts/video-job/${jobId}`
+      ).pipe(takeUntil(this.destroy$)).subscribe({
+        next: (res) => {
+          if (!res.success) return;
+
+          if (res.status === 'completed' && res.videoUrl) {
+            clearInterval(timer);
+            this.videoPolls.delete(idx);
+            this.variants[idx].videoUrl = res.videoUrl;
+            this.variants[idx].loadingVideo = false;
+            this.variants[idx].videoProgress = 100;
+            if (this.selectedVideoIndex === null) this.selectedVideoIndex = idx;
+            this.checkAllVideosComplete();
+            this.loadCredits();
+          } else if (res.status === 'failed') {
+            clearInterval(timer);
+            this.videoPolls.delete(idx);
+            this.variants[idx].loadingVideo = false;
+            this.variants[idx].videoError = res.error || { code: 'VIDEO_FAILED', message: 'Video generation failed.' };
+            this.checkAllVideosComplete();
+          }
+          // status === 'pending' — keep polling
+        },
+        error: () => {
+          // Network error while polling — keep trying (don't stop the interval)
+        }
+      });
+    }, 4000);
+
+    this.videoPolls.set(idx, timer);
+  }
+
+  private checkAllVideosComplete(): void {
+    const allDone = this.variants.every(v => !v.loadingVideo);
+    if (allDone) this.generatingVideos = false;
+  }
+
+  selectVideo(idx: number): void {
+    this.selectedVideoIndex = this.selectedVideoIndex === idx ? null : idx;
+  }
+
+  randomizeVideoConfig(): void {
+    const pickStyle = () => this.videoStyleOptions[Math.floor(Math.random() * this.videoStyleOptions.length)].id;
+    const pickTone  = () => this.videoToneOptions[Math.floor(Math.random() * this.videoToneOptions.length)];
+    const pickAspect = () => this.videoAspectOptions[Math.floor(Math.random() * this.videoAspectOptions.length)].id as '16:9' | '9:16';
+    const pickDuration = () => this.videoDurations[Math.floor(Math.random() * this.videoDurations.length)] as 4 | 8 | 12;
+    this.videoConfig = { duration: pickDuration(), aspect: pickAspect(), style: pickStyle(), tone: pickTone() };
+  }
+
+  clearVideoConfig(): void {
+    this.videoConfig = { duration: 4, aspect: '9:16', style: 'cinematic', tone: 'energetic' };
+  }
+
+  get hasVideoConfig(): boolean {
+    return this.videoConfig.style !== 'cinematic' || this.videoConfig.tone !== 'energetic' ||
+           this.videoConfig.duration !== 4 || this.videoConfig.aspect !== '9:16';
+  }
+
+  get selectedVideoUrl(): string | undefined {
+    return this.selectedVideoIndex !== null ? this.variants[this.selectedVideoIndex]?.videoUrl : undefined;
+  }
+
+  /** Normalise an HTTP error into a typed videoError object */
+  private parseVideoError(err: any): { code: string; message: string } {
+    const body = err?.error;
+    const code = body?.code || 'VIDEO_FAILED';
+    const message = body?.message || 'Could not generate video for this variant. Please try again.';
     return { code, message };
   }
 
