@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { KnowledgeBaseService, IKnowledgeBase } from '../../core/services/knowledge-base.service';
@@ -19,7 +19,10 @@ export class KnowledgeBaseComponent implements OnInit {
   // UI State
   activeTab: 'list' | 'manual' | 'pdf' | 'url' = 'list';
   showAddModal = false;
+  /** Entry shown in “read full” popup */
   selectedEntry: IKnowledgeBase | null = null;
+  showReadModal = false;
+  readModalLoading = false;
   loading = false;
   submitting = false;
 
@@ -372,5 +375,38 @@ export class KnowledgeBaseComponent implements OnInit {
    */
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString();
+  }
+
+  openReadModal(entry: IKnowledgeBase): void {
+    this.readModalLoading = true;
+    this.showReadModal = true;
+    this.selectedEntry = null;
+    this.knowledgeBaseService.getKnowledgeBase(entry._id).subscribe({
+      next: (res) => {
+        this.readModalLoading = false;
+        if (res.success && res.data) {
+          this.selectedEntry = res.data;
+        } else {
+          this.selectedEntry = entry;
+        }
+      },
+      error: () => {
+        this.readModalLoading = false;
+        this.selectedEntry = entry;
+      }
+    });
+  }
+
+  closeReadModal(): void {
+    this.showReadModal = false;
+    this.selectedEntry = null;
+    this.readModalLoading = false;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeReadModal(ev: Event): void {
+    if (!this.showReadModal) return;
+    ev.preventDefault();
+    this.closeReadModal();
   }
 }

@@ -1,14 +1,22 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { AppearanceService } from '../../core/services/appearance.service';
 import { IUser } from '../../core/models/user.model';
 import { Subscription } from 'rxjs';
 
-/**
- * Home Component - Landing Page
- * Single Responsibility: Display RepMeUp brand and value proposition
- */
+type UseCaseTab = 'support' | 'social' | 'startup' | 'enterprise';
+
+interface UseCase {
+  title: string;
+  icon: string;
+  transformation: string;
+  points: string[];
+  stat: string;
+  statLabel: string;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -16,15 +24,77 @@ import { Subscription } from 'rxjs';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   currentUser: IUser | null = null;
   showUserMenu = false;
   showMobileMenu = false;
+  activeUseCaseTab: UseCaseTab = 'support';
   private userSubscription?: Subscription;
+  private observer?: IntersectionObserver;
+
+  useCases: Record<UseCaseTab, UseCase> = {
+    support: {
+      title: 'Support Teams',
+      icon: 'fas fa-headset',
+      transformation: 'From ticket overload to resolved in minutes',
+      points: [
+        'AI automatically routes and prioritises incoming issues',
+        'One unified inbox across every channel',
+        'Average response time cut by 70%'
+      ],
+      stat: '70%',
+      statLabel: 'Faster Response'
+    },
+    social: {
+      title: 'Social Media Managers',
+      icon: 'fas fa-hashtag',
+      transformation: 'From comment chaos to brand control',
+      points: [
+        'Reply to comments & DMs across all platforms in one place',
+        'AI generates on-brand replies with a single click',
+        'Never miss a mention or negative comment again'
+      ],
+      stat: '5x',
+      statLabel: 'More Coverage'
+    },
+    startup: {
+      title: 'Startups',
+      icon: 'fas fa-rocket',
+      transformation: 'From overwhelmed founder to scaling team',
+      points: [
+        'One person manages five platforms effortlessly',
+        'AI handles 80% of routine replies automatically',
+        'Focus on growth — not repetitive customer replies'
+      ],
+      stat: '80%',
+      statLabel: 'Less Manual Work'
+    },
+    enterprise: {
+      title: 'Enterprises',
+      icon: 'fas fa-building',
+      transformation: 'From scattered teams to unified brand control',
+      points: [
+        'Role-based team access and multi-step approval workflows',
+        'Compliance-ready audit trails for every reply sent',
+        'Custom AI trained precisely on your brand voice'
+      ],
+      stat: '99%',
+      statLabel: 'Brand Consistency'
+    }
+  };
+
+  get useCaseTabKeys(): UseCaseTab[] {
+    return Object.keys(this.useCases) as UseCaseTab[];
+  }
+
+  get activeCase(): UseCase {
+    return this.useCases[this.activeUseCaseTab];
+  }
 
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    public appearance: AppearanceService
   ) {}
 
   ngOnInit(): void {
@@ -33,10 +103,30 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngAfterViewInit(): void {
+    this.observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            this.observer?.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 }
+    );
+    document.querySelectorAll('.animate-on-scroll').forEach(el => {
+      this.observer?.observe(el);
+    });
+  }
+
   ngOnDestroy(): void {
-    if (this.userSubscription) {
-      this.userSubscription.unsubscribe();
-    }
+    this.userSubscription?.unsubscribe();
+    this.observer?.disconnect();
+  }
+
+  setActiveUseCaseTab(tab: UseCaseTab): void {
+    this.activeUseCaseTab = tab;
   }
 
   navigateToLogin(): void {

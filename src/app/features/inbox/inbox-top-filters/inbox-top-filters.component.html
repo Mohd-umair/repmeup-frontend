@@ -65,6 +65,53 @@
         (selectedChange)="onStatusesChange($event)"
       />
 
+      <!-- Chat session: open vs closed conversations -->
+      <div class="min-w-0 flex-1 sm:flex-initial flex flex-col gap-1">
+        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <i class="fas fa-comment-dots text-gray-400"></i>
+          Chat
+        </span>
+        <div
+          class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800/80"
+          role="group"
+          aria-label="Filter by chat session"
+        >
+          <button
+            type="button"
+            (click)="onChatSessionChange(null); $event.stopPropagation()"
+            class="px-2.5 py-2 text-[11px] font-semibold transition-colors min-w-[2.5rem]"
+            [class.bg-rep-lime]="chatSession === null"
+            [class.text-rep-black]="chatSession === null"
+            [class.text-gray-600]="chatSession !== null"
+            [class.dark:text-gray-300]="chatSession !== null"
+          >
+            All
+          </button>
+          <button
+            type="button"
+            (click)="onChatSessionChange('open')"
+            class="px-2.5 py-2 text-[11px] font-semibold border-l border-gray-200 dark:border-gray-700 transition-colors"
+            [class.bg-emerald-500]="chatSession === 'open'"
+            [class.text-white]="chatSession === 'open'"
+            [class.text-gray-600]="chatSession !== 'open'"
+            [class.dark:text-gray-300]="chatSession !== 'open'"
+          >
+            Open
+          </button>
+          <button
+            type="button"
+            (click)="onChatSessionChange('closed'); $event.stopPropagation()"
+            class="px-2.5 py-2 text-[11px] font-semibold border-l border-gray-200 dark:border-gray-700 transition-colors"
+            [class.bg-gray-600]="chatSession === 'closed'"
+            [class.text-white]="chatSession === 'closed'"
+            [class.text-gray-600]="chatSession !== 'closed'"
+            [class.dark:text-gray-300]="chatSession !== 'closed'"
+          >
+            Closed
+          </button>
+        </div>
+      </div>
+
       <!-- Date range (same row, label aligned with other filters) -->
       <div class="min-w-0 flex-1 sm:flex-initial flex flex-col gap-1">
         <span class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">

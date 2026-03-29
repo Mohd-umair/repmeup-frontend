@@ -10,7 +10,7 @@ import {
 } from '../inbox-multiselect-filter/inbox-multiselect-filter.component';
 
 export interface AppliedFilterChip {
-  category: 'label' | 'type' | 'sentiment' | 'status' | 'date';
+  category: 'label' | 'type' | 'sentiment' | 'status' | 'date' | 'chatSession';
   value: string;
   display: string;
 }
@@ -36,6 +36,8 @@ export class InboxTopFiltersComponent implements OnChanges {
   selectedTypes: string[] = [];
   selectedSentiments: string[] = [];
   selectedStatuses: string[] = [];
+  /** Open = active chats; Closed = session closed; null = all */
+  chatSession: 'open' | 'closed' | null = null;
 
   typeOptions: InboxMultiselectOption[] = [
     { value: InteractionType.COMMENT, label: 'Comments', icon: '💬' },
@@ -85,6 +87,8 @@ export class InboxTopFiltersComponent implements OnChanges {
     this.selectedSentiments = inboxFilterToArray(this.filters.sentiment as any);
     this.selectedStatuses = inboxFilterToArray(this.filters.status as any);
     this.selectedLabelIds = inboxFilterToArray(this.filters.label as any);
+    const cs = (this.filters as IInboxFilters).chatSession;
+    this.chatSession = cs === 'open' || cs === 'closed' ? cs : null;
   }
 
   private setMultiField<K extends keyof IInboxFilters>(key: K, values: string[]): void {
@@ -104,6 +108,11 @@ export class InboxTopFiltersComponent implements OnChanges {
     this.setMultiField('sentiment', this.selectedSentiments);
     this.setMultiField('status', this.selectedStatuses);
     this.setMultiField('label', this.selectedLabelIds);
+    if (this.chatSession) {
+      (this.filters as IInboxFilters).chatSession = this.chatSession;
+    } else {
+      delete (this.filters as IInboxFilters).chatSession;
+    }
   }
 
   onLabelsChange(vals: string[]): void {
@@ -123,6 +132,11 @@ export class InboxTopFiltersComponent implements OnChanges {
 
   onStatusesChange(vals: string[]): void {
     this.selectedStatuses = vals;
+    this.emitFilters();
+  }
+
+  onChatSessionChange(val: 'open' | 'closed' | null): void {
+    this.chatSession = val;
     this.emitFilters();
   }
 
@@ -164,6 +178,7 @@ export class InboxTopFiltersComponent implements OnChanges {
     this.selectedTypes = [];
     this.selectedSentiments = [];
     this.selectedStatuses = [];
+    this.chatSession = null;
     this.emitFilters();
   }
 
@@ -180,6 +195,7 @@ export class InboxTopFiltersComponent implements OnChanges {
       this.selectedSentiments.length > 0 ||
       this.selectedStatuses.length > 0 ||
       this.selectedLabelIds.length > 0 ||
+      this.chatSession != null ||
       !!(this.filters.dateFrom || this.filters.dateTo)
     );
   }
@@ -218,6 +234,11 @@ export class InboxTopFiltersComponent implements OnChanges {
       }
       chips.push({ category: 'date', value: 'range', display });
     }
+    if (this.chatSession === 'open') {
+      chips.push({ category: 'chatSession', value: 'open', display: 'Chat open' });
+    } else if (this.chatSession === 'closed') {
+      chips.push({ category: 'chatSession', value: 'closed', display: 'Chat closed' });
+    }
     return chips;
   }
 
@@ -237,6 +258,8 @@ export class InboxTopFiltersComponent implements OnChanges {
         return 'Status';
       case 'date':
         return 'Date';
+      case 'chatSession':
+        return 'Chat';
       default:
         return '';
     }
@@ -260,6 +283,9 @@ export class InboxTopFiltersComponent implements OnChanges {
       case 'date':
         this.clearDateRange();
         return;
+      case 'chatSession':
+        this.chatSession = null;
+        break;
     }
     this.emitFilters();
   }

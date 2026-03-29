@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute } from '@angular/router';
@@ -19,6 +19,26 @@ export interface VariantItem {
   content: string;
   imageUrl?: string;
   loadingImage?: boolean;
+}
+
+export interface ImageConfig {
+  style: string;
+  mood: string;
+  lighting: string;
+  composition: string;
+  colorPalette: string;
+  cameraAngle: string;
+  format: string;
+}
+
+export interface ImageStyleOption {
+  id: string;
+  label: string;
+  icon: string;
+  desc: string;
+  accentColor: string;
+  /** 3 representative sample URLs — shown in hover tooltip and selected preview panel */
+  samples: string[];
 }
 
 @Component({
@@ -57,6 +77,268 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   scheduling = false;
   publishing = false;
   aiCredits: any = null;
+
+  // ─── Image Style System ──────────────────────────────────────────────────────
+
+  imageConfig: ImageConfig = {
+    style: '',
+    mood: '',
+    lighting: '',
+    composition: '',
+    colorPalette: '',
+    cameraAngle: '',
+    format: 'square'
+  };
+
+  showAdvancedImageConfig = false;
+
+  /** Style chip the user is currently hovering — drives live preview update instantly */
+  hoveredStyleId: string | null = null;
+
+  /** Which sample (0-2) is shown large in the preview panel */
+  previewSampleIndex = 0;
+
+  /** Tracks failed sample image loads so we can show fallback */
+  failedSamples = new Set<string>();
+
+  // ─── Lightbox ────────────────────────────────────────────────────────────────
+  lightboxUrl: string | null = null;
+  lightboxLabel = '';
+  /** All 3 sample URLs for the active style — used for prev/next navigation */
+  lightboxUrls: string[] = [];
+  lightboxIndex = 0;
+
+  openLightbox(url: string, label: string, allUrls: string[], idx: number): void {
+    this.lightboxUrl   = url;
+    this.lightboxLabel = label;
+    this.lightboxUrls  = allUrls;
+    this.lightboxIndex = idx;
+  }
+
+  closeLightbox(): void { this.lightboxUrl = null; }
+
+  lightboxNav(dir: 1 | -1): void {
+    const len = this.lightboxUrls.length;
+    this.lightboxIndex = (this.lightboxIndex + dir + len) % len;
+    this.lightboxUrl   = this.lightboxUrls[this.lightboxIndex];
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(e: KeyboardEvent): void {
+    if (!this.lightboxUrl) return;
+    if (e.key === 'Escape')      this.closeLightbox();
+    if (e.key === 'ArrowRight')  this.lightboxNav(1);
+    if (e.key === 'ArrowLeft')   this.lightboxNav(-1);
+  }
+
+  /**
+   * 3 representative sample URLs per style.
+   * Seeds are stable so each style always shows the same set.
+   * Replace with your own asset URLs in /assets/content-studio/styles/ at any time.
+   */
+  imageStyles: ImageStyleOption[] = [
+    { id: 'photorealistic', label: 'Photorealistic', icon: 'fa-camera', accentColor: 'blue',
+      desc: 'Ultra-sharp real-world photography, DSLR quality',
+      samples: ['https://picsum.photos/seed/rop1a/480/480','https://picsum.photos/seed/rop1b/480/480','https://picsum.photos/seed/rop1c/480/480'] },
+    { id: 'cinematic', label: 'Cinematic', icon: 'fa-film', accentColor: 'orange',
+      desc: 'Film-grade color grading, dramatic anamorphic quality',
+      samples: ['https://picsum.photos/seed/rop2a/480/480','https://picsum.photos/seed/rop2b/480/480','https://picsum.photos/seed/rop2c/480/480'] },
+    { id: 'minimalist', label: 'Minimalist', icon: 'fa-minus', accentColor: 'gray',
+      desc: 'Clean geometric forms, vast white space, pure simplicity',
+      samples: ['https://picsum.photos/seed/rop3a/480/480','https://picsum.photos/seed/rop3b/480/480','https://picsum.photos/seed/rop3c/480/480'] },
+    { id: '3d-render', label: '3D Render', icon: 'fa-cube', accentColor: 'cyan',
+      desc: 'CGI depth, soft ambient occlusion, ray-traced realism',
+      samples: ['https://picsum.photos/seed/rop4a/480/480','https://picsum.photos/seed/rop4b/480/480','https://picsum.photos/seed/rop4c/480/480'] },
+    { id: 'illustration', label: 'Illustration', icon: 'fa-pen-nib', accentColor: 'yellow',
+      desc: 'Flat / vector digital art, modern graphic style',
+      samples: ['https://picsum.photos/seed/rop5a/480/480','https://picsum.photos/seed/rop5b/480/480','https://picsum.photos/seed/rop5c/480/480'] },
+    { id: 'corporate', label: 'Corporate', icon: 'fa-briefcase', accentColor: 'indigo',
+      desc: 'Polished professional business aesthetic, executive quality',
+      samples: ['https://picsum.photos/seed/rop6a/480/480','https://picsum.photos/seed/rop6b/480/480','https://picsum.photos/seed/rop6c/480/480'] },
+    { id: 'futuristic', label: 'Futuristic', icon: 'fa-rocket', accentColor: 'violet',
+      desc: 'Neon-lit cyberpunk, holographic UI, sci-fi tech aesthetic',
+      samples: ['https://picsum.photos/seed/rop7a/480/480','https://picsum.photos/seed/rop7b/480/480','https://picsum.photos/seed/rop7c/480/480'] },
+    { id: 'vintage', label: 'Vintage', icon: 'fa-clock-rotate-left', accentColor: 'amber',
+      desc: 'Analog film grain, faded warm palette, nostalgic retro feel',
+      samples: ['https://picsum.photos/seed/rop8a/480/480','https://picsum.photos/seed/rop8b/480/480','https://picsum.photos/seed/rop8c/480/480'] },
+    { id: 'bold-graphic', label: 'Bold Graphic', icon: 'fa-bolt', accentColor: 'red',
+      desc: 'High-contrast poster art, editorial punch, strong geometry',
+      samples: ['https://picsum.photos/seed/rop9a/480/480','https://picsum.photos/seed/rop9b/480/480','https://picsum.photos/seed/rop9c/480/480'] },
+    { id: 'watercolor', label: 'Watercolor', icon: 'fa-droplet', accentColor: 'teal',
+      desc: 'Soft expressive brushstrokes, artistic paper texture',
+      samples: ['https://picsum.photos/seed/rop10a/480/480','https://picsum.photos/seed/rop10b/480/480','https://picsum.photos/seed/rop10c/480/480'] },
+    { id: 'dark-moody', label: 'Dark & Moody', icon: 'fa-moon', accentColor: 'slate',
+      desc: 'Deep shadows, chiaroscuro noir drama, cinematic atmosphere',
+      samples: ['https://picsum.photos/seed/rop11a/480/480','https://picsum.photos/seed/rop11b/480/480','https://picsum.photos/seed/rop11c/480/480'] },
+    { id: 'pastel-life', label: 'Pastel Life', icon: 'fa-sun', accentColor: 'pink',
+      desc: 'Bright airy lifestyle, soft pastel tones, consumer-friendly warmth',
+      samples: ['https://picsum.photos/seed/rop12a/480/480','https://picsum.photos/seed/rop12b/480/480','https://picsum.photos/seed/rop12c/480/480'] }
+  ];
+
+  moodOptions       = ['Energetic', 'Calm', 'Inspiring', 'Professional', 'Playful', 'Mysterious', 'Luxurious', 'Friendly'];
+  lightingOptions   = ['Natural Daylight', 'Golden Hour', 'Studio Lighting', 'Dramatic Shadows', 'Neon Glow', 'Soft Diffused', 'Backlit'];
+  compositionOptions= ['Rule of Thirds', 'Centered Symmetry', 'Close-up Detail', 'Wide Shot', 'Flat Lay', 'Dynamic Diagonal'];
+  colorPaletteOptions = ['Vibrant', 'Monochrome', 'Pastel & Soft', 'Earthy Tones', 'Cool Blues', 'Warm Oranges', 'High Contrast B&W'];
+  cameraAngleOptions  = ['Eye Level', "Bird's Eye", 'Low Angle Hero', 'Close-up Macro', 'Isometric'];
+  formatOptions       = [
+    { id: 'square',    label: '1:1',  tooltip: 'Square — Instagram' },
+    { id: 'portrait',  label: '4:5',  tooltip: 'Portrait — IG Feed' },
+    { id: 'landscape', label: '16:9', tooltip: 'Landscape — LinkedIn' },
+    { id: 'story',     label: '9:16', tooltip: 'Story / Reel' }
+  ];
+
+  // ─── Visual Style Selection & Preview ─────────────────────────────────────
+
+  /** Toggle-select a style chip; resets sample index so previews feel fresh */
+  selectVisualStyle(styleId: string): void {
+    this.imageConfig.style = this.imageConfig.style === styleId ? '' : styleId;
+    this.previewSampleIndex = 0;
+    this.failedSamples.clear();
+  }
+
+  /** Called on chip mouseenter — instantly updates the preview panel */
+  hoverStyle(styleId: string): void {
+    this.hoveredStyleId = styleId;
+  }
+
+  /** Called on chip mouseleave — reverts preview to selected style */
+  unhoverStyle(): void {
+    this.hoveredStyleId = null;
+  }
+
+  /** The style driving the preview panel: hovered takes priority over selected */
+  get activePreviewStyle(): ImageStyleOption | null {
+    const id = this.hoveredStyleId || this.imageConfig.style;
+    return id ? (this.imageStyles.find(s => s.id === id) ?? null) : null;
+  }
+
+  /**
+   * Returns a sample URL for a given variation index (0-2).
+   * - No advanced filters → use the static style sample at that index.
+   * - Any filter active → build a deterministic picsum seed combining all options
+   *   + the variation index, so all 3 thumbnails AND the main image each show
+   *   a different image that reflects the same filter combination.
+   */
+  getSampleUrl(idx: number, size: 1200 | 480 | 120 = 480): string {
+    const style = this.activePreviewStyle;
+    if (!style) return '';
+    const c = this.imageConfig;
+    const hasFilters = !this.hoveredStyleId &&
+      (c.mood || c.lighting || c.composition || c.colorPalette || c.cameraAngle);
+    if (!hasFilters) {
+      const url = style.samples[idx] ?? style.samples[0];
+      // Static samples are stored at /480/480 — rewrite to the requested size
+      return url.replace('/480/480', `/${size}/${size}`);
+    }
+    const seed = [style.id, c.mood || 'x', c.lighting || 'x', c.composition || 'x',
+                  c.colorPalette || 'x', c.cameraAngle || 'x', `v${idx}`]
+      .join('-').replace(/\s+/g, '').toLowerCase();
+    return `https://picsum.photos/seed/${seed}/${size}/${size}`;
+  }
+
+  /** Convenience getter for the big preview image (respects hover vs selected index) */
+  get dynamicPreviewUrl(): string {
+    return this.getSampleUrl(this.hoveredStyleId ? 0 : this.previewSampleIndex);
+  }
+
+  /**
+   * CSS filter string that visually simulates the selected Mood + Lighting + Palette
+   * on the preview image without requiring a new AI call.
+   */
+  get previewCssFilter(): string {
+    const moodFilters: Record<string, string> = {
+      'Energetic':    'brightness(1.1) saturate(1.4) contrast(1.05)',
+      'Calm':         'brightness(0.97) saturate(0.75) contrast(0.95)',
+      'Inspiring':    'brightness(1.05) saturate(1.15) contrast(1.05)',
+      'Professional': 'saturate(0.65) brightness(0.97) contrast(1.05)',
+      'Playful':      'saturate(1.5) brightness(1.08) hue-rotate(10deg)',
+      'Mysterious':   'brightness(0.72) contrast(1.25) saturate(0.9)',
+      'Luxurious':    'contrast(1.1) brightness(0.95) saturate(1.1)',
+      'Friendly':     'brightness(1.08) saturate(1.2) contrast(0.97)',
+    };
+    const lightingFilters: Record<string, string> = {
+      'Natural Daylight': '',
+      'Golden Hour':      'sepia(0.3) brightness(1.12)',
+      'Studio Lighting':  'contrast(1.12) brightness(1.06)',
+      'Dramatic Shadows': 'contrast(1.35) brightness(0.82)',
+      'Neon Glow':        'saturate(1.6) brightness(1.12) contrast(1.08)',
+      'Soft Diffused':    'brightness(1.1) contrast(0.88)',
+      'Backlit':          'brightness(1.25) contrast(0.88)',
+    };
+    const paletteFilters: Record<string, string> = {
+      'Vibrant':              'saturate(1.5)',
+      'Monochrome':           'saturate(0) contrast(1.1)',
+      'Pastel & Soft':        'saturate(0.7) brightness(1.1)',
+      'Earthy Tones':         'sepia(0.4) saturate(0.85)',
+      'Cool Blues':           'hue-rotate(20deg) saturate(1.1)',
+      'Warm Oranges':         'hue-rotate(-20deg) saturate(1.2) brightness(1.05)',
+      'High Contrast B&W':    'saturate(0) contrast(1.5)',
+    };
+    const c = this.imageConfig;
+    const parts: string[] = [];
+    if (c.mood && moodFilters[c.mood])           parts.push(moodFilters[c.mood]);
+    if (c.lighting && lightingFilters[c.lighting]) parts.push(lightingFilters[c.lighting]);
+    if (c.colorPalette && paletteFilters[c.colorPalette]) parts.push(paletteFilters[c.colorPalette]);
+    return parts.filter(Boolean).join(' ') || 'none';
+  }
+
+  /** All selected advanced filter options displayed as badges in the preview */
+  get activeFilterBadges(): { label: string; value: string; icon: string }[] {
+    const c = this.imageConfig;
+    const f: { label: string; value: string; icon: string }[] = [];
+    if (c.mood)         f.push({ label: 'Mood',    value: c.mood,         icon: 'fa-face-smile' });
+    if (c.lighting)     f.push({ label: 'Light',   value: c.lighting,     icon: 'fa-lightbulb' });
+    if (c.composition)  f.push({ label: 'Comp',    value: c.composition,  icon: 'fa-crop' });
+    if (c.colorPalette) f.push({ label: 'Palette', value: c.colorPalette, icon: 'fa-palette' });
+    if (c.cameraAngle)  f.push({ label: 'Angle',   value: c.cameraAngle,  icon: 'fa-video' });
+    return f;
+  }
+
+  get hasAdvancedFilters(): boolean {
+    const c = this.imageConfig;
+    return !!(c.mood || c.lighting || c.composition || c.colorPalette || c.cameraAngle);
+  }
+
+  /** Cycle to a specific sample in the preview panel */
+  setPreviewSample(idx: number): void {
+    this.previewSampleIndex = idx;
+  }
+
+  /** Fallback: mark a sample URL as failed so we show a placeholder instead */
+  markSampleFailed(url: string): void {
+    this.failedSamples.add(url);
+  }
+
+  isSampleFailed(url: string): boolean {
+    return this.failedSamples.has(url);
+  }
+
+  randomizeImageConfig(): void {
+    const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+    this.imageConfig = {
+      style:        pick(this.imageStyles).id,
+      mood:         pick(this.moodOptions),
+      lighting:     pick(this.lightingOptions),
+      composition:  pick(this.compositionOptions),
+      colorPalette: pick(this.colorPaletteOptions),
+      cameraAngle:  pick(this.cameraAngleOptions),
+      format:       pick(this.formatOptions).id
+    };
+    this.previewSampleIndex = 0;
+    this.failedSamples.clear();
+  }
+
+  clearImageConfig(): void {
+    this.imageConfig = { style: '', mood: '', lighting: '', composition: '', colorPalette: '', cameraAngle: '', format: 'square' };
+    this.previewSampleIndex = 0;
+    this.failedSamples.clear();
+  }
+
+  get hasImageConfig(): boolean {
+    return !!(this.imageConfig.style || this.imageConfig.mood || this.imageConfig.lighting);
+  }
+
+  // ─── Helpers ────────────────────────────────────────────────────────────────
 
   intentOptions = [
     { value: 'Awareness', label: 'Awareness' },
@@ -168,7 +450,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.variants.forEach((v, idx) => {
       this.http.post<{ success: boolean; imageUrl: string }>(
         `${environment.apiUrl}/posts/generate-variant-image`,
-        { topic, variantContent: v.content }
+        { topic, variantContent: v.content, imageConfig: this.imageConfig, variantIndex: idx }
       ).pipe(takeUntil(this.destroy$)).subscribe({
         next: (res) => {
           if (res.success && res.imageUrl) this.variants[idx].imageUrl = res.imageUrl;
@@ -189,7 +471,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.variants[idx].loadingImage = true;
     this.http.post<{ success: boolean; imageUrl: string }>(
       `${environment.apiUrl}/posts/generate-variant-image`,
-      { topic: this.topic.trim(), variantContent: this.variants[idx].content }
+      { topic: this.topic.trim(), variantContent: this.variants[idx].content, imageConfig: this.imageConfig, variantIndex: idx }
     ).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         if (res.success && res.imageUrl) {

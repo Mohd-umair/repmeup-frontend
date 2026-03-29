@@ -39,6 +39,8 @@ export interface IInteraction {
   resolvedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  /** When false, conversation is treated as closed in inbox filters until reopened */
+  chatOpen?: boolean;
 }
 
 export enum Platform {
@@ -192,6 +194,8 @@ export interface IInboxFilters {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  /** Client-only: mapped to `chatOpen=true|false` query for GET /inbox */
+  chatSession?: 'open' | 'closed';
 }
 
 export interface IAssignmentHistory {

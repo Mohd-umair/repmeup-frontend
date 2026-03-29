@@ -6,3 +6,28 @@
 }
 
 @include theme.light-mode-overrides;
+
+.kb-read-modal__body {
+  font-family: inherit;
+}
+
+.dark .kb-read-modal {
+  background-color: rgb(17 24 39);
+  border-color: rgb(55 65 81);
+}
+
+.dark .kb-read-modal .text-rep-black {
+  color: rgb(243 244 246);
+}
+
+.dark .kb-read-modal .text-gray-800 {
+  color: rgb(209 213 219);
+}
+
+.dark .kb-read-modal .border-gray-200 {
+  border-color: rgb(55 65 81);
+}
+
+.dark .kb-read-modal .bg-gray-50\/80 {
+  background-color: rgb(31 41 55 / 0.9);
+}

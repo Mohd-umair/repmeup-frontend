@@ -175,6 +175,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         if (!inboxFilterMatches(this.platformFilters.platform as any, incoming.platform)) return;
         if (!inboxFilterMatches(this.topFilters.type as any, incoming.type)) return;
         if (!inboxIntentBucketMatches(this.topFilters.intentBucket, incoming)) return;
+        const chatSession = (this.topFilters as IInboxFilters & { chatSession?: 'open' | 'closed' }).chatSession;
+        if (chatSession === 'open' && incoming.chatOpen === false) return;
+        if (chatSession === 'closed' && incoming.chatOpen !== false) return;
         // New messages are always unread — so if the unread filter is active they qualify.
         // If a non-unread status filter is active (e.g. resolved), skip new incoming messages.
         const statusFilter = (this.topFilters.status as string) || '';
@@ -885,16 +888,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    * Refresh inbox list without showing loading spinner (for polling so new DMs appear like chat).
    */
   private refreshInboxListSilent(): void {
-    const mergedFilters = this.stripEmptyDateRange({
-      ...this.platformFilters,
-      ...this.topFilters,
-      page: 1,
-      viewMode: this.viewMode === 'all' ? undefined : this.viewMode,
-      status: this.topFilters.status || undefined
-    });
-    this.filters = Object.fromEntries(
-      Object.entries(mergedFilters).filter(([_, v]) => v !== undefined && v !== null && v !== '')
-    ) as IInboxFilters;
+    this.filters = this.buildInteractionRequestFilters(1);
     this.inboxService.getInteractions(this.filters).subscribe({
       next: (response) => {
         this.totalConversations = response?.data?.pagination?.total ?? this.totalConversations;
@@ -915,22 +909,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       this.loadingMoreConversations = true;
     }
 
-    // Merge filters: viewMode affects assignedTo and status/sort
-    // Clean undefined values to prevent wrong cache keys
-    const mergedFilters = this.stripEmptyDateRange({
-      ...this.platformFilters,
-      ...this.topFilters,
-      page: this.currentPage,
-      viewMode: this.viewMode === 'all' ? undefined : this.viewMode,
-      // Pass status from topFilters unless we're in archived view
-      status: this.topFilters.status || undefined
-    });
-    
-    // Remove undefined/null/empty values from filters
-    this.filters = Object.fromEntries(
-      Object.entries(mergedFilters).filter(([_, v]) => v !== undefined && v !== null && v !== '')
-    ) as IInboxFilters;
-    
+    this.filters = this.buildInteractionRequestFilters(this.currentPage);
+
     this.inboxService.getInteractions(this.filters).subscribe({
       next: (response) => {
         // Backend sends hasMore — no need to know page size on the frontend
@@ -1035,6 +1015,31 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     if (!next.dateFrom?.toString().trim()) delete next.dateFrom;
     if (!next.dateTo?.toString().trim()) delete next.dateTo;
     return next;
+  }
+
+  /**
+   * Maps UI filters (e.g. chatSession) to API query params (chatOpen) and strips empties.
+   */
+  private buildInteractionRequestFilters(pageNum: number): IInboxFilters {
+    const merged = this.stripEmptyDateRange({
+      ...this.platformFilters,
+      ...this.topFilters,
+      page: pageNum,
+      viewMode: this.viewMode === 'all' ? undefined : this.viewMode,
+      status: this.topFilters.status || undefined
+    });
+    const raw = merged as IInboxFilters & { chatSession?: 'open' | 'closed' };
+    const { chatSession, ...rest } = raw;
+    const entries = Object.entries(rest).filter(
+      ([_, v]) => v !== undefined && v !== null && v !== ''
+    ) as [string, unknown][];
+    const out = Object.fromEntries(entries) as Record<string, unknown>;
+    if (chatSession === 'open') {
+      out['chatOpen'] = 'true';
+    } else if (chatSession === 'closed') {
+      out['chatOpen'] = 'false';
+    }
+    return out as IInboxFilters;
   }
 
   // ── Quick-filter active-state helpers (each filter is independent) ──────────
@@ -1340,14 +1345,34 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     this.inboxService.getInteraction(interaction._id).subscribe({
       next: (response) => {
         if (response.success && response.data) {
+          const data = response.data;
+          // Opening a closed thread starts the chat again (session open)
+          if (data.chatOpen === false) {
+            this.inboxService.updateChatOpen(data._id, true).subscribe({
+              next: (r) => {
+                if (r.success && r.data) {
+                  this.inboxService.setSelectedInteraction(r.data);
+                  const index = this.interactions.findIndex(i => i._id === data._id);
+                  if (index !== -1) {
+                    this.interactions[index] = r.data;
+                  }
+                } else {
+                  this.inboxService.setSelectedInteraction(data);
+                }
+              },
+              error: () => {
+                this.inboxService.setSelectedInteraction(data);
+              }
+            });
+            return;
+          }
           // Update the selected interaction with the full details
-          this.inboxService.setSelectedInteraction(response.data);
-          
+          this.inboxService.setSelectedInteraction(data);
+
           // Update the interaction in the local list if status changed
           const index = this.interactions.findIndex(i => i._id === interaction._id);
-          if (index !== -1 && response.data.status !== this.interactions[index].status) {
-            this.interactions[index] = response.data;
-            // The service will sync on next refresh, local update is sufficient for UI
+          if (index !== -1 && data.status !== this.interactions[index].status) {
+            this.interactions[index] = data;
           }
         }
       },

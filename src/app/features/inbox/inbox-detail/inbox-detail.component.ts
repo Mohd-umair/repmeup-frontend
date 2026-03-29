@@ -84,6 +84,9 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   // Resolution
   resolvingInteraction = false;
 
+  /** Chat session open/closed (inbox workflow) */
+  updatingChatOpen = false;
+
   /** Deleting Facebook comment (on platform + DB) */
   deletingComment = false;
   deletingReplyId: string | null = null;
@@ -1178,6 +1181,46 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       error: (error) => {
         console.error('Error reopening interaction:', error);
         this.resolvingInteraction = false;
+      }
+    });
+  }
+
+  isChatSessionOpen(): boolean {
+    return this.interaction != null && this.interaction.chatOpen !== false;
+  }
+
+  closeChatSession(): void {
+    if (!this.interaction?._id) return;
+    this.updatingChatOpen = true;
+    this.inboxService.updateChatOpen(this.interaction._id, false).subscribe({
+      next: (res) => {
+        this.updatingChatOpen = false;
+        if (res.success) {
+          this.sweetAlertService.toast('success', 'Chat closed');
+        }
+      },
+      error: (err) => {
+        this.updatingChatOpen = false;
+        const msg = err?.error?.error || 'Could not close chat';
+        this.sweetAlertService.toast('error', msg);
+      }
+    });
+  }
+
+  reopenChatSession(): void {
+    if (!this.interaction?._id) return;
+    this.updatingChatOpen = true;
+    this.inboxService.updateChatOpen(this.interaction._id, true).subscribe({
+      next: (res) => {
+        this.updatingChatOpen = false;
+        if (res.success) {
+          this.sweetAlertService.toast('success', 'Chat opened');
+        }
+      },
+      error: (err) => {
+        this.updatingChatOpen = false;
+        const msg = err?.error?.error || 'Could not open chat';
+        this.sweetAlertService.toast('error', msg);
       }
     });
   }

@@ -1,58 +1,71 @@
-// Home Component Styles
+// ─── Scroll Reveal ────────────────────────────────────────────────────────────
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.72s cubic-bezier(0.22, 1, 0.36, 1);
 
-// Smooth scroll behavior
-html {
-  scroll-behavior: smooth;
-}
-
-// Navigation animations
-nav {
-  transition: all 0.3s ease;
-  
-  &.scrolled {
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-}
-
-// Hero section animations
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
+  &.is-visible {
     opacity: 1;
     transform: translateY(0);
   }
+
+  &.delay-1 { transition-delay: 0.1s; }
+  &.delay-2 { transition-delay: 0.2s; }
+  &.delay-3 { transition-delay: 0.3s; }
+  &.delay-4 { transition-delay: 0.4s; }
+  &.delay-5 { transition-delay: 0.5s; }
+  &.delay-6 { transition-delay: 0.6s; }
 }
 
-.hero-content {
-  animation: fadeInUp 0.8s ease-out;
+// ─── Glow Pulse ───────────────────────────────────────────────────────────────
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 24px rgba(216, 255, 0, 0.15); }
+  50%       { box-shadow: 0 0 48px rgba(216, 255, 0, 0.40); }
 }
 
-// Feature card hover effects
-.feature-card {
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-8px);
-    
-    .feature-icon {
-      transform: scale(1.1) rotate(5deg);
-    }
-  }
+.glow-lime {
+  animation: glow-pulse 3.2s ease-in-out infinite;
 }
 
-.feature-icon {
-  transition: transform 0.3s ease;
+// ─── AI Gradient Shimmer ──────────────────────────────────────────────────────
+@keyframes ai-shimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-// Testimonial card animations
-@keyframes slideIn {
+.ai-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.12) 0%,
+    rgba(139, 92, 246, 0.12) 50%,
+    rgba(59, 130, 246, 0.12) 100%
+  );
+  background-size: 200% 200%;
+  animation: ai-shimmer 5s ease-in-out infinite;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+// ─── Typing Cursor ────────────────────────────────────────────────────────────
+@keyframes blink-cursor {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.typing-cursor::after {
+  content: '|';
+  animation: blink-cursor 1s infinite;
+  color: #D8FF00;
+  margin-left: 2px;
+  font-weight: 300;
+}
+
+// ─── Pattern Interrupt Text Reveal ────────────────────────────────────────────
+@keyframes text-slide-in {
   from {
     opacity: 0;
-    transform: translateX(-20px);
+    transform: translateX(-28px);
   }
   to {
     opacity: 1;
@@ -60,206 +73,524 @@ nav {
   }
 }
 
-.testimonial-card {
-  animation: slideIn 0.6s ease-out;
-  animation-fill-mode: both;
-  
-  &:nth-child(1) {
-    animation-delay: 0.1s;
-  }
-  
-  &:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-  
-  &:nth-child(3) {
-    animation-delay: 0.3s;
-  }
+.pi-line {
+  opacity: 0;
+  animation: text-slide-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+
+  &:nth-child(1) { animation-delay: 0.05s; }
+  &:nth-child(2) { animation-delay: 0.2s; }
+  &:nth-child(3) { animation-delay: 0.35s; }
+  &:nth-child(4) { animation-delay: 0.5s; }
+  &:nth-child(5) { animation-delay: 0.65s; }
+  &:nth-child(6) { animation-delay: 0.8s; }
+  &:nth-child(7) { animation-delay: 0.95s; }
 }
 
-// Button animations
-.btn-gradient {
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-  }
-  
-  &:hover::before {
-    width: 300px;
-    height: 300px;
-  }
-  
-  span {
-    position: relative;
-    z-index: 1;
-  }
-}
-
-// Dashboard preview animation
+// ─── Floating Badge ───────────────────────────────────────────────────────────
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.float-badge {
+  animation: float 4s ease-in-out infinite;
+
+  &.float-delay {
+    animation-delay: 2s;
   }
 }
 
-.dashboard-preview {
-  animation: float 3s ease-in-out infinite;
-}
+// ─── Card Hover Lift ──────────────────────────────────────────────────────────
+.card-hover {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.3s ease;
 
-// Gradient text animation
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 48px rgba(216, 255, 0, 0.08);
+    border-color: rgba(216, 255, 0, 0.35);
   }
 }
 
+// ─── Problem Card Icon Shake ──────────────────────────────────────────────────
+@keyframes icon-shake {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25%       { transform: rotate(-4deg) scale(1.06); }
+  75%       { transform: rotate(4deg) scale(1.06); }
+}
+
+.problem-card:hover .problem-icon {
+  animation: icon-shake 0.5s ease-in-out;
+}
+
+// ─── Gradient Text ────────────────────────────────────────────────────────────
 .gradient-text {
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease infinite;
+  background: linear-gradient(135deg, #D8FF00 0%, #a8e000 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-// CTA section glow effect
-.cta-section {
+// ─── Step Connector ───────────────────────────────────────────────────────────
+.step-line {
+  background: linear-gradient(90deg, #D8FF00 0%, rgba(216, 255, 0, 0.15) 100%);
+  height: 2px;
+}
+
+// ─── ROI Number Entrance ──────────────────────────────────────────────────────
+@keyframes number-pop {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.roi-number {
+  animation: number-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+
+  &.is-visible { animation-play-state: running; }
+}
+
+// ─── Hero background orbs ─────────────────────────────────────────────────────
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(20px, -15px) scale(1.05); }
+  66%       { transform: translate(-10px, 20px) scale(0.97); }
+}
+
+.bg-orb {
+  animation: orb-drift 12s ease-in-out infinite;
+  pointer-events: none;
+
+  &.orb-2 { animation-delay: -4s; animation-duration: 16s; }
+  &.orb-3 { animation-delay: -8s; animation-duration: 20s; }
+}
+
+// ─── Tab Active Underline ─────────────────────────────────────────────────────
+.tab-btn {
   position: relative;
-  
-  &::before {
+  transition: color 0.25s ease;
+
+  &::after {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-    animation: rotate 20s linear infinite;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #D8FF00;
+    transform: scaleX(0);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  &.active::after {
+    transform: scaleX(1);
   }
 }
 
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+// ─── Theme Transition ─────────────────────────────────────────────────────────
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 250ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-// Stats counter animation
-.stat-number {
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: scale(1.1);
-  }
+// Exclude animation-driven elements from the blanket transition
+.animate-on-scroll,
+.bg-orb,
+.float-badge,
+.pi-line,
+.glow-lime,
+.ai-gradient-bg,
+.typing-cursor::after {
+  transition-property: opacity, transform, background-color, border-color, color;
 }
 
-// Platform icons animation
-.platform-icon {
-  transition: transform 0.3s ease;
-  
-  &:hover {
-    transform: scale(1.2) rotate(5deg);
-  }
+// ─── Light-mode overrides for CSS classes that Tailwind can't reach ───────────
+:root {
+  --page-bg: #ffffff;
+  --page-alt-bg: #f8fafb;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --border: #e5e7eb;
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
-  .hero-content {
-    text-align: center;
-  }
-  
-  .dashboard-preview {
-    margin-top: 2rem;
-  }
+.dark {
+  --page-bg: #0B0B0B;
+  --page-alt-bg: #030712;
+  --card-bg: rgba(17, 24, 39, 0.5);
+  --border: #1f2937;
 }
 
-// Custom scrollbar for webkit browsers
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
+// ─── Scrollbar ────────────────────────────────────────────────────────────────
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--page-bg); }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
-  border-radius: 5px;
-  
-  &:hover {
-    background: linear-gradient(180deg, #2563eb, #7c3aed);
+  background: #D8FF00;
+  border-radius: 4px;
+}
+
+// ─── Hero content entrance ────────────────────────────────────────────────────
+.hero-content {
+  animation: fadeInUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hero-visual {
+  animation: fadeInUp 0.9s 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(36px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ─── Pattern comparison (“Same service…” phones) ───────────────────────────────
+.pattern-comparison-section {
+  isolation: isolate;
+}
+
+.pattern-phone-wrap {
+  perspective: 820px;
+  perspective-origin: 50% 42%;
+}
+
+/* Outer chassis — physical phone + 3D-readable bezel */
+.pattern-device-chassis {
+  position: relative;
+  border-radius: 2.75rem;
+  padding: 0.65rem;
+  transform-style: preserve-3d;
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.2) 0%, transparent 26%),
+    linear-gradient(145deg, #3f3f46 0%, #18181b 42%, #1c1c20 54%, #27272a 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 -2px 6px rgba(0, 0, 0, 0.35) inset,
+    -14px 22px 36px rgba(0, 0, 0, 0.38),
+    16px 32px 52px rgba(0, 0, 0, 0.22),
+    0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.dark .pattern-device-chassis {
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.12) 0%, transparent 24%),
+    linear-gradient(145deg, #52525b 0%, #09090b 38%, #141210 52%, #1c1917 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 -2px 8px rgba(0, 0, 0, 0.55) inset,
+    -16px 26px 44px rgba(0, 0, 0, 0.72),
+    14px 36px 60px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 0, 0, 0.55);
+}
+
+/* Side hardware rails (mute / volume / power) */
+.pattern-device-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  z-index: 2;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.pattern-device-rail--left {
+  left: 0;
+  transform: translate3d(-32%, 0, 10px);
+}
+
+.pattern-device-rail--right {
+  right: 0;
+  transform: translate3d(32%, 0, 10px);
+}
+
+.pattern-device-btn {
+  position: absolute;
+  left: 50%;
+  display: block;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    #71717a 0%,
+    #52525b 28%,
+    #3f3f46 62%,
+    #27272a 100%
+  );
+  box-shadow:
+    1px 0 0 rgba(255, 255, 255, 0.18) inset,
+    -2px 0 3px rgba(0, 0, 0, 0.55) inset,
+    -3px 1px 6px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.pattern-device-rail--right .pattern-device-btn {
+  background: linear-gradient(
+    270deg,
+    #71717a 0%,
+    #52525b 28%,
+    #3f3f46 62%,
+    #27272a 100%
+  );
+  box-shadow:
+    -1px 0 0 rgba(255, 255, 255, 0.14) inset,
+    2px 0 3px rgba(0, 0, 0, 0.5) inset,
+    3px 1px 6px rgba(0, 0, 0, 0.32),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.dark .pattern-device-btn {
+  background: linear-gradient(90deg, #a1a1aa 0%, #71717a 25%, #52525b 55%, #3f3f46 100%);
+}
+
+.dark .pattern-device-rail--right .pattern-device-btn {
+  background: linear-gradient(270deg, #a1a1aa 0%, #71717a 25%, #52525b 55%, #3f3f46 100%);
+}
+
+/* Mute / action — short pill, upper left */
+.pattern-device-btn--mute {
+  top: 20%;
+  height: 1.4rem;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+}
+
+/* Volume — two stacked elongated keys */
+.pattern-device-btn--vol-up {
+  top: 31%;
+  height: 2.85rem;
+}
+
+.pattern-device-btn--vol-down {
+  top: 40.5%;
+  height: 2.85rem;
+}
+
+/* Power — right side, longer */
+.pattern-device-btn--power {
+  top: 22%;
+  height: 4.6rem;
+}
+
+/* Glass / screen plane slightly in front of the metal frame */
+.pattern-device-chassis > .pattern-device-face {
+  position: relative;
+  z-index: 3;
+  transform: translateZ(14px);
+  transform-style: preserve-3d;
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -4px 18px rgba(0, 0, 0, 0.12);
+}
+
+.dark .pattern-device-chassis > .pattern-device-face {
+  box-shadow:
+    0 18px 36px rgba(0, 0, 0, 0.55),
+    0 2px 10px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -4px 22px rgba(0, 0, 0, 0.35);
+}
+
+/* Top half clipped to radius; screen stays overflow-visible for 3D bubbles */
+.pattern-device-face {
+  overflow: visible;
+}
+
+.pattern-device-face-header {
+  overflow: hidden;
+  border-radius: 2.15rem 2.15rem 0 0;
+}
+
+.pattern-device-screen {
+  overflow: visible;
+  transform-style: preserve-3d;
+  border-radius: 0 0 2.15rem 2.15rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 28rem; /* taller phone */
+  @media (min-width: 640px) {
+    min-height: 31rem;
   }
 }
 
-// Loading animation for images
-img {
-  transition: opacity 0.3s ease;
-  
-  &.loading {
-    opacity: 0;
-  }
-  
-  &.loaded {
-    opacity: 1;
+/* Chat bubbles “lift” off the glass toward the viewer */
+.pattern-msg-pop {
+  position: relative;
+  transform-style: preserve-3d;
+  isolation: isolate;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.07),
+    0 16px 32px rgba(0, 0, 0, 0.1),
+    0 32px 64px rgba(0, 0, 0, 0.11);
+}
+
+.dark .pattern-msg-pop {
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.35),
+    0 20px 40px rgba(0, 0, 0, 0.42),
+    0 40px 80px rgba(0, 0, 0, 0.38);
+}
+
+.pattern-phone-a .pattern-msg-pop--in {
+  z-index: 2;
+  transform: translate3d(-0.5rem, -0.2rem, 1.85rem) scale(1.03);
+}
+
+.pattern-phone-a .pattern-msg-pop--meta {
+  z-index: 3;
+  transform: translate3d(0, -0.28rem, 2.1rem) scale(1.06);
+}
+
+.pattern-phone-a .pattern-msg-pop--out {
+  z-index: 4;
+  transform: translate3d(0.55rem, -0.5rem, 2.5rem) scale(1.045);
+}
+
+.pattern-phone-b .pattern-msg-pop--in {
+  z-index: 2;
+  transform: translate3d(0.5rem, -0.2rem, 1.85rem) scale(1.03);
+}
+
+.pattern-phone-b .pattern-msg-pop--meta {
+  z-index: 3;
+  transform: translate3d(0, -0.28rem, 2.1rem) scale(1.06);
+}
+
+.pattern-phone-b .pattern-msg-pop--out {
+  z-index: 4;
+  transform: translate3d(-0.55rem, -0.5rem, 2.5rem) scale(1.045);
+}
+
+.pattern-device-notch {
+  width: 5.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: #0a0a0a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35) inset;
+}
+
+.pattern-phone-a,
+.pattern-phone-b {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+/* Tilt toward center + slight pitch so screens read as 3D objects */
+.pattern-phone-a {
+  transform: rotateY(17deg) rotateX(7deg) rotateZ(-3.5deg);
+  @media (max-width: 1023px) {
+    transform: rotateY(9deg) rotateX(5deg) rotateZ(-2deg);
   }
 }
 
-// Section fade-in on scroll
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+.pattern-phone-b {
+  transform: rotateY(-17deg) rotateX(7deg) rotateZ(3.5deg);
+  @media (max-width: 1023px) {
+    transform: rotateY(-9deg) rotateX(5deg) rotateZ(2deg);
   }
 }
 
-section {
-  animation: fadeIn 0.6s ease-out;
-}
-
-// Badge pulse animation
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
+@media (prefers-reduced-motion: reduce) {
+  .pattern-phone-a {
+    transform: rotateZ(-2deg);
   }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
+  .pattern-phone-b {
+    transform: rotateZ(2deg);
   }
-}
 
-.pulse-badge {
-  animation: pulse 2s ease-in-out infinite;
-}
-
-// Trust indicator animation
-.trust-indicator {
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  .pattern-phone-a .pattern-msg-pop--in,
+  .pattern-phone-a .pattern-msg-pop--meta,
+  .pattern-phone-a .pattern-msg-pop--out,
+  .pattern-phone-b .pattern-msg-pop--in,
+  .pattern-phone-b .pattern-msg-pop--meta,
+  .pattern-phone-b .pattern-msg-pop--out {
+    transform: none;
   }
 }
 
+.pattern-glow-green {
+  background: radial-gradient(
+    ellipse 72% 58% at 50% 52%,
+    rgba(34, 197, 94, 0.45) 0%,
+    rgba(34, 197, 94, 0.12) 45%,
+    transparent 72%
+  );
+  filter: blur(2px);
+}
+
+.dark .pattern-glow-green {
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 55%,
+    rgba(34, 197, 94, 0.35) 0%,
+    rgba(34, 197, 94, 0.08) 50%,
+    transparent 72%
+  );
+}
+
+.pattern-glow-amber {
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 55%,
+    rgba(245, 158, 11, 0.5) 0%,
+    rgba(251, 191, 36, 0.15) 45%,
+    transparent 70%
+  );
+  filter: blur(2px);
+}
+
+.dark .pattern-glow-amber {
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 55%,
+    rgba(245, 158, 11, 0.35) 0%,
+    rgba(251, 191, 36, 0.08) 50%,
+    transparent 72%
+  );
+}
+
+.pattern-bridge-pill {
+  color: #0f172a; /* slate-900 — readable on light gradient */
+  background: linear-gradient(
+    90deg,
+    rgba(34, 197, 94, 0.95) 0%,
+    rgba(240, 253, 244, 1) 42%,
+    rgba(254, 252, 232, 1) 58%,
+    rgba(251, 191, 36, 0.85) 100%
+  );
+  box-shadow:
+    0 4px 24px rgba(34, 197, 94, 0.25),
+    0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.pattern-bridge-pill__label {
+  color: inherit;
+}
+
+.dark .pattern-bridge-pill {
+  /* Near-white + shadow so label stays readable on green→amber dark gradient */
+  color: #ffffff;
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.85),
+    0 0 12px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(
+    90deg,
+    rgb(21, 128, 61) 0%,
+    rgb(6, 78, 59) 38%,
+    rgb(55, 48, 36) 50%,
+    rgb(146, 64, 14) 100%
+  );
+  box-shadow:
+    0 4px 28px rgba(34, 197, 94, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.pattern-glass {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}

@@ -12,6 +12,7 @@ export class AppearanceService {
   readonly isDark = signal(this.resolveIsDark());
 
   constructor() {
+    this.apply();
     this.mediaQuery?.addEventListener('change', () => {
       if (this.getStored() === 'system') {
         this.apply();
@@ -47,7 +48,7 @@ export class AppearanceService {
     return this.mediaQuery?.matches ?? false;
   }
 
-  private apply(): void {
+  apply(): void {
     const dark = this.resolveIsDark();
     this.isDark.set(dark);
     document.documentElement.classList.toggle('dark', dark);

@@ -207,6 +207,27 @@ export class InboxService {
   }
 
   /**
+   * Mark conversation chat session open or closed (inbox workflow).
+   */
+  updateChatOpen(id: string, chatOpen: boolean): Observable<IApiResponse<IInteraction>> {
+    return this.apiService.put<IApiResponse<IInteraction>>(`/inbox/${id}/chat-open`, { chatOpen }).pipe(
+      tap((response) => {
+        if (response.success && response.data) {
+          const updated = response.data;
+          const list = this.interactionsSubject.value.map((i) =>
+            i._id === id ? { ...i, ...updated } : i
+          );
+          this.interactionsSubject.next(list);
+          const sel = this.selectedInteractionSubject.value;
+          if (sel?._id === id) {
+            this.selectedInteractionSubject.next({ ...sel, ...updated });
+          }
+        }
+      })
+    );
+  }
+
+  /**
    * Delete interaction. For Facebook comments, deletes on Facebook and in DB; otherwise removes from DB only.
    */
   deleteInteraction(id: string): Observable<IApiResponse> {

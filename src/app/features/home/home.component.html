@@ -1,101 +1,90 @@
-<!-- Navigation Header -->
-<nav class="fixed top-0 left-0 right-0 z-50 bg-rep-black/95 backdrop-blur-lg border-b border-rep-black shadow-lg">
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NAV
+════════════════════════════════════════════════════════════════════════════ -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-rep-black/95 backdrop-blur-lg border-b border-gray-200/80 dark:border-gray-800/60 shadow-sm dark:shadow-lg">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16 sm:h-20">
       <!-- Logo -->
       <a routerLink="/" class="cursor-pointer shrink-0 overflow-visible flex">
-        <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="w-14 h-14 sm:w-20 sm:h-20 rounded-xl object-contain shadow-lg block">
+        <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-contain shadow-lg block">
       </a>
 
-      <!-- Desktop Navigation Links -->
+      <!-- Desktop Nav Links -->
       <div class="hidden md:flex items-center space-x-8">
-        <a (click)="scrollToSection('features')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition">Features</a>
-        <a (click)="scrollToSection('solutions')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition">Solutions</a>
-        <a (click)="scrollToSection('testimonials')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition">Testimonials</a>
-        <a (click)="scrollToSection('pricing')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition">Pricing</a>
-        <a routerLink="/about" class="text-gray-300 hover:text-rep-lime font-medium transition">About</a>
-        <a routerLink="/contact" class="text-gray-300 hover:text-rep-lime font-medium transition">Contact</a>
+        <a (click)="scrollToSection('how-it-works')" class="text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime font-medium cursor-pointer transition text-sm">How it Works</a>
+        <a (click)="scrollToSection('ecosystem')" class="text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime font-medium cursor-pointer transition text-sm">Products</a>
+        <a (click)="scrollToSection('use-cases')" class="text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime font-medium cursor-pointer transition text-sm">Solutions</a>
+        <a (click)="scrollToSection('testimonials')" class="text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime font-medium cursor-pointer transition text-sm">Testimonials</a>
       </div>
 
-      <!-- Desktop CTA Buttons / User Menu + Mobile Hamburger -->
-      <div class="flex items-center gap-3">
-        <!-- Show Sign In/Register when not logged in (desktop only) -->
+      <!-- Right side controls -->
+      <div class="flex items-center gap-2">
+
+        <!-- ── Dark / Light toggle ── -->
+        <button
+          (click)="appearance.toggle()"
+          [title]="appearance.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          class="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-rep-lime hover:bg-lime-50 dark:bg-rep-lime/10 transition-all group"
+          aria-label="Toggle theme">
+          <!-- Sun icon for dark mode -->
+          <svg *ngIf="appearance.isDark()" class="w-4 h-4 text-lime-700 dark:text-rep-lime group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5" stroke-width="2"/>
+            <path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <!-- Moon icon for light mode -->
+          <svg *ngIf="!appearance.isDark()" class="w-4 h-4 text-gray-600 group-hover:text-lime-700 dark:hover:text-rep-lime transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+
         <ng-container *ngIf="!currentUser">
-          <button 
-            (click)="navigateToLogin()"
-            class="hidden md:block px-4 py-2 text-gray-300 font-medium hover:text-rep-lime transition"
-          >
+          <button (click)="navigateToLogin()"
+            class="hidden md:block px-4 py-2 text-gray-500 dark:text-gray-400 font-medium hover:text-lime-700 dark:hover:text-rep-lime transition text-sm">
             Sign In
           </button>
-          <button 
-            (click)="navigateToRegister()"
-            class="hidden sm:block px-5 py-2.5 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/50 transition transform hover:scale-105 text-sm"
-          >
-            Get Started
+          <button (click)="navigateToRegister()"
+            class="hidden sm:block px-5 py-2.5 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition transform hover:scale-105 text-sm">
+            Get Started Free
           </button>
         </ng-container>
 
-        <!-- Show User Profile when logged in -->
+        <!-- Logged-in user -->
         <div *ngIf="currentUser" class="relative">
-          <button 
-            (click)="toggleUserMenu()"
-            class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-800/50 transition"
-          >
+          <button (click)="toggleUserMenu()"
+            class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/50 transition">
             <div class="w-9 h-9 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-semibold text-sm shrink-0">
               {{ getUserInitials() }}
             </div>
             <div class="text-left hidden md:block">
-              <p class="text-sm font-medium text-rep-white">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+              <p class="text-sm font-medium text-gray-900 dark:text-rep-white">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
               <p class="text-xs text-gray-400">{{ currentUser.role }}</p>
             </div>
             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
-
-          <!-- User Dropdown Menu -->
-          <div 
-            *ngIf="showUserMenu"
-            class="absolute right-0 mt-2 w-56 bg-rep-black rounded-lg shadow-lg border border-gray-800 py-1 z-50"
-          >
-            <a 
-              (click)="navigateToDashboard(); showUserMenu = false"
-              class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white cursor-pointer"
-            >
-              <div class="flex items-center space-x-2">
-                <span>📊</span>
-                <span>Dashboard</span>
-              </div>
+          <div *ngIf="showUserMenu"
+            class="absolute right-0 mt-2 w-56 bg-white dark:bg-rep-black rounded-lg shadow-xl border border-gray-200 dark:border-gray-800 py-1 z-50">
+            <a (click)="navigateToDashboard(); showUserMenu = false"
+              class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-rep-white cursor-pointer">
+              <div class="flex items-center space-x-2"><span>📊</span><span>Dashboard</span></div>
             </a>
-            <a 
-              routerLink="/app/settings"
-              (click)="showUserMenu = false"
-              class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white"
-            >
-              <div class="flex items-center space-x-2">
-                <span>⚙️</span>
-                <span>Settings</span>
-              </div>
+            <a routerLink="/app/settings" (click)="showUserMenu = false"
+              class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-rep-white">
+              <div class="flex items-center space-x-2"><span>⚙️</span><span>Settings</span></div>
             </a>
-            <hr class="my-1 border-gray-800">
-            <button 
-              (click)="logout()" 
-              class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-lime"
-            >
-              <div class="flex items-center space-x-2">
-                <span>🚪</span>
-                <span>Logout</span>
-              </div>
+            <hr class="my-1 border-gray-200 dark:border-gray-800">
+            <button (click)="logout()"
+              class="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-lime-700 dark:hover:text-rep-lime">
+              <div class="flex items-center space-x-2"><span>🚪</span><span>Logout</span></div>
             </button>
           </div>
         </div>
 
-        <!-- Hamburger button (mobile only) -->
-        <button
-          (click)="showMobileMenu = !showMobileMenu"
-          class="md:hidden p-2 rounded-lg text-gray-300 hover:text-rep-lime hover:bg-gray-800/50 transition"
-          aria-label="Toggle menu"
-        >
+        <!-- Hamburger -->
+        <button (click)="showMobileMenu = !showMobileMenu"
+          class="md:hidden p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-100 dark:hover:bg-gray-800/50 transition"
+          aria-label="Toggle menu">
           <svg *ngIf="!showMobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
@@ -107,180 +96,170 @@
     </div>
   </div>
 
-  <!-- Mobile Menu Drawer -->
-  <div
-    *ngIf="showMobileMenu"
-    class="md:hidden border-t border-gray-800 bg-rep-black/98 backdrop-blur-lg px-4 py-4 space-y-1"
-  >
-    <a (click)="scrollToSection('features'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Features</a>
-    <a (click)="scrollToSection('solutions'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Solutions</a>
-    <a (click)="scrollToSection('testimonials'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Testimonials</a>
-    <a (click)="scrollToSection('pricing'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Pricing</a>
-    <a routerLink="/about" (click)="showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800/50 rounded-xl font-medium transition">About</a>
-    <a routerLink="/contact" (click)="showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800/50 rounded-xl font-medium transition">Contact</a>
-    <div class="pt-2 border-t border-gray-800 flex flex-col gap-2" *ngIf="!currentUser">
-      <button (click)="navigateToLogin(); showMobileMenu = false" class="w-full px-4 py-3 text-center text-gray-300 font-medium hover:text-rep-lime border border-gray-700 rounded-xl transition">Sign In</button>
-      <button (click)="navigateToRegister(); showMobileMenu = false" class="w-full px-4 py-3 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/50 transition">Get Started Free</button>
+  <!-- Mobile Menu -->
+  <div *ngIf="showMobileMenu"
+    class="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white/98 dark:bg-rep-black/98 backdrop-blur-lg px-4 py-4 space-y-1">
+    <a (click)="scrollToSection('how-it-works'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">How it Works</a>
+    <a (click)="scrollToSection('ecosystem'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Products</a>
+    <a (click)="scrollToSection('use-cases'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Solutions</a>
+    <a (click)="scrollToSection('testimonials'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Testimonials</a>
+    <div class="pt-2 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-2" *ngIf="!currentUser">
+      <button (click)="navigateToLogin(); showMobileMenu = false" class="w-full px-4 py-3 text-center text-gray-600 dark:text-gray-300 font-medium hover:text-lime-700 dark:hover:text-rep-lime border border-gray-300 dark:border-gray-700 rounded-xl transition">Sign In</button>
+      <button (click)="navigateToRegister(); showMobileMenu = false" class="w-full px-4 py-3 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition">Get Started Free</button>
     </div>
   </div>
 </nav>
 
-<!-- Hero Section -->
-<section class="relative pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-20 lg:pb-28 overflow-hidden bg-rep-black">
-  <!-- Decorative Background Elements -->
-  <div class="absolute top-0 right-0 w-72 sm:w-[600px] h-72 sm:h-[600px] bg-rep-lime/5 rounded-full blur-3xl"></div>
-  <div class="absolute bottom-0 left-0 w-64 sm:w-96 h-64 sm:h-96 bg-rep-lime/5 rounded-full blur-3xl"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 1 — HERO
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="relative pt-24 sm:pt-28 lg:pt-36 pb-16 sm:pb-24 overflow-hidden bg-white dark:bg-rep-black">
+  <!-- Background orbs -->
+  <div class="bg-orb absolute top-0 right-0 w-[500px] h-[500px] bg-rep-lime/5 rounded-full blur-3xl"></div>
+  <div class="bg-orb orb-2 absolute bottom-0 left-0 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl"></div>
+  <div class="bg-orb orb-3 absolute top-1/2 left-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 bg-rep-lime/3 rounded-full blur-3xl"></div>
 
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="grid lg:grid-cols-[42%_58%] gap-8 xl:gap-16 items-center">
-      <!-- Left: Content -->
-      <div class="text-center lg:text-left">
-        <div class="inline-block mb-5">
-          <span class="px-3 py-1.5 sm:px-4 sm:py-2 bg-rep-lime/20 border border-rep-lime/30 text-rep-lime rounded-full text-xs sm:text-sm font-bold">
-            🚀 Trusted by 10,000+ Businesses
-          </span>
+    <div class="grid lg:grid-cols-[46%_54%] gap-8 xl:gap-16 items-center">
+
+      <!-- LEFT: Hero Text -->
+      <div class="hero-content text-center lg:text-left">
+        <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-xs font-bold tracking-wider uppercase">
+          <span class="w-2 h-2 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse"></span>
+          Trusted by modern teams managing high-volume conversations
         </div>
-        
-        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-5 leading-tight">
-          <span class="text-rep-white">
-            Your Reputation Shapes Trust.
-          </span>
-          <br>
-          <span class="text-rep-lime">RepMeUp Makes It Stronger.</span>
+
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.2rem] font-black mb-6 leading-[1.07] tracking-tight">
+          <span class="text-gray-900 dark:text-rep-white">Your Customers Are Talking.</span><br>
+          <span class="text-gray-900 dark:text-rep-white">Are You </span>
+          <span class="gradient-text">Responding</span>
+          <span class="text-gray-900 dark:text-rep-white"> —<br class="hidden sm:block"> Or Being </span>
+          <span class="text-gray-900 dark:text-rep-white">Judged?</span>
         </h1>
-        
-        <p class="text-base sm:text-lg lg:text-xl text-gray-300 mb-7 leading-relaxed">
-          Every business has people behind it. We protect and grow their reputation across all platforms. 
-          <strong class="text-rep-white">Build, monitor, and elevate</strong> your online presence with confidence.
+
+        <p class="text-base sm:text-lg lg:text-xl text-gray-500 dark:text-gray-400 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
+          Every message, comment, and delay shapes perception.<br>
+          <strong class="text-gray-800 dark:text-gray-200">Repmeup helps you manage and win every conversation</strong> — powered by AI.
         </p>
 
-        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-          <button 
-            (click)="navigateToRegister()"
-            class="px-7 py-3.5 sm:px-8 sm:py-4 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-2xl hover:shadow-rep-lime/50 transition transform hover:scale-105 text-base sm:text-lg"
-          >
-            Start Free Trial
-            <i class="fas fa-arrow-right ml-2"></i>
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mb-10">
+          <button (click)="scrollToSection('ecosystem')"
+            class="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-base overflow-hidden glow-lime">
+            <i class="fas fa-play-circle text-lg"></i>
+            See It in Action
+            <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
           </button>
-          <button 
-            (click)="scrollToSection('features')"
-            class="px-7 py-3.5 sm:px-8 sm:py-4 bg-rep-black border-2 border-gray-700 text-rep-white font-bold rounded-xl hover:border-rep-lime transition text-base sm:text-lg"
-          >
-            <i class="fas fa-play-circle mr-2"></i>
-            Watch Demo
+          <button (click)="navigateToRegister()"
+            class="inline-flex items-center justify-center gap-3 px-8 py-4 bg-transparent border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-rep-lime/60 hover:bg-rep-lime/5 transition-all text-base">
+            <i class="fas fa-rocket text-sm"></i>
+            Start Free Trial
           </button>
         </div>
 
-        <!-- Trust Indicators -->
-        <div class="mt-8 sm:mt-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-8">
+        <!-- Trust indicators -->
+        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-10">
           <div class="text-center lg:text-left">
-            <p class="text-2xl sm:text-3xl font-bold text-rep-lime">10K+</p>
-            <p class="text-xs sm:text-sm text-gray-400">Active Users</p>
+            <p class="text-2xl sm:text-3xl font-black text-lime-700 dark:text-rep-lime">10K+</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Active Users</p>
           </div>
+          <div class="w-px h-8 bg-gray-200 dark:bg-gray-800 hidden sm:block"></div>
           <div class="text-center lg:text-left">
-            <p class="text-2xl sm:text-3xl font-bold text-rep-lime">50M+</p>
-            <p class="text-xs sm:text-sm text-gray-400">Reviews Managed</p>
+            <p class="text-2xl sm:text-3xl font-black text-lime-700 dark:text-rep-lime">50M+</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Conversations Managed</p>
           </div>
+          <div class="w-px h-8 bg-gray-200 dark:bg-gray-800 hidden sm:block"></div>
           <div class="text-center lg:text-left">
-            <p class="text-2xl sm:text-3xl font-bold text-rep-lime">99.9%</p>
-            <p class="text-xs sm:text-sm text-gray-400">Uptime</p>
+            <p class="text-2xl sm:text-3xl font-black text-lime-700 dark:text-rep-lime">2 min</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Avg. Reply Time</p>
           </div>
         </div>
       </div>
 
-      <!-- Right: Inbox Screenshot — hidden on small mobile, shows from sm up -->
-      <div class="relative mt-10 lg:mt-0 lg:pl-4 hidden sm:block">
-        <!-- Glow behind the card -->
-        <div class="absolute -inset-4 bg-rep-lime/5 rounded-3xl blur-3xl pointer-events-none"></div>
+      <!-- RIGHT: Product UI Mockup -->
+      <div class="hero-visual relative mt-12 lg:mt-0 lg:pl-4 hidden sm:block">
+        <div class="absolute -inset-6 bg-rep-lime/4 rounded-3xl blur-3xl pointer-events-none"></div>
 
-        <!-- Browser chrome wrapper -->
-        <div class="relative rounded-2xl overflow-hidden border-2 border-gray-700 shadow-2xl shadow-rep-lime/10">
-
-          <!-- Browser bar -->
-          <div class="flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3.5 bg-gray-900 border-b border-gray-800">
+        <!-- Browser chrome -->
+        <div class="relative rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700/80 shadow-2xl shadow-black/10 dark:shadow-rep-lime/8">
+          <!-- Bar -->
+          <div class="flex items-center gap-2 px-4 sm:px-5 py-3 bg-gray-100 dark:bg-gray-900/90 border-b border-gray-200 dark:border-gray-800">
             <span class="w-3 h-3 rounded-full bg-red-500"></span>
             <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
             <span class="w-3 h-3 rounded-full bg-green-500"></span>
-            <div class="flex-1 mx-2 sm:mx-4 px-3 py-1 sm:px-4 sm:py-1.5 bg-gray-800 rounded-lg flex items-center gap-2 min-w-0">
-              <i class="fas fa-lock text-gray-500 text-xs shrink-0"></i>
-              <span class="text-xs sm:text-sm text-gray-400 truncate">app.repmeup.in/app/inbox</span>
+            <div class="flex-1 mx-4 px-4 py-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center gap-2 min-w-0">
+              <i class="fas fa-lock text-gray-400 dark:text-gray-500 text-xs shrink-0"></i>
+              <span class="text-xs text-gray-500 dark:text-gray-400 truncate">app.repmeup.in/app/inbox</span>
             </div>
-            <div class="flex items-center gap-2 sm:gap-3 text-sm shrink-0">
+            <div class="flex items-center gap-2 text-sm shrink-0">
               <i class="fab fa-instagram text-pink-400"></i>
               <i class="fab fa-facebook text-blue-400"></i>
               <i class="fab fa-google text-yellow-400 hidden sm:inline"></i>
             </div>
           </div>
 
-          <!-- App shell — reduced height on tablet -->
-          <div class="flex bg-gray-950" style="height: 420px;">
-
-            <!-- Sidebar — only on lg+ -->
-            <div class="hidden lg:flex flex-col w-44 xl:w-48 bg-rep-black border-r border-gray-800 p-3 shrink-0">
-              <div class="flex items-center gap-2 xl:gap-3 px-2 py-3 mb-3">
-                <div class="w-7 h-7 xl:w-8 xl:h-8 bg-rep-lime rounded-lg shrink-0"></div>
-                <span class="text-sm font-bold text-rep-white">RepMeUp</span>
+          <!-- App shell -->
+          <div class="flex bg-gray-50 dark:bg-gray-950" style="height:420px;">
+            <!-- Sidebar -->
+            <div class="hidden lg:flex flex-col w-44 xl:w-48 bg-white dark:bg-rep-black border-r border-gray-200 dark:border-gray-800/70 p-3 shrink-0">
+              <div class="flex items-center gap-2.5 px-2 py-3 mb-3">
+                <div class="w-7 h-7 bg-rep-lime rounded-lg shrink-0"></div>
+                <span class="text-sm font-bold text-gray-900 dark:text-rep-white">RepMeUp</span>
               </div>
-              <nav class="space-y-1 flex-1">
-                <div class="flex items-center gap-2 xl:gap-3 px-2.5 xl:px-3 py-2 bg-rep-lime/15 border border-rep-lime/30 rounded-xl">
-                  <i class="fas fa-inbox text-rep-lime text-xs w-4"></i>
-                  <span class="text-xs font-semibold text-rep-lime">Inbox</span>
-                  <span class="ml-auto bg-rep-lime text-rep-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">8</span>
+              <nav class="space-y-0.5 flex-1">
+                <div class="flex items-center gap-2.5 px-3 py-2.5 bg-lime-50 dark:bg-rep-lime/12 border border-lime-200 dark:border-rep-lime/25 rounded-xl">
+                  <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-xs w-4"></i>
+                  <span class="text-xs font-semibold text-lime-700 dark:text-rep-lime">Inbox</span>
+                  <span class="ml-auto bg-rep-lime text-rep-black text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">8</span>
                 </div>
-                <div class="flex items-center gap-2 xl:gap-3 px-2.5 xl:px-3 py-2 rounded-xl">
-                  <i class="fas fa-chart-bar text-gray-500 text-xs w-4"></i>
-                  <span class="text-xs text-gray-500">Analytics</span>
+                <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
+                  <i class="fas fa-chart-bar text-gray-400 text-xs w-4"></i>
+                  <span class="text-xs text-gray-400">Analytics</span>
                 </div>
-                <div class="flex items-center gap-2 xl:gap-3 px-2.5 xl:px-3 py-2 rounded-xl">
-                  <i class="fas fa-edit text-gray-500 text-xs w-4"></i>
-                  <span class="text-xs text-gray-500">Publish</span>
+                <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
+                  <i class="fas fa-edit text-gray-400 text-xs w-4"></i>
+                  <span class="text-xs text-gray-400">Publish</span>
                 </div>
-                <div class="flex items-center gap-2 xl:gap-3 px-2.5 xl:px-3 py-2 rounded-xl">
-                  <i class="fas fa-robot text-gray-500 text-xs w-4"></i>
-                  <span class="text-xs text-gray-500">AI Replies</span>
-                </div>
-                <div class="flex items-center gap-2 xl:gap-3 px-2.5 xl:px-3 py-2 rounded-xl">
-                  <i class="fas fa-cog text-gray-500 text-xs w-4"></i>
-                  <span class="text-xs text-gray-500">Settings</span>
+                <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
+                  <i class="fas fa-robot text-gray-400 text-xs w-4"></i>
+                  <span class="text-xs text-gray-400">AI Replies</span>
                 </div>
               </nav>
-              <div class="mt-3 px-2 py-2.5 bg-gray-900 rounded-xl">
-                <p class="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wide">Connected</p>
+              <div class="mt-2 px-2 py-2.5 bg-gray-100 dark:bg-gray-900/70 rounded-xl">
+                <p class="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wide">Connected</p>
                 <div class="flex gap-1.5 flex-wrap">
-                  <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:#1877F2;"><i class="fab fa-facebook-f text-white" style="font-size:9px;"></i></span>
-                  <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);"><i class="fab fa-instagram text-white" style="font-size:9px;"></i></span>
-                  <span class="w-5 h-5 rounded-md bg-white flex items-center justify-center"><i class="fab fa-google text-red-500" style="font-size:9px;"></i></span>
-                  <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:#FF0000;"><i class="fab fa-youtube text-white" style="font-size:9px;"></i></span>
+                  <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:#1877F2"><i class="fab fa-facebook-f text-white" style="font-size:8px"></i></span>
+                  <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white" style="font-size:8px"></i></span>
+                  <span class="w-5 h-5 rounded-md bg-white flex items-center justify-center border border-gray-200"><i class="fab fa-google text-red-500" style="font-size:8px"></i></span>
+                  <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:#FF0000"><i class="fab fa-youtube text-white" style="font-size:8px"></i></span>
                 </div>
               </div>
             </div>
 
-            <!-- Thread list — narrow on sm/md, wider on lg+ -->
-            <div class="w-48 sm:w-52 lg:w-56 xl:w-64 border-r border-gray-800 flex flex-col shrink-0">
-              <div class="px-3 py-2.5 border-b border-gray-800 flex items-center justify-between">
-                <span class="text-xs font-bold text-rep-white">All Messages</span>
-                <span class="px-2 py-0.5 bg-rep-lime text-rep-black text-xs font-bold rounded-full">8</span>
+            <!-- Thread list -->
+            <div class="w-44 sm:w-52 lg:w-56 xl:w-60 border-r border-gray-200 dark:border-gray-800/70 flex flex-col shrink-0 bg-white dark:bg-transparent">
+              <div class="px-3 py-2.5 border-b border-gray-200 dark:border-gray-800/70 flex items-center justify-between">
+                <span class="text-xs font-bold text-gray-900 dark:text-rep-white">All Messages</span>
+                <span class="px-2 py-0.5 bg-rep-lime text-rep-black text-xs font-black rounded-full">8</span>
               </div>
-              <!-- Platform pills -->
-              <div class="flex gap-1 px-3 py-2 border-b border-gray-800">
+              <div class="flex gap-1 px-3 py-2 border-b border-gray-200 dark:border-gray-800/70">
                 <span class="px-2 py-0.5 bg-rep-lime text-rep-black text-xs font-bold rounded-full">All</span>
-                <span class="px-2 py-0.5 bg-gray-800 text-gray-400 text-xs rounded-full flex items-center gap-1"><i class="fab fa-instagram text-pink-400"></i></span>
-                <span class="px-2 py-0.5 bg-gray-800 text-gray-400 text-xs rounded-full flex items-center gap-1"><i class="fab fa-facebook text-blue-400"></i></span>
+                <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-400 text-xs rounded-full"><i class="fab fa-instagram text-pink-400"></i></span>
+                <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-400 text-xs rounded-full"><i class="fab fa-facebook text-blue-400"></i></span>
               </div>
-              <!-- Threads -->
-              <div class="flex-1 overflow-hidden divide-y divide-gray-800">
+              <div class="flex-1 overflow-hidden divide-y divide-gray-100 dark:divide-gray-800/50">
                 <div class="px-3 py-2.5 bg-rep-lime/5 border-l-2 border-rep-lime">
                   <div class="flex items-start gap-2">
                     <div class="w-7 h-7 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">S</div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between mb-0.5">
-                        <span class="text-xs font-semibold text-rep-white truncate">Sarah W.</span>
+                        <span class="text-xs font-semibold text-gray-900 dark:text-rep-white truncate">Sarah W.</span>
                         <i class="fab fa-instagram text-pink-400 text-xs shrink-0"></i>
                       </div>
-                      <p class="text-xs text-gray-400 truncate">hello this is test...</p>
-                      <p class="text-xs text-gray-600 mt-0.5">2m ago</p>
+                      <p class="text-xs text-gray-500 truncate">When will you restock?</p>
+                      <p class="text-xs text-gray-400 mt-0.5">2m ago</p>
                     </div>
-                    <span class="w-2 h-2 bg-rep-lime rounded-full shrink-0 mt-1.5"></span>
+                    <span class="w-2 h-2 bg-rep-lime rounded-full shrink-0 mt-1.5 animate-pulse"></span>
                   </div>
                 </div>
                 <div class="px-3 py-2.5">
@@ -288,11 +267,11 @@
                     <div class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-xs font-bold shrink-0">M</div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between mb-0.5">
-                        <span class="text-xs font-semibold text-rep-white truncate">Michael K.</span>
+                        <span class="text-xs font-semibold text-gray-900 dark:text-rep-white truncate">Michael K.</span>
                         <i class="fab fa-facebook text-blue-400 text-xs shrink-0"></i>
                       </div>
-                      <p class="text-xs text-gray-400 truncate">Loved the product!</p>
-                      <p class="text-xs text-gray-600 mt-0.5">18m ago</p>
+                      <p class="text-xs text-gray-500 truncate">Loved the product!</p>
+                      <p class="text-xs text-gray-400 mt-0.5">18m ago</p>
                     </div>
                   </div>
                 </div>
@@ -301,11 +280,11 @@
                     <div class="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold shrink-0">P</div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between mb-0.5">
-                        <span class="text-xs font-semibold text-rep-white truncate">Priya S.</span>
+                        <span class="text-xs font-semibold text-gray-900 dark:text-rep-white truncate">Priya S.</span>
                         <i class="fab fa-google text-yellow-400 text-xs shrink-0"></i>
                       </div>
-                      <p class="text-xs text-gray-400 truncate">★★★★★ Amazing!</p>
-                      <p class="text-xs text-gray-600 mt-0.5">45m ago</p>
+                      <p class="text-xs text-gray-500 truncate">★★★★★ Amazing!</p>
+                      <p class="text-xs text-gray-400 mt-0.5">45m ago</p>
                     </div>
                   </div>
                 </div>
@@ -314,62 +293,46 @@
                     <div class="w-7 h-7 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold shrink-0">J</div>
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center justify-between mb-0.5">
-                        <span class="text-xs font-semibold text-rep-white truncate">James L.</span>
+                        <span class="text-xs font-semibold text-gray-900 dark:text-rep-white truncate">James L.</span>
                         <i class="fab fa-instagram text-pink-400 text-xs shrink-0"></i>
                       </div>
-                      <p class="text-xs text-gray-400 truncate">Custom order?</p>
-                      <p class="text-xs text-gray-600 mt-0.5">1h ago</p>
+                      <p class="text-xs text-gray-500 truncate">Custom order?</p>
+                      <p class="text-xs text-gray-400 mt-0.5">1h ago</p>
                     </div>
-                    <span class="w-2 h-2 bg-rep-lime rounded-full shrink-0 mt-1.5"></span>
-                  </div>
-                </div>
-                <div class="px-3 py-2.5">
-                  <div class="flex items-start gap-2">
-                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center text-white text-xs font-bold shrink-0">A</div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center justify-between mb-0.5">
-                        <span class="text-xs font-semibold text-rep-white truncate">Aisha M.</span>
-                        <i class="fab fa-facebook text-blue-400 text-xs shrink-0"></i>
-                      </div>
-                      <p class="text-xs text-gray-400 truncate">Delivery update?</p>
-                      <p class="text-xs text-gray-600 mt-0.5">2h ago</p>
-                    </div>
+                    <span class="w-2 h-2 bg-rep-lime rounded-full shrink-0 mt-1.5 animate-pulse"></span>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Conversation panel -->
-            <div class="flex-1 flex flex-col min-w-0">
-              <!-- Header -->
-              <div class="px-3 sm:px-5 py-2.5 sm:py-3 border-b border-gray-800 flex items-center justify-between">
-                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div class="flex-1 flex flex-col min-w-0 bg-white dark:bg-transparent">
+              <div class="px-4 sm:px-5 py-2.5 border-b border-gray-200 dark:border-gray-800/70 flex items-center justify-between">
+                <div class="flex items-center gap-3 min-w-0">
                   <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">S</div>
                   <div class="min-w-0">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="text-xs sm:text-sm font-bold text-rep-white truncate">Sarah Williams</span>
-                      <span class="px-1.5 py-0.5 rounded-full text-xs font-semibold text-pink-300 shrink-0" style="background:rgba(236,72,153,0.15);">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-sm font-bold text-gray-900 dark:text-rep-white truncate">Sarah Williams</span>
+                      <span class="px-1.5 py-0.5 rounded-full text-xs font-semibold text-pink-400 shrink-0" style="background:rgba(236,72,153,0.12)">
                         <i class="fab fa-instagram text-xs"></i> DM
                       </span>
                     </div>
-                    <p class="text-xs text-gray-500 truncate">rep_me_up · 2 minutes ago</p>
+                    <p class="text-xs text-gray-400 truncate">rep_me_up · 2 minutes ago</p>
                   </div>
                 </div>
-                <span class="shrink-0 px-2 py-1 bg-rep-lime/10 text-rep-lime text-xs font-semibold rounded-full border border-rep-lime/20">Unread</span>
+                <span class="shrink-0 px-2 py-1 bg-lime-50 dark:bg-rep-lime/10 text-lime-700 dark:text-rep-lime text-xs font-semibold rounded-full border border-lime-200 dark:border-rep-lime/25">Unread</span>
               </div>
-
-              <!-- Messages -->
-              <div class="flex-1 px-3 sm:px-5 py-3 sm:py-4 space-y-3 sm:space-y-4 overflow-hidden">
+              <div class="flex-1 px-4 sm:px-5 py-3 space-y-3 overflow-hidden">
                 <div class="flex items-end gap-2">
                   <div class="w-6 h-6 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">S</div>
-                  <div class="bg-gray-800 rounded-2xl rounded-bl-sm px-3 py-2 max-w-[85%]">
-                    <p class="text-xs sm:text-sm text-rep-white">hello this is test message</p>
-                    <p class="text-xs text-gray-500 mt-0.5">5:38 PM</p>
+                  <div class="bg-gray-100 dark:bg-gray-800/80 rounded-2xl rounded-bl-sm px-3 py-2 max-w-[80%]">
+                    <p class="text-xs sm:text-sm text-gray-800 dark:text-rep-white">When will you restock the blue variant?</p>
+                    <p class="text-xs text-gray-400 mt-0.5">5:38 PM</p>
                   </div>
                 </div>
                 <div class="flex items-end gap-2 justify-end">
-                  <div class="bg-rep-lime rounded-2xl rounded-br-sm px-3 py-2 max-w-[85%]">
-                    <p class="text-xs sm:text-sm text-rep-black font-medium">Hi Sarah! Thanks for reaching out. How can I help? 😊</p>
+                  <div class="bg-rep-lime rounded-2xl rounded-br-sm px-3 py-2 max-w-[80%]">
+                    <p class="text-xs sm:text-sm text-rep-black font-semibold">Hi Sarah! The blue variant restocks next week. We'll notify you — stay tuned! 💙</p>
                     <div class="flex items-center justify-end gap-1 mt-0.5">
                       <p class="text-xs text-rep-black/60">5:39 PM</p>
                       <i class="fas fa-check-double text-rep-black/60 text-xs"></i>
@@ -377,833 +340,1191 @@
                   </div>
                   <div class="w-6 h-6 rounded-full bg-rep-lime flex items-center justify-center text-rep-black text-xs font-bold shrink-0">R</div>
                 </div>
-                <div class="flex items-end gap-2">
-                  <div class="w-6 h-6 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">S</div>
-                  <div class="bg-gray-800 rounded-2xl rounded-bl-sm px-3 py-2 max-w-[85%]">
-                    <p class="text-xs sm:text-sm text-rep-white">I wanted to know about your premium plan</p>
-                    <p class="text-xs text-gray-500 mt-0.5">5:40 PM</p>
-                  </div>
-                </div>
               </div>
-
-              <!-- AI suggestion + reply bar -->
-              <div class="border-t border-gray-800 px-3 sm:px-5 py-2.5 sm:py-3">
-                <div class="mb-2 px-3 py-2 bg-blue-950/50 border border-blue-800/40 rounded-xl flex items-center gap-2">
+              <!-- AI suggestion bar -->
+              <div class="border-t border-gray-200 dark:border-gray-800/70 px-4 sm:px-5 py-2.5">
+                <div class="mb-2 px-3 py-2 ai-gradient-bg rounded-xl flex items-center gap-2">
                   <i class="fas fa-robot text-blue-400 text-xs shrink-0"></i>
-                  <p class="text-xs text-gray-300 flex-1 truncate">Our Premium plan includes unlimited platforms & AI replies...</p>
-                  <button class="shrink-0 px-2 py-1 bg-blue-600/30 text-blue-300 text-xs rounded-lg font-semibold">Use</button>
+                  <p class="text-xs text-gray-600 dark:text-gray-300 flex-1 truncate typing-cursor">Our Premium plan includes unlimited platforms & AI replies</p>
+                  <button class="shrink-0 px-2.5 py-1 bg-blue-600/20 dark:bg-blue-600/30 text-blue-600 dark:text-blue-300 text-xs rounded-lg font-semibold border border-blue-300/30 dark:border-blue-700/30">Use</button>
                 </div>
                 <div class="flex gap-2">
-                  <div class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-xs text-gray-500">Type a reply…</div>
-                  <button class="px-3 py-2 bg-rep-lime text-rep-black font-bold rounded-xl text-xs">
+                  <div class="flex-1 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl px-3 py-2 text-xs text-gray-400">Type a reply…</div>
+                  <button class="px-3 py-2 bg-rep-lime text-rep-black font-bold rounded-xl text-xs hover:shadow-lg hover:shadow-rep-lime/30 transition">
                     <i class="fas fa-paper-plane"></i>
                   </button>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
-        <!-- Floating badges — only on lg+ to avoid overflow on tablets -->
-        <div class="hidden lg:flex absolute -bottom-5 -left-5 bg-rep-black rounded-2xl shadow-xl px-4 py-3 border-2 border-gray-700 items-center gap-3">
+        <!-- Floating badges -->
+        <div class="hidden lg:flex float-badge absolute -bottom-5 -left-6 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black px-4 py-3 border border-gray-200 dark:border-gray-700 items-center gap-3">
           <div class="flex -space-x-2">
-            <span class="w-8 h-8 rounded-full border-2 border-gray-800 flex items-center justify-center" style="background:#1877F2;"><i class="fab fa-facebook-f text-white text-xs"></i></span>
-            <span class="w-8 h-8 rounded-full border-2 border-gray-800 flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);"><i class="fab fa-instagram text-white text-xs"></i></span>
-            <span class="w-8 h-8 rounded-full border-2 border-gray-800 bg-white flex items-center justify-center"><i class="fab fa-google text-red-500 text-xs"></i></span>
+            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center" style="background:#1877F2"><i class="fab fa-facebook-f text-white text-xs"></i></span>
+            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white text-xs"></i></span>
+            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-white flex items-center justify-center"><i class="fab fa-google text-red-500 text-xs"></i></span>
           </div>
           <div>
-            <p class="text-sm font-bold text-rep-white">5 Platforms</p>
-            <p class="text-xs text-gray-500">All Connected</p>
+            <p class="text-sm font-bold text-gray-900 dark:text-rep-white">5 Platforms</p>
+            <p class="text-xs text-gray-400">All Connected</p>
           </div>
         </div>
-
-        <div class="hidden lg:flex absolute -top-5 -right-5 bg-rep-black rounded-2xl shadow-xl px-4 py-3 border-2 border-gray-700 items-center gap-3">
+        <div class="hidden lg:flex float-badge float-delay absolute -top-5 -right-6 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black px-4 py-3 border border-gray-200 dark:border-gray-700 items-center gap-3">
           <div class="w-9 h-9 bg-rep-lime rounded-xl flex items-center justify-center shrink-0">
             <i class="fas fa-robot text-rep-black text-sm"></i>
           </div>
           <div>
-            <p class="text-sm font-bold text-rep-white">AI Reply Ready</p>
-            <p class="text-xs text-gray-500">94% accuracy</p>
+            <p class="text-sm font-bold text-gray-900 dark:text-rep-white">AI Reply Ready</p>
+            <p class="text-xs text-gray-400">94% accuracy</p>
           </div>
         </div>
       </div>
 
-      <!-- Mobile-only CTA visual strip (replaces the mockup on xs screens) -->
-      <div class="sm:hidden flex flex-wrap justify-center gap-4 mt-6">
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl">
+      <!-- Mobile trust strip -->
+      <div class="sm:hidden flex flex-wrap justify-center gap-3 mt-4">
+        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 rounded-xl">
           <div class="flex -space-x-1.5">
-            <span class="w-6 h-6 rounded-full border-2 border-gray-800 flex items-center justify-center" style="background:#1877F2;"><i class="fab fa-facebook-f text-white" style="font-size:9px;"></i></span>
-            <span class="w-6 h-6 rounded-full border-2 border-gray-800 flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);"><i class="fab fa-instagram text-white" style="font-size:9px;"></i></span>
-            <span class="w-6 h-6 rounded-full border-2 border-gray-800 bg-white flex items-center justify-center"><i class="fab fa-google text-red-500" style="font-size:9px;"></i></span>
+            <span class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center" style="background:#1877F2"><i class="fab fa-facebook-f text-white" style="font-size:8px"></i></span>
+            <span class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white" style="font-size:8px"></i></span>
           </div>
-          <span class="text-xs font-bold text-rep-white">5 Platforms Connected</span>
+          <span class="text-xs font-bold text-gray-800 dark:text-rep-white">5 Platforms</span>
         </div>
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl">
-          <div class="w-7 h-7 bg-rep-lime rounded-lg flex items-center justify-center shrink-0">
-            <i class="fas fa-robot text-rep-black text-xs"></i>
+        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 rounded-xl">
+          <div class="w-5 h-5 bg-rep-lime rounded-md flex items-center justify-center shrink-0">
+            <i class="fas fa-robot text-rep-black" style="font-size:9px"></i>
           </div>
-          <span class="text-xs font-bold text-rep-white">AI Reply · 94% accuracy</span>
+          <span class="text-xs font-bold text-gray-800 dark:text-rep-white">AI · 94% accuracy</span>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Platform Integrations Section -->
-<section class="py-14 sm:py-20 bg-rep-black relative overflow-hidden">
-  <!-- Decorative glows matching hero -->
-  <div class="absolute left-0 w-96 h-96 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 2 — PATTERN INTERRUPT (two-phone comparison, screenshot-style)
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="pattern-comparison-section py-16 sm:py-24 lg:py-28 bg-white dark:bg-gray-950 relative overflow-x-hidden">
+  <div class="absolute left-0 top-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-rep-lime/25 to-transparent"></div>
+  <div class="absolute left-0 bottom-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-rep-lime/15 to-transparent"></div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <!-- Top headline -->
+    <header class="text-center mb-12 sm:mb-16 animate-on-scroll px-2">
+      <h2 class="flex flex-row flex-nowrap justify-center items-center gap-x-1.5 sm:gap-x-2 md:gap-x-3 text-sm sm:text-lg md:text-2xl lg:text-[2.65rem] font-black text-gray-900 dark:text-white tracking-tight leading-tight">
+        <span class="pi-line shrink-0">Same service.</span>
+        <span class="pi-line shrink-0">Same price.</span>
+        <span class="pi-line shrink-0">Same city.</span>
+      </h2>
+    </header>
+
+    <!-- Phones grid + floating bridge -->
+    <div class="relative animate-on-scroll delay-1">
+      <!-- Central bridge (desktop): between phones -->
+      <div
+        class="pattern-bridge-pill pattern-glass hidden lg:flex absolute left-1/2 top-[44%] z-30 -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 px-5 py-3 rounded-full border border-white/50 dark:border-white/10 whitespace-nowrap shadow-lg"
+        aria-hidden="true"
+      >
+        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white dark:bg-emerald-500 shrink-0">
+          <i class="fas fa-stopwatch text-sm"></i>
+        </span>
+        <span class="pattern-bridge-pill__label text-sm sm:text-base font-extrabold pr-1">Replies in 2 minutes.</span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 lg:gap-24 xl:gap-32 2xl:gap-40 items-start justify-items-center">
+        <!-- ═══ Business A — fast winner (LEFT) ═══ -->
+        <div class="pattern-phone-wrap relative w-full max-w-[min(100%,360px)] flex flex-col items-center lg:items-end lg:pr-10">
+          <div
+            class="mb-4 inline-flex items-center gap-2 rounded-2xl border border-emerald-200/80 dark:border-emerald-500/40 bg-emerald-50/90 dark:bg-emerald-950/60 pattern-glass px-4 py-2 shadow-md"
+          >
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500 text-white text-sm">
+              <i class="fas fa-check"></i>
+            </span>
+            <span class="text-sm font-bold text-emerald-900 dark:text-emerald-100">Business A</span>
+          </div>
+
+          <div class="relative w-full">
+            <div class="pattern-glow-green absolute left-1/2 top-1/2 h-[520px] w-[380px] -translate-x-1/2 -translate-y-1/2 pointer-events-none -z-10"></div>
+
+            <div class="pattern-phone-a relative w-full">
+              <div class="pattern-device-chassis">
+                <div class="pattern-device-rail pattern-device-rail--left" aria-hidden="true">
+                  <span class="pattern-device-btn pattern-device-btn--mute"></span>
+                  <span class="pattern-device-btn pattern-device-btn--vol-up"></span>
+                  <span class="pattern-device-btn pattern-device-btn--vol-down"></span>
+                </div>
+                <div class="pattern-device-rail pattern-device-rail--right" aria-hidden="true">
+                  <span class="pattern-device-btn pattern-device-btn--power"></span>
+                </div>
+                <div
+                  class="pattern-device-face rounded-[2.15rem] bg-gray-100 dark:bg-gray-950 ring-1 ring-black/10 dark:ring-white/10"
+                >
+                  <div class="pattern-device-face-header">
+                    <!-- Notch + status -->
+                    <div class="flex flex-col items-center bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800/80">
+                      <div class="pt-2.5 pb-1 flex justify-center">
+                        <div class="pattern-device-notch" aria-hidden="true"></div>
+                      </div>
+                      <div class="flex w-full items-center justify-between px-4 pb-2 text-[10px] font-semibold text-gray-600 dark:text-gray-400">
+                        <span>9:41</span>
+                        <div class="flex items-center gap-1">
+                          <i class="fas fa-signal text-[9px]"></i>
+                          <i class="fas fa-wifi text-[9px]"></i>
+                          <i class="fas fa-battery-three-quarters text-[9px]"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Screen body (overflow visible so bubbles can pop out) -->
+                  <div class="pattern-device-screen pattern-glass bg-white/95 dark:bg-gray-900/95 px-4 pt-4 pb-5 sm:px-5">
+              <!-- User A -->
+              <div class="mb-4 flex items-center gap-3">
+                <div
+                  class="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-pink-400 to-rose-600 ring-2 ring-white dark:ring-gray-800 shadow-md flex items-center justify-center text-white text-xs font-black"
+                  aria-hidden="true"
+                >
+                  A
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-bold text-gray-900 dark:text-white">User A</p>
+                  <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Online</p>
+                </div>
+              </div>
+
+              <!-- Customer bubble -->
+              <div
+                class="pattern-msg-pop pattern-msg-pop--in mb-4 rounded-2xl rounded-bl-md border border-gray-100 dark:border-gray-700 bg-gray-50/90 dark:bg-gray-800/90 p-3"
+              >
+                <p class="text-[13px] leading-snug text-gray-800 dark:text-gray-100">Denim jacket ka price kya hai?</p>
+                <p class="mt-1.5 text-[11px] text-gray-400">12:20</p>
+              </div>
+
+              <!-- Fast reply pill -->
+              <div
+                class="pattern-msg-pop pattern-msg-pop--meta mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 dark:border-emerald-400/50 bg-emerald-100/80 dark:bg-emerald-800/90 px-3 py-1.5 text-[11px] font-bold text-emerald-800 dark:text-white"
+              >
+                <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-300"></i>
+                Replies in 2 minutes
+              </div>
+
+              <!-- Business reply -->
+              <div
+                class="pattern-msg-pop pattern-msg-pop--out relative mb-4 rounded-2xl rounded-br-md border border-emerald-200/60 dark:border-emerald-600/40 bg-emerald-50/95 dark:bg-emerald-950/50 p-3"
+              >
+                <div class="absolute -left-1 top-3 h-7 w-7 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold border-2 border-white dark:border-gray-900">B</div>
+                <p class="pl-7 text-[13px] leading-snug text-emerald-950 dark:text-emerald-50">
+                  Hi! Denim jacket ka price ₹1299 hai. Aapko aur kuch madad chahiye? 😊
+                </p>
+              </div>
+
+              <!-- Footer rating -->
+              <div class="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-700/80 pt-4">
+                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400">
+                  <i class="fas fa-thumbs-up"></i>
+                </span>
+                <div class="flex gap-0.5 text-amber-400 text-sm" aria-label="5 star rating">
+                  <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+              </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile bridge (between phones; hidden on lg — desktop uses absolute pill) -->
+        <div class="flex justify-center lg:hidden -my-2 py-2">
+          <div
+            class="pattern-bridge-pill pattern-glass inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-white/50 dark:border-white/10 shadow-md"
+          >
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white text-xs">
+              <i class="fas fa-stopwatch"></i>
+            </span>
+            <span class="pattern-bridge-pill__label text-xs font-extrabold">Replies in 2 minutes.</span>
+          </div>
+        </div>
+
+        <!-- ═══ Business B — slow (RIGHT) ═══ -->
+        <div class="pattern-phone-wrap relative w-full max-w-[min(100%,360px)] flex flex-col items-center lg:items-start lg:pl-10">
+          <div
+            class="mb-4 inline-flex items-center gap-2 rounded-2xl border border-amber-200/90 dark:border-amber-500/40 bg-amber-50/90 dark:bg-amber-950/50 pattern-glass px-4 py-2 shadow-md"
+          >
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400 text-amber-950 text-sm">
+              <i class="fas fa-clock"></i>
+            </span>
+            <span class="text-sm font-bold text-amber-900 dark:text-amber-100">Business B</span>
+          </div>
+
+          <div class="relative w-full">
+            <div class="pattern-glow-amber absolute left-1/2 top-1/2 h-[520px] w-[380px] -translate-x-1/2 -translate-y-1/2 pointer-events-none -z-10"></div>
+
+            <div class="pattern-phone-b relative w-full">
+              <div class="pattern-device-chassis">
+                <div class="pattern-device-rail pattern-device-rail--left" aria-hidden="true">
+                  <span class="pattern-device-btn pattern-device-btn--mute"></span>
+                  <span class="pattern-device-btn pattern-device-btn--vol-up"></span>
+                  <span class="pattern-device-btn pattern-device-btn--vol-down"></span>
+                </div>
+                <div class="pattern-device-rail pattern-device-rail--right" aria-hidden="true">
+                  <span class="pattern-device-btn pattern-device-btn--power"></span>
+                </div>
+                <div
+                  class="pattern-device-face rounded-[2.15rem] bg-gray-100 dark:bg-gray-950 ring-1 ring-black/10 dark:ring-white/10"
+                >
+                  <div class="pattern-device-face-header">
+                    <div class="flex flex-col items-center bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800/80">
+                      <div class="pt-2.5 pb-1 flex justify-center">
+                        <div class="pattern-device-notch" aria-hidden="true"></div>
+                      </div>
+                      <div class="flex w-full items-center justify-between px-4 pb-2 text-[10px] font-semibold text-gray-600 dark:text-gray-400">
+                        <span>9:41</span>
+                        <div class="flex items-center gap-1">
+                          <i class="fas fa-signal text-[9px]"></i>
+                          <i class="fas fa-wifi text-[9px]"></i>
+                          <i class="fas fa-battery-three-quarters text-[9px]"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pattern-device-screen pattern-glass bg-white/95 dark:bg-gray-900/95 px-4 pt-4 pb-5 sm:px-5">
+              <div class="mb-4 flex items-center gap-3">
+                <div
+                  class="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-slate-400 to-slate-700 ring-2 ring-white dark:ring-gray-800 shadow-md flex items-center justify-center text-white text-xs font-black"
+                  aria-hidden="true"
+                >
+                  B
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-bold text-gray-900 dark:text-white">User B</p>
+                  <p class="text-xs text-amber-600 dark:text-amber-400 font-medium">Away</p>
+                </div>
+              </div>
+
+              <div
+                class="pattern-msg-pop pattern-msg-pop--in mb-4 rounded-2xl rounded-bl-md border border-gray-100 dark:border-gray-700 bg-gray-50/90 dark:bg-gray-800/90 p-3"
+              >
+                <p class="text-[13px] leading-snug text-gray-800 dark:text-gray-100">Denim jacket ka price kya hai?</p>
+                <p class="mt-1.5 text-[11px] text-gray-400">07:45</p>
+              </div>
+
+              <div
+                class="pattern-msg-pop pattern-msg-pop--meta mb-4 inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 dark:border-amber-500/30 bg-amber-100/80 dark:bg-amber-900/50 px-3 py-1.5 text-[11px] font-bold text-amber-900 dark:text-amber-200"
+              >
+                <i class="fas fa-clock text-amber-600 dark:text-amber-400"></i>
+                Replies in 2 hours
+              </div>
+
+              <div
+                class="pattern-msg-pop pattern-msg-pop--out relative mb-4 rounded-2xl rounded-br-md border border-amber-200/70 dark:border-amber-600/40 bg-amber-50/95 dark:bg-amber-950/45 p-3 pr-12"
+              >
+                <div class="absolute -left-1 top-3 h-7 w-7 rounded-full bg-amber-500 flex items-center justify-center text-[10px] text-amber-950 font-bold border-2 border-white dark:border-gray-900">B</div>
+                <p class="pl-7 text-[13px] leading-snug text-amber-950 dark:text-amber-50">
+                  Sorry raat ko late reply hua! Denim jacket ka price ₹1299 hai.
+                </p>
+                <span
+                  class="absolute right-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-amber-200/80 dark:bg-amber-800/60 text-lg"
+                  title="Slow response"
+                  aria-hidden="true"
+                >😴</span>
+              </div>
+
+              <div class="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-700/80 pt-4">
+                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400">
+                  <i class="fas fa-thumbs-down"></i>
+                </span>
+                <div class="flex gap-0.5 text-sm" aria-label="3 out of 5 stars">
+                  <i class="fas fa-star text-amber-400"></i><i class="fas fa-star text-amber-400"></i><i class="fas fa-star text-amber-400"></i><i class="fas fa-star text-gray-200 dark:text-gray-600 opacity-50"></i><i class="fas fa-star text-gray-200 dark:text-gray-600 opacity-50"></i>
+                </div>
+              </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer line + RepMeUp wordmark -->
+    <footer class="mt-16 sm:mt-20 text-center animate-on-scroll delay-2">
+      <p class="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+        Guess who wins<span class="text-lime-700 dark:text-rep-lime">.</span>
+      </p>
+      <p class="mt-4 flex items-center justify-center gap-0.5 text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
+        RepMeUp<span class="inline-block h-2.5 w-2.5 translate-y-0.5 rounded-sm bg-rep-lime align-middle" aria-hidden="true"></span>
+      </p>
+      <p class="mt-6 max-w-md mx-auto text-sm text-gray-500 dark:text-gray-400">
+        Response speed is the new competitive advantage. Don't let slow replies cost you customers.
+      </p>
+    </footer>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 3 — THE PROBLEM
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
+  <div class="absolute right-0 top-0 w-96 h-96 bg-red-500/3 rounded-full blur-3xl pointer-events-none"></div>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div class="text-center mb-10 sm:mb-14">
-      <span class="inline-block mb-4 px-3 py-1.5 sm:px-4 sm:py-2 bg-rep-lime/10 border border-rep-lime/20 text-rep-lime rounded-full text-xs sm:text-sm font-bold">
-        <i class="fas fa-plug mr-2"></i>Official Platform Integrations
+    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
+      <span class="inline-block mb-4 px-4 py-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-500 dark:text-red-400 rounded-full text-sm font-bold">
+        <i class="fas fa-exclamation-triangle mr-2"></i>Sound familiar?
       </span>
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-rep-white mb-4">
-        Connected to the Platforms
-        <span class="text-rep-lime"> That Matter</span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
+        Your Team Is Living in<br><span class="text-red-500 dark:text-red-400">Managed Chaos</span>
       </h2>
-      <p class="text-base sm:text-xl text-gray-300 max-w-2xl mx-auto">
-        RepMeUp is officially integrated with Meta, Google and more — so you manage every conversation from one place.
+      <p class="text-gray-500 text-base sm:text-xl max-w-2xl mx-auto">
+        The average business uses 7+ tools to manage conversations. Here's what that actually looks like.
       </p>
     </div>
 
-    <!-- Integration Cards Grid — 5 platforms, dark cards matching Features section -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 mb-10 sm:mb-12">
-
-      <!-- Meta -->
-      <div class="flex flex-col items-center p-5 sm:p-8 bg-rep-black rounded-2xl border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10 cursor-default">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg" style="background: linear-gradient(135deg, #0866FF 0%, #0082FB 100%);">
-          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 sm:w-9 sm:h-9">
-            <path d="M6 24.5C6 27.5 7.5 29 9.5 29C11.3 29 12.5 27.9 14 25.8L16.2 22.5L13.5 18.5C12 16.3 10.8 15.5 9.3 15.5C7.4 15.5 6 17.5 6 20.5V24.5Z" fill="white"/>
-            <path d="M20 14.5C18.5 14.5 17.3 15.5 16 17.5L20 24L24 17.5C22.7 15.5 21.5 14.5 20 14.5Z" fill="white"/>
-            <path d="M26.5 15.5C25 15.5 23.8 16.3 22.3 18.5L19.6 22.5L21.8 25.8C23.3 27.9 24.5 29 26.3 29C28.3 29 30 27.5 30 24.5V20.5C30 17.5 28.5 15.5 26.5 15.5Z" fill="white"/>
-          </svg>
+    <!-- Problem Cards -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+      <div class="problem-card animate-on-scroll delay-1 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover">
+        <div class="problem-icon w-12 h-12 bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-bell-slash text-red-500 dark:text-red-400 text-lg"></i>
         </div>
-        <p class="text-sm sm:text-base font-bold text-rep-white">Meta</p>
-        <p class="text-xs sm:text-sm text-gray-400 mt-1">Business Suite</p>
-        <span class="mt-3 px-2.5 py-1 bg-rep-lime/10 text-rep-lime text-xs font-semibold rounded-full border border-rep-lime/20">
-          <i class="fas fa-check-circle mr-1"></i>Active
-        </span>
+        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">Missed Messages</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Critical DMs and comments fall through the cracks every single day.</p>
       </div>
 
-      <!-- Facebook -->
-      <div class="flex flex-col items-center p-5 sm:p-8 bg-rep-black rounded-2xl border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10 cursor-default">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg" style="background: #1877F2;">
-          <i class="fab fa-facebook-f text-white text-xl sm:text-2xl"></i>
+      <div class="problem-card animate-on-scroll delay-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover">
+        <div class="problem-icon w-12 h-12 bg-orange-50 dark:bg-orange-500/15 border border-orange-200 dark:border-orange-500/20 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-hourglass-half text-orange-500 dark:text-orange-400 text-lg"></i>
         </div>
-        <p class="text-sm sm:text-base font-bold text-rep-white">Facebook</p>
-        <p class="text-xs sm:text-sm text-gray-400 mt-1">Pages & Messenger</p>
-        <span class="mt-3 px-2.5 py-1 bg-rep-lime/10 text-rep-lime text-xs font-semibold rounded-full border border-rep-lime/20">
-          <i class="fas fa-check-circle mr-1"></i>Active
-        </span>
+        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">Slow Replies</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Hours pass before customers get a response — and they notice.</p>
       </div>
 
-      <!-- Instagram -->
-      <div class="flex flex-col items-center p-5 sm:p-8 bg-rep-black rounded-2xl border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10 cursor-default">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg" style="background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);">
-          <i class="fab fa-instagram text-white text-xl sm:text-2xl"></i>
+      <div class="problem-card animate-on-scroll delay-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover">
+        <div class="problem-icon w-12 h-12 bg-yellow-50 dark:bg-yellow-500/15 border border-yellow-200 dark:border-yellow-500/20 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-layer-group text-yellow-600 dark:text-yellow-400 text-lg"></i>
         </div>
-        <p class="text-sm sm:text-base font-bold text-rep-white">Instagram</p>
-        <p class="text-xs sm:text-sm text-gray-400 mt-1">DMs & Comments</p>
-        <span class="mt-3 px-2.5 py-1 bg-rep-lime/10 text-rep-lime text-xs font-semibold rounded-full border border-rep-lime/20">
-          <i class="fas fa-check-circle mr-1"></i>Active
-        </span>
+        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">Scattered Tools</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Instagram here, Google Reviews there, Facebook somewhere else.</p>
       </div>
 
-      <!-- Google -->
-      <div class="flex flex-col items-center p-5 sm:p-8 bg-rep-black rounded-2xl border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10 cursor-default">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-rep-white flex items-center justify-center mb-3 sm:mb-4 shadow-lg">
-          <svg viewBox="0 0 48 48" class="w-8 h-8 sm:w-9 sm:h-9">
-            <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l5.9-5.9C34.2 3.3 29.4 1 24 1 14.7 1 6.9 6.7 3.5 14.8l6.9 5.4C12.2 14.2 17.6 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.5 24.5c0-1.7-.1-3-.4-4.3H24v8.2h12.7c-.6 3-2.4 5.5-5 7.2l7.7 6C43.4 37.2 46.5 31.3 46.5 24.5z"/>
-            <path fill="#FBBC05" d="M10.4 28.8C10 27.6 9.8 26.3 9.8 25s.2-2.6.6-3.8l-6.9-5.4C1.9 18.5 1 21.6 1 25s.9 6.5 2.5 9.2l6.9-5.4z"/>
-            <path fill="#34A853" d="M24 47c5.4 0 10-1.8 13.3-4.9l-7.7-6c-1.9 1.3-4.3 2-5.6 2-6.4 0-11.8-4.7-13.6-11.3l-6.9 5.4C6.9 41.3 14.7 47 24 47z"/>
-          </svg>
+      <div class="problem-card animate-on-scroll delay-4 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover">
+        <div class="problem-icon w-12 h-12 bg-purple-50 dark:bg-purple-500/15 border border-purple-200 dark:border-purple-500/20 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-question-circle text-purple-500 dark:text-purple-400 text-lg"></i>
         </div>
-        <p class="text-sm sm:text-base font-bold text-rep-white">Google</p>
-        <p class="text-xs sm:text-sm text-gray-400 mt-1">Reviews & Maps</p>
-        <span class="mt-3 px-2.5 py-1 bg-rep-lime/10 text-rep-lime text-xs font-semibold rounded-full border border-rep-lime/20">
-          <i class="fas fa-check-circle mr-1"></i>Active
-        </span>
+        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">No Context</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Your team starts every reply blind — no history, no customer context.</p>
       </div>
 
-      <!-- YouTube -->
-      <div class="flex flex-col items-center p-5 sm:p-8 bg-rep-black rounded-2xl border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10 cursor-default">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg" style="background: #FF0000;">
-          <i class="fab fa-youtube text-white text-xl sm:text-2xl"></i>
+      <div class="problem-card animate-on-scroll delay-5 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover sm:col-span-2 lg:col-span-1">
+        <div class="problem-icon w-12 h-12 bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/20 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-random text-blue-500 dark:text-blue-400 text-lg"></i>
         </div>
-        <p class="text-sm sm:text-base font-bold text-rep-white">YouTube</p>
-        <p class="text-xs sm:text-sm text-gray-400 mt-1">Comments</p>
-        <span class="mt-3 px-2.5 py-1 bg-rep-lime/10 text-rep-lime text-xs font-semibold rounded-full border border-rep-lime/20">
-          <i class="fas fa-check-circle mr-1"></i>Active
-        </span>
+        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">Team Confusion</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Two people reply to the same message. Nobody knows who owns what.</p>
       </div>
     </div>
 
-    <!-- Meta Partnership Banner — dark theme -->
-    <div class="rounded-2xl border-2 border-gray-800 hover:border-rep-lime/30 transition p-5 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-5 sm:gap-6">
-      <!-- Left: icons + text -->
-      <div class="flex items-center gap-6">
-        <div class="flex -space-x-3 shrink-0">
-          <div class="w-12 h-12 rounded-full border-2 border-gray-800 flex items-center justify-center shadow-lg" style="background:#1877F2;">
-            <i class="fab fa-facebook-f text-white text-lg"></i>
+    <!-- Closing punch line -->
+    <div class="animate-on-scroll text-center">
+      <div class="inline-block px-8 py-5 bg-red-50 dark:bg-gradient-to-r dark:from-red-950/40 dark:via-gray-900 dark:to-red-950/40 border border-red-200 dark:border-red-800/30 rounded-2xl">
+        <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-rep-white">
+          You're not losing customers.
+          <span class="text-red-500 dark:text-red-400"> You're losing moments.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4 — THE SOLUTION
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="py-16 sm:py-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
+  <div class="absolute left-1/2 top-0 -translate-x-1/2 w-[800px] h-[400px] bg-rep-lime/3 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <!-- Left -->
+      <div class="animate-on-scroll">
+        <span class="inline-block mb-5 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
+          <i class="fas fa-check-circle mr-2"></i>The Solution
+        </span>
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-6 leading-tight tracking-tight">
+          One Platform.<br>
+          <span class="gradient-text">Total Control</span><br>
+          Over Conversations.
+        </h2>
+        <p class="text-gray-500 text-lg mb-8 leading-relaxed">
+          Social, chat, email, voice — unified, intelligent, and built for speed.
+          Replace the chaos of 7 tools with one workspace designed to win every conversation.
+        </p>
+        <div class="space-y-4">
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 bg-lime-50 dark:bg-rep-lime/15 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fas fa-check text-lime-700 dark:text-rep-lime text-sm"></i>
+            </div>
+            <div>
+              <p class="text-gray-900 dark:text-rep-white font-semibold">One unified inbox for every channel</p>
+              <p class="text-gray-500 text-sm">WhatsApp, Instagram, Facebook, Google Reviews — all in one place</p>
+            </div>
           </div>
-          <div class="w-12 h-12 rounded-full border-2 border-gray-800 flex items-center justify-center shadow-lg" style="background: linear-gradient(45deg,#f09433,#dc2743,#bc1888);">
-            <i class="fab fa-instagram text-white text-lg"></i>
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 bg-lime-50 dark:bg-rep-lime/15 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fas fa-check text-lime-700 dark:text-rep-lime text-sm"></i>
+            </div>
+            <div>
+              <p class="text-gray-900 dark:text-rep-white font-semibold">AI that replies before your competitor does</p>
+              <p class="text-gray-500 text-sm">Smart suggestions, auto-routing, and sentiment detection</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 bg-lime-50 dark:bg-rep-lime/15 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fas fa-check text-lime-700 dark:text-rep-lime text-sm"></i>
+            </div>
+            <div>
+              <p class="text-gray-900 dark:text-rep-white font-semibold">Full context on every conversation</p>
+              <p class="text-gray-500 text-sm">Customer history, previous messages, and resolved threads — always visible</p>
+            </div>
           </div>
         </div>
+      </div>
+
+      <!-- Right: Before / After visual -->
+      <div class="animate-on-scroll delay-2">
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Before -->
+          <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-2xl p-5">
+            <p class="text-red-500 dark:text-red-400 text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+              <i class="fas fa-times-circle"></i> Before
+            </p>
+            <div class="space-y-3">
+              <div class="flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800/20">
+                <i class="fab fa-instagram text-pink-400 text-xs"></i>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Tab 1 of 7</span>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800/20">
+                <i class="fab fa-facebook text-blue-400 text-xs"></i>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Tab 2 of 7</span>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800/20">
+                <i class="fas fa-envelope text-gray-400 text-xs"></i>
+                <span class="text-xs text-gray-500 dark:text-gray-400">Tab 3 of 7</span>
+              </div>
+              <div class="px-3 py-2 rounded-xl bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700/30">
+                <p class="text-xs text-red-500 dark:text-red-300 font-semibold">12 unread · 3 tools down</p>
+              </div>
+            </div>
+          </div>
+          <!-- After -->
+          <div class="bg-rep-lime/5 border border-lime-200 dark:border-rep-lime/20 rounded-2xl p-5">
+            <p class="text-lime-700 dark:text-rep-lime text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+              <i class="fas fa-check-circle"></i> After RepMeUp
+            </p>
+            <div class="space-y-3">
+              <div class="flex items-center gap-2 px-3 py-2 bg-lime-50 dark:bg-rep-lime/10 rounded-xl border border-lime-200 dark:border-rep-lime/15">
+                <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-xs"></i>
+                <span class="text-xs text-gray-700 dark:text-gray-300">All in 1 place</span>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-2 bg-lime-50 dark:bg-rep-lime/10 rounded-xl border border-lime-200 dark:border-rep-lime/15">
+                <i class="fas fa-robot text-lime-700 dark:text-rep-lime text-xs"></i>
+                <span class="text-xs text-gray-700 dark:text-gray-300">AI suggests reply</span>
+              </div>
+              <div class="flex items-center gap-2 px-3 py-2 bg-lime-50 dark:bg-rep-lime/10 rounded-xl border border-lime-200 dark:border-rep-lime/15">
+                <i class="fas fa-bolt text-lime-700 dark:text-rep-lime text-xs"></i>
+                <span class="text-xs text-gray-700 dark:text-gray-300">Sent in 2 min</span>
+              </div>
+              <div class="px-3 py-2 rounded-xl bg-lime-50 dark:bg-rep-lime/15 border border-lime-200 dark:border-rep-lime/25">
+                <p class="text-xs text-lime-700 dark:text-rep-lime font-bold">0 missed · All resolved</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 5 — PRODUCT ECOSYSTEM
+════════════════════════════════════════════════════════════════════════════ -->
+<section id="ecosystem" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
+  <div class="absolute left-0 bottom-0 w-80 h-80 bg-rep-lime/4 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
+      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
+        <i class="fas fa-th-large mr-2"></i>Product Ecosystem
+      </span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
+        Three Products.<br>
+        <span class="gradient-text">One Unified Platform.</span>
+      </h2>
+      <p class="text-gray-500 text-base sm:text-xl max-w-2xl mx-auto">
+        Simple clarity of what we do — and the massive value it delivers.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 sm:gap-8">
+      <!-- RMP Inbox -->
+      <div class="animate-on-scroll delay-1 card-hover bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-rep-lime/4 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="w-14 h-14 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-2xl flex items-center justify-center mb-6">
+          <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-xl"></i>
+        </div>
+        <div class="mb-2 inline-block px-3 py-1 bg-lime-50 dark:bg-rep-lime/10 rounded-full text-lime-700 dark:text-rep-lime text-xs font-bold">RMP Inbox</div>
+        <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-rep-white mb-3">Control the Chaos</h3>
+        <p class="text-gray-500 text-sm mb-6 leading-relaxed">
+          All conversations. One inbox. AI included. Never miss a message across WhatsApp, Instagram, Facebook, Google, or YouTube.
+        </p>
+        <ul class="space-y-2.5 mb-8">
+          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> Unified multi-platform inbox</li>
+          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> AI reply suggestions</li>
+          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> Smart conversation routing</li>
+        </ul>
+        <a (click)="scrollToSection('how-it-works')" class="inline-flex items-center gap-2 text-lime-700 dark:text-rep-lime font-semibold text-sm cursor-pointer hover:gap-3 transition-all">
+          Learn More <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <!-- RMP Publish — featured -->
+      <div class="animate-on-scroll delay-2 relative mt-4">
+        <!-- "Most Popular" badge — sits above the card, not clipped -->
+        <div class="absolute -top-4 left-8 z-10">
+          <span class="px-4 py-1.5 bg-rep-lime text-rep-black text-xs font-black rounded-full shadow-lg shadow-rep-lime/40">
+            ⭐ Most Popular
+          </span>
+        </div>
+
+        <!-- Card -->
+        <div class="card-hover h-full bg-lime-50 dark:bg-gray-900 border-2 border-lime-400 dark:border-rep-lime/60 rounded-3xl p-8 relative overflow-hidden shadow-2xl shadow-lime-300/40 dark:shadow-rep-lime/20">
+          <!-- Decorative glow orb -->
+          <div class="absolute top-0 right-0 w-48 h-48 bg-rep-lime/15 dark:bg-rep-lime/12 rounded-full blur-3xl pointer-events-none"></div>
+          <!-- Top accent bar -->
+          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-rep-lime to-transparent rounded-t-3xl"></div>
+
+          <div class="w-14 h-14 bg-rep-lime rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-rep-lime/40">
+            <i class="fas fa-calendar-alt text-rep-black text-xl"></i>
+          </div>
+          <div class="mb-2 inline-block px-3 py-1 bg-lime-200 dark:bg-rep-lime/20 rounded-full text-lime-800 dark:text-rep-lime text-xs font-bold">RMP Publish</div>
+          <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-3">Control the Narrative</h3>
+          <p class="text-gray-600 dark:text-gray-300 text-sm mb-6 leading-relaxed">
+            Plan, post, and track content that performs. Schedule AI-generated posts across all platforms and measure what resonates.
+          </p>
+          <ul class="space-y-2.5 mb-8">
+            <li class="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> AI content generation</li>
+            <li class="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> Multi-platform scheduling</li>
+            <li class="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> Performance analytics</li>
+          </ul>
+          <a (click)="scrollToSection('how-it-works')" class="inline-flex items-center gap-2 text-lime-700 dark:text-rep-lime font-semibold text-sm cursor-pointer hover:gap-3 transition-all">
+            Learn More <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- RMP Desk -->
+      <div class="animate-on-scroll delay-3 card-hover bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/4 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl flex items-center justify-center mb-6">
+          <i class="fas fa-headset text-blue-500 dark:text-blue-400 text-xl"></i>
+        </div>
+        <div class="mb-2 inline-block px-3 py-1 bg-blue-50 dark:bg-blue-500/10 rounded-full text-blue-500 dark:text-blue-400 text-xs font-bold">RMP Desk</div>
+        <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-rep-white mb-3">Control the Experience</h3>
+        <p class="text-gray-500 text-sm mb-6 leading-relaxed">
+          One continuous conversation across all channels. Support tickets, reviews, and DMs all managed in one intelligent desk.
+        </p>
+        <ul class="space-y-2.5 mb-8">
+          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-blue-400 text-xs"></i> Ticket management</li>
+          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-blue-400 text-xs"></i> Customer history threads</li>
+          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-blue-400 text-xs"></i> SLA tracking & escalation</li>
+        </ul>
+        <a (click)="scrollToSection('how-it-works')" class="inline-flex items-center gap-2 text-blue-500 dark:text-blue-400 font-semibold text-sm cursor-pointer hover:gap-3 transition-all">
+          Learn More <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 6 — HOW IT WORKS
+════════════════════════════════════════════════════════════════════════════ -->
+<section id="how-it-works" class="py-16 sm:py-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
+      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
+        <i class="fas fa-magic mr-2"></i>Super Simple
+      </span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
+        Up & Running in
+        <span class="gradient-text"> 3 Steps</span>
+      </h2>
+      <p class="text-gray-500 text-base sm:text-xl max-w-xl mx-auto">No complicated setup. No developer needed.</p>
+    </div>
+
+    <div class="relative">
+      <!-- Connector line (desktop) -->
+      <div class="hidden lg:block absolute top-16 left-[calc(16.67%+1px)] right-[calc(16.67%+1px)] h-0.5 step-line z-0"></div>
+
+      <div class="grid sm:grid-cols-3 gap-8 relative z-10">
+        <!-- Step 1 -->
+        <div class="animate-on-scroll delay-1 text-center">
+          <div class="relative inline-flex mb-6">
+            <div class="w-16 h-16 bg-rep-lime rounded-2xl flex items-center justify-center shadow-xl shadow-rep-lime/30 glow-lime">
+              <i class="fas fa-plug text-rep-black text-xl"></i>
+            </div>
+            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-rep-lime rounded-full flex items-center justify-center text-lime-700 dark:text-rep-lime text-xs font-black">1</span>
+          </div>
+          <h3 class="text-lg font-black text-gray-900 dark:text-rep-white mb-2">Connect Your Channels</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">Link Instagram, Facebook, Google, YouTube, and WhatsApp with one click using official OAuth.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="animate-on-scroll delay-2 text-center">
+          <div class="relative inline-flex mb-6">
+            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl flex items-center justify-center">
+              <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-xl"></i>
+            </div>
+            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 text-xs font-black">2</span>
+          </div>
+          <h3 class="text-lg font-black text-gray-900 dark:text-rep-white mb-2">Centralise Conversations</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">Every message from every platform flows into your single unified inbox — organised, tagged, and ready.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="animate-on-scroll delay-3 text-center">
+          <div class="relative inline-flex mb-6">
+            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl flex items-center justify-center">
+              <i class="fas fa-robot text-blue-400 text-xl"></i>
+            </div>
+            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 text-xs font-black">3</span>
+          </div>
+          <h3 class="text-lg font-black text-gray-900 dark:text-rep-white mb-2">Let AI Assist & Automate</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">AI drafts perfect replies, routes complex issues, and learns your brand voice with every interaction.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center mt-14 animate-on-scroll">
+      <button (click)="navigateToRegister()"
+        class="inline-flex items-center gap-3 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition transform hover:scale-105 text-base">
+        <i class="fas fa-rocket"></i>
+        Get Started in 5 Minutes — Free
+        <i class="fas fa-arrow-right text-sm"></i>
+      </button>
+      <p class="text-gray-400 text-xs mt-3">No credit card required. Cancel anytime.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 7 — AI DIFFERENTIATOR
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-50/50 dark:via-blue-950/15 to-transparent"></div>
+  <div class="absolute left-0 top-0 w-full h-px bg-gradient-to-r from-transparent via-blue-200 dark:via-blue-500/20 to-transparent"></div>
+  <div class="absolute left-0 bottom-0 w-full h-px bg-gradient-to-r from-transparent via-blue-200 dark:via-blue-500/15 to-transparent"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+
+      <!-- Left: AI Demo Card -->
+      <div class="animate-on-scroll delay-1 order-2 lg:order-1">
+        <div class="ai-gradient-bg rounded-3xl p-6 sm:p-8 space-y-5">
+          <!-- Header -->
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 bg-blue-50 dark:bg-blue-600/20 rounded-xl flex items-center justify-center border border-blue-200 dark:border-blue-600/20">
+              <i class="fas fa-robot text-blue-500 dark:text-blue-400"></i>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-900 dark:text-rep-white">RepMeUp AI</p>
+              <p class="text-xs text-gray-400">Powered by GPT-4 · Brand-tuned</p>
+            </div>
+            <div class="ml-auto flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs rounded-full border border-green-200 dark:border-green-800/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              Active
+            </div>
+          </div>
+
+          <!-- Incoming message -->
+          <div class="bg-white dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-200 dark:border-gray-700/40">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fab fa-instagram text-pink-400 text-xs"></i>
+              <span class="text-xs text-gray-400">Instagram Comment · 0:47 ago</span>
+              <span class="ml-auto px-2 py-0.5 bg-yellow-50 dark:bg-yellow-900/40 text-yellow-600 dark:text-yellow-400 text-xs rounded-full border border-yellow-200 dark:border-yellow-800/30">Pending</span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-300 italic">"When will you restock the blue variant? I've been waiting for weeks!"</p>
+          </div>
+
+          <!-- Sentiment tags -->
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="px-3 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs rounded-full border border-orange-200 dark:border-orange-800/25">
+              <i class="fas fa-tag mr-1"></i>Intent: Purchase
+            </span>
+            <span class="px-3 py-1 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs rounded-full border border-yellow-200 dark:border-yellow-800/25">
+              <i class="fas fa-smile mr-1"></i>Sentiment: Neutral
+            </span>
+            <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded-full border border-blue-200 dark:border-blue-800/25">
+              <i class="fas fa-bolt mr-1"></i>Urgent
+            </span>
+          </div>
+
+          <!-- AI suggestion -->
+          <div class="bg-blue-50 dark:bg-blue-950/40 rounded-2xl p-4 border border-blue-200 dark:border-blue-700/30">
+            <div class="flex items-center gap-2 mb-2">
+              <i class="fas fa-magic text-blue-500 dark:text-blue-400 text-xs"></i>
+              <span class="text-xs text-blue-600 dark:text-blue-300 font-semibold">AI Suggested Reply</span>
+              <span class="text-xs text-gray-400 ml-auto">Generated in 0.3s</span>
+            </div>
+            <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed typing-cursor">
+              Hi! Great news — the blue variant is back in stock next Friday. We'll send you a direct notification the moment it's live. Thank you for your patience! 💙
+            </p>
+            <div class="flex gap-2 mt-3">
+              <button class="flex-1 py-2 bg-lime-50 dark:bg-rep-lime/15 hover:bg-rep-lime/25 text-lime-700 dark:text-rep-lime text-xs rounded-xl font-bold transition border border-lime-200 dark:border-rep-lime/25">
+                <i class="fas fa-check mr-1"></i>Approve & Send
+              </button>
+              <button class="px-4 py-2 bg-gray-100 dark:bg-gray-800/60 text-gray-500 text-xs rounded-xl font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800">
+                <i class="fas fa-edit mr-1"></i>Edit
+              </button>
+            </div>
+          </div>
+
+          <!-- Smart routing -->
+          <div class="flex items-center gap-3 px-4 py-3 bg-purple-50 dark:bg-purple-950/30 rounded-xl border border-purple-200 dark:border-purple-800/25">
+            <i class="fas fa-route text-purple-500 dark:text-purple-400 text-sm"></i>
+            <p class="text-xs text-gray-600 dark:text-gray-400">
+              <span class="text-gray-800 dark:text-gray-300 font-semibold">Smart Routing:</span> Assigned to Sales team · Priority raised
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Copy -->
+      <div class="animate-on-scroll order-1 lg:order-2">
+        <span class="inline-block mb-5 px-4 py-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 rounded-full text-sm font-bold">
+          <i class="fas fa-brain mr-2"></i>AI Differentiator
+        </span>
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-6 leading-tight tracking-tight">
+          AI That Replies<br>
+          <span class="text-blue-500 dark:text-blue-400">Before Your Competitor</span><br>
+          <span class="gradient-text">Does.</span>
+        </h2>
+        <p class="text-gray-500 text-lg mb-8 leading-relaxed">
+          Your competitors are still copy-pasting replies. RepMeUp AI is already drafting, tagging, routing, and responding — in milliseconds.
+        </p>
+        <div class="space-y-5">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-blue-50 dark:bg-blue-500/10 rounded-xl flex items-center justify-center shrink-0">
+              <i class="fas fa-bolt text-blue-500 dark:text-blue-400"></i>
+            </div>
+            <div>
+              <p class="text-gray-900 dark:text-rep-white font-bold">Instant Replies</p>
+              <p class="text-gray-500 text-sm">AI drafts context-aware responses in under a second</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-purple-50 dark:bg-purple-500/10 rounded-xl flex items-center justify-center shrink-0">
+              <i class="fas fa-route text-purple-500 dark:text-purple-400"></i>
+            </div>
+            <div>
+              <p class="text-gray-900 dark:text-rep-white font-bold">Smart Routing</p>
+              <p class="text-gray-500 text-sm">Complex issues escalated to the right team member automatically</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-green-50 dark:bg-green-500/10 rounded-xl flex items-center justify-center shrink-0">
+              <i class="fas fa-graduation-cap text-green-500 dark:text-green-400"></i>
+            </div>
+            <div>
+              <p class="text-gray-900 dark:text-rep-white font-bold">Learns From Every Conversation</p>
+              <p class="text-gray-500 text-sm">Gets better over time — trained on your exact brand voice and history</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 8 — BUSINESS IMPACT (ROI)
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="py-16 sm:py-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
+  <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-rep-lime/20 to-transparent"></div>
+  <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-rep-lime/15 to-transparent"></div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
+      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
+        <i class="fas fa-chart-line mr-2"></i>Real ROI
+      </span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
+        Outcomes, Not Features
+      </h2>
+      <p class="text-gray-500 text-base sm:text-xl max-w-2xl mx-auto">
+        Here's what businesses report after switching to RepMeUp.
+      </p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+      <div class="animate-on-scroll delay-1 card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center relative overflow-hidden shadow-sm">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rep-lime/0 via-rep-lime to-rep-lime/0 rounded-t-3xl"></div>
+        <div class="w-12 h-12 bg-lime-50 dark:bg-rep-lime/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+          <i class="fas fa-bolt text-lime-700 dark:text-rep-lime text-lg"></i>
+        </div>
+        <p class="text-4xl sm:text-5xl font-black text-lime-700 dark:text-rep-lime mb-2">70%</p>
+        <p class="text-gray-800 dark:text-gray-300 font-semibold mb-1">Faster Response Times</p>
+        <p class="text-gray-400 text-xs">Average across all plans</p>
+      </div>
+
+      <div class="animate-on-scroll delay-2 card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center relative overflow-hidden shadow-sm">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400/0 via-green-400 to-green-400/0 rounded-t-3xl"></div>
+        <div class="w-12 h-12 bg-green-50 dark:bg-green-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+          <i class="fas fa-chart-line text-green-500 dark:text-green-400 text-lg"></i>
+        </div>
+        <p class="text-4xl sm:text-5xl font-black text-green-500 dark:text-green-400 mb-2">3.2x</p>
+        <p class="text-gray-800 dark:text-gray-300 font-semibold mb-1">Higher Conversion</p>
+        <p class="text-gray-400 text-xs">From conversation to customer</p>
+      </div>
+
+      <div class="animate-on-scroll delay-3 card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center relative overflow-hidden shadow-sm">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400/0 via-blue-400 to-blue-400/0 rounded-t-3xl"></div>
+        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+          <i class="fas fa-robot text-blue-500 dark:text-blue-400 text-lg"></i>
+        </div>
+        <p class="text-4xl sm:text-5xl font-black text-blue-500 dark:text-blue-400 mb-2">80%</p>
+        <p class="text-gray-800 dark:text-gray-300 font-semibold mb-1">Reduced Manual Work</p>
+        <p class="text-gray-400 text-xs">AI handles the routine replies</p>
+      </div>
+
+      <div class="animate-on-scroll delay-4 card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center relative overflow-hidden shadow-sm">
+        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400/0 via-purple-400 to-purple-400/0 rounded-t-3xl"></div>
+        <div class="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+          <i class="fas fa-bullseye text-purple-500 dark:text-purple-400 text-lg"></i>
+        </div>
+        <p class="text-4xl sm:text-5xl font-black text-purple-500 dark:text-purple-400 mb-2">99%</p>
+        <p class="text-gray-800 dark:text-gray-300 font-semibold mb-1">Brand Voice Consistency</p>
+        <p class="text-gray-400 text-xs">Every reply, on-brand</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 9 — USE CASES
+════════════════════════════════════════════════════════════════════════════ -->
+<section id="use-cases" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
+  <div class="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-rep-lime/4 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <div class="text-center mb-10 sm:mb-14 animate-on-scroll">
+      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
+        <i class="fas fa-users mr-2"></i>Use Cases
+      </span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
+        Built for Teams Like Yours
+      </h2>
+      <p class="text-gray-500 text-base sm:text-xl max-w-2xl mx-auto">
+        See yourself in the transformation.
+      </p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex flex-wrap justify-center gap-2 mb-10 animate-on-scroll delay-1">
+      <button *ngFor="let key of useCaseTabKeys"
+        (click)="setActiveUseCaseTab(key)"
+        [class.active]="activeUseCaseTab === key"
+        [ngClass]="{
+          'bg-rep-lime text-rep-black border-rep-lime': activeUseCaseTab === key,
+          'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700': activeUseCaseTab !== key
+        }"
+        class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm border transition-all">
+        <i [class]="useCases[key].icon + ' mr-2 text-xs'"></i>
+        {{ useCases[key].title }}
+      </button>
+    </div>
+
+    <!-- Active case content -->
+    <div class="animate-on-scroll delay-2">
+      <div class="grid lg:grid-cols-2 gap-8 items-center">
         <div>
-          <p class="text-lg font-bold text-rep-white">Built on the Meta Business Platform</p>
-          <p class="text-gray-400 text-sm mt-1">
-            RepMeUp uses the official <strong class="text-rep-white">Meta Graph API</strong> to securely connect your Facebook Pages and Instagram Business accounts — no third-party tools, no data stored without permission.
+          <p class="text-lime-700 dark:text-rep-lime text-sm font-bold uppercase tracking-wider mb-3">
+            <i [class]="activeCase.icon + ' mr-2'"></i>{{ activeCase.title }}
+          </p>
+          <h3 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-rep-white mb-4 leading-tight">
+            {{ activeCase.transformation }}
+          </h3>
+          <ul class="space-y-4 mb-8">
+            <li *ngFor="let point of activeCase.points" class="flex items-start gap-3">
+              <div class="w-6 h-6 bg-lime-50 dark:bg-rep-lime/15 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i>
+              </div>
+              <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{{ point }}</p>
+            </li>
+          </ul>
+          <button (click)="navigateToRegister()"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-rep-black font-black rounded-xl hover:shadow-xl hover:shadow-rep-lime/30 transition transform hover:scale-105 text-sm">
+            Start Free — No Card Required
+            <i class="fas fa-arrow-right text-xs"></i>
+          </button>
+        </div>
+        <div class="bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center card-hover">
+          <div class="w-20 h-20 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <i [class]="activeCase.icon + ' text-lime-700 dark:text-rep-lime text-3xl'"></i>
+          </div>
+          <p class="text-5xl sm:text-6xl font-black gradient-text mb-2">{{ activeCase.stat }}</p>
+          <p class="text-gray-500 font-semibold text-lg mb-4">{{ activeCase.statLabel }}</p>
+          <p class="text-gray-400 text-sm max-w-xs mx-auto leading-relaxed">
+            Reported by businesses using RepMeUp for {{ activeCase.title }} management
           </p>
         </div>
       </div>
-
-      <!-- Right: trust chips — lime style -->
-      <div class="flex flex-wrap gap-3 shrink-0">
-        <div class="flex items-center gap-2 px-4 py-2 bg-rep-black border border-gray-700 rounded-xl text-sm font-semibold text-gray-300 whitespace-nowrap hover:border-rep-lime/40 transition">
-          <i class="fas fa-lock text-rep-lime"></i>
-          OAuth 2.0 Secured
-        </div>
-        <div class="flex items-center gap-2 px-4 py-2 bg-rep-black border border-gray-700 rounded-xl text-sm font-semibold text-gray-300 whitespace-nowrap hover:border-rep-lime/40 transition">
-          <i class="fas fa-shield-alt text-rep-lime"></i>
-          Official Graph API
-        </div>
-        <div class="flex items-center gap-2 px-4 py-2 bg-rep-black border border-gray-700 rounded-xl text-sm font-semibold text-gray-300 whitespace-nowrap hover:border-rep-lime/40 transition">
-          <i class="fas fa-user-shield text-rep-lime"></i>
-          GDPR Compliant
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
-<!-- Features Section -->
-<section id="features" class="py-14 sm:py-20 bg-rep-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-10 sm:mb-16">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-rep-black mb-4">
-        Everything You Need to
-        <span class="text-rep-lime">Manage Reputation</span>
-      </h2>
-      <p class="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto">
-        Powerful tools to monitor, protect, and grow your online reputation across all platforms
-      </p>
-    </div>
 
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-      <!-- Feature 1: Monitor -->
-      <div class="bg-rep-black rounded-2xl p-6 sm:p-8 border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10">
-        <div class="w-16 h-16 bg-rep-lime rounded-xl flex items-center justify-center mb-6 shadow-lg">
-          <i class="fas fa-eye text-rep-black text-2xl"></i>
-        </div>
-        <h3 class="text-xl font-bold text-rep-white mb-3">RepMeUp Monitor</h3>
-        <p class="text-gray-300 mb-4">Track reviews, mentions, and alerts across all platforms in real-time.</p>
-        <ul class="space-y-2 text-sm text-gray-300">
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Real-time alerts
-          </li>
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Multi-platform tracking
-          </li>
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Sentiment analysis
-          </li>
-        </ul>
-      </div>
-
-      <!-- Feature 2: Protect -->
-      <div class="bg-rep-black rounded-2xl p-6 sm:p-8 border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10">
-        <div class="w-16 h-16 bg-rep-lime rounded-xl flex items-center justify-center mb-6 shadow-lg">
-          <i class="fas fa-shield-alt text-rep-black text-2xl"></i>
-        </div>
-        <h3 class="text-xl font-bold text-rep-white mb-3">RepMeUp Protect</h3>
-        <p class="text-gray-300 mb-4">Crisis management, takedowns, and legal coordination when you need it most.</p>
-        <ul class="space-y-2 text-sm text-gray-300">
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Crisis response
-          </li>
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Content removal
-          </li>
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Legal support
-          </li>
-        </ul>
-      </div>
-
-      <!-- Feature 3: Grow -->
-      <div class="bg-rep-black rounded-2xl p-6 sm:p-8 border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10">
-        <div class="w-16 h-16 bg-rep-lime rounded-xl flex items-center justify-center mb-6 shadow-lg">
-          <i class="fas fa-chart-line text-rep-black text-2xl"></i>
-        </div>
-        <h3 class="text-xl font-bold text-rep-white mb-3">RepMeUp Grow</h3>
-        <p class="text-gray-300 mb-4">Build trust, increase visibility, and generate more positive reviews.</p>
-        <ul class="space-y-2 text-sm text-gray-300">
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Review generation
-          </li>
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Trust building
-          </li>
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            SEO optimization
-          </li>
-        </ul>
-      </div>
-
-      <!-- Feature 4: Business -->
-      <div class="bg-rep-black rounded-2xl p-6 sm:p-8 border-2 border-gray-800 hover:border-rep-lime/50 transition hover:shadow-xl hover:shadow-rep-lime/10">
-        <div class="w-16 h-16 bg-rep-lime rounded-xl flex items-center justify-center mb-6 shadow-lg">
-          <i class="fas fa-building text-rep-black text-2xl"></i>
-        </div>
-        <h3 class="text-xl font-bold text-rep-white mb-3">RepMeUp Business</h3>
-        <p class="text-gray-300 mb-4">Enterprise-grade solutions for companies, brands, and startups.</p>
-        <ul class="space-y-2 text-sm text-gray-300">
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Team management
-          </li>
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            Advanced analytics
-          </li>
-          <li class="flex items-center">
-            <i class="fas fa-check-circle text-rep-lime mr-2"></i>
-            API access
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Dashboard Screenshots Section -->
-<section id="dashboard" class="py-16 sm:py-24 bg-rep-black overflow-hidden relative">
-  <!-- Background glow -->
-  <div class="absolute left-0 w-96 h-96 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 10 — SOCIAL PROOF
+════════════════════════════════════════════════════════════════════════════ -->
+<section id="testimonials" class="py-16 sm:py-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
+  <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700/40 to-transparent"></div>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div class="text-center mb-10 sm:mb-16">
-      <span class="inline-block mb-4 px-3 py-1.5 sm:px-4 sm:py-2 bg-rep-lime/10 border border-rep-lime/20 text-rep-lime rounded-full text-xs sm:text-sm font-bold tracking-wide">
-        <i class="fas fa-desktop mr-2"></i>See it in Action
+    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
+      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
+        <i class="fas fa-quote-left mr-2"></i>Social Proof
       </span>
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-rep-white mb-4">
-        Everything You Need,
-        <span class="text-rep-lime"> In One Place.</span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
+        Teams That Switched<br>
+        <span class="gradient-text">Never Looked Back</span>
       </h2>
-      <p class="text-base sm:text-xl text-gray-400 max-w-2xl mx-auto">
-        Analytics, AI replies, platform management — all inside a single beautifully designed workspace.
-      </p>
+      <p class="text-gray-500 text-base sm:text-lg max-w-xl mx-auto">Even 2–3 strong ones are enough. Here's what our early users say.</p>
     </div>
 
-    <!-- 3-column feature screenshots -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-10 sm:mb-14">
-
-      <!-- Analytics Dashboard -->
-      <div class="rounded-2xl overflow-hidden border-2 border-gray-800 shadow-xl">
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border-b border-gray-800">
-          <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-          <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
-          <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-          <span class="ml-2 text-xs text-gray-500">Analytics Dashboard</span>
-        </div>
-        <div class="bg-gray-950 p-5">
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="text-sm font-bold text-rep-white">Performance Overview</h4>
-            <span class="text-xs text-gray-500">Last 30 days</span>
-          </div>
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-gray-900 rounded-xl p-3">
-              <p class="text-2xl font-bold text-rep-lime">1,247</p>
-              <p class="text-xs text-gray-400 mt-1">Total Messages</p>
-              <div class="flex items-center gap-1 mt-1">
-                <i class="fas fa-arrow-up text-green-400 text-xs"></i>
-                <span class="text-xs text-green-400">+18%</span>
-              </div>
-            </div>
-            <div class="bg-gray-900 rounded-xl p-3">
-              <p class="text-2xl font-bold text-rep-white">94%</p>
-              <p class="text-xs text-gray-400 mt-1">Response Rate</p>
-              <div class="flex items-center gap-1 mt-1">
-                <i class="fas fa-arrow-up text-green-400 text-xs"></i>
-                <span class="text-xs text-green-400">+5%</span>
-              </div>
-            </div>
-            <div class="bg-gray-900 rounded-xl p-3">
-              <p class="text-2xl font-bold text-rep-white">4.8</p>
-              <p class="text-xs text-gray-400 mt-1">Avg. Rating</p>
-              <div class="flex text-yellow-400 text-xs mt-1 gap-0.5">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-              </div>
-            </div>
-            <div class="bg-gray-900 rounded-xl p-3">
-              <p class="text-2xl font-bold text-rep-white">2.3h</p>
-              <p class="text-xs text-gray-400 mt-1">Avg. Response</p>
-              <div class="flex items-center gap-1 mt-1">
-                <i class="fas fa-arrow-down text-green-400 text-xs"></i>
-                <span class="text-xs text-green-400">-22%</span>
-              </div>
-            </div>
-          </div>
-          <!-- Mini chart bars -->
-          <div class="bg-gray-900 rounded-xl p-3">
-            <p class="text-xs text-gray-500 mb-3">Message volume (last 7 days)</p>
-            <div class="flex items-end gap-1.5 h-16">
-              <div class="flex-1 bg-rep-lime/20 rounded-t" style="height:40%"></div>
-              <div class="flex-1 bg-rep-lime/30 rounded-t" style="height:60%"></div>
-              <div class="flex-1 bg-rep-lime/40 rounded-t" style="height:50%"></div>
-              <div class="flex-1 bg-rep-lime/60 rounded-t" style="height:75%"></div>
-              <div class="flex-1 bg-rep-lime/80 rounded-t" style="height:55%"></div>
-              <div class="flex-1 bg-rep-lime rounded-t" style="height:90%"></div>
-              <div class="flex-1 bg-rep-lime/70 rounded-t" style="height:80%"></div>
-            </div>
-            <div class="flex justify-between mt-1">
-              <span class="text-xs text-gray-600">Mon</span>
-              <span class="text-xs text-gray-600">Sun</span>
-            </div>
-          </div>
-        </div>
-        <div class="px-4 py-3 bg-rep-black border-t border-gray-800">
-          <p class="text-xs text-gray-400"><i class="fas fa-chart-bar text-rep-lime mr-1"></i> Analytics Dashboard — sentiment trends, response rate & platform breakdown</p>
-        </div>
-      </div>
-
-      <!-- Platform Connections -->
-      <div class="rounded-2xl overflow-hidden border-2 border-gray-800 shadow-xl">
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border-b border-gray-800">
-          <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-          <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
-          <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-          <span class="ml-2 text-xs text-gray-500">Settings → Platforms</span>
-        </div>
-        <div class="bg-gray-950 p-5">
-          <h4 class="text-sm font-bold text-rep-white mb-4">Connected Accounts</h4>
-          <div class="space-y-3">
-            <div class="flex items-center gap-3 p-3 bg-gray-900 rounded-xl border border-gray-800">
-              <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);">
-                <i class="fab fa-instagram text-white text-sm"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-rep-white">rep_me_up</p>
-                <p class="text-xs text-gray-500">Instagram Business</p>
-              </div>
-              <span class="flex items-center gap-1 px-2 py-1 bg-green-900/40 text-green-400 text-xs rounded-lg border border-green-800/40">
-                <i class="fas fa-circle text-xs" style="font-size:6px;"></i> Live
-              </span>
-            </div>
-            <div class="flex items-center gap-3 p-3 bg-gray-900 rounded-xl border border-gray-800">
-              <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background:#1877F2;">
-                <i class="fab fa-facebook-f text-white text-sm"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-rep-white">Repmeup ORM</p>
-                <p class="text-xs text-gray-500">Facebook Page</p>
-              </div>
-              <span class="flex items-center gap-1 px-2 py-1 bg-green-900/40 text-green-400 text-xs rounded-lg border border-green-800/40">
-                <i class="fas fa-circle text-xs" style="font-size:6px;"></i> Live
-              </span>
-            </div>
-            <div class="flex items-center gap-3 p-3 bg-gray-900 rounded-xl border border-gray-800">
-              <div class="w-9 h-9 rounded-lg bg-white flex items-center justify-center shrink-0">
-                <svg viewBox="0 0 20 20" class="w-5 h-5"><path fill="#EA4335" d="M10 4c1.4 0 2.6.5 3.5 1.3L16.1 3C14.5 1.6 12.4.7 10 .7 6.2.7 3 2.9 1.5 6.1l3 2.3C5.3 5.7 7.5 4 10 4z"/><path fill="#4285F4" d="M19.3 10.2c0-.7-.1-1.3-.2-1.9H10v3.7h5.2c-.2 1.2-.9 2.2-1.9 2.9l3 2.3c1.7-1.6 2.8-3.9 3-6.7-.1-.1-.1-.2 0-.3z"/><path fill="#FBBC05" d="M4.5 12.4c-.2-.6-.3-1.2-.3-1.8 0-.6.1-1.2.3-1.8L1.5 6.5C.8 7.8.4 9.4.4 11c0 1.6.4 3.2 1.1 4.5l3-2.3c0-.3 0-.5 0-.8z"/><path fill="#34A853" d="M10 19.3c2.4 0 4.4-.8 5.9-2.2l-2.9-2.3c-.8.6-1.8.9-3 .9-2.5 0-4.7-1.7-5.5-4l-3 2.3C3 17.1 6.2 19.3 10 19.3z"/></svg>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-rep-white">My Business</p>
-                <p class="text-xs text-gray-500">Google Business Profile</p>
-              </div>
-              <span class="flex items-center gap-1 px-2 py-1 bg-green-900/40 text-green-400 text-xs rounded-lg border border-green-800/40">
-                <i class="fas fa-circle text-xs" style="font-size:6px;"></i> Live
-              </span>
-            </div>
-            <div class="flex items-center gap-3 p-3 bg-gray-900 rounded-xl border border-gray-800">
-              <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style="background:#FF0000;">
-                <i class="fab fa-youtube text-white text-sm"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-rep-white">RepMeUp Channel</p>
-                <p class="text-xs text-gray-500">YouTube</p>
-              </div>
-              <span class="flex items-center gap-1 px-2 py-1 bg-green-900/40 text-green-400 text-xs rounded-lg border border-green-800/40">
-                <i class="fas fa-circle text-xs" style="font-size:6px;"></i> Live
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="px-4 py-3 bg-rep-black border-t border-gray-800">
-          <p class="text-xs text-gray-400"><i class="fas fa-plug text-rep-lime mr-1"></i> Platform Manager — connect/disconnect accounts via OAuth in one click</p>
-        </div>
-      </div>
-
-      <!-- AI Auto-Reply -->
-      <div class="rounded-2xl overflow-hidden border-2 border-gray-800 shadow-xl">
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-900 border-b border-gray-800">
-          <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-          <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
-          <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-          <span class="ml-2 text-xs text-gray-500">AI Reply Settings</span>
-        </div>
-        <div class="bg-gray-950 p-5">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 bg-blue-600/20 rounded-lg flex items-center justify-center">
-              <i class="fas fa-robot text-blue-400 text-sm"></i>
-            </div>
-            <div>
-              <h4 class="text-sm font-bold text-rep-white">AI Auto-Reply</h4>
-              <p class="text-xs text-gray-500">Powered by GPT-4</p>
-            </div>
-            <div class="ml-auto">
-              <div class="w-10 h-5 bg-rep-lime rounded-full flex items-center justify-end pr-0.5">
-                <div class="w-4 h-4 bg-white rounded-full shadow"></div>
-              </div>
-            </div>
-          </div>
-          <!-- Sample auto-reply card -->
-          <div class="space-y-3">
-            <div class="p-3 bg-gray-900 rounded-xl border border-gray-800">
-              <div class="flex items-center gap-2 mb-2">
-                <i class="fab fa-instagram text-pink-400 text-xs"></i>
-                <span class="text-xs text-gray-400">Instagram Comment</span>
-                <span class="ml-auto px-1.5 py-0.5 bg-yellow-900/40 text-yellow-400 text-xs rounded border border-yellow-800/30">Pending</span>
-              </div>
-              <p class="text-xs text-gray-300 mb-2 italic">"When will you restock the blue variant?"</p>
-              <div class="p-2 bg-blue-950/40 rounded-lg border border-blue-800/30">
-                <p class="text-xs text-blue-200">Hi! The blue variant is back in stock next week. We'll notify you — stay tuned! 💙</p>
-              </div>
-              <div class="flex gap-2 mt-2">
-                <button class="flex-1 py-1.5 bg-rep-lime/10 hover:bg-rep-lime/20 text-rep-lime text-xs rounded-lg font-semibold transition border border-rep-lime/20">Approve &amp; Send</button>
-                <button class="flex-1 py-1.5 bg-gray-800 text-gray-400 text-xs rounded-lg font-semibold transition">Edit</button>
-              </div>
-            </div>
-            <div class="p-3 bg-gray-900 rounded-xl border border-gray-800">
-              <div class="flex items-center gap-2 mb-2">
-                <i class="fab fa-google text-yellow-400 text-xs"></i>
-                <span class="text-xs text-gray-400">Google Review</span>
-                <span class="ml-auto px-1.5 py-0.5 bg-green-900/40 text-green-400 text-xs rounded border border-green-800/30">Sent</span>
-              </div>
-              <p class="text-xs text-gray-300 mb-2 italic">"★★★★★ Best experience ever!"</p>
-              <div class="p-2 bg-green-950/40 rounded-lg border border-green-800/30">
-                <p class="text-xs text-green-200">Thank you so much! We're thrilled you had a great experience. See you again! 🌟</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="px-4 py-3 bg-rep-black border-t border-gray-800">
-          <p class="text-xs text-gray-400"><i class="fas fa-robot text-rep-lime mr-1"></i> AI replies trained on your brand voice — approve, edit or auto-send</p>
-        </div>
+    <!-- Platform logos strip -->
+    <div class="flex flex-wrap justify-center items-center gap-4 mb-14 animate-on-scroll delay-1">
+      <div *ngFor="let p of [
+        {icon: 'fab fa-instagram', label: 'Instagram', color: 'text-pink-400'},
+        {icon: 'fab fa-facebook', label: 'Facebook', color: 'text-blue-500'},
+        {icon: 'fab fa-google', label: 'Google', color: 'text-yellow-500'},
+        {icon: 'fab fa-youtube', label: 'YouTube', color: 'text-red-500'},
+        {icon: 'fab fa-whatsapp', label: 'WhatsApp', color: 'text-green-500'}
+      ]"
+        class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-xl text-sm font-semibold text-gray-500 dark:text-gray-400">
+        <i [class]="p.icon + ' ' + p.color"></i>
+        {{ p.label }}
       </div>
     </div>
 
-    <!-- Bottom CTA inside this section -->
-    <div class="text-center">
-      <button 
-        (click)="navigateToRegister()"
-        class="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3.5 sm:py-4 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-2xl hover:shadow-rep-lime/50 transition transform hover:scale-105 text-base sm:text-lg"
-      >
-        <i class="fas fa-rocket"></i>
-        <span class="hidden sm:inline">Try RepMeUp Free — No Credit Card Required</span>
-        <span class="sm:hidden">Try RepMeUp Free</span>
-        <i class="fas fa-arrow-right"></i>
-      </button>
-      <p class="text-xs sm:text-sm text-gray-500 mt-3">Join 10,000+ businesses managing their reputation with RepMeUp</p>
-    </div>
-  </div>
-</section>
-
-<!-- Solutions Section -->
-<section id="solutions" class="py-14 sm:py-20 bg-rep-black">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-10 sm:mb-16">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-rep-white mb-4">
-        Built for <span class="text-rep-lime">Everyone</span>
-      </h2>
-      <p class="text-base sm:text-xl text-gray-300 max-w-2xl mx-auto">
-        Whether you're an individual, founder, or enterprise, we have the right solution for you
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-6 sm:gap-8">
-      <!-- For Individuals -->
-      <div class="bg-rep-white rounded-3xl p-6 sm:p-10 shadow-xl border-2 border-gray-800 hover:border-rep-lime transition">
-        <div class="flex items-start sm:items-center gap-4 mb-5 sm:mb-6">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-rep-lime rounded-2xl flex items-center justify-center shrink-0">
-            <i class="fas fa-user text-rep-black text-xl sm:text-2xl"></i>
-          </div>
-          <div>
-            <h3 class="text-xl sm:text-2xl font-bold text-rep-black">For Individuals & Founders</h3>
-            <p class="text-sm sm:text-base text-gray-600">Your name. Your image. Always protected.</p>
-          </div>
+    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
+      <div class="animate-on-scroll delay-1 testimonial-card card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-7 relative overflow-hidden shadow-sm">
+        <div class="absolute top-4 right-6 text-6xl font-black text-gray-100 dark:text-gray-800/40 leading-none">"</div>
+        <div class="flex text-lime-700 dark:text-rep-lime gap-0.5 mb-4">
+          <i *ngFor="let _ of [1,2,3,4,5]" class="fas fa-star text-xs"></i>
         </div>
-        <p class="text-gray-700 mb-6 leading-relaxed">
-          Protect your personal brand and professional reputation. Monitor what's being said about you online, 
-          respond to reviews, and build trust with your audience.
+        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
+          "RepMeUp transformed how we manage online reputation. The unified inbox saves us 3+ hours every day, and the AI responses are scarily accurate."
         </p>
-        <ul class="space-y-3 mb-8">
-          <li class="flex items-start">
-            <i class="fas fa-check-circle text-rep-lime mr-3 mt-1"></i>
-            <span class="text-gray-700">Personal brand monitoring</span>
-          </li>
-          <li class="flex items-start">
-            <i class="fas fa-check-circle text-rep-lime mr-3 mt-1"></i>
-            <span class="text-gray-700">Review management</span>
-          </li>
-          <li class="flex items-start">
-            <i class="fas fa-check-circle text-rep-lime mr-3 mt-1"></i>
-            <span class="text-gray-700">Social media tracking</span>
-          </li>
-          <li class="flex items-start">
-            <i class="fas fa-check-circle text-rep-lime mr-3 mt-1"></i>
-            <span class="text-gray-700">AI-powered responses</span>
-          </li>
-        </ul>
-        <button 
-          (click)="navigateToRegister()"
-          class="w-full px-6 py-4 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/50 transition"
-        >
-          Start Protecting Your Reputation
-        </button>
-      </div>
-
-      <!-- For Businesses -->
-      <div class="bg-rep-white rounded-3xl p-6 sm:p-10 shadow-xl border-2 border-gray-800 hover:border-rep-lime transition">
-        <div class="flex items-start sm:items-center gap-4 mb-5 sm:mb-6">
-          <div class="w-14 h-14 sm:w-16 sm:h-16 bg-rep-lime rounded-2xl flex items-center justify-center shrink-0">
-            <i class="fas fa-building text-rep-black text-xl sm:text-2xl"></i>
-          </div>
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-black">S</div>
           <div>
-            <h3 class="text-xl sm:text-2xl font-bold text-rep-black">For Businesses & Brands</h3>
-            <p class="text-sm sm:text-base text-gray-600">Your reputation is your biggest asset. We help you grow it.</p>
+            <p class="font-bold text-gray-900 dark:text-rep-white text-sm">Sarah Johnson</p>
+            <p class="text-xs text-gray-400">CEO, TechStart Inc.</p>
           </div>
-        </div>
-        <p class="text-gray-700 mb-6 leading-relaxed">
-          Enterprise-grade reputation management. Monitor, manage, and strengthen your digital reputation 
-          across all platforms with advanced analytics and team collaboration.
-        </p>
-        <ul class="space-y-3 mb-8">
-          <li class="flex items-start">
-            <i class="fas fa-check-circle text-rep-lime mr-3 mt-1"></i>
-            <span class="text-gray-700">Multi-platform monitoring</span>
-          </li>
-          <li class="flex items-start">
-            <i class="fas fa-check-circle text-rep-lime mr-3 mt-1"></i>
-            <span class="text-gray-700">Team collaboration</span>
-          </li>
-          <li class="flex items-start">
-            <i class="fas fa-check-circle text-rep-lime mr-3 mt-1"></i>
-            <span class="text-gray-700">Advanced analytics & ROI</span>
-          </li>
-          <li class="flex items-start">
-            <i class="fas fa-check-circle text-rep-lime mr-3 mt-1"></i>
-            <span class="text-gray-700">Custom integrations & API</span>
-          </li>
-        </ul>
-        <button 
-          (click)="navigateToRegister()"
-          class="w-full px-6 py-4 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/50 transition"
-        >
-          Scale Your Reputation Management
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Testimonials Section -->
-<section id="testimonials" class="py-14 sm:py-20 bg-rep-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-10 sm:mb-16">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-rep-black mb-4">
-        Trusted by <span class="text-rep-lime">Industry Leaders</span>
-      </h2>
-      <p class="text-base sm:text-xl text-gray-600">See what our customers are saying</p>
-    </div>
-
-    <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-8">
-      <!-- Testimonial 1 -->
-      <div class="bg-rep-black rounded-2xl p-6 sm:p-8 border-2 border-gray-800">
-        <div class="flex items-center mb-4">
-          <div class="flex text-rep-lime">
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-          </div>
-        </div>
-        <p class="text-gray-300 mb-6 leading-relaxed">
-          "RepMeUp transformed how we manage our online reputation. The unified inbox saves us hours every day, 
-          and the AI responses are incredibly accurate."
-        </p>
-        <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 bg-rep-lime rounded-full"></div>
-          <div>
-            <p class="font-bold text-rep-white">Sarah Johnson</p>
-            <p class="text-sm text-gray-400">CEO, TechStart Inc.</p>
-          </div>
+          <i class="fab fa-instagram text-pink-400 ml-auto"></i>
         </div>
       </div>
 
-      <!-- Testimonial 2 -->
-      <div class="bg-rep-black rounded-2xl p-6 sm:p-8 border-2 border-gray-800">
-        <div class="flex items-center mb-4">
-          <div class="flex text-rep-lime">
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-          </div>
+      <div class="animate-on-scroll delay-2 testimonial-card card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-7 relative overflow-hidden shadow-sm">
+        <div class="absolute top-4 right-6 text-6xl font-black text-gray-100 dark:text-gray-800/40 leading-none">"</div>
+        <div class="flex text-lime-700 dark:text-rep-lime gap-0.5 mb-4">
+          <i *ngFor="let _ of [1,2,3,4,5]" class="fas fa-star text-xs"></i>
         </div>
-        <p class="text-gray-300 mb-6 leading-relaxed">
-          "As a founder, protecting my personal brand is crucial. RepMeUp gives me peace of mind knowing 
-          everything is monitored and managed professionally."
+        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
+          "As a founder managing everything myself, RepMeUp is genuinely an unfair advantage. My response time went from 6 hours to under 10 minutes."
         </p>
-        <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 bg-rep-lime rounded-full"></div>
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-black">M</div>
           <div>
-            <p class="font-bold text-rep-white">Michael Chen</p>
-            <p class="text-sm text-gray-400">Founder, Growth Labs</p>
+            <p class="font-bold text-gray-900 dark:text-rep-white text-sm">Michael Chen</p>
+            <p class="text-xs text-gray-400">Founder, Growth Labs</p>
           </div>
+          <i class="fab fa-google text-yellow-500 ml-auto"></i>
         </div>
       </div>
 
-      <!-- Testimonial 3 -->
-      <div class="bg-rep-black rounded-2xl p-6 sm:p-8 border-2 border-gray-800 sm:col-span-2 md:col-span-1">
-        <div class="flex items-center mb-4">
-          <div class="flex text-rep-lime">
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-          </div>
+      <div class="animate-on-scroll delay-3 testimonial-card card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-7 relative overflow-hidden shadow-sm sm:col-span-2 md:col-span-1">
+        <div class="absolute top-4 right-6 text-6xl font-black text-gray-100 dark:text-gray-800/40 leading-none">"</div>
+        <div class="flex text-lime-700 dark:text-rep-lime gap-0.5 mb-4">
+          <i *ngFor="let _ of [1,2,3,4,5]" class="fas fa-star text-xs"></i>
         </div>
-        <p class="text-gray-300 mb-6 leading-relaxed">
-          "The analytics dashboard is incredible. We can see exactly how our reputation management efforts 
-          are driving business growth. ROI is clear and measurable."
+        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
+          "The analytics dashboard is incredible. We can see sentiment, response rates, and top-performing content — all in one place. ROI is crystal clear."
         </p>
-        <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 bg-rep-lime rounded-full"></div>
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-black">E</div>
           <div>
-            <p class="font-bold text-rep-white">Emily Rodriguez</p>
-            <p class="text-sm text-gray-400">CMO, Retail Pro</p>
+            <p class="font-bold text-gray-900 dark:text-rep-white text-sm">Emily Rodriguez</p>
+            <p class="text-xs text-gray-400">CMO, Retail Pro</p>
           </div>
+          <i class="fab fa-facebook text-blue-500 ml-auto"></i>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA Section -->
-<section class="py-14 sm:py-20 bg-rep-black relative overflow-hidden">
-  <div class="absolute inset-0 bg-rep-lime/5"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 11 — FINAL CONVERSION BLOCK
+════════════════════════════════════════════════════════════════════════════ -->
+<section class="py-20 sm:py-28 bg-white dark:bg-rep-black relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-transparent via-rep-lime/3 to-transparent"></div>
+  <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute left-0 top-0 w-full h-px bg-gradient-to-r from-transparent via-rep-lime/25 to-transparent"></div>
+
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-rep-white mb-5 sm:mb-6">
-      Turn Reputation Into a Growth Engine
-    </h2>
-    <p class="text-base sm:text-xl text-gray-300 mb-8 sm:mb-10 leading-relaxed">
-      Join thousands of businesses and individuals who trust RepMeUp to protect and grow their online reputation. 
-      Start your free trial today—no credit card required.
-    </p>
-    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <button 
-        (click)="navigateToRegister()"
-        class="px-8 py-4 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-2xl hover:shadow-rep-lime/50 transition transform hover:scale-105 text-lg"
-      >
-        Start Free Trial
-        <i class="fas fa-arrow-right ml-2"></i>
-      </button>
-      <button 
-        (click)="scrollToSection('features')"
-        class="px-8 py-4 bg-rep-black border-2 border-gray-700 text-rep-white font-bold rounded-xl hover:border-rep-lime transition text-lg"
-      >
-        Learn More
-      </button>
+    <div class="animate-on-scroll">
+      <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-xs font-bold tracking-wider uppercase">
+        <span class="w-2 h-2 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse"></span>
+        Ready to Take Control?
+      </div>
+
+      <h2 class="text-3xl sm:text-4xl lg:text-6xl font-black text-gray-900 dark:text-rep-white mb-5 leading-tight tracking-tight">
+        You Can't Control<br>
+        <span class="gradient-text">What Customers Say.</span>
+      </h2>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-600 dark:text-gray-300 mb-8 leading-tight tracking-tight">
+        But You Can Control<br>
+        <span class="text-gray-900 dark:text-rep-white">How You Respond.</span>
+      </h2>
+
+      <p class="text-gray-500 text-base sm:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+        Every second you wait, a competitor is responding. Join 10,000+ businesses who chose to win the conversation.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+        <button (click)="navigateToRegister()"
+          class="group inline-flex items-center justify-center gap-3 px-10 py-5 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/50 transition-all transform hover:scale-105 text-lg glow-lime">
+          <i class="fas fa-rocket text-base"></i>
+          Book a Demo
+          <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
+        </button>
+        <button (click)="navigateToRegister()"
+          class="inline-flex items-center justify-center gap-3 px-10 py-5 border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-rep-lime/60 hover:bg-rep-lime/5 transition-all text-lg">
+          <i class="fas fa-play-circle text-sm"></i>
+          Start Free
+        </button>
+      </div>
+
+      <p class="text-gray-400 text-sm">
+        <i class="fas fa-shield-alt mr-1 text-gray-300 dark:text-gray-700"></i>No credit card required &nbsp;·&nbsp;
+        <i class="fas fa-undo mr-1 text-gray-300 dark:text-gray-700"></i>Cancel anytime &nbsp;·&nbsp;
+        <i class="fas fa-clock mr-1 text-gray-300 dark:text-gray-700"></i>Setup in 5 minutes
+      </p>
     </div>
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="bg-rep-black text-rep-white py-12 sm:py-16 border-t border-gray-800">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 12 — FOOTER
+════════════════════════════════════════════════════════════════════════════ -->
+<footer class="bg-gray-50 dark:bg-rep-black border-t border-gray-200 dark:border-gray-800/60 pt-14 sm:pt-16 pb-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10 sm:mb-12">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+
       <!-- Brand -->
-      <div class="col-span-2 md:col-span-1">
-        <div class="mb-4">
-          <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="w-20 h-20 rounded-xl object-contain block mb-3">
-          <h3 class="text-xl font-bold text-rep-white">RepMeUp</h3>
-          <p class="text-xs text-gray-400">Reputation that works</p>
+      <div class="col-span-2 md:col-span-2">
+        <div class="flex items-center gap-3 mb-4">
+          <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="w-10 h-10 rounded-xl object-contain block">
+          <div>
+            <h3 class="text-lg font-black text-gray-900 dark:text-rep-white">RepMeUp</h3>
+            <p class="text-xs text-gray-400">Reputation that responds</p>
+          </div>
         </div>
-        <p class="text-gray-400 text-sm mb-4">
-          Every business has people behind it. We protect and grow their reputation.
+        <p class="text-gray-500 text-sm mb-5 leading-relaxed max-w-xs">
+          Every business has people behind it. We help them win every conversation — powered by AI.
         </p>
-        <div class="flex space-x-4">
-          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-rep-lime hover:text-rep-black transition">
+        <div class="flex space-x-3">
+          <a href="#" class="w-9 h-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime transition text-sm">
             <i class="fab fa-twitter"></i>
           </a>
-          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-rep-lime hover:text-rep-black transition">
-            <i class="fab fa-linkedin"></i>
+          <a href="#" class="w-9 h-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime transition text-sm">
+            <i class="fab fa-linkedin-in"></i>
           </a>
-          <a href="#" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-rep-lime hover:text-rep-black transition">
-            <i class="fab fa-facebook"></i>
+          <a href="#" class="w-9 h-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime transition text-sm">
+            <i class="fab fa-instagram"></i>
           </a>
         </div>
       </div>
 
-      <!-- Product -->
+      <!-- Products -->
       <div>
-        <h4 class="font-bold mb-4 text-rep-white">Product</h4>
-        <ul class="space-y-2 text-gray-400 text-sm">
-          <li><a href="#" class="hover:text-rep-lime transition">Features</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">Pricing</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">Integrations</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">API</a></li>
+        <h4 class="text-sm font-black text-gray-900 dark:text-rep-white mb-4 uppercase tracking-wider">Products</h4>
+        <ul class="space-y-3 text-gray-500 text-sm">
+          <li><a (click)="scrollToSection('ecosystem')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">RMP Inbox</a></li>
+          <li><a (click)="scrollToSection('ecosystem')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">RMP Publish</a></li>
+          <li><a (click)="scrollToSection('ecosystem')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">RMP Desk</a></li>
+          <li><a href="#" class="hover:text-lime-700 dark:hover:text-rep-lime transition">API & Integrations</a></li>
         </ul>
       </div>
 
       <!-- Solutions -->
       <div>
-        <h4 class="font-bold mb-4 text-rep-white">Solutions</h4>
-        <ul class="space-y-2 text-gray-400 text-sm">
-          <li><a href="#" class="hover:text-rep-lime transition">For Individuals</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">For Businesses</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">For Agencies</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">Enterprise</a></li>
+        <h4 class="text-sm font-black text-gray-900 dark:text-rep-white mb-4 uppercase tracking-wider">Solutions</h4>
+        <ul class="space-y-3 text-gray-500 text-sm">
+          <li><a (click)="setActiveUseCaseTab('support'); scrollToSection('use-cases')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">Support Teams</a></li>
+          <li><a (click)="setActiveUseCaseTab('social'); scrollToSection('use-cases')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">Social Media Managers</a></li>
+          <li><a (click)="setActiveUseCaseTab('startup'); scrollToSection('use-cases')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">Startups</a></li>
+          <li><a (click)="setActiveUseCaseTab('enterprise'); scrollToSection('use-cases')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">Enterprises</a></li>
         </ul>
       </div>
 
       <!-- Company -->
       <div>
-        <h4 class="font-bold mb-4 text-rep-white">Company</h4>
-        <ul class="space-y-2 text-gray-400 text-sm">
-          <li><a routerLink="/about" class="hover:text-rep-lime transition">About</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">Blog</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">Careers</a></li>
-          <li><a routerLink="/contact" class="hover:text-rep-lime transition">Contact</a></li>
+        <h4 class="text-sm font-black text-gray-900 dark:text-rep-white mb-4 uppercase tracking-wider">Company</h4>
+        <ul class="space-y-3 text-gray-500 text-sm">
+          <li><a routerLink="/about" class="hover:text-lime-700 dark:hover:text-rep-lime transition">About</a></li>
+          <li><a href="#" class="hover:text-lime-700 dark:hover:text-rep-lime transition">Careers</a></li>
+          <li><a routerLink="/contact" class="hover:text-lime-700 dark:hover:text-rep-lime transition">Contact</a></li>
+          <li><a href="#" class="hover:text-lime-700 dark:hover:text-rep-lime transition">Blog</a></li>
         </ul>
       </div>
     </div>
 
-    <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+    <!-- Bottom bar -->
+    <div class="border-t border-gray-200 dark:border-gray-800/60 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
       <p class="text-gray-400 text-sm">
         © 2026 RepMeUp. All rights reserved.
       </p>
-      <div class="flex space-x-6 mt-4 md:mt-0">
-        <a routerLink="/privacy-policy" class="text-gray-400 hover:text-rep-lime text-sm transition">Privacy Policy</a>
-        <a routerLink="/terms-conditions" class="text-gray-400 hover:text-rep-lime text-sm transition">Terms of Service</a>
-        <a routerLink="/privacy-policy" fragment="cookies" class="text-gray-400 hover:text-rep-lime text-sm transition">Cookie Policy</a>
+      <!-- Theme toggle in footer too -->
+      <div class="flex items-center gap-4">
+        <button (click)="appearance.toggle()"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs text-gray-500 hover:border-rep-lime hover:text-lime-700 dark:hover:text-rep-lime transition">
+          <svg *ngIf="appearance.isDark()" class="w-3.5 h-3.5 text-lime-700 dark:text-rep-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5" stroke-width="2"/>
+            <path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg *ngIf="!appearance.isDark()" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          {{ appearance.isDark() ? 'Light Mode' : 'Dark Mode' }}
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-5 justify-center">
+        <a routerLink="/privacy-policy" class="text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime text-xs transition">Privacy Policy</a>
+        <a routerLink="/terms-conditions" class="text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime text-xs transition">Terms of Service</a>
+        <a routerLink="/privacy-policy" fragment="cookies" class="text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime text-xs transition">Cookie Policy</a>
       </div>
     </div>
   </div>

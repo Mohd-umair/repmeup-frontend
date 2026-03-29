@@ -70,6 +70,26 @@
             title="Reopen conversation">
             <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-redo'"></i>
           </button>
+          <button
+            *ngIf="isChatSessionOpen()"
+            type="button"
+            (click)="closeChatSession()"
+            [disabled]="updatingChatOpen"
+            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-200 hover:bg-gray-300 text-gray-800 transition disabled:opacity-50"
+            title="Close chat session">
+            <i [class]="updatingChatOpen ? 'fas fa-spinner fa-spin' : 'fas fa-times-circle'"></i>
+            <span class="ml-1 hidden sm:inline">Close chat</span>
+          </button>
+          <button
+            *ngIf="!isChatSessionOpen()"
+            type="button"
+            (click)="reopenChatSession()"
+            [disabled]="updatingChatOpen"
+            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition disabled:opacity-50"
+            title="Open chat session">
+            <i [class]="updatingChatOpen ? 'fas fa-spinner fa-spin' : 'fas fa-comment-dots'"></i>
+            <span class="ml-1 hidden sm:inline">Open chat</span>
+          </button>
           <!-- Three-dots menu: Edit & Delete (Facebook comments) -->
           <div *ngIf="showActionsMenuForInteraction()" class="relative" #actionsMenuContainer>
             <button

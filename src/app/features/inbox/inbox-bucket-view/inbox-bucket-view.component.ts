@@ -152,6 +152,9 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     if (this.filters.search) target['search'] = this.filters.search;
     if (this.filters.dateFrom) target['dateFrom'] = this.filters.dateFrom;
     if (this.filters.dateTo) target['dateTo'] = this.filters.dateTo;
+    const chatSession = (this.filters as { chatSession?: 'open' | 'closed' }).chatSession;
+    if (chatSession === 'open') target['chatOpen'] = 'true';
+    else if (chatSession === 'closed') target['chatOpen'] = 'false';
   }
 
   loadBucketView(): void {
