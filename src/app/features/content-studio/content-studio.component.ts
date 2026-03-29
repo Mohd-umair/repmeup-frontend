@@ -8,6 +8,8 @@ import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 import { SocialPreviewComponent } from '../publish/social-preview/social-preview.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { MediaSelectorModalComponent } from '../../shared/components/media-selector-modal/media-selector-modal.component';
+import { Media } from '../../core/models/media.model';
 
 export interface PlatformOption {
   id: string;
@@ -19,6 +21,8 @@ export interface VariantItem {
   content: string;
   imageUrl?: string;
   loadingImage?: boolean;
+  /** Set when image generation fails — drives the inline error card on the variant */
+  imageError?: { code: string; message: string } | null;
 }
 
 export interface ImageConfig {
@@ -44,7 +48,7 @@ export interface ImageStyleOption {
 @Component({
   selector: 'app-content-studio',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SocialPreviewComponent, ButtonComponent],
+  imports: [CommonModule, FormsModule, RouterModule, SocialPreviewComponent, ButtonComponent, MediaSelectorModalComponent],
   templateUrl: './content-studio.component.html',
   styleUrls: ['./content-studio.component.scss']
 })
@@ -125,10 +129,40 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   onKeydown(e: KeyboardEvent): void {
+    if (this.showImagePickerForVariant !== null) {
+      if (e.key === 'Escape') this.closeImagePicker();
+      return;
+    }
     if (!this.lightboxUrl) return;
     if (e.key === 'Escape')      this.closeLightbox();
     if (e.key === 'ArrowRight')  this.lightboxNav(1);
     if (e.key === 'ArrowLeft')   this.lightboxNav(-1);
+  }
+
+  // ─── Image Picker (Media Library / Upload) ───────────────────────────────────
+  /** Index of the variant currently requesting an image from the library; null = closed */
+  showImagePickerForVariant: number | null = null;
+
+  openImagePicker(variantIdx: number): void {
+    this.showImagePickerForVariant = variantIdx;
+  }
+
+  closeImagePicker(): void {
+    this.showImagePickerForVariant = null;
+  }
+
+  /** Called when the user confirms a selection inside MediaSelectorModal */
+  onMediaSelected(media: Media | Media[]): void {
+    const idx = this.showImagePickerForVariant;
+    if (idx === null) return;
+    const selected = Array.isArray(media) ? media[0] : media;
+    if (selected?.publicUrl) {
+      this.variants[idx].imageUrl   = selected.publicUrl;
+      this.variants[idx].imageError = null;
+      // Auto-select this variant's image for the preview panel
+      this.selectedImageIndex = idx;
+    }
+    this.closeImagePicker();
   }
 
   /**
@@ -444,7 +478,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   fetchImagesForVariants(): void {
     this.generatingImages = true;
     const topic = this.topic.trim();
-    this.variants.forEach(v => { v.loadingImage = true; });
+    this.variants.forEach(v => { v.loadingImage = true; v.imageError = null; });
     let completed = 0;
 
     this.variants.forEach((v, idx) => {
@@ -457,8 +491,9 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
           this.variants[idx].loadingImage = false;
           if (++completed === this.variants.length) { this.generatingImages = false; this.loadCredits(); }
         },
-        error: () => {
+        error: (err) => {
           this.variants[idx].loadingImage = false;
+          this.variants[idx].imageError = this.parseImageError(err);
           if (++completed === this.variants.length) { this.generatingImages = false; this.loadCredits(); }
         }
       });
@@ -469,6 +504,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   generateImageForVariant(idx: number): void {
     if (this.variants[idx]?.loadingImage) return;
     this.variants[idx].loadingImage = true;
+    this.variants[idx].imageError = null;
     this.http.post<{ success: boolean; imageUrl: string }>(
       `${environment.apiUrl}/posts/generate-variant-image`,
       { topic: this.topic.trim(), variantContent: this.variants[idx].content, imageConfig: this.imageConfig, variantIndex: idx }
@@ -481,11 +517,19 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
         this.variants[idx].loadingImage = false;
         this.loadCredits();
       },
-      error: () => {
+      error: (err) => {
         this.variants[idx].loadingImage = false;
-        this.notify.error('Image Failed', 'Could not generate image for this variant.');
+        this.variants[idx].imageError = this.parseImageError(err);
       }
     });
+  }
+
+  /** Normalise an HTTP error into a typed imageError object */
+  private parseImageError(err: any): { code: string; message: string } {
+    const body = err?.error;
+    const code = body?.code || 'IMAGE_FAILED';
+    const message = body?.message || 'Could not generate image for this variant. Please try again.';
+    return { code, message };
   }
 
   // ─── Selection Helpers ─────────────────────────────────────────────────────

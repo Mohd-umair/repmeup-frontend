@@ -561,37 +561,116 @@
             <span class="text-xs text-gray-500">Generating image…</span>
           </div>
 
+          <!-- ── Image Error State ─────────────────────────────────────────── -->
+          <ng-container *ngIf="!v.loadingImage && !v.imageUrl && v.imageError">
+
+            <!-- Content Policy / Copyright error -->
+            <div *ngIf="v.imageError.code === 'CONTENT_POLICY'"
+              class="mb-3 rounded-xl border border-amber-400/40 bg-amber-500/10 dark:border-amber-400/30 dark:bg-amber-500/10 p-3 space-y-2">
+              <div class="flex items-start gap-2">
+                <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-400/20 dark:bg-amber-500/20">
+                  <i class="fas fa-shield-halved text-[11px] text-amber-600 dark:text-amber-400"></i>
+                </span>
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-amber-800 dark:text-amber-400 mb-0.5">
+                    Content Policy — Image Blocked
+                  </p>
+                  <p class="text-[11px] leading-snug text-amber-700/90 dark:text-amber-300/80">
+                    {{ v.imageError.message }}
+                  </p>
+                </div>
+              </div>
+              <button type="button" (click)="generateImageForVariant(i)"
+                class="w-full py-1.5 rounded-lg text-[11px] font-medium transition
+                       bg-amber-100 text-amber-900 border border-amber-400/50 hover:bg-amber-200
+                       dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-400/30 dark:hover:bg-amber-500/25
+                       flex items-center justify-center gap-1.5">
+                <i class="fas fa-rotate-right text-[10px]"></i> Retry with generic prompt
+              </button>
+            </div>
+
+            <!-- Generic image generation error -->
+            <div *ngIf="v.imageError.code !== 'CONTENT_POLICY'"
+              class="mb-3 rounded-xl border border-red-400/30 bg-red-500/10 p-3 space-y-2">
+              <div class="flex items-start gap-2">
+                <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-400/20">
+                  <i class="fas fa-triangle-exclamation text-[11px] text-red-500 dark:text-red-400"></i>
+                </span>
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-red-700 dark:text-red-400 mb-0.5">Image Generation Failed</p>
+                  <p class="text-[11px] leading-snug text-red-600/90 dark:text-red-300/80">{{ v.imageError.message }}</p>
+                </div>
+              </div>
+              <button type="button" (click)="generateImageForVariant(i)"
+                class="w-full py-1.5 rounded-lg text-[11px] font-medium transition
+                       bg-red-100 text-red-800 border border-red-400/40 hover:bg-red-200
+                       dark:bg-red-500/15 dark:text-red-300 dark:border-red-400/30 dark:hover:bg-red-500/25
+                       flex items-center justify-center gap-1.5">
+                <i class="fas fa-rotate-right text-[10px]"></i> Try Again
+              </button>
+            </div>
+          </ng-container>
+          <!-- /Image Error State -->
+
           <!-- Image Preview -->
-          <div *ngIf="!v.loadingImage && v.imageUrl" class="mb-3">
+          <div *ngIf="!v.loadingImage && v.imageUrl" class="mb-3 relative group/imgpreview">
             <img [src]="v.imageUrl" alt="Generated image"
               class="w-full h-36 object-cover rounded-lg border border-gray-700" />
+            <!-- Replace overlay -->
+            <div class="absolute inset-0 rounded-lg flex items-center justify-center gap-2
+                        bg-black/0 group-hover/imgpreview:bg-black/55 transition-all duration-200">
+              <button type="button" (click)="openImagePicker(i)"
+                class="opacity-0 group-hover/imgpreview:opacity-100 transition-opacity duration-200
+                       flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold
+                       bg-white/90 text-gray-900 hover:bg-white shadow-md">
+                <i class="fas fa-folder-open text-purple-600 text-[10px]"></i> Replace
+              </button>
+            </div>
           </div>
 
           <!-- Waiting for auto-generation -->
-          <div *ngIf="!v.loadingImage && !v.imageUrl && includeImage && !generating"
+          <div *ngIf="!v.loadingImage && !v.imageUrl && !v.imageError && includeImage && !generating"
             class="w-full h-16 rounded-lg bg-gray-800/40 border border-dashed border-gray-700
                    flex items-center justify-center mb-3">
             <span class="text-xs text-gray-500">Image pending…</span>
           </div>
 
-          <!-- On-demand generate (when includeImage is OFF) -->
-          <div *ngIf="!v.loadingImage && !v.imageUrl && !includeImage && !generating" class="mb-3">
+          <!-- No image yet: two action buttons side-by-side -->
+          <div *ngIf="!v.loadingImage && !v.imageUrl && !v.imageError && !generating" class="mb-3 flex gap-2">
+            <!-- AI Generate (always available) -->
             <button type="button" (click)="generateImageForVariant(i)"
-              class="w-full h-16 rounded-lg bg-purple-500/10 border border-dashed border-purple-500/30
-                     text-xs text-purple-400 hover:bg-purple-500/20 transition flex items-center justify-center gap-1.5">
-              <i class="fas fa-image"></i> Generate Image
+              class="flex-1 h-16 rounded-lg bg-purple-500/10 border border-dashed border-purple-500/30
+                     text-xs text-purple-400 hover:bg-purple-500/20 transition flex flex-col items-center justify-center gap-1">
+              <i class="fas fa-wand-magic-sparkles text-sm"></i>
+              <span>AI Generate</span>
+            </button>
+            <!-- Upload / Browse library -->
+            <button type="button" (click)="openImagePicker(i)"
+              class="flex-1 h-16 rounded-lg bg-blue-500/10 border border-dashed border-blue-500/30
+                     text-xs text-blue-400 hover:bg-blue-500/20 transition flex flex-col items-center justify-center gap-1">
+              <i class="fas fa-folder-open text-sm"></i>
+              <span>Upload / Browse</span>
             </button>
           </div>
 
-          <!-- Use Image Button -->
-          <button *ngIf="!v.loadingImage && v.imageUrl" type="button" (click)="selectImage(i)"
-            [class]="selectedImageIndex === i
-              ? 'bg-purple-500 text-white'
-              : 'bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400'"
-            class="w-full py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
-            <i [class]="selectedImageIndex === i ? 'fas fa-check' : 'fas fa-image'"></i>
-            {{ selectedImageIndex === i ? 'Image Selected' : 'Use this Image' }}
-          </button>
+          <!-- Use Image Button + Replace action row -->
+          <div *ngIf="!v.loadingImage && v.imageUrl" class="flex gap-2">
+            <button type="button" (click)="selectImage(i)"
+              [class]="selectedImageIndex === i
+                ? 'bg-purple-500 text-white'
+                : 'bg-gray-800 text-gray-400 hover:bg-purple-500/20 hover:text-purple-400'"
+              class="flex-1 py-1.5 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
+              <i [class]="selectedImageIndex === i ? 'fas fa-check' : 'fas fa-image'"></i>
+              {{ selectedImageIndex === i ? 'Image Selected' : 'Use this Image' }}
+            </button>
+            <button type="button" (click)="openImagePicker(i)"
+              class="px-3 py-1.5 rounded-lg text-xs font-medium transition
+                     bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-blue-400
+                     flex items-center gap-1.5"
+              title="Replace with library image">
+              <i class="fas fa-folder-open text-[11px]"></i> Replace
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -712,6 +791,21 @@
     </div>
   </div>
 </div>
+
+<!-- ── Media Selector (Upload / Browse Library) ──────────────────────────── -->
+<div *ngIf="showImagePickerForVariant !== null"
+  class="fixed inset-0 z-[998] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+  (click)="closeImagePicker()">
+  <div (click)="$event.stopPropagation()" class="w-full max-w-4xl max-h-[90vh] overflow-auto rounded-2xl shadow-2xl">
+    <app-media-selector-modal
+      [mediaType]="'image'"
+      [allowMultiple]="false"
+      (close)="closeImagePicker()"
+      (select)="onMediaSelected($event)">
+    </app-media-selector-modal>
+  </div>
+</div>
+<!-- /Media Selector -->
 
 <!-- ── Image Lightbox ──────────────────────────────────────────────────────── -->
 <div *ngIf="lightboxUrl"
