@@ -11,6 +11,10 @@
   &::-webkit-scrollbar { height: 6px; }
   &::-webkit-scrollbar-track { background: transparent; }
   &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
+
+  html.dark & {
+    &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+  }
 }
 
 .bucket-drop-zone {
@@ -18,6 +22,10 @@
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
   &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 2px; }
+
+  html.dark & {
+    &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+  }
 }
 
 // ─── Column wrapper ───────────────────────────────────────────────────────────
@@ -25,41 +33,75 @@
   border: 1px solid rgba(0,0,0,0.07);
   background: #f8f9fc;
 
-  html.dark & {
-    border-color: rgba(255,255,255,0.06);
-    background: rgba(17,24,39,0.7);
-  }
-
   &.column-collapsed {
     cursor: pointer;
     user-select: none;
   }
 }
 
+/* Bucket column chrome — use host-context so dark styles always win vs parent/layout */
+:host-context(html.dark) .column-wrapper {
+  border-color: rgba(255,255,255,0.08);
+  background: var(--surface-secondary, #1a1d27);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
 // ─── Collapsed column body ────────────────────────────────────────────────────
 .collapsed-col {
   min-height: 120px;
-  transition: background 200ms ease;
+  transition: background 200ms ease, filter 200ms ease;
+  position: relative;
 
   &:hover {
     filter: brightness(0.97);
   }
 }
 
+:host-context(html.dark) .collapsed-col:hover {
+  filter: brightness(1.06);
+}
+
+/*
+ * Inline [style.background] gradients use light tints (#RRGGBB18) and beat normal SCSS.
+ * In dark mode, force solid surfaces + a thin bucket-color accent.
+ */
+:host-context(html.dark) .column-header:not(.column-header-unassigned) {
+  background: var(--surface-secondary, #1a1d27) !important;
+  background-image: none !important;
+  border-bottom-color: rgba(255,255,255,0.08);
+  box-shadow: inset 4px 0 0 0 var(--bucket-color, #6b7280);
+}
+
+:host-context(html.dark) .column-header-unassigned {
+  background: var(--surface-secondary, #1a1d27) !important;
+  background-image: none !important;
+  border-bottom-color: rgba(255,255,255,0.08);
+  box-shadow: inset 4px 0 0 0 rgba(107, 114, 128, 0.55);
+}
+
+:host-context(html.dark) .collapsed-col:not(.collapsed-col-unassigned) {
+  background: var(--surface-secondary, #1a1d27) !important;
+  background-image: none !important;
+  box-shadow: inset 4px 0 0 0 var(--bucket-color, #6b7280);
+}
+
+:host-context(html.dark) .collapsed-col-unassigned {
+  background: var(--surface-secondary, #1a1d27) !important;
+  background-image: none !important;
+  box-shadow: inset 4px 0 0 0 rgba(107, 114, 128, 0.45);
+}
+
 .column-header {
   border-bottom: 1px solid rgba(0,0,0,0.06);
-
-  html.dark & {
-    border-color: rgba(255,255,255,0.05);
-  }
 }
 
 .column-body {
   background: rgba(0,0,0,0.015);
+}
 
-  html.dark & {
-    background: transparent;
-  }
+:host-context(html.dark) .column-body {
+  /* Opaque surface so the board never reads “washed out” */
+  background: var(--surface-tertiary, #252833);
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
@@ -69,29 +111,15 @@
   overflow: hidden;
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 
-  html.dark & {
-    background: #1e2533;
-  }
-
   // Default (unselected) state
   &.card-unselected {
     border-color: rgba(0,0,0,0.08);
     box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
 
-    html.dark & {
-      border-color: rgba(255,255,255,0.07);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-    }
-
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
       border-color: rgba(0,0,0,0.12);
-
-      html.dark & {
-        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-        border-color: rgba(255,255,255,0.12);
-      }
     }
   }
 
@@ -100,11 +128,31 @@
     border-color: var(--accent-color, #3B82F6) !important;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color, #3B82F6) 15%, transparent),
                 0 4px 12px rgba(0,0,0,0.08);
+  }
+}
 
-    html.dark & {
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color, #3B82F6) 25%, transparent),
-                  0 4px 12px rgba(0,0,0,0.4);
+/*
+ * Message cards: nested `html.dark &` can lose to encapsulation / utility order.
+ * Force theme card surface in dark mode (same as rest of inbox).
+ */
+:host-context(html.dark) .bucket-card {
+  background-color: var(--card-bg, #1a1d27) !important;
+
+  &.card-unselected {
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
+      border-color: rgba(255,255,255,0.14);
     }
+  }
+
+  &.card-selected {
+    background-color: color-mix(in srgb, var(--accent-color, #3b82f6) 14%, var(--card-bg, #1a1d27)) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-color, #3b82f6) 28%, transparent),
+                0 4px 14px rgba(0,0,0,0.45);
   }
 }
 
@@ -169,6 +217,10 @@
   transform: rotate(1.5deg) scale(1.02);
 }
 
+:host-context(html.dark) .cdk-drag-preview.bucket-card {
+  background-color: var(--card-bg, #1a1d27) !important;
+}
+
 .cdk-drag-animating {
   transition: transform 200ms cubic-bezier(0,0,0.2,1);
 }
@@ -181,10 +233,12 @@
 .insights-panel {
   border: 1px solid rgba(0,0,0,0.08);
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  background: #fff;
 
   html.dark & {
-    border-color: rgba(255,255,255,0.07);
-    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+    background: var(--surface-secondary, #1a1d27);
   }
 }
 
@@ -193,6 +247,13 @@
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
   &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+
+  background: #f9fafb;
+
+  html.dark & {
+    background: var(--surface-primary, #0f1117);
+    &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+  }
 }
 
 // ─── Light-mode overrides ─────────────────────────────────────────────────────
@@ -209,6 +270,10 @@
 .card-resolved-overlay {
   background: rgba(16, 185, 129, 0.08);
   border-radius: inherit;
+
+  html.dark & {
+    background: rgba(16, 185, 129, 0.18);
+  }
 }
 
 // ─── Inline Chat Panel ────────────────────────────────────────────────────────
@@ -228,13 +293,48 @@
   animation: slideInRight 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+:host-context(html.dark) .chat-panel {
+  /* Match inbox chrome — avoid Tailwind gray-900 “flat grey” */
+  background-color: var(--surface-secondary, #1a1d27) !important;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.chat-panel-header {
+  position: relative;
+  isolation: isolate;
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Inline gradient reads washed-out / grey in dark — use theme surfaces + accent strip */
+:host-context(html.dark) .chat-panel-header {
+  background: var(--surface-secondary, #1a1d27) !important;
+  background-image: none !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 4px 0 0 0 var(--chat-bucket-color, #6b7280);
+}
+
 // Thread scroll container
 .chat-thread {
   scroll-behavior: smooth;
+  background: #f9fafb;
 
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
   &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 2px; }
+}
+
+:host-context(html.dark) .chat-thread {
+  background-color: var(--surface-primary, #0f1117) !important;
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
+}
+
+:host-context(html.dark) .chat-compose-bar {
+  background-color: var(--surface-secondary, #1a1d27) !important;
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 // Customer bubble (left-aligned)

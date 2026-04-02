@@ -8,6 +8,7 @@ import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { IInteraction, Platform } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
+import { AppearanceService } from '../../../core/services/appearance.service';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 
 /**
@@ -42,12 +43,24 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   constructor(
     public themeService: ThemeService,
+    private appearance: AppearanceService,
     private sanitizer: DomSanitizer,
     private avatarService: InboxAvatarService
   ) {}
 
   onAvatarError(key: string): void {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
+  }
+
+  /** Returns up to 2 initials from the author's display name: "John Doe" → "JD", "John" → "JO". */
+  getAuthorInitials(interaction: IInteraction): string {
+    const name = this.getAuthorDisplayName(interaction);
+    if (!name || name === 'Unknown') return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return ((parts[0][0] || '') + (parts[parts.length - 1][0] || '')).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   }
 
   /** Observable avatar URL (fetched with auth for Facebook so img can display). */
@@ -256,5 +269,22 @@ export class InboxListComponent implements OnInit, OnDestroy {
       border: theme.borderColor,
       bg: theme.backgroundColor
     };
+  }
+
+  /** Row surface: white in light mode, card token in dark (inline style beats Tailwind on this row). */
+  getListRowBackground(interaction: IInteraction): string {
+    const colors = this.getPlatformColors(interaction.platform);
+    const end = this.appearance.isDark() ? '#1A1D27' : '#ffffff';
+    if (this.isSelected(interaction)) {
+      return `linear-gradient(to right, ${colors.gradientFrom}14, ${end})`;
+    }
+    return end;
+  }
+
+  getListRowBorderColor(interaction: IInteraction): string {
+    if (this.isSelected(interaction)) {
+      return this.getPlatformColors(interaction.platform).primary + '40';
+    }
+    return this.appearance.isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
   }
 }

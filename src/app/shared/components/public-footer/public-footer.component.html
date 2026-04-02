@@ -1,0 +1,84 @@
+<footer class="home-footer-dark bg-rep-black border-t border-gray-800 pt-14 sm:pt-16 pb-8 relative overflow-hidden">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+
+      <div class="col-span-2 md:col-span-2">
+        <div class="flex items-center gap-3 mb-4">
+          <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="app-logo rounded-xl block shadow-sm">
+          <div>
+            <h3 class="text-lg font-black text-rep-white">RepMeUp</h3>
+            <p class="text-xs text-gray-500">Reputation that responds</p>
+          </div>
+        </div>
+        <p class="text-gray-400 text-sm mb-5 leading-relaxed max-w-xs">
+          Every business has people behind it. We help them win every conversation — powered by AI.
+        </p>
+        <div class="flex space-x-2.5">
+          <a href="#" class="w-9 h-9 bg-gray-900 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime hover:shadow-md hover:shadow-rep-lime/20 transition-all text-sm">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a href="#" class="w-9 h-9 bg-gray-900 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime hover:shadow-md hover:shadow-rep-lime/20 transition-all text-sm">
+            <i class="fab fa-linkedin-in"></i>
+          </a>
+          <a href="#" class="w-9 h-9 bg-gray-900 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime hover:shadow-md hover:shadow-rep-lime/20 transition-all text-sm">
+            <i class="fab fa-instagram"></i>
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-sm font-black text-rep-white mb-4 uppercase tracking-wider">Products</h4>
+        <ul class="space-y-3 text-gray-400 text-sm">
+          <li><button type="button" (click)="goSection('ecosystem')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">RMP Inbox</button></li>
+          <li><button type="button" (click)="goSection('ecosystem')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">RMP Publish</button></li>
+          <li><button type="button" (click)="goSection('ecosystem')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">RMP Desk</button></li>
+          <li><a href="#" class="hover:text-rep-lime transition">API & Integrations</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-sm font-black text-rep-white mb-4 uppercase tracking-wider">Solutions</h4>
+        <ul class="space-y-3 text-gray-400 text-sm">
+          <li><button type="button" (click)="goUseCase('support')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">Support Teams</button></li>
+          <li><button type="button" (click)="goUseCase('social')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">Social Media Managers</button></li>
+          <li><button type="button" (click)="goUseCase('startup')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">Startups</button></li>
+          <li><button type="button" (click)="goUseCase('enterprise')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">Enterprises</button></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-sm font-black text-rep-white mb-4 uppercase tracking-wider">Company</h4>
+        <ul class="space-y-3 text-gray-400 text-sm">
+          <li><a routerLink="/about" class="hover:text-rep-lime transition">About</a></li>
+          <li><a href="#" class="hover:text-rep-lime transition">Careers</a></li>
+          <li><a routerLink="/contact" class="hover:text-rep-lime transition">Contact</a></li>
+          <li><a href="#" class="hover:text-rep-lime transition">Blog</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p class="text-gray-500 text-sm">
+        © 2026 RepMeUp. All rights reserved.
+      </p>
+      <div class="flex items-center gap-4">
+        <button (click)="appearance.toggle()"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-900 text-xs text-gray-300 hover:border-rep-lime hover:text-rep-lime transition">
+          <svg *ngIf="appearance.isDark()" class="w-3.5 h-3.5 text-rep-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5" stroke-width="2"/>
+            <path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg *ngIf="!appearance.isDark()" class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          {{ appearance.isDark() ? 'Light Mode' : 'Dark Mode' }}
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-5 justify-center">
+        <a routerLink="/privacy-policy" class="text-gray-500 hover:text-rep-lime text-xs transition">Privacy Policy</a>
+        <a routerLink="/terms-conditions" class="text-gray-500 hover:text-rep-lime text-xs transition">Terms of Service</a>
+        <a routerLink="/privacy-policy" fragment="cookies" class="text-gray-500 hover:text-rep-lime text-xs transition">Cookie Policy</a>
+      </div>
+    </div>
+  </div>
+</footer>

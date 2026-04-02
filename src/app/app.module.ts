@@ -3,6 +3,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { PaginationComponent } from './shared/components/pagination/pagination.component';
+import { PublicSiteShellComponent } from './shared/components/public-site-shell/public-site-shell.component';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -94,7 +96,9 @@ import { MediaLibraryComponent } from './features/media-library/media-library.co
     KnowledgeBaseComponent,
     NotificationsComponent,
     MediaLibraryComponent,
-    SocialPreviewComponent
+    SocialPreviewComponent,
+    PaginationComponent,
+    PublicSiteShellComponent
   ],
   providers: [
     {

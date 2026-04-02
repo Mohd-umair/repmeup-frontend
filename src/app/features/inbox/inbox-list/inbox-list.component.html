@@ -1,6 +1,6 @@
 <div class="h-full flex flex-col">
   <!-- Search Header -->
-  <div *ngIf="showSearch" class="p-4 border-b border-gray-200">
+  <div *ngIf="showSearch" class="p-4 border-b border-gray-200 dark:border-gray-700">
     <div class="relative">
       <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
         <i class="fas fa-search text-gray-400"></i>
@@ -10,7 +10,7 @@
         [(ngModel)]="searchTerm"
         (input)="onSearchInput($event)"
         placeholder="Search conversations..."
-        class="w-full pl-11 pr-20 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime focus:bg-white transition text-sm"
+        class="w-full pl-11 pr-20 py-3 bg-gray-50 dark:bg-gray-800/90 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime focus:bg-white dark:focus:bg-gray-800 transition text-sm text-gray-900 dark:text-gray-100"
       />
       <div class="absolute inset-y-0 right-0 pr-4 flex items-center space-x-2">
         <i *ngIf="loading && searchTerm" class="fas fa-spinner fa-spin text-rep-black dark:text-rep-lime text-sm"></i>
@@ -34,7 +34,7 @@
   <div *ngIf="loading" class="flex-1 flex items-center justify-center">
     <div class="text-center">
       <div class="w-16 h-16 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mx-auto mb-4"></div>
-      <p class="text-sm font-medium text-gray-600">Loading conversations...</p>
+      <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Loading conversations...</p>
     </div>
   </div>
 
@@ -44,8 +44,8 @@
       <div class="w-24 h-24 bg-rep-lime/20 border border-rep-lime/30 rounded-full flex items-center justify-center mx-auto mb-4">
         <i class="fas fa-inbox text-4xl text-rep-black dark:text-rep-lime"></i>
       </div>
-      <h3 class="text-xl font-bold text-rep-black mb-2">No conversations yet</h3>
-      <p class="text-sm text-gray-600 mb-4">When customers interact with your platforms, they'll appear here</p>
+      <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">No conversations yet</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">When customers interact with your platforms, they'll appear here</p>
       <button class="px-4 py-2 bg-rep-lime text-rep-black rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-rep-lime/50 transition">
         <i class="fas fa-sync mr-2"></i>
         Refresh
@@ -66,10 +66,8 @@
       class="p-3 mb-2 rounded-xl cursor-pointer transition-all duration-300 border-l-4 border"
       [class.shadow-lg]="isSelected(interaction)"
       [style.borderLeftColor]="getPlatformColors(interaction.platform).primary"
-      [style.borderColor]="isSelected(interaction) ? getPlatformColors(interaction.platform).primary + '40' : 'rgba(0,0,0,0.05)'"
-      [style.background]="isSelected(interaction) 
-        ? 'linear-gradient(to right, ' + getPlatformColors(interaction.platform).gradientFrom + '08, white)' 
-        : 'white'"
+      [style.borderColor]="getListRowBorderColor(interaction)"
+      [style.background]="getListRowBackground(interaction)"
       [style.boxShadow]="isSelected(interaction)
         ? '0 4px 16px ' + getPlatformColors(interaction.platform).primary + '20'
         : '0 1px 2px rgba(0,0,0,0.05)'"
@@ -84,20 +82,21 @@
         />
         <!-- Avatar + platform icon badge -->
         <div class="relative flex-shrink-0 self-start flex justify-center">
+          <!-- Initials fallback — always visible; covered by the real image when available -->
+          <div class="w-11 h-11 rounded-lg flex items-center justify-center text-white font-bold text-base shadow-md mx-auto select-none"
+               [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
+            {{ getAuthorInitials(interaction) }}
+          </div>
+          <!-- Real avatar: overlaid on top, hidden on error -->
           <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
-            <img *ngIf="avatarUrl && !avatarFallback[interaction.platformId]"
+            <img *ngIf="!avatarFallback[interaction.platformId]"
                  [src]="avatarUrl"
                  (error)="onAvatarError(interaction.platformId)"
                  alt=""
-                 class="w-11 h-11 rounded-lg object-cover shadow-md flex-shrink-0 mx-auto">
-            <div *ngIf="!avatarUrl || avatarFallback[interaction.platformId]"
-                 class="w-11 h-11 rounded-lg flex items-center justify-center text-white font-bold text-base shadow-md transition-all duration-300 mx-auto"
-                 [style.background]="'linear-gradient(135deg, ' + getPlatformColors(interaction.platform).gradientFrom + ', ' + getPlatformColors(interaction.platform).gradientTo + ')'">
-              {{ getAuthorDisplayName(interaction).charAt(0).toUpperCase() }}
-            </div>
+                 class="absolute inset-0 w-11 h-11 rounded-lg object-cover shadow-md mx-auto">
           </ng-container>
           <div
-            class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white"
+            class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800"
             [style.background]="getPlatformColors(interaction.platform).primary"
             [title]="interaction.platform || 'Platform'"
           >
@@ -110,7 +109,7 @@
           <!-- Header Row -->
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2 flex-1 min-w-0">
-              <h3 class="text-sm font-bold text-gray-900 truncate">
+              <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
                 {{ getAuthorDisplayName(interaction) }}
               </h3>
               <!-- Unread dot -->
@@ -119,7 +118,7 @@
                     [style.background]="getPlatformColors(interaction.platform).primary"></span>
               <span
                 *ngIf="interaction.chatOpen === false"
-                class="text-[10px] font-semibold px-1.5 py-0 rounded-md bg-gray-200 text-gray-700 flex-shrink-0"
+                class="text-[10px] font-semibold px-1.5 py-0 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 flex-shrink-0"
                 title="Chat closed"
               >Closed</span>
             </div>
@@ -153,10 +152,18 @@
                   class="text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap flex-shrink-0"
                   [class.bg-red-100]="isOverdue(interaction)"
                   [class.text-red-700]="isOverdue(interaction)"
+                  [class.dark:text-red-300]="isOverdue(interaction)"
                   [class.bg-amber-100]="!isOverdue(interaction) && !isLatestReplied(interaction)"
                   [class.text-amber-800]="!isOverdue(interaction) && !isLatestReplied(interaction)"
+                  [class.dark:text-amber-200]="!isOverdue(interaction) && !isLatestReplied(interaction)"
                   [class.bg-emerald-100]="isLatestReplied(interaction)"
-                  [class.text-emerald-700]="isLatestReplied(interaction)">
+                  [class.text-emerald-700]="isLatestReplied(interaction)"
+                  [class.dark:text-emerald-300]="isLatestReplied(interaction)"
+                  [ngClass]="{
+                    'dark:bg-red-950/50': isOverdue(interaction),
+                    'dark:bg-amber-950/40': !isOverdue(interaction) && !isLatestReplied(interaction),
+                    'dark:bg-emerald-950/40': isLatestReplied(interaction)
+                  }">
               <i class="fas mr-1"
                  [class.fa-clock]="!isLatestReplied(interaction)"
                  [class.fa-check-circle]="isLatestReplied(interaction)"
@@ -167,7 +174,7 @@
 
           <!-- Footer - Only show labels -->
           <div *ngIf="interaction.labels && interaction.labels.length > 0" 
-               class="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-gray-100">
+               class="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700">
             <!-- Labels (First 2) -->
             <span 
               *ngFor="let label of interaction.labels?.slice(0, 2)"

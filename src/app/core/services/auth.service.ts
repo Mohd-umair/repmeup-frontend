@@ -145,6 +145,19 @@ export class AuthService {
   }
 
   /**
+   * Handle Google OAuth callback — save tokens, mark authenticated, load user.
+   * Must be called by GoogleCallbackComponent so all reactive subjects are updated.
+   */
+  handleGoogleCallback(token: string, refreshToken: string): Observable<IApiResponse<IUser>> {
+    this.storageService.saveToken(token);
+    if (refreshToken) {
+      this.storageService.saveRefreshToken(refreshToken);
+    }
+    this.isAuthenticatedSubject.next(true);
+    return this.getCurrentUser();
+  }
+
+  /**
    * Handle successful authentication
    */
   private handleAuthSuccess(authData: IAuthResponse): void {

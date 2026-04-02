@@ -1,7 +1,7 @@
 <!-- Loading -->
 <div *ngIf="loading" class="flex flex-col items-center justify-center h-full py-20 gap-3">
-  <div class="w-10 h-10 rounded-full border-4 border-gray-200 border-t-blue-500 animate-spin"></div>
-  <p class="text-sm text-gray-400 font-medium">Loading board…</p>
+  <div class="w-10 h-10 rounded-full border-4 border-gray-200 dark:border-gray-600 border-t-blue-500 dark:border-t-blue-400 animate-spin"></div>
+  <p class="text-sm text-gray-400 dark:text-gray-500 font-medium">Loading board…</p>
 </div>
 
 <!-- ═══ Main layout: Kanban (8) + AI Insights (4) ═══ -->
@@ -22,6 +22,7 @@
       <!-- Column Header (expanded) -->
       <div *ngIf="!isCollapsed(col.bucket._id)"
            class="column-header px-3 py-3 flex items-center justify-between"
+           [style.--bucket-color]="col.bucket.color"
            [style.background]="'linear-gradient(135deg,' + col.bucket.color + '18,' + col.bucket.color + '08)'">
         <div class="flex items-center gap-2 min-w-0">
           <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -41,7 +42,7 @@
             <i class="fas fa-check text-[8px] mr-0.5"></i>{{ getResolvedCount(col) }}/{{ col.total }}
           </span>
           <button type="button" (click)="toggleCollapse(col.bucket._id)"
-                  class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-black/5 transition-colors"
+                  class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                   title="Collapse column">
             <i class="fas fa-chevron-left text-[9px]"></i>
           </button>
@@ -51,6 +52,7 @@
       <!-- Column Header (collapsed – icon + count, click anywhere to expand) -->
       <div *ngIf="isCollapsed(col.bucket._id)"
            class="collapsed-col flex flex-col items-center justify-center gap-3 h-full cursor-pointer py-4"
+           [style.--bucket-color]="col.bucket.color"
            [style.background]="'linear-gradient(180deg,' + col.bucket.color + '18,' + col.bucket.color + '05)'"
            (click)="toggleCollapse(col.bucket._id)"
            [title]="col.bucket.name + ' (' + col.total + ') — click to expand'">
@@ -93,7 +95,7 @@
              [class.card-unselected]="selectedInteractionId !== interaction._id"
              [style.--accent-color]="col.bucket.color">
 
-          <div *cdkDragPlaceholder class="rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50" style="min-height:90px;"></div>
+          <div *cdkDragPlaceholder class="rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/40" style="min-height:90px;"></div>
           <!-- Unread dot -->
           <span *ngIf="interaction.status === 'unread'" class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-800 z-10"></span>
           <!-- Resolved overlay -->
@@ -151,10 +153,10 @@
           <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-2" [style.backgroundColor]="col.bucket.color + '15'">
             <i [class]="col.bucket.icon" class="text-lg" [style.color]="col.bucket.color + '60'"></i>
           </div>
-          <p class="text-[11px] font-medium text-gray-400">No conversations</p>
+          <p class="text-[11px] font-medium text-gray-400 dark:text-gray-500">No conversations</p>
         </div>
         <div *ngIf="col.loading" class="flex justify-center py-3">
-          <div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-gray-400 animate-spin"></div>
+          <div class="w-5 h-5 rounded-full border-2 border-gray-200 dark:border-gray-600 border-t-gray-400 dark:border-t-gray-300 animate-spin"></div>
         </div>
       </div>
     </div>
@@ -168,7 +170,8 @@
          [style.flex]="isCollapsed('__unassigned__') ? '0 0 52px' : '1 1 0'">
 
       <!-- Header expanded -->
-      <div *ngIf="!isCollapsed('__unassigned__')" class="column-header px-3 py-3 flex items-center justify-between bg-gray-50/80 dark:bg-gray-800/50">
+      <div *ngIf="!isCollapsed('__unassigned__')"
+           class="column-header column-header-unassigned px-3 py-3 flex items-center justify-between bg-gray-50/80 dark:bg-gray-900">
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-lg flex items-center justify-center bg-gray-200/70 dark:bg-gray-700 flex-shrink-0">
             <i class="fas fa-layer-group text-xs text-gray-400"></i>
@@ -178,7 +181,7 @@
         <div class="flex items-center gap-1">
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-400 text-white">{{ unassignedColumn.total }}</span>
           <button type="button" (click)="toggleCollapse('__unassigned__')"
-                  class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-black/5 transition-colors">
+                  class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
             <i class="fas fa-chevron-left text-[9px]"></i>
           </button>
         </div>
@@ -186,7 +189,7 @@
 
       <!-- Header collapsed – Uncategorized -->
       <div *ngIf="isCollapsed('__unassigned__')"
-           class="collapsed-col flex flex-col items-center justify-center gap-3 h-full cursor-pointer py-4 bg-gray-50/60 dark:bg-gray-800/30"
+           class="collapsed-col collapsed-col-unassigned flex flex-col items-center justify-center gap-3 h-full cursor-pointer py-4 bg-gray-50/60 dark:bg-gray-900"
            (click)="toggleCollapse('__unassigned__')"
            [title]="'Uncategorized (' + unassignedColumn.total + ') — click to expand'">
         <!-- Accent dot -->
@@ -221,8 +224,8 @@
              [class.card-selected]="selectedInteractionId === interaction._id"
              [class.card-unselected]="selectedInteractionId !== interaction._id"
              style="--accent-color: #9CA3AF">
-          <div *cdkDragPlaceholder class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50" style="min-height:90px;"></div>
-          <span *ngIf="interaction.status === 'unread'" class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white z-10"></span>
+          <div *cdkDragPlaceholder class="rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-800/40" style="min-height:90px;"></div>
+          <span *ngIf="interaction.status === 'unread'" class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white dark:ring-gray-800 z-10"></span>
           <div *ngIf="interaction.status === 'resolved'"
                class="absolute inset-0 rounded-xl z-10 flex items-center justify-center pointer-events-none card-resolved-overlay">
             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white shadow-sm">
@@ -260,7 +263,7 @@
         </div>
 
         <div *ngIf="unassignedColumn.loading" class="flex justify-center py-3">
-          <div class="w-5 h-5 rounded-full border-2 border-gray-200 border-t-gray-400 animate-spin"></div>
+          <div class="w-5 h-5 rounded-full border-2 border-gray-200 dark:border-gray-600 border-t-gray-400 dark:border-t-gray-300 animate-spin"></div>
         </div>
       </div>
     </div>
@@ -272,18 +275,19 @@
         <i class="fas fa-columns text-3xl text-gray-300 dark:text-gray-600"></i>
       </div>
       <p class="font-bold text-gray-700 dark:text-gray-300 text-lg">No intent buckets yet</p>
-      <p class="text-sm text-gray-400 mt-1.5">Go to <strong>Settings → Buckets</strong> to create your first categories.</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1.5">Go to <strong>Settings → Buckets</strong> to create your first categories.</p>
     </div>
   </div>
 
   <!-- ──────────────────── RIGHT: Chat Panel OR AI Insights ──────────────────── -->
   <ng-container *ngIf="activeChatInteraction; else insightsPanel">
   <!-- ── Mini Inline Chat Panel ── -->
-  <div class="chat-panel flex flex-col rounded-2xl overflow-hidden flex-shrink-0 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 shadow-md"
+  <div class="chat-panel flex flex-col rounded-2xl overflow-hidden flex-shrink-0 bg-white border border-gray-100 dark:border-gray-700 shadow-md"
        style="flex: 0 0 380px; width: 380px;">
 
     <!-- Chat Header -->
-    <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0"
+    <div class="chat-panel-header flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex-shrink-0"
+         [style.--chat-bucket-color]="activeChatInteraction.intentBucket?.color || '#6B7280'"
          [style.background]="'linear-gradient(135deg,' + (activeChatInteraction.intentBucket?.color || '#6B7280') + '18,' + (activeChatInteraction.intentBucket?.color || '#6B7280') + '06)'">
       <!-- Avatar -->
       <div class="relative flex-shrink-0">
@@ -334,8 +338,8 @@
 
       <!-- Loading skeleton -->
       <div *ngIf="chatLoading" class="flex flex-col items-center justify-center py-10 gap-2">
-        <div class="w-6 h-6 rounded-full border-2 border-gray-200 border-t-gray-400 animate-spin"></div>
-        <span class="text-xs text-gray-400">Loading conversation…</span>
+        <div class="w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-600 border-t-gray-400 dark:border-t-gray-300 animate-spin"></div>
+        <span class="text-xs text-gray-400 dark:text-gray-500">Loading conversation…</span>
       </div>
 
       <ng-container *ngIf="!chatLoading">
@@ -426,10 +430,7 @@
     </div>
 
     <!-- Compose area -->
-    <div class="border-t border-gray-100 dark:border-gray-700 flex-shrink-0 relative">
-
-      <!-- Hidden file input -->
-      <input #fileInputRef type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)">
+    <div class="chat-compose-bar border-t border-gray-100 dark:border-gray-700 bg-white flex-shrink-0 relative">
 
       <!-- ── Emoji picker panel ── -->
       <div *ngIf="showEmojiPicker"
@@ -443,17 +444,30 @@
         </div>
       </div>
 
-      <!-- ── Image preview ── -->
-      <div *ngIf="attachedFilePreview && attachedFileType === 'image'"
-           class="flex items-center gap-2 px-3 pt-2.5">
-        <div class="relative inline-block">
-          <img [src]="attachedFilePreview" alt="Attachment" class="h-14 w-14 object-cover rounded-lg border border-gray-200 dark:border-gray-600"/>
-          <button type="button" (click)="clearAttachment()"
-                  class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gray-700 text-white flex items-center justify-center shadow">
-            <i class="fas fa-times text-[8px]"></i>
-          </button>
+      <!-- ── Pending media (library) ── -->
+      <div *ngIf="pendingMediaAttachment"
+           class="mx-3 mt-2 flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/80">
+        <div class="relative flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700">
+          <img *ngIf="pendingMediaAttachment.mediaType === 'image'"
+               [src]="pendingMediaAttachment.publicUrl" alt="Attachment" class="w-full h-full object-cover" />
+          <div *ngIf="pendingMediaAttachment.mediaType === 'video'"
+               class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700">
+            <i class="fas fa-video text-white text-sm"></i>
+          </div>
+          <div *ngIf="pendingMediaAttachment.mediaType === 'audio'"
+               class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-400 to-purple-500">
+            <i class="fas fa-microphone-alt text-white text-sm"></i>
+          </div>
         </div>
-        <span class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[140px]">{{ attachedFile?.name }}</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-medium text-gray-700 dark:text-gray-200 capitalize">{{ pendingMediaAttachment.mediaType }}</p>
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">{{ pendingMediaAttachment.name || 'From library' }}</p>
+        </div>
+        <button type="button" (click)="clearAttachment()"
+                class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-white flex items-center justify-center text-[10px] transition"
+                title="Remove">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
 
       <!-- ── Voice recording bar ── -->
@@ -511,18 +525,18 @@
                   title="Emoji">
             😊
           </button>
-          <!-- Image -->
+          <!-- Media library -->
           <button type="button"
-                  (click)="openFilePicker()"
-                  [disabled]="isResolved() || !!attachedFilePreview"
+                  (click)="openMediaSelector()"
+                  [disabled]="isResolved() || !!pendingMediaAttachment || !!recordedAudioUrl"
                   class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-40"
-                  title="Attach image">
-            <i class="fas fa-image text-sm"></i>
+                  title="Attach from media library">
+            <i class="fas fa-photo-video text-sm"></i>
           </button>
           <!-- Voice -->
           <button type="button"
                   (click)="isRecording ? stopRecording() : startRecording()"
-                  [disabled]="isResolved() || !!recordedAudioUrl"
+                  [disabled]="isResolved() || !!recordedAudioUrl || !!pendingMediaAttachment"
                   class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-40"
                   [ngClass]="isRecording ? 'bg-red-100 dark:bg-red-900/30 text-red-500 animate-pulse' : 'text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'"
                   title="{{ isRecording ? 'Stop recording' : 'Record voice message' }}">
@@ -572,7 +586,7 @@
         <span class="font-bold text-[13px] text-gray-800 dark:text-white">AI Insights</span>
       </div>
       <button type="button" (click)="loadInsightStats(); loadTopicInsights()" title="Refresh insights"
-              class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-rep-black hover:bg-rep-lime/20 transition-colors">
+              class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-rep-black dark:hover:text-rep-lime hover:bg-rep-lime/20 dark:hover:bg-white/10 transition-colors">
         <i class="fas fa-sync-alt text-[10px]" [class.fa-spin]="insightsLoading"></i>
       </button>
     </div>
@@ -585,7 +599,8 @@
               [class.text-rep-black]="insightsTab === 'sentiment'"
               [class.dark:text-rep-lime]="insightsTab === 'sentiment'"
               [class.border-transparent]="insightsTab !== 'sentiment'"
-              [class.text-gray-500]="insightsTab !== 'sentiment'">
+              [class.text-gray-500]="insightsTab !== 'sentiment'"
+              [class.dark:text-gray-400]="insightsTab !== 'sentiment'">
         <i class="fas fa-chart-pie mr-1"></i> Sentiment
       </button>
       <button type="button" (click)="insightsTab = 'topics'"
@@ -594,13 +609,14 @@
               [class.text-rep-black]="insightsTab === 'topics'"
               [class.dark:text-rep-lime]="insightsTab === 'topics'"
               [class.border-transparent]="insightsTab !== 'topics'"
-              [class.text-gray-500]="insightsTab !== 'topics'">
+              [class.text-gray-500]="insightsTab !== 'topics'"
+              [class.dark:text-gray-400]="insightsTab !== 'topics'">
         <i class="fas fa-tags mr-1"></i> Buckets
       </button>
     </div>
 
     <!-- Scrollable content -->
-    <div class="flex-1 overflow-y-auto insights-scroll bg-gray-50 dark:bg-gray-900/50">
+    <div class="flex-1 overflow-y-auto insights-scroll">
 
       <!-- ── SENTIMENT TAB ── -->
       <div *ngIf="insightsTab === 'sentiment'" class="p-3 space-y-3">
@@ -634,7 +650,8 @@
           <div *ngFor="let item of commonComments; let last = last"
                class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                [class.border-b]="!last"
-               [class.border-gray-100]="!last">
+               [class.border-gray-100]="!last"
+               [class.dark:border-gray-700]="!last">
             <div class="flex items-center justify-between gap-2 mb-1">
               <!-- Keyword badge: lime bg + black text in light, dark bg + lime text in dark -->
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize
@@ -713,3 +730,12 @@
   </ng-template><!-- end #insightsPanel -->
 
 </div>
+
+<!-- Media library — pick image/video/audio for bucket chat reply (upload new is inside the modal) -->
+<app-media-selector-modal
+  *ngIf="showMediaModal"
+  [allowMultiple]="false"
+  mediaType="all"
+  (close)="closeMediaSelector()"
+  (select)="onMediaSelect($any($event))">
+</app-media-selector-modal>

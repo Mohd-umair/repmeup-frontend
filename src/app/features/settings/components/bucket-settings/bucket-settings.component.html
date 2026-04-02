@@ -100,6 +100,20 @@
         <p class="text-sm mt-1">Click "Add Bucket" to create your first category.</p>
       </div>
     </div>
+
+    <!-- Pagination -->
+    <div class="pt-2">
+      <app-pagination
+        [currentPage]="currentPage"
+        [totalPages]="totalPages"
+        [totalItems]="totalItems"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 20, 50]"
+        [loading]="loading"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+      ></app-pagination>
+    </div>
   </div>
 </div>
 

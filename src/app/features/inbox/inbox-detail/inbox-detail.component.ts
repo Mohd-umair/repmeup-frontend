@@ -168,9 +168,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         }
       }
 
-      // Mark interaction as read when it's viewed
+      // Mark notifications as read when the conversation is viewed.
+      // NOTE: marking the interaction itself as 'read' is handled exclusively
+      // in onInteractionSelect() (the container), so we never override a
+      // manually-set 'unread' status from a background lifecycle event.
       if (this.interaction && this.interaction._id) {
-        this.markAsRead();
         this.markNotificationsAsRead();
       }
 
@@ -761,6 +763,16 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     return (first + last).toUpperCase() || 'A';
   }
 
+  /** Returns up to 2 initials from a display name: "John Doe" → "JD", "John" → "JO". */
+  getAuthorInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return ((parts[0][0] || '') + (parts[parts.length - 1][0] || '')).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
   /**
    * Check if sentBy is a populated user object or just a string ID
    */
@@ -909,33 +921,6 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   clearAISuggestion(): void {
     this.aiSuggestion = null;
     this.suggestionError = null;
-  }
-
-  /**
-   * Mark interaction as read when viewed
-   */
-  markAsRead(): void {
-    if (!this.interaction || !this.interaction._id) {
-      return;
-    }
-
-    // Only mark as read if it's currently unread
-    if (this.interaction.status === 'unread') {
-      // Call the backend to mark as read (this will also update the status)
-      this.inboxService.getInteraction(this.interaction._id, { sortOrder: this.timelineSortOrder }).subscribe({
-        next: (response) => {
-          if (response.success && response.data) {
-            // Update the local interaction with the new status
-            this.interaction = response.data;
-            // Emit update to refresh the list
-            this.interactionUpdate.emit();
-          }
-        },
-        error: (error) => {
-          console.error('Error marking interaction as read:', error);
-        }
-      });
-    }
   }
 
   /**
@@ -1197,6 +1182,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         this.updatingChatOpen = false;
         if (res.success) {
           this.sweetAlertService.toast('success', 'Chat closed');
+          this.interactionUpdate.emit();
         }
       },
       error: (err) => {
@@ -1215,6 +1201,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         this.updatingChatOpen = false;
         if (res.success) {
           this.sweetAlertService.toast('success', 'Chat opened');
+          this.interactionUpdate.emit();
         }
       },
       error: (err) => {

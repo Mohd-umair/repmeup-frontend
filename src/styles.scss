@@ -381,3 +381,20 @@ input[type="checkbox"].peer {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* RepMeUp brand logo — fixed box + fill (stretches to 100px-wide frame) */
+.app-logo {
+  width: 100px;
+  object-fit: fill;
+}
+
+/* Home marketing nav: match app sidebar/header (solid rep-black, gray-800 hairline) */
+app-home nav.home-nav-dark {
+  background-color: #0b0b0b !important;
+  border-bottom: 1px solid #1f2937 !important;
+}
+
+app-home footer.home-footer-dark {
+  background-color: #0b0b0b !important;
+  border-top: 1px solid #1f2937 !important;
+}

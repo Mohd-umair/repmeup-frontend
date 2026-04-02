@@ -77,56 +77,25 @@ export class MenuService {
               grouped = { main: [], management: [], settings: [] };
             }
 
-            const hasContentTop = menus.some(
-              (m: IMenuItem) => m.route === '/app/content' && !m.parentId
-            );
-            if (!hasContentTop) {
-              const contentMenu: IMenuItem = {
-                _id: 'content-default',
-                label: 'Content',
-                icon: '📄',
-                route: '/app/content',
-                requiredRoles: ['admin', 'manager', 'agent'],
-                requiredPermissions: [],
-                order: 5,
-                isActive: true,
-                group: 'main'
-              };
-              menus = [...menus, contentMenu];
-              grouped = {
-                main: [...(grouped.main || [])],
-                management: [...(grouped.management || [])],
-                settings: [...(grouped.settings || [])]
-              };
-              grouped.main.push(contentMenu);
-              grouped.main.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-            }
+            const normalized = this.normalizeAllMenuRoutes(menus, grouped);
+            menus = normalized.menus;
+            grouped = normalized.grouped;
 
-            // Inject Drafts menu item if not already present
-            const hasDrafts = menus.some(
-              (m: IMenuItem) => m.route === '/app/drafts' && !m.parentId
-            );
-            if (!hasDrafts) {
-              const draftsMenu: IMenuItem = {
-                _id: 'drafts-default',
-                label: 'Drafts',
-                icon: '📝',
-                route: '/app/drafts',
-                requiredRoles: ['admin', 'manager', 'agent'],
-                requiredPermissions: ['posts.read'],
-                order: 72,
-                isActive: true,
-                group: 'main'
-              };
-              menus = [...menus, draftsMenu];
-              grouped = {
-                main: [...(grouped.main || [])],
-                management: [...(grouped.management || [])],
-                settings: [...(grouped.settings || [])]
-              };
-              grouped.main.push(draftsMenu);
-              grouped.main.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-            }
+            /** Hide top-level items that duplicate other flows (Content → Publish/Published; Drafts → create flow). */
+            const isRemovedStandaloneMenu = (m: IMenuItem): boolean => {
+              const noParent = m.parentId == null || m.parentId === '';
+              if (!noParent) return false;
+              return m.route === '/app/content' || m.route === '/app/drafts';
+            };
+
+            menus = menus.filter((m) => !isRemovedStandaloneMenu(m));
+            const filterGroupedTop = (arr: IMenuItem[] | undefined) =>
+              (arr || []).filter((item) => !isRemovedStandaloneMenu(item));
+            grouped = {
+              main: filterGroupedTop(grouped.main),
+              management: filterGroupedTop(grouped.management),
+              settings: filterGroupedTop(grouped.settings)
+            };
 
             this.menusSubject.next(menus);
             this.groupedMenusSubject.next(grouped);
@@ -183,5 +152,86 @@ export class MenuService {
    */
   get groupedMenusValue(): any {
     return this.groupedMenusSubject.value;
+  }
+
+  /**
+   * DB menus often omit `/app/` or use a nested path. Angular app routes live under `/app/...`.
+   * e.g. `app/publish/approval-queue` must become `/app/approval-queue` (not `/app/app/publish/...`).
+   */
+  private static readonly PUBLIC_SINGLE_ROUTE_SEGMENTS = new Set([
+    'home',
+    'contact',
+    'about',
+    'privacy-policy',
+    'terms-conditions',
+    'terms',
+    'data-deletion-status',
+    'auth',
+    'login',
+    'register'
+  ]);
+
+  private normalizeMenuRouteForApp(route: string): string {
+    const raw = (route || '').trim();
+    if (!raw) return raw;
+    const qIdx = raw.search(/[?#]/);
+    const pathRaw = (qIdx === -1 ? raw : raw.slice(0, qIdx)).trim();
+    const suffix = qIdx === -1 ? '' : raw.slice(qIdx);
+    if (!pathRaw) return raw;
+
+    let path = pathRaw;
+    if (!path.startsWith('/')) {
+      path = path.startsWith('app/') ? `/${path}` : path;
+    }
+    const core = path.replace(/\/+$/, '') || '/';
+
+    if (
+      core === '/app/publish/approval-queue' ||
+      core === '/app/app/publish/approval-queue'
+    ) {
+      return `/app/approval-queue${suffix}`;
+    }
+
+    if (core.startsWith('/app/') || core === '/app') {
+      return `${core}${suffix}`;
+    }
+
+    if (!pathRaw.startsWith('/')) {
+      const seg = pathRaw.replace(/^\/+/, '');
+      return `/app/${seg}${suffix}`;
+    }
+
+    const inner = core.replace(/^\/+|\/+$/g, '');
+    if (!inner || inner.includes('/')) {
+      return `${core}${suffix}`;
+    }
+    if (inner === 'app' || MenuService.PUBLIC_SINGLE_ROUTE_SEGMENTS.has(inner)) {
+      return `${core}${suffix}`;
+    }
+    return `/app/${inner}${suffix}`;
+  }
+
+  private normalizeMenuItemDeep(item: IMenuItem): IMenuItem {
+    const route = this.normalizeMenuRouteForApp(item.route);
+    const children = item.children?.length
+      ? item.children.map((c) => this.normalizeMenuItemDeep(c))
+      : undefined;
+    return { ...item, route, ...(children ? { children } : {}) };
+  }
+
+  private normalizeAllMenuRoutes(
+    menus: IMenuItem[],
+    grouped: IMenuResponse['grouped']
+  ): { menus: IMenuItem[]; grouped: IMenuResponse['grouped'] } {
+    const normList = (list: IMenuItem[] | undefined) =>
+      (list || []).map((m) => this.normalizeMenuItemDeep(m));
+    return {
+      menus: normList(menus),
+      grouped: {
+        main: normList(grouped.main),
+        management: normList(grouped.management),
+        settings: normList(grouped.settings)
+      }
+    };
   }
 }

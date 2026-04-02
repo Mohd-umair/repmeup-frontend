@@ -10,7 +10,7 @@
     </h3>
     <div class="flex items-center gap-2">
       <button
-        *ngIf="hasActiveFilters() && expanded"
+        *ngIf="hasActiveFilters()"
         (click)="clearFilters(); $event.stopPropagation()"
         (touchstart)="clearFilters(); $event.stopPropagation()"
         type="button"
@@ -28,17 +28,25 @@
     </div>
   </div>
 
-  <!-- Filters row (collapsible) — multiselects + date on one row -->
+  <!-- Filters row (collapsible): Platform → Intent → Type → Status (incl. chat open/closed) → Sentiment → Labels → Extra → Date -->
   <div *ngIf="expanded" class="mt-3 animate-slideDown">
     <div class="flex flex-wrap gap-3 items-end">
       <app-inbox-multiselect-filter
-        *ngIf="labels && labels.length > 0"
         class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
-        label="Labels"
-        [options]="labelOptions"
-        [selected]="selectedLabelIds"
-        placeholder="Any label"
-        (selectedChange)="onLabelsChange($event)"
+        label="Platform"
+        [options]="platformOptions"
+        [selected]="selectedPlatforms"
+        placeholder="Any platform"
+        (selectedChange)="onPlatformsChange($event)"
+      />
+      <app-inbox-multiselect-filter
+        *ngIf="intentBuckets && intentBuckets.length > 0"
+        class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
+        label="Intent"
+        [options]="intentOptions"
+        [selected]="selectedIntentBucketIds"
+        placeholder="Any intent"
+        (selectedChange)="onIntentChange($event)"
       />
       <app-inbox-multiselect-filter
         class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
@@ -49,6 +57,14 @@
         (selectedChange)="onTypesChange($event)"
       />
       <app-inbox-multiselect-filter
+        class="min-w-0 flex-1 sm:flex-initial sm:w-[13rem]"
+        label="Status"
+        [options]="statusOptionsForMultiselect"
+        [selected]="selectedStatusAndChatKeys"
+        placeholder="Any status"
+        (selectedChange)="onStatusAndChatChange($event)"
+      />
+      <app-inbox-multiselect-filter
         class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
         label="Sentiment"
         [options]="sentimentOptions"
@@ -57,59 +73,35 @@
         (selectedChange)="onSentimentsChange($event)"
       />
       <app-inbox-multiselect-filter
+        *ngIf="labels && labels.length > 0"
         class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
-        label="Status"
-        [options]="statusOptions"
-        [selected]="selectedStatuses"
-        placeholder="Any status"
-        (selectedChange)="onStatusesChange($event)"
+        label="Labels"
+        [options]="labelOptions"
+        [selected]="selectedLabelIds"
+        placeholder="Any label"
+        (selectedChange)="onLabelsChange($event)"
       />
 
-      <!-- Chat session: open vs closed conversations -->
-      <div class="min-w-0 flex-1 sm:flex-initial flex flex-col gap-1">
+      <!-- Extra filter: same presets as former toolbar (All, Priority, Mine, …) — not shown for bucket board -->
+      <div class="min-w-0 flex-1 sm:flex-initial flex flex-col gap-1 sm:w-[11rem]">
         <span class="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1">
-          <i class="fas fa-comment-dots text-gray-400"></i>
-          Chat
+          <i class="fas fa-bolt text-gray-400"></i>
+          Extra filter
         </span>
-        <div
-          class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800/80"
-          role="group"
-          aria-label="Filter by chat session"
+        <select
+          class="w-full text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 text-gray-800 dark:text-gray-100 px-2.5 py-2 outline-none focus:ring-2 focus:ring-rep-lime/40 cursor-pointer"
+          [ngModel]="listViewModeForDropdown"
+          (ngModelChange)="onViewModeDropdownSelect($event)"
+          (click)="$event.stopPropagation()"
         >
-          <button
-            type="button"
-            (click)="onChatSessionChange(null); $event.stopPropagation()"
-            class="px-2.5 py-2 text-[11px] font-semibold transition-colors min-w-[2.5rem]"
-            [class.bg-rep-lime]="chatSession === null"
-            [class.text-rep-black]="chatSession === null"
-            [class.text-gray-600]="chatSession !== null"
-            [class.dark:text-gray-300]="chatSession !== null"
-          >
-            All
-          </button>
-          <button
-            type="button"
-            (click)="onChatSessionChange('open')"
-            class="px-2.5 py-2 text-[11px] font-semibold border-l border-gray-200 dark:border-gray-700 transition-colors"
-            [class.bg-emerald-500]="chatSession === 'open'"
-            [class.text-white]="chatSession === 'open'"
-            [class.text-gray-600]="chatSession !== 'open'"
-            [class.dark:text-gray-300]="chatSession !== 'open'"
-          >
-            Open
-          </button>
-          <button
-            type="button"
-            (click)="onChatSessionChange('closed'); $event.stopPropagation()"
-            class="px-2.5 py-2 text-[11px] font-semibold border-l border-gray-200 dark:border-gray-700 transition-colors"
-            [class.bg-gray-600]="chatSession === 'closed'"
-            [class.text-white]="chatSession === 'closed'"
-            [class.text-gray-600]="chatSession !== 'closed'"
-            [class.dark:text-gray-300]="chatSession !== 'closed'"
-          >
-            Closed
-          </button>
-        </div>
+          <option *ngIf="viewMode === 'buckets'" value="" disabled>Bucket board</option>
+          <option value="all">All</option>
+          <option value="priority">Priority</option>
+          <option value="assigned">Mine</option>
+          <option value="needs_response">Pending</option>
+          <option value="overdue">Overdue</option>
+          <option value="archived">Archived</option>
+        </select>
       </div>
 
       <!-- Date range (same row, label aligned with other filters) -->
@@ -151,30 +143,30 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Small applied-filter badges (directly under filter controls) -->
-    <div
-      *ngIf="hasActiveFilters()"
-      class="mt-2.5 pt-2 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-1"
-      (click)="$event.stopPropagation()">
-      <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0 mr-0.5">
-        Applied
-      </span>
-      <span
-        *ngFor="let chip of appliedFilterChips; trackBy: trackByChip"
-        class="inline-flex items-center gap-0.5 max-w-full pl-1.5 pr-0.5 py-0.5 rounded-full text-[10px] font-medium leading-none
-          bg-gray-100/90 dark:bg-gray-800 text-gray-700 dark:text-gray-200
-          border border-gray-200/80 dark:border-gray-600">
-        <span class="text-gray-500 dark:text-gray-400 shrink-0 font-normal">{{ chipCategoryLabel(chip) }}:</span>
-        <span class="truncate max-w-[7.5rem] sm:max-w-[11rem]" [title]="chip.display">{{ chip.display }}</span>
-        <button
-          type="button"
-          (click)="removeAppliedChip(chip, $event)"
-          class="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 dark:hover:bg-red-600 transition-colors"
-          [attr.aria-label]="'Remove ' + chipCategoryLabel(chip) + ' ' + chip.display">
-          <i class="fas fa-times text-[7px]"></i>
-        </button>
-      </span>
-    </div>
+  <!-- Applied chips: visible even when Quick Filters row is collapsed -->
+  <div
+    *ngIf="hasActiveFilters()"
+    class="mt-2.5 pt-2 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-1"
+    (click)="$event.stopPropagation()">
+    <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide shrink-0 mr-0.5">
+      Applied
+    </span>
+    <span
+      *ngFor="let chip of appliedFilterChips; trackBy: trackByChip"
+      class="inline-flex items-center gap-0.5 max-w-full pl-1.5 pr-0.5 py-0.5 rounded-full text-[10px] font-medium leading-none
+        bg-gray-100/90 dark:bg-gray-800 text-gray-700 dark:text-gray-200
+        border border-gray-200/80 dark:border-gray-600">
+      <span class="text-gray-500 dark:text-gray-400 shrink-0 font-normal">{{ chipCategoryLabel(chip) }}:</span>
+      <span class="truncate max-w-[7.5rem] sm:max-w-[11rem]" [title]="chip.display">{{ chip.display }}</span>
+      <button
+        type="button"
+        (click)="removeAppliedChip(chip, $event)"
+        class="shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 dark:hover:bg-red-600 transition-colors"
+        [attr.aria-label]="'Remove ' + chipCategoryLabel(chip) + ' ' + chip.display">
+        <i class="fas fa-times text-[7px]"></i>
+      </button>
+    </span>
   </div>
 </div>

@@ -7,6 +7,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { PaginationComponent, PaginationMeta } from '../../shared/components/pagination/pagination.component';
 
 interface DraftMetadata {
   topic?: string;
@@ -37,12 +38,18 @@ interface DraftPost {
 @Component({
   selector: 'app-drafts',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ButtonComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ButtonComponent, PaginationComponent],
   templateUrl: './drafts.component.html'
 })
 export class DraftsComponent implements OnInit, OnDestroy {
   drafts: DraftPost[] = [];
   loading = true;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 20;
+  totalPages = 1;
+  totalItems = 0;
 
   /** Inline edit state */
   editingId: string | null = null;
@@ -60,6 +67,9 @@ export class DraftsComponent implements OnInit, OnDestroy {
 
   /** Delete state */
   deletingId: string | null = null;
+
+  /** Send-to-approval state */
+  sendingApprovalId: string | null = null;
 
   /** Detail / preview modal */
   previewDraft: DraftPost | null = null;
@@ -82,12 +92,18 @@ export class DraftsComponent implements OnInit, OnDestroy {
 
   loadDrafts(): void {
     this.loading = true;
+    const params = { page: this.currentPage, limit: this.pageSize };
     this.http
-      .get<{ success: boolean; data: DraftPost[] }>(`${environment.apiUrl}/posts/drafts`)
+      .get<{ success: boolean; data: DraftPost[]; pagination: PaginationMeta }>(`${environment.apiUrl}/posts/drafts`, { params })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
           this.drafts = res.data || [];
+          if (res.pagination) {
+            this.totalItems = res.pagination.total;
+            this.totalPages = res.pagination.pages;
+            this.currentPage = res.pagination.page;
+          }
           this.loading = false;
         },
         error: () => {
@@ -95,6 +111,17 @@ export class DraftsComponent implements OnInit, OnDestroy {
           this.loading = false;
         }
       });
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadDrafts();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+    this.loadDrafts();
   }
 
   // ─── Inline Edit ─────────────────────────────────────────────────────────────
@@ -217,6 +244,32 @@ export class DraftsComponent implements OnInit, OnDestroy {
         error: () => {
           this.notify.error('Failed to delete draft.');
           this.deletingId = null;
+        }
+      });
+  }
+
+  // ─── Send to Approval ────────────────────────────────────────────────────────
+
+  sendToApproval(id: string): void {
+    if (this.sendingApprovalId === id) return;
+    this.sendingApprovalId = id;
+    this.http
+      .patch<{ success: boolean; message: string }>(
+        `${environment.apiUrl}/posts/drafts/${id}/send-to-approval`,
+        {}
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.drafts = this.drafts.filter(d => d._id !== id);
+          if (this.previewDraft?._id === id) this.previewDraft = null;
+          this.sendingApprovalId = null;
+          this.notify.success('Sent for approval!', res.message || 'Post moved to the Approval Queue.');
+        },
+        error: (err) => {
+          this.sendingApprovalId = null;
+          const msg = err?.error?.message || err?.error?.error || 'Could not send for approval.';
+          this.notify.error('Failed', msg);
         }
       });
   }

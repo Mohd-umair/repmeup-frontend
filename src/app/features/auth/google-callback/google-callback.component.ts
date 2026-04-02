@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { StorageService } from '../../../core/services/storage.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-google-callback',
@@ -29,7 +29,7 @@ export class GoogleCallbackComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private storageService: StorageService
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -50,14 +50,21 @@ export class GoogleCallbackComponent implements OnInit {
       }
 
       if (token) {
-        // Save tokens using StorageService (keys: orm_token, orm_refresh_token)
-        this.storageService.saveToken(token);
-        if (refreshToken) {
-          this.storageService.saveRefreshToken(refreshToken);
-        }
-
-        // Redirect to dashboard
-        this.router.navigate(['/app/dashboard']);
+        // Save tokens, update auth state, and load user data before navigating.
+        // Calling handleGoogleCallback ensures currentUser$ and isAuthenticated$ are
+        // properly set so all app components receive the correct state immediately.
+        this.authService.handleGoogleCallback(token, refreshToken).subscribe({
+          next: () => {
+            this.router.navigate(['/app/dashboard']);
+          },
+          error: (err) => {
+            console.error('Google callback - failed to load user:', err);
+            this.error = 'Authentication failed — could not load user profile.';
+            setTimeout(() => {
+              this.authService.logout();
+            }, 2000);
+          }
+        });
       } else {
         this.error = 'Authentication failed - no token received';
         setTimeout(() => {

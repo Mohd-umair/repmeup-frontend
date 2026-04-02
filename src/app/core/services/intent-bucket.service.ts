@@ -31,8 +31,8 @@ export class IntentBucketService {
 
   constructor(private api: ApiService) {}
 
-  getBuckets(): Observable<any> {
-    return this.api.get<any>('/intent-buckets').pipe(
+  getBuckets(params?: { page?: number; limit?: number }): Observable<any> {
+    return this.api.get<any>('/intent-buckets', params).pipe(
       tap(res => {
         if (res.success && res.data) {
           this.bucketsSubject.next(res.data);

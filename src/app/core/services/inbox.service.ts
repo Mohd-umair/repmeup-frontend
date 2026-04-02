@@ -86,9 +86,11 @@ export class InboxService {
   }
 
   /**
-   * Get single interaction by ID
+   * Get single interaction by ID.
+   * Pass `markRead: true` only when the user explicitly opens a conversation —
+   * never from background refreshes, polling, or socket-triggered re-fetches.
    */
-  getInteraction(id: string, params?: { sortOrder?: 'asc' | 'desc' }): Observable<IApiResponse<IInteraction>> {
+  getInteraction(id: string, params?: { sortOrder?: 'asc' | 'desc'; markRead?: boolean }): Observable<IApiResponse<IInteraction>> {
     return this.apiService.get<IApiResponse<IInteraction>>(`/inbox/${id}`, params)
       .pipe(
         tap(response => {
@@ -203,7 +205,20 @@ export class InboxService {
    * Update interaction status
    */
   updateStatus(id: string, status: string): Observable<IApiResponse> {
-    return this.apiService.put<IApiResponse>(`/inbox/${id}/status`, { status });
+    return this.apiService.put<IApiResponse>(`/inbox/${id}/status`, { status }).pipe(
+      tap((response) => {
+        if (response.success) {
+          const list = this.interactionsSubject.value.map((i) =>
+            i._id === id ? { ...i, status: status as any } : i
+          );
+          this.interactionsSubject.next(list);
+          const sel = this.selectedInteractionSubject.value;
+          if (sel?._id === id) {
+            this.selectedInteractionSubject.next({ ...sel, status: status as any });
+          }
+        }
+      })
+    );
   }
 
   /**

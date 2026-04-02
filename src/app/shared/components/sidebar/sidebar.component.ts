@@ -125,10 +125,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.notificationPollTimerId = undefined;
     }, 2500);
 
-    this.notificationDataService.unreadCount$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((count) => {
-        this.applyInboxBadgeToSections(count);
+    combineLatest([
+      this.notificationDataService.inboxUnreadCount$,
+      this.notificationDataService.publishUnreadCount$
+    ]).pipe(takeUntil(this.destroy$))
+      .subscribe(([inboxCount, publishCount]) => {
+        this.applyBadgesToSections(inboxCount, publishCount);
         this.cdr.markForCheck();
       });
 
@@ -157,6 +159,16 @@ export class SidebarComponent implements OnInit, OnDestroy {
       return { paths: 'exact', queryParams: 'exact' };
     }
     return this.routerLinkActiveOptionsForChild(child.route);
+  }
+
+  /**
+   * Returns true when the icon string is a Font Awesome class (e.g. "fas fa-user", "fa fa-home").
+   * Returns false for emoji / unicode characters which are rendered as plain text.
+   */
+  isFaIcon(icon: string): boolean {
+    if (!icon) return false;
+    const t = icon.trim();
+    return /^fa[srbldt]?\s/.test(t) || /^fa-/.test(t);
   }
 
   trackBySection(_index: number, section: SidebarSection): string {
@@ -269,7 +281,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
     this.sidebarSections = nextSections.filter((s) => s.items.length > 0);
 
     this.pruneExpandedSubmenuKeys();
-    this.applyInboxBadgeToSections(this.notificationDataService.unreadCountValue);
+    this.applyBadgesToSections(
+      this.notificationDataService.inboxUnreadCountValue,
+      this.notificationDataService.publishUnreadCountValue
+    );
     this.decorateActiveOnSectionsOnly();
     this.expandSubmenusMatchingCurrentRoute();
     this.cdr.markForCheck();
@@ -334,13 +349,30 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }
   }
 
-  private applyInboxBadgeToSections(count: number): void {
-    if (count <= 0) return;
+  /**
+   * Apply notification badges to the correct sidebar sections:
+   *   - Social-interaction notifications  → /app/inbox
+   *   - Post-workflow notifications       → /app/publish (parent menu)
+   */
+  private applyBadgesToSections(inboxCount: number, publishCount: number): void {
     for (const sec of this.sidebarSections) {
-      const inbox = sec.items.find((item) => item.route === '/app/inbox');
-      if (inbox) {
-        inbox.badge = count;
-        return;
+      for (const item of sec.items) {
+        // Inbox badge
+        if (item.route === '/app/inbox') {
+          item.badge = inboxCount > 0 ? inboxCount : undefined;
+        }
+        // Publish parent badge (approval queue lives under /app/publish)
+        if (item.route === '/app/publish') {
+          item.badge = publishCount > 0 ? publishCount : undefined;
+          // Also clear child badges to avoid double-counting
+          if (item.children) {
+            for (const child of item.children) {
+              if (child.route === '/app/approval-queue') {
+                child.badge = publishCount > 0 ? publishCount : undefined;
+              }
+            }
+          }
+        }
       }
     }
   }

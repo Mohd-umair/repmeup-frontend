@@ -1004,9 +1004,38 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   }
 
   onTopFilterChange(filters: IInboxFilters): void {
-    this.topFilters = this.stripEmptyDateRange(filters);
+    const clone = { ...filters } as IInboxFilters & { platform?: unknown };
+    if (Object.prototype.hasOwnProperty.call(clone, 'platform')) {
+      const p = clone.platform as IInboxFilters['platform'];
+      delete (clone as any).platform;
+      if (p === undefined || p === null || (Array.isArray(p) && p.length === 0)) {
+        this.platformFilters = {};
+      } else {
+        this.platformFilters = { platform: p };
+      }
+      this.applyThemeForPlatformFilters();
+    }
+    this.topFilters = this.stripEmptyDateRange(clone);
     this.updateMergedBucketFilters();
     this.loadInteractions(true);
+  }
+
+  /**
+   * Extra filter dropdown (Quick filters): same presets as the old toolbar chips.
+   * Leaving bucket board switches back to list with the chosen preset.
+   */
+  onQuickExtraViewFilter(mode: InboxViewMode): void {
+    if (mode === 'buckets') return;
+    if (this.viewMode === 'buckets') {
+      this.bucketSearchTerm = '';
+      this.bucketSortBy = 'newest';
+      this.lastListViewMode = mode;
+      this.viewMode = mode;
+      this.updateMergedBucketFilters();
+      this.loadInteractions(true);
+      return;
+    }
+    this.setViewMode(mode);
   }
 
   /** Drop date range keys when empty so cleared dates never stay in API requests */
@@ -1341,45 +1370,26 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   }
 
   onInteractionSelect(interaction: IInteraction): void {
-    // Fetch full interaction details (this will also mark it as read on the backend)
-    this.inboxService.getInteraction(interaction._id).subscribe({
+    // markRead:true is ONLY passed here — the single explicit user-open action.
+    // Background refreshes, polling, socket events and action-panel refetches must
+    // NOT pass markRead so they cannot override a manually-set 'unread' status.
+    // Closed chats are NOT auto-reopened here; the user must explicitly click "Open Chat".
+    this.inboxService.getInteraction(interaction._id, { markRead: true }).subscribe({
       next: (response) => {
         if (response.success && response.data) {
           const data = response.data;
-          // Opening a closed thread starts the chat again (session open)
-          if (data.chatOpen === false) {
-            this.inboxService.updateChatOpen(data._id, true).subscribe({
-              next: (r) => {
-                if (r.success && r.data) {
-                  this.inboxService.setSelectedInteraction(r.data);
-                  const index = this.interactions.findIndex(i => i._id === data._id);
-                  if (index !== -1) {
-                    this.interactions[index] = r.data;
-                  }
-                } else {
-                  this.inboxService.setSelectedInteraction(data);
-                }
-              },
-              error: () => {
-                this.inboxService.setSelectedInteraction(data);
-              }
-            });
-            return;
-          }
-          // Update the selected interaction with the full details
           this.inboxService.setSelectedInteraction(data);
 
-          // Update the interaction in the local list if status changed
-          const index = this.interactions.findIndex(i => i._id === interaction._id);
-          if (index !== -1 && data.status !== this.interactions[index].status) {
+          // Sync the list entry so the status badge updates immediately
+          const index = this.interactions.findIndex(i => i._id === data._id);
+          if (index !== -1) {
             this.interactions[index] = data;
           }
         }
       },
       error: (error) => {
         console.error('Error fetching interaction details:', error);
-        // Fallback to setting the interaction without fetching
-    this.inboxService.setSelectedInteraction(interaction);
+        this.inboxService.setSelectedInteraction(interaction);
       }
     });
   }

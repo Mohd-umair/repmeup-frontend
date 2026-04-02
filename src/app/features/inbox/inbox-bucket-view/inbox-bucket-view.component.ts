@@ -5,7 +5,10 @@ import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from 
 import { InboxService } from '../../../core/services/inbox.service';
 import { IIntentBucket } from '../../../core/services/intent-bucket.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { IInteraction, IInboxFilters, IReply, InteractionStatus } from '../../../core/models/interaction.model';
+import { IInteraction, IInboxFilters, IReply, InteractionStatus, Platform } from '../../../core/models/interaction.model';
+import { Media } from '../../../core/models/media.model';
+import { MediaSelectorModalComponent } from '../../../shared/components/media-selector-modal/media-selector-modal.component';
+import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { inboxFilterSerialize } from '../../../core/utils/inbox-filter-values';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
@@ -32,7 +35,7 @@ interface SentimentStats {
 @Component({
   selector: 'app-inbox-bucket-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, SentimentDonutChartComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, SentimentDonutChartComponent, MediaSelectorModalComponent],
   templateUrl: './inbox-bucket-view.component.html',
   styleUrls: ['./inbox-bucket-view.component.scss']
 })
@@ -41,7 +44,6 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   @Output() interactionSelect = new EventEmitter<IInteraction>();
 
   @ViewChild('chatThreadRef') chatThreadRef?: ElementRef<HTMLElement>;
-  @ViewChild('fileInputRef') fileInputRef?: ElementRef<HTMLInputElement>;
   @ViewChild('composeRef') composeRef?: ElementRef<HTMLTextAreaElement>;
 
   columns: BucketColumn[] = [];
@@ -68,9 +70,9 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
 
   // ── Compose toolbar extras ──
   showEmojiPicker = false;
-  attachedFile: File | null = null;
-  attachedFilePreview: string | null = null;
-  attachedFileType: 'image' | 'audio' | null = null;
+  showMediaModal = false;
+  /** Attachment chosen from media library (URL already public — no upload step). */
+  pendingMediaAttachment: { publicUrl: string; mediaType: 'image' | 'video' | 'audio'; name?: string } | null = null;
   isRecording = false;
   recordingSeconds = 0;
   recordedAudioUrl: string | null = null;
@@ -100,7 +102,8 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
 
   constructor(
     private inboxService: InboxService,
-    private notify: NotificationService
+    private notify: NotificationService,
+    private sweetAlertService: SweetAlertService
   ) {}
 
   ngOnInit(): void {
@@ -382,23 +385,32 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   submitReply(): void {
     const hasText = this.replyText.trim().length > 0;
     const hasBlob = !!this.recordedBlob;
-    const hasImage = !!this.attachedFile;
-    if (!this.activeChatInteraction || (!hasText && !hasBlob && !hasImage) || this.replying) return;
+    const hasLibraryMedia = !!this.pendingMediaAttachment;
+    if (!this.activeChatInteraction || (!hasText && !hasBlob && !hasLibraryMedia) || this.replying) return;
 
     this.replying = true;
     const id = this.activeChatInteraction._id;
     const text = this.replyText.trim();
 
-    // If there's an attachment (audio blob or image file), upload it first to get a real public URL.
-    if (hasBlob || hasImage) {
-      const blob: Blob = hasBlob
-        ? this.recordedBlob!
-        : this.attachedFile!;
-      const filename = hasBlob
-        ? `voice-${Date.now()}.webm`
-        : (this.attachedFile?.name ?? `image-${Date.now()}.png`);
-      const attachType: 'audio' | 'image' = hasBlob ? 'audio' : 'image';
-      const replyContent = text || (attachType === 'audio' ? '🎤 Voice message' : '🖼️ Image');
+    if (hasLibraryMedia) {
+      const { publicUrl, mediaType } = this.pendingMediaAttachment!;
+      const defaultCaption =
+        mediaType === 'audio' ? '🎤 Voice message' : mediaType === 'video' ? '🎬 Video' : '🖼️ Image';
+      const replyContent = text || defaultCaption;
+      this.inboxService.replyToInteraction(id, replyContent, false, undefined, publicUrl, mediaType).subscribe({
+        next: () => this.onReplySent(id),
+        error: () => {
+          this.notify.error('Error', 'Failed to send reply. Please try again.');
+          this.replying = false;
+        }
+      });
+      return;
+    }
+
+    if (hasBlob) {
+      const blob = this.recordedBlob!;
+      const filename = `voice-${Date.now()}.webm`;
+      const replyContent = text || '🎤 Voice message';
 
       this.inboxService.uploadAttachment(blob, filename).subscribe({
         next: (res: any) => {
@@ -408,7 +420,7 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
             this.replying = false;
             return;
           }
-          this.inboxService.replyToInteraction(id, replyContent, false, undefined, publicUrl, attachType).subscribe({
+          this.inboxService.replyToInteraction(id, replyContent, false, undefined, publicUrl, 'audio').subscribe({
             next: () => this.onReplySent(id),
             error: () => {
               this.notify.error('Error', 'Failed to send reply. Please try again.');
@@ -422,7 +434,6 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
         }
       });
     } else {
-      // Text-only reply
       this.inboxService.replyToInteraction(id, text).subscribe({
         next: () => this.onReplySent(id),
         error: () => {
@@ -463,31 +474,49 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  // ── Image attachment ──────────────────────────────────────────────────────
-  openFilePicker(): void {
-    this.fileInputRef?.nativeElement.click();
+  // ── Media library attachment (same flow as inbox detail) ───────────────────
+  openMediaSelector(): void {
+    this.showMediaModal = true;
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      this.notify.error('Invalid file', 'Only image files are supported.');
+  closeMediaSelector(): void {
+    this.showMediaModal = false;
+  }
+
+  private getPlatformMediaLimits(): { imageMaxBytes: number; videoMaxBytes: number; audioMaxBytes: number } {
+    const platform = this.activeChatInteraction?.platform;
+    if (platform === Platform.INSTAGRAM) {
+      return { imageMaxBytes: 8 * 1024 * 1024, videoMaxBytes: 25 * 1024 * 1024, audioMaxBytes: 25 * 1024 * 1024 };
+    }
+    if (platform === Platform.FACEBOOK) {
+      return { imageMaxBytes: 25 * 1024 * 1024, videoMaxBytes: 25 * 1024 * 1024, audioMaxBytes: 25 * 1024 * 1024 };
+    }
+    return { imageMaxBytes: 25 * 1024 * 1024, videoMaxBytes: 25 * 1024 * 1024, audioMaxBytes: 25 * 1024 * 1024 };
+  }
+
+  onMediaSelect(media: Media): void {
+    if (!this.activeChatInteraction) return;
+    const limits = this.getPlatformMediaLimits();
+    const size = media.size ?? 0;
+    const isImage = media.mediaType === 'image';
+    const isVideo = media.mediaType === 'video';
+    const isAudio = media.mediaType === 'audio';
+    const maxBytes = isImage ? limits.imageMaxBytes : isAudio ? limits.audioMaxBytes : limits.videoMaxBytes;
+    if (size > maxBytes) {
+      const maxMB = Math.round(maxBytes / (1024 * 1024));
+      void this.sweetAlertService.toast('error', `This ${media.mediaType} is too large. Max ${maxMB}MB for this platform.`);
       return;
     }
-    this.attachedFile = file;
-    this.attachedFileType = 'image';
-    const reader = new FileReader();
-    reader.onload = (e) => { this.attachedFilePreview = e.target?.result as string; };
-    reader.readAsDataURL(file);
-    input.value = '';
+    this.pendingMediaAttachment = {
+      publicUrl: media.publicUrl,
+      mediaType: media.mediaType,
+      name: media.originalName
+    };
+    this.showMediaModal = false;
   }
 
   clearAttachment(): void {
-    this.attachedFile = null;
-    this.attachedFilePreview = null;
-    this.attachedFileType = null;
+    this.pendingMediaAttachment = null;
   }
 
   // ── Voice recording ───────────────────────────────────────────────────────

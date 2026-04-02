@@ -1,0 +1,98 @@
+<nav class="home-nav-dark fixed top-0 left-0 right-0 z-50 bg-rep-black border-b border-gray-800">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
+    <div class="flex items-center justify-between h-16 sm:h-20">
+      <a routerLink="/" class="cursor-pointer shrink-0 overflow-visible flex">
+        <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="app-logo rounded-xl shadow-lg block">
+      </a>
+
+      <div class="hidden md:flex items-center space-x-8">
+        <button type="button" (click)="goSection('how-it-works')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">How it Works</button>
+        <button type="button" (click)="goSection('ecosystem')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Products</button>
+        <button type="button" (click)="goSection('use-cases')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Solutions</button>
+        <button type="button" (click)="goSection('testimonials')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Testimonials</button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          (click)="appearance.toggle()"
+          [title]="appearance.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          class="p-2.5 rounded-lg border border-gray-700 bg-gray-900 hover:border-rep-lime hover:bg-gray-800 transition-all group"
+          aria-label="Toggle theme">
+          <svg *ngIf="appearance.isDark()" class="w-4 h-4 text-rep-lime group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5" stroke-width="2"/>
+            <path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg *ngIf="!appearance.isDark()" class="w-4 h-4 text-gray-300 group-hover:text-rep-lime transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+
+        <ng-container *ngIf="!currentUser">
+          <button (click)="navigateToLogin()"
+            class="hidden md:block px-4 py-2 text-gray-300 font-medium hover:text-rep-lime transition text-sm">
+            Sign In
+          </button>
+          <button (click)="navigateToRegister()"
+            class="hidden sm:block px-5 py-2.5 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition transform hover:scale-105 text-sm">
+            Get Started Free
+          </button>
+        </ng-container>
+
+        <div *ngIf="currentUser" class="relative">
+          <button (click)="toggleUserMenu()"
+            class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-800 transition">
+            <div class="w-9 h-9 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-semibold text-sm shrink-0">
+              {{ getUserInitials() }}
+            </div>
+            <div class="text-left hidden md:block">
+              <p class="text-sm font-medium text-rep-white">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+              <p class="text-xs text-gray-400">{{ currentUser.role }}</p>
+            </div>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div *ngIf="showUserMenu"
+            class="home-nav-user-menu absolute right-0 mt-2 w-56 rounded-lg shadow-xl border border-gray-800 py-1 z-50">
+            <a (click)="navigateToDashboard(); showUserMenu = false"
+              class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white cursor-pointer">
+              <div class="flex items-center space-x-2"><span>📊</span><span>Dashboard</span></div>
+            </a>
+            <a routerLink="/app/settings" (click)="showUserMenu = false"
+              class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white">
+              <div class="flex items-center space-x-2"><span>⚙️</span><span>Settings</span></div>
+            </a>
+            <hr class="my-1 border-gray-800">
+            <button (click)="logout()"
+              class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-lime">
+              <div class="flex items-center space-x-2"><span>🚪</span><span>Logout</span></div>
+            </button>
+          </div>
+        </div>
+
+        <button (click)="showMobileMenu = !showMobileMenu"
+          class="md:hidden p-2 rounded-lg text-gray-400 hover:text-rep-lime hover:bg-gray-800 transition"
+          aria-label="Toggle menu">
+          <svg *ngIf="!showMobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          <svg *ngIf="showMobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showMobileMenu"
+    class="home-nav-mobile-drawer md:hidden border-t border-gray-800 bg-rep-black max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-4 space-y-1">
+    <button type="button" (click)="goSection('how-it-works'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">How it Works</button>
+    <button type="button" (click)="goSection('ecosystem'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Products</button>
+    <button type="button" (click)="goSection('use-cases'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Solutions</button>
+    <button type="button" (click)="goSection('testimonials'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Testimonials</button>
+    <div class="pt-2 border-t border-gray-800 flex flex-col gap-2" *ngIf="!currentUser">
+      <button (click)="navigateToLogin(); showMobileMenu = false" class="w-full px-4 py-3 text-center text-gray-300 font-medium hover:text-rep-lime border border-gray-700 rounded-xl transition">Sign In</button>
+      <button (click)="navigateToRegister(); showMobileMenu = false" class="w-full px-4 py-3 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition">Get Started Free</button>
+    </div>
+  </div>
+</nav>

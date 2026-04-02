@@ -129,7 +129,7 @@
         [attr.title]="sentiment.label"
         type="button"
         class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-200 text-xs font-medium border"
-        [ngClass]="isFilterActive('sentiment', sentiment.value) ? getSentimentActiveClass(sentiment.value) : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400'"
+        [ngClass]="isFilterActive('sentiment', sentiment.value) ? getSentimentActiveClass(sentiment.value) : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'"
       >
         <span>{{ sentiment.icon }}</span>
         <span>{{ sentiment.label }}</span>
@@ -157,7 +157,7 @@
         [attr.title]="status.label"
         type="button"
         class="px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all duration-200 text-xs font-medium border"
-        [ngClass]="isFilterActive('status', status.value) ? getStatusActiveClass(status.value) : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400'"
+        [ngClass]="isFilterActive('status', status.value) ? getStatusActiveClass(status.value) : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'"
       >
         <span>{{ status.icon }}</span>
         <span>{{ status.label }}</span>

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { InboxService } from '../../../core/services/inbox.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
+import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { IInteraction, InteractionStatus } from '../../../core/models/interaction.model';
 
 @Component({
@@ -27,13 +28,24 @@ export class InboxActionsComponent implements OnInit {
   orgLabels: { _id: string; name: string; color?: string }[] = [];
   loadingLabels = false;
   addingLabel = false;
+  updatingStatus = false;
 
   readonly InteractionStatus = InteractionStatus;
+
+  readonly statusOptions: { value: InteractionStatus; label: string; icon: string; colorClass: string }[] = [
+    { value: InteractionStatus.UNREAD,    label: 'Unread',    icon: 'fa-envelope',        colorClass: 'text-blue-600'   },
+    { value: InteractionStatus.READ,      label: 'Read',      icon: 'fa-envelope-open',   colorClass: 'text-gray-500'   },
+    { value: InteractionStatus.REPLIED,   label: 'Replied',   icon: 'fa-reply',           colorClass: 'text-green-600'  },
+    { value: InteractionStatus.RESOLVED,  label: 'Resolved',  icon: 'fa-check-circle',    colorClass: 'text-emerald-600'},
+    { value: InteractionStatus.ARCHIVED,  label: 'Archived',  icon: 'fa-archive',         colorClass: 'text-amber-600'  },
+    { value: InteractionStatus.SPAM,      label: 'Spam',      icon: 'fa-ban',             colorClass: 'text-red-600'    },
+  ];
 
   constructor(
     private inboxService: InboxService,
     private authService: AuthService,
-    private userService: UserService
+    private userService: UserService,
+    private sweetAlertService: SweetAlertService
   ) {}
 
   ngOnInit(): void {
@@ -77,12 +89,21 @@ export class InboxActionsComponent implements OnInit {
   }
 
   onStatusChange(status: string): void {
-    if (!this.interaction?._id) return;
+    if (!this.interaction?._id || !status || this.updatingStatus) return;
+    this.updatingStatus = true;
     this.inboxService.updateStatus(this.interaction._id, status).subscribe({
       next: (response) => {
+        this.updatingStatus = false;
         if (response.success) {
+          const option = this.statusOptions.find(o => o.value === status);
+          this.sweetAlertService.toast('success', `Status set to ${option?.label ?? status}`);
           this.refreshInteraction();
         }
+      },
+      error: (err) => {
+        this.updatingStatus = false;
+        const msg = err?.error?.error || 'Could not update status';
+        this.sweetAlertService.toast('error', msg);
       }
     });
   }
@@ -187,5 +208,9 @@ export class InboxActionsComponent implements OnInit {
 
   isResolved(): boolean {
     return this.interaction?.status === InteractionStatus.RESOLVED;
+  }
+
+  getCurrentStatusOption(): { value: InteractionStatus; label: string; icon: string; colorClass: string } | undefined {
+    return this.statusOptions.find(o => o.value === this.interaction?.status);
   }
 }

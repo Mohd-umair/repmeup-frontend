@@ -8,7 +8,7 @@ export interface INotification {
   _id: string;
   user: string;
   organization: string;
-  type: 'new_interaction' | 'assignment' | 'mention' | 'escalation' | 'negative_spike' | 'response_received' | 'platform_error' | 'system';
+  type: 'new_interaction' | 'assignment' | 'mention' | 'escalation' | 'negative_spike' | 'response_received' | 'platform_error' | 'system' | 'post_pending_approval' | 'post_approved' | 'post_rejected';
   title: string;
   message: string;
   relatedTo?: {
@@ -38,6 +38,14 @@ export class NotificationDataService {
 
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
+
+  /** Unread count for inbox-type notifications (social interactions). */
+  private inboxUnreadCountSubject = new BehaviorSubject<number>(0);
+  public inboxUnreadCount$ = this.inboxUnreadCountSubject.asObservable();
+
+  /** Unread count for publish-type notifications (post_approved, post_rejected, post_pending_approval). */
+  private publishUnreadCountSubject = new BehaviorSubject<number>(0);
+  public publishUnreadCount$ = this.publishUnreadCountSubject.asObservable();
 
   private pollingInterval = 30000; // 30 seconds
   private polling = false;
@@ -70,8 +78,17 @@ export class NotificationDataService {
     this.polling = false;
   }
 
+  /** Inbox-type notification types (matches backend INBOX_TYPES). */
+  private static readonly INBOX_TYPES = new Set([
+    'new_interaction', 'assignment', 'mention', 'escalation', 'response_received'
+  ]);
+  /** Publish-type notification types (matches backend PUBLISH_TYPES). */
+  private static readonly PUBLISH_TYPES = new Set([
+    'post_pending_approval', 'post_approved', 'post_rejected'
+  ]);
+
   /**
-   * Get all notifications
+   * Get all notifications and recompute per-section unread counts from the returned list.
    */
   getNotifications(unreadOnly: boolean = false): Observable<any> {
     const params = unreadOnly ? { unreadOnly: 'true' } : {};
@@ -83,24 +100,34 @@ export class NotificationDataService {
             if (response.unreadCount !== undefined) {
               this.unreadCountSubject.next(response.unreadCount);
             }
+            // Derive per-section counts from the returned notifications list
+            const unread: INotification[] = (response.data as INotification[]).filter(n => !n.isRead);
+            this.inboxUnreadCountSubject.next(
+              unread.filter(n => NotificationDataService.INBOX_TYPES.has(n.type)).length
+            );
+            this.publishUnreadCountSubject.next(
+              unread.filter(n => NotificationDataService.PUBLISH_TYPES.has(n.type)).length
+            );
           }
         })
       );
   }
 
   /**
-   * Get unread count
+   * Get unread count split by UI section (inbox vs publish).
    */
-  getUnreadCount(): Observable<IApiResponse<{ count: number }>> {
-    // Use silent (no loader) because this is called on a 30-second interval
-    return this.apiService.getSilent<IApiResponse<{ count: number }>>('/notifications/unread-count')
-      .pipe(
-        tap(response => {
-          if (response.success && response.data) {
-            this.unreadCountSubject.next(response.data.count);
-          }
-        })
-      );
+  getUnreadCount(): Observable<IApiResponse<{ count: number; inboxCount: number; publishCount: number }>> {
+    return this.apiService.getSilent<IApiResponse<{ count: number; inboxCount: number; publishCount: number }>>(
+      '/notifications/unread-count'
+    ).pipe(
+      tap(response => {
+        if (response.success && response.data) {
+          this.unreadCountSubject.next(response.data.count);
+          this.inboxUnreadCountSubject.next(response.data.inboxCount ?? response.data.count);
+          this.publishUnreadCountSubject.next(response.data.publishCount ?? 0);
+        }
+      })
+    );
   }
 
   /**
@@ -150,10 +177,18 @@ export class NotificationDataService {
     this.getNotifications().subscribe();
   }
 
-  /**
-   * Get current unread count (synchronous)
-   */
+  /** Total unread count (synchronous). */
   get unreadCountValue(): number {
     return this.unreadCountSubject.value;
+  }
+
+  /** Inbox-section unread count (synchronous). */
+  get inboxUnreadCountValue(): number {
+    return this.inboxUnreadCountSubject.value;
+  }
+
+  /** Publish-section unread count (synchronous). */
+  get publishUnreadCountValue(): number {
+    return this.publishUnreadCountSubject.value;
   }
 }

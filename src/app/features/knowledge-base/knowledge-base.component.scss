@@ -7,8 +7,170 @@
 
 @include theme.light-mode-overrides;
 
+/* Tag chip row: match global input tokens so dark theme text is not light-on-white */
+.kb-tag-well {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+}
+
+.kb-tag-input {
+  color: var(--input-text);
+
+  &::placeholder {
+    color: var(--input-placeholder);
+  }
+}
+
+/* ── Dark theme: Knowledge Base used hard-coded light surfaces (rep-white, gray-200).
+   Remap them to app CSS variables so cards, text, and borders match the rest of the app. ── */
+:host-context(html.dark) {
+  .kb-theme {
+    .bg-rep-white {
+      background-color: var(--card-bg) !important;
+    }
+
+    .bg-white {
+      background-color: var(--card-bg) !important;
+    }
+
+    .border-gray-800 {
+      border-color: var(--card-border) !important;
+    }
+
+    .border-gray-200 {
+      border-color: var(--border-secondary) !important;
+    }
+
+    .border-gray-100 {
+      border-color: var(--border-primary) !important;
+    }
+
+    .text-rep-black {
+      color: var(--text-primary) !important;
+    }
+
+    .text-gray-600 {
+      color: var(--text-secondary) !important;
+    }
+
+    .text-gray-500 {
+      color: var(--text-muted) !important;
+    }
+
+    .text-gray-400 {
+      color: var(--text-muted) !important;
+    }
+
+    .text-gray-300 {
+      color: var(--text-secondary) !important;
+    }
+
+    .text-gray-800 {
+      color: var(--text-primary) !important;
+    }
+
+    .text-gray-700 {
+      color: var(--text-secondary) !important;
+    }
+
+    .bg-gray-50 {
+      background-color: var(--surface-secondary) !important;
+    }
+
+    .bg-gray-100 {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .bg-gray-200 {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .hover\:bg-gray-50:hover {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .hover\:bg-gray-100:hover {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .hover\:bg-gray-200:hover {
+      background-color: rgb(55 65 81 / 0.5) !important;
+    }
+
+    .hover\:bg-rep-lime\/5:hover {
+      background-color: rgb(216 255 0 / 0.08) !important;
+    }
+
+    /* Usage banner expanded strip */
+    .bg-gray-50\/80 {
+      background-color: rgb(26 29 39 / 0.92) !important;
+    }
+
+    /* Skeleton */
+    .animate-pulse .bg-gray-200 {
+      background-color: rgb(55 65 81) !important;
+    }
+
+    .animate-pulse .bg-gray-100 {
+      background-color: rgb(55 65 81 / 0.6) !important;
+    }
+
+    /* “Where your KB is used” — titles/icons used text-gray-900 (near-black on dark card bg) */
+    .kb-usage-banner {
+      .text-gray-900 {
+        color: var(--text-primary) !important;
+      }
+
+      .text-blue-900 {
+        color: #93c5fd !important;
+      }
+
+      .text-purple-900 {
+        color: #d8b4fe !important;
+      }
+
+      .text-amber-900 {
+        color: #fcd34d !important;
+      }
+
+      .bg-blue-100 {
+        background-color: rgb(30 58 138 / 0.35) !important;
+      }
+
+      .border-blue-200 {
+        border-color: rgb(59 130 246 / 0.35) !important;
+      }
+
+      .bg-purple-100 {
+        background-color: rgb(88 28 135 / 0.35) !important;
+      }
+
+      .border-purple-200 {
+        border-color: rgb(168 85 247 / 0.35) !important;
+      }
+
+      .bg-amber-100 {
+        background-color: rgb(120 53 15 / 0.4) !important;
+      }
+
+      .border-amber-200 {
+        border-color: rgb(245 158 11 / 0.4) !important;
+      }
+    }
+  }
+}
+
 .kb-read-modal__body {
   font-family: inherit;
+}
+
+/* Tag chips: always dark text on lime (modal .text-rep-black override must not apply) */
+.kb-read-modal__tag {
+  color: #0b0b0b !important;
+}
+
+.dark .kb-read-modal .kb-read-modal__tag {
+  color: #0b0b0b !important;
 }
 
 .dark .kb-read-modal {
@@ -30,4 +192,16 @@
 
 .dark .kb-read-modal .bg-gray-50\/80 {
   background-color: rgb(31 41 55 / 0.9);
+}
+
+/* ── Analytics sidebar ── */
+.kb-analytics-panel {
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+:host-context(html.dark) {
+  .kb-analytics-panel {
+    background-color: var(--card-bg);
+    border-color: var(--card-border);
+  }
 }

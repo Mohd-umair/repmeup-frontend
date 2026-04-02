@@ -124,8 +124,8 @@
                     {{ getInitials(agent.firstName, agent.lastName) }}
                   </div>
                   <div>
-                    <div class="text-sm font-medium text-rep-black">{{ agent.firstName }} {{ agent.lastName }}</div>
-                    <div class="text-sm text-gray-600">{{ agent.email }}</div>
+                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ agent.firstName }} {{ agent.lastName }}</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">{{ agent.email }}</div>
                   </div>
                 </div>
               </td>
@@ -218,6 +218,19 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="px-6 pb-4">
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          [totalItems]="totalItems"
+          [pageSize]="pageSize"
+          [loading]="loading"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
+        ></app-pagination>
       </div>
     </div>
 

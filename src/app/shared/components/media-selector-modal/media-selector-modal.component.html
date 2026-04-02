@@ -88,6 +88,18 @@
             <div class="absolute bottom-2 left-2 px-2 py-1 bg-green-500 rounded-md text-xs font-semibold text-white flex items-center gap-1" *ngIf="media.usageCount > 0">
               {{ media.usageCount }}x
             </div>
+
+            <!-- Single delete (does not toggle selection) -->
+            <button type="button"
+              class="absolute bottom-2 right-2 z-20 w-9 h-9 rounded-lg flex items-center justify-center transition
+                     bg-gray-900/85 hover:bg-red-600 text-gray-200 hover:text-white border border-gray-600/80 hover:border-red-500
+                     disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-900/85"
+              [disabled]="media.usageCount > 0 || deletingId === media._id || deletingBulk"
+              [title]="media.usageCount > 0 ? 'In use in posts — cannot delete' : 'Delete from library'"
+              (click)="requestDeleteOne(media, $event)">
+              <i class="fas text-sm" [class.fa-spinner]="deletingId === media._id" [class.fa-spin]="deletingId === media._id"
+                [class.fa-trash-can]="deletingId !== media._id"></i>
+            </button>
           </div>
 
           <!-- Media Info -->
@@ -130,15 +142,22 @@
     </div>
 
     <!-- Footer -->
-    <div class="p-6 border-t border-gray-800 flex justify-between items-center">
+    <div class="p-6 border-t border-gray-800 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
       <div class="text-gray-400 text-sm">
         {{ selectedMedia.length }} {{ allowMultiple ? 'item(s)' : 'item' }} selected
       </div>
-      <div class="flex gap-3">
-        <button class="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-rep-white rounded-lg font-semibold transition" (click)="closeModal()">
+      <div class="flex flex-wrap gap-3 justify-end">
+        <button class="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-rep-white rounded-lg font-semibold transition" (click)="closeModal()" [disabled]="deletingBulk || !!deletingId">
           Cancel
         </button>
-        <button class="px-6 py-2.5 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" (click)="confirmSelection()" [disabled]="selectedMedia.length === 0">
+        <button type="button"
+          class="px-6 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 border border-red-500/60 text-red-400 hover:bg-red-500/15 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          (click)="deleteSelected()"
+          [disabled]="selectedMedia.length === 0 || deletingBulk || !!deletingId">
+          <i class="fas" [class.fa-spinner]="deletingBulk" [class.fa-spin]="deletingBulk" [class.fa-trash-can]="!deletingBulk"></i>
+          Delete selected<span *ngIf="selectedMedia.length > 0"> ({{ selectedMedia.length }})</span>
+        </button>
+        <button class="px-6 py-2.5 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" (click)="confirmSelection()" [disabled]="selectedMedia.length === 0 || deletingBulk || !!deletingId">
           <i class="fas fa-check"></i>
           Select {{ selectedMedia.length > 0 ? '(' + selectedMedia.length + ')' : '' }}
         </button>

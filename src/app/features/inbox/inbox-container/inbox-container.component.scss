@@ -10,6 +10,15 @@
 
 @include theme.light-mode-overrides;
 
+// Stat numbers use inline platform color; restore readable text in dark mode
+:host-context(html.dark) .inbox-stat-value {
+  color: var(--text-primary) !important;
+}
+
+:host-context(html.dark) .inbox-stat-label {
+  color: var(--text-muted);
+}
+
 // Smooth transitions for theme changes
 * {
   transition: background-color 0.3s ease,

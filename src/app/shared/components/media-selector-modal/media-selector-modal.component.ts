@@ -1,9 +1,13 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { MediaUploadModalComponent } from '../media-upload-modal/media-upload-modal.component';
 import { Media, MediaLibraryParams } from '../../../core/models/media.model';
 import { MediaLibraryService } from '../../../core/services/media-library.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 
 @Component({
   selector: 'app-media-selector-modal',
@@ -25,8 +29,14 @@ export class MediaSelectorModalComponent implements OnInit {
   filterType: 'all' | 'image' | 'video' | 'audio' = 'all';
   sortBy = '-createdAt';
   showUploadModal = false;
+  deletingId: string | null = null;
+  deletingBulk = false;
 
-  constructor(private mediaLibraryService: MediaLibraryService) {}
+  constructor(
+    private mediaLibraryService: MediaLibraryService,
+    private notify: NotificationService,
+    private swal: SweetAlertService
+  ) {}
 
   ngOnInit(): void {
     this.filterType = this.mediaType;
@@ -144,5 +154,99 @@ export class MediaSelectorModalComponent implements OnInit {
     this.closeUploadModal();
     // Reload the media list to show the newly uploaded item
     this.loadMedia();
+  }
+
+  /** Per-item delete — stops card click from toggling selection */
+  requestDeleteOne(media: Media, ev: Event): void {
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (this.deletingId || this.deletingBulk) return;
+    if (media.usageCount > 0) {
+      void this.swal.warning(
+        'In use',
+        `This file is referenced in ${media.usageCount} post(s). Remove it from those posts before deleting.`
+      );
+      return;
+    }
+    const name = media.originalName || 'this file';
+    void this.swal
+      .confirmDelete(
+        'Delete this media?',
+        `Permanently remove “${name}” from your library? This cannot be undone.`
+      )
+      .then(result => {
+        if (!result.isConfirmed) return;
+
+        this.deletingId = media._id;
+        this.mediaLibraryService.deleteMedia(media._id).subscribe({
+          next: () => {
+            this.deletingId = null;
+            this.selectedMedia = this.selectedMedia.filter(m => m._id !== media._id);
+            this.notify.success('Deleted', 'Media removed from your library.');
+            this.loadMedia();
+          },
+          error: (err) => {
+            this.deletingId = null;
+            const msg = err?.error?.message || err?.message || 'Could not delete.';
+            this.notify.error('Delete failed', msg);
+          }
+        });
+      });
+  }
+
+  /** Delete all currently selected items (single or multi mode) */
+  deleteSelected(): void {
+    if (this.deletingBulk || this.deletingId || this.selectedMedia.length === 0) return;
+    const inUse = this.selectedMedia.filter(m => m.usageCount > 0);
+    if (inUse.length > 0) {
+      void this.swal.warning(
+        'Cannot delete',
+        `${inUse.length} selected item(s) are in use. Deselect them or remove them from posts first.`
+      );
+      return;
+    }
+    const n = this.selectedMedia.length;
+    const title = n === 1 ? 'Delete this file?' : `Delete ${n} files?`;
+    const message =
+      n === 1
+        ? 'This file will be removed from your library permanently.'
+        : 'All selected files will be removed from your library permanently.';
+
+    void this.swal.confirmDelete(title, message).then(result => {
+      if (!result.isConfirmed) return;
+
+      this.deletingBulk = true;
+      const items = [...this.selectedMedia];
+      forkJoin(
+        items.map(m =>
+          this.mediaLibraryService.deleteMedia(m._id).pipe(
+            map(() => ({ ok: true as const, id: m._id })),
+            catchError(err => of({ ok: false as const, id: m._id, err }))
+          )
+        )
+      ).subscribe({
+        next: results => {
+          this.deletingBulk = false;
+          const deleted = results.filter((r): r is { ok: true; id: string } => r.ok);
+          const failed = results.filter(r => !r.ok);
+          this.selectedMedia = [];
+          this.loadMedia();
+          if (deleted.length > 0) {
+            this.notify.success('Deleted', `${deleted.length} file(s) removed from your library.`);
+          }
+          if (failed.length > 0) {
+            const first = failed[0] as { ok: false; id: string; err: unknown };
+            const msg =
+              (first.err as { error?: { message?: string } })?.error?.message ||
+              'Some items could not be deleted.';
+            this.notify.error('Partial failure', msg);
+          }
+        },
+        error: () => {
+          this.deletingBulk = false;
+          this.notify.error('Delete failed', 'Could not delete selected media.');
+        }
+      });
+    });
   }
 }

@@ -550,6 +550,7 @@ export class PublishComponent implements OnInit {
     this.success = null;
     
     try {
+      let pendingApproval = false;
       // Publish to each platform
       for (const platform of this.selectedPlatforms) {
         const formData = new FormData();
@@ -599,11 +600,17 @@ export class PublishComponent implements OnInit {
         
         const endpoint = this.scheduleEnabled || asDraft ? '/posts/schedule' : '/posts/publish';
         
-        await this.http.post<any>(`${environment.apiUrl}${endpoint}`, formData).toPromise();
+        const res = await this.http.post<any>(`${environment.apiUrl}${endpoint}`, formData).toPromise();
+        if (res?.pendingApproval) pendingApproval = true;
       }
       
       // Show success notification
-      if (asDraft) {
+      if (pendingApproval) {
+        this.notificationService.success(
+          'Submitted for Approval',
+          'Your post has been sent to the admin for review.'
+        );
+      } else if (asDraft) {
         this.notificationService.success('Draft Saved', 'Your draft has been saved successfully!');
       } else if (this.scheduleEnabled) {
         this.notificationService.success(

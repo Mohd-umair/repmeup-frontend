@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NotificationComponent } from '../notification/notification.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
@@ -18,7 +20,27 @@ import { GlobalLoaderComponent } from '../global-loader/global-loader.component'
   styleUrls: ['./main-layout.component.scss']
 })
 export class MainLayoutComponent {
+  @ViewChild('mainScroll', { read: ElementRef }) private mainScroll?: ElementRef<HTMLElement>;
+
   sidebarOpen = false;
+
+  private readonly router = inject(Router);
+
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed()
+      )
+      .subscribe(() => {
+        queueMicrotask(() => {
+          const el = this.mainScroll?.nativeElement;
+          if (el) {
+            el.scrollTop = 0;
+          }
+        });
+      });
+  }
 
   /**
    * Toggle sidebar visibility on mobile

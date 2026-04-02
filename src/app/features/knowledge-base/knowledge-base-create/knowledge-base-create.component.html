@@ -1,0 +1,531 @@
+<div class="min-h-full bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="mb-6">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3">
+      <button type="button" (click)="goBack()"
+        class="hover:text-rep-black dark:hover:text-white transition flex items-center gap-1">
+        <i class="fas fa-database text-[10px]"></i>
+        Knowledge Base
+      </button>
+      <i class="fas fa-chevron-right text-[9px]"></i>
+      <span class="text-rep-black dark:text-white font-medium">Create Entry</span>
+    </nav>
+
+    <div class="flex items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-rep-black dark:text-white">
+          <i class="fas fa-plus-circle mr-2 text-rep-lime"></i>
+          Add Knowledge Entry
+        </h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Teach the AI about your business — manual text, PDF, or a website URL.
+        </p>
+      </div>
+      <button type="button" (click)="goBack()"
+        class="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+        <i class="fas fa-arrow-left text-xs"></i>
+        Back to List
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Source Tabs ─────────────────────────────────────────────────────── -->
+  <div class="flex items-center gap-1 mb-5 bg-white dark:bg-gray-800 p-1 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 w-fit">
+    <button type="button" (click)="activeTab = 'manual'"
+      [class]="activeTab === 'manual'
+        ? 'px-5 py-2 rounded-lg text-sm font-semibold bg-rep-lime text-gray-900 shadow'
+        : 'px-5 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-rep-black dark:hover:text-white transition'">
+      <i class="fas fa-keyboard mr-1.5"></i> Manual Entry
+    </button>
+    <button type="button" (click)="activeTab = 'pdf'"
+      [class]="activeTab === 'pdf'
+        ? 'px-5 py-2 rounded-lg text-sm font-semibold bg-rep-lime text-gray-900 shadow'
+        : 'px-5 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-rep-black dark:hover:text-white transition'">
+      <i class="fas fa-file-pdf mr-1.5"></i> Upload PDF
+    </button>
+    <button type="button" (click)="activeTab = 'url'"
+      [class]="activeTab === 'url'
+        ? 'px-5 py-2 rounded-lg text-sm font-semibold bg-rep-lime text-gray-900 shadow'
+        : 'px-5 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-rep-black dark:hover:text-white transition'">
+      <i class="fas fa-globe mr-1.5"></i> Import from URL
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       MANUAL ENTRY FORM
+       ══════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'manual'" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
+
+    <!-- Quick-start templates -->
+    <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-700">
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+        <i class="fas fa-magic mr-1.5 text-rep-lime"></i> Start from a template
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" (click)="applyTemplate('faq')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300 text-xs font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition">
+          <i class="fas fa-question-circle"></i> FAQ
+        </button>
+        <button type="button" (click)="applyTemplate('brand_voice')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300 text-xs font-medium hover:bg-purple-100 dark:hover:bg-purple-900/50 transition">
+          <i class="fas fa-bullhorn"></i> Brand Voice
+        </button>
+        <button type="button" (click)="applyTemplate('policy')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/50 transition">
+          <i class="fas fa-file-contract"></i> Policy
+        </button>
+        <button type="button" (click)="applyTemplate('product_info')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300 text-xs font-medium hover:bg-green-100 dark:hover:bg-green-900/50 transition">
+          <i class="fas fa-box"></i> Product Info
+        </button>
+        <button type="button" (click)="applyTemplate('procedure')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-700 dark:bg-rose-900/30 dark:text-rose-300 text-xs font-medium hover:bg-rose-100 dark:hover:bg-rose-900/50 transition">
+          <i class="fas fa-tasks"></i> Procedure
+        </button>
+        <button type="button" (click)="applyTemplate('general')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+          <i class="fas fa-info-circle"></i> General
+        </button>
+      </div>
+    </div>
+
+    <form [formGroup]="manualForm" (ngSubmit)="submitManual()" class="space-y-5">
+
+      <!-- Title -->
+      <div>
+        <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+          <i class="fas fa-heading mr-1"></i> Title *
+        </label>
+        <input type="text" formControlName="title"
+          placeholder="e.g., Return Policy, Product Features, FAQ..."
+          class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+      </div>
+
+      <!-- Content (key/value rows) -->
+      <div>
+        <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+          <i class="fas fa-align-left mr-1"></i> Content *
+        </label>
+        <div class="space-y-2">
+          <div class="hidden sm:grid grid-cols-[220px_1fr_28px] gap-2 px-1">
+            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Key / Label</span>
+            <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Value</span>
+            <span></span>
+          </div>
+          <div *ngFor="let field of templateFields; let i = index"
+            class="group grid grid-cols-1 sm:grid-cols-[220px_1fr_28px] gap-2 items-start rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 hover:border-rep-lime/40 p-2.5 transition-colors">
+            <input type="text"
+              [(ngModel)]="field.key"
+              [ngModelOptions]="{standalone: true}"
+              placeholder="e.g. ABOUT US"
+              class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-xs font-bold uppercase tracking-wide text-gray-800 dark:text-gray-200 focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400" />
+            <textarea
+              [(ngModel)]="field.value"
+              [ngModelOptions]="{standalone: true}"
+              rows="2"
+              placeholder="Enter value…"
+              class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-800 dark:text-gray-200 focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 resize-y transition"></textarea>
+            <button *ngIf="templateFields.length > 1"
+              type="button" (click)="removeTemplateField(i)"
+              class="mt-0.5 w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition opacity-0 group-hover:opacity-100 shrink-0 justify-self-end sm:justify-self-auto"
+              title="Remove row">
+              <i class="fas fa-times text-xs"></i>
+            </button>
+            <span *ngIf="templateFields.length <= 1" class="hidden sm:block"></span>
+          </div>
+          <div class="flex items-center gap-3 pt-1">
+            <button type="button" (click)="addTemplateField()"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-gray-300 dark:border-gray-600 hover:border-rep-lime rounded-lg text-xs text-gray-500 dark:text-gray-400 hover:text-rep-black dark:hover:text-white transition">
+              <i class="fas fa-plus text-[10px]"></i> Add field
+            </button>
+            <span class="text-xs text-gray-400">
+              Each field becomes <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">KEY:\nvalue</code>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Type + Category -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-tag mr-1"></i> Type
+          </label>
+          <select formControlName="type"
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm">
+            <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.label }}</option>
+          </select>
+          <p *ngIf="selectedTypeDescription" class="mt-1.5 text-xs text-gray-500 dark:text-gray-400 flex items-start gap-1.5">
+            <i class="fas fa-info-circle mt-0.5 shrink-0 text-rep-lime"></i>
+            {{ selectedTypeDescription }}
+          </p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-folder mr-1"></i> Category
+          </label>
+          <input type="text" formControlName="category"
+            placeholder="e.g., Support, Sales, Product..."
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        </div>
+
+        <!-- Tags -->
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-tags mr-1"></i> Tags
+          </label>
+          <div class="kb-tag-well flex flex-wrap gap-1.5 px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus-within:ring-4 focus-within:ring-rep-lime/20 focus-within:border-rep-lime transition min-h-[46px] cursor-text bg-white dark:bg-gray-900"
+            (click)="$any($event.currentTarget).querySelector('input').focus()">
+            <span *ngFor="let tag of manualTags; let i = index"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold border bg-rep-lime text-rep-black border-rep-lime dark:bg-rep-lime/20 dark:text-rep-lime dark:border-rep-lime/50">
+              #{{ tag }}
+              <button type="button" (click)="removeTag('manual', i)"
+                class="hover:opacity-70 leading-none">&times;</button>
+            </span>
+            <input type="text" [(ngModel)]="manualTagInput" [ngModelOptions]="{standalone: true}"
+              (keydown)="onTagKeydown($event, 'manual')" (blur)="commitTagOnBlur('manual')"
+              [placeholder]="manualTags.length === 0 ? 'Type tag, press Enter or comma...' : ''"
+              class="flex-1 min-w-[120px] outline-none text-sm bg-transparent py-0.5 text-rep-black dark:text-white" />
+          </div>
+          <p class="text-xs text-gray-400 mt-1">
+            Press <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-mono">Enter</kbd> or
+            <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-mono">,</kbd> to add ·
+            <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-mono">Backspace</kbd> to remove last
+          </p>
+        </div>
+
+        <!-- Priority -->
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-star mr-1"></i> Priority (1–10)
+            <span class="relative inline-flex ml-1 group cursor-help">
+              <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
+              <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
+                {{ tooltips.priority }}
+                <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
+              </span>
+            </span>
+          </label>
+          <input type="number" formControlName="priority" min="1" max="10"
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        </div>
+      </div>
+
+      <!-- Advanced AI Options -->
+      <div class="bg-rep-lime/10 dark:bg-rep-lime/5 border border-rep-lime/30 rounded-xl p-5 space-y-4">
+        <h3 class="text-base font-semibold text-rep-black dark:text-white">
+          <i class="fas fa-cog mr-2"></i> Advanced AI Training Options
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+              <i class="fas fa-brain mr-1"></i> Training Context
+              <span class="relative inline-flex ml-1 group cursor-help">
+                <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
+                <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
+                  {{ tooltips.trainingContext }}
+                  <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
+                </span>
+              </span>
+            </label>
+            <input type="text" formControlName="trainingContext"
+              placeholder='e.g., "Use when customer asks about returns"'
+              class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-800 text-rep-black dark:text-white transition text-sm" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+              <i class="fas fa-weight-hanging mr-1"></i> Training Weight (1–10)
+              <span class="relative inline-flex ml-1 group cursor-help">
+                <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
+                <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
+                  {{ tooltips.trainingWeight }}
+                  <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
+                </span>
+              </span>
+            </label>
+            <input type="number" formControlName="trainingWeight" min="1" max="10"
+              class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-800 text-rep-black dark:text-white transition text-sm" />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Brand Voice → 9–10 · Policies → 7–8 · FAQs → 5–6</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-6">
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" formControlName="isTrainingData"
+              class="w-5 h-5 rounded focus:ring-rep-lime/25">
+            <span class="text-sm font-medium text-rep-black dark:text-white">Use for AI Training</span>
+          </label>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" formControlName="isActive"
+              class="w-5 h-5 rounded focus:ring-rep-lime/25">
+            <span class="text-sm font-medium text-rep-black dark:text-white">Active</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" (click)="goBack()"
+          class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+          <i class="fas fa-arrow-left mr-1.5"></i> Cancel
+        </button>
+        <button type="submit"
+          [disabled]="!fieldEditorHasContent || manualForm.get('title')?.invalid || submitting"
+          class="px-8 py-3 bg-rep-lime text-gray-900 rounded-xl text-sm font-semibold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+          <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-plus mr-2'"></i>
+          {{ submitting ? 'Saving...' : 'Save Knowledge Entry' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       PDF UPLOAD FORM
+       ══════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'pdf'" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
+    <div class="mb-5">
+      <h2 class="text-xl font-bold text-rep-black dark:text-white mb-1">Upload PDF Document</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Upload a PDF to automatically extract and train AI with its content</p>
+    </div>
+
+    <form [formGroup]="pdfForm" (ngSubmit)="submitPDF()" class="space-y-5">
+
+      <!-- Drop zone -->
+      <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-10 text-center hover:border-rep-lime transition">
+        <i class="fas fa-file-pdf text-5xl text-red-500 mb-3"></i>
+        <h3 class="text-lg font-semibold text-rep-black dark:text-white mb-1">Drop your PDF here or click to browse</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Maximum file size: 10MB</p>
+        <input type="file" accept="application/pdf" (change)="onFileSelected($event)" class="hidden" #fileInput />
+        <button type="button" (click)="fileInput.click()"
+          class="px-6 py-3 bg-rep-lime text-gray-900 rounded-xl text-sm font-semibold hover:shadow-xl hover:shadow-rep-lime/50 transition">
+          <i class="fas fa-upload mr-2"></i> Select PDF File
+        </button>
+        <p *ngIf="selectedFile" class="mt-3 text-sm font-medium text-rep-lime">
+          <i class="fas fa-check-circle mr-1"></i> {{ selectedFile.name }}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-heading mr-1"></i> Title (optional)
+          </label>
+          <input type="text" formControlName="title" placeholder="Leave empty to use filename"
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-folder mr-1"></i> Category
+          </label>
+          <input type="text" formControlName="category" placeholder="e.g., Documentation, Manual..."
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        </div>
+        <!-- Tags -->
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-tags mr-1"></i> Tags
+          </label>
+          <div class="kb-tag-well flex flex-wrap gap-1.5 px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus-within:ring-4 focus-within:ring-rep-lime/20 focus-within:border-rep-lime transition min-h-[46px] cursor-text bg-white dark:bg-gray-900"
+            (click)="$any($event.currentTarget).querySelector('input').focus()">
+            <span *ngFor="let tag of pdfTags; let i = index"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold border bg-rep-lime text-rep-black border-rep-lime dark:bg-rep-lime/20 dark:text-rep-lime dark:border-rep-lime/50">
+              #{{ tag }}
+              <button type="button" (click)="removeTag('pdf', i)"
+                class="hover:opacity-70 leading-none">&times;</button>
+            </span>
+            <input type="text" [(ngModel)]="pdfTagInput" [ngModelOptions]="{standalone: true}"
+              (keydown)="onTagKeydown($event, 'pdf')" (blur)="commitTagOnBlur('pdf')"
+              [placeholder]="pdfTags.length === 0 ? 'Type tag, press Enter...' : ''"
+              class="flex-1 min-w-[120px] outline-none text-sm bg-transparent py-0.5 text-rep-black dark:text-white" />
+          </div>
+        </div>
+        <!-- Priority -->
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-star mr-1"></i> Priority (1–10)
+          </label>
+          <input type="number" formControlName="priority" min="1" max="10"
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" (click)="goBack()"
+          class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+          <i class="fas fa-arrow-left mr-1.5"></i> Cancel
+        </button>
+        <button type="submit" [disabled]="!selectedFile || submitting"
+          class="px-8 py-3 bg-rep-lime text-gray-900 rounded-xl text-sm font-semibold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+          <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-upload mr-2'"></i>
+          {{ submitting ? 'Uploading...' : 'Upload & Extract' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       URL IMPORT FORM
+       ══════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeTab === 'url'" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
+    <div class="mb-5">
+      <h2 class="text-xl font-bold text-rep-black dark:text-white mb-1">Import from Website</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Enter a URL to scrape and extract content for AI training</p>
+    </div>
+
+    <form [formGroup]="urlForm" (ngSubmit)="openCreditConfirmAndSubmit()" class="space-y-5">
+
+      <!-- URL -->
+      <div>
+        <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+          <i class="fas fa-globe mr-1"></i> Website URL *
+        </label>
+        <input type="url" formControlName="url" placeholder="https://example.com/about"
+          class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+          <i class="fas fa-info-circle mr-1"></i>We'll extract the main content and use it for AI training
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-heading mr-1"></i> Title (optional)
+          </label>
+          <input type="text" formControlName="title" placeholder="Leave empty to use page title"
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-folder mr-1"></i> Category
+          </label>
+          <input type="text" formControlName="category" placeholder="e.g., About, Services, Blog..."
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        </div>
+        <!-- Tags -->
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-tags mr-1"></i> Tags
+          </label>
+          <div class="kb-tag-well flex flex-wrap gap-1.5 px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus-within:ring-4 focus-within:ring-rep-lime/20 focus-within:border-rep-lime transition min-h-[46px] cursor-text bg-white dark:bg-gray-900"
+            (click)="$any($event.currentTarget).querySelector('input').focus()">
+            <span *ngFor="let tag of urlTags; let i = index"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold border bg-rep-lime text-rep-black border-rep-lime dark:bg-rep-lime/20 dark:text-rep-lime dark:border-rep-lime/50">
+              #{{ tag }}
+              <button type="button" (click)="removeTag('url', i)"
+                class="hover:opacity-70 leading-none">&times;</button>
+            </span>
+            <input type="text" [(ngModel)]="urlTagInput" [ngModelOptions]="{standalone: true}"
+              (keydown)="onTagKeydown($event, 'url')" (blur)="commitTagOnBlur('url')"
+              [placeholder]="urlTags.length === 0 ? 'Type tag, press Enter...' : ''"
+              class="flex-1 min-w-[120px] outline-none text-sm bg-transparent py-0.5 text-rep-black dark:text-white" />
+          </div>
+        </div>
+        <!-- Priority -->
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-star mr-1"></i> Priority (1–10)
+          </label>
+          <input type="number" formControlName="priority" min="1" max="10"
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
+        </div>
+        <!-- Word count -->
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-file-word mr-1"></i> Target summary size
+          </label>
+          <select formControlName="targetWordCount"
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm">
+            <option *ngFor="let w of wordCountOptions" [value]="w">{{ w }} words</option>
+          </select>
+        </div>
+        <!-- Tag count -->
+        <div>
+          <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
+            <i class="fas fa-tags mr-1"></i> Tags to generate
+          </label>
+          <select formControlName="targetTagCount"
+            class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm">
+            <option *ngFor="let t of tagCountOptions" [value]="t">{{ t }} tags</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Credit estimate -->
+      <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 flex items-center gap-3">
+        <i class="fas fa-coins text-amber-600"></i>
+        <span class="text-sm font-medium text-amber-900 dark:text-amber-300">
+          Approx. <strong>{{ estimatedCredits }}</strong> AI credit{{ estimatedCredits !== 1 ? 's' : '' }} —
+          based on {{ urlForm.get('targetWordCount')?.value }} words, {{ urlForm.get('targetTagCount')?.value }} tags.
+        </span>
+      </div>
+
+      <!-- How it works -->
+      <div class="bg-rep-lime/10 dark:bg-rep-lime/5 border border-rep-lime/30 rounded-xl p-4">
+        <div class="flex items-start gap-3">
+          <i class="fas fa-info-circle text-rep-black dark:text-rep-lime text-base mt-0.5 shrink-0"></i>
+          <div>
+            <h4 class="font-semibold text-rep-black dark:text-white mb-1 text-sm">How URL Scraping Works</h4>
+            <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+              <li>• We fetch the webpage content</li>
+              <li>• Extract main text (removing scripts, styles, nav)</li>
+              <li>• AI summarises to your chosen word count and generates tags</li>
+              <li>• Entry is added to your knowledge base immediately</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" (click)="goBack()"
+          class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+          <i class="fas fa-arrow-left mr-1.5"></i> Cancel
+        </button>
+        <button type="submit" [disabled]="urlForm.invalid || submitting"
+          class="px-8 py-3 bg-rep-lime text-gray-900 rounded-xl text-sm font-semibold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+          <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-download mr-2'"></i>
+          {{ submitting ? 'Scraping...' : 'Scrape & Import' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+
+<!-- ── Credit Confirmation Modal ───────────────────────────────────────────── -->
+<div *ngIf="showCreditConfirmModal"
+  class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+  (click)="closeCreditConfirmModal()">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-md w-full p-6 sm:p-8"
+    (click)="$event.stopPropagation()">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+        <i class="fas fa-coins text-amber-600 text-sm"></i>
+      </div>
+      <div>
+        <h3 class="font-bold text-rep-black dark:text-white text-base">Confirm AI Credit Usage</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400">This action will consume AI credits</p>
+      </div>
+    </div>
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 mb-5">
+      <p class="text-sm text-amber-900 dark:text-amber-300">
+        Scraping <strong>{{ pendingUrlFormData?.url }}</strong> will use approximately
+        <strong>{{ estimatedCredits }} AI credit{{ estimatedCredits !== 1 ? 's' : '' }}</strong>.
+      </p>
+    </div>
+    <div class="flex gap-3">
+      <button type="button" (click)="closeCreditConfirmModal()"
+        class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+        Cancel
+      </button>
+      <button type="button" (click)="confirmAndSubmitURL()"
+        class="flex-1 px-4 py-2.5 bg-rep-lime text-gray-900 rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-rep-lime/40 transition">
+        <i class="fas fa-check mr-1.5"></i> Confirm & Scrape
+      </button>
+    </div>
+  </div>
+</div>

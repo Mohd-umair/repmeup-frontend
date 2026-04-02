@@ -1,3 +1,7 @@
+@use '../../../shared/styles/legal-document-dark' as legal;
+
+@include legal.legal-document-dark;
+
 .terms-conditions {
   // Custom scrollbar
   &::-webkit-scrollbar {

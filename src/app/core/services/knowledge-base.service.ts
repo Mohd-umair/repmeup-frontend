@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { IApiResponse } from '../models/api-response.model';
+import { IApiResponse, IPagination } from '../models/api-response.model';
+
+export interface IKbTemplateField { key: string; value: string; }
 
 export interface IKnowledgeBase {
   _id: string;
@@ -11,6 +13,7 @@ export interface IKnowledgeBase {
   category: string;
   title: string;
   content: string;
+  templateFields?: IKbTemplateField[];
   tags: string[];
   keywords: string[];
   priority: number;
@@ -27,6 +30,32 @@ export interface IKnowledgeBase {
   updatedAt: Date;
 }
 
+/** Org-wide stats returned with each list request (sidebar analytics). */
+export interface IKbListAnalytics {
+  totalEntries: number;
+  activeCount: number;
+  inactiveCount: number;
+  usedEntries: number;
+  neverUsedEntries: number;
+  totalUsage: number;
+  avgTrainingWeight: number;
+  highWeightCount: number;
+  midWeightCount: number;
+  lowWeightCount: number;
+  topUsed: Array<{ _id: string; title: string; usageCount: number; source?: string; type?: string }>;
+  bySource: Record<string, number>;
+  byType: Array<{ type: string; count: number }>;
+  topTags: Array<{ tag: string; count: number }>;
+}
+
+export interface IKnowledgeBaseListResponse {
+  success: boolean;
+  data?: IKnowledgeBase[];
+  pagination?: IPagination;
+  analytics?: IKbListAnalytics;
+  error?: string;
+}
+
 /**
  * Knowledge Base Service - Single Responsibility Principle
  * Handles all knowledge base related API operations
@@ -38,10 +67,10 @@ export class KnowledgeBaseService {
   constructor(private apiService: ApiService) {}
 
   /**
-   * Get all knowledge base entries
+   * Paginated list; optional query: page, limit, category, source, search
    */
-  getAllKnowledgeBase(params?: any): Observable<IApiResponse<any>> {
-    return this.apiService.get<IApiResponse<any>>('/knowledge-base', params);
+  getAllKnowledgeBase(params?: Record<string, string | number>): Observable<IKnowledgeBaseListResponse> {
+    return this.apiService.get<IKnowledgeBaseListResponse>('/knowledge-base', params);
   }
 
   /**

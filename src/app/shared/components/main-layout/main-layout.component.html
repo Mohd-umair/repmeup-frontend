@@ -27,7 +27,7 @@
     <app-header (menuToggle)="toggleSidebar()"></app-header>
 
     <!-- Content -->
-    <main class="flex-1 overflow-y-auto overflow-x-hidden w-full">
+    <main #mainScroll class="flex-1 overflow-y-auto overflow-x-hidden w-full">
       <router-outlet></router-outlet>
     </main>
   </div>

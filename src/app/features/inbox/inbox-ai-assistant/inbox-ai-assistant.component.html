@@ -1,7 +1,7 @@
 <div class="h-full flex flex-col overflow-hidden">
   <!-- Empty state -->
   <div *ngIf="!interaction" class="flex-1 flex items-center justify-center p-6 text-center">
-    <div class="text-gray-500 text-sm">
+    <div class="text-gray-500 dark:text-gray-400 text-sm">
       <i class="fas fa-robot text-2xl mb-3 block opacity-50"></i>
       Select a conversation to get AI suggestions
     </div>
@@ -13,7 +13,7 @@
       <div class="mb-3">
         <i class="fas fa-magic text-3xl text-rep-lime opacity-80"></i>
       </div>
-      <p class="text-xs text-gray-500 mb-3">Generate AI-powered reply suggestions based on the conversation and your knowledge base.</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Generate AI-powered reply suggestions based on the conversation and your knowledge base.</p>
       <button
         (click)="generateSuggestions()"
         class="px-4 py-2 bg-rep-lime hover:bg-rep-lime/90 text-rep-black rounded-lg text-xs font-bold transition inline-flex items-center gap-2">
@@ -27,19 +27,19 @@
       <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rep-lime/10 mb-3">
         <i class="fas fa-spinner fa-spin text-rep-lime text-lg"></i>
       </div>
-      <p class="text-xs text-gray-500">Generating AI suggestions...</p>
-      <p class="text-[10px] text-gray-400 mt-1">Analyzing conversation &amp; knowledge base</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">Generating AI suggestions...</p>
+      <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Analyzing conversation &amp; knowledge base</p>
     </div>
 
     <!-- Error state -->
     <div *ngIf="error" class="text-center py-4">
-      <div class="bg-red-50 rounded-lg p-3 mb-3">
-        <i class="fas fa-exclamation-circle text-red-500 mr-1"></i>
-        <span class="text-xs text-red-600">{{ error }}</span>
+      <div class="bg-red-50 dark:bg-red-950/40 rounded-lg p-3 mb-3 border border-red-100 dark:border-red-900/50">
+        <i class="fas fa-exclamation-circle text-red-500 dark:text-red-400 mr-1"></i>
+        <span class="text-xs text-red-600 dark:text-red-300">{{ error }}</span>
       </div>
       <button
         (click)="generateSuggestions()"
-        class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition">
+        class="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-medium transition">
         <i class="fas fa-redo mr-1"></i> Try Again
       </button>
     </div>
@@ -47,20 +47,19 @@
     <!-- Generated cards -->
     <ng-container *ngIf="generated && !loading">
       <!-- KB indicator -->
-      <div *ngIf="usedKnowledgeBase" class="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 rounded-md">
-        <i class="fas fa-book-open text-emerald-500 text-[10px]"></i>
-        <span class="text-[10px] text-emerald-700 font-medium">Powered by {{ knowledgeBaseCount }} knowledge base article{{ knowledgeBaseCount !== 1 ? 's' : '' }}</span>
+      <div *ngIf="usedKnowledgeBase" class="flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-950/40 rounded-md border border-emerald-100/80 dark:border-emerald-800/40">
+        <i class="fas fa-book-open text-emerald-500 dark:text-emerald-400 text-[10px]"></i>
+        <span class="text-[10px] text-emerald-700 dark:text-emerald-300 font-medium">Powered by {{ knowledgeBaseCount }} knowledge base article{{ knowledgeBaseCount !== 1 ? 's' : '' }}</span>
       </div>
 
       <!-- Reply cards -->
-      <div *ngFor="let card of cards" class="border rounded-lg overflow-hidden transition-all duration-200"
-           [class.opacity-50]="!card.enabled"
-           [style.border-color]="'rgba(0,0,0,0.08)'">
+      <div *ngFor="let card of cards" class="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden transition-all duration-200 bg-white dark:bg-gray-800/40"
+           [class.opacity-50]="!card.enabled">
         <!-- Card header -->
-        <div class="flex items-center justify-between px-3 py-2 bg-gray-50/80" style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+        <div class="flex items-center justify-between px-3 py-2 bg-gray-50/80 dark:bg-gray-900/60 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-2">
-            <i [class]="card.icon" class="text-xs text-gray-600"></i>
-            <span class="text-sm font-bold text-gray-800">{{ card.label }}</span>
+            <i [class]="card.icon" class="text-xs text-gray-600 dark:text-gray-400"></i>
+            <span class="text-sm font-bold text-gray-800 dark:text-gray-100">{{ card.label }}</span>
           </div>
           <label class="inline-flex items-center gap-2 cursor-pointer select-none">
             <span class="text-[11px] font-semibold" [class.text-emerald-600]="card.enabled" [class.text-gray-400]="!card.enabled">
@@ -77,18 +76,17 @@
         <!-- Card body -->
         <div *ngIf="card.enabled" class="p-3">
           <!-- View mode -->
-          <div *ngIf="!card.editing" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-3">{{ card.content }}</div>
+          <div *ngIf="!card.editing" class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap mb-3">{{ card.content }}</div>
 
           <!-- Edit mode -->
           <div *ngIf="card.editing" class="mb-3">
             <textarea
               [(ngModel)]="card.editContent"
               rows="4"
-              class="w-full px-2.5 py-2 border rounded-lg text-sm resize-none focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition leading-relaxed"
-              style="border-color: rgba(0,0,0,0.15);"
+              class="w-full px-2.5 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm resize-none focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition leading-relaxed bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
             ></textarea>
             <div class="flex justify-end gap-1.5 mt-1.5">
-              <button (click)="onCancelEdit(card)" class="px-2 py-1 text-[10px] text-gray-500 hover:text-gray-700 transition">Cancel</button>
+              <button (click)="onCancelEdit(card)" class="px-2 py-1 text-[10px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition">Cancel</button>
               <button (click)="onSaveEdit(card)" class="px-2 py-1 text-[10px] bg-rep-lime text-rep-black rounded font-bold transition hover:bg-rep-lime/90">Save</button>
             </div>
           </div>
@@ -119,7 +117,7 @@
 
       <!-- Improve toggle -->
       <div class="flex items-center justify-between px-1 py-1.5">
-        <span class="text-xs text-gray-600 font-medium">Improve Auto-Replies</span>
+        <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">Improve Auto-Replies</span>
         <label class="inline-flex items-center gap-2 cursor-pointer select-none">
           <span class="text-[11px] font-semibold" [class.text-emerald-600]="improveAutoReplies" [class.text-gray-400]="!improveAutoReplies">
             {{ improveAutoReplies ? 'ON' : 'OFF' }}

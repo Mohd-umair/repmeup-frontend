@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { IntentBucketService, IIntentBucket } from '../../../../core/services/intent-bucket.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SweetAlertService } from '../../../../core/services/sweet-alert.service';
+import { PaginationComponent, PaginationMeta } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-bucket-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './bucket-settings.component.html',
   styleUrls: ['./bucket-settings.component.scss']
 })
@@ -16,6 +17,12 @@ export class BucketSettingsComponent implements OnInit {
   buckets: IIntentBucket[] = [];
   loading = true;
   saving = false;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 20;
+  totalPages = 1;
+  totalItems = 0;
 
   showModal = false;
   editingBucket: Partial<IIntentBucket> | null = null;
@@ -64,9 +71,14 @@ export class BucketSettingsComponent implements OnInit {
 
   loadBuckets(): void {
     this.loading = true;
-    this.bucketService.getBuckets().subscribe({
+    this.bucketService.getBuckets({ page: this.currentPage, limit: this.pageSize }).subscribe({
       next: (res: any) => {
         this.buckets = res.data || [];
+        if (res.pagination) {
+          this.totalItems = res.pagination.total;
+          this.totalPages = res.pagination.pages;
+          this.currentPage = res.pagination.page;
+        }
         this.loading = false;
       },
       error: () => {
@@ -74,6 +86,17 @@ export class BucketSettingsComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadBuckets();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+    this.loadBuckets();
   }
 
   openCreate(): void {

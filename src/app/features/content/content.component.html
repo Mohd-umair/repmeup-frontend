@@ -12,7 +12,7 @@
       </p>
     </div>
 
-    <!-- Platform Filter (icon buttons) + Sync on the right -->
+    <!-- Platform Filter + Sync -->
     <div class="mb-6 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2">
@@ -61,25 +61,60 @@
       </div>
     </div>
 
-    <!-- Content Type Filter (when Facebook or Instagram is selected) -->
+    <!-- Content Type Filter + Search (when a platform is selected) -->
     <div *ngIf="showContentTypeFilter" class="mb-6 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
-      <div class="flex flex-wrap items-center gap-2">
-        <i class="fas fa-layer-group text-rep-lime"></i>
-        <span class="text-gray-400 text-sm">Content type:</span>
-        <button
-          *ngFor="let ct of contentTypes"
-          type="button"
-          (click)="setContentType(ct.value)"
-          [class.bg-rep-lime]="selectedContentType === ct.value"
-          [class.text-rep-black]="selectedContentType === ct.value"
-          [class.bg-gray-800]="selectedContentType !== ct.value"
-          [class.text-gray-400]="selectedContentType !== ct.value"
-          class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
-          [attr.title]="ct.label"
-        >
-          <i [class]="ct.icon"></i>
-          <span class="hidden sm:inline">{{ ct.label }}</span>
-        </button>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- Content type tabs -->
+        <div class="flex flex-wrap items-center gap-2">
+          <i class="fas fa-layer-group text-rep-lime"></i>
+          <span class="text-gray-400 text-sm">Content type:</span>
+          <button
+            *ngFor="let ct of contentTypes"
+            type="button"
+            (click)="setContentType(ct.value)"
+            [class.bg-rep-lime]="selectedContentType === ct.value"
+            [class.text-rep-black]="selectedContentType === ct.value"
+            [class.bg-gray-800]="selectedContentType !== ct.value"
+            [class.text-gray-400]="selectedContentType !== ct.value"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
+            [attr.title]="ct.label"
+          >
+            <i [class]="ct.icon"></i>
+            <span class="hidden sm:inline">{{ ct.label }}</span>
+          </button>
+        </div>
+
+        <!-- Search input -->
+        <div class="relative flex-shrink-0">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none"></i>
+          <input
+            type="search"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="onSearchInput()"
+            placeholder="Search captions…"
+            class="pl-9 pr-8 py-1.5 rounded-lg text-sm bg-gray-800 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-rep-lime/60 w-56 transition"
+          />
+          <button
+            *ngIf="searchQuery"
+            type="button"
+            (click)="clearSearch()"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition text-sm"
+            title="Clear search"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Result count when searching -->
+      <div *ngIf="searchQuery && !loading" class="mt-2 text-xs text-gray-500">
+        <ng-container *ngIf="totalItems > 0">
+          Found <span class="text-rep-lime font-semibold">{{ totalItems }}</span> result{{ totalItems !== 1 ? 's' : '' }} for
+          <span class="text-gray-300 italic">"{{ searchQuery }}"</span>
+        </ng-container>
+        <ng-container *ngIf="totalItems === 0">
+          No results for <span class="text-gray-300 italic">"{{ searchQuery }}"</span>
+        </ng-container>
       </div>
     </div>
 
@@ -88,7 +123,7 @@
       {{ error }}
     </div>
 
-    <!-- Default: Select platform first (no platform selected) -->
+    <!-- Default: Select platform first -->
     <div *ngIf="!loading && !error && selectedPlatform === 'all'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 md:p-16 border border-gray-800 text-center">
       <div class="max-w-sm mx-auto mb-6">
         <svg class="w-full h-auto text-gray-600" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -110,12 +145,13 @@
       <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
     </div>
 
-    <!-- Empty (platform selected but no posts in DB – prompt to sync) -->
-    <div *ngIf="!loading && !error && selectedPlatform !== 'all' && posts.length === 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
+    <!-- Empty: platform selected but no posts synced yet -->
+    <div *ngIf="!loading && !error && selectedPlatform !== 'all' && !searchQuery && posts.length === 0"
+      class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
       <i class="fas fa-cloud-download-alt text-6xl text-gray-600 mb-4"></i>
       <p class="text-lg text-gray-400 mb-2">No posts yet</p>
       <p class="text-sm text-gray-500 mb-6">
-        Click <strong>Sync from {{ getPlatformName(selectedPlatform) }}</strong> to fetch posts from your {{ getPlatformName(selectedPlatform) }} account and save them here.
+        Click <strong>Sync from {{ getPlatformName(selectedPlatform) }}</strong> to fetch posts from your {{ getPlatformName(selectedPlatform) }} account.
       </p>
       <button
         type="button"
@@ -128,22 +164,29 @@
       </button>
     </div>
 
-    <!-- Empty (filter returned no results) -->
-    <div *ngIf="!loading && !error && posts.length > 0 && getFilteredPosts().length === 0" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
-      <i class="fas fa-filter text-6xl text-gray-600 mb-4"></i>
-      <p class="text-lg text-gray-400 mb-2">No content for this filter</p>
-      <p class="text-sm text-gray-500">
-        Try a different content type or platform.
-      </p>
+    <!-- Empty: search/filter returned no results -->
+    <div *ngIf="!loading && !error && selectedPlatform !== 'all' && (searchQuery || selectedContentType !== 'all') && posts.length === 0"
+      class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
+      <i class="fas fa-search text-6xl text-gray-600 mb-4"></i>
+      <p class="text-lg text-gray-400 mb-2">No matching posts</p>
+      <p class="text-sm text-gray-500">Try a different search term or content type.</p>
+      <button
+        *ngIf="searchQuery"
+        type="button"
+        (click)="clearSearch()"
+        class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gray-700 text-gray-200 rounded-lg text-sm hover:bg-gray-600 transition"
+      >
+        <i class="fas fa-times"></i> Clear search
+      </button>
     </div>
 
-    <!-- Posts Grid (unified layout for any platform) -->
-    <div *ngIf="!loading && getFilteredPosts().length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+    <!-- Posts Grid -->
+    <div *ngIf="!loading && posts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
       <article
-        *ngFor="let post of getFilteredPosts()"
+        *ngFor="let post of posts"
         class="border border-gray-700 rounded-xl overflow-hidden bg-gray-800/30 hover:border-rep-lime/40 transition-all duration-300 flex flex-col"
       >
-        <!-- Media (if any) – medium thumbnail -->
+        <!-- Media thumbnail -->
         <div class="h-44 sm:h-52 bg-gray-900/50 relative overflow-hidden">
           <img
             *ngIf="post.mediaUrl && (post.mediaType === 'image' || post.mediaType === 'carousel')"
@@ -164,7 +207,7 @@
           >
             <i class="fas fa-quote-left text-2xl"></i>
           </div>
-          <!-- Platform badge (Font Awesome + brand color, like analytics platform cards) -->
+          <!-- Platform badge -->
           <div
             class="absolute bottom-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center shadow-md"
             [style.background-color]="getPlatformColors(post.platform).primary + '20'"
@@ -206,6 +249,19 @@
         </div>
       </article>
     </div>
+
+    <!-- Pagination -->
+    <app-pagination
+      *ngIf="selectedPlatform !== 'all'"
+      [currentPage]="currentPage"
+      [totalPages]="totalPages"
+      [totalItems]="totalItems"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 20, 50]"
+      [loading]="loading"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+    ></app-pagination>
 
   </div>
 </div>

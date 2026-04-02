@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { forkJoin, Subject, takeUntil, interval } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
+import { AuthService } from '../../core/services/auth.service';
 import { SocialPreviewComponent } from '../publish/social-preview/social-preview.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { MediaSelectorModalComponent } from '../../shared/components/media-selector-modal/media-selector-modal.component';
@@ -189,6 +190,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   logoOverlay = false;
   logoPosition: string = 'bottom-right';
   orgLogo: string | null = null;
+  showLogoPickerModal = false;
 
   logoPositions = [
     { id: 'top-left',      label: '↖', row: 1 },
@@ -329,6 +331,22 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   closeImagePicker(): void {
     this.showImagePickerForVariant = null;
+  }
+
+  openLogoPicker(): void {
+    this.showLogoPickerModal = true;
+  }
+
+  closeLogoPicker(): void {
+    this.showLogoPickerModal = false;
+  }
+
+  onLogoMediaSelected(media: Media | Media[]): void {
+    const selected = Array.isArray(media) ? media[0] : media;
+    if (selected?.publicUrl) {
+      this.orgLogo = selected.publicUrl;
+    }
+    this.closeLogoPicker();
   }
 
   /** Called when the user confirms a selection inside MediaSelectorModal */
@@ -602,8 +620,17 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
-    private notify: NotificationService
+    private notify: NotificationService,
+    private authService: AuthService
   ) {}
+
+  get isAgent(): boolean {
+    return this.authService.currentUserValue?.role === 'agent';
+  }
+
+  get publishButtonLabel(): string {
+    return this.isAgent ? 'Submit for Approval' : 'Publish Now';
+  }
 
   ngOnInit(): void {
     this.loadPlatforms();
@@ -1039,16 +1066,20 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     if (!scheduledFor) return;
     this.scheduling = true;
     const postType = this.selectedVideoUrl ? this.videoPostType : this.postFormat;
-    const body: any = { platform, content, scheduledFor, postType };
+    const body: any = { platform, content, scheduledFor, postType, generatedBy: 'ai' };
     if (this.selectedVideoUrl) body.mediaUrl = this.selectedVideoUrl;
     else if (this.selectedImageUrl) body.mediaUrl = this.selectedImageUrl;
     this.http.post<any>(`${environment.apiUrl}/posts/schedule`, body)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
+        next: (res) => {
           this.showScheduleModal = false; this.scheduleDate = ''; this.scheduleTime = '';
           this.scheduling = false;
-          this.notify.success('Scheduled', 'Post scheduled successfully.');
+          if (res?.pendingApproval) {
+            this.notify.success('Submitted for Approval', 'Your post has been sent to the admin for review.');
+          } else {
+            this.notify.success('Scheduled', 'Post scheduled successfully.');
+          }
         },
         error: (err) => { this.scheduling = false; this.notify.error('Schedule Failed', err?.error?.message || 'Failed to schedule.'); }
       });
@@ -1060,13 +1091,21 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.publishing = true;
     const postType = this.selectedVideoUrl ? this.videoPostType : this.postFormat;
     const calls = this.selectedPlatformIds.map(platformId => {
-      const body: any = { platform: platformId, content, postType };
+      const body: any = { platform: platformId, content, postType, generatedBy: 'ai' };
       if (this.selectedVideoUrl) body.mediaUrl = this.selectedVideoUrl;
       else if (this.selectedImageUrl) body.mediaUrl = this.selectedImageUrl;
       return this.http.post<any>(`${environment.apiUrl}/posts/publish`, body);
     });
     forkJoin(calls).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => { this.publishing = false; this.notify.success('Published', 'Post published successfully.'); },
+      next: (results) => {
+        this.publishing = false;
+        const sentForApproval = results.some((r: any) => r?.pendingApproval);
+        if (sentForApproval) {
+          this.notify.success('Submitted for Approval', 'Your post has been sent to the admin for review.');
+        } else {
+          this.notify.success('Published', 'Post published successfully.');
+        }
+      },
       error: (err) => {
         this.publishing = false;
         const body = err?.error;

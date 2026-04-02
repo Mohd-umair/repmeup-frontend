@@ -1,177 +1,71 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     NAV
-════════════════════════════════════════════════════════════════════════════ -->
-<nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-rep-black/95 backdrop-blur-lg border-b border-gray-200/80 dark:border-gray-800/60 shadow-sm dark:shadow-lg">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-16 sm:h-20">
-      <!-- Logo -->
-      <a routerLink="/" class="cursor-pointer shrink-0 overflow-visible flex">
-        <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-contain shadow-lg block">
-      </a>
-
-      <!-- Desktop Nav Links -->
-      <div class="hidden md:flex items-center space-x-8">
-        <a (click)="scrollToSection('how-it-works')" class="text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime font-medium cursor-pointer transition text-sm">How it Works</a>
-        <a (click)="scrollToSection('ecosystem')" class="text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime font-medium cursor-pointer transition text-sm">Products</a>
-        <a (click)="scrollToSection('use-cases')" class="text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime font-medium cursor-pointer transition text-sm">Solutions</a>
-        <a (click)="scrollToSection('testimonials')" class="text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime font-medium cursor-pointer transition text-sm">Testimonials</a>
-      </div>
-
-      <!-- Right side controls -->
-      <div class="flex items-center gap-2">
-
-        <!-- ── Dark / Light toggle ── -->
-        <button
-          (click)="appearance.toggle()"
-          [title]="appearance.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-          class="p-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-rep-lime hover:bg-lime-50 dark:bg-rep-lime/10 transition-all group"
-          aria-label="Toggle theme">
-          <!-- Sun icon for dark mode -->
-          <svg *ngIf="appearance.isDark()" class="w-4 h-4 text-lime-700 dark:text-rep-lime group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="5" stroke-width="2"/>
-            <path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
-          <!-- Moon icon for light mode -->
-          <svg *ngIf="!appearance.isDark()" class="w-4 h-4 text-gray-600 group-hover:text-lime-700 dark:hover:text-rep-lime transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
-        </button>
-
-        <ng-container *ngIf="!currentUser">
-          <button (click)="navigateToLogin()"
-            class="hidden md:block px-4 py-2 text-gray-500 dark:text-gray-400 font-medium hover:text-lime-700 dark:hover:text-rep-lime transition text-sm">
-            Sign In
-          </button>
-          <button (click)="navigateToRegister()"
-            class="hidden sm:block px-5 py-2.5 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition transform hover:scale-105 text-sm">
-            Get Started Free
-          </button>
-        </ng-container>
-
-        <!-- Logged-in user -->
-        <div *ngIf="currentUser" class="relative">
-          <button (click)="toggleUserMenu()"
-            class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/50 transition">
-            <div class="w-9 h-9 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-semibold text-sm shrink-0">
-              {{ getUserInitials() }}
-            </div>
-            <div class="text-left hidden md:block">
-              <p class="text-sm font-medium text-gray-900 dark:text-rep-white">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
-              <p class="text-xs text-gray-400">{{ currentUser.role }}</p>
-            </div>
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-          <div *ngIf="showUserMenu"
-            class="absolute right-0 mt-2 w-56 bg-white dark:bg-rep-black rounded-lg shadow-xl border border-gray-200 dark:border-gray-800 py-1 z-50">
-            <a (click)="navigateToDashboard(); showUserMenu = false"
-              class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-rep-white cursor-pointer">
-              <div class="flex items-center space-x-2"><span>📊</span><span>Dashboard</span></div>
-            </a>
-            <a routerLink="/app/settings" (click)="showUserMenu = false"
-              class="block px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-rep-white">
-              <div class="flex items-center space-x-2"><span>⚙️</span><span>Settings</span></div>
-            </a>
-            <hr class="my-1 border-gray-200 dark:border-gray-800">
-            <button (click)="logout()"
-              class="w-full text-left px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-lime-700 dark:hover:text-rep-lime">
-              <div class="flex items-center space-x-2"><span>🚪</span><span>Logout</span></div>
-            </button>
-          </div>
-        </div>
-
-        <!-- Hamburger -->
-        <button (click)="showMobileMenu = !showMobileMenu"
-          class="md:hidden p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-100 dark:hover:bg-gray-800/50 transition"
-          aria-label="Toggle menu">
-          <svg *ngIf="!showMobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
-          <svg *ngIf="showMobileMenu" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Mobile Menu -->
-  <div *ngIf="showMobileMenu"
-    class="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white/98 dark:bg-rep-black/98 backdrop-blur-lg px-4 py-4 space-y-1">
-    <a (click)="scrollToSection('how-it-works'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">How it Works</a>
-    <a (click)="scrollToSection('ecosystem'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Products</a>
-    <a (click)="scrollToSection('use-cases'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Solutions</a>
-    <a (click)="scrollToSection('testimonials'); showMobileMenu = false" class="flex items-center px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-lime-700 dark:hover:text-rep-lime hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl font-medium cursor-pointer transition">Testimonials</a>
-    <div class="pt-2 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-2" *ngIf="!currentUser">
-      <button (click)="navigateToLogin(); showMobileMenu = false" class="w-full px-4 py-3 text-center text-gray-600 dark:text-gray-300 font-medium hover:text-lime-700 dark:hover:text-rep-lime border border-gray-300 dark:border-gray-700 rounded-xl transition">Sign In</button>
-      <button (click)="navigateToRegister(); showMobileMenu = false" class="w-full px-4 py-3 bg-rep-lime text-rep-black font-bold rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition">Get Started Free</button>
-    </div>
-  </div>
-</nav>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 1 — HERO
 ════════════════════════════════════════════════════════════════════════════ -->
-<section class="relative pt-24 sm:pt-28 lg:pt-36 pb-16 sm:pb-24 overflow-hidden bg-white dark:bg-rep-black">
-  <!-- Background orbs -->
-  <div class="bg-orb absolute top-0 right-0 w-[500px] h-[500px] bg-rep-lime/5 rounded-full blur-3xl"></div>
-  <div class="bg-orb orb-2 absolute bottom-0 left-0 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl"></div>
-  <div class="bg-orb orb-3 absolute top-1/2 left-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 bg-rep-lime/3 rounded-full blur-3xl"></div>
+<section class="relative pt-24 sm:pt-28 lg:pt-36 pb-16 sm:pb-24 overflow-hidden bg-white dark:bg-rep-black noise-overlay">
+  <!-- Background orbs (below mesh so grid stays visible) -->
+  <div class="bg-orb absolute top-0 right-0 z-0 w-[600px] h-[600px] bg-rep-lime/7 rounded-full blur-3xl"></div>
+  <div class="bg-orb orb-2 absolute bottom-0 left-0 z-0 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl"></div>
+  <div class="bg-orb orb-3 absolute top-1/2 left-1/2 z-0 w-[700px] h-[700px] -translate-x-1/2 -translate-y-1/2 bg-rep-lime/4 rounded-full blur-3xl"></div>
+
+  <!-- Mesh grid (above orbs; stronger contrast in light theme via SCSS) -->
+  <div class="hero-mesh absolute inset-0 z-[1] pointer-events-none"></div>
+
+  <!-- Floating particles -->
+  <div class="hero-particle" style="left:12%; top:20%; --dur:9s; --delay:0s;"></div>
+  <div class="hero-particle" style="left:78%; top:15%; --dur:11s; --delay:1.5s; width:4px; height:4px; opacity:0.4;"></div>
+  <div class="hero-particle" style="left:88%; top:55%; --dur:8s;  --delay:3s;"></div>
+  <div class="hero-particle" style="left:5%;  top:70%; --dur:13s; --delay:0.8s; width:5px; height:5px;"></div>
+  <div class="hero-particle" style="left:55%; top:85%; --dur:10s; --delay:2s;  width:4px; height:4px;"></div>
+  <div class="hero-particle" style="left:38%; top:8%;  --dur:7s;  --delay:4s;  width:3px; height:3px; opacity:0.35;"></div>
+
+  <!-- Accent line top -->
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
 
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="grid lg:grid-cols-[46%_54%] gap-8 xl:gap-16 items-center">
 
       <!-- LEFT: Hero Text -->
       <div class="hero-content text-center lg:text-left">
-        <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-xs font-bold tracking-wider uppercase">
-          <span class="w-2 h-2 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse"></span>
-          Trusted by modern teams managing high-volume conversations
-        </div>
 
-        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.2rem] font-black mb-6 leading-[1.07] tracking-tight">
-          <span class="text-gray-900 dark:text-rep-white">Your Customers Are Talking.</span><br>
-          <span class="text-gray-900 dark:text-rep-white">Are You </span>
-          <span class="gradient-text">Responding</span>
-          <span class="text-gray-900 dark:text-rep-white"> —<br class="hidden sm:block"> Or Being </span>
-          <span class="text-gray-900 dark:text-rep-white">Judged?</span>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.2rem] font-black mb-6 leading-[1.1] tracking-tight">
+          <span class="text-gray-900 dark:text-rep-white">You Can't Control </span><span class="gradient-text">What Customers Say.</span>
+          <span class="block mt-3 sm:mt-4 text-gray-900 dark:text-rep-white">But You Can Control <span class="gradient-text">How You Respond.</span></span>
         </h1>
 
         <p class="text-base sm:text-lg lg:text-xl text-gray-500 dark:text-gray-400 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
-          Every message, comment, and delay shapes perception.<br>
-          <strong class="text-gray-800 dark:text-gray-200">Repmeup helps you manage and win every conversation</strong> — powered by AI.
+          Every message, comment, and delay shapes perception.
+          <strong class="text-gray-800 dark:text-gray-200"> RepMeUp helps you manage and win every conversation</strong> — powered by AI.
         </p>
 
         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mb-10">
           <button (click)="scrollToSection('ecosystem')"
-            class="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-base overflow-hidden glow-lime">
+            class="btn-primary group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-base glow-lime">
             <i class="fas fa-play-circle text-lg"></i>
             See It in Action
             <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
           </button>
           <button (click)="navigateToRegister()"
-            class="inline-flex items-center justify-center gap-3 px-8 py-4 bg-transparent border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-rep-lime/60 hover:bg-rep-lime/5 transition-all text-base">
-            <i class="fas fa-rocket text-sm"></i>
+            class="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-rep-lime/60 hover:bg-rep-lime/5 hover:shadow-lg hover:shadow-rep-lime/10 transition-all text-base backdrop-blur-sm">
+            <i class="fas fa-rocket text-sm text-lime-600 dark:text-rep-lime"></i>
             Start Free Trial
           </button>
         </div>
 
         <!-- Trust indicators -->
-        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-6 sm:gap-10">
-          <div class="text-center lg:text-left">
-            <p class="text-2xl sm:text-3xl font-black text-lime-700 dark:text-rep-lime">10K+</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Active Users</p>
+        <div class="flex flex-wrap items-center justify-center lg:justify-start gap-8 sm:gap-10 py-6 border-t border-black/[0.05] dark:border-white/[0.05]">
+          <div class="text-center lg:text-left group cursor-default">
+            <p class="text-2xl sm:text-3xl font-black text-lime-600 dark:text-rep-lime group-hover:scale-105 transition-transform inline-block">10K+</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-medium">Active Users</p>
           </div>
-          <div class="w-px h-8 bg-gray-200 dark:bg-gray-800 hidden sm:block"></div>
-          <div class="text-center lg:text-left">
-            <p class="text-2xl sm:text-3xl font-black text-lime-700 dark:text-rep-lime">50M+</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Conversations Managed</p>
+          <div class="w-px h-10 bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent hidden sm:block"></div>
+          <div class="text-center lg:text-left group cursor-default">
+            <p class="text-2xl sm:text-3xl font-black text-lime-600 dark:text-rep-lime group-hover:scale-105 transition-transform inline-block">50M+</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-medium">Conversations Managed</p>
           </div>
-          <div class="w-px h-8 bg-gray-200 dark:bg-gray-800 hidden sm:block"></div>
-          <div class="text-center lg:text-left">
-            <p class="text-2xl sm:text-3xl font-black text-lime-700 dark:text-rep-lime">2 min</p>
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Avg. Reply Time</p>
+          <div class="w-px h-10 bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent hidden sm:block"></div>
+          <div class="text-center lg:text-left group cursor-default">
+            <p class="text-2xl sm:text-3xl font-black text-lime-600 dark:text-rep-lime group-hover:scale-105 transition-transform inline-block">2 min</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-medium">Avg. Reply Time</p>
           </div>
         </div>
       </div>
@@ -359,39 +253,43 @@
           </div>
         </div>
 
-        <!-- Floating badges -->
-        <div class="hidden lg:flex float-badge absolute -bottom-5 -left-6 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black px-4 py-3 border border-gray-200 dark:border-gray-700 items-center gap-3">
+        <!-- Floating badges — premium glass cards -->
+        <div class="hidden lg:flex float-badge absolute -bottom-5 -left-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/50 px-4 py-3 border border-black/[0.07] dark:border-white/[0.08] items-center gap-3">
           <div class="flex -space-x-2">
-            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center" style="background:#1877F2"><i class="fab fa-facebook-f text-white text-xs"></i></span>
-            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white text-xs"></i></span>
-            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-white flex items-center justify-center"><i class="fab fa-google text-red-500 text-xs"></i></span>
+            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-sm" style="background:#1877F2"><i class="fab fa-facebook-f text-white text-xs"></i></span>
+            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-sm" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white text-xs"></i></span>
+            <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 bg-white flex items-center justify-center shadow-sm"><i class="fab fa-google text-red-500 text-xs"></i></span>
           </div>
           <div>
             <p class="text-sm font-bold text-gray-900 dark:text-rep-white">5 Platforms</p>
             <p class="text-xs text-gray-400">All Connected</p>
           </div>
+          <div class="w-2 h-2 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse ml-1 shrink-0"></div>
         </div>
-        <div class="hidden lg:flex float-badge float-delay absolute -top-5 -right-6 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black px-4 py-3 border border-gray-200 dark:border-gray-700 items-center gap-3">
-          <div class="w-9 h-9 bg-rep-lime rounded-xl flex items-center justify-center shrink-0">
+        <div class="hidden lg:flex float-badge float-delay absolute -top-5 -right-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/50 px-4 py-3 border border-black/[0.07] dark:border-white/[0.08] items-center gap-3">
+          <div class="w-10 h-10 bg-rep-lime rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-rep-lime/30">
             <i class="fas fa-robot text-rep-black text-sm"></i>
           </div>
           <div>
             <p class="text-sm font-bold text-gray-900 dark:text-rep-white">AI Reply Ready</p>
-            <p class="text-xs text-gray-400">94% accuracy</p>
+            <p class="text-xs text-gray-400 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse"></span>
+              94% accuracy
+            </p>
           </div>
         </div>
       </div>
 
       <!-- Mobile trust strip -->
       <div class="sm:hidden flex flex-wrap justify-center gap-3 mt-4">
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 rounded-xl">
+        <div class="flex items-center gap-2 px-4 py-2.5 bg-white/80 dark:bg-gray-900/80 border border-black/[0.06] dark:border-gray-700 rounded-xl shadow-sm backdrop-blur-sm">
           <div class="flex -space-x-1.5">
             <span class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center" style="background:#1877F2"><i class="fab fa-facebook-f text-white" style="font-size:8px"></i></span>
             <span class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white" style="font-size:8px"></i></span>
           </div>
           <span class="text-xs font-bold text-gray-800 dark:text-rep-white">5 Platforms</span>
         </div>
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 rounded-xl">
+        <div class="flex items-center gap-2 px-4 py-2.5 bg-white/80 dark:bg-gray-900/80 border border-black/[0.06] dark:border-gray-700 rounded-xl shadow-sm backdrop-blur-sm">
           <div class="w-5 h-5 bg-rep-lime rounded-md flex items-center justify-center shrink-0">
             <i class="fas fa-robot text-rep-black" style="font-size:9px"></i>
           </div>
@@ -402,15 +300,53 @@
   </div>
 </section>
 
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 1b — PLATFORM LOGO TRUST STRIP
+════════════════════════════════════════════════════════════════════════════ -->
+<div class="relative py-7 bg-[#F6F8F2] dark:bg-[#0d0f0a] border-y border-black/[0.05] dark:border-white/[0.04] overflow-hidden">
+  <div class="section-divider absolute top-0 left-0 right-0 opacity-40"></div>
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12">
+    <div class="flex flex-wrap justify-center items-center gap-4 sm:gap-8">
+      <div class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-900/60 rounded-xl border border-black/[0.06] dark:border-white/[0.05] shadow-sm hover:shadow-md hover:border-rep-lime/30 transition-all cursor-default">
+        <i class="fab fa-instagram text-base" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></i>
+        <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Instagram</span>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-900/60 rounded-xl border border-black/[0.06] dark:border-white/[0.05] shadow-sm hover:shadow-md hover:border-rep-lime/30 transition-all cursor-default">
+        <i class="fab fa-facebook text-base text-blue-500"></i>
+        <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Facebook</span>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-900/60 rounded-xl border border-black/[0.06] dark:border-white/[0.05] shadow-sm hover:shadow-md hover:border-rep-lime/30 transition-all cursor-default">
+        <i class="fab fa-whatsapp text-base text-green-500"></i>
+        <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">WhatsApp</span>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-900/60 rounded-xl border border-black/[0.06] dark:border-white/[0.05] shadow-sm hover:shadow-md hover:border-rep-lime/30 transition-all cursor-default">
+        <i class="fab fa-google text-base text-yellow-500"></i>
+        <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">Google</span>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-900/60 rounded-xl border border-black/[0.06] dark:border-white/[0.05] shadow-sm hover:shadow-md hover:border-rep-lime/30 transition-all cursor-default">
+        <i class="fab fa-youtube text-base text-red-500"></i>
+        <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">YouTube</span>
+      </div>
+      <div class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-900/60 rounded-xl border border-black/[0.06] dark:border-white/[0.05] shadow-sm hover:shadow-md hover:border-rep-lime/30 transition-all cursor-default">
+        <i class="fab fa-linkedin text-base text-blue-600"></i>
+        <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">LinkedIn</span>
+      </div>
+    </div>
+  </div>
+  <div class="section-divider absolute bottom-0 left-0 right-0 opacity-40"></div>
+</div>
+
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 2 — PATTERN INTERRUPT (two-phone comparison, screenshot-style)
 ════════════════════════════════════════════════════════════════════════════ -->
-<section class="pattern-comparison-section py-16 sm:py-24 lg:py-28 bg-white dark:bg-gray-950 relative overflow-x-hidden">
-  <div class="absolute left-0 top-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-rep-lime/25 to-transparent"></div>
-  <div class="absolute left-0 bottom-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-rep-lime/15 to-transparent"></div>
+<section class="pattern-comparison-section section-alt py-16 sm:py-24 lg:py-28 relative overflow-x-hidden">
+  <!-- Dot grid pattern -->
+  <div class="pattern-dot absolute inset-0 pointer-events-none"></div>
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
+  <div class="section-divider absolute bottom-0 left-0 right-0"></div>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <!-- Top headline -->
     <header class="text-center mb-12 sm:mb-16 animate-on-scroll px-2">
       <h2 class="flex flex-row flex-nowrap justify-center items-center gap-x-1.5 sm:gap-x-2 md:gap-x-3 text-sm sm:text-lg md:text-2xl lg:text-[2.65rem] font-black text-gray-900 dark:text-white tracking-tight leading-tight">
@@ -667,71 +603,71 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 3 — THE PROBLEM
 ════════════════════════════════════════════════════════════════════════════ -->
-<section class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute right-0 top-0 w-96 h-96 bg-red-500/3 rounded-full blur-3xl pointer-events-none"></div>
+<section class="section-alt py-16 sm:py-24 relative overflow-hidden">
+  <div class="absolute right-0 top-0 w-96 h-96 bg-rep-lime/8 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute left-0 bottom-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <span class="inline-block mb-4 px-4 py-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-500 dark:text-red-400 rounded-full text-sm font-bold">
-        <i class="fas fa-exclamation-triangle mr-2"></i>Sound familiar?
-      </span>
       <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
-        Your Team Is Living in<br><span class="text-red-500 dark:text-red-400">Managed Chaos</span>
+        Your Team Is Living in<br><span class="gradient-text">Managed Chaos</span>
       </h2>
-      <p class="text-gray-500 text-base sm:text-xl max-w-2xl mx-auto">
+      <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-2xl mx-auto">
         The average business uses 7+ tools to manage conversations. Here's what that actually looks like.
       </p>
     </div>
 
-    <!-- Problem Cards -->
+    <!-- Problem Cards — premium glass style -->
     <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
-      <div class="problem-card animate-on-scroll delay-1 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover">
-        <div class="problem-icon w-12 h-12 bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/20 rounded-xl flex items-center justify-center mb-4">
+      <div class="problem-card animate-on-scroll delay-1 premium-card rounded-2xl p-6">
+        <div class="problem-icon w-12 h-12 bg-red-50 dark:bg-red-500/20 border border-red-100 dark:border-red-500/35 rounded-xl flex items-center justify-center mb-4">
           <i class="fas fa-bell-slash text-red-500 dark:text-red-400 text-lg"></i>
         </div>
-        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">Missed Messages</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Critical DMs and comments fall through the cracks every single day.</p>
+        <h3 class="text-gray-900 dark:text-zinc-50 font-bold mb-2">Missed Messages</h3>
+        <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed">Critical DMs and comments fall through the cracks every single day.</p>
       </div>
 
-      <div class="problem-card animate-on-scroll delay-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover">
-        <div class="problem-icon w-12 h-12 bg-orange-50 dark:bg-orange-500/15 border border-orange-200 dark:border-orange-500/20 rounded-xl flex items-center justify-center mb-4">
+      <div class="problem-card animate-on-scroll delay-2 premium-card rounded-2xl p-6">
+        <div class="problem-icon w-12 h-12 bg-orange-50 dark:bg-orange-500/20 border border-orange-100 dark:border-orange-500/35 rounded-xl flex items-center justify-center mb-4">
           <i class="fas fa-hourglass-half text-orange-500 dark:text-orange-400 text-lg"></i>
         </div>
-        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">Slow Replies</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Hours pass before customers get a response — and they notice.</p>
+        <h3 class="text-gray-900 dark:text-zinc-50 font-bold mb-2">Slow Replies</h3>
+        <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed">Hours pass before customers get a response — and they notice.</p>
       </div>
 
-      <div class="problem-card animate-on-scroll delay-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover">
-        <div class="problem-icon w-12 h-12 bg-yellow-50 dark:bg-yellow-500/15 border border-yellow-200 dark:border-yellow-500/20 rounded-xl flex items-center justify-center mb-4">
+      <div class="problem-card animate-on-scroll delay-3 premium-card rounded-2xl p-6">
+        <div class="problem-icon w-12 h-12 bg-yellow-50 dark:bg-yellow-500/20 border border-yellow-100 dark:border-yellow-500/35 rounded-xl flex items-center justify-center mb-4">
           <i class="fas fa-layer-group text-yellow-600 dark:text-yellow-400 text-lg"></i>
         </div>
-        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">Scattered Tools</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Instagram here, Google Reviews there, Facebook somewhere else.</p>
+        <h3 class="text-gray-900 dark:text-zinc-50 font-bold mb-2">Scattered Tools</h3>
+        <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed">Instagram here, Google Reviews there, Facebook somewhere else.</p>
       </div>
 
-      <div class="problem-card animate-on-scroll delay-4 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover">
-        <div class="problem-icon w-12 h-12 bg-purple-50 dark:bg-purple-500/15 border border-purple-200 dark:border-purple-500/20 rounded-xl flex items-center justify-center mb-4">
+      <div class="problem-card animate-on-scroll delay-4 premium-card rounded-2xl p-6">
+        <div class="problem-icon w-12 h-12 bg-purple-50 dark:bg-purple-500/20 border border-purple-100 dark:border-purple-500/35 rounded-xl flex items-center justify-center mb-4">
           <i class="fas fa-question-circle text-purple-500 dark:text-purple-400 text-lg"></i>
         </div>
-        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">No Context</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Your team starts every reply blind — no history, no customer context.</p>
+        <h3 class="text-gray-900 dark:text-zinc-50 font-bold mb-2">No Context</h3>
+        <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed">Your team starts every reply blind — no history, no customer context.</p>
       </div>
 
-      <div class="problem-card animate-on-scroll delay-5 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 card-hover sm:col-span-2 lg:col-span-1">
-        <div class="problem-icon w-12 h-12 bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/20 rounded-xl flex items-center justify-center mb-4">
+      <div class="problem-card animate-on-scroll delay-5 premium-card rounded-2xl p-6 sm:col-span-2 lg:col-span-1">
+        <div class="problem-icon w-12 h-12 bg-blue-50 dark:bg-blue-500/20 border border-blue-100 dark:border-blue-500/35 rounded-xl flex items-center justify-center mb-4">
           <i class="fas fa-random text-blue-500 dark:text-blue-400 text-lg"></i>
         </div>
-        <h3 class="text-gray-900 dark:text-rep-white font-bold mb-2">Team Confusion</h3>
-        <p class="text-gray-500 text-sm leading-relaxed">Two people reply to the same message. Nobody knows who owns what.</p>
+        <h3 class="text-gray-900 dark:text-zinc-50 font-bold mb-2">Team Confusion</h3>
+        <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed">Two people reply to the same message. Nobody knows who owns what.</p>
       </div>
     </div>
 
-    <!-- Closing punch line -->
+    <!-- Closing punch line — premium -->
     <div class="animate-on-scroll text-center">
-      <div class="inline-block px-8 py-5 bg-red-50 dark:bg-gradient-to-r dark:from-red-950/40 dark:via-gray-900 dark:to-red-950/40 border border-red-200 dark:border-red-800/30 rounded-2xl">
-        <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-rep-white">
+      <div class="inline-block relative px-10 py-6 rounded-2xl overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-lime-50 via-white to-lime-50 dark:from-rep-lime/8 dark:via-gray-900 dark:to-rep-lime/8 border border-lime-200/70 dark:border-rep-lime/20 rounded-2xl"></div>
+        <div class="shimmer-line absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl"></div>
+        <p class="relative text-xl sm:text-2xl font-bold text-gray-900 dark:text-rep-white">
           You're not losing customers.
-          <span class="text-red-500 dark:text-red-400"> You're losing moments.</span>
+          <span class="gradient-text"> You're losing moments.</span>
         </p>
       </div>
     </div>
@@ -742,16 +678,14 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 4 — THE SOLUTION
 ════════════════════════════════════════════════════════════════════════════ -->
-<section class="py-16 sm:py-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
-  <div class="absolute left-1/2 top-0 -translate-x-1/2 w-[800px] h-[400px] bg-rep-lime/3 rounded-full blur-3xl pointer-events-none"></div>
+<section class="section-alt py-16 sm:py-24 relative overflow-hidden">
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
+  <div class="absolute left-1/2 top-0 -translate-x-1/2 w-[800px] h-[400px] bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-    <div class="grid lg:grid-cols-2 gap-12 items-center">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.22fr)] gap-10 lg:gap-14 xl:gap-16 items-center">
       <!-- Left -->
       <div class="animate-on-scroll">
-        <span class="inline-block mb-5 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
-          <i class="fas fa-check-circle mr-2"></i>The Solution
-        </span>
         <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-6 leading-tight tracking-tight">
           One Platform.<br>
           <span class="gradient-text">Total Control</span><br>
@@ -792,52 +726,53 @@
         </div>
       </div>
 
-      <!-- Right: Before / After visual -->
-      <div class="animate-on-scroll delay-2">
-        <div class="grid grid-cols-2 gap-4">
+      <!-- Right: Before / After — 1 col on small screens, 2 cols from md (avoids crushed copy) -->
+      <div class="animate-on-scroll delay-2 w-full min-w-0">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6 lg:gap-8 w-full">
           <!-- Before -->
-          <div class="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-2xl p-5">
-            <p class="text-red-500 dark:text-red-400 text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-              <i class="fas fa-times-circle"></i> Before
+          <div class="min-w-0 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 lg:p-8">
+            <p class="text-red-500 dark:text-red-400 text-xs sm:text-sm md:text-base font-black uppercase tracking-wide mb-4 sm:mb-5 md:mb-6 flex items-center gap-2 sm:gap-2.5">
+              <i class="fas fa-times-circle text-sm sm:text-base md:text-lg shrink-0"></i> Before
             </p>
-            <div class="space-y-3">
-              <div class="flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800/20">
-                <i class="fab fa-instagram text-pink-400 text-xs"></i>
-                <span class="text-xs text-gray-500 dark:text-gray-400">Tab 1 of 7</span>
+            <div class="space-y-3 sm:space-y-4 md:space-y-5">
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-red-100 dark:bg-red-900/20 rounded-lg sm:rounded-xl md:rounded-2xl border border-red-200 dark:border-red-800/20">
+                <i class="fab fa-instagram text-pink-400 text-sm sm:text-base md:text-lg shrink-0"></i>
+                <span class="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 font-medium min-w-0">Tab 1 of 7</span>
               </div>
-              <div class="flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800/20">
-                <i class="fab fa-facebook text-blue-400 text-xs"></i>
-                <span class="text-xs text-gray-500 dark:text-gray-400">Tab 2 of 7</span>
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-red-100 dark:bg-red-900/20 rounded-lg sm:rounded-xl md:rounded-2xl border border-red-200 dark:border-red-800/20">
+                <i class="fab fa-facebook text-blue-400 text-sm sm:text-base md:text-lg shrink-0"></i>
+                <span class="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 font-medium min-w-0">Tab 2 of 7</span>
               </div>
-              <div class="flex items-center gap-2 px-3 py-2 bg-red-100 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800/20">
-                <i class="fas fa-envelope text-gray-400 text-xs"></i>
-                <span class="text-xs text-gray-500 dark:text-gray-400">Tab 3 of 7</span>
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-red-100 dark:bg-red-900/20 rounded-lg sm:rounded-xl md:rounded-2xl border border-red-200 dark:border-red-800/20">
+                <i class="fas fa-envelope text-gray-500 dark:text-gray-400 text-sm sm:text-base md:text-lg shrink-0"></i>
+                <span class="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 font-medium min-w-0">Tab 3 of 7</span>
               </div>
-              <div class="px-3 py-2 rounded-xl bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700/30">
-                <p class="text-xs text-red-500 dark:text-red-300 font-semibold">12 unread · 3 tools down</p>
+              <div class="px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 rounded-lg sm:rounded-xl md:rounded-2xl bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700/30 min-w-0">
+                <p class="text-xs sm:text-sm md:text-base text-red-600 dark:text-red-300 font-bold leading-snug break-words">12 unread · 3 tools down</p>
               </div>
             </div>
           </div>
           <!-- After -->
-          <div class="bg-rep-lime/5 border border-lime-200 dark:border-rep-lime/20 rounded-2xl p-5">
-            <p class="text-lime-700 dark:text-rep-lime text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-              <i class="fas fa-check-circle"></i> After RepMeUp
+          <div class="min-w-0 bg-rep-lime/5 border border-lime-200 dark:border-rep-lime/20 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 lg:p-8">
+            <p class="text-lime-700 dark:text-rep-lime text-xs sm:text-sm md:text-base font-black uppercase tracking-wide mb-4 sm:mb-5 md:mb-6 flex flex-wrap items-center gap-2 sm:gap-2.5">
+              <i class="fas fa-check-circle text-sm sm:text-base md:text-lg shrink-0"></i>
+              <span class="break-words leading-tight">After RepMeUp</span>
             </p>
-            <div class="space-y-3">
-              <div class="flex items-center gap-2 px-3 py-2 bg-lime-50 dark:bg-rep-lime/10 rounded-xl border border-lime-200 dark:border-rep-lime/15">
-                <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-xs"></i>
-                <span class="text-xs text-gray-700 dark:text-gray-300">All in 1 place</span>
+            <div class="space-y-3 sm:space-y-4 md:space-y-5">
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-lime-50 dark:bg-rep-lime/10 rounded-lg sm:rounded-xl md:rounded-2xl border border-lime-200 dark:border-rep-lime/15">
+                <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-sm sm:text-base md:text-lg shrink-0"></i>
+                <span class="text-xs sm:text-sm md:text-base text-gray-800 dark:text-zinc-200 font-medium min-w-0">All in 1 place</span>
               </div>
-              <div class="flex items-center gap-2 px-3 py-2 bg-lime-50 dark:bg-rep-lime/10 rounded-xl border border-lime-200 dark:border-rep-lime/15">
-                <i class="fas fa-robot text-lime-700 dark:text-rep-lime text-xs"></i>
-                <span class="text-xs text-gray-700 dark:text-gray-300">AI suggests reply</span>
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-lime-50 dark:bg-rep-lime/10 rounded-lg sm:rounded-xl md:rounded-2xl border border-lime-200 dark:border-rep-lime/15">
+                <i class="fas fa-robot text-lime-700 dark:text-rep-lime text-sm sm:text-base md:text-lg shrink-0"></i>
+                <span class="text-xs sm:text-sm md:text-base text-gray-800 dark:text-zinc-200 font-medium min-w-0">AI suggests reply</span>
               </div>
-              <div class="flex items-center gap-2 px-3 py-2 bg-lime-50 dark:bg-rep-lime/10 rounded-xl border border-lime-200 dark:border-rep-lime/15">
-                <i class="fas fa-bolt text-lime-700 dark:text-rep-lime text-xs"></i>
-                <span class="text-xs text-gray-700 dark:text-gray-300">Sent in 2 min</span>
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-lime-50 dark:bg-rep-lime/10 rounded-lg sm:rounded-xl md:rounded-2xl border border-lime-200 dark:border-rep-lime/15">
+                <i class="fas fa-bolt text-lime-700 dark:text-rep-lime text-sm sm:text-base md:text-lg shrink-0"></i>
+                <span class="text-xs sm:text-sm md:text-base text-gray-800 dark:text-zinc-200 font-medium min-w-0">Sent in 2 min</span>
               </div>
-              <div class="px-3 py-2 rounded-xl bg-lime-50 dark:bg-rep-lime/15 border border-lime-200 dark:border-rep-lime/25">
-                <p class="text-xs text-lime-700 dark:text-rep-lime font-bold">0 missed · All resolved</p>
+              <div class="px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 rounded-lg sm:rounded-xl md:rounded-2xl bg-lime-50 dark:bg-rep-lime/15 border border-lime-200 dark:border-rep-lime/25 min-w-0">
+                <p class="text-xs sm:text-sm md:text-base text-lime-800 dark:text-rep-lime font-black leading-snug break-words">0 missed · All resolved</p>
               </div>
             </div>
           </div>
@@ -852,13 +787,10 @@
      SECTION 5 — PRODUCT ECOSYSTEM
 ════════════════════════════════════════════════════════════════════════════ -->
 <section id="ecosystem" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute left-0 bottom-0 w-80 h-80 bg-rep-lime/4 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute left-0 bottom-0 w-80 h-80 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
-        <i class="fas fa-th-large mr-2"></i>Product Ecosystem
-      </span>
       <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
         Three Products.<br>
         <span class="gradient-text">One Unified Platform.</span>
@@ -953,12 +885,12 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 6 — HOW IT WORKS
 ════════════════════════════════════════════════════════════════════════════ -->
-<section id="how-it-works" class="py-16 sm:py-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+<section id="how-it-works" class="section-alt py-16 sm:py-24 relative overflow-hidden">
+  <!-- Diagonal pattern -->
+  <div class="pattern-diagonal absolute inset-0 pointer-events-none"></div>
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
-        <i class="fas fa-magic mr-2"></i>Super Simple
-      </span>
       <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
         Up & Running in
         <span class="gradient-text"> 3 Steps</span>
@@ -986,25 +918,25 @@
         <!-- Step 2 -->
         <div class="animate-on-scroll delay-2 text-center">
           <div class="relative inline-flex mb-6">
-            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl flex items-center justify-center">
-              <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-xl"></i>
+            <div class="w-16 h-16 bg-white dark:bg-gray-800/60 border border-black/[0.06] dark:border-gray-700 rounded-2xl flex items-center justify-center shadow-md">
+              <i class="fas fa-inbox text-lime-600 dark:text-rep-lime text-xl"></i>
             </div>
-            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 text-xs font-black">2</span>
+            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-lime-400 dark:border-rep-lime/60 rounded-full flex items-center justify-center text-lime-600 dark:text-rep-lime text-xs font-black shadow-sm">2</span>
           </div>
           <h3 class="text-lg font-black text-gray-900 dark:text-rep-white mb-2">Centralise Conversations</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Every message from every platform flows into your single unified inbox — organised, tagged, and ready.</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Every message from every platform flows into your single unified inbox — organised, tagged, and ready.</p>
         </div>
 
         <!-- Step 3 -->
         <div class="animate-on-scroll delay-3 text-center">
           <div class="relative inline-flex mb-6">
-            <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl flex items-center justify-center">
-              <i class="fas fa-robot text-blue-400 text-xl"></i>
+            <div class="w-16 h-16 bg-white dark:bg-gray-800/60 border border-black/[0.06] dark:border-gray-700 rounded-2xl flex items-center justify-center shadow-md">
+              <i class="fas fa-robot text-blue-500 dark:text-blue-400 text-xl"></i>
             </div>
-            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 text-xs font-black">3</span>
+            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-blue-400 dark:border-blue-500/60 rounded-full flex items-center justify-center text-blue-500 dark:text-blue-400 text-xs font-black shadow-sm">3</span>
           </div>
           <h3 class="text-lg font-black text-gray-900 dark:text-rep-white mb-2">Let AI Assist & Automate</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">AI drafts perfect replies, routes complex issues, and learns your brand voice with every interaction.</p>
+          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">AI drafts perfect replies, routes complex issues, and learns your brand voice with every interaction.</p>
         </div>
       </div>
     </div>
@@ -1012,10 +944,10 @@
     <!-- CTA -->
     <div class="text-center mt-14 animate-on-scroll">
       <button (click)="navigateToRegister()"
-        class="inline-flex items-center gap-3 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition transform hover:scale-105 text-base">
+        class="btn-primary group inline-flex items-center gap-3 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-base glow-lime">
         <i class="fas fa-rocket"></i>
         Get Started in 5 Minutes — Free
-        <i class="fas fa-arrow-right text-sm"></i>
+        <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
       </button>
       <p class="text-gray-400 text-xs mt-3">No credit card required. Cancel anytime.</p>
     </div>
@@ -1027,11 +959,11 @@
      SECTION 7 — AI DIFFERENTIATOR
 ════════════════════════════════════════════════════════════════════════════ -->
 <section class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-50/50 dark:via-blue-950/15 to-transparent"></div>
-  <div class="absolute left-0 top-0 w-full h-px bg-gradient-to-r from-transparent via-blue-200 dark:via-blue-500/20 to-transparent"></div>
-  <div class="absolute left-0 bottom-0 w-full h-px bg-gradient-to-r from-transparent via-blue-200 dark:via-blue-500/15 to-transparent"></div>
+  <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-50/35 to-transparent dark:from-transparent dark:via-zinc-900/50 dark:to-transparent pointer-events-none"></div>
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
+  <div class="section-divider absolute bottom-0 left-0 right-0"></div>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="grid lg:grid-cols-2 gap-12 items-center">
 
       <!-- Left: AI Demo Card -->
@@ -1107,9 +1039,6 @@
 
       <!-- Right: Copy -->
       <div class="animate-on-scroll order-1 lg:order-2">
-        <span class="inline-block mb-5 px-4 py-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-blue-600 dark:text-blue-400 rounded-full text-sm font-bold">
-          <i class="fas fa-brain mr-2"></i>AI Differentiator
-        </span>
         <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-6 leading-tight tracking-tight">
           AI That Replies<br>
           <span class="text-blue-500 dark:text-blue-400">Before Your Competitor</span><br>
@@ -1156,62 +1085,62 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 8 — BUSINESS IMPACT (ROI)
 ════════════════════════════════════════════════════════════════════════════ -->
-<section class="py-16 sm:py-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
-  <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-rep-lime/20 to-transparent"></div>
-  <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-rep-lime/15 to-transparent"></div>
+<section class="section-alt py-16 sm:py-24 relative overflow-hidden">
+  <!-- Diagonal stripe pattern -->
+  <div class="pattern-diagonal absolute inset-0 pointer-events-none"></div>
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
+  <div class="section-divider absolute bottom-0 left-0 right-0"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] bg-rep-lime/6 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
-        <i class="fas fa-chart-line mr-2"></i>Real ROI
-      </span>
       <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
         Outcomes, Not Features
       </h2>
-      <p class="text-gray-500 text-base sm:text-xl max-w-2xl mx-auto">
+      <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-2xl mx-auto">
         Here's what businesses report after switching to RepMeUp.
       </p>
     </div>
 
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-      <div class="animate-on-scroll delay-1 card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center relative overflow-hidden shadow-sm">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rep-lime/0 via-rep-lime to-rep-lime/0 rounded-t-3xl"></div>
-        <div class="w-12 h-12 bg-lime-50 dark:bg-rep-lime/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-          <i class="fas fa-bolt text-lime-700 dark:text-rep-lime text-lg"></i>
+      <div class="animate-on-scroll delay-1 stat-card roi-card-glow text-center">
+        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-rep-lime to-transparent rounded-t-[1.25rem]"></div>
+        <div class="w-12 h-12 bg-lime-50 dark:bg-rep-lime/10 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-sm">
+          <i class="fas fa-bolt text-lime-600 dark:text-rep-lime text-lg"></i>
         </div>
-        <p class="text-4xl sm:text-5xl font-black text-lime-700 dark:text-rep-lime mb-2">70%</p>
-        <p class="text-gray-800 dark:text-gray-300 font-semibold mb-1">Faster Response Times</p>
-        <p class="text-gray-400 text-xs">Average across all plans</p>
+        <p class="text-4xl sm:text-5xl font-black text-lime-600 dark:text-rep-lime mb-2">70%</p>
+        <p class="text-gray-800 dark:text-zinc-200 font-semibold mb-1">Faster Response</p>
+        <p class="text-gray-500 dark:text-zinc-400 text-xs">Average across all plans</p>
       </div>
 
-      <div class="animate-on-scroll delay-2 card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center relative overflow-hidden shadow-sm">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400/0 via-green-400 to-green-400/0 rounded-t-3xl"></div>
-        <div class="w-12 h-12 bg-green-50 dark:bg-green-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+      <div class="animate-on-scroll delay-2 stat-card roi-card-glow text-center">
+        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-green-400 to-transparent rounded-t-[1.25rem]"></div>
+        <div class="w-12 h-12 bg-green-50 dark:bg-green-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-sm">
           <i class="fas fa-chart-line text-green-500 dark:text-green-400 text-lg"></i>
         </div>
         <p class="text-4xl sm:text-5xl font-black text-green-500 dark:text-green-400 mb-2">3.2x</p>
-        <p class="text-gray-800 dark:text-gray-300 font-semibold mb-1">Higher Conversion</p>
-        <p class="text-gray-400 text-xs">From conversation to customer</p>
+        <p class="text-gray-800 dark:text-zinc-200 font-semibold mb-1">Higher Conversion</p>
+        <p class="text-gray-500 dark:text-zinc-400 text-xs">Conversation to customer</p>
       </div>
 
-      <div class="animate-on-scroll delay-3 card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center relative overflow-hidden shadow-sm">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400/0 via-blue-400 to-blue-400/0 rounded-t-3xl"></div>
-        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+      <div class="animate-on-scroll delay-3 stat-card roi-card-glow text-center">
+        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-blue-400 to-transparent rounded-t-[1.25rem]"></div>
+        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-sm">
           <i class="fas fa-robot text-blue-500 dark:text-blue-400 text-lg"></i>
         </div>
         <p class="text-4xl sm:text-5xl font-black text-blue-500 dark:text-blue-400 mb-2">80%</p>
-        <p class="text-gray-800 dark:text-gray-300 font-semibold mb-1">Reduced Manual Work</p>
-        <p class="text-gray-400 text-xs">AI handles the routine replies</p>
+        <p class="text-gray-800 dark:text-zinc-200 font-semibold mb-1">Less Manual Work</p>
+        <p class="text-gray-500 dark:text-zinc-400 text-xs">AI handles routine replies</p>
       </div>
 
-      <div class="animate-on-scroll delay-4 card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center relative overflow-hidden shadow-sm">
-        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400/0 via-purple-400 to-purple-400/0 rounded-t-3xl"></div>
-        <div class="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto">
+      <div class="animate-on-scroll delay-4 stat-card roi-card-glow text-center">
+        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-purple-400 to-transparent rounded-t-[1.25rem]"></div>
+        <div class="w-12 h-12 bg-purple-50 dark:bg-purple-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-sm">
           <i class="fas fa-bullseye text-purple-500 dark:text-purple-400 text-lg"></i>
         </div>
         <p class="text-4xl sm:text-5xl font-black text-purple-500 dark:text-purple-400 mb-2">99%</p>
-        <p class="text-gray-800 dark:text-gray-300 font-semibold mb-1">Brand Voice Consistency</p>
-        <p class="text-gray-400 text-xs">Every reply, on-brand</p>
+        <p class="text-gray-800 dark:text-zinc-200 font-semibold mb-1">Brand Consistency</p>
+        <p class="text-gray-500 dark:text-zinc-400 text-xs">Every reply, on-brand</p>
       </div>
     </div>
   </div>
@@ -1222,13 +1151,10 @@
      SECTION 9 — USE CASES
 ════════════════════════════════════════════════════════════════════════════ -->
 <section id="use-cases" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-rep-lime/4 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="text-center mb-10 sm:mb-14 animate-on-scroll">
-      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
-        <i class="fas fa-users mr-2"></i>Use Cases
-      </span>
       <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
         Built for Teams Like Yours
       </h2>
@@ -1256,9 +1182,6 @@
     <div class="animate-on-scroll delay-2">
       <div class="grid lg:grid-cols-2 gap-8 items-center">
         <div>
-          <p class="text-lime-700 dark:text-rep-lime text-sm font-bold uppercase tracking-wider mb-3">
-            <i [class]="activeCase.icon + ' mr-2'"></i>{{ activeCase.title }}
-          </p>
           <h3 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-rep-white mb-4 leading-tight">
             {{ activeCase.transformation }}
           </h3>
@@ -1295,14 +1218,13 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 10 — SOCIAL PROOF
 ════════════════════════════════════════════════════════════════════════════ -->
-<section id="testimonials" class="py-16 sm:py-24 bg-gray-50 dark:bg-gray-950 relative overflow-hidden">
-  <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700/40 to-transparent"></div>
+<section id="testimonials" class="section-alt py-16 sm:py-24 relative overflow-hidden">
+  <!-- Dot grid pattern -->
+  <div class="pattern-dot absolute inset-0 pointer-events-none"></div>
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <span class="inline-block mb-4 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-sm font-bold">
-        <i class="fas fa-quote-left mr-2"></i>Social Proof
-      </span>
       <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
         Teams That Switched<br>
         <span class="gradient-text">Never Looked Back</span>
@@ -1319,64 +1241,73 @@
         {icon: 'fab fa-youtube', label: 'YouTube', color: 'text-red-500'},
         {icon: 'fab fa-whatsapp', label: 'WhatsApp', color: 'text-green-500'}
       ]"
-        class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-xl text-sm font-semibold text-gray-500 dark:text-gray-400">
+        class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[rgba(30,32,38,0.92)] border border-gray-200 dark:border-white/10 rounded-xl text-sm font-semibold text-gray-500 dark:text-zinc-300">
         <i [class]="p.icon + ' ' + p.color"></i>
         {{ p.label }}
       </div>
     </div>
 
     <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
-      <div class="animate-on-scroll delay-1 testimonial-card card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-7 relative overflow-hidden shadow-sm">
-        <div class="absolute top-4 right-6 text-6xl font-black text-gray-100 dark:text-gray-800/40 leading-none">"</div>
-        <div class="flex text-lime-700 dark:text-rep-lime gap-0.5 mb-4">
+      <!-- Card 1 -->
+      <div class="animate-on-scroll delay-1 testimonial-card premium-card rounded-3xl p-7 relative overflow-hidden">
+        <div class="absolute top-4 right-6 text-7xl font-black text-lime-100 dark:text-rep-lime/8 leading-none select-none">"</div>
+        <div class="flex text-lime-500 dark:text-rep-lime gap-0.5 mb-4">
           <i *ngFor="let _ of [1,2,3,4,5]" class="fas fa-star text-xs"></i>
         </div>
-        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
+        <p class="text-gray-600 dark:text-zinc-300 leading-relaxed mb-6 text-sm">
           "RepMeUp transformed how we manage online reputation. The unified inbox saves us 3+ hours every day, and the AI responses are scarily accurate."
         </p>
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-black">S</div>
+        <div class="flex items-center gap-3 pt-4 border-t border-black/[0.05] dark:border-white/10">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-black text-sm shadow-md">S</div>
           <div>
-            <p class="font-bold text-gray-900 dark:text-rep-white text-sm">Sarah Johnson</p>
-            <p class="text-xs text-gray-400">CEO, TechStart Inc.</p>
+            <p class="font-bold text-gray-900 dark:text-zinc-50 text-sm">Sarah Johnson</p>
+            <p class="text-xs text-gray-500 dark:text-zinc-400">CEO, TechStart Inc.</p>
           </div>
-          <i class="fab fa-instagram text-pink-400 ml-auto"></i>
+          <div class="ml-auto w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)">
+            <i class="fab fa-instagram text-white text-xs"></i>
+          </div>
         </div>
       </div>
 
-      <div class="animate-on-scroll delay-2 testimonial-card card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-7 relative overflow-hidden shadow-sm">
-        <div class="absolute top-4 right-6 text-6xl font-black text-gray-100 dark:text-gray-800/40 leading-none">"</div>
-        <div class="flex text-lime-700 dark:text-rep-lime gap-0.5 mb-4">
+      <!-- Card 2 -->
+      <div class="animate-on-scroll delay-2 testimonial-card premium-card rounded-3xl p-7 relative overflow-hidden">
+        <div class="absolute top-4 right-6 text-7xl font-black text-lime-100 dark:text-rep-lime/8 leading-none select-none">"</div>
+        <div class="flex text-lime-500 dark:text-rep-lime gap-0.5 mb-4">
           <i *ngFor="let _ of [1,2,3,4,5]" class="fas fa-star text-xs"></i>
         </div>
-        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
+        <p class="text-gray-600 dark:text-zinc-300 leading-relaxed mb-6 text-sm">
           "As a founder managing everything myself, RepMeUp is genuinely an unfair advantage. My response time went from 6 hours to under 10 minutes."
         </p>
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-black">M</div>
+        <div class="flex items-center gap-3 pt-4 border-t border-black/[0.05] dark:border-white/10">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-black text-sm shadow-md">M</div>
           <div>
-            <p class="font-bold text-gray-900 dark:text-rep-white text-sm">Michael Chen</p>
-            <p class="text-xs text-gray-400">Founder, Growth Labs</p>
+            <p class="font-bold text-gray-900 dark:text-zinc-50 text-sm">Michael Chen</p>
+            <p class="text-xs text-gray-500 dark:text-zinc-400">Founder, Growth Labs</p>
           </div>
-          <i class="fab fa-google text-yellow-500 ml-auto"></i>
+          <div class="ml-auto w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm border border-gray-100">
+            <i class="fab fa-google text-yellow-500 text-xs"></i>
+          </div>
         </div>
       </div>
 
-      <div class="animate-on-scroll delay-3 testimonial-card card-hover bg-white dark:bg-rep-black border border-gray-200 dark:border-gray-800 rounded-3xl p-7 relative overflow-hidden shadow-sm sm:col-span-2 md:col-span-1">
-        <div class="absolute top-4 right-6 text-6xl font-black text-gray-100 dark:text-gray-800/40 leading-none">"</div>
-        <div class="flex text-lime-700 dark:text-rep-lime gap-0.5 mb-4">
+      <!-- Card 3 -->
+      <div class="animate-on-scroll delay-3 testimonial-card premium-card rounded-3xl p-7 relative overflow-hidden sm:col-span-2 md:col-span-1">
+        <div class="absolute top-4 right-6 text-7xl font-black text-lime-100 dark:text-rep-lime/8 leading-none select-none">"</div>
+        <div class="flex text-lime-500 dark:text-rep-lime gap-0.5 mb-4">
           <i *ngFor="let _ of [1,2,3,4,5]" class="fas fa-star text-xs"></i>
         </div>
-        <p class="text-gray-600 dark:text-gray-300 leading-relaxed mb-6 text-sm">
+        <p class="text-gray-600 dark:text-zinc-300 leading-relaxed mb-6 text-sm">
           "The analytics dashboard is incredible. We can see sentiment, response rates, and top-performing content — all in one place. ROI is crystal clear."
         </p>
-        <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-black">E</div>
+        <div class="flex items-center gap-3 pt-4 border-t border-black/[0.05] dark:border-white/10">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-black text-sm shadow-md">E</div>
           <div>
-            <p class="font-bold text-gray-900 dark:text-rep-white text-sm">Emily Rodriguez</p>
-            <p class="text-xs text-gray-400">CMO, Retail Pro</p>
+            <p class="font-bold text-gray-900 dark:text-zinc-50 text-sm">Emily Rodriguez</p>
+            <p class="text-xs text-gray-500 dark:text-zinc-400">CMO, Retail Pro</p>
           </div>
-          <i class="fab fa-facebook text-blue-500 ml-auto"></i>
+          <div class="ml-auto w-7 h-7 rounded-lg flex items-center justify-center" style="background:#1877F2">
+            <i class="fab fa-facebook-f text-white text-xs"></i>
+          </div>
         </div>
       </div>
     </div>
@@ -1387,145 +1318,60 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 11 — FINAL CONVERSION BLOCK
 ════════════════════════════════════════════════════════════════════════════ -->
-<section class="py-20 sm:py-28 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute inset-0 bg-gradient-to-br from-transparent via-rep-lime/3 to-transparent"></div>
-  <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="absolute left-0 top-0 w-full h-px bg-gradient-to-r from-transparent via-rep-lime/25 to-transparent"></div>
+<section class="py-20 sm:py-28 bg-[#F6F8F2] dark:bg-rep-black relative overflow-hidden noise-overlay">
+  <!-- Mesh grid overlay -->
+  <div class="hero-mesh absolute inset-0 pointer-events-none opacity-60"></div>
+  <!-- Glow orbs -->
+  <div class="bg-orb absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-rep-lime/8 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="bg-orb orb-2 absolute left-0 bottom-0 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
 
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 text-center relative z-10">
     <div class="animate-on-scroll">
-      <div class="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 text-lime-700 dark:text-rep-lime rounded-full text-xs font-bold tracking-wider uppercase">
-        <span class="w-2 h-2 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse"></span>
-        Ready to Take Control?
-      </div>
-
       <h2 class="text-3xl sm:text-4xl lg:text-6xl font-black text-gray-900 dark:text-rep-white mb-5 leading-tight tracking-tight">
         You Can't Control<br>
         <span class="gradient-text">What Customers Say.</span>
       </h2>
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-600 dark:text-gray-300 mb-8 leading-tight tracking-tight">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-500 dark:text-gray-400 mb-8 leading-tight tracking-tight">
         But You Can Control<br>
         <span class="text-gray-900 dark:text-rep-white">How You Respond.</span>
       </h2>
 
-      <p class="text-gray-500 text-base sm:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+      <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
         Every second you wait, a competitor is responding. Join 10,000+ businesses who chose to win the conversation.
       </p>
 
-      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-        <button (click)="navigateToRegister()"
-          class="group inline-flex items-center justify-center gap-3 px-10 py-5 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/50 transition-all transform hover:scale-105 text-lg glow-lime">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+        <button (click)="navigateToContact()"
+          class="btn-primary group inline-flex items-center justify-center gap-3 px-10 py-5 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/50 transition-all transform hover:scale-105 text-lg glow-lime">
           <i class="fas fa-rocket text-base"></i>
           Book a Demo
           <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
         </button>
         <button (click)="navigateToRegister()"
-          class="inline-flex items-center justify-center gap-3 px-10 py-5 border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-rep-lime/60 hover:bg-rep-lime/5 transition-all text-lg">
-          <i class="fas fa-play-circle text-sm"></i>
+          class="group inline-flex items-center justify-center gap-3 px-10 py-5 bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-rep-lime/50 hover:bg-rep-lime/5 hover:shadow-lg hover:shadow-rep-lime/10 transition-all text-lg backdrop-blur-sm">
+          <i class="fas fa-play-circle text-sm text-lime-600 dark:text-rep-lime"></i>
           Start Free
         </button>
       </div>
 
-      <p class="text-gray-400 text-sm">
-        <i class="fas fa-shield-alt mr-1 text-gray-300 dark:text-gray-700"></i>No credit card required &nbsp;·&nbsp;
-        <i class="fas fa-undo mr-1 text-gray-300 dark:text-gray-700"></i>Cancel anytime &nbsp;·&nbsp;
-        <i class="fas fa-clock mr-1 text-gray-300 dark:text-gray-700"></i>Setup in 5 minutes
-      </p>
+      <!-- Trust micro-strip -->
+      <div class="flex flex-wrap items-center justify-center gap-5 text-sm text-gray-400">
+        <span class="flex items-center gap-1.5">
+          <i class="fas fa-shield-alt text-lime-500 dark:text-rep-lime text-xs"></i>
+          No credit card required
+        </span>
+        <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
+        <span class="flex items-center gap-1.5">
+          <i class="fas fa-undo text-lime-500 dark:text-rep-lime text-xs"></i>
+          Cancel anytime
+        </span>
+        <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
+        <span class="flex items-center gap-1.5">
+          <i class="fas fa-clock text-lime-500 dark:text-rep-lime text-xs"></i>
+          Setup in 5 minutes
+        </span>
+      </div>
     </div>
   </div>
 </section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 12 — FOOTER
-════════════════════════════════════════════════════════════════════════════ -->
-<footer class="bg-gray-50 dark:bg-rep-black border-t border-gray-200 dark:border-gray-800/60 pt-14 sm:pt-16 pb-8">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
-
-      <!-- Brand -->
-      <div class="col-span-2 md:col-span-2">
-        <div class="flex items-center gap-3 mb-4">
-          <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="w-10 h-10 rounded-xl object-contain block">
-          <div>
-            <h3 class="text-lg font-black text-gray-900 dark:text-rep-white">RepMeUp</h3>
-            <p class="text-xs text-gray-400">Reputation that responds</p>
-          </div>
-        </div>
-        <p class="text-gray-500 text-sm mb-5 leading-relaxed max-w-xs">
-          Every business has people behind it. We help them win every conversation — powered by AI.
-        </p>
-        <div class="flex space-x-3">
-          <a href="#" class="w-9 h-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime transition text-sm">
-            <i class="fab fa-twitter"></i>
-          </a>
-          <a href="#" class="w-9 h-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime transition text-sm">
-            <i class="fab fa-linkedin-in"></i>
-          </a>
-          <a href="#" class="w-9 h-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime transition text-sm">
-            <i class="fab fa-instagram"></i>
-          </a>
-        </div>
-      </div>
-
-      <!-- Products -->
-      <div>
-        <h4 class="text-sm font-black text-gray-900 dark:text-rep-white mb-4 uppercase tracking-wider">Products</h4>
-        <ul class="space-y-3 text-gray-500 text-sm">
-          <li><a (click)="scrollToSection('ecosystem')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">RMP Inbox</a></li>
-          <li><a (click)="scrollToSection('ecosystem')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">RMP Publish</a></li>
-          <li><a (click)="scrollToSection('ecosystem')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">RMP Desk</a></li>
-          <li><a href="#" class="hover:text-lime-700 dark:hover:text-rep-lime transition">API & Integrations</a></li>
-        </ul>
-      </div>
-
-      <!-- Solutions -->
-      <div>
-        <h4 class="text-sm font-black text-gray-900 dark:text-rep-white mb-4 uppercase tracking-wider">Solutions</h4>
-        <ul class="space-y-3 text-gray-500 text-sm">
-          <li><a (click)="setActiveUseCaseTab('support'); scrollToSection('use-cases')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">Support Teams</a></li>
-          <li><a (click)="setActiveUseCaseTab('social'); scrollToSection('use-cases')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">Social Media Managers</a></li>
-          <li><a (click)="setActiveUseCaseTab('startup'); scrollToSection('use-cases')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">Startups</a></li>
-          <li><a (click)="setActiveUseCaseTab('enterprise'); scrollToSection('use-cases')" class="hover:text-lime-700 dark:hover:text-rep-lime transition cursor-pointer">Enterprises</a></li>
-        </ul>
-      </div>
-
-      <!-- Company -->
-      <div>
-        <h4 class="text-sm font-black text-gray-900 dark:text-rep-white mb-4 uppercase tracking-wider">Company</h4>
-        <ul class="space-y-3 text-gray-500 text-sm">
-          <li><a routerLink="/about" class="hover:text-lime-700 dark:hover:text-rep-lime transition">About</a></li>
-          <li><a href="#" class="hover:text-lime-700 dark:hover:text-rep-lime transition">Careers</a></li>
-          <li><a routerLink="/contact" class="hover:text-lime-700 dark:hover:text-rep-lime transition">Contact</a></li>
-          <li><a href="#" class="hover:text-lime-700 dark:hover:text-rep-lime transition">Blog</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Bottom bar -->
-    <div class="border-t border-gray-200 dark:border-gray-800/60 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-      <p class="text-gray-400 text-sm">
-        © 2026 RepMeUp. All rights reserved.
-      </p>
-      <!-- Theme toggle in footer too -->
-      <div class="flex items-center gap-4">
-        <button (click)="appearance.toggle()"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs text-gray-500 hover:border-rep-lime hover:text-lime-700 dark:hover:text-rep-lime transition">
-          <svg *ngIf="appearance.isDark()" class="w-3.5 h-3.5 text-lime-700 dark:text-rep-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="5" stroke-width="2"/>
-            <path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
-          <svg *ngIf="!appearance.isDark()" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
-          {{ appearance.isDark() ? 'Light Mode' : 'Dark Mode' }}
-        </button>
-      </div>
-      <div class="flex flex-wrap gap-5 justify-center">
-        <a routerLink="/privacy-policy" class="text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime text-xs transition">Privacy Policy</a>
-        <a routerLink="/terms-conditions" class="text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime text-xs transition">Terms of Service</a>
-        <a routerLink="/privacy-policy" fragment="cookies" class="text-gray-400 hover:text-lime-700 dark:hover:text-rep-lime text-xs transition">Cookie Policy</a>
-      </div>
-    </div>
-  </div>
-</footer>

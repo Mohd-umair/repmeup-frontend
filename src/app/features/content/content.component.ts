@@ -4,9 +4,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ThemeService } from '../../core/services/theme.service';
+import { PaginationComponent, PaginationMeta } from '../../shared/components/pagination/pagination.component';
 
 export interface PlatformPost {
   platform: string;
@@ -22,39 +23,27 @@ export interface PlatformPost {
   commentCount?: number;
 }
 
-export interface RepMeUpPublishedPost {
-  _id?: string;
-  platform: string;
-  platformConnection?: {
-    platform: string;
-    platformUsername: string;
-  };
-  content: string;
-  mediaUrls?: string[];
-  mediaStoragePath?: string;
-  status: string;
-  publishedAt?: Date;
-  platformPostId?: string;
-  platformPostUrl?: string;
-}
-
 @Component({
   selector: 'app-content',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, PaginationComponent],
   templateUrl: './content.component.html',
   styleUrls: ['./content.component.scss']
 })
 export class ContentComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
+  private readonly search$ = new Subject<string>();
 
   posts: PlatformPost[] = [];
   loading = false;
   error: string | null = null;
   syncing = false;
   lastSyncedAt: string | null = null;
+
   selectedPlatform = 'all';
   selectedContentType = 'all';
+  searchQuery = '';
+
   platformFilterOptions: string[] = ['facebook', 'instagram'];
   contentTypes: { value: string; label: string; icon: string }[] = [
     { value: 'all', label: 'All', icon: 'fas fa-th-large' },
@@ -65,13 +54,11 @@ export class ContentComponent implements OnInit, OnDestroy {
     { value: 'story', label: 'Stories', icon: 'fas fa-bolt' }
   ];
 
-  /** `library` = platform posts from Meta; `published` = posts published via RepMeUp */
-  contentView: 'library' | 'published' = 'library';
-
-  repMeUpPublished: RepMeUpPublishedPost[] = [];
-  publishedLoading = false;
-  pubPlatform = 'all';
-  pubSearch = '';
+  // Pagination
+  currentPage = 1;
+  pageSize = 10;
+  totalPages = 1;
+  totalItems = 0;
 
   constructor(
     private http: HttpClient,
@@ -80,16 +67,17 @@ export class ContentComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute
   ) {}
 
-  get publishedTotalCount(): number {
-    return this.repMeUpPublished.length;
-  }
-
   ngOnInit(): void {
     this.posts = [];
-    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      this.contentView = params.get('view') === 'published' ? 'published' : 'library';
+    // Debounce search input — fires loadPosts after 400 ms of inactivity
+    this.search$.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.currentPage = 1;
+      this.loadPosts();
     });
-    this.loadRepMeUpPublished();
   }
 
   ngOnDestroy(): void {
@@ -97,56 +85,19 @@ export class ContentComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  setContentView(view: 'library' | 'published'): void {
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: view === 'published' ? { view: 'published' } : { view: null },
-      replaceUrl: true
-    });
+  onSearchInput(): void {
+    this.search$.next(this.searchQuery);
   }
 
-  loadRepMeUpPublished(): void {
-    this.publishedLoading = true;
-    this.http.get<{ posts?: RepMeUpPublishedPost[] }>(`${environment.apiUrl}/posts/published`).subscribe({
-      next: (response) => {
-        this.repMeUpPublished = response.posts || [];
-        this.publishedLoading = false;
-      },
-      error: () => {
-        this.repMeUpPublished = [];
-        this.publishedLoading = false;
-      }
-    });
-  }
-
-  getFilteredRepMeUpPublished(): RepMeUpPublishedPost[] {
-    return this.repMeUpPublished.filter((post) => {
-      const platformMatch = this.pubPlatform === 'all' || post.platform === this.pubPlatform;
-      const searchMatch =
-        !this.pubSearch || post.content.toLowerCase().includes(this.pubSearch.toLowerCase());
-      return platformMatch && searchMatch;
-    });
-  }
-
-  getUniqueRepMeUpPlatforms(): string[] {
-    const platforms = new Set<string>();
-    this.repMeUpPublished.forEach((post) => {
-      if (post.platform) platforms.add(post.platform);
-    });
-    return Array.from(platforms);
-  }
-
-  getPostsPerWeekRepMeUp(): number {
-    return this.repMeUpPublished.length > 0 ? Math.ceil(this.repMeUpPublished.length / 7) : 0;
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.currentPage = 1;
+    this.loadPosts();
   }
 
   openPostComments(post: PlatformPost): void {
     this.router.navigate(['/app/inbox'], {
-      queryParams: {
-        platform: post.platform,
-        postId: post.externalId,
-        type: 'comment'
-      }
+      queryParams: { platform: post.platform, postId: post.externalId, type: 'comment' }
     });
   }
 
@@ -158,21 +109,42 @@ export class ContentComponent implements OnInit, OnDestroy {
     if (this.selectedPlatform === 'all') {
       this.posts = [];
       this.lastSyncedAt = null;
+      this.totalItems = 0;
+      this.totalPages = 1;
       return;
     }
     this.loading = true;
     this.error = null;
-    const params = new HttpParams().set('platform', this.selectedPlatform);
+
+    let params = new HttpParams()
+      .set('platform', this.selectedPlatform)
+      .set('page', this.currentPage.toString())
+      .set('limit', this.pageSize.toString());
+
+    if (this.searchQuery.trim()) {
+      params = params.set('search', this.searchQuery.trim());
+    }
+    if (this.selectedContentType !== 'all') {
+      params = params.set('contentType', this.selectedContentType);
+    }
+
     this.http
       .get<{
         success: boolean;
         posts: PlatformPost[];
         meta?: { total: number; platformFilter: string; lastSyncedAt?: string };
+        pagination?: PaginationMeta;
       }>(`${environment.apiUrl}/platform-posts`, { params })
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
           this.posts = res.posts || [];
           this.lastSyncedAt = res.meta?.lastSyncedAt ?? null;
+          if (res.pagination) {
+            this.totalItems = res.pagination.total;
+            this.totalPages = res.pagination.pages;
+            this.currentPage = res.pagination.page;
+          }
           this.loading = false;
         },
         error: (err) => {
@@ -185,7 +157,26 @@ export class ContentComponent implements OnInit, OnDestroy {
 
   onPlatformChange(): void {
     this.selectedContentType = 'all';
+    this.searchQuery = '';
+    this.currentPage = 1;
     this.error = null;
+    this.loadPosts();
+  }
+
+  setContentType(value: string): void {
+    this.selectedContentType = value;
+    this.currentPage = 1;
+    this.loadPosts();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadPosts();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
     this.loadPosts();
   }
 
@@ -203,6 +194,7 @@ export class ContentComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.syncing = false;
+          this.currentPage = 1;
           this.loadPosts();
         },
         error: (err) => {
@@ -212,17 +204,8 @@ export class ContentComponent implements OnInit, OnDestroy {
       });
   }
 
-  setContentType(value: string): void {
-    this.selectedContentType = value;
-  }
-
   get showContentTypeFilter(): boolean {
     return this.selectedPlatform === 'facebook' || this.selectedPlatform === 'instagram';
-  }
-
-  getFilteredPosts(): PlatformPost[] {
-    if (this.selectedContentType === 'all') return this.posts;
-    return this.posts.filter((p) => (p.contentType || 'post') === this.selectedContentType);
   }
 
   getPlatformName(platform: string): string {
@@ -252,11 +235,7 @@ export class ContentComponent implements OnInit, OnDestroy {
 
   getPlatformColors(platform: string): { primary: string; gradientFrom: string; gradientTo: string } {
     const theme = this.themeService.getTheme(platform);
-    return {
-      primary: theme.primaryColor,
-      gradientFrom: theme.gradientFrom,
-      gradientTo: theme.gradientTo
-    };
+    return { primary: theme.primaryColor, gradientFrom: theme.gradientFrom, gradientTo: theme.gradientTo };
   }
 
   getPlatformColor(platform: string): string {

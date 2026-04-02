@@ -1,7 +1,7 @@
 <div class="h-full flex flex-col overflow-hidden">
   <!-- Empty state -->
   <div *ngIf="!interaction" class="flex-1 flex items-center justify-center p-6 text-center">
-    <div class="text-gray-500 text-sm">
+    <div class="text-gray-500 dark:text-gray-400 text-sm">
       <i class="fas fa-mouse-pointer text-2xl mb-3 block opacity-50"></i>
       Select a conversation to see actions
     </div>
@@ -28,12 +28,45 @@
           {{ agent.firstName }} {{ agent.lastName }}
         </option>
       </select>
-      <span *ngIf="loadingAgents" class="text-xs text-gray-500">Loading...</span>
+      <span *ngIf="loadingAgents" class="text-xs text-gray-500 dark:text-gray-400">Loading...</span>
+    </div>
+
+    <!-- Status -->
+    <div class="space-y-2">
+      <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Status</label>
+
+      <!-- Current status badge -->
+      <div *ngIf="interaction?.status" class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1.5 border border-gray-200 dark:border-gray-700">
+        <i class="fas text-[11px]"
+          [class]="getCurrentStatusOption()?.icon ?? 'fa-circle'"
+          [ngClass]="getCurrentStatusOption()?.colorClass ?? 'text-gray-400'"></i>
+        <span class="text-xs font-medium text-gray-800 dark:text-gray-200">{{ getCurrentStatusOption()?.label ?? interaction?.status }}</span>
+        <span *ngIf="updatingStatus" class="ml-auto">
+          <i class="fas fa-spinner fa-spin text-gray-400 text-[10px]"></i>
+        </span>
+      </div>
+
+      <!-- Change status select -->
+      <select
+        (change)="onStatusChange($any($event.target).value); $any($event.target).value = ''"
+        [disabled]="updatingStatus"
+        class="w-full px-2.5 py-1.5 border rounded-lg text-xs focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        style="border-color: rgba(0,0,0,0.15);"
+      >
+        <option value="">Change status...</option>
+        <option
+          *ngFor="let opt of statusOptions"
+          [value]="opt.value"
+          [disabled]="interaction?.status === opt.value"
+        >
+          {{ opt.label }}{{ interaction?.status === opt.value ? ' ✓' : '' }}
+        </option>
+      </select>
     </div>
 
     <!-- Labels -->
     <div class="space-y-2">
-      <label class="text-xs font-semibold text-gray-500 uppercase">Labels</label>
+      <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Labels</label>
       <div *ngIf="leadLabel && !hasLabel(leadLabel._id)" class="mb-1.5">
         <button
           (click)="onMarkAsLead()"
@@ -58,13 +91,13 @@
           {{ l.name }}{{ hasLabel(l._id) ? ' ✓' : '' }}
         </option>
       </select>
-      <span *ngIf="loadingLabels" class="text-xs text-gray-500">Loading labels...</span>
-      <span *ngIf="!loadingLabels && orgLabels.length === 0" class="text-xs text-gray-500">No labels yet</span>
+      <span *ngIf="loadingLabels" class="text-xs text-gray-500 dark:text-gray-400">Loading labels...</span>
+      <span *ngIf="!loadingLabels && orgLabels.length === 0" class="text-xs text-gray-500 dark:text-gray-400">No labels yet</span>
     </div>
 
     <!-- Add note -->
     <div class="space-y-2">
-      <label class="text-xs font-semibold text-gray-500 uppercase">Add note</label>
+      <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Add note</label>
       <textarea
         [(ngModel)]="noteText"
         placeholder="Internal note (team only)..."
@@ -73,7 +106,7 @@
         style="border-color: rgba(0,0,0,0.15);"
       ></textarea>
       <div class="flex items-center justify-between gap-2">
-        <label class="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
           <input type="checkbox" [(ngModel)]="noteIsPrivate" class="rounded">
           Private
         </label>

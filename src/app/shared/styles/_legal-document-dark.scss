@@ -1,0 +1,90 @@
+// Privacy / Terms: calm link colours (no neon lime) in light and dark.
+@mixin legal-document-dark {
+  /* Light: standard blue links on white “paper” */
+  :host-context(html:not(.dark)) .legal-document a {
+    color: #2563eb !important;
+    text-underline-offset: 2px;
+  }
+
+  :host-context(html:not(.dark)) .legal-document a:hover {
+    color: #1d4ed8 !important;
+  }
+
+  :host-context(html:not(.dark)) :host a.text-rep-lime {
+    color: #2563eb !important;
+  }
+
+  :host-context(html:not(.dark)) :host a.text-rep-lime:hover {
+    color: #1d4ed8 !important;
+  }
+
+  :host-context(html.dark) .legal-document {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    color: var(--text-secondary);
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      color: var(--text-primary);
+    }
+
+    .text-rep-black {
+      color: var(--text-primary) !important;
+    }
+
+    .text-gray-700 {
+      color: var(--text-secondary) !important;
+    }
+
+    .text-gray-400,
+    .text-gray-500 {
+      color: var(--text-muted) !important;
+    }
+
+    strong {
+      color: var(--text-primary);
+    }
+
+    /* Links: readable blue (avoid neon lime on dark card) */
+    a {
+      color: #7dd3fc !important;
+      text-underline-offset: 2px;
+    }
+
+    a:hover {
+      color: #bae6fd !important;
+    }
+
+    .bg-blue-50 {
+      background-color: rgba(30, 58, 138, 0.32) !important;
+    }
+
+    .bg-gray-50 {
+      background-color: var(--surface-tertiary) !important;
+    }
+
+    .bg-yellow-50 {
+      background-color: rgba(113, 63, 18, 0.38) !important;
+    }
+
+    .bg-green-50 {
+      background-color: rgba(22, 101, 52, 0.32) !important;
+    }
+
+    section.border-rep-lime {
+      background-color: rgba(216, 255, 0, 0.1) !important;
+    }
+  }
+
+  /* Footer "Back to Home" and any other lime links outside .legal-document */
+  :host-context(html.dark) :host a.text-rep-lime {
+    color: #7dd3fc !important;
+  }
+
+  :host-context(html.dark) :host a.text-rep-lime:hover {
+    color: #bae6fd !important;
+  }
+}

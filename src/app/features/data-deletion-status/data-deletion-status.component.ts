@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
@@ -11,7 +11,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-data-deletion-status',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './data-deletion-status.component.html',
   styleUrls: ['./data-deletion-status.component.scss']
 })

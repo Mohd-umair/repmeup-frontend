@@ -1,0 +1,48 @@
+<div class="pagination-wrapper" *ngIf="totalItems > 0">
+  <div class="pagination-info">
+    <span class="items-label">
+      Showing <strong>{{ firstItemIndex }}</strong>–<strong>{{ lastItemIndex }}</strong> of <strong>{{ totalItems }}</strong>
+    </span>
+
+    <div class="page-size-control">
+      <label for="pageSize">Per page</label>
+      <select id="pageSize" [value]="pageSize" (change)="onPageSizeChange($event)" [disabled]="loading">
+        <option *ngFor="let opt of pageSizeOptions" [value]="opt">{{ opt }}</option>
+      </select>
+    </div>
+  </div>
+
+  <nav class="pagination-nav" aria-label="Pagination">
+    <button
+      class="page-btn nav-btn"
+      (click)="prevPage()"
+      [disabled]="currentPage === 1 || loading"
+      aria-label="Previous page"
+    >
+      <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <ng-container *ngFor="let page of pages">
+      <button
+        *ngIf="isNumber(page)"
+        class="page-btn"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+        [disabled]="loading"
+        [attr.aria-current]="page === currentPage ? 'page' : null"
+      >
+        {{ page }}
+      </button>
+      <span *ngIf="!isNumber(page)" class="page-ellipsis">…</span>
+    </ng-container>
+
+    <button
+      class="page-btn nav-btn"
+      (click)="nextPage()"
+      [disabled]="currentPage === totalPages || loading"
+      aria-label="Next page"
+    >
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </nav>
+</div>

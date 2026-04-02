@@ -1,10 +1,7 @@
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
-import { AppearanceService } from '../../core/services/appearance.service';
-import { IUser } from '../../core/models/user.model';
-import { Subscription } from 'rxjs';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 type UseCaseTab = 'support' | 'social' | 'startup' | 'enterprise';
 
@@ -20,16 +17,12 @@ interface UseCase {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
-  currentUser: IUser | null = null;
-  showUserMenu = false;
-  showMobileMenu = false;
   activeUseCaseTab: UseCaseTab = 'support';
-  private userSubscription?: Subscription;
   private observer?: IntersectionObserver;
 
   useCases: Record<UseCaseTab, UseCase> = {
@@ -91,16 +84,19 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.useCases[this.activeUseCaseTab];
   }
 
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-    public appearance: AppearanceService
-  ) {}
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
-    this.userSubscription = this.authService.currentUser$.subscribe(user => {
-      this.currentUser = user;
-    });
+    const applyUseCaseFromUrl = (): void => {
+      const uc = this.router.parseUrl(this.router.url).queryParams['uc'] as UseCaseTab | undefined;
+      if (uc && this.useCases[uc]) {
+        this.activeUseCaseTab = uc;
+      }
+    };
+    applyUseCaseFromUrl();
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => applyUseCaseFromUrl());
   }
 
   ngAfterViewInit(): void {
@@ -121,7 +117,6 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
-    this.userSubscription?.unsubscribe();
     this.observer?.disconnect();
   }
 
@@ -129,16 +124,12 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     this.activeUseCaseTab = tab;
   }
 
-  navigateToLogin(): void {
-    this.router.navigate(['/auth/login']);
-  }
-
   navigateToRegister(): void {
     this.router.navigate(['/auth/register']);
   }
 
-  navigateToDashboard(): void {
-    this.router.navigate(['/app/dashboard']);
+  navigateToContact(): void {
+    this.router.navigate(['/contact']);
   }
 
   scrollToSection(sectionId: string): void {
@@ -146,20 +137,5 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }
-
-  toggleUserMenu(): void {
-    this.showUserMenu = !this.showUserMenu;
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.showUserMenu = false;
-    this.router.navigate(['/']);
-  }
-
-  getUserInitials(): string {
-    if (!this.currentUser) return 'U';
-    return `${this.currentUser.firstName?.charAt(0) || ''}${this.currentUser.lastName?.charAt(0) || ''}`.toUpperCase() || 'U';
   }
 }

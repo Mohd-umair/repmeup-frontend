@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
-import { IApiResponse } from '../models/api-response.model';
+import { IApiResponse, IPagination } from '../models/api-response.model';
 
 export interface IUser {
   _id: string;
@@ -57,6 +57,12 @@ export interface IAvailableAgent {
   currentWorkload: number;
 }
 
+export interface IUsersPagedResponse {
+  success: boolean;
+  data: IUser[];
+  pagination: IPagination;
+}
+
 export interface ICreateUserDto {
   email: string;
   password: string;
@@ -95,10 +101,10 @@ export class UserService {
   constructor(private apiService: ApiService) {}
 
   /**
-   * Get all users in organization
+   * Get all users in organization (paginated)
    */
-  getUsers(params?: { role?: string; status?: string; search?: string }): Observable<IApiResponse<IUser[]>> {
-    return this.apiService.get<IApiResponse<IUser[]>>('/users', params);
+  getUsers(params?: { role?: string; status?: string; search?: string; page?: number; limit?: number }): Observable<IUsersPagedResponse> {
+    return this.apiService.get<IUsersPagedResponse>('/users', params);
   }
 
   /**

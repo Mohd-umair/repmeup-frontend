@@ -12,6 +12,7 @@ import { ResetPasswordComponent } from './features/auth/reset-password/reset-pas
 
 // Layout
 import { MainLayoutComponent } from './shared/components/main-layout/main-layout.component';
+import { PublicSiteShellComponent } from './shared/components/public-site-shell/public-site-shell.component';
 
 // Feature Components
 import { HomeComponent } from './features/home/home.component';
@@ -20,6 +21,7 @@ import { InboxContainerComponent } from './features/inbox/inbox-container/inbox-
 import { SettingsComponent } from './features/settings/settings.component';
 import { AgentsComponent } from './features/agents/agents.component';
 import { KnowledgeBaseComponent } from './features/knowledge-base/knowledge-base.component';
+import { KnowledgeBaseCreateComponent } from './features/knowledge-base/knowledge-base-create/knowledge-base-create.component';
 import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { AnalyticsLegacyTabRedirectComponent } from './features/analytics/analytics-legacy-tab-redirect.component';
 import { PublishComponent } from './features/publish/publish.component';
@@ -46,23 +48,21 @@ import { DraftsComponent } from './features/drafts/drafts.component';
  * Defines all application routes with proper guards
  */
 const routes: Routes = [
-  // Public routes
-  { path: '', component: HomeComponent },
-  { path: 'home', component: HomeComponent },
-  
-  // Legal pages (public)
-  { path: 'privacy-policy', component: PrivacyPolicyComponent },
-  { path: 'terms-conditions', component: TermsConditionsComponent },
+  // Public marketing site (shared header + footer)
+  {
+    path: '',
+    component: PublicSiteShellComponent,
+    children: [
+      { path: '', component: HomeComponent },
+      { path: 'home', redirectTo: '', pathMatch: 'full' },
+      { path: 'privacy-policy', component: PrivacyPolicyComponent },
+      { path: 'terms-conditions', component: TermsConditionsComponent },
+      { path: 'contact', component: ContactComponent },
+      { path: 'about', component: AboutComponent },
+      { path: 'data-deletion-status', component: DataDeletionStatusComponent },
+    ],
+  },
   { path: 'terms', redirectTo: 'terms-conditions', pathMatch: 'full' },
-  
-  // Contact page (public)
-  { path: 'contact', component: ContactComponent },
-
-  // About page (public)
-  { path: 'about', component: AboutComponent },
-  
-  // Data deletion status page (public)
-  { path: 'data-deletion-status', component: DataDeletionStatusComponent },
   
   // Auth routes (public)
   {
@@ -89,13 +89,14 @@ const routes: Routes = [
       { path: 'publish', component: PublishComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
       { path: 'publish/calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'publish/published', component: PublishPublishedRedirectComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'publish/approval-queue', redirectTo: 'approval-queue', pathMatch: 'full' },
       { path: 'calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'content', component: ContentComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'brand-hub', component: BrandHubComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'content-studio', component: ContentStudioComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
       { path: 'scheduled-posts', component: ScheduledPostsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'drafts', component: DraftsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
-      { path: 'approval-queue', component: ApprovalQueueComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.manage'] } },
+      { path: 'approval-queue', component: ApprovalQueueComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.manage', 'posts.read'] } },
       { path: 'trend-explorer', component: TrendExplorerComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.export'] } },
       {
         path: 'analytics/:legacyTab',
@@ -110,6 +111,7 @@ const routes: Routes = [
         data: { permissions: ['analytics.read'] }
       },
       { path: 'knowledge-base', component: KnowledgeBaseComponent, canActivate: [PermissionGuard], data: { permissions: ['knowledge_base.read'] } },
+      { path: 'knowledge-base/create', component: KnowledgeBaseCreateComponent, canActivate: [PermissionGuard], data: { permissions: ['knowledge_base.read'] } },
       { path: 'settings', redirectTo: 'settings/platforms', pathMatch: 'full' },
       { path: 'settings/platforms', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/profile', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
@@ -131,7 +133,12 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+  imports: [
+    RouterModule.forRoot(routes, {
+      scrollPositionRestoration: 'top',
+      anchorScrolling: 'enabled',
+    }),
+  ],
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

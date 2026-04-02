@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-rep-black flex items-center justify-center p-6">
+<div class="min-h-screen bg-rep-black flex items-center justify-center p-6 pt-28 sm:pt-32 pb-12">
   <div class="max-w-2xl w-full">
     <!-- Loading State -->
     <div *ngIf="loading" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-12 border border-gray-800 text-center">
@@ -34,14 +34,6 @@
           All your data associated with this account has been permanently removed from our system.
         </p>
       </div>
-
-      <a
-        href="https://repmeup.in"
-        class="inline-block px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg hover:shadow-rep-lime/50 transition"
-      >
-        <i class="fas fa-home mr-2"></i>
-        Return to Homepage
-      </a>
     </div>
 
     <!-- Processing Status -->
@@ -99,18 +91,11 @@
 
       <div class="flex flex-col sm:flex-row gap-3 justify-center">
         <a
-          href="https://repmeup.in/contact"
-          class="px-6 py-3 bg-gray-800 text-rep-white rounded-xl font-semibold hover:bg-gray-700 transition"
+          routerLink="/contact"
+          class="inline-flex items-center justify-center px-6 py-3 bg-gray-800 text-rep-white rounded-xl font-semibold hover:bg-gray-700 transition"
         >
           <i class="fas fa-envelope mr-2"></i>
           Contact Support
-        </a>
-        <a
-          href="https://repmeup.in"
-          class="px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg hover:shadow-rep-lime/50 transition"
-        >
-          <i class="fas fa-home mr-2"></i>
-          Return to Homepage
         </a>
       </div>
     </div>

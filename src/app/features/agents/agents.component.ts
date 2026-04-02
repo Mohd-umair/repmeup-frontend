@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService, IUser, ICreateUserDto, IUpdateUserDto } from '../../core/services/user.service';
 import { IntentBucketService, IIntentBucket } from '../../core/services/intent-bucket.service';
+import { IPagination } from '../../core/models/api-response.model';
 
 @Component({
   selector: 'app-agents',
@@ -13,6 +14,12 @@ export class AgentsComponent implements OnInit {
   agents: IUser[] = [];
   loading = false;
   error: string | null = null;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 20;
+  totalPages = 1;
+  totalItems = 0;
 
   showAddModal = false;
   showEditModal = false;
@@ -85,7 +92,7 @@ export class AgentsComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    const params: any = {};
+    const params: any = { page: this.currentPage, limit: this.pageSize };
     if (this.roleFilter) params.role = this.roleFilter;
     if (this.statusFilter) params.status = this.statusFilter;
     if (this.searchQuery) params.search = this.searchQuery;
@@ -94,6 +101,11 @@ export class AgentsComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.agents = response.data || [];
+          if (response.pagination) {
+            this.totalItems = response.pagination.total;
+            this.totalPages = response.pagination.pages;
+            this.currentPage = response.pagination.page;
+          }
         }
         this.loading = false;
       },
@@ -103,6 +115,17 @@ export class AgentsComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadAgents();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+    this.loadAgents();
   }
 
   openAddModal(): void {
@@ -220,6 +243,7 @@ export class AgentsComponent implements OnInit {
 
   // Filter actions
   applyFilters(): void {
+    this.currentPage = 1;
     this.loadAgents();
   }
 
@@ -232,17 +256,17 @@ export class AgentsComponent implements OnInit {
 
   // Helper methods
   getRoleColor(role: string): string {
-    switch (role) {
+    const r = (role || '').toLowerCase();
+    switch (r) {
       case 'admin':
-        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30';
       case 'manager':
-        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30';
+        return 'bg-rep-lime/20 text-rep-black border border-rep-lime/30 dark:bg-rep-lime/15 dark:text-rep-lime dark:border-rep-lime/35';
       case 'agent':
-        return 'bg-gray-100 text-gray-800 border border-gray-300';
+        return 'bg-gray-100 text-gray-800 border border-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600';
       case 'viewer':
-        return 'bg-gray-100 text-gray-600 border border-gray-200';
+        return 'bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
       default:
-        return 'bg-gray-100 text-gray-800 border border-gray-300';
+        return 'bg-gray-100 text-gray-800 border border-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600';
     }
   }
 

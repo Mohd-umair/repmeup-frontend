@@ -4,7 +4,7 @@
   <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
       <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-rep-white flex items-center gap-2">
-        <i class="fas fa-file-pen text-rep-black dark:text-rep-lime"></i>
+        <i class="fas fa-file-pen text-rep-lime drop-shadow-[0_0_10px_rgba(184,245,103,0.45)]"></i>
         Drafts
       </h1>
       <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
@@ -13,15 +13,15 @@
     </div>
     <a routerLink="/app/content-studio"
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
-             bg-rep-black text-rep-white hover:bg-gray-900
-             dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 transition">
-      <i class="fas fa-plus"></i> New AI Post
+             bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm shadow-rep-lime/25
+             dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 dark:shadow-rep-lime/20 transition">
+      <i class="fas fa-plus text-rep-black"></i> New AI Post
     </a>
   </div>
 
   <!-- Loading -->
   <div *ngIf="loading" class="flex justify-center py-20">
-    <i class="fas fa-spinner fa-spin text-3xl text-rep-black dark:text-rep-lime"></i>
+    <i class="fas fa-spinner fa-spin text-3xl text-rep-lime"></i>
   </div>
 
   <!-- Empty state -->
@@ -36,9 +36,9 @@
     </p>
     <a routerLink="/app/content-studio"
       class="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
-             bg-rep-black text-rep-white hover:bg-gray-900
-             dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 transition">
-      <i class="fas fa-wand-magic-sparkles"></i> Go to Content Studio
+             bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm shadow-rep-lime/25
+             dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 dark:shadow-rep-lime/20 transition">
+      <i class="fas fa-wand-magic-sparkles text-rep-black"></i> Go to Content Studio
     </a>
   </div>
 
@@ -106,15 +106,17 @@
         </span>
       </div>
 
-      <!-- Media thumbnail (if any) -->
+      <!-- Full image (uncropped; capped height so the grid stays usable) -->
       <div *ngIf="resolveMediaUrl(draft) && draft.mediaType === 'image'"
-        class="relative h-36 bg-gray-100 dark:bg-gray-800 overflow-hidden cursor-pointer group mx-3 mt-2 rounded-lg"
+        class="relative bg-gray-100 dark:bg-gray-800 cursor-pointer group mx-3 mt-2 rounded-lg overflow-hidden"
         (click)="openPreview(draft)">
         <img [src]="resolveMediaUrl(draft)!"
           [alt]="draft.platform + ' draft image'"
-          class="w-full h-full object-cover transition group-hover:scale-105 duration-300" />
-        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
-          <i class="fas fa-expand text-white opacity-0 group-hover:opacity-100 transition text-xl drop-shadow"></i>
+          class="w-full h-auto max-h-[min(560px,75vh)] object-contain object-center mx-auto block
+                 transition-opacity duration-300 group-hover:opacity-90" />
+        <div class="absolute inset-0 pointer-events-none flex items-center justify-center
+                    bg-black/0 group-hover:bg-black/15 transition">
+          <i class="fas fa-expand text-white opacity-0 group-hover:opacity-100 transition text-xl drop-shadow-lg"></i>
         </div>
       </div>
 
@@ -172,9 +174,9 @@
           <button (click)="publishDraft(draft._id)" type="button"
             [disabled]="publishingId === draft._id"
             class="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold transition
-                   bg-rep-black text-rep-white hover:bg-gray-900
-                   dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 disabled:opacity-50">
-            <i [class]="publishingId === draft._id ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-paper-plane text-[10px]'"></i>
+                   bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm shadow-rep-lime/25
+                   dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 dark:shadow-rep-lime/20 disabled:opacity-50">
+            <i [class]="(publishingId === draft._id ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-paper-plane text-[10px]') + ' text-rep-black'"></i>
             {{ publishingId === draft._id ? 'Publishing…' : 'Publish Now' }}
           </button>
           <button (click)="openSchedule(draft)" type="button"
@@ -184,6 +186,17 @@
             <i class="fas fa-calendar-plus text-[10px]"></i> Schedule
           </button>
         </div>
+
+        <!-- Send for Approval row -->
+        <button (click)="sendToApproval(draft._id)" type="button"
+          [disabled]="sendingApprovalId === draft._id"
+          class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition
+                 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100
+                 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700/30 dark:hover:bg-amber-900/30
+                 disabled:opacity-50">
+          <i [class]="sendingApprovalId === draft._id ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-clipboard-check text-[10px]'"></i>
+          {{ sendingApprovalId === draft._id ? 'Sending…' : 'Send for Approval' }}
+        </button>
 
         <!-- Secondary actions row: Edit + Delete -->
         <div class="flex gap-1.5">
@@ -206,6 +219,17 @@
 
     </div>
   </div>
+
+  <!-- Pagination -->
+  <app-pagination
+    [currentPage]="currentPage"
+    [totalPages]="totalPages"
+    [totalItems]="totalItems"
+    [pageSize]="pageSize"
+    [loading]="loading"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)"
+  ></app-pagination>
 
 </div>
 
@@ -309,11 +333,11 @@
       </span>
     </div>
 
-    <!-- Media -->
+    <!-- Media — full image in preview -->
     <div *ngIf="resolveMediaUrl(previewDraft) && previewDraft.mediaType === 'image'"
-      class="flex-shrink-0 bg-gray-100 dark:bg-gray-800 max-h-72 overflow-hidden">
+      class="flex-shrink-0 bg-gray-100 dark:bg-gray-800 flex justify-center overflow-y-auto max-h-[min(85vh,800px)]">
       <img [src]="resolveMediaUrl(previewDraft)!" [alt]="'Preview'"
-        class="w-full h-full object-contain" />
+        class="w-full h-auto max-h-[min(85vh,800px)] object-contain object-center" />
     </div>
     <div *ngIf="resolveMediaUrl(previewDraft) && previewDraft.mediaType === 'video'"
       class="flex-shrink-0 bg-gray-950 max-h-72 overflow-hidden">
@@ -333,14 +357,23 @@
     </div>
 
     <!-- Footer actions -->
-    <div class="flex items-center gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
+    <div class="flex flex-wrap items-center gap-2 px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
       <button (click)="closePreview(); publishDraft(previewDraft!._id)" type="button"
         [disabled]="publishingId === previewDraft._id"
-        class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition
-               bg-rep-black text-rep-white hover:bg-gray-900
-               dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 disabled:opacity-50">
-        <i [class]="publishingId === previewDraft._id ? 'fas fa-spinner fa-spin' : 'fas fa-paper-plane'"></i>
+        class="flex-1 min-w-[100px] inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition
+               bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm shadow-rep-lime/25
+               dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/90 dark:shadow-rep-lime/20 disabled:opacity-50">
+        <i [class]="(publishingId === previewDraft._id ? 'fas fa-spinner fa-spin' : 'fas fa-paper-plane') + ' text-rep-black'"></i>
         {{ publishingId === previewDraft._id ? 'Publishing…' : 'Publish Now' }}
+      </button>
+      <button (click)="sendToApproval(previewDraft!._id)" type="button"
+        [disabled]="sendingApprovalId === previewDraft._id"
+        class="flex-1 min-w-[100px] inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition
+               bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100
+               dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700/30 dark:hover:bg-amber-900/30
+               disabled:opacity-50">
+        <i [class]="sendingApprovalId === previewDraft._id ? 'fas fa-spinner fa-spin' : 'fas fa-clipboard-check'"></i>
+        {{ sendingApprovalId === previewDraft._id ? 'Sending…' : 'Send for Approval' }}
       </button>
       <app-button variant="secondary" (buttonClick)="closePreview(); openSchedule(previewDraft!)">
         <i class="fas fa-calendar-plus mr-1.5"></i> Schedule
