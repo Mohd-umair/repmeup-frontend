@@ -18,7 +18,7 @@
 
       <!-- Current Plan Badge -->
       <div *ngIf="subscriptionLimits" class="mt-6 inline-flex items-center px-4 py-2 bg-rep-lime rounded-full">
-        <i class="fas fa-check-circle mr-2 text-rep-black"></i>
+        <i class="fas fa-circle-check mr-2 text-rep-black"></i>
         <span class="font-semibold text-rep-black">
           Currently on {{ subscriptionLimits.plan }} Plan
         </span>
@@ -51,7 +51,7 @@
         <!-- Current Plan Badge -->
         <div *ngIf="isCurrentPlan(planKey)" 
              class="absolute top-4 left-4 px-3 py-1 bg-rep-lime text-rep-black rounded-full text-xs font-bold z-10 flex items-center gap-1">
-          <i class="fas fa-check-circle"></i>
+          <i class="fas fa-circle-check"></i>
           CURRENT
         </div>
 

@@ -2,17 +2,18 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PlatformService, PlatformConnection } from '../../core/services/platform.service';
+import { PlatformService } from '../../core/services/platform.service';
 import { OrganizationService, AutoReplySettings } from '../../core/services/organization.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
+import { RazorpayService } from '../../core/services/razorpay.service';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
 import { PermissionService } from '../../core/services/permission.service';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
-import { BucketSettingsComponent } from './components/bucket-settings/bucket-settings.component';
+import { BillingComponent } from './components/billing/billing.component';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 
@@ -22,7 +23,7 @@ import { Observable, Subscription } from 'rxjs';
  */
 
 // All available settings tabs
-type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply' | 'brand-rules' | 'compliance' | 'intent-buckets';
+type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply' | 'brand-rules' | 'compliance' | 'accounts';
 
 interface Platform {
   id: string;
@@ -51,7 +52,7 @@ interface SettingsNavTab {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BucketSettingsComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
@@ -118,7 +119,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     { id: 'auto-reply', icon: 'fas fa-robot', label: 'Auto-Reply', routeSegment: 'auto-reply', requiredPermission: 'settings.read' },
     { id: 'brand-rules', icon: 'fas fa-palette', label: 'Brand Rules', routeSegment: 'brand-rules', requiredPermission: 'settings.read' },
     { id: 'compliance', icon: 'fas fa-shield-alt', label: 'Compliance', routeSegment: 'compliance', requiredPermission: 'settings.read' },
-    { id: 'intent-buckets', icon: 'fas fa-columns', label: 'Buckets', routeSegment: 'intent-buckets', requiredPermission: 'settings.read' }
+    { id: 'accounts', icon: 'fas fa-credit-card', label: 'Plans & Billing', routeSegment: 'accounts', requiredPermission: 'billing.read' },
   ];
 
   private subscriptions: Subscription[] = [];
@@ -223,7 +224,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     public permissionService: PermissionService,
     public platformConnectionService: PlatformConnectionService, // SOLID: Dependency Injection
     private subscriptionService: SubscriptionService,
-    private socialAccountsService: SocialAccountsService
+    private socialAccountsService: SocialAccountsService,
+    private razorpayService: RazorpayService
   ) {
     // Initialize observables (reactive state management)
     this.usage$ = this.platformConnectionService.usage$;
@@ -1228,6 +1230,22 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Display max connected accounts (-1 → unlimited). Used in banners and upgrade CTAs.
+   */
+  formatMaxAccountsPhrase(max: number): string {
+    if (max === -1) return 'Unlimited accounts';
+    return `${max.toLocaleString()} accounts`;
+  }
+
+  /**
+   * "3 of …" copy: full phrase after "of" (e.g. "10 accounts", "Unlimited accounts").
+   */
+  formatMaxAccountsOfLabel(max: number): string {
+    if (max === -1) return 'Unlimited accounts';
+    return `${max.toLocaleString()} account${max !== 1 ? 's' : ''}`;
+  }
+
+  /**
    * Show plans modal
    */
   openPlansModal(): void {
@@ -1292,40 +1310,57 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Confirm and execute upgrade
+   * Confirm and execute upgrade.
+   * Free plan → direct API call. Paid plan → Razorpay checkout.
    */
   private confirmUpgrade(planId: string, planName: string): void {
-    if (!confirm(`Upgrade to ${planName} plan?\n\nThis will immediately update your account limits.`)) {
+    const plan = this.allPlans?.[planId];
+    const price = plan?.price;
+
+    // Free plan — skip payment
+    if (price === 0 || price === 'free') {
+      if (!confirm(`Switch to ${planName} plan?\n\nThis will immediately update your account limits.`)) return;
+      this.upgradingPlan = true;
+      this.subscriptionService.upgradePlan(planId).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.notificationService.success('Plan Updated!', `You are now on the ${planName} plan.`);
+            this.loadSubscriptionLimits();
+            this.closePlansModal();
+          }
+          this.upgradingPlan = false;
+        },
+        error: (error) => {
+          const msg = error.error?.error || error.error?.message || 'Failed to update plan';
+          this.notificationService.error('Update Failed', msg);
+          this.upgradingPlan = false;
+        }
+      });
       return;
     }
 
+    // Paid plan — open Razorpay checkout
     this.upgradingPlan = true;
-    this.subscriptionService.upgradePlan(planId).subscribe({
-      next: (response) => {
-        if (response.success) {
+    const priceLabel = price === 'custom' ? 'Custom' : `$${price}/mo`;
+
+    this.razorpayService.initiateUpgrade({ planId, planName, priceLabel })
+      .then((res) => {
+        if (res.success) {
           this.notificationService.success(
-            'Plan Upgraded!',
-            `Successfully upgraded to ${planName} plan.`
+            'Payment Successful',
+            `Welcome to the ${planName} plan! Your new limits are active immediately.`
           );
-          
-          // Refresh subscription limits
           this.loadSubscriptionLimits();
-          
-          // Close modal if open
           this.closePlansModal();
         }
         this.upgradingPlan = false;
-      },
-      error: (error) => {
-        console.error('Error upgrading plan:', error);
-        const errorMessage = error.error?.error || error.error?.message || 'Failed to upgrade plan';
-        this.notificationService.error(
-          'Upgrade Failed',
-          errorMessage
-        );
+      })
+      .catch((errMsg: string) => {
+        if (errMsg !== 'Payment cancelled.') {
+          this.notificationService.error('Payment Failed', errMsg || 'Could not complete payment. Please try again.');
+        }
         this.upgradingPlan = false;
-      }
-    });
+      });
   }
 
   /**

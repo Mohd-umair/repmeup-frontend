@@ -83,21 +83,21 @@
         </div>
         <div class="space-y-3 mb-6">
           <div class="flex items-start gap-3">
-            <i class="fas fa-check-circle text-rep-lime mt-0.5"></i>
+            <i class="fas fa-circle-check text-rep-lime mt-0.5"></i>
             <div>
               <p class="text-gray-300 text-sm font-medium">Auto-Reply Settings</p>
               <p class="text-gray-500 text-xs">Configure when AI should respond</p>
             </div>
           </div>
           <div class="flex items-start gap-3">
-            <i class="fas fa-check-circle text-rep-lime mt-0.5"></i>
+            <i class="fas fa-circle-check text-rep-lime mt-0.5"></i>
             <div>
               <p class="text-gray-300 text-sm font-medium">Knowledge Base</p>
               <p class="text-gray-500 text-xs">Train AI with your business info</p>
             </div>
           </div>
           <div class="flex items-start gap-3">
-            <i class="fas fa-check-circle text-rep-lime mt-0.5"></i>
+            <i class="fas fa-circle-check text-rep-lime mt-0.5"></i>
             <div>
               <p class="text-gray-300 text-sm font-medium">Response Tone</p>
               <p class="text-gray-500 text-xs">Set your brand's voice</p>
@@ -596,7 +596,7 @@
                 <i class="fas text-2xl"
                    [ngClass]="{
                      'fa-trophy': tasks.pending === 0 && tasks.total > 0,
-                     'fa-check-circle': tasks.pending > 0 && tasks.pending <= 5,
+                     'fa-circle-check': tasks.pending > 0 && tasks.pending <= 5,
                      'fa-hourglass-half': tasks.pending > 5 && tasks.pending <= 10,
                      'fa-exclamation-circle': tasks.pending > 10,
                      'fa-clipboard-list': tasks.pending === 0 && tasks.total === 0
@@ -659,7 +659,7 @@
             <div class="mb-3">
               <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
                    [ngClass]="{'bg-green-500/20': tasks.completed > 0, 'bg-gray-700': tasks.completed === 0}">
-                <i class="fas fa-check-circle text-2xl"
+                <i class="fas fa-circle-check text-2xl"
                    [ngClass]="{'text-green-500': tasks.completed > 0, 'text-gray-400': tasks.completed === 0}"></i>
               </div>
             </div>
@@ -908,7 +908,7 @@
                 <p class="text-xs text-gray-400 mb-1">Resolution Rate</p>
                 <p class="text-lg font-bold text-rep-white">{{ performanceMetrics.resolutionRate }}%</p>
               </div>
-              <i class="fas fa-check-circle text-2xl text-green-500"></i>
+              <i class="fas fa-circle-check text-2xl text-green-500"></i>
             </div>
 
             <div class="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
@@ -941,7 +941,7 @@
               >
                 View
               </button>
-              <i *ngIf="performanceMetrics.overdueCount === 0" class="fas fa-check-circle text-2xl text-green-500"></i>
+              <i *ngIf="performanceMetrics.overdueCount === 0" class="fas fa-circle-check text-2xl text-green-500"></i>
             </div>
           </div>
         </div>

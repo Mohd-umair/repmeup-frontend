@@ -20,7 +20,7 @@
           type="button"
           class="text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <i class="fas fa-times"></i>
+          <i class="fas fa-xmark"></i>
         </button>
       </div>
     </div>
@@ -166,7 +166,7 @@
                   }">
               <i class="fas mr-1"
                  [class.fa-clock]="!isLatestReplied(interaction)"
-                 [class.fa-check-circle]="isLatestReplied(interaction)"
+                 [class.fa-circle-check]="isLatestReplied(interaction)"
                  [class.text-red-500]="isOverdue(interaction)"></i>
               {{ sla }}
             </span>

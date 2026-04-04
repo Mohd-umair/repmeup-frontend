@@ -1,18 +1,39 @@
 <div class="min-h-screen bg-rep-black p-3 sm:p-4 md:p-6 w-full">
   <div class="w-full">
 
-    <!-- Page Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-rep-white flex items-center gap-2 sm:gap-3">
-        <i class="fas fa-th-large text-rep-lime"></i>
-        Content
-      </h1>
-      <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">
-        Posts from your connected Facebook Pages and Instagram accounts. More platforms coming soon.
-      </p>
+    <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-rep-white flex items-center gap-2 sm:gap-3">
+          <i class="fas fa-th-large text-rep-lime"></i>
+          Content
+        </h1>
+        <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">
+          Posts from your connected Facebook Pages and Instagram accounts. More platforms coming soon.
+        </p>
+      </div>
+      <!-- View toggle -->
+      <div class="flex items-center rounded-lg border border-gray-700 overflow-hidden shrink-0 self-start sm:self-auto">
+        <button type="button"
+          (click)="setViewMode('grid')"
+          [class]="viewMode === 'grid'
+            ? 'px-3 py-2 bg-rep-lime text-rep-black'
+            : 'px-3 py-2 bg-gray-900 text-gray-400 hover:bg-gray-800 transition'"
+          title="Grid view">
+          <i class="fas fa-grip text-sm"></i>
+        </button>
+        <button type="button"
+          (click)="setViewMode('list')"
+          [class]="viewMode === 'list'
+            ? 'px-3 py-2 bg-rep-lime text-rep-black'
+            : 'px-3 py-2 bg-gray-900 text-gray-400 hover:bg-gray-800 transition'"
+          title="List view">
+          <i class="fas fa-table-list text-sm"></i>
+        </button>
+      </div>
     </div>
 
-    <!-- Platform Filter + Sync -->
+    <!-- ── Platform Filter + Sync ───────────────────────────────────────────── -->
     <div class="mb-6 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2">
@@ -26,8 +47,7 @@
             [class.bg-gray-800]="selectedPlatform !== 'all'"
             [class.text-gray-400]="selectedPlatform !== 'all'"
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
-            title="All platforms"
-          >
+            title="All platforms">
             <i class="fas fa-th-large"></i>
           </button>
           <button
@@ -39,12 +59,11 @@
             [class.bg-gray-800]="selectedPlatform !== platform"
             [class.text-gray-400]="selectedPlatform !== platform"
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
-            [attr.title]="getPlatformName(platform)"
-          >
+            [attr.title]="getPlatformName(platform)">
             <i [class]="getPlatformIcon(platform)"></i>
           </button>
         </div>
-        <div *ngIf="showContentTypeFilter" class="flex items-center gap-3 flex-shrink-0">
+        <div *ngIf="canSync" class="flex items-center gap-3 flex-shrink-0">
           <span *ngIf="lastSyncedAt" class="text-xs text-gray-500" [title]="formatDate(lastSyncedAt)">
             Last synced: {{ getRelativeTime(lastSyncedAt) }}
           </span>
@@ -52,8 +71,7 @@
             type="button"
             (click)="syncPosts()"
             [disabled]="syncing"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition"
-          >
+            class="inline-flex items-center gap-2 px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition">
             <i class="fas fa-sync-alt" [class.fa-spin]="syncing"></i>
             {{ syncing ? 'Syncing...' : 'Sync from ' + getPlatformName(selectedPlatform) }}
           </button>
@@ -61,10 +79,9 @@
       </div>
     </div>
 
-    <!-- Content Type Filter + Search (when a platform is selected) -->
-    <div *ngIf="showContentTypeFilter" class="mb-6 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
+    <!-- ── Content Type Filter + Search ────────────────────────────────────── -->
+    <div class="mb-6 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <!-- Content type tabs -->
         <div class="flex flex-wrap items-center gap-2">
           <i class="fas fa-layer-group text-rep-lime"></i>
           <span class="text-gray-400 text-sm">Content type:</span>
@@ -77,14 +94,11 @@
             [class.bg-gray-800]="selectedContentType !== ct.value"
             [class.text-gray-400]="selectedContentType !== ct.value"
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
-            [attr.title]="ct.label"
-          >
+            [attr.title]="ct.label">
             <i [class]="ct.icon"></i>
             <span class="hidden sm:inline">{{ ct.label }}</span>
           </button>
         </div>
-
-        <!-- Search input -->
         <div class="relative flex-shrink-0">
           <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none"></i>
           <input
@@ -99,14 +113,11 @@
             type="button"
             (click)="clearSearch()"
             class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition text-sm"
-            title="Clear search"
-          >
-            <i class="fas fa-times"></i>
+            title="Clear search">
+            <i class="fas fa-xmark"></i>
           </button>
         </div>
       </div>
-
-      <!-- Result count when searching -->
       <div *ngIf="searchQuery && !loading" class="mt-2 text-xs text-gray-500">
         <ng-container *ngIf="totalItems > 0">
           Found <span class="text-rep-lime font-semibold">{{ totalItems }}</span> result{{ totalItems !== 1 ? 's' : '' }} for
@@ -118,74 +129,63 @@
       </div>
     </div>
 
-    <!-- Error -->
+    <!-- ── Error ────────────────────────────────────────────────────────────── -->
     <div *ngIf="error" class="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-xl text-red-200 text-sm">
       {{ error }}
     </div>
 
-    <!-- Default: Select platform first -->
-    <div *ngIf="!loading && !error && selectedPlatform === 'all'" class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 md:p-16 border border-gray-800 text-center">
-      <div class="max-w-sm mx-auto mb-6">
-        <svg class="w-full h-auto text-gray-600" viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect x="20" y="20" width="80" height="80" rx="12" stroke="currentColor" stroke-width="2" fill="none"/>
-          <rect x="100" y="20" width="80" height="80" rx="12" stroke="currentColor" stroke-width="2" fill="none" opacity="0.5"/>
-          <path d="M60 60 L80 60 L80 40 L60 40 Z" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.7"/>
-          <circle cx="70" cy="70" r="8" stroke="currentColor" stroke-width="1.5" fill="none"/>
-          <text x="100" y="65" text-anchor="middle" class="text-2xl fill-current" opacity="0.6">?</text>
-        </svg>
-      </div>
-      <h2 class="text-xl sm:text-2xl font-bold text-rep-white mb-2">Select a platform first</h2>
-      <p class="text-gray-400 text-sm sm:text-base max-w-md mx-auto">
-        Choose Facebook or Instagram above to view and sync posts from your connected accounts.
-      </p>
-    </div>
-
-    <!-- Loading -->
+    <!-- ── Loading ──────────────────────────────────────────────────────────── -->
     <div *ngIf="loading" class="flex justify-center py-12">
       <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
     </div>
 
-    <!-- Empty: platform selected but no posts synced yet -->
-    <div *ngIf="!loading && !error && selectedPlatform !== 'all' && !searchQuery && posts.length === 0"
+    <!-- ── Empty: no active connections ────────────────────────────────────── -->
+    <div *ngIf="!loading && !error && posts.length === 0 && noActiveConnections"
       class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
-      <i class="fas fa-cloud-download-alt text-6xl text-gray-600 mb-4"></i>
-      <p class="text-lg text-gray-400 mb-2">No posts yet</p>
+      <i class="fas fa-plug-circle-xmark text-6xl text-gray-600 mb-4"></i>
+      <p class="text-lg text-gray-400 mb-2">No connected accounts</p>
       <p class="text-sm text-gray-500 mb-6">
-        Click <strong>Sync from {{ getPlatformName(selectedPlatform) }}</strong> to fetch posts from your {{ getPlatformName(selectedPlatform) }} account.
+        Connect a Facebook Page or Instagram account in Settings to see your published posts here.
       </p>
-      <button
-        type="button"
-        (click)="syncPosts()"
-        [disabled]="syncing"
-        class="inline-flex items-center gap-2 px-5 py-3 bg-rep-lime text-rep-black rounded-lg font-semibold hover:opacity-90 disabled:opacity-60 transition"
-      >
-        <i class="fas fa-sync-alt" [class.fa-spin]="syncing"></i>
-        {{ syncing ? 'Syncing...' : 'Sync from ' + getPlatformName(selectedPlatform) }}
-      </button>
+      <a routerLink="/app/settings"
+        class="inline-flex items-center gap-2 px-5 py-2.5 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:opacity-90 transition">
+        <i class="fas fa-gear"></i> Go to Settings
+      </a>
     </div>
 
-    <!-- Empty: search/filter returned no results -->
-    <div *ngIf="!loading && !error && selectedPlatform !== 'all' && (searchQuery || selectedContentType !== 'all') && posts.length === 0"
+    <!-- ── Empty: no posts synced ───────────────────────────────────────────── -->
+    <div *ngIf="!loading && !error && !searchQuery && selectedContentType === 'all' && posts.length === 0 && !noActiveConnections"
+      class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
+      <i class="fas fa-cloud-download-alt text-6xl text-gray-600 mb-4"></i>
+      <p class="text-lg text-gray-400 mb-2">No published posts yet</p>
+      <p class="text-sm text-gray-500 mb-6">
+        Select a platform above and click <strong>Sync</strong> to fetch posts from your connected accounts.
+      </p>
+    </div>
+
+    <!-- ── Empty: search / filter no results ───────────────────────────────── -->
+    <div *ngIf="!loading && !error && (searchQuery || selectedContentType !== 'all') && posts.length === 0"
       class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-8 sm:p-12 border border-gray-800 text-center">
       <i class="fas fa-search text-6xl text-gray-600 mb-4"></i>
       <p class="text-lg text-gray-400 mb-2">No matching posts</p>
       <p class="text-sm text-gray-500">Try a different search term or content type.</p>
-      <button
-        *ngIf="searchQuery"
-        type="button"
-        (click)="clearSearch()"
-        class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gray-700 text-gray-200 rounded-lg text-sm hover:bg-gray-600 transition"
-      >
-        <i class="fas fa-times"></i> Clear search
+      <button *ngIf="searchQuery" type="button" (click)="clearSearch()"
+        class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gray-700 text-gray-200 rounded-lg text-sm hover:bg-gray-600 transition">
+        <i class="fas fa-xmark"></i> Clear search
       </button>
     </div>
 
-    <!-- Posts Grid -->
-    <div *ngIf="!loading && posts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+    <!-- ════════════════════════════════════════════════════════════════════════
+         GRID VIEW
+         ════════════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="!loading && posts.length > 0 && viewMode === 'grid'"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
       <article
         *ngFor="let post of posts"
-        class="border border-gray-700 rounded-xl overflow-hidden bg-gray-800/30 hover:border-rep-lime/40 transition-all duration-300 flex flex-col"
-      >
+        (click)="openDetail(post)"
+        [ngClass]="selectedPost?.externalId === post.externalId ? 'ring-2 ring-rep-lime' : ''"
+        class="border border-gray-700 rounded-xl overflow-hidden bg-gray-800/30 hover:border-rep-lime/40 transition-all duration-300 flex flex-col cursor-pointer">
+
         <!-- Media thumbnail -->
         <div class="h-44 sm:h-52 bg-gray-900/50 relative overflow-hidden">
           <img
@@ -195,23 +195,17 @@
             class="w-full h-full object-cover"
             loading="lazy"
           />
-          <div
-            *ngIf="post.mediaUrl && post.mediaType === 'video'"
-            class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500"
-          >
+          <div *ngIf="post.mediaUrl && post.mediaType === 'video'"
+            class="w-full h-full flex items-center justify-center bg-gray-900 text-gray-500">
             <i class="fas fa-play-circle text-3xl"></i>
           </div>
-          <div
-            *ngIf="!post.mediaUrl"
-            class="w-full h-full flex items-center justify-center text-gray-600"
-          >
+          <div *ngIf="!post.mediaUrl"
+            class="w-full h-full flex items-center justify-center text-gray-600">
             <i class="fas fa-quote-left text-2xl"></i>
           </div>
           <!-- Platform badge -->
-          <div
-            class="absolute bottom-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center shadow-md"
-            [style.background-color]="getPlatformColors(post.platform).primary + '20'"
-          >
+          <div class="absolute bottom-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center shadow-md"
+            [style.background-color]="getPlatformColors(post.platform).primary + '20'">
             <i [class]="getPlatformIcon(post.platform) + ' text-base'" [style.color]="getPlatformColors(post.platform).primary"></i>
           </div>
         </div>
@@ -219,30 +213,30 @@
         <div class="p-4 flex flex-col flex-1">
           <p class="text-sm sm:text-base text-gray-300 line-clamp-3 whitespace-pre-wrap flex-1">{{ post.text || 'No caption' }}</p>
           <p class="text-xs text-gray-500 mt-2">{{ post.connectionName }}</p>
-          <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-700">
-            <span class="text-xs text-gray-500" [title]="'Posted on ' + formatDate(post.createdAt)">
-              Posted {{ getRelativeTime(post.createdAt) }}
+          <!-- Engagement stats -->
+          <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-700">
+            <span class="inline-flex items-center gap-1 text-xs text-gray-400" title="Likes">
+              <i class="fas fa-heart text-pink-500 text-[10px]"></i>
+              {{ post.likeCount ?? 0 | number }}
             </span>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                (click)="openPostComments(post)"
-                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg font-semibold text-xs transition
-                  bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 hover:border-gray-400
-                  dark:bg-gray-700 dark:text-gray-200 dark:border-transparent dark:hover:bg-gray-600"
-              >
+            <span class="inline-flex items-center gap-1 text-xs text-gray-400" title="Shares / Reposts">
+              <i class="fas fa-share text-blue-400 text-[10px]"></i>
+              {{ post.shareCount ?? 0 | number }}
+            </span>
+            <span class="inline-flex items-center gap-1 text-xs text-gray-400" title="Comments">
+              <i class="fas fa-comments text-gray-400 text-[10px]"></i>
+              {{ post.commentCount ?? 0 | number }}
+            </span>
+            <span class="flex-1"></span>
+            <div class="flex items-center gap-1.5" (click)="$event.stopPropagation()">
+              <button type="button" (click)="openPostComments(post)" title="View Comments"
+                class="p-1.5 rounded-lg font-semibold text-xs transition bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600">
                 <i class="fas fa-comments"></i>
-                Comments ({{ post.commentCount ?? 0 }})
               </button>
-              <a
-                *ngIf="post.permalink"
-                [href]="post.permalink"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-1 px-3 py-1.5 bg-rep-lime text-rep-black rounded-lg font-semibold text-xs hover:opacity-90 transition"
-              >
-                <i class="fas fa-external-link-alt"></i>
-                View
+              <a *ngIf="post.permalink" [href]="post.permalink" target="_blank" rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rep-lime text-rep-black rounded-lg font-semibold text-xs hover:opacity-90 transition">
+                <i [class]="getPlatformIcon(post.platform)"></i>
+                <span class="hidden sm:inline">View</span>
               </a>
             </div>
           </div>
@@ -250,9 +244,118 @@
       </article>
     </div>
 
-    <!-- Pagination -->
+    <!-- ════════════════════════════════════════════════════════════════════════
+         LIST VIEW
+         ════════════════════════════════════════════════════════════════════════ -->
+    <div *ngIf="!loading && posts.length > 0 && viewMode === 'list'"
+      class="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden bg-white dark:bg-transparent shadow-sm dark:shadow-none">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+        <thead class="bg-gray-100 dark:bg-gray-900/60">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-500 uppercase tracking-wide w-14">Media</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-500 uppercase tracking-wide">Caption</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-500 uppercase tracking-wide hidden md:table-cell">Platform</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-500 uppercase tracking-wide hidden lg:table-cell">Type</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-500 uppercase tracking-wide hidden md:table-cell">Engagement</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-500 uppercase tracking-wide hidden lg:table-cell">Posted</th>
+            <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-500 uppercase tracking-wide">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-900/20 divide-y divide-gray-200 dark:divide-gray-800">
+          <tr *ngFor="let post of posts"
+            (click)="openDetail(post)"
+            [ngClass]="selectedPost?.externalId === post.externalId ? 'bg-rep-lime/10 dark:bg-rep-lime/5' : 'hover:bg-gray-50 dark:hover:bg-gray-800/40'"
+            class="transition cursor-pointer">
+
+            <!-- Thumbnail -->
+            <td class="px-4 py-3">
+              <div class="w-10 h-10 rounded-lg overflow-hidden shrink-0 relative">
+                <img
+                  *ngIf="post.mediaUrl && (post.mediaType === 'image' || post.mediaType === 'carousel')"
+                  [src]="post.mediaUrl" loading="lazy"
+                  class="w-full h-full object-cover" alt="" />
+                <div *ngIf="post.mediaUrl && post.mediaType === 'video'"
+                  class="w-full h-full bg-gray-200 dark:bg-gray-900 flex items-center justify-center">
+                  <i class="fas fa-play text-gray-600 dark:text-white text-[10px] ml-0.5"></i>
+                </div>
+                <div *ngIf="!post.mediaUrl"
+                  class="w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <i class="fas fa-quote-left text-gray-400 dark:text-gray-500 text-xs"></i>
+                </div>
+                <!-- Platform badge overlay -->
+                <div class="absolute bottom-0 right-0 w-4 h-4 rounded-tl-md flex items-center justify-center"
+                  [style.background-color]="getPlatformColors(post.platform).primary + '30'">
+                  <i [class]="getPlatformIcon(post.platform) + ' text-[8px]'" [style.color]="getPlatformColors(post.platform).primary"></i>
+                </div>
+              </div>
+            </td>
+
+            <!-- Caption -->
+            <td class="px-4 py-3 max-w-xs">
+              <p class="text-sm text-gray-800 dark:text-gray-300 truncate">{{ truncate(post.text || 'No caption', 90) }}</p>
+              <p class="text-[11px] text-gray-500 dark:text-gray-500 mt-0.5">{{ post.connectionName }}</p>
+            </td>
+
+            <!-- Platform -->
+            <td class="px-4 py-3 hidden md:table-cell">
+              <div class="flex items-center gap-1.5">
+                <i [class]="getPlatformIcon(post.platform) + ' text-sm'" [style.color]="getPlatformColors(post.platform).primary"></i>
+                <span class="text-sm text-gray-800 dark:text-gray-300">{{ getPlatformName(post.platform) }}</span>
+              </div>
+            </td>
+
+            <!-- Type -->
+            <td class="px-4 py-3 hidden lg:table-cell">
+              <span *ngIf="post.contentType"
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-700 border border-gray-200 dark:border-transparent dark:bg-gray-800 dark:text-gray-400">
+                {{ post.contentType }}
+              </span>
+            </td>
+
+            <!-- Engagement -->
+            <td class="px-4 py-3 hidden md:table-cell">
+              <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Likes">
+                  <i class="fas fa-heart text-pink-500 text-[10px]"></i>
+                  {{ post.likeCount ?? 0 | number }}
+                </span>
+                <span class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Shares / Reposts">
+                  <i class="fas fa-share text-blue-400 text-[10px]"></i>
+                  {{ post.shareCount ?? 0 | number }}
+                </span>
+                <span class="inline-flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Comments">
+                  <i class="fas fa-comments text-gray-400 text-[10px]"></i>
+                  {{ post.commentCount ?? 0 | number }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Posted -->
+            <td class="px-4 py-3 hidden lg:table-cell text-xs text-gray-600 dark:text-gray-500 whitespace-nowrap">
+              {{ getRelativeTime(post.createdAt) }}
+            </td>
+
+            <!-- Actions (stop propagation) -->
+            <td class="px-4 py-3 text-right" (click)="$event.stopPropagation()">
+              <div class="flex items-center justify-end gap-1">
+                <button type="button" (click)="openPostComments(post)" title="Comments"
+                  class="p-1.5 rounded-lg text-xs transition bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200 hover:text-gray-900 dark:border-transparent dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200">
+                  <i class="fas fa-comments"></i>
+                </button>
+                <a *ngIf="post.permalink" [href]="post.permalink" target="_blank" rel="noopener noreferrer"
+                  [title]="'View on ' + getPlatformName(post.platform)"
+                  class="p-1.5 rounded-lg text-xs transition bg-rep-lime/15 text-rep-black dark:text-rep-lime dark:bg-rep-lime/10 hover:bg-rep-lime/25 dark:hover:bg-rep-lime/20">
+                  <i [class]="getPlatformIcon(post.platform)"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Pagination ──────────────────────────────────────────────────────── -->
     <app-pagination
-      *ngIf="selectedPlatform !== 'all'"
       [currentPage]="currentPage"
       [totalPages]="totalPages"
       [totalItems]="totalItems"
@@ -263,5 +366,126 @@
       (pageSizeChange)="onPageSizeChange($event)"
     ></app-pagination>
 
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     BACKDROP
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="selectedPost"
+  class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
+  (click)="closeDetail()"></div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     DETAIL SIDEBAR
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="selectedPost"
+  class="fixed inset-y-0 right-0 w-full max-w-lg bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-xl z-40 flex flex-col">
+
+  <!-- Sidebar header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-800 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+        [style.background-color]="getPlatformColors(selectedPost.platform).primary + '20'">
+        <i [class]="getPlatformIcon(selectedPost.platform)" [style.color]="getPlatformColors(selectedPost.platform).primary"></i>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getPlatformName(selectedPost.platform) }}</p>
+        <p class="text-[11px] text-gray-400">{{ selectedPost.connectionName }}</p>
+      </div>
+      <span *ngIf="selectedPost.contentType"
+        class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+        {{ selectedPost.contentType }}
+      </span>
+    </div>
+    <button type="button" (click)="closeDetail()"
+      class="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400
+             hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+      <i class="fas fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="flex-1 overflow-y-auto">
+
+    <!-- Media -->
+    <div *ngIf="selectedPost.mediaUrl && (selectedPost.mediaType === 'image' || selectedPost.mediaType === 'carousel')"
+      class="bg-gray-100 dark:bg-gray-800">
+      <img [src]="selectedPost.mediaUrl"
+        [alt]="selectedPost.text | slice:0:80"
+        loading="lazy"
+        class="w-full h-auto max-h-[min(70vh,560px)] object-contain object-center block" />
+    </div>
+    <div *ngIf="selectedPost.mediaUrl && selectedPost.mediaType === 'video'"
+      class="bg-gray-950">
+      <video [src]="selectedPost.mediaUrl" controls
+        class="w-full max-h-72 object-contain"></video>
+    </div>
+    <div *ngIf="!selectedPost.mediaUrl"
+      class="h-28 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+      <i class="fas fa-quote-left text-3xl text-gray-400 dark:text-gray-600"></i>
+    </div>
+
+    <!-- Engagement stats row -->
+    <div class="mx-5 mt-4 grid grid-cols-3 divide-x divide-gray-100 dark:divide-gray-800 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 overflow-hidden">
+      <div class="flex flex-col items-center justify-center py-3 gap-0.5">
+        <i class="fas fa-heart text-pink-500 text-base"></i>
+        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ selectedPost.likeCount ?? 0 | number }}</span>
+        <span class="text-[10px] text-gray-400 uppercase tracking-wide">Likes</span>
+      </div>
+      <div class="flex flex-col items-center justify-center py-3 gap-0.5">
+        <i class="fas fa-share text-blue-400 text-base"></i>
+        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ selectedPost.shareCount ?? 0 | number }}</span>
+        <span class="text-[10px] text-gray-400 uppercase tracking-wide">Shares</span>
+      </div>
+      <div class="flex flex-col items-center justify-center py-3 gap-0.5">
+        <i class="fas fa-comments text-gray-400 dark:text-gray-500 text-base"></i>
+        <span class="text-sm font-bold text-gray-900 dark:text-white">{{ selectedPost.commentCount ?? 0 | number }}</span>
+        <span class="text-[10px] text-gray-400 uppercase tracking-wide">Comments</span>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="px-5 py-4">
+      <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words leading-relaxed">
+        {{ selectedPost.text || 'No caption' }}
+      </p>
+      <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-4 flex items-center gap-1.5">
+        <i class="fas fa-clock text-[10px]"></i>
+        Posted {{ formatDate(selectedPost.createdAt) }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Sidebar footer actions -->
+  <div class="border-t border-gray-200 dark:border-gray-800 px-5 py-4 shrink-0 space-y-2">
+    <!-- View on platform -->
+    <a *ngIf="selectedPost.permalink"
+      [href]="selectedPost.permalink"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition
+             bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm shadow-rep-lime/20">
+      <i [class]="getPlatformIcon(selectedPost.platform)"></i>
+      View on {{ getPlatformName(selectedPost.platform) }}
+    </a>
+    <div *ngIf="!selectedPost.permalink"
+      class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium
+             bg-gray-100 dark:bg-gray-800 text-gray-400 border border-dashed border-gray-300 dark:border-gray-700">
+      <i class="fas fa-link-slash text-xs"></i>
+      No permalink available
+    </div>
+    <!-- Comments -->
+    <button type="button" (click)="openPostComments(selectedPost); closeDetail()"
+      class="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition
+             bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200
+             dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700">
+      <i class="fas fa-comments"></i>
+      View Comments
+      <span *ngIf="(selectedPost.commentCount ?? 0) > 0"
+        class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 text-[10px] font-bold">
+        {{ selectedPost.commentCount }}
+      </span>
+    </button>
   </div>
 </div>

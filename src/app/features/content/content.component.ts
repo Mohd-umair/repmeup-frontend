@@ -20,6 +20,8 @@ export interface PlatformPost {
   mediaUrl: string | null;
   mediaType: 'image' | 'video' | 'carousel' | null;
   contentType?: string;
+  likeCount?: number;
+  shareCount?: number;
   commentCount?: number;
 }
 
@@ -39,10 +41,17 @@ export class ContentComponent implements OnInit, OnDestroy {
   error: string | null = null;
   syncing = false;
   lastSyncedAt: string | null = null;
+  noActiveConnections = false;
 
   selectedPlatform = 'all';
   selectedContentType = 'all';
   searchQuery = '';
+
+  /** View mode: grid (cards) or list (table) */
+  viewMode: 'grid' | 'list' = 'grid';
+
+  /** Sidebar detail panel */
+  selectedPost: PlatformPost | null = null;
 
   platformFilterOptions: string[] = ['facebook', 'instagram'];
   contentTypes: { value: string; label: string; icon: string }[] = [
@@ -68,8 +77,9 @@ export class ContentComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.posts = [];
-    // Debounce search input — fires loadPosts after 400 ms of inactivity
+    const saved = localStorage.getItem('content_view_mode');
+    if (saved === 'list' || saved === 'grid') this.viewMode = saved;
+
     this.search$.pipe(
       debounceTime(400),
       distinctUntilChanged(),
@@ -78,12 +88,31 @@ export class ContentComponent implements OnInit, OnDestroy {
       this.currentPage = 1;
       this.loadPosts();
     });
+
+    this.loadPosts();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  setViewMode(mode: 'grid' | 'list'): void {
+    this.viewMode = mode;
+    localStorage.setItem('content_view_mode', mode);
+  }
+
+  // ─── Sidebar detail ──────────────────────────────────────────────────────────
+
+  openDetail(post: PlatformPost): void {
+    this.selectedPost = post;
+  }
+
+  closeDetail(): void {
+    this.selectedPost = null;
+  }
+
+  // ─── Existing methods ────────────────────────────────────────────────────────
 
   onSearchInput(): void {
     this.search$.next(this.searchQuery);
@@ -106,20 +135,16 @@ export class ContentComponent implements OnInit, OnDestroy {
   }
 
   loadPosts(): void {
-    if (this.selectedPlatform === 'all') {
-      this.posts = [];
-      this.lastSyncedAt = null;
-      this.totalItems = 0;
-      this.totalPages = 1;
-      return;
-    }
     this.loading = true;
     this.error = null;
 
     let params = new HttpParams()
-      .set('platform', this.selectedPlatform)
       .set('page', this.currentPage.toString())
       .set('limit', this.pageSize.toString());
+
+    if (this.selectedPlatform !== 'all') {
+      params = params.set('platform', this.selectedPlatform);
+    }
 
     if (this.searchQuery.trim()) {
       params = params.set('search', this.searchQuery.trim());
@@ -132,7 +157,7 @@ export class ContentComponent implements OnInit, OnDestroy {
       .get<{
         success: boolean;
         posts: PlatformPost[];
-        meta?: { total: number; platformFilter: string; lastSyncedAt?: string };
+        meta?: { total: number; platformFilter: string; lastSyncedAt?: string; noActiveConnections?: boolean };
         pagination?: PaginationMeta;
       }>(`${environment.apiUrl}/platform-posts`, { params })
       .pipe(takeUntil(this.destroy$))
@@ -140,6 +165,7 @@ export class ContentComponent implements OnInit, OnDestroy {
         next: (res) => {
           this.posts = res.posts || [];
           this.lastSyncedAt = res.meta?.lastSyncedAt ?? null;
+          this.noActiveConnections = res.meta?.noActiveConnections ?? false;
           if (res.pagination) {
             this.totalItems = res.pagination.total;
             this.totalPages = res.pagination.pages;
@@ -160,6 +186,7 @@ export class ContentComponent implements OnInit, OnDestroy {
     this.searchQuery = '';
     this.currentPage = 1;
     this.error = null;
+    this.closeDetail();
     this.loadPosts();
   }
 
@@ -205,6 +232,10 @@ export class ContentComponent implements OnInit, OnDestroy {
   }
 
   get showContentTypeFilter(): boolean {
+    return true;
+  }
+
+  get canSync(): boolean {
     return this.selectedPlatform === 'facebook' || this.selectedPlatform === 'instagram';
   }
 
@@ -258,5 +289,10 @@ export class ContentComponent implements OnInit, OnDestroy {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return this.formatDate(iso);
+  }
+
+  truncate(text: string, len = 100): string {
+    if (!text) return '';
+    return text.length > len ? text.slice(0, len) + '…' : text;
   }
 }

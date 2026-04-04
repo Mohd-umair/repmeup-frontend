@@ -126,7 +126,7 @@
                   <i class="fas fa-check-double text-xs"></i>
                 </button>
                 <button (click)="deselectAllPlatforms()" class="w-8 h-8 bg-gray-800 text-gray-400 hover:bg-gray-700 rounded-lg transition flex items-center justify-center" title="Clear All">
-                  <i class="fas fa-times text-xs"></i>
+                  <i class="fas fa-xmark text-xs"></i>
                 </button>
               </div>
             </div>
@@ -216,7 +216,7 @@
             <!-- Custom Mode: Platform Selector (Cleaner) -->
             <div *ngIf="aiMode === 'custom' && Object.keys(platformPosts).length > 0" class="mt-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
               <p class="text-xs font-medium text-gray-400 mb-2">
-                <i class="fas fa-edit mr-1"></i>
+                <i class="fas fa-pen-to-square mr-1"></i>
                 Load platform content:
               </p>
               <div class="flex flex-wrap gap-2">
@@ -376,7 +376,7 @@
                       (click)="removeMedia(i)"
                       class="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition"
                     >
-                      <i class="fas fa-trash text-xs"></i>
+                      <i class="fas fa-trash-can text-xs"></i>
                     </button>
                     <button
                       *ngIf="i < mediaFiles.length - 1"
@@ -614,7 +614,7 @@
                   (click)="deleteDraft(draft.id); $event.stopPropagation()"
                   class="text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition"
                 >
-                  <i class="fas fa-trash text-xs"></i>
+                  <i class="fas fa-trash-can text-xs"></i>
                 </button>
               </div>
             </div>
@@ -650,7 +650,7 @@
                   (click)="deleteScheduledPost(post._id!)"
                   class="text-red-400 hover:text-red-300 transition opacity-0 group-hover:opacity-100"
                 >
-                  <i class="fas fa-trash text-xs"></i>
+                  <i class="fas fa-trash-can text-xs"></i>
                 </button>
               </div>
               

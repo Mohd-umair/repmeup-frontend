@@ -42,6 +42,7 @@ import { TrendExplorerComponent } from './features/trend-explorer/trend-explorer
 import { ContentStudioComponent } from './features/content-studio/content-studio.component';
 import { ScheduledPostsComponent } from './features/scheduled-posts/scheduled-posts.component';
 import { DraftsComponent } from './features/drafts/drafts.component';
+import { BucketSettingsComponent } from './features/settings/components/bucket-settings/bucket-settings.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -91,10 +92,10 @@ const routes: Routes = [
       { path: 'publish/published', component: PublishPublishedRedirectComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'publish/approval-queue', redirectTo: 'approval-queue', pathMatch: 'full' },
       { path: 'calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
-      { path: 'content', component: ContentComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'publish/content', component: ContentComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'brand-hub', component: BrandHubComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'content-studio', component: ContentStudioComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
-      { path: 'scheduled-posts', component: ScheduledPostsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
+      { path: 'publish/scheduled-posts', component: ScheduledPostsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'drafts', component: DraftsComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'approval-queue', component: ApprovalQueueComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.manage', 'posts.read'] } },
       { path: 'trend-explorer', component: TrendExplorerComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.export'] } },
@@ -120,7 +121,13 @@ const routes: Routes = [
       { path: 'settings/auto-reply', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/brand-rules', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/compliance', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
-      { path: 'settings/intent-buckets', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/accounts', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
+      {
+        path: 'intent-buckets',
+        component: BucketSettingsComponent,
+        canActivate: [PermissionGuard],
+        data: { permissions: ['inbox.read', 'settings.read'] }
+      },
       { path: 'agents', component: AgentsComponent, canActivate: [PermissionGuard], data: { permissions: ['users.read'] } },
       { path: 'plans', component: PlansComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.manage'] } },
       { path: 'ai-credits', component: AiCreditsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },

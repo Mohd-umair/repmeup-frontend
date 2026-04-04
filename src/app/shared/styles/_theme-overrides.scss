@@ -132,5 +132,22 @@
     .placeholder-gray-400::placeholder {
       color: var(--input-placeholder) !important;
     }
+
+    /* Tables (e.g. Content / Published list view): opacity grays stay dark without remapping */
+    .bg-gray-900\/60 {
+      background-color: var(--surface-secondary) !important;
+    }
+
+    .bg-gray-900\/20 {
+      background-color: var(--surface-primary) !important;
+    }
+
+    .divide-gray-800 > :not([hidden]) ~ :not([hidden]) {
+      border-color: var(--card-border) !important;
+    }
+
+    .hover\:bg-gray-800\/40:hover {
+      background-color: var(--surface-tertiary) !important;
+    }
   }
 }

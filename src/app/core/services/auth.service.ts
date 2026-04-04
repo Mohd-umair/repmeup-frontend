@@ -145,6 +145,27 @@ export class AuthService {
   }
 
   /**
+   * Send a 6-digit OTP to the given email for passwordless login.
+   */
+  sendOtp(email: string): Observable<IApiResponse<any>> {
+    return this.apiService.post<IApiResponse<any>>('/auth/send-otp', { email });
+  }
+
+  /**
+   * Verify OTP code and authenticate the user.
+   */
+  verifyOtp(email: string, otp: string): Observable<IApiResponse<IAuthResponse>> {
+    return this.apiService.post<IApiResponse<IAuthResponse>>('/auth/verify-otp', { email, otp })
+      .pipe(
+        tap(response => {
+          if (response.success && response.data) {
+            this.handleAuthSuccess(response.data);
+          }
+        })
+      );
+  }
+
+  /**
    * Handle Google OAuth callback — save tokens, mark authenticated, load user.
    * Must be called by GoogleCallbackComponent so all reactive subjects are updated.
    */

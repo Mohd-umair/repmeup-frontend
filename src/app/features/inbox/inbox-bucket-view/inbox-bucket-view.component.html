@@ -102,7 +102,7 @@
           <div *ngIf="interaction.status === 'resolved'"
                class="absolute inset-0 rounded-xl z-10 flex items-center justify-center pointer-events-none card-resolved-overlay">
             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white shadow-sm">
-              <i class="fas fa-check-circle text-[10px]"></i> Resolved
+              <i class="fas fa-circle-check text-[10px]"></i> Resolved
             </span>
           </div>
 
@@ -229,7 +229,7 @@
           <div *ngIf="interaction.status === 'resolved'"
                class="absolute inset-0 rounded-xl z-10 flex items-center justify-center pointer-events-none card-resolved-overlay">
             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-bold bg-emerald-500 text-white shadow-sm">
-              <i class="fas fa-check-circle text-[10px]"></i> Resolved
+              <i class="fas fa-circle-check text-[10px]"></i> Resolved
             </span>
           </div>
           <div class="card-content px-3 pt-3 pb-2.5" [class.opacity-50]="interaction.status === 'resolved'">
@@ -320,7 +320,7 @@
           <span class="text-[10px] text-gray-400">{{ getRelativeTime(activeChatInteraction.platformCreatedAt || activeChatInteraction.createdAt) }}</span>
           <span *ngIf="isResolved()"
                 class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-            <i class="fas fa-check-circle" style="font-size:8px;"></i> Resolved
+            <i class="fas fa-circle-check" style="font-size:8px;"></i> Resolved
           </span>
         </div>
       </div>
@@ -328,7 +328,7 @@
       <button type="button" (click)="closeChat()"
               class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
               title="Close">
-        <i class="fas fa-times text-xs"></i>
+        <i class="fas fa-xmark text-xs"></i>
       </button>
     </div>
 
@@ -416,7 +416,7 @@
     <div *ngIf="isResolved()"
          class="mx-3 mb-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 flex items-center justify-between gap-2 flex-shrink-0">
       <div class="flex items-center gap-2 min-w-0">
-        <i class="fas fa-check-circle text-emerald-500 text-xs flex-shrink-0"></i>
+        <i class="fas fa-circle-check text-emerald-500 text-xs flex-shrink-0"></i>
         <span class="text-xs text-emerald-700 dark:text-emerald-400 font-medium">This conversation is resolved.</span>
       </div>
       <button
@@ -466,7 +466,7 @@
         <button type="button" (click)="clearAttachment()"
                 class="flex-shrink-0 w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-white flex items-center justify-center text-[10px] transition"
                 title="Remove">
-          <i class="fas fa-times"></i>
+          <i class="fas fa-xmark"></i>
         </button>
       </div>
 
@@ -494,7 +494,7 @@
                  style="accent-color: var(--rep-lime, #c8f04e)"></audio>
           <button type="button" (click)="cancelRecording()"
                   class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-red-100 hover:text-red-500 transition flex-shrink-0">
-            <i class="fas fa-trash text-[9px]"></i>
+            <i class="fas fa-trash-can text-[9px]"></i>
           </button>
         </ng-container>
       </div>
@@ -560,7 +560,7 @@
             (click)="resolveChat()"
             [disabled]="resolving"
             class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50">
-            <i class="fas" [class.fa-check-circle]="!resolving" [class.fa-spinner]="resolving" [class.fa-spin]="resolving" style="font-size:10px;"></i>
+            <i class="fas" [class.fa-circle-check]="!resolving" [class.fa-spinner]="resolving" [class.fa-spin]="resolving" style="font-size:10px;"></i>
             {{ resolving ? 'Resolving…' : 'Resolve' }}
           </button>
         </div>

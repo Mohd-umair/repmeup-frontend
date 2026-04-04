@@ -51,6 +51,12 @@ export class DraftsComponent implements OnInit, OnDestroy {
   totalPages = 1;
   totalItems = 0;
 
+  /** View mode: grid (cards) or list (table) */
+  viewMode: 'grid' | 'list' = 'grid';
+
+  /** Sidebar detail panel */
+  selectedDraft: DraftPost | null = null;
+
   /** Inline edit state */
   editingId: string | null = null;
   editContent = '';
@@ -71,9 +77,6 @@ export class DraftsComponent implements OnInit, OnDestroy {
   /** Send-to-approval state */
   sendingApprovalId: string | null = null;
 
-  /** Detail / preview modal */
-  previewDraft: DraftPost | null = null;
-
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -82,6 +85,8 @@ export class DraftsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    const saved = localStorage.getItem('drafts_view_mode');
+    if (saved === 'list' || saved === 'grid') this.viewMode = saved;
     this.loadDrafts();
   }
 
@@ -89,6 +94,27 @@ export class DraftsComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  setViewMode(mode: 'grid' | 'list'): void {
+    this.viewMode = mode;
+    localStorage.setItem('drafts_view_mode', mode);
+  }
+
+  // ─── Sidebar detail ──────────────────────────────────────────────────────────
+
+  openDetail(draft: DraftPost): void {
+    this.selectedDraft = draft;
+    this.editingId = null;
+    this.editContent = '';
+  }
+
+  closeDetail(): void {
+    this.selectedDraft = null;
+    this.editingId = null;
+    this.editContent = '';
+  }
+
+  // ─── Load ────────────────────────────────────────────────────────────────────
 
   loadDrafts(): void {
     this.loading = true;
@@ -149,6 +175,9 @@ export class DraftsComponent implements OnInit, OnDestroy {
         next: (res) => {
           const idx = this.drafts.findIndex(d => d._id === draft._id);
           if (idx > -1) this.drafts[idx].content = res.data.content;
+          if (this.selectedDraft?._id === draft._id) {
+            this.selectedDraft = { ...this.selectedDraft, content: res.data.content };
+          }
           this.cancelEdit();
           this.savingEdit = false;
           this.notify.success('Draft updated.');
@@ -174,7 +203,7 @@ export class DraftsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.drafts = this.drafts.filter(d => d._id !== id);
-          if (this.previewDraft?._id === id) this.previewDraft = null;
+          if (this.selectedDraft?._id === id) this.closeDetail();
           this.publishingId = null;
           this.notify.success('Published!', res.message || 'Draft published successfully.');
         },
@@ -215,6 +244,7 @@ export class DraftsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.drafts = this.drafts.filter(d => d._id !== this.schedulingId);
+          if (this.selectedDraft?._id === this.schedulingId) this.closeDetail();
           this.closeSchedule();
           this.scheduling = false;
           this.notify.success('Draft scheduled successfully!');
@@ -237,7 +267,7 @@ export class DraftsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.drafts = this.drafts.filter(d => d._id !== id);
-          if (this.previewDraft?._id === id) this.previewDraft = null;
+          if (this.selectedDraft?._id === id) this.closeDetail();
           this.deletingId = null;
           this.notify.success('Draft deleted.');
         },
@@ -262,7 +292,7 @@ export class DraftsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.drafts = this.drafts.filter(d => d._id !== id);
-          if (this.previewDraft?._id === id) this.previewDraft = null;
+          if (this.selectedDraft?._id === id) this.closeDetail();
           this.sendingApprovalId = null;
           this.notify.success('Sent for approval!', res.message || 'Post moved to the Approval Queue.');
         },
@@ -272,16 +302,6 @@ export class DraftsComponent implements OnInit, OnDestroy {
           this.notify.error('Failed', msg);
         }
       });
-  }
-
-  // ─── Preview modal ───────────────────────────────────────────────────────────
-
-  openPreview(draft: DraftPost): void {
-    this.previewDraft = draft;
-  }
-
-  closePreview(): void {
-    this.previewDraft = null;
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────

@@ -1,97 +1,368 @@
 <div class="min-h-screen bg-white dark:bg-rep-black p-4 md:p-6">
-  <div class="mb-6 flex items-center justify-between">
+
+  <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+  <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
       <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-rep-white flex items-center gap-2">
-        <i class="fas fa-calendar-check text-rep-black dark:text-rep-lime"></i>
+        <i class="fas fa-calendar-check text-rep-lime drop-shadow-[0_0_10px_rgba(184,245,103,0.45)]"></i>
         Scheduled Posts
       </h1>
-      <p class="text-gray-500 dark:text-gray-400 mt-1">View and manage your upcoming scheduled posts.</p>
+      <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+        View and manage your upcoming scheduled posts.
+      </p>
     </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <!-- View toggle -->
+      <div class="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <button type="button"
+          (click)="setViewMode('grid')"
+          [class]="viewMode === 'grid'
+            ? 'px-3 py-2 bg-rep-lime text-rep-black'
+            : 'px-3 py-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition'"
+          title="Grid view">
+          <i class="fas fa-grip text-sm"></i>
+        </button>
+        <button type="button"
+          (click)="setViewMode('list')"
+          [class]="viewMode === 'list'
+            ? 'px-3 py-2 bg-rep-lime text-rep-black'
+            : 'px-3 py-2 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition'"
+          title="List view">
+          <i class="fas fa-table-list text-sm"></i>
+        </button>
+      </div>
+      <a routerLink="/app/content-studio"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
+               bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm shadow-rep-lime/25 transition">
+        <i class="fas fa-plus text-rep-black"></i> New Post
+      </a>
+    </div>
+  </div>
+
+  <!-- ── Loading ────────────────────────────────────────────────────────────── -->
+  <div *ngIf="loading" class="flex justify-center py-20">
+    <i class="fas fa-spinner fa-spin text-3xl text-rep-lime"></i>
+  </div>
+
+  <!-- ── Empty state ────────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && posts.length === 0"
+    class="flex flex-col items-center justify-center py-20 text-center">
+    <div class="w-20 h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-5">
+      <i class="fas fa-calendar-xmark text-3xl text-gray-300 dark:text-gray-600"></i>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1">No scheduled posts yet</h3>
+    <p class="text-sm text-gray-400 dark:text-gray-500 max-w-xs">
+      Create a post in Content Studio and schedule it for a future date and time.
+    </p>
     <a routerLink="/app/content-studio"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-rep-lime text-rep-black hover:bg-rep-lime/90 transition">
-      <i class="fas fa-plus"></i> New Post
+      class="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+             bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm shadow-rep-lime/25 transition">
+      <i class="fas fa-wand-magic-sparkles text-rep-black"></i> Go to Content Studio
     </a>
   </div>
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="flex justify-center py-16">
-    <i class="fas fa-spinner fa-spin text-3xl text-rep-black dark:text-rep-lime"></i>
-  </div>
-
-  <!-- Empty state -->
-  <div *ngIf="!loading && posts.length === 0" class="text-center py-16">
-    <i class="fas fa-calendar-xmark text-5xl text-gray-300 dark:text-gray-600 mb-4"></i>
-    <p class="text-gray-500 dark:text-gray-400 text-lg">No scheduled posts yet.</p>
-    <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">Create a post from the Content Studio and schedule it.</p>
-  </div>
-
-  <!-- Posts grid -->
-  <div *ngIf="!loading && posts.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+  <!-- ════════════════════════════════════════════════════════════════════════
+       GRID VIEW
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && posts.length > 0 && viewMode === 'grid'"
+    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
     <div *ngFor="let post of posts"
-      class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900/50 overflow-hidden transition hover:border-gray-300 dark:hover:border-gray-600">
+      class="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm
+             dark:border-gray-800 dark:bg-gray-900/50
+             hover:border-gray-300 dark:hover:border-gray-700 transition-all overflow-hidden cursor-pointer"
+      [ngClass]="selectedPost?._id === post._id ? 'ring-2 ring-rep-lime/40' : ''"
+      (click)="openDetail(post)">
 
-      <!-- Header -->
-      <div class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-800">
+      <!-- Card header -->
+      <div class="flex items-center justify-between px-3 py-2.5 border-b border-gray-100 dark:border-gray-800">
         <div class="flex items-center gap-2">
-          <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-            <i [class]="getPlatformIcon(post.platform) + ' text-sm'"></i>
+          <span class="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800">
+            <i [class]="getPlatformIcon(post.platform) + ' text-sm ' + getPlatformColor(post.platform)"></i>
           </span>
           <span class="text-sm font-medium text-gray-900 dark:text-white">{{ getPlatformLabel(post.platform) }}</span>
         </div>
-        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-          <i class="fas fa-clock text-[10px]"></i> Scheduled
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
+                     bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+          <i class="fas fa-clock text-[8px]"></i> Scheduled
         </span>
       </div>
 
+      <!-- Media thumbnail -->
+      <div *ngIf="resolveMediaUrl(post) && post.mediaType === 'image'"
+        class="relative bg-gray-100 dark:bg-gray-800 mx-3 mt-2 rounded-lg overflow-hidden">
+        <img [src]="resolveMediaUrl(post)!"
+          [alt]="post.platform + ' scheduled image'"
+          class="w-full h-auto max-h-48 object-cover" />
+      </div>
+      <div *ngIf="resolveMediaUrl(post) && post.mediaType === 'video'"
+        class="relative h-28 bg-gray-900 flex items-center justify-center overflow-hidden mx-3 mt-2 rounded-lg">
+        <div class="w-10 h-10 rounded-full bg-white/20 border-2 border-white/50 flex items-center justify-center">
+          <i class="fas fa-play text-white text-base ml-0.5"></i>
+        </div>
+        <span class="absolute bottom-2 right-2 text-[10px] text-white/70 bg-black/40 rounded px-1.5 py-0.5">Video</span>
+      </div>
+
       <!-- Content -->
-      <div class="p-3">
-        <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">{{ truncate(post.content) }}</p>
+      <div class="flex-1 px-3 py-2">
+        <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words leading-relaxed">
+          {{ truncate(post.content) }}
+        </p>
       </div>
 
       <!-- Scheduled time -->
       <div class="px-3 pb-2">
-        <div class="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1">
-          <i class="fas fa-calendar-day"></i>
-          {{ post.scheduledFor | date:'medium' }}
+        <div class="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400
+                    bg-gray-50 dark:bg-gray-800 rounded-lg px-2.5 py-1">
+          <i class="fas fa-calendar-day text-[10px]"></i>
+          {{ post.scheduledFor | date:'d MMM y, h:mm a' }}
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="flex items-center gap-2 p-3 pt-0">
+      <!-- Inline quick actions -->
+      <div class="p-3 pt-0 border-t border-gray-100 dark:border-gray-800 flex gap-1.5"
+           (click)="$event.stopPropagation()">
         <button (click)="openReschedule(post)" type="button"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition
-            bg-gray-100 text-gray-700 hover:bg-gray-200
-            dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
-          <i class="fas fa-clock-rotate-left"></i> Reschedule
+          title="Reschedule"
+          class="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition
+                 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+          <i class="fas fa-clock-rotate-left text-[10px]"></i> Reschedule
         </button>
         <button (click)="deletePost(post._id)" type="button"
           [disabled]="deletingId === post._id"
-          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition
-            bg-red-50 text-red-600 hover:bg-red-100
-            dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30
-            disabled:opacity-50">
-          <i [class]="deletingId === post._id ? 'fas fa-spinner fa-spin' : 'fas fa-trash-can'"></i>
-          {{ deletingId === post._id ? 'Deleting...' : 'Delete' }}
+          title="Delete"
+          class="px-3 py-1.5 rounded-lg text-xs font-medium transition
+                 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30
+                 disabled:opacity-50">
+          <i [class]="deletingId === post._id ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-trash-can text-[10px]'"></i>
         </button>
       </div>
     </div>
   </div>
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       LIST VIEW
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && posts.length > 0 && viewMode === 'list'"
+    class="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
+      <thead class="bg-gray-50 dark:bg-gray-900/60">
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide w-10"></th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Platform</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Content</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Scheduled For</th>
+          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Status</th>
+          <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white dark:bg-gray-900/30 divide-y divide-gray-100 dark:divide-gray-800">
+        <tr *ngFor="let post of posts"
+          (click)="openDetail(post)"
+          [ngClass]="selectedPost?._id === post._id
+            ? 'bg-rep-lime/5 hover:bg-rep-lime/5 dark:bg-rep-lime/5'
+            : 'hover:bg-gray-50 dark:hover:bg-gray-800/40'"
+          class="transition cursor-pointer">
+
+          <!-- Media thumbnail -->
+          <td class="px-4 py-3">
+            <div *ngIf="resolveMediaUrl(post) && post.mediaType === 'image'"
+              class="w-9 h-9 rounded-md overflow-hidden shrink-0">
+              <img [src]="resolveMediaUrl(post)!" class="w-full h-full object-cover" alt="" />
+            </div>
+            <div *ngIf="resolveMediaUrl(post) && post.mediaType === 'video'"
+              class="w-9 h-9 rounded-md bg-gray-900 flex items-center justify-center shrink-0">
+              <i class="fas fa-play text-white text-[10px] ml-0.5"></i>
+            </div>
+            <div *ngIf="!resolveMediaUrl(post)"
+              class="w-9 h-9 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+              <i class="fas fa-align-left text-gray-400 text-xs"></i>
+            </div>
+          </td>
+
+          <!-- Platform -->
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-2">
+              <span class="flex items-center justify-center w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800">
+                <i [class]="getPlatformIcon(post.platform) + ' text-xs ' + getPlatformColor(post.platform)"></i>
+              </span>
+              <span class="text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                {{ getPlatformLabel(post.platform) }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Content -->
+          <td class="px-4 py-3 max-w-xs">
+            <p class="text-sm text-gray-700 dark:text-gray-300 truncate">{{ truncate(post.content, 80) }}</p>
+          </td>
+
+          <!-- Scheduled For -->
+          <td class="px-4 py-3 hidden md:table-cell text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+            <div class="inline-flex items-center gap-1.5">
+              <i class="fas fa-calendar-day text-[10px] text-rep-lime"></i>
+              {{ post.scheduledFor | date:'d MMM y, h:mm a' }}
+            </div>
+          </td>
+
+          <!-- Status badge -->
+          <td class="px-4 py-3 hidden lg:table-cell">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium
+                         bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+              <i class="fas fa-clock text-[8px]"></i> Scheduled
+            </span>
+          </td>
+
+          <!-- Actions -->
+          <td class="px-4 py-3 text-right" (click)="$event.stopPropagation()">
+            <div class="flex items-center justify-end gap-1">
+              <button (click)="openReschedule(post)" type="button"
+                title="Reschedule"
+                class="p-1.5 rounded-lg text-xs transition bg-gray-100 text-gray-600 hover:bg-gray-200
+                       dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700">
+                <i class="fas fa-clock-rotate-left"></i>
+              </button>
+              <button (click)="deletePost(post._id)" type="button"
+                [disabled]="deletingId === post._id"
+                title="Delete"
+                class="p-1.5 rounded-lg text-xs transition bg-red-50 text-red-600 hover:bg-red-100
+                       dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 disabled:opacity-50">
+                <i [class]="deletingId === post._id ? 'fas fa-spinner fa-spin' : 'fas fa-trash-can'"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
 </div>
 
-<!-- Reschedule modal -->
-<div *ngIf="rescheduleId" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" (click)="closeReschedule()">
-  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 w-full max-w-sm shadow-xl" (click)="$event.stopPropagation()">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-rep-white mb-4">Reschedule Post</h3>
+<!-- ════════════════════════════════════════════════════════════════════════════
+     BACKDROP
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="selectedPost"
+  class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
+  (click)="closeDetail()"></div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     DETAIL SIDEBAR
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="selectedPost"
+  class="fixed inset-y-0 right-0 w-full max-w-lg bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-xl z-40 flex flex-col">
+
+  <!-- Sidebar header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 shrink-0">
+    <div class="flex items-center gap-3">
+      <span class="flex items-center justify-center w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800">
+        <i [class]="getPlatformIcon(selectedPost.platform) + ' ' + getPlatformColor(selectedPost.platform)"></i>
+      </span>
+      <div>
+        <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ getPlatformLabel(selectedPost.platform) }}</p>
+        <p class="text-[11px] text-gray-400">Scheduled Post</p>
+      </div>
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
+                   bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+        <i class="fas fa-clock text-[8px]"></i> Scheduled
+      </span>
+    </div>
+    <button type="button" (click)="closeDetail()"
+      class="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 dark:text-gray-400
+             hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+      <i class="fas fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="flex-1 overflow-y-auto">
+
+    <!-- Media -->
+    <div *ngIf="resolveMediaUrl(selectedPost) && selectedPost.mediaType === 'image'"
+      class="bg-gray-100 dark:bg-gray-800">
+      <img [src]="resolveMediaUrl(selectedPost)!"
+        alt="Scheduled post media"
+        class="w-full h-auto max-h-[min(70vh,560px)] object-contain object-center block" />
+    </div>
+    <div *ngIf="resolveMediaUrl(selectedPost) && selectedPost.mediaType === 'video'"
+      class="bg-gray-950">
+      <video [src]="resolveMediaUrl(selectedPost)!" controls
+        class="w-full max-h-72 object-contain"></video>
+    </div>
+
+    <!-- Scheduled time banner -->
+    <div class="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-blue-200 dark:border-blue-700/40 bg-blue-50 dark:bg-blue-900/15 px-4 py-3">
+      <i class="fas fa-calendar-check text-blue-500 dark:text-blue-400 text-lg shrink-0"></i>
+      <div>
+        <p class="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">Scheduled for</p>
+        <p class="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+          {{ selectedPost.scheduledFor | date:'EEEE, d MMMM y' }}
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          {{ selectedPost.scheduledFor | date:'h:mm a' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="px-5 pt-4 pb-2">
+      <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Post Content</h3>
+      <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words leading-relaxed">
+        {{ selectedPost.content }}
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Sidebar footer actions -->
+  <div class="shrink-0 border-t border-gray-100 dark:border-gray-800 px-5 py-4 flex flex-wrap gap-2">
+    <button type="button"
+      (click)="openReschedule(selectedPost); $event.stopPropagation()"
+      class="flex-1 min-w-[120px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+             bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition">
+      <i class="fas fa-clock-rotate-left"></i> Reschedule
+    </button>
+    <button type="button"
+      (click)="deletePost(selectedPost._id)"
+      [disabled]="deletingId === selectedPost._id"
+      class="flex-1 min-w-[100px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+             bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30
+             border border-red-200 dark:border-red-700/40 transition disabled:opacity-50">
+      <i [class]="deletingId === selectedPost._id ? 'fas fa-spinner fa-spin' : 'fas fa-trash-can'"></i>
+      {{ deletingId === selectedPost._id ? 'Deleting…' : 'Delete' }}
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     RESCHEDULE MODAL
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="rescheduleId"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+  (click)="closeReschedule()">
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+       (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-rep-white flex items-center gap-2">
+        <i class="fas fa-clock-rotate-left text-rep-lime"></i> Reschedule Post
+      </h3>
+      <button type="button" (click)="closeReschedule()"
+        class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
     <div class="space-y-4">
       <div>
-        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Date</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date</label>
         <input type="date" [(ngModel)]="rescheduleDate"
-          class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-gray-900 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" />
+          class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl
+                 dark:bg-gray-800 dark:border-gray-700 dark:text-white
+                 focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition" />
       </div>
       <div>
-        <label class="block text-sm text-gray-600 dark:text-gray-400 mb-1">Time</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Time</label>
         <input type="time" [(ngModel)]="rescheduleTime"
-          class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-gray-900 rounded-lg dark:bg-gray-800 dark:border-gray-700 dark:text-white" />
+          class="w-full px-3 py-2 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl
+                 dark:bg-gray-800 dark:border-gray-700 dark:text-white
+                 focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition" />
       </div>
     </div>
     <div class="flex gap-2 mt-6">

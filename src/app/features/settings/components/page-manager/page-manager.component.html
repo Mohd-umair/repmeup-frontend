@@ -86,7 +86,7 @@
               <span
                 *ngIf="page.connections.facebook.connected"
                 class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold flex items-center gap-1">
-                <i class="fas fa-check-circle"></i>
+                <i class="fas fa-circle-check"></i>
                 Connected
               </span>
               
@@ -99,7 +99,7 @@
                   class="fas"
                   [class.fa-spinner]="disconnectingId === page.connections.facebook.connectionId"
                   [class.fa-spin]="disconnectingId === page.connections.facebook.connectionId"
-                  [class.fa-times]="disconnectingId !== page.connections.facebook.connectionId"></i>
+                  [class.fa-xmark]="disconnectingId !== page.connections.facebook.connectionId"></i>
                 <span>{{ disconnectingId === page.connections.facebook.connectionId ? 'Removing...' : 'Disconnect' }}</span>
               </button>
 
@@ -132,7 +132,7 @@
               <span
                 *ngIf="page.connections.instagram.connected"
                 class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold flex items-center gap-1">
-                <i class="fas fa-check-circle"></i>
+                <i class="fas fa-circle-check"></i>
                 Connected
               </span>
 
@@ -145,7 +145,7 @@
                   class="fas"
                   [class.fa-spinner]="disconnectingId === page.connections.instagram.connectionId"
                   [class.fa-spin]="disconnectingId === page.connections.instagram.connectionId"
-                  [class.fa-times]="disconnectingId !== page.connections.instagram.connectionId"></i>
+                  [class.fa-xmark]="disconnectingId !== page.connections.instagram.connectionId"></i>
                 <span>{{ disconnectingId === page.connections.instagram.connectionId ? 'Removing...' : 'Disconnect' }}</span>
               </button>
 

@@ -1,0 +1,409 @@
+<!-- Loading state -->
+<div *ngIf="loadingLimits" class="space-y-4 animate-pulse">
+  <div class="h-40 bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div *ngFor="let _ of [1,2,3,4,5]" class="h-28 bg-gray-200 dark:bg-gray-800 rounded-xl"></div>
+  </div>
+</div>
+
+<ng-container *ngIf="!loadingLimits">
+
+  <!-- ═══ CURRENT PLAN CARD ═══ -->
+  <div class="current-plan-card rounded-2xl p-6 md:p-8 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm mb-6">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 bg-rep-lime rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-rep-lime/30">
+          <i class="fas fa-crown text-rep-black text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white capitalize">
+              {{ subscriptionLimits?.plan ?? 'Free' }} Plan
+            </h2>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-full capitalize" [ngClass]="getStatusColor()">
+              {{ subscriptionLimits?.status ?? 'active' }}
+            </span>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            Your current subscription and usage limits
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+        <!-- Upgrade prompt if near limit -->
+        <ng-container *ngIf="subscriptionLimits?.nextTier">
+          <button
+            (click)="upgradePlan(subscriptionLimits!.nextTier!.name.toLowerCase(), subscriptionLimits!.nextTier!.name)"
+            [disabled]="upgradingPlan !== null"
+            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-rep-lime text-rep-black font-bold rounded-xl text-sm hover:shadow-lg hover:shadow-rep-lime/30 transition-all disabled:opacity-60">
+            <i class="fas fa-arrow-up text-xs"></i>
+            Upgrade to {{ subscriptionLimits!.nextTier!.name }}
+          </button>
+        </ng-container>
+
+        <button
+          *ngIf="subscriptionLimits && subscriptionLimits.tier > 0 && subscriptionLimits.status === 'active'"
+          (click)="confirmCancel()"
+          class="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-medium rounded-xl text-sm hover:border-red-300 hover:text-red-500 transition-all">
+          <i class="fas fa-times text-xs"></i>
+          Cancel Plan
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Cancellation banner ── -->
+    <div *ngIf="billing?.cancelAtPeriodEnd"
+      class="mt-5 pt-5 border-t border-amber-100 dark:border-amber-900/40">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 px-4 py-3">
+        <div class="flex items-center gap-2 flex-1 min-w-0">
+          <i class="fas fa-exclamation-triangle text-amber-500 shrink-0"></i>
+          <p class="text-sm text-amber-700 dark:text-amber-300">
+            <strong>Cancellation scheduled.</strong>
+            Your plan will be cancelled on <strong>{{ formatDate(billing?.currentPeriodEnd) }}</strong>.
+            You'll be downgraded to Free after that.
+          </p>
+        </div>
+        <button
+          (click)="reactivateSubscription()"
+          [disabled]="cancellingPlan"
+          class="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs transition-all disabled:opacity-60">
+          <ng-container *ngIf="cancellingPlan; else reactivateLabel">
+            <i class="fas fa-spinner fa-spin"></i> Saving…
+          </ng-container>
+          <ng-template #reactivateLabel>
+            <i class="fas fa-undo"></i> Reactivate
+          </ng-template>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Pending downgrade banner ── -->
+    <div *ngIf="billing?.pendingDowngradePlanId && !billing?.cancelAtPeriodEnd"
+      class="mt-5 pt-5 border-t border-blue-100 dark:border-blue-900/40">
+      <div class="flex items-center gap-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 px-4 py-3">
+        <i class="fas fa-info-circle text-blue-500 shrink-0"></i>
+        <p class="text-sm text-blue-700 dark:text-blue-300">
+          <strong>Downgrade scheduled.</strong>
+          Your plan will switch to <strong>{{ billing!.pendingDowngradePlanId }}</strong> at the end of the billing period on <strong>{{ formatDate(billing?.currentPeriodEnd) }}</strong>.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Billing dates ── -->
+    <div *ngIf="billing && subscriptionLimits?.tier && subscriptionLimits?.tier! > 0 && !billing.cancelAtPeriodEnd"
+      class="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800">
+      <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 dark:text-gray-400">
+        <span *ngIf="billing.currentPeriodStart || billing.currentPeriodEnd">
+          <i class="fas fa-calendar-check text-rep-lime mr-1.5"></i>
+          Current period:
+          <strong class="text-gray-700 dark:text-gray-300">{{ formatDate(billing.currentPeriodStart) }} – {{ formatDate(billing.currentPeriodEnd) }}</strong>
+        </span>
+        <span *ngIf="billing.nextBillingAt">
+          <i class="fas fa-credit-card text-rep-lime mr-1.5"></i>
+          Next charge:
+          <strong class="text-gray-700 dark:text-gray-300">{{ formatDate(billing.nextBillingAt) }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Next tier teaser -->
+    <div *ngIf="subscriptionLimits?.nextTier && !billing?.cancelAtPeriodEnd"
+      class="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        <i class="fas fa-bolt text-amber-400 mr-1.5"></i>
+        Upgrade to <strong class="text-gray-800 dark:text-gray-200">{{ subscriptionLimits!.nextTier!.name }}</strong>
+        to get <strong class="text-rep-lime">{{ formatMaxAccountsPhrase(subscriptionLimits!.nextTier!.maxAccounts) }}</strong>
+        and more.
+      </p>
+      <span class="text-sm font-bold text-gray-800 dark:text-gray-200">
+        {{ subscriptionLimits!.nextTier!.price === 'custom' ? 'Contact Sales' : '$' + subscriptionLimits!.nextTier!.price + '/mo' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- ═══ USAGE METRICS GRID ═══ -->
+  <div class="mb-8">
+    <h3 class="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <i class="fas fa-chart-bar text-rep-lime text-sm"></i>
+      Current Usage
+    </h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div *ngFor="let metric of usageMetrics"
+        class="usage-card p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl flex items-center justify-center"
+              [ngClass]="{
+                'bg-lime-50 dark:bg-lime-900/20 text-lime-600 dark:text-lime-400': metric.color === 'lime',
+                'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400': metric.color === 'blue',
+                'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400': metric.color === 'purple',
+                'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400': metric.color === 'orange',
+                'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400': metric.color === 'green'
+              }">
+              <i [class]="metric.icon + ' text-sm'"></i>
+            </div>
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-400">{{ metric.label }}</span>
+          </div>
+
+          <!-- Warning badge if near/at limit -->
+          <span *ngIf="isAtLimit(metric)"
+            class="text-[10px] font-bold px-2 py-0.5 bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-full">
+            Limit Reached
+          </span>
+          <span *ngIf="!isAtLimit(metric) && isNearLimit(metric)"
+            class="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 rounded-full">
+            Near Limit
+          </span>
+        </div>
+
+        <!-- Values -->
+        <div class="flex items-baseline gap-1 mb-3">
+          <span class="text-2xl font-black text-gray-900 dark:text-white">
+            {{ getUsageValue(metric.key) }}
+          </span>
+          <span class="text-sm text-gray-400 dark:text-gray-500">
+            / {{ getLimitValue(metric.limitKey) }}
+          </span>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-700"
+            [ngClass]="getBarColor(metric)"
+            [style.width.%]="getUsagePercent(metric)">
+          </div>
+        </div>
+
+        <!-- Percent label (small usage vs large limits needs decimals, not rounded 0%) -->
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
+          <ng-container *ngIf="getUsagePercentLabel(metric) === '—'; else pctUsed">Unlimited</ng-container>
+          <ng-template #pctUsed>{{ getUsagePercentLabel(metric) }}% used</ng-template>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PLAN HISTORY ═══ -->
+  <div *ngIf="billing?.planHistory && billing!.planHistory!.length > 0" class="mb-8">
+    <h3 class="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <i class="fas fa-history text-rep-lime text-sm"></i>
+      Plan History
+    </h3>
+    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden shadow-sm">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800">
+          <tr>
+            <th class="text-left px-5 py-3 font-semibold text-gray-600 dark:text-gray-400">Date</th>
+            <th class="text-left px-5 py-3 font-semibold text-gray-600 dark:text-gray-400">Plan</th>
+            <th class="text-left px-5 py-3 font-semibold text-gray-600 dark:text-gray-400 hidden sm:table-cell">Reason</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+          <tr *ngFor="let entry of billing!.planHistory!.slice().reverse()"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+            <td class="px-5 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+              {{ formatDate(entry.changedAt) }}
+            </td>
+            <td class="px-5 py-3">
+              <span class="inline-block px-2.5 py-1 bg-lime-50 dark:bg-lime-900/20 text-lime-700 dark:text-lime-400 font-bold rounded-lg capitalize">
+                {{ entry.planName }}
+              </span>
+            </td>
+            <td class="px-5 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">
+              {{ entry.reason || '—' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ PLANS GRID ═══ -->
+  <div class="mb-8">
+    <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+      <i class="fas fa-layer-group text-rep-lime text-sm"></i>
+      Available Plans
+    </h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+      Choose the plan that fits your team. Changes take effect immediately.
+    </p>
+
+    <!-- Plans loading -->
+    <div *ngIf="loadingPlans" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+      <div *ngFor="let _ of [1,2,3,4]" class="h-80 bg-gray-200 dark:bg-gray-800 rounded-2xl"></div>
+    </div>
+
+    <!-- Plans grid -->
+    <div *ngIf="!loadingPlans && allPlans" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div *ngFor="let planKey of getPlanKeys()"
+        class="plan-card relative rounded-2xl p-6 flex flex-col transition-all duration-200"
+        [ngClass]="isCurrentPlan(planKey)
+          ? 'plan-card--current border-2 border-rep-lime shadow-lg bg-lime-50 dark:bg-gray-900'
+          : isUpgrade(getPlan(planKey).tier)
+            ? 'plan-card--upgrade border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900'
+            : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900'">
+
+        <!-- Top accent bar for current plan -->
+        <div *ngIf="isCurrentPlan(planKey)"
+          class="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-rep-lime to-transparent -translate-y-px rounded-t-2xl"></div>
+
+        <!-- Badge -->
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <span *ngIf="getPlanBadge(planKey)"
+              class="inline-block text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full mb-2"
+              [ngClass]="planKey === 'pro' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'">
+              {{ getPlanBadge(planKey) }}
+            </span>
+            <span *ngIf="isCurrentPlan(planKey)"
+              class="inline-block text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full mb-2 bg-rep-lime text-rep-black">
+              Current Plan
+            </span>
+            <h4 class="text-lg font-black text-gray-900 dark:text-white capitalize">{{ planKey }}</h4>
+          </div>
+
+          <div class="text-right shrink-0">
+            <p class="text-2xl font-black text-gray-900 dark:text-white">
+              {{ formatPrice(getPlan(planKey).price) }}
+            </p>
+            <p *ngIf="getPlan(planKey).price !== 0 && getPlan(planKey).price !== 'custom'"
+              class="text-xs text-gray-400">/month</p>
+          </div>
+        </div>
+
+        <!-- Limits -->
+        <ul class="space-y-2.5 mb-6 flex-1">
+          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <i class="fas fa-plug text-xs w-4 text-center"
+              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
+            <span>{{ formatLimit(getPlan(planKey).limits.maxAccounts) }} accounts</span>
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <i class="fas fa-users text-xs w-4 text-center"
+              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
+            <span>{{ formatLimit(getPlan(planKey).limits.maxUsers) }} team members</span>
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <i class="fas fa-calendar-alt text-xs w-4 text-center"
+              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
+            <span>{{ formatLimit(getPlan(planKey).limits.maxPostsPerMonth) }} posts/mo</span>
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <i class="fas fa-robot text-xs w-4 text-center"
+              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
+            <span>{{ formatLimit(getPlan(planKey).limits.maxAutoRepliesPerMonth) }} AI replies/mo</span>
+          </li>
+          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <i class="fas fa-bolt text-xs w-4 text-center"
+              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
+            <span>{{ formatLimit(getPlan(planKey).limits.maxAICreditsPerMonth) }} AI credits/mo</span>
+          </li>
+        </ul>
+
+        <!-- Features chips -->
+        <div class="flex flex-wrap gap-1.5 mb-5">
+          <span *ngFor="let feature of getPlan(planKey).features.slice(0, 4)"
+            class="text-[10px] font-medium px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full">
+            {{ formatFeature(feature) }}
+          </span>
+          <span *ngIf="getPlan(planKey).features.length > 4"
+            class="text-[10px] font-medium px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full">
+            +{{ getPlan(planKey).features.length - 4 }} more
+          </span>
+        </div>
+
+        <!-- CTA button -->
+        <ng-container *ngIf="getPlan(planKey).price === 'custom'; else standardCta">
+          <button (click)="contactSales()"
+            class="w-full py-2.5 px-4 border-2 border-gray-900 dark:border-gray-300 text-gray-900 dark:text-gray-300 font-bold rounded-xl text-sm hover:bg-gray-900 hover:text-white dark:hover:bg-gray-300 dark:hover:text-gray-900 transition-all">
+            Contact Sales
+          </button>
+        </ng-container>
+
+        <ng-template #standardCta>
+          <button *ngIf="isCurrentPlan(planKey)"
+            disabled
+            class="w-full py-2.5 px-4 bg-rep-lime text-rep-black font-bold rounded-xl text-sm opacity-70 cursor-default flex items-center justify-center gap-2">
+            <i class="fas fa-check text-xs"></i>
+            Current Plan
+          </button>
+
+          <button *ngIf="!isCurrentPlan(planKey)"
+            (click)="upgradePlan(planKey, getPlan(planKey).name ?? planKey)"
+            [disabled]="upgradingPlan !== null"
+            class="w-full py-2.5 px-4 font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+            [ngClass]="isUpgrade(getPlan(planKey).tier)
+              ? 'bg-rep-lime text-rep-black hover:shadow-md hover:shadow-rep-lime/30'
+              : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400'">
+            <ng-container *ngIf="upgradingPlan === planKey; else ctaLabel">
+              <i class="fas fa-spinner fa-spin text-xs"></i>
+              Processing…
+            </ng-container>
+            <ng-template #ctaLabel>
+              <i class="fas"
+                [ngClass]="isUpgrade(getPlan(planKey).tier) ? 'fa-arrow-up' : 'fa-arrow-down'"
+                style="font-size:10px"></i>
+              {{ isUpgrade(getPlan(planKey).tier) ? 'Upgrade' : 'Downgrade' }}
+            </ng-template>
+          </button>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Empty state for plans -->
+    <div *ngIf="!loadingPlans && !allPlans"
+      class="text-center py-10 text-gray-400 dark:text-gray-500">
+      <i class="fas fa-exclamation-circle text-2xl mb-2"></i>
+      <p class="text-sm">Could not load plans. Please refresh.</p>
+    </div>
+  </div>
+
+  <!-- ═══ CANCEL PLAN MODAL ═══ -->
+  <div *ngIf="showCancelConfirm"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+    (click)="dismissCancel()">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 max-w-md w-full"
+      (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+          <i class="fas fa-times text-red-500 dark:text-red-400"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-gray-900 dark:text-white">Cancel Subscription</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">You'll keep access until the billing period ends.</p>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+          Reason for cancelling (optional)
+        </label>
+        <textarea
+          [(ngModel)]="cancelReason"
+          rows="3"
+          placeholder="Let us know how we can improve…"
+          class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-red-300 dark:focus:ring-red-700"
+        ></textarea>
+      </div>
+
+      <div class="flex gap-3">
+        <button (click)="dismissCancel()"
+          class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-medium rounded-xl text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+          Keep Plan
+        </button>
+        <button (click)="submitCancel()"
+          [disabled]="cancellingPlan"
+          class="flex-1 py-2.5 bg-red-500 text-white font-bold rounded-xl text-sm hover:bg-red-600 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+          <ng-container *ngIf="cancellingPlan">
+            <i class="fas fa-spinner fa-spin text-xs"></i>
+            Cancelling…
+          </ng-container>
+          <ng-container *ngIf="!cancellingPlan">Confirm Cancel</ng-container>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</ng-container>

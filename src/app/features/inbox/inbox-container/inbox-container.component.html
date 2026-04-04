@@ -338,7 +338,7 @@
         type="button"
         (click)="onBucketSearchChange('')"
         class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors">
-        <i class="fas fa-times" style="font-size: 9px;"></i>
+        <i class="fas fa-xmark" style="font-size: 9px;"></i>
       </button>
     </div>
 
@@ -623,7 +623,7 @@
             <button (click)="bulkResolve()" [disabled]="bulkProcessing" type="button" 
                     class="inline-flex flex-shrink-0 items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-40 transition-colors whitespace-nowrap"
                     title="Resolve selected">
-              <i class="fas fa-check-circle text-[10px]"></i>
+              <i class="fas fa-circle-check text-[10px]"></i>
               <span>Resolve</span>
             </button>
 
@@ -672,7 +672,7 @@
                   <button (click)="showBulkMoreActions = false; assignDropdownPos = null; $event.stopPropagation()" 
                           type="button"
                           class="w-5 h-5 flex items-center justify-center rounded text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                    <i class="fas fa-times text-[9px]"></i>
+                    <i class="fas fa-xmark text-[9px]"></i>
                   </button>
                 </div>
 
@@ -745,7 +745,7 @@
                   <button (click)="showBulkLabelActions = false; labelDropdownPos = null; $event.stopPropagation()" 
                           type="button"
                           class="w-5 h-5 flex items-center justify-center rounded text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                    <i class="fas fa-times text-[9px]"></i>
+                    <i class="fas fa-xmark text-[9px]"></i>
                   </button>
                 </div>
                 <div class="max-h-48 overflow-y-auto py-1">
@@ -864,7 +864,7 @@
           Keyboard Shortcuts
         </h3>
         <button (click)="showShortcutsOverlay = false" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
-          <i class="fas fa-times text-xl"></i>
+          <i class="fas fa-xmark text-xl"></i>
         </button>
       </div>
       <div class="space-y-3 text-sm">

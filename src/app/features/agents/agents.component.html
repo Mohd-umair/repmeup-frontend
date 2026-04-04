@@ -23,7 +23,7 @@
           <p class="text-sm font-semibold text-red-900">{{ error }}</p>
         </div>
         <button (click)="error = null" class="text-red-600 hover:text-red-800">
-          <i class="fas fa-times"></i>
+          <i class="fas fa-xmark"></i>
         </button>
       </div>
     </div>
@@ -200,9 +200,9 @@
                   <span class="text-gray-200 dark:text-gray-600">|</span>
                   <button 
                     (click)="openEditModal(agent)"
-                    class="text-gray-800 dark:text-rep-lime hover:text-rep-lime dark:hover:text-rep-lime/90 font-medium transition"
+                    class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition"
                   >
-                    <i class="fas fa-edit mr-1"></i>
+                    <i class="fas fa-pen-to-square mr-1"></i>
                     Edit
                   </button>
                   <span class="text-gray-200 dark:text-gray-600">|</span>
@@ -210,7 +210,7 @@
                     (click)="openDeleteModal(agent)"
                     class="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 font-medium transition"
                   >
-                    <i class="fas fa-trash mr-1"></i>
+                    <i class="fas fa-trash-can mr-1"></i>
                     Remove
                   </button>
                 </div>
@@ -242,7 +242,7 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-gray-900 dark:text-rep-white">Add Team Member</h2>
         <button (click)="closeAddModal()" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-          <i class="fas fa-times text-xl"></i>
+          <i class="fas fa-xmark text-xl"></i>
         </button>
       </div>
 
@@ -367,7 +367,7 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-gray-900 dark:text-rep-white">Edit Team Member</h2>
         <button (click)="closeEditModal()" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-          <i class="fas fa-times text-xl"></i>
+          <i class="fas fa-xmark text-xl"></i>
         </button>
       </div>
 
@@ -479,7 +479,7 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-red-600 dark:text-red-400">Confirm Deletion</h2>
         <button (click)="closeDeleteModal()" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-          <i class="fas fa-times text-xl"></i>
+          <i class="fas fa-xmark text-xl"></i>
         </button>
       </div>
 
@@ -501,7 +501,7 @@
           (click)="confirmDelete()"
           class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition"
         >
-          <i class="fas fa-trash mr-2"></i>
+          <i class="fas fa-trash-can mr-2"></i>
           Delete
         </button>
         <button 
@@ -528,7 +528,7 @@
           </div>
         </div>
         <button (click)="closePerformanceModal()" class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-          <i class="fas fa-times text-xl"></i>
+          <i class="fas fa-xmark text-xl"></i>
         </button>
       </div>
 

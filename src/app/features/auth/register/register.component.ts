@@ -40,7 +40,8 @@ export class RegisterComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       organizationName: ['', [Validators.required, Validators.minLength(2)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
+      confirmPassword: ['', [Validators.required]],
+      terms: [false, [Validators.requiredTrue]]
     }, {
       validators: this.passwordMatchValidator
     });
@@ -76,7 +77,8 @@ export class RegisterComponent implements OnInit {
     this.error = '';
 
     const formData = { ...this.registerForm.value };
-    delete formData.confirmPassword; // Remove confirmPassword before sending
+    delete formData.confirmPassword;
+    delete formData.terms;
 
     this.authService.register(formData).subscribe({
       next: (response) => {
@@ -120,6 +122,9 @@ export class RegisterComponent implements OnInit {
     const control = this.registerForm.get(field);
     
     if (control?.hasError('required')) {
+      if (field === 'terms') {
+        return 'Please accept the Terms and Privacy Policy';
+      }
       return 'This field is required';
     }
     if (control?.hasError('email')) {

@@ -8,7 +8,7 @@
         Upload to Media Library
       </h2>
       <button class="w-10 h-10 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-rep-white transition flex items-center justify-center" (click)="closeModal()">
-        <i class="fas fa-times"></i>
+        <i class="fas fa-xmark"></i>
       </button>
     </div>
 
@@ -33,7 +33,7 @@
         <!-- File Selected -->
         <div *ngIf="selectedFile" class="relative">
           <button class="absolute top-2 right-2 w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition z-10" (click)="removeFile(); $event.stopPropagation()">
-            <i class="fas fa-times"></i>
+            <i class="fas fa-xmark"></i>
           </button>
 
           <!-- Image Preview -->

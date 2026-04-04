@@ -4,6 +4,22 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
+export interface ISubscriptionBillingInfo {
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
+  nextBillingAt?: string | null;
+  cancelAtPeriodEnd?: boolean;
+  cancelledAt?: string | null;
+  cancellationReason?: string | null;
+  pendingDowngradePlanId?: string | null;
+  planHistory?: Array<{
+    planId: string;
+    planName: string;
+    changedAt: string;
+    reason: string | null;
+  }>;
+}
+
 export interface ISubscriptionLimits {
   plan: string;
   planId: string;
@@ -31,6 +47,7 @@ export interface ISubscriptionLimits {
     maxAccounts: number;
     price: number | string;
   };
+  billing?: ISubscriptionBillingInfo;
 }
 
 export interface ISubscription {
@@ -136,11 +153,44 @@ export class SubscriptionService {
   }
 
   /**
-   * Calculate usage percentage
+   * Reactivate a subscription that was scheduled for cancellation at period end
+   */
+  reactivateSubscription(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/reactivate`, {});
+  }
+
+  /**
+   * Calculate usage percentage (0–100, raw float)
    */
   getUsagePercentage(usage: number, limit: number): number {
-    if (limit === -1) return 0; // Unlimited
+    if (limit === -1 || limit <= 0) return 0;
     return Math.min(100, (usage / limit) * 100);
+  }
+
+  /**
+   * Bar width: same as getUsagePercentage but shows a thin bar when usage > 0 but raw % rounds to 0.
+   */
+  getUsagePercentageForBar(usage: number, limit: number): number {
+    if (limit === -1 || limit <= 0) return 0;
+    const pct = Math.min(100, (usage / limit) * 100);
+    if (usage > 0 && pct > 0 && pct < 1) return 1;
+    return pct;
+  }
+
+  /**
+   * Label for "X% used" — avoids showing 0% when usage is small vs a large limit (e.g. 5 / 10000).
+   */
+  formatUsagePercentageLabel(usage: number, limit: number): string {
+    if (limit === -1 || limit <= 0) return '—';
+    if (usage <= 0) return '0';
+    const pct = Math.min(100, (usage / limit) * 100);
+    if (pct >= 99.995) return '100';
+    if (pct < 1) {
+      const rounded = parseFloat(pct.toFixed(2));
+      if (usage > 0 && rounded === 0) return '<0.01';
+      return String(rounded);
+    }
+    return String(Math.round(pct));
   }
 
   /**

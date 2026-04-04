@@ -1,24 +1,25 @@
-<div class="w-full">
-  <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
-    <div class="flex items-center justify-between mb-6">
+<div class="w-full min-h-full p-4 md:p-6 bg-white dark:bg-rep-black">
+  <div class="bg-white dark:bg-gray-900/80 rounded-xl shadow-xl p-6 md:p-8 border border-gray-200 dark:border-gray-800">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div>
-        <h2 class="text-xl md:text-2xl font-bold text-rep-black flex items-center gap-2">
-          <i class="fas fa-columns text-rep-lime"></i>
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fas fa-columns text-rep-lime" aria-hidden="true"></i>
           Intent Buckets
         </h2>
-        <p class="text-gray-600 text-sm mt-1">Define categories for auto-classifying incoming messages. Drag to reorder columns in the kanban view.</p>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Define categories for auto-classifying incoming messages. Drag to reorder columns in the kanban view.</p>
       </div>
       <button
+        type="button"
         (click)="openCreate()"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:shadow-lg transition">
-        <i class="fas fa-plus"></i>
+        class="inline-flex items-center gap-2 px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:shadow-lg transition shrink-0">
+        <i class="fas fa-plus" aria-hidden="true"></i>
         Add Bucket
       </button>
     </div>
 
     <!-- Loading -->
     <div *ngIf="loading" class="flex justify-center py-12">
-      <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+      <i class="fas fa-spinner fa-spin text-3xl text-gray-400 dark:text-gray-500" aria-hidden="true"></i>
     </div>
 
     <!-- Bucket List -->
@@ -30,78 +31,72 @@
         (dragover)="onDragOver($event)"
         (drop)="onDrop(i)"
         class="flex items-center gap-4 p-4 rounded-xl border transition group cursor-grab active:cursor-grabbing"
-        [class.border-gray-200]="dragIndex !== i"
-        [class.border-rep-lime]="dragIndex === i"
-        [class.bg-gray-50]="dragIndex !== i"
-        [class.bg-rep-lime]="dragIndex === i"
-        [class.bg-opacity-10]="dragIndex === i">
+        [ngClass]="dragIndex === i
+          ? 'border-rep-lime bg-rep-lime/10 dark:bg-rep-lime/15'
+          : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'">
 
-        <!-- Drag Handle -->
-        <i class="fas fa-grip-vertical text-gray-400 group-hover:text-gray-600"></i>
+        <i class="fas fa-grip-vertical text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 shrink-0" aria-hidden="true"></i>
 
-        <!-- Color dot -->
         <span class="w-4 h-4 rounded-full flex-shrink-0" [style.backgroundColor]="bucket.color"></span>
 
-        <!-- Icon + Name -->
         <div class="flex items-center gap-2 min-w-0 flex-1">
-          <i [class]="bucket.icon" [style.color]="bucket.color"></i>
-          <span class="font-semibold text-rep-black truncate">{{ bucket.name }}</span>
-          <span *ngIf="bucket.isDefault" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium ml-1">Default</span>
+          <i [class]="bucket.icon" [style.color]="bucket.color" aria-hidden="true"></i>
+          <span class="font-semibold text-gray-900 dark:text-white truncate">{{ bucket.name }}</span>
+          <span *ngIf="bucket.isDefault" class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 px-2 py-0.5 rounded-full font-medium ml-1 shrink-0">Default</span>
         </div>
 
-        <!-- Keywords count -->
-        <span class="text-xs text-gray-500 hidden sm:inline">{{ bucket.keywords?.length || 0 }} keywords</span>
+        <span class="text-xs text-gray-500 dark:text-gray-400 hidden sm:inline shrink-0">{{ bucket.keywords?.length || 0 }} keywords</span>
 
-        <!-- Reply config badges -->
-        <div class="hidden sm:flex items-center gap-1.5">
+        <div class="hidden sm:flex items-center gap-1.5 flex-wrap justify-end">
           <span *ngIf="bucket.replyEnabled === false"
-            class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium"
+            class="text-[10px] bg-red-100 text-red-700 dark:bg-red-900/35 dark:text-red-300 px-1.5 py-0.5 rounded font-medium"
             title="Auto-reply disabled for this bucket">
-            <i class="fas fa-volume-mute mr-0.5"></i>No Reply
+            <i class="fas fa-volume-mute mr-0.5" aria-hidden="true"></i>No Reply
           </span>
           <span *ngIf="bucket.replyTone"
-            class="text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-medium capitalize"
+            class="text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-900/35 dark:text-purple-300 px-1.5 py-0.5 rounded font-medium capitalize"
             title="Reply tone">
             {{ bucket.replyTone }}
           </span>
           <span *ngIf="bucket.replyLanguage && bucket.replyLanguage !== 'auto'"
-            class="text-[10px] bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded font-medium capitalize"
+            class="text-[10px] bg-indigo-100 text-indigo-700 dark:bg-indigo-900/35 dark:text-indigo-300 px-1.5 py-0.5 rounded font-medium capitalize"
             title="Reply language">
             {{ bucket.replyLanguage }}
           </span>
         </div>
 
-        <!-- Actions -->
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1 shrink-0">
           <button *ngIf="!bucket.isDefault"
+            type="button"
             (click)="toggleDefault(bucket)"
-            class="p-2 text-gray-400 hover:text-blue-600 transition rounded-lg hover:bg-blue-50"
+            class="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30"
             title="Set as default (catch-all)">
-            <i class="fas fa-flag text-sm"></i>
+            <i class="fas fa-flag text-sm" aria-hidden="true"></i>
           </button>
           <button
+            type="button"
             (click)="openEdit(bucket)"
-            class="p-2 text-gray-400 hover:text-rep-black transition rounded-lg hover:bg-gray-100"
+            class="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
             title="Edit bucket">
-            <i class="fas fa-pen text-sm"></i>
+            <i class="fas fa-pen-to-square text-sm" aria-hidden="true"></i>
           </button>
           <button
+            type="button"
             (click)="deleteBucket(bucket)"
-            class="p-2 text-gray-400 hover:text-red-600 transition rounded-lg hover:bg-red-50"
+            class="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition rounded-lg hover:bg-red-50 dark:hover:bg-red-900/25"
             title="Delete bucket">
-            <i class="fas fa-trash text-sm"></i>
+            <i class="fas fa-trash-can text-sm" aria-hidden="true"></i>
           </button>
         </div>
       </div>
 
-      <div *ngIf="buckets.length === 0" class="text-center py-12 text-gray-500">
-        <i class="fas fa-columns text-4xl mb-3 block text-gray-300"></i>
-        <p class="font-medium">No buckets configured</p>
-        <p class="text-sm mt-1">Click "Add Bucket" to create your first category.</p>
+      <div *ngIf="buckets.length === 0" class="text-center py-12 text-gray-500 dark:text-gray-400">
+        <i class="fas fa-columns text-4xl mb-3 block text-gray-300 dark:text-gray-600" aria-hidden="true"></i>
+        <p class="font-medium text-gray-700 dark:text-gray-300">No buckets configured</p>
+        <p class="text-sm mt-1">Click &quot;Add Bucket&quot; to create your first category.</p>
       </div>
     </div>
 
-    <!-- Pagination -->
     <div class="pt-2">
       <app-pagination
         [currentPage]="currentPage"
@@ -119,163 +114,151 @@
 
 <!-- Create/Edit Modal -->
 <div *ngIf="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" (click)="closeModal()">
-  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
-  <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6" (click)="$event.stopPropagation()">
+  <div class="absolute inset-0 bg-black/50 dark:bg-black/60 backdrop-blur-sm" aria-hidden="true"></div>
+  <div class="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6" (click)="$event.stopPropagation()">
     <div class="flex items-center justify-between mb-5">
-      <h3 class="text-lg font-bold text-rep-black">{{ isEditing ? 'Edit' : 'Create' }} Bucket</h3>
-      <button (click)="closeModal()" class="p-2 text-gray-400 hover:text-gray-600 transition rounded-lg hover:bg-gray-100">
-        <i class="fas fa-times"></i>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ isEditing ? 'Edit' : 'Create' }} Bucket</h3>
+      <button type="button" (click)="closeModal()" class="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
+        <i class="fas fa-xmark" aria-hidden="true"></i>
       </button>
     </div>
 
     <div class="space-y-4">
-      <!-- Name -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Bucket Name</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bucket Name</label>
         <input
           [(ngModel)]="form.name"
           placeholder="e.g. Hot Leads"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-rep-lime focus:border-rep-lime" />
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime" />
       </div>
 
-      <!-- Color -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
         <div class="flex flex-wrap gap-2">
           <button
+            type="button"
             *ngFor="let c of colorPresets"
             (click)="selectColor(c)"
             class="w-8 h-8 rounded-full border-2 transition hover:scale-110"
             [style.backgroundColor]="c"
-            [class.border-rep-black]="form.color === c"
-            [class.border-transparent]="form.color !== c">
+            [ngClass]="form.color === c ? 'border-gray-900 dark:border-white' : 'border-transparent'">
           </button>
         </div>
       </div>
 
-      <!-- Icon -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Icon</label>
         <div class="flex flex-wrap gap-2">
           <button
+            type="button"
             *ngFor="let ic of iconPresets"
             (click)="selectIcon(ic)"
             class="w-9 h-9 rounded-lg border-2 flex items-center justify-center transition hover:scale-110"
-            [class.border-rep-lime]="form.icon === ic"
-            [class.bg-rep-lime]="form.icon === ic"
-            [class.bg-opacity-10]="form.icon === ic"
-            [class.border-gray-200]="form.icon !== ic">
-            <i [class]="ic" class="text-sm" [class.text-rep-black]="form.icon === ic" [class.text-gray-500]="form.icon !== ic"></i>
+            [ngClass]="form.icon === ic ? 'border-rep-lime bg-rep-lime/15' : 'border-gray-200 dark:border-gray-600'">
+            <i [class]="ic" class="text-sm" [ngClass]="form.icon === ic ? 'text-rep-lime' : 'text-gray-500 dark:text-gray-400'"></i>
           </button>
         </div>
       </div>
 
-      <!-- Keywords -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Trigger Keywords</label>
-        <p class="text-xs text-gray-500 mb-2">Messages containing these words will be auto-assigned to this bucket.</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trigger Keywords</label>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Messages containing these words will be auto-assigned to this bucket.</p>
         <div class="flex gap-2 mb-2">
           <input
             [(ngModel)]="keywordInput"
             (keydown.enter)="addKeyword(); $event.preventDefault()"
             placeholder="Add keyword"
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-rep-lime focus:border-rep-lime" />
+            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime" />
           <button
+            type="button"
             (click)="addKeyword()"
-            class="px-3 py-2 bg-rep-lime text-rep-black rounded-lg text-sm font-semibold hover:shadow transition">
+            class="px-3 py-2 bg-rep-lime text-rep-black rounded-lg text-sm font-semibold hover:shadow transition shrink-0">
             Add
           </button>
         </div>
         <div class="flex flex-wrap gap-1.5">
           <span
             *ngFor="let kw of form.keywords"
-            class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+            class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-full text-xs font-medium border border-gray-200 dark:border-gray-700">
             {{ kw }}
-            <button (click)="removeKeyword(kw)" class="hover:text-red-600 transition">&times;</button>
+            <button type="button" (click)="removeKeyword(kw)" class="hover:text-red-600 dark:hover:text-red-400 transition">&times;</button>
           </span>
         </div>
       </div>
 
-      <!-- AI Prompt Hint -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">AI Classification Hint</label>
-        <p class="text-xs text-gray-500 mb-2">Describe what kind of messages belong in this bucket. AI will use this when no keywords match.</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">AI Classification Hint</label>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Describe what kind of messages belong in this bucket. AI will use this when no keywords match.</p>
         <textarea
           [(ngModel)]="form.aiPromptHint"
           rows="3"
           placeholder="e.g. Messages asking about pricing, deals, or showing purchase intent"
-          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-rep-lime focus:border-rep-lime resize-none">
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime resize-none">
         </textarea>
       </div>
 
-      <!-- AI Reply Settings -->
-      <div class="border-t border-gray-200 pt-4 mt-2">
-        <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <i class="fas fa-robot text-rep-lime"></i>
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
+        <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+          <i class="fas fa-robot text-rep-lime" aria-hidden="true"></i>
           AI Reply Settings
         </h4>
 
         <div class="space-y-3">
-          <!-- Reply Enabled -->
           <label class="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" [(ngModel)]="form.replyEnabled" class="w-4 h-4 accent-[#BFFF00] rounded" />
-            <span class="text-sm text-gray-700">Enable auto-reply for messages in this bucket</span>
+            <input type="checkbox" [(ngModel)]="form.replyEnabled" class="w-4 h-4 accent-rep-lime rounded border-gray-300 dark:border-gray-600" />
+            <span class="text-sm text-gray-700 dark:text-gray-300">Enable auto-reply for messages in this bucket</span>
           </label>
 
-          <!-- Reply Tone -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Reply Tone</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reply Tone</label>
             <select
               [(ngModel)]="form.replyTone"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-rep-lime focus:border-rep-lime bg-white">
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime">
               <option *ngFor="let opt of toneOptions" [value]="opt.value">{{ opt.label }}</option>
             </select>
-            <p class="text-xs text-gray-400 mt-1">Leave as "Org Default" to use your Brand Voice tone.</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Leave as &quot;Org Default&quot; to use your Brand Voice tone.</p>
           </div>
 
-          <!-- Reply Language -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Reply Language</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reply Language</label>
             <select
               [(ngModel)]="form.replyLanguage"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-rep-lime focus:border-rep-lime bg-white">
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime">
               <option *ngFor="let opt of languageOptions" [value]="opt.value">{{ opt.label }}</option>
             </select>
           </div>
 
-          <!-- Custom Reply Instructions -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Custom Reply Instructions</label>
-            <p class="text-xs text-gray-500 mb-2">Tell the AI how to handle messages in this bucket (max 500 chars).</p>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Custom Reply Instructions</label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Tell the AI how to handle messages in this bucket (max 500 chars).</p>
             <textarea
               [(ngModel)]="form.replyPrompt"
               rows="3"
               maxlength="500"
               placeholder="e.g. Focus on upselling premium plans and highlight current offers"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-rep-lime focus:border-rep-lime resize-none">
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime resize-none">
             </textarea>
-            <p class="text-xs text-gray-400 text-right mt-0.5">{{ (form.replyPrompt?.length || 0) }} / 500</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 text-right mt-0.5">{{ (form.replyPrompt?.length || 0) }} / 500</p>
           </div>
         </div>
       </div>
 
-      <!-- Default toggle -->
       <label class="flex items-center gap-3 cursor-pointer">
-        <input type="checkbox" [(ngModel)]="form.isDefault" class="w-4 h-4 accent-[#BFFF00] rounded" />
-        <span class="text-sm text-gray-700">Default bucket (catch-all for unclassified messages)</span>
+        <input type="checkbox" [(ngModel)]="form.isDefault" class="w-4 h-4 accent-rep-lime rounded border-gray-300 dark:border-gray-600" />
+        <span class="text-sm text-gray-700 dark:text-gray-300">Default bucket (catch-all for unclassified messages)</span>
       </label>
     </div>
 
-    <!-- Actions -->
-    <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
-      <button (click)="closeModal()" class="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium text-sm transition">
+    <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <button type="button" (click)="closeModal()" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium text-sm transition">
         Cancel
       </button>
       <button
+        type="button"
         (click)="saveBucket()"
         [disabled]="saving"
         class="px-5 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold text-sm hover:shadow-lg transition disabled:opacity-50">
-        <i *ngIf="saving" class="fas fa-spinner fa-spin mr-1"></i>
+        <i *ngIf="saving" class="fas fa-spinner fa-spin mr-1" aria-hidden="true"></i>
         {{ isEditing ? 'Update' : 'Create' }}
       </button>
     </div>

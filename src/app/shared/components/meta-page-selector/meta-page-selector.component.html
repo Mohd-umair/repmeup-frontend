@@ -18,7 +18,7 @@
         </div>
         <button (click)="close()" 
                 class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 transition-colors flex items-center justify-center">
-          <i class="fas fa-times text-xl"></i>
+          <i class="fas fa-xmark text-xl"></i>
         </button>
       </div>
     </div>
@@ -113,7 +113,7 @@
               <div class="flex flex-wrap gap-2">
                 <span *ngIf="page.isConnectedFacebook" 
                       class="px-2.5 py-1 bg-green-100 text-green-800 border border-green-300 rounded-lg text-xs font-semibold">
-                  <i class="fas fa-check-circle mr-1"></i>Facebook Connected
+                  <i class="fas fa-circle-check mr-1"></i>Facebook Connected
                 </span>
                 <span *ngIf="page.hasInstagram && page.isConnectedInstagram" 
                       class="px-2.5 py-1 bg-purple-100 text-purple-800 border border-purple-300 rounded-lg text-xs font-semibold">

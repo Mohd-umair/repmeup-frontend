@@ -290,11 +290,8 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
     const topSum = topUsed.reduce((s, e) => s + (e.usageCount ?? 0), 0);
     const othersCount = Math.max(0, (a.totalUsage ?? 0) - topSum);
 
-    const truncate = (str: string, max = 18) =>
-      str && str.length > max ? str.slice(0, max - 1) + '…' : (str || '?');
-
     const segments: DonutSegment[] = topUsed.map((e, i) => ({
-      label: truncate(e.title),
+      label: e.title || '?',
       value: e.usageCount ?? 0,
       color: this.usageDonutPalette[i % this.usageDonutPalette.length]
     }));

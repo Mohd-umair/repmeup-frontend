@@ -4,7 +4,7 @@
     <!-- Approve success / error toasts -->
     <div *ngIf="approveSuccess"
          class="flex items-center gap-3 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 text-green-800 dark:text-green-300">
-      <i class="fas fa-check-circle text-lg"></i>
+      <i class="fas fa-circle-check text-lg"></i>
       <span class="text-sm font-medium">{{ approveSuccess }}</span>
     </div>
     <div *ngIf="approveError"
@@ -173,10 +173,10 @@
                   <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold" [ngClass]="statusClass(post)">
                     <i class="fas"
                       [class.fa-clock]="post.status === 'pending_approval'"
-                      [class.fa-times-circle]="post.status === 'rejected'"
+                      [class.fa-circle-xmark]="post.status === 'rejected'"
                       [class.fa-globe]="post.status === 'published'"
                       [class.fa-calendar-check]="post.status === 'scheduled'"
-                      [class.fa-check-circle]="post.status === 'draft'"
+                      [class.fa-circle-check]="post.status === 'draft'"
                     ></i>
                     {{ statusLabel(post) }}
                   </span>
@@ -201,7 +201,7 @@
                     <button
                       type="button"
                       (click)="approve(post)"
-                      class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition"
+                      class="text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium transition"
                     >
                       <i class="fas fa-check mr-1"></i>Approve
                     </button>
@@ -209,9 +209,9 @@
                     <button
                       type="button"
                       (click)="openRejectModal(post)"
-                      class="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 font-medium transition"
+                      class="text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-medium transition"
                     >
-                      <i class="fas fa-times mr-1"></i>Reject
+                      <i class="fas fa-xmark mr-1"></i>Reject
                     </button>
                   </div>
                   <!-- Admin — no actions for already-decided posts -->
@@ -223,7 +223,7 @@
                       (click)="startEdit(post)"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg transition"
                     >
-                      <i class="fas fa-pencil-alt"></i>Edit &amp; Resubmit
+                      <i class="fas fa-pen-to-square"></i>Edit &amp; Resubmit
                     </button>
                   </div>
                   <span *ngIf="isAgent && post.status !== 'rejected'" class="text-xs text-gray-400 dark:text-gray-500 italic">—</span>
@@ -264,14 +264,14 @@
       </span>
     </div>
     <button type="button" (click)="closeDetail()" class="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-lg">
-      <i class="fas fa-times"></i>
+      <i class="fas fa-xmark"></i>
     </button>
   </div>
   <div class="flex-1 overflow-y-auto p-4 space-y-4">
     <!-- Rejection info banner -->
     <div *ngIf="selectedPost.status === 'rejected'" class="rounded-xl border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 px-4 py-3 space-y-1">
       <p class="text-sm font-semibold text-red-700 dark:text-red-400 flex items-center gap-1.5">
-        <i class="fas fa-times-circle"></i> Rejected by {{ selectedPost.rejectedBy?.name || 'Admin' }}
+        <i class="fas fa-circle-xmark"></i> Rejected by {{ selectedPost.rejectedBy?.name || 'Admin' }}
       </p>
       <p *ngIf="selectedPost.rejectedReason" class="text-sm text-red-600 dark:text-red-400">{{ selectedPost.rejectedReason }}</p>
       <p *ngIf="!selectedPost.rejectedReason" class="text-sm text-red-500 dark:text-red-500 italic">No reason provided.</p>
@@ -279,7 +279,7 @@
     <!-- Approval info banner -->
     <div *ngIf="isApproved(selectedPost)" class="rounded-xl border border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20 px-4 py-3 space-y-1">
       <p class="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-1.5">
-        <i class="fas fa-check-circle"></i> Approved by {{ selectedPost.approvedBy?.name || 'Admin' }}
+        <i class="fas fa-circle-check"></i> Approved by {{ selectedPost.approvedBy?.name || 'Admin' }}
       </p>
       <p *ngIf="selectedPost.status === 'published' && selectedPost.platformPostUrl" class="text-sm">
         <a [href]="selectedPost.platformPostUrl" target="_blank" rel="noopener"
@@ -413,7 +413,7 @@
         [disabled]="adminSavingPending"
         (buttonClick)="startAdminEditMode()"
       >
-        <i class="fas fa-pencil-alt mr-1.5"></i>Edit post
+        <i class="fas fa-pen-to-square mr-1.5"></i>Edit post
       </app-button>
       <app-button variant="primary" size="sm" [loading]="approvingId === selectedPost._id || adminSavingPending" (buttonClick)="approve(selectedPost)">Approve</app-button>
       <app-button variant="secondary" size="sm" [disabled]="adminSavingPending" (buttonClick)="openScheduleModal(selectedPost)">Approve &amp; schedule</app-button>
@@ -423,7 +423,7 @@
     <!-- Agent: rejected post — read-only view + Edit button -->
     <div *ngIf="isAgent && selectedPost.status === 'rejected' && !agentEditMode" class="pt-4">
       <app-button variant="primary" size="sm" (buttonClick)="startAgentEditMode()">
-        <i class="fas fa-pencil-alt mr-1.5"></i>Edit &amp; Resubmit
+        <i class="fas fa-pen-to-square mr-1.5"></i>Edit &amp; Resubmit
       </app-button>
     </div>
 
@@ -441,7 +441,7 @@
 
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-rep-white flex items-center gap-2">
-          <i class="fas fa-pencil-alt text-amber-500"></i>Edit &amp; Resubmit
+          <i class="fas fa-pen-to-square text-amber-500"></i>Edit &amp; Resubmit
         </h3>
         <button
           type="button"
@@ -485,7 +485,7 @@
           </button>
         </div>
         <p *ngIf="agentSelectedLibraryMedia" class="text-xs text-gray-600 dark:text-gray-400 truncate" [title]="agentSelectedLibraryMedia.originalName">
-          <i class="fas fa-check-circle text-rep-lime mr-1"></i>Selected: {{ agentSelectedLibraryMedia.originalName }}
+          <i class="fas fa-circle-check text-rep-lime mr-1"></i>Selected: {{ agentSelectedLibraryMedia.originalName }}
         </p>
       </div>
 

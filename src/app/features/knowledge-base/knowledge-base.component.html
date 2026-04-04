@@ -212,9 +212,9 @@
                       </button>
                       <span class="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
                       <button type="button" (click)="openEditEntry(entry)"
-                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition text-left"
+                        class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition text-left"
                         title="Edit entry">
-                        <i class="fas fa-pen mr-1"></i>Edit
+                        <i class="fas fa-pen-to-square mr-1"></i>Edit
                       </button>
                       <span class="hidden sm:inline text-gray-300 dark:text-gray-600">|</span>
                       <button type="button" (click)="toggleActive(entry)"
@@ -225,7 +225,7 @@
                       <button type="button" (click)="deleteEntry(entry._id)"
                         class="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 font-medium transition text-left"
                         title="Delete entry">
-                        <i class="fas fa-trash mr-1"></i>Delete
+                        <i class="fas fa-trash-can mr-1"></i>Delete
                       </button>
                     </div>
                   </td>
@@ -328,7 +328,7 @@
         </div>
         <button type="button" (click)="cancelEdit()"
           class="shrink-0 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-300 rounded-lg transition">
-          <i class="fas fa-times mr-1"></i> Cancel Edit
+          <i class="fas fa-xmark mr-1"></i> Cancel Edit
         </button>
       </div>
 
@@ -423,7 +423,7 @@
                 class="mt-0.5 w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-red-50 hover:text-red-500 transition opacity-0 group-hover:opacity-100 shrink-0 justify-self-end sm:justify-self-auto"
                 title="Remove row"
               >
-                <i class="fas fa-times text-xs"></i>
+                <i class="fas fa-xmark text-xs"></i>
               </button>
               <!-- placeholder so grid stays 3-col when no remove button -->
               <span *ngIf="templateFields.length <= 1" class="hidden sm:block"></span>
@@ -690,7 +690,7 @@
             </div>
             <app-simple-donut-chart
               [segments]="usageDonutSegments"
-              [height]="210"
+              [height]="170"
               centerLabel="AI uses"
               emptyMessage="No usage yet — AI hasn't referenced any entries.">
             </app-simple-donut-chart>
@@ -824,7 +824,7 @@
         </div>
         <button type="button" (click)="closeReadModal()"
           class="shrink-0 w-10 h-10 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-rep-black transition" aria-label="Close">
-          <i class="fas fa-times"></i>
+          <i class="fas fa-xmark"></i>
         </button>
       </div>
 

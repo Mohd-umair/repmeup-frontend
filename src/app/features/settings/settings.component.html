@@ -129,8 +129,8 @@
               Approaching Account Limit
             </h3>
             <p class="text-amber-800 mb-3">
-              You're using <strong>{{ subscriptionLimits.usage.connectedAccounts }}</strong> of 
-              <strong>{{ subscriptionLimits.limits.maxAccounts }}</strong> accounts 
+              You're using <strong>{{ subscriptionLimits.usage.connectedAccounts }}</strong> of
+              <strong>{{ formatMaxAccountsOfLabel(subscriptionLimits.limits.maxAccounts) }}</strong>
               ({{ getUsagePercentage() | number:'1.0-0' }}% capacity).
               <span *ngIf="subscriptionLimits.remaining > 0">
                 You can add {{ subscriptionLimits.remaining }} more.
@@ -141,7 +141,7 @@
                     [disabled]="upgradingPlan"
                     class="px-4 py-2 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               <i [class]="upgradingPlan ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-arrow-up mr-2'"></i>
-              {{ upgradingPlan ? 'Upgrading...' : 'Upgrade to ' + subscriptionLimits.nextTier.name + ' (' + subscriptionLimits.nextTier.maxAccounts + ' accounts)' }}
+              {{ upgradingPlan ? 'Upgrading...' : 'Upgrade to ' + subscriptionLimits.nextTier.name + ' (' + formatMaxAccountsPhrase(subscriptionLimits.nextTier.maxAccounts) + ')' }}
             </button>
           </div>
         </div>
@@ -161,8 +161,8 @@
               Account Limit Reached
             </h3>
             <p class="text-red-800 mb-3">
-              You're using <strong>{{ subscriptionLimits.usage.connectedAccounts }}</strong> of 
-              <strong>{{ subscriptionLimits.limits.maxAccounts }}</strong> account{{ subscriptionLimits.limits.maxAccounts !== 1 ? 's' : '' }}.
+              You're using <strong>{{ subscriptionLimits.usage.connectedAccounts }}</strong> of
+              <strong>{{ formatMaxAccountsOfLabel(subscriptionLimits.limits.maxAccounts) }}</strong>.
               <span *ngIf="getOverLimitCount() > 0">
                 ({{ getOverLimitCount() }} over your plan limit.)
               </span>
@@ -302,7 +302,7 @@
               (click)="connectAvailableAccount(account)"
               [disabled]="!subscriptionLimits?.canConnectMore"
               class="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-              <i class="fas fa-check-circle mr-2"></i>
+              <i class="fas fa-circle-check mr-2"></i>
               Connect Now
             </button>
           </div>
@@ -346,7 +346,7 @@
               <p class="text-sm text-gray-600 mt-1">Select the plan that fits your needs</p>
             </div>
             <button (click)="closePlansModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
-              <i class="fas fa-times text-gray-600 text-xl"></i>
+              <i class="fas fa-xmark text-gray-600 text-xl"></i>
             </button>
           </div>
 
@@ -572,7 +572,7 @@
                   (click)="removeOrgLogo()"
                   [disabled]="removingLogo"
                   class="mt-2 w-24 text-center text-xs text-red-600 hover:text-red-800 hover:underline disabled:opacity-50 transition">
-                  <i class="fas fa-trash text-[10px] mr-1"></i>
+                  <i class="fas fa-trash-can text-[10px] mr-1"></i>
                   {{ removingLogo ? 'Removing…' : 'Remove' }}
                 </button>
               </div>
@@ -1199,10 +1199,11 @@
       </div>
     </div>
 
-    <!-- Compliance Rules Tab -->
-    <!-- Intent Buckets Tab -->
-    <div *ngIf="activeTab === 'intent-buckets'">
-      <app-bucket-settings></app-bucket-settings>
+  
+
+    <!-- Plans & Billing Tab -->
+    <div *ngIf="activeTab === 'accounts'" class="w-full">
+      <app-billing></app-billing>
     </div>
 
     <div *ngIf="activeTab === 'compliance'" class="w-full">

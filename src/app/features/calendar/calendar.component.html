@@ -148,7 +148,7 @@
             <button 
               (click)="closePostsModal()"
               class="w-10 h-10 flex items-center justify-center rounded-full bg-rep-black/10 hover:bg-rep-black/20 transition">
-              <i class="fas fa-times text-rep-black text-xl"></i>
+              <i class="fas fa-xmark text-rep-black text-xl"></i>
             </button>
           </div>
         </div>
@@ -187,7 +187,7 @@
                       *ngIf="post.status === 'scheduled'"
                       (click)="deleteScheduledPost(post._id!)"
                       class="text-red-400 hover:text-red-300 transition text-sm">
-                      <i class="fas fa-trash mr-1"></i>
+                      <i class="fas fa-trash-can mr-1"></i>
                       Delete
                     </button>
                   </div>
