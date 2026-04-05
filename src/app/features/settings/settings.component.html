@@ -693,25 +693,58 @@
           </div>
 
           <!-- Inbox / Conversations: Auto-assign -->
-          <div class="pt-6 border-t border-gray-200">
-            <h3 class="text-lg font-semibold text-rep-black mb-2">
-              <i class="fas fa-inbox mr-2 text-gray-400"></i>
+          <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-rep-black dark:text-white mb-2">
+              <i class="fas fa-inbox mr-2 text-gray-400 dark:text-gray-500"></i>
               Inbox &amp; conversations
             </h3>
-            <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+            <div class="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900/40 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-900/60 transition border border-transparent dark:border-gray-700">
               <div class="flex items-center space-x-4">
-                <div class="w-12 h-12 bg-rep-lime/20 rounded-xl flex items-center justify-center border border-rep-lime/30">
-                  <i class="fas fa-user-plus text-xl text-rep-black"></i>
+                <div class="w-12 h-12 bg-rep-lime/20 dark:bg-rep-lime/10 rounded-xl flex items-center justify-center border border-rep-lime/30 dark:border-rep-lime/20">
+                  <i class="fas fa-user-plus text-xl text-rep-black dark:text-white"></i>
                 </div>
                 <div>
-                  <h3 class="text-base font-semibold text-rep-black">Auto-assign new conversations</h3>
-                  <p class="text-sm text-gray-600">When off, new chats are not assigned; agents assign them manually from the inbox.</p>
+                  <h3 class="text-base font-semibold text-rep-black dark:text-white">Auto-assign new conversations</h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">When off, new chats are not assigned; agents assign them manually from the inbox.</p>
                 </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" [(ngModel)]="organizationData.escalationSettings.autoAssign" name="autoAssign" class="sr-only peer" [disabled]="!permissionService.hasPermission('organization.update')">
                 <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
               </label>
+            </div>
+
+            <div class="mt-6 space-y-3" *ngIf="permissionService.hasPermission('organization.update')">
+              <div>
+                <h4 class="text-sm font-semibold text-rep-black dark:text-white">
+                  Auto-assignment pool <span class="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Limit auto-assign to specific people, or leave none selected to use every admin, manager, and agent (round-robin or least-busy per organization settings).
+                </p>
+              </div>
+              <p *ngIf="loadingAssignableUsers" class="text-sm text-gray-500 dark:text-gray-400">
+                <i class="fas fa-spinner fa-spin mr-1"></i> Loading team…
+              </p>
+              <div *ngIf="!loadingAssignableUsers && assignableUsersForEscalation.length > 0"
+                class="max-h-52 overflow-y-auto rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 p-3 space-y-2">
+                <label *ngFor="let u of assignableUsersForEscalation" class="flex items-center gap-3 cursor-pointer text-sm text-rep-black dark:text-gray-200">
+                  <input
+                    type="checkbox"
+                    [checked]="isEscalationAgentSelected(u._id)"
+                    (change)="toggleEscalationAgent(u._id, $event)"
+                    class="rounded border-gray-300 dark:border-gray-600 text-rep-lime focus:ring-rep-lime/30">
+                  <span>{{ u.firstName }} {{ u.lastName }}</span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">({{ u.role }})</span>
+                </label>
+              </div>
+              <button
+                type="button"
+                (click)="clearEscalationAgentPool()"
+                class="text-sm font-semibold text-rep-black dark:text-rep-lime hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="(organizationData.escalationSettings.availableAgents?.length ?? 0) === 0">
+                Clear selection — use full team pool
+              </button>
             </div>
           </div>
 

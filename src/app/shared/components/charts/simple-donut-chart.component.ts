@@ -12,6 +12,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import ApexCharts from 'apexcharts';
+import { Subscription, timer } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 export interface DonutSegment {
   label: string;
@@ -70,6 +72,7 @@ export class SimpleDonutChartComponent implements AfterViewInit, OnChanges, OnDe
 
   private chart: ApexCharts | null = null;
   private initialized = false;
+  private deferRenderSub?: Subscription;
 
   constructor(private cdr: ChangeDetectorRef) {}
 
@@ -94,7 +97,7 @@ export class SimpleDonutChartComponent implements AfterViewInit, OnChanges, OnDe
   ngAfterViewInit(): void {
     this.initialized = true;
     if (this.showChart) {
-      setTimeout(() => this.renderChart(), 50);
+      this.scheduleRender();
     }
   }
 
@@ -104,13 +107,24 @@ export class SimpleDonutChartComponent implements AfterViewInit, OnChanges, OnDe
     this.chart?.destroy();
     this.chart = null;
     if (this.showChart) {
-      setTimeout(() => this.renderChart(), 50);
+      this.scheduleRender();
     }
     this.cdr.markForCheck();
   }
 
   ngOnDestroy(): void {
+    this.deferRenderSub?.unsubscribe();
     this.chart?.destroy();
+  }
+
+  private scheduleRender(): void {
+    this.deferRenderSub?.unsubscribe();
+    this.deferRenderSub = timer(50)
+      .pipe(take(1))
+      .subscribe(() => {
+        this.deferRenderSub = undefined;
+        this.renderChart();
+      });
   }
 
   private renderChart(): void {

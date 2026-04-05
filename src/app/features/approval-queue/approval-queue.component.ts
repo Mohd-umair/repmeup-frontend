@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, finalize, map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, Subscription, throwError, timer } from 'rxjs';
+import { catchError, finalize, map, switchMap, take, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Media } from '../../core/models/media.model';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
@@ -51,7 +51,7 @@ export interface PendingPost {
   templateUrl: './approval-queue.component.html',
   styleUrls: ['./approval-queue.component.scss']
 })
-export class ApprovalQueueComponent implements OnInit {
+export class ApprovalQueueComponent implements OnInit, OnDestroy {
   posts: PendingPost[] = [];
   loading = true;
 
@@ -97,10 +97,21 @@ export class ApprovalQueueComponent implements OnInit {
   showAdminMediaLibrary = false;
   adminSavingPending = false;
 
+  /** Auto-clear banner messages (replaces raw setTimeout). */
+  private readonly flashSubs = new Subscription();
+
   constructor(
     private http: HttpClient,
     private authService: AuthService
   ) {}
+
+  private clearFlashAfter(ms: number, fn: () => void): void {
+    this.flashSubs.add(timer(ms).pipe(take(1)).subscribe(fn));
+  }
+
+  ngOnDestroy(): void {
+    this.flashSubs.unsubscribe();
+  }
 
   get isAgent(): boolean {
     return this.authService.currentUserValue?.role === 'agent';
@@ -290,7 +301,7 @@ export class ApprovalQueueComponent implements OnInit {
     if (!item) return;
     if (item.mediaType === 'audio') {
       this.approveError = 'Choose an image or video from the library.';
-      setTimeout(() => { this.approveError = ''; }, 6000);
+      this.clearFlashAfter(6000, () => { this.approveError = ''; });
       return;
     }
     this.adminSelectedLibraryMedia = item;
@@ -303,12 +314,12 @@ export class ApprovalQueueComponent implements OnInit {
     const mediaStaged = !!this.adminSelectedLibraryMedia;
     if (!contentChanged && !mediaStaged) {
       this.approveSuccess = 'No changes to save.';
-      setTimeout(() => { this.approveSuccess = ''; }, 3000);
+      this.clearFlashAfter(3000, () => { this.approveSuccess = ''; });
       return;
     }
     if (!this.adminEditContent.trim()) {
       this.approveError = 'Post text cannot be empty.';
-      setTimeout(() => { this.approveError = ''; }, 5000);
+      this.clearFlashAfter(5000, () => { this.approveError = ''; });
       return;
     }
 
@@ -323,12 +334,12 @@ export class ApprovalQueueComponent implements OnInit {
         this.clearAdminMediaReplacement();
         this.adminEditMode = false;
         this.approveSuccess = 'Post updated.';
-        setTimeout(() => { this.approveSuccess = ''; }, 4000);
+        this.clearFlashAfter(4000, () => { this.approveSuccess = ''; });
       },
       error: (err) => {
         this.adminSavingPending = false;
         this.approveError = err?.error?.message || err?.error?.error || 'Failed to save changes.';
-        setTimeout(() => { this.approveError = ''; }, 7000);
+        this.clearFlashAfter(7000, () => { this.approveError = ''; });
       }
     });
   }
@@ -376,7 +387,7 @@ export class ApprovalQueueComponent implements OnInit {
     }
     if (!this.adminEditContent.trim()) {
       this.approveError = 'Post text cannot be empty. Fix the copy before continuing.';
-      setTimeout(() => { this.approveError = ''; }, 7000);
+      this.clearFlashAfter(7000, () => { this.approveError = ''; });
       return throwError(() => new Error('empty content'));
     }
 
@@ -396,7 +407,7 @@ export class ApprovalQueueComponent implements OnInit {
       catchError((err) => {
         const msg = err?.error?.message || err?.error?.error || err?.message || 'Failed to save changes.';
         this.approveError = msg;
-        setTimeout(() => { this.approveError = ''; }, 7000);
+        this.clearFlashAfter(7000, () => { this.approveError = ''; });
         return throwError(() => err);
       }),
       finalize(() => {
@@ -437,7 +448,7 @@ export class ApprovalQueueComponent implements OnInit {
         this.selectedIds.clear();
         this.approveSuccess = `${ids.length} post(s) approved and published.`;
         this.load();
-        setTimeout(() => { this.approveSuccess = ''; }, 5000);
+        this.clearFlashAfter(5000, () => { this.approveSuccess = ''; });
         return;
       }
       this.http.patch(`${environment.apiUrl}/posts/${ids[i]}/approve`, {}).subscribe({
@@ -464,13 +475,13 @@ export class ApprovalQueueComponent implements OnInit {
               : 'Post approved and scheduled.';
             this.closeDetail();
             this.load();
-            setTimeout(() => { this.approveSuccess = ''; }, 5000);
+            this.clearFlashAfter(5000, () => { this.approveSuccess = ''; });
           },
           error: (err) => {
             this.approvingId = null;
             const msg = err?.error?.message || err?.error?.error || 'Approval failed. Please try again.';
             this.approveError = msg;
-            setTimeout(() => { this.approveError = ''; }, 7000);
+            this.clearFlashAfter(7000, () => { this.approveError = ''; });
           }
         });
       },
@@ -501,11 +512,11 @@ export class ApprovalQueueComponent implements OnInit {
             this.approveSuccess = 'Post approved and scheduled successfully!';
             this.closeDetail();
             this.load();
-            setTimeout(() => { this.approveSuccess = ''; }, 5000);
+            this.clearFlashAfter(5000, () => { this.approveSuccess = ''; });
           },
           error: (err) => {
             this.approveError = err?.error?.message || 'Failed to schedule the post.';
-            setTimeout(() => { this.approveError = ''; }, 7000);
+            this.clearFlashAfter(7000, () => { this.approveError = ''; });
           }
         });
       },
@@ -537,7 +548,7 @@ export class ApprovalQueueComponent implements OnInit {
         },
         error: (err) => {
           this.approveError = err?.error?.message || err?.error?.error || 'Rejection failed. Please try again.';
-          setTimeout(() => { this.approveError = ''; }, 7000);
+          this.clearFlashAfter(7000, () => { this.approveError = ''; });
         }
       });
     };
@@ -590,7 +601,7 @@ export class ApprovalQueueComponent implements OnInit {
     if (!item) return;
     if (item.mediaType === 'audio') {
       this.agentEditError = 'Choose an image or video from the library.';
-      setTimeout(() => { this.agentEditError = ''; }, 6000);
+      this.clearFlashAfter(6000, () => { this.agentEditError = ''; });
       return;
     }
     this.agentSelectedLibraryMedia = item;
@@ -614,7 +625,7 @@ export class ApprovalQueueComponent implements OnInit {
         this.closeDetail();
         this.approveSuccess = 'Post resubmitted for approval.';
         this.load();
-        setTimeout(() => { this.approveSuccess = ''; }, 5000);
+        this.clearFlashAfter(5000, () => { this.approveSuccess = ''; });
       },
       error: (err) => {
         this.agentSaving = false;

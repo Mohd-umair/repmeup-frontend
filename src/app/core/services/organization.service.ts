@@ -31,6 +31,8 @@ export interface InboxSettings {
 
 export interface EscalationSettings {
   autoAssign?: boolean;
+  /** Explicit auto-assignment pool; empty/omitted = all admins, managers, agents. */
+  availableAgents?: string[];
 }
 
 export interface IOrganization {

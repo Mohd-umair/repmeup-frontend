@@ -1,6 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { Subject, timer } from 'rxjs';
+import { take, takeUntil } from 'rxjs/operators';
+import { ApiService } from '../../core/services/api.service';
+
 @Component({
   selector: 'app-contact',
   standalone: true,
@@ -8,14 +13,26 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss']
 })
-export class ContactComponent {
+export class ContactComponent implements OnInit, OnDestroy {
   contactForm: FormGroup;
   submitted = false;
   loading = false;
   success = false;
-  error = false;
+  /** Server or network error — shown in template */
+  submitError: string | null = null;
 
-  constructor(private fb: FormBuilder) {
+  /**
+   * Optional intent from query (e.g. book-demo) — stored on ContactInquiry for super-admin.
+   */
+  private intentFromQuery: string | null = null;
+
+  private readonly destroy$ = new Subject<void>();
+
+  constructor(
+    private fb: FormBuilder,
+    private route: ActivatedRoute,
+    private apiService: ApiService
+  ) {
     this.contactForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
@@ -26,29 +43,72 @@ export class ContactComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.route.queryParamMap.pipe(take(1), takeUntil(this.destroy$)).subscribe((qp) => {
+      const intent = qp.get('intent');
+      if (intent === 'book-demo') {
+        this.intentFromQuery = 'book-demo';
+        this.contactForm.patchValue({
+          subject: 'demo',
+          message:
+            'I would like to book a product demo. Please share your availability and next steps.'
+        });
+      }
+    });
+  }
+
   onSubmit(): void {
     this.submitted = true;
-    
-    if (this.contactForm.valid) {
-      this.loading = true;
-      this.error = false;
-      this.success = false;
+    this.submitError = null;
 
-      // TODO: Integrate with backend API
-      // For now, simulate API call
-      setTimeout(() => {
-        console.log('Contact form submitted:', this.contactForm.value);
-        this.loading = false;
-        this.success = true;
-        this.contactForm.reset();
-        this.submitted = false;
-        
-        // Hide success message after 5 seconds
-        setTimeout(() => {
-          this.success = false;
-        }, 5000);
-      }, 1000);
+    if (!this.contactForm.valid) {
+      return;
     }
+
+    this.loading = true;
+    this.success = false;
+
+    const raw = this.contactForm.value;
+    const body = {
+      name: raw.name,
+      email: raw.email,
+      phone: raw.phone || '',
+      company: raw.company || '',
+      subject: raw.subject,
+      message: raw.message,
+      ...(this.intentFromQuery ? { intent: this.intentFromQuery } : {})
+    };
+
+    this.apiService
+      .post<{ success: boolean; message: string; error?: string }>('/contact/submit', body)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.loading = false;
+          if (res.success) {
+            this.success = true;
+            this.contactForm.reset();
+            this.submitted = false;
+            this.intentFromQuery = null;
+            timer(5000)
+              .pipe(take(1), takeUntil(this.destroy$))
+              .subscribe(() => {
+                this.success = false;
+              });
+          } else {
+            this.submitError = res.error || 'Something went wrong. Please try again.';
+          }
+        },
+        error: (err) => {
+          this.loading = false;
+          const msg =
+            err?.error?.error ||
+            err?.error?.message ||
+            (typeof err?.error === 'string' ? err.error : null) ||
+            'Could not send your message. Please try again later.';
+          this.submitError = msg;
+        }
+      });
   }
 
   get f() {
@@ -69,5 +129,10 @@ export class ContactComponent {
       }
     }
     return '';
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

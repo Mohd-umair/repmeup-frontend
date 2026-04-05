@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { timer } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 export type HomeUseCaseTab = 'support' | 'social' | 'startup' | 'enterprise';
 
@@ -13,17 +15,21 @@ export class PublicNavigationService {
 
   goToHomeSection(sectionId: string): void {
     this.router.navigate(['/'], { fragment: sectionId }).then(() => {
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 120);
+      timer(120)
+        .pipe(take(1))
+        .subscribe(() => {
+          document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
     });
   }
 
   goToUseCasesTab(tab: HomeUseCaseTab): void {
     this.router.navigate(['/'], { queryParams: { uc: tab }, fragment: 'use-cases' }).then(() => {
-      setTimeout(() => {
-        document.getElementById('use-cases')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 120);
+      timer(120)
+        .pipe(take(1))
+        .subscribe(() => {
+          document.getElementById('use-cases')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
     });
   }
 }

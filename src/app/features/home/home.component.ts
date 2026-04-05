@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 
 type UseCaseTab = 'support' | 'social' | 'startup' | 'enterprise';
 
@@ -24,6 +25,7 @@ interface UseCase {
 export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   activeUseCaseTab: UseCaseTab = 'support';
   private observer?: IntersectionObserver;
+  private readonly destroy$ = new Subject<void>();
 
   useCases: Record<UseCaseTab, UseCase> = {
     support: {
@@ -95,7 +97,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     };
     applyUseCaseFromUrl();
     this.router.events
-      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
       .subscribe(() => applyUseCaseFromUrl());
   }
 
@@ -117,6 +122,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.observer?.disconnect();
   }
 
@@ -130,6 +137,11 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 
   navigateToContact(): void {
     this.router.navigate(['/contact']);
+  }
+
+  /** Floating CTA — contact page with demo intent (query can prefill form later). */
+  bookDemo(): void {
+    this.router.navigate(['/contact'], { queryParams: { intent: 'book-demo' } });
   }
 
   scrollToSection(sectionId: string): void {

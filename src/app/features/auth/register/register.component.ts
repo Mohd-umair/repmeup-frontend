@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Subject, timer } from 'rxjs';
+import { take, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 
@@ -17,13 +19,15 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, OnDestroy {
   registerForm!: FormGroup;
   loading = false;
   error = '';
   success = false;
   showPassword = false;
   showConfirmPassword = false;
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private formBuilder: FormBuilder,
@@ -45,6 +49,11 @@ export class RegisterComponent implements OnInit {
     }, {
       validators: this.passwordMatchValidator
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /**
@@ -80,23 +89,25 @@ export class RegisterComponent implements OnInit {
     delete formData.confirmPassword;
     delete formData.terms;
 
-    this.authService.register(formData).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.success = true;
-          setTimeout(() => {
-            this.router.navigate(['/app/dashboard']);
-          }, 2000);
-        } else {
-          this.error = response.error || 'Registration failed';
+    this.authService.register(formData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.success = true;
+            timer(2000)
+              .pipe(take(1), takeUntil(this.destroy$))
+              .subscribe(() => this.router.navigate(['/app/dashboard']));
+          } else {
+            this.error = response.error || 'Registration failed';
+            this.loading = false;
+          }
+        },
+        error: (error) => {
+          this.error = error.error?.error || 'An error occurred during registration';
           this.loading = false;
         }
-      },
-      error: (error) => {
-        this.error = error.error?.error || 'An error occurred during registration';
-        this.loading = false;
-      }
-    });
+      });
   }
 
   togglePasswordVisibility(): void {

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { forkJoin, Subject, takeUntil, interval } from 'rxjs';
+import { forkJoin, Subject, Subscription, takeUntil, timer, of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -614,7 +615,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   /** Tracks active polling subscriptions per variant index so we can cancel them */
-  private videoPolls = new Map<number, ReturnType<typeof setInterval>>();
+  private videoPolls = new Map<number, Subscription>();
 
   constructor(
     private http: HttpClient,
@@ -645,7 +646,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.videoPolls.forEach(t => clearInterval(t));
+    this.videoPolls.forEach((sub) => sub.unsubscribe());
     this.videoPolls.clear();
   }
 
@@ -922,41 +923,46 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   /** Poll GET /video-job/:jobId every 4 s until completed or failed */
   private startVideoPolling(idx: number, jobId: string): void {
-    // Clear any existing poll for this variant
-    if (this.videoPolls.has(idx)) clearInterval(this.videoPolls.get(idx)!);
+    this.videoPolls.get(idx)?.unsubscribe();
 
-    const timer = setInterval(() => {
-      this.http.get<{ success: boolean; status: string; videoUrl: string | null; error: { code: string; message: string } | null }>(
-        `${environment.apiUrl}/posts/video-job/${jobId}`
-      ).pipe(takeUntil(this.destroy$)).subscribe({
-        next: (res) => {
-          if (!res.success) return;
+    type VideoJobRes = {
+      success: boolean;
+      status: string;
+      videoUrl: string | null;
+      error: { code: string; message: string } | null;
+    };
 
-          if (res.status === 'completed' && res.videoUrl) {
-            clearInterval(timer);
-            this.videoPolls.delete(idx);
-            this.variants[idx].videoUrl = res.videoUrl;
-            this.variants[idx].loadingVideo = false;
-            this.variants[idx].videoProgress = 100;
-            if (this.selectedVideoIndex === null) this.selectedVideoIndex = idx;
-            this.checkAllVideosComplete();
-            this.loadCredits();
-          } else if (res.status === 'failed') {
-            clearInterval(timer);
-            this.videoPolls.delete(idx);
-            this.variants[idx].loadingVideo = false;
-            this.variants[idx].videoError = res.error || { code: 'VIDEO_FAILED', message: 'Video generation failed.' };
-            this.checkAllVideosComplete();
-          }
-          // status === 'pending' — keep polling
-        },
-        error: () => {
-          // Network error while polling — keep trying (don't stop the interval)
+    const pollSub = timer(0, 4000)
+      .pipe(
+        switchMap(() =>
+          this.http
+            .get<VideoJobRes>(`${environment.apiUrl}/posts/video-job/${jobId}`)
+            .pipe(catchError(() => of(null as VideoJobRes | null)))
+        ),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((res) => {
+        if (res == null || !res.success) return;
+
+        if (res.status === 'completed' && res.videoUrl) {
+          pollSub.unsubscribe();
+          this.videoPolls.delete(idx);
+          this.variants[idx].videoUrl = res.videoUrl;
+          this.variants[idx].loadingVideo = false;
+          this.variants[idx].videoProgress = 100;
+          if (this.selectedVideoIndex === null) this.selectedVideoIndex = idx;
+          this.checkAllVideosComplete();
+          this.loadCredits();
+        } else if (res.status === 'failed') {
+          pollSub.unsubscribe();
+          this.videoPolls.delete(idx);
+          this.variants[idx].loadingVideo = false;
+          this.variants[idx].videoError = res.error || { code: 'VIDEO_FAILED', message: 'Video generation failed.' };
+          this.checkAllVideosComplete();
         }
       });
-    }, 4000);
 
-    this.videoPolls.set(idx, timer);
+    this.videoPolls.set(idx, pollSub);
   }
 
   private checkAllVideosComplete(): void {

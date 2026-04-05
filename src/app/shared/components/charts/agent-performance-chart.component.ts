@@ -4,6 +4,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import ApexCharts from 'apexcharts';
+import { Subscription, timer } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { IAgentStats } from '../../../core/models/analytics.model';
 
 @Component({
@@ -37,6 +39,7 @@ export class AgentPerformanceChartComponent implements AfterViewInit, OnChanges,
   private chart: ApexCharts | null = null;
   private initialized = false;
   private renderScheduled = false;
+  private scheduleSub?: Subscription;
 
   ngAfterViewInit(): void {
     this.initialized = true;
@@ -51,17 +54,21 @@ export class AgentPerformanceChartComponent implements AfterViewInit, OnChanges,
   }
 
   ngOnDestroy(): void {
+    this.scheduleSub?.unsubscribe();
     this.chart?.destroy();
   }
 
   private scheduleRender(): void {
     if (this.renderScheduled) return;
     this.renderScheduled = true;
-    // Wait for DOM to have dimensions (next tick + one more for layout)
-    setTimeout(() => {
-      this.renderScheduled = false;
-      this.renderChart();
-    }, 100);
+    this.scheduleSub?.unsubscribe();
+    this.scheduleSub = timer(100)
+      .pipe(take(1))
+      .subscribe(() => {
+        this.renderScheduled = false;
+        this.scheduleSub = undefined;
+        this.renderChart();
+      });
   }
 
   private renderChart(): void {

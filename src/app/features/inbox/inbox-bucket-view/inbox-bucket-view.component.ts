@@ -13,7 +13,8 @@ import { inboxFilterSerialize } from '../../../core/utils/inbox-filter-values';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
 import { SentimentDonutChartComponent } from '../../../shared/components/charts/sentiment-donut-chart.component';
-import { Subscription } from 'rxjs';
+import { Subscription, timer, interval } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 interface BucketColumn {
   bucket: IIntentBucket;
@@ -78,11 +79,11 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   recordedAudioUrl: string | null = null;
   private recordedBlob: Blob | null = null;
   private mediaRecorder: MediaRecorder | null = null;
-  private recordingTimer: any = null;
+  private recordingTickSub?: Subscription;
 
   /** After a real CDK drag, the browser often fires a click — suppress opening chat for that card only. */
   private pendingSuppressClickForInteractionId: string | null = null;
-  private pendingDragClickClearHandle: ReturnType<typeof setTimeout> | null = null;
+  private pendingDragClickSub?: Subscription;
 
   /** Same emoji picker as list inbox (`inbox-detail`) */
   readonly emojiList: readonly string[] = INBOX_EMOJI_LIST;
@@ -118,14 +119,14 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnDestroy(): void {
     this.clearPendingDragClickTimer();
+    this.recordingTickSub?.unsubscribe();
+    this.recordingTickSub = undefined;
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   private clearPendingDragClickTimer(): void {
-    if (this.pendingDragClickClearHandle !== null) {
-      clearTimeout(this.pendingDragClickClearHandle);
-      this.pendingDragClickClearHandle = null;
-    }
+    this.pendingDragClickSub?.unsubscribe();
+    this.pendingDragClickSub = undefined;
   }
 
   onBucketCardDragStarted(interaction: IInteraction): void {
@@ -135,10 +136,12 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
 
   onBucketCardDragEnded(): void {
     this.clearPendingDragClickTimer();
-    this.pendingDragClickClearHandle = setTimeout(() => {
-      this.pendingDragClickClearHandle = null;
-      this.pendingSuppressClickForInteractionId = null;
-    }, 400);
+    this.pendingDragClickSub = timer(400)
+      .pipe(take(1))
+      .subscribe(() => {
+        this.pendingDragClickSub = undefined;
+        this.pendingSuppressClickForInteractionId = null;
+      });
   }
 
   private mergeListFiltersIntoParams(target: Record<string, unknown>): void {
@@ -375,11 +378,15 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private scrollChatToBottom(): void {
-    setTimeout(() => {
-      if (this.chatThreadRef?.nativeElement) {
-        this.chatThreadRef.nativeElement.scrollTop = this.chatThreadRef.nativeElement.scrollHeight;
-      }
-    }, 50);
+    this.subscriptions.push(
+      timer(50)
+        .pipe(take(1))
+        .subscribe(() => {
+          if (this.chatThreadRef?.nativeElement) {
+            this.chatThreadRef.nativeElement.scrollTop = this.chatThreadRef.nativeElement.scrollHeight;
+          }
+        })
+    );
   }
 
   submitReply(): void {
@@ -463,7 +470,11 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   insertEmoji(emoji: string): void {
     this.replyText += emoji;
     this.showEmojiPicker = false;
-    setTimeout(() => this.composeRef?.nativeElement.focus(), 0);
+    this.subscriptions.push(
+      timer(0)
+        .pipe(take(1))
+        .subscribe(() => this.composeRef?.nativeElement.focus())
+    );
   }
 
   @HostListener('document:click', ['$event'])
@@ -537,7 +548,8 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
       this.mediaRecorder.start();
       this.isRecording = true;
       this.recordingSeconds = 0;
-      this.recordingTimer = setInterval(() => this.recordingSeconds++, 1000);
+      this.recordingTickSub?.unsubscribe();
+      this.recordingTickSub = interval(1000).subscribe(() => this.recordingSeconds++);
     }).catch(() => {
       this.notify.error('Microphone denied', 'Please allow microphone access to record voice messages.');
     });
@@ -548,7 +560,8 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
       this.mediaRecorder.stop();
     }
     this.isRecording = false;
-    clearInterval(this.recordingTimer);
+    this.recordingTickSub?.unsubscribe();
+    this.recordingTickSub = undefined;
   }
 
   cancelRecording(): void {
@@ -556,7 +569,8 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
       this.mediaRecorder.stop();
     }
     this.isRecording = false;
-    clearInterval(this.recordingTimer);
+    this.recordingTickSub?.unsubscribe();
+    this.recordingTickSub = undefined;
     this.recordedBlob = null;
     this.recordedAudioUrl = null;
     this.recordingSeconds = 0;

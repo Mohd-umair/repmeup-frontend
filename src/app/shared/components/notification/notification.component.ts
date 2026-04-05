@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate, state } from '@angular/animations';
 import { NotificationService, Notification } from '../../../core/services/notification.service';
-import { Subscription } from 'rxjs';
+import { Subscription, timer } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-notification',
@@ -25,7 +26,7 @@ import { Subscription } from 'rxjs';
 export class NotificationComponent implements OnInit, OnDestroy {
   notifications: Notification[] = [];
   private subscription?: Subscription;
-  private timeouts: Map<string, any> = new Map();
+  private readonly dismissTimers = new Map<string, Subscription>();
 
   constructor(private notificationService: NotificationService) {}
 
@@ -39,9 +40,8 @@ export class NotificationComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription?.unsubscribe();
-    // Clear all timeouts
-    this.timeouts.forEach(timeout => clearTimeout(timeout));
-    this.timeouts.clear();
+    this.dismissTimers.forEach((sub) => sub.unsubscribe());
+    this.dismissTimers.clear();
   }
 
   addNotification(notification: Notification): void {
@@ -50,12 +50,10 @@ export class NotificationComponent implements OnInit, OnDestroy {
     this.notifications.push(notification);
     console.log('📋 [NotificationComponent] Total notifications:', this.notifications.length);
 
-    // Auto-remove after duration
-    const timeout = setTimeout(() => {
-      this.removeNotification(notification.id);
-    }, notification.duration || 4000);
-
-    this.timeouts.set(notification.id, timeout);
+    const sub = timer(notification.duration || 4000)
+      .pipe(take(1))
+      .subscribe(() => this.removeNotification(notification.id));
+    this.dismissTimers.set(notification.id, sub);
 
     // Limit to 5 notifications
     if (this.notifications.length > 5) {
@@ -65,14 +63,11 @@ export class NotificationComponent implements OnInit, OnDestroy {
   }
 
   removeNotification(id: string): void {
-    // Clear timeout
-    const timeout = this.timeouts.get(id);
-    if (timeout) {
-      clearTimeout(timeout);
-      this.timeouts.delete(id);
+    const sub = this.dismissTimers.get(id);
+    if (sub) {
+      sub.unsubscribe();
+      this.dismissTimers.delete(id);
     }
-
-    // Remove from list
     this.notifications = this.notifications.filter(n => n.id !== id);
   }
 

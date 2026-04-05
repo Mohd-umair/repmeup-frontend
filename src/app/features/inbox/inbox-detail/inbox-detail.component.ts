@@ -9,9 +9,8 @@ import { UserService, IAvailableAgent } from '../../../core/services/user.servic
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationDataService } from '../../../core/services/notification-data.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { Observable, of, Subscription, timer, interval } from 'rxjs';
+import { map, take } from 'rxjs/operators';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 import { MediaLibraryService } from '../../../core/services/media-library.service';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
@@ -111,13 +110,15 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   private mediaRecorder: MediaRecorder | null = null;
   private recordingStream: MediaStream | null = null;
   private recordedChunks: Blob[] = [];
-  private recordingTimer: ReturnType<typeof setInterval> | null = null;
+  private recordingTickSub?: Subscription;
 
   /** Same picker as list inbox — single source: `INBOX_EMOJI_LIST` */
   readonly emojiList: readonly string[] = INBOX_EMOJI_LIST;
 
   // Subscriptions
   private subscriptions: Subscription[] = [];
+  /** One-shot delays (focus/scroll/success banner) — no raw setTimeout */
+  private readonly timedTasks = new Subscription();
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
@@ -187,6 +188,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.timedTasks.unsubscribe();
     this.stopRecordingStream();
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
@@ -231,10 +233,14 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     control.markAsDirty();
     control.updateValueAndValidity();
     this.ngZone.runOutsideAngular(() => {
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + emoji.length, start + emoji.length);
-      }, 0);
+      this.timedTasks.add(
+        timer(0)
+          .pipe(take(1))
+          .subscribe(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+          })
+      );
     });
     this.cdr.markForCheck();
   }
@@ -341,7 +347,13 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
           this.updateTimeline();
           this.replySuccess = true;
           this.interactionUpdate.emit();
-          setTimeout(() => { this.replySuccess = false; }, 3000);
+          this.timedTasks.add(
+            timer(3000)
+              .pipe(take(1))
+              .subscribe(() => {
+                this.replySuccess = false;
+              })
+          );
         } else {
           optimistic.status = 'failed';
           this.optimisticReplies = [...this.optimisticReplies];
@@ -443,16 +455,20 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         if (e.data && e.data.size > 0) this.recordedChunks.push(e.data);
       };
       recorder.onstop = () => {
-        // Defer so the final ondataavailable (from stop()) is processed first in all browsers
-        setTimeout(() => this.finishVoiceRecording(), 50);
+        this.timedTasks.add(
+          timer(50)
+            .pipe(take(1))
+            .subscribe(() => this.finishVoiceRecording())
+        );
       };
       recorder.start(100);
       this.isRecording = true;
       this.recordingDurationSec = 0;
-      this.recordingTimer = setInterval(() => {
+      this.recordingTickSub?.unsubscribe();
+      this.recordingTickSub = interval(1000).subscribe(() => {
         this.recordingDurationSec++;
         this.cdr.markForCheck();
-      }, 1000);
+      });
       this.cdr.markForCheck();
     } catch (err) {
       console.error('Voice recording start failed:', err);
@@ -471,10 +487,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       }
     } catch (_) {}
     this.mediaRecorder.stop();
-    if (this.recordingTimer) {
-      clearInterval(this.recordingTimer);
-      this.recordingTimer = null;
-    }
+    this.recordingTickSub?.unsubscribe();
+    this.recordingTickSub = undefined;
     this.isRecording = false;
     this.cdr.markForCheck();
   }
@@ -522,10 +536,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   private stopRecordingStream(): void {
-    if (this.recordingTimer) {
-      clearInterval(this.recordingTimer);
-      this.recordingTimer = null;
-    }
+    this.recordingTickSub?.unsubscribe();
+    this.recordingTickSub = undefined;
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
       try { this.mediaRecorder.stop(); } catch {}
       this.mediaRecorder = null;
@@ -661,7 +673,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
   /**
    * Schedules a scroll to the bottom after Angular renders + browser paints.
-   * Uses setTimeout → requestAnimationFrame to guarantee DOM is fully laid out.
+   * Uses RxJS timer(0) → requestAnimationFrame so layout has settled.
    * 'instant' always scrolls (used when switching conversations).
    * 'smooth' only scrolls if the user is already near the bottom.
    */
@@ -672,19 +684,24 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     }
     // Run outside Angular zone to avoid triggering extra change-detection cycles
     this.ngZone.runOutsideAngular(() => {
-      setTimeout(() => {
-        requestAnimationFrame(() => {
-          const el = this.conversationThread?.nativeElement;
-          if (!el) return;
-          if (behavior === 'smooth') {
-            el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-          } else {
-            // Direct assignment is more cross-browser reliable than scrollTo({ behavior: 'instant' })
-            el.scrollTop = el.scrollHeight;
-          }
-          this.ngZone.run(() => { this.isScrolledToBottom = true; });
-        });
-      }, 0);
+      this.timedTasks.add(
+        timer(0)
+          .pipe(take(1))
+          .subscribe(() => {
+            requestAnimationFrame(() => {
+              const el = this.conversationThread?.nativeElement;
+              if (!el) return;
+              if (behavior === 'smooth') {
+                el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+              } else {
+                el.scrollTop = el.scrollHeight;
+              }
+              this.ngZone.run(() => {
+                this.isScrolledToBottom = true;
+              });
+            });
+          })
+      );
     });
   }
 
@@ -1348,19 +1365,27 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
    * Focus the reply textarea (used by keyboard shortcut R)
    */
   focusReplyBox(): void {
-    setTimeout(() => this.replyTextarea?.nativeElement?.focus(), 0);
+    this.timedTasks.add(
+      timer(0)
+        .pipe(take(1))
+        .subscribe(() => this.replyTextarea?.nativeElement?.focus())
+    );
   }
 
   insertReplyContent(content: string): void {
     this.replyForm.patchValue({ content });
-    setTimeout(() => {
-      const el = this.replyTextarea?.nativeElement;
-      if (el) {
-        el.focus();
-        el.style.height = 'auto';
-        el.style.height = el.scrollHeight + 'px';
-      }
-    }, 0);
+    this.timedTasks.add(
+      timer(0)
+        .pipe(take(1))
+        .subscribe(() => {
+          const el = this.replyTextarea?.nativeElement;
+          if (el) {
+            el.focus();
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+          }
+        })
+    );
   }
 
   private resetReplyTextareaHeight(): void {

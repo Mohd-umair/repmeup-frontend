@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Subject, interval, takeUntil, take } from 'rxjs';
+import { Subject, Subscription, timer } from 'rxjs';
+import { map, take, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 
@@ -41,7 +42,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   // Resend countdown (60 s)
   resendCountdown = 0;
-  private countdownInterval: any = null;
+  private resendCountdownSub?: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -69,9 +70,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearResendCountdown();
     this.destroy$.next();
     this.destroy$.complete();
-    clearInterval(this.countdownInterval);
   }
 
   // ─── Method switcher ─────────────────────────────────────────────────────
@@ -194,20 +195,27 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.otpSent = false;
     this.error = '';
     this.otpCodeForm.reset();
-    clearInterval(this.countdownInterval);
+    this.clearResendCountdown();
     this.resendCountdown = 0;
   }
 
+  private clearResendCountdown(): void {
+    this.resendCountdownSub?.unsubscribe();
+    this.resendCountdownSub = undefined;
+  }
+
   private startResendCountdown(): void {
-    clearInterval(this.countdownInterval);
+    this.clearResendCountdown();
     this.resendCountdown = 60;
-    this.countdownInterval = setInterval(() => {
-      this.resendCountdown--;
-      if (this.resendCountdown <= 0) {
-        clearInterval(this.countdownInterval);
-        this.resendCountdown = 0;
-      }
-    }, 1000);
+    this.resendCountdownSub = timer(0, 1000)
+      .pipe(
+        map((tick) => 60 - tick),
+        take(61),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((n) => {
+        this.resendCountdown = n;
+      });
   }
 
   // ─── Google OAuth ─────────────────────────────────────────────────────────

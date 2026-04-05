@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { Subject, timer } from 'rxjs';
+import { take, takeUntil } from 'rxjs/operators';
 import { StorageService } from '../../../core/services/storage.service';
 import { environment } from '../../../../environments/environment';
 
@@ -12,7 +14,7 @@ import { environment } from '../../../../environments/environment';
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './reset-password.component.html'
 })
-export class ResetPasswordComponent implements OnInit {
+export class ResetPasswordComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   loading = false;
   success = false;
@@ -20,6 +22,8 @@ export class ResetPasswordComponent implements OnInit {
   token = '';
   showPassword = false;
   showConfirmPassword = false;
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -72,20 +76,29 @@ export class ResetPasswordComponent implements OnInit {
     this.http.post<{ success: boolean; data: { token: string; refreshToken: string } }>(
       `${environment.apiUrl}/auth/reset-password`,
       { token: this.token, password: this.form.value.password }
-    ).subscribe({
-      next: (res) => {
-        if (res.success && res.data.token) {
-          this.storageService.saveToken(res.data.token);
-          this.storageService.saveRefreshToken(res.data.refreshToken);
+    )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data.token) {
+            this.storageService.saveToken(res.data.token);
+            this.storageService.saveRefreshToken(res.data.refreshToken);
+          }
+          this.success = true;
+          this.loading = false;
+          timer(2500)
+            .pipe(take(1), takeUntil(this.destroy$))
+            .subscribe(() => this.router.navigate(['/app/dashboard']));
+        },
+        error: (err) => {
+          this.error = err.error?.error || 'Failed to reset password. The link may have expired.';
+          this.loading = false;
         }
-        this.success = true;
-        this.loading = false;
-        setTimeout(() => this.router.navigate(['/app/dashboard']), 2500);
-      },
-      error: (err) => {
-        this.error = err.error?.error || 'Failed to reset password. The link may have expired.';
-        this.loading = false;
-      }
-    });
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

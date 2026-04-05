@@ -11,11 +11,13 @@ import { SubscriptionService, ISubscriptionLimits } from '../../core/services/su
 import { RazorpayService } from '../../core/services/razorpay.service';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
 import { PermissionService } from '../../core/services/permission.service';
+import { UserService, IAvailableAgent } from '../../core/services/user.service';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
 import { BillingComponent } from './components/billing/billing.component';
 import { RouterModule } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, timer } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 /**
  * Settings Component - Single Responsibility Principle
@@ -101,9 +103,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
     industry: '',
     size: '',
     logo: '' as string | undefined,
-    escalationSettings: { autoAssign: true } as { autoAssign: boolean }
+    escalationSettings: { autoAssign: true, availableAgents: [] as string[] }
   };
   savingOrganization = false;
+
+  /** Users eligible for inbox assignment (same pool as backend when list is empty). */
+  assignableUsersForEscalation: IAvailableAgent[] = [];
+  loadingAssignableUsers = false;
 
   // Logo upload state
   logoPreview: string | null = null;
@@ -225,7 +231,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     public platformConnectionService: PlatformConnectionService, // SOLID: Dependency Injection
     private subscriptionService: SubscriptionService,
     private socialAccountsService: SocialAccountsService,
-    private razorpayService: RazorpayService
+    private razorpayService: RazorpayService,
+    private userService: UserService
   ) {
     // Initialize observables (reactive state management)
     this.usage$ = this.platformConnectionService.usage$;
@@ -270,24 +277,29 @@ export class SettingsComponent implements OnInit, OnDestroy {
         // CRITICAL: Refresh subscription limits to update connection count
         this.loadSubscriptionLimits();
         
-        // Show success message
-        setTimeout(() => {
-          this.notificationService.success(
-            'Platform Connected',
-            `${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`
-          );
-          
-          // If Facebook was just connected, automatically open page selector
-          if (platform === 'facebook') {
-            setTimeout(() => {
-              this.notificationService.info(
-                'Select Pages',
-                'Now choose which Facebook pages and Instagram accounts to connect'
+        this.subscriptions.push(
+          timer(500)
+            .pipe(take(1))
+            .subscribe(() => {
+              this.notificationService.success(
+                'Platform Connected',
+                `${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`
               );
-              this.showMetaPageSelector = true;
-            }, 1500);
-          }
-        }, 500);
+              if (platform === 'facebook') {
+                this.subscriptions.push(
+                  timer(1500)
+                    .pipe(take(1))
+                    .subscribe(() => {
+                      this.notificationService.info(
+                        'Select Pages',
+                        'Now choose which Facebook pages and Instagram accounts to connect'
+                      );
+                      this.showMetaPageSelector = true;
+                    })
+                );
+              }
+            })
+        );
         
         // Clean URL
         this.router.navigate([], {
@@ -309,20 +321,24 @@ export class SettingsComponent implements OnInit, OnDestroy {
             next: () => {
               console.log('✅ Platform connections refreshed after Facebook OAuth');
               
-              // Show success message after connections are loaded
-              setTimeout(() => {
-                this.notificationService.success(
-                  'Facebook Connected',
-                  `You have access to ${pages} page(s). Now select which ones to connect.`
-                );
-                
-                // Auto-open page selector after successful Facebook connection
-                // Give it 2 seconds to ensure database write completes
-                setTimeout(() => {
-                  console.log('🎯 Opening Meta Page Selector after Facebook OAuth...');
-                  this.showMetaPageSelector = true;
-                }, 2000);
-              }, 500);
+              this.subscriptions.push(
+                timer(500)
+                  .pipe(take(1))
+                  .subscribe(() => {
+                    this.notificationService.success(
+                      'Facebook Connected',
+                      `You have access to ${pages} page(s). Now select which ones to connect.`
+                    );
+                    this.subscriptions.push(
+                      timer(2000)
+                        .pipe(take(1))
+                        .subscribe(() => {
+                          console.log('🎯 Opening Meta Page Selector after Facebook OAuth...');
+                          this.showMetaPageSelector = true;
+                        })
+                    );
+                  })
+              );
             },
             error: (err) => {
               console.error('❌ Failed to refresh connections:', err);
@@ -394,12 +410,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
             this.loadPlatformConnections();
             // CRITICAL: Refresh subscription limits to update connection count
             this.loadSubscriptionLimits();
-            setTimeout(() => {
-              this.notificationService.success(
-                'Instagram Connected',
-                `${accounts} account(s) connected successfully!`
-              );
-            }, 500);
+            this.subscriptions.push(
+              timer(500)
+                .pipe(take(1))
+                .subscribe(() => {
+                  this.notificationService.success(
+                    'Instagram Connected',
+                    `${accounts} account(s) connected successfully!`
+                  );
+                })
+            );
           }
         } else if (params['status'] === 'error') {
           const errorMessage = decodeURIComponent(params['message'] || 'Connection failed');
@@ -470,12 +490,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
             this.loadPlatformConnections();
             // CRITICAL: Refresh subscription limits to update connection count
             this.loadSubscriptionLimits();
-            setTimeout(() => {
-              this.notificationService.success(
-                'LinkedIn Connected',
-                `${accounts} organization(s) connected successfully!`
-              );
-            }, 500);
+            this.subscriptions.push(
+              timer(500)
+                .pipe(take(1))
+                .subscribe(() => {
+                  this.notificationService.success(
+                    'LinkedIn Connected',
+                    `${accounts} organization(s) connected successfully!`
+                  );
+                })
+            );
           }
         } else if (params['status'] === 'error') {
           const errorMessage = decodeURIComponent(params['message'] || 'Connection failed');
@@ -1434,6 +1458,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
       next: (response) => {
         if (response.success && response.data) {
           const data = response.data as any;
+          const rawAgents = data.escalationSettings?.availableAgents;
+          const availableAgents = Array.isArray(rawAgents)
+            ? rawAgents.map((id: unknown) => (typeof id === 'string' ? id : (id as { toString(): string }).toString()))
+            : [];
           this.organizationData = {
             name: data.name || '',
             website: data.website || '',
@@ -1441,16 +1469,61 @@ export class SettingsComponent implements OnInit, OnDestroy {
             size: data.size || '',
             logo: data.logo || '',
             escalationSettings: {
-              autoAssign: data.escalationSettings?.autoAssign !== false
+              autoAssign: data.escalationSettings?.autoAssign !== false,
+              availableAgents
             }
           };
           this.logoPreview = data.logo ? this.resolveLogoUrl(data.logo) : null;
+          this.loadAssignableUsersForEscalation();
         }
       },
       error: (error) => {
         console.error('Error loading organization:', error);
       }
     });
+  }
+
+  /** Load inbox-assignable users for escalation pool multi-select. */
+  private loadAssignableUsersForEscalation(): void {
+    if (!this.permissionService.hasPermission('organization.update')) {
+      return;
+    }
+    this.loadingAssignableUsers = true;
+    this.userService.getAvailableAgents().subscribe({
+      next: (res) => {
+        if (res.success && Array.isArray(res.data)) {
+          this.assignableUsersForEscalation = res.data;
+        }
+        this.loadingAssignableUsers = false;
+      },
+      error: () => {
+        this.loadingAssignableUsers = false;
+      }
+    });
+  }
+
+  isEscalationAgentSelected(userId: string): boolean {
+    return this.organizationData.escalationSettings.availableAgents?.includes(userId) ?? false;
+  }
+
+  toggleEscalationAgent(userId: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!this.organizationData.escalationSettings.availableAgents) {
+      this.organizationData.escalationSettings.availableAgents = [];
+    }
+    const list = this.organizationData.escalationSettings.availableAgents;
+    if (input.checked && !list.includes(userId)) {
+      list.push(userId);
+    } else if (!input.checked) {
+      const i = list.indexOf(userId);
+      if (i >= 0) {
+        list.splice(i, 1);
+      }
+    }
+  }
+
+  clearEscalationAgentPool(): void {
+    this.organizationData.escalationSettings.availableAgents = [];
   }
 
   /**

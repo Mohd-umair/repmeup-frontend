@@ -9,8 +9,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
-import { Subject, merge, combineLatest } from 'rxjs';
-import { distinctUntilChanged, filter, map, takeUntil } from 'rxjs/operators';
+import { Subject, merge, combineLatest, Subscription, timer } from 'rxjs';
+import { distinctUntilChanged, filter, map, take, takeUntil } from 'rxjs/operators';
 import { NotificationDataService } from '../../../core/services/notification-data.service';
 import { MenuService, IMenuItem } from '../../../core/services/menu.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -62,8 +62,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   private readonly destroy$ = new Subject<void>();
   private navUrl = '';
-  /** Browser: timer handle is a number (Node typings use Timeout — use loose type for portability). */
-  private notificationPollTimerId: number | undefined;
+  private notificationPollStartSub?: Subscription;
 
   /**
    * At most one collapsible submenu open (accordion).
@@ -120,10 +119,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       });
 
-    this.notificationPollTimerId = window.setTimeout(() => {
-      this.notificationDataService.startPolling();
-      this.notificationPollTimerId = undefined;
-    }, 2500);
+    this.notificationPollStartSub = timer(2500)
+      .pipe(take(1), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.notificationPollStartSub = undefined;
+        this.notificationDataService.startPolling();
+      });
 
     combineLatest([
       this.notificationDataService.inboxUnreadCount$,
@@ -138,9 +139,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.notificationPollTimerId != null) {
-      clearTimeout(this.notificationPollTimerId);
-    }
+    this.notificationPollStartSub?.unsubscribe();
     this.notificationDataService.stopPolling();
     this.destroy$.next();
     this.destroy$.complete();

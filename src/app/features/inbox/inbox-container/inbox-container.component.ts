@@ -21,7 +21,7 @@ import { InboxAiAssistantComponent } from '../inbox-ai-assistant/inbox-ai-assist
 import { InboxBucketViewComponent } from '../inbox-bucket-view/inbox-bucket-view.component';
 import { OrganizationService } from '../../../core/services/organization.service';
 import { forkJoin, timer, Subscription, of, from, interval } from 'rxjs';
-import { exhaustMap, catchError } from 'rxjs/operators';
+import { exhaustMap, catchError, take } from 'rxjs/operators';
 
 /**
  * Inbox Container Component - Single Responsibility Principle
@@ -85,6 +85,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   private autoSyncSubscription?: Subscription;
   private inboxPollSubscription?: Subscription;
   private subscriptions: Subscription[] = [];
+  /** Deferred bulk-dropdown attach (replaces setTimeout 0) */
+  private bulkDropdownDeferSub?: Subscription;
 
   constructor(
     private inboxService: InboxService,
@@ -273,7 +275,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     } else {
       this.assignDropdownPos = { top: 120, left: 24 };
     }
-    setTimeout(() => this.attachDropdownCloseListener(), 0);
+    this.scheduleBulkDropdownAttach();
   }
 
   /** Open label dropdown with fixed positioning (escapes overflow clipping) */
@@ -293,7 +295,17 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     } else {
       this.labelDropdownPos = { top: 120, left: 24 };
     }
-    setTimeout(() => this.attachDropdownCloseListener(), 0);
+    this.scheduleBulkDropdownAttach();
+  }
+
+  private scheduleBulkDropdownAttach(): void {
+    this.bulkDropdownDeferSub?.unsubscribe();
+    this.bulkDropdownDeferSub = timer(0)
+      .pipe(take(1))
+      .subscribe(() => {
+        this.bulkDropdownDeferSub = undefined;
+        this.attachDropdownCloseListener();
+      });
   }
 
   private dropdownCloseHandler = (): void => {
@@ -306,7 +318,13 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   private attachDropdownCloseListener(): void {
     document.removeEventListener('click', this.dropdownCloseHandler);
-    setTimeout(() => document.addEventListener('click', this.dropdownCloseHandler), 0);
+    this.bulkDropdownDeferSub?.unsubscribe();
+    this.bulkDropdownDeferSub = timer(0)
+      .pipe(take(1))
+      .subscribe(() => {
+        this.bulkDropdownDeferSub = undefined;
+        document.addEventListener('click', this.dropdownCloseHandler);
+      });
   }
 
   selectAllOnPage(): void {
@@ -556,6 +574,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     document.removeEventListener('click', this.dropdownCloseHandler);
+    this.bulkDropdownDeferSub?.unsubscribe();
     if (this.autoSyncSubscription) {
       this.autoSyncSubscription.unsubscribe();
     }
