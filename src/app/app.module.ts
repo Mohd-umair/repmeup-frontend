@@ -41,6 +41,7 @@ import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { AboutComponent } from './features/about/about.component';
+import { FaqComponent } from './features/faq/faq.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 import { PublishComponent } from './features/publish/publish.component';
 import { CalendarComponent } from './features/calendar/calendar.component';
@@ -65,6 +66,7 @@ import { MediaLibraryComponent } from './features/media-library/media-library.co
     PrivacyPolicyComponent,
     TermsConditionsComponent,
     AboutComponent,
+    FaqComponent,
     AiCreditsComponent
   ],
   imports: [

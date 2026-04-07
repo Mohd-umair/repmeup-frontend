@@ -1,0 +1,8 @@
+:host {
+  display: block;
+}
+
+/* Avoid Tailwind arbitrary class in [class.xxx] — brackets break Angular's template parser. */
+.fu-drag-scale {
+  transform: scale(1.01);
+}

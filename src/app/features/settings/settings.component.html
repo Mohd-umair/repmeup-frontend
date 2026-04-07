@@ -11,25 +11,25 @@
       
       <!-- Connection Stats -->
       <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-        <div class="flex-1 sm:flex-none bg-rep-white rounded-xl sm:rounded-2xl shadow-lg px-3 sm:px-4 md:px-6 py-2 sm:py-3 border border-gray-800">
+        <div class="flex-1 sm:flex-none bg-rep-white dark:bg-gray-900 rounded-xl sm:rounded-2xl shadow-lg px-3 sm:px-4 md:px-6 py-2 sm:py-3 border border-gray-800 dark:border-gray-700">
           <div class="flex items-center gap-2 sm:gap-3">
             <div class="w-8 h-8 sm:w-10 sm:h-10 bg-rep-lime rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
               <i class="fas fa-check text-rep-black text-sm sm:text-base md:text-lg"></i>
             </div>
             <div class="min-w-0">
-              <p class="text-xs text-gray-600 font-medium uppercase tracking-wide truncate">Connected</p>
-              <p class="text-xl sm:text-2xl font-bold text-rep-black">{{ getConnectedCount() }}</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 font-medium uppercase tracking-wide truncate">Connected</p>
+              <p class="text-xl sm:text-2xl font-bold text-rep-black dark:text-white">{{ getConnectedCount() }}</p>
             </div>
           </div>
         </div>
-        <div class="flex-1 sm:flex-none bg-rep-white rounded-xl sm:rounded-2xl shadow-lg px-3 sm:px-4 md:px-6 py-2 sm:py-3 border border-gray-800">
+        <div class="flex-1 sm:flex-none bg-rep-white dark:bg-gray-900 rounded-xl sm:rounded-2xl shadow-lg px-3 sm:px-4 md:px-6 py-2 sm:py-3 border border-gray-800 dark:border-gray-700">
           <div class="flex items-center gap-2 sm:gap-3">
-            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <i class="fas fa-clock text-gray-600 text-sm sm:text-base md:text-lg"></i>
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 dark:bg-gray-700 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-clock text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg"></i>
             </div>
             <div class="min-w-0">
-              <p class="text-xs text-gray-600 font-medium uppercase tracking-wide truncate">Available</p>
-              <p class="text-xl sm:text-2xl font-bold text-rep-black">{{ getPendingCount() }}</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 font-medium uppercase tracking-wide truncate">Available</p>
+              <p class="text-xl sm:text-2xl font-bold text-rep-black dark:text-white">{{ getPendingCount() }}</p>
             </div>
           </div>
         </div>
@@ -37,7 +37,7 @@
     </div>
 
     <!-- Tabs — grid on mobile, horizontal row on desktop -->
-    <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800 relative z-10">
+    <div class="bg-rep-white dark:bg-gray-900 rounded-xl sm:rounded-2xl shadow-xl p-1.5 sm:p-2 border border-gray-800 dark:border-gray-700 relative z-10">
       <nav class="grid grid-cols-3 sm:grid-cols-4 md:flex gap-1 sm:gap-1.5">
         <button *ngFor="let tab of tabs"
           [hidden]="!canViewTab($any(tab.id))"
@@ -45,7 +45,7 @@
           (click)="setActiveTab($any(tab.id))"
           [class]="activeTab === tab.id
             ? 'bg-rep-lime text-rep-black shadow-lg'
-            : 'text-gray-600 hover:bg-gray-100'"
+            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
           class="md:flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-2 md:px-3 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs md:text-sm transition-all duration-200 cursor-pointer touch-manipulation min-h-[42px] select-none active:scale-95"
         >
           <i [class]="tab.icon + ' text-xs md:text-sm pointer-events-none'"></i>
@@ -117,7 +117,7 @@
 
       <!-- 90% Capacity Warning Banner -->
       <div *ngIf="subscriptionLimits && isNearLimit() && !isLimitReached()" 
-           class="bg-gradient-to-r from-amber-50 to-amber-100 border-2 border-amber-400 rounded-xl p-5 shadow-md">
+           class="bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-950/50 dark:to-amber-900/30 border-2 border-amber-400 dark:border-amber-600 rounded-xl p-5 shadow-md">
         <div class="flex items-start gap-4">
           <div class="flex-shrink-0">
             <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center">
@@ -125,10 +125,10 @@
             </div>
           </div>
           <div class="flex-1">
-            <h3 class="text-lg font-bold text-amber-900 mb-1">
+            <h3 class="text-lg font-bold text-amber-900 dark:text-amber-200 mb-1">
               Approaching Account Limit
             </h3>
-            <p class="text-amber-800 mb-3">
+            <p class="text-amber-800 dark:text-amber-100/90 mb-3">
               You're using <strong>{{ subscriptionLimits.usage.connectedAccounts }}</strong> of
               <strong>{{ formatMaxAccountsOfLabel(subscriptionLimits.limits.maxAccounts) }}</strong>
               ({{ getUsagePercentage() | number:'1.0-0' }}% capacity).
@@ -149,7 +149,7 @@
 
       <!-- Limit Reached Banner -->
       <div *ngIf="subscriptionLimits && isLimitReached()" 
-           class="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-400 rounded-xl p-5 shadow-md">
+           class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950/50 dark:to-red-900/30 border-2 border-red-400 dark:border-red-600 rounded-xl p-5 shadow-md">
         <div class="flex items-start gap-4">
           <div class="flex-shrink-0">
             <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center">
@@ -157,10 +157,10 @@
             </div>
           </div>
           <div class="flex-1">
-            <h3 class="text-lg font-bold text-red-900 mb-1">
+            <h3 class="text-lg font-bold text-red-900 dark:text-red-200 mb-1">
               Account Limit Reached
             </h3>
-            <p class="text-red-800 mb-3">
+            <p class="text-red-800 dark:text-red-100/90 mb-3">
               You're using <strong>{{ subscriptionLimits.usage.connectedAccounts }}</strong> of
               <strong>{{ formatMaxAccountsOfLabel(subscriptionLimits.limits.maxAccounts) }}</strong>.
               <span *ngIf="getOverLimitCount() > 0">
@@ -177,7 +177,7 @@
                 {{ upgradingPlan ? 'Upgrading...' : 'Upgrade to ' + subscriptionLimits.nextTier.name }}
               </button>
               <button (click)="goToPlansPage()"
-                      class="px-5 py-2.5 bg-white border-2 border-red-300 text-red-700 rounded-lg font-semibold hover:bg-red-50 transition-all">
+                      class="px-5 py-2.5 bg-white dark:bg-gray-800 border-2 border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 rounded-lg font-semibold hover:bg-red-50 dark:hover:bg-red-950/40 transition-all">
                 <i class="fas fa-eye mr-2"></i>
                 View All Plans
               </button>
@@ -187,94 +187,94 @@
       </div>
 
       <!-- NEW: Add Account Section (Step 8) -->
-      <div class="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6">
-        <h3 class="text-lg font-bold text-rep-black mb-4">Add Account</h3>
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md border-2 border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-bold text-rep-black dark:text-white mb-4">Add Account</h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <!-- Meta (Facebook/Instagram) -->
           <button 
             (click)="openMetaPageSelector()"
             [disabled]="!canAddConnection || loading"
-            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             [title]="canAddConnection ? 'Add Facebook or Instagram account' : connectionLimitMessage">
             <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-2">
               <i class="fab fa-facebook-f text-white text-xl"></i>
             </div>
-            <span class="text-xs font-semibold text-gray-700">Meta</span>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">Meta</span>
           </button>
 
           <!-- YouTube -->
           <button 
             (click)="connectPlatform(platforms[2])"
             [disabled]="!canAddConnection || loading || platforms[2].connected"
-            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-red-500 hover:bg-red-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             [title]="platforms[2].connected ? 'Already connected' : (canAddConnection ? 'Connect YouTube' : connectionLimitMessage)">
             <div class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center mb-2">
               <i class="fab fa-youtube text-white text-xl"></i>
             </div>
-            <span class="text-xs font-semibold text-gray-700">YouTube</span>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">YouTube</span>
           </button>
 
           <!-- Google Business -->
           <button 
             (click)="connectPlatform(platforms[3])"
             [disabled]="!canAddConnection || loading || platforms[3]?.connected"
-            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             [title]="platforms[3]?.connected ? 'Already connected' : (canAddConnection ? 'Connect Google Business' : connectionLimitMessage)">
             <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center mb-2">
               <i class="fab fa-google text-white text-xl"></i>
             </div>
-            <span class="text-xs font-semibold text-gray-700">Google</span>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">Google</span>
           </button>
 
           <!-- LinkedIn -->
           <button 
             (click)="connectPlatform(platforms[4])"
             [disabled]="!canAddConnection || loading || platforms[4].connected"
-            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-blue-700 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             [title]="platforms[4].connected ? 'Already connected' : (canAddConnection ? 'Connect LinkedIn' : connectionLimitMessage)">
             <div class="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mb-2">
               <i class="fab fa-linkedin text-white text-xl"></i>
             </div>
-            <span class="text-xs font-semibold text-gray-700">LinkedIn</span>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">LinkedIn</span>
           </button>
 
           <!-- WhatsApp -->
           <button 
             (click)="connectPlatform(platforms[5])"
             [disabled]="!canAddConnection || loading || platforms[5].connected"
-            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             [title]="platforms[5].connected ? 'Already connected' : (canAddConnection ? 'Connect WhatsApp' : connectionLimitMessage)">
             <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-2">
               <i class="fab fa-whatsapp text-white text-xl"></i>
             </div>
-            <span class="text-xs font-semibold text-gray-700">WhatsApp</span>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">WhatsApp</span>
           </button>
 
           <!-- More Platforms (Coming Soon) -->
           <button 
             disabled
-            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl opacity-50 cursor-not-allowed">
+            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl opacity-50 cursor-not-allowed">
             <div class="w-12 h-12 bg-gray-300 rounded-xl flex items-center justify-center mb-2">
               <i class="fas fa-plus text-white text-xl"></i>
             </div>
             <span class="text-xs font-semibold text-gray-500">More Soon</span>
           </button>
         </div>
-        <p class="text-xs text-gray-500 mt-4 text-center">
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
           <i class="fas fa-info-circle mr-1"></i>
           {{ canAddConnection ? 'Select a platform to connect' : connectionLimitMessage }}
         </p>
       </div>
 
       <!-- NEW: Available Accounts Section -->
-      <div *ngIf="availableAccounts.length > 0" class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-md border-2 border-blue-200 p-6">
+      <div *ngIf="availableAccounts.length > 0" class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 rounded-xl shadow-md border-2 border-blue-200 dark:border-blue-800 p-6">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="text-xl font-bold text-rep-black flex items-center">
-              <i class="fas fa-plug text-blue-600 mr-2"></i>
+            <h3 class="text-xl font-bold text-rep-black dark:text-white flex items-center">
+              <i class="fas fa-plug text-blue-600 dark:text-blue-400 mr-2"></i>
               Available to Connect
             </h3>
-            <p class="text-sm text-gray-600 mt-1">
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
               These accounts are authenticated and ready to use
             </p>
           </div>
@@ -285,15 +285,15 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
           <div *ngFor="let account of availableAccounts" 
-               class="bg-white rounded-lg border-2 border-gray-200 p-4 hover:border-blue-400 hover:shadow-lg transition-all">
+               class="bg-white dark:bg-gray-800/80 rounded-lg border-2 border-gray-200 dark:border-gray-600 p-4 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg transition-all">
             <div class="flex items-start justify-between mb-3">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                   <i [class]="'fab fa-' + account.platform + ' text-white'"></i>
                 </div>
                 <div>
-                  <h4 class="font-semibold text-rep-black text-sm">{{ account.platformUsername }}</h4>
-                  <p class="text-xs text-gray-500 capitalize">{{ account.platform }}</p>
+                  <h4 class="font-semibold text-rep-black dark:text-white text-sm">{{ account.platformUsername }}</h4>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 capitalize">{{ account.platform }}</p>
                 </div>
               </div>
             </div>
@@ -308,8 +308,8 @@
           </div>
         </div>
 
-        <div *ngIf="!subscriptionLimits?.canConnectMore" class="mt-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
-          <p class="text-sm text-amber-800">
+        <div *ngIf="!subscriptionLimits?.canConnectMore" class="mt-4 p-3 bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg">
+          <p class="text-sm text-amber-800 dark:text-amber-200">
             <i class="fas fa-info-circle mr-2"></i>
             You've reached your plan limit. Upgrade to connect these accounts.
           </p>
@@ -317,9 +317,9 @@
       </div>
 
       <!-- NEW: Connected Accounts List (SOLID: Single Responsibility) -->
-      <div class="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6">
+      <div class="bg-white dark:bg-gray-900 rounded-xl shadow-md border-2 border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-bold text-rep-black">Connected Accounts</h3>
+          <h3 class="text-xl font-bold text-rep-black dark:text-white">Connected Accounts</h3>
         </div>
         <app-connected-accounts-list
           [connections]="(connections$ | async) || []"
@@ -337,16 +337,16 @@
       </app-meta-page-selector>
 
       <!-- Plans Modal -->
-      <div *ngIf="showPlansModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" (click)="closePlansModal()">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+      <div *ngIf="showPlansModal" class="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50 p-4" (click)="closePlansModal()">
+        <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-gray-700" (click)="$event.stopPropagation()">
           <!-- Modal Header -->
-          <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+          <div class="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-t-2xl">
             <div>
-              <h2 class="text-2xl font-bold text-rep-black">Choose Your Plan</h2>
-              <p class="text-sm text-gray-600 mt-1">Select the plan that fits your needs</p>
+              <h2 class="text-2xl font-bold text-rep-black dark:text-white">Choose Your Plan</h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Select the plan that fits your needs</p>
             </div>
-            <button (click)="closePlansModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
-              <i class="fas fa-xmark text-gray-600 text-xl"></i>
+            <button (click)="closePlansModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors">
+              <i class="fas fa-xmark text-gray-600 dark:text-gray-400 text-xl"></i>
             </button>
           </div>
 
@@ -354,8 +354,8 @@
           <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div *ngFor="let planKey of getPlanKeys()" 
-                   [class]="subscriptionLimits?.planId === planKey ? 'border-4 border-rep-lime' : 'border-2 border-gray-200'"
-                   class="bg-white rounded-xl p-6 hover:shadow-lg transition-all relative">
+                   [class]="subscriptionLimits?.planId === planKey ? 'border-4 border-rep-lime' : 'border-2 border-gray-200 dark:border-gray-600'"
+                   class="bg-white dark:bg-gray-800/50 rounded-xl p-6 hover:shadow-lg transition-all relative">
                 
                 <!-- Current Plan Badge -->
                 <div *ngIf="subscriptionLimits?.planId === planKey" 
@@ -365,9 +365,9 @@
 
                 <!-- Plan Header -->
                 <div class="mb-4">
-                  <h3 class="text-2xl font-bold text-rep-black">{{ allPlans[planKey].name }}</h3>
+                  <h3 class="text-2xl font-bold text-rep-black dark:text-white">{{ allPlans[planKey].name }}</h3>
                   <div class="mt-2">
-                    <span class="text-4xl font-bold text-rep-black">{{ formatPrice(allPlans[planKey].price) }}</span>
+                    <span class="text-4xl font-bold text-rep-black dark:text-white">{{ formatPrice(allPlans[planKey].price) }}</span>
                   </div>
                 </div>
 
@@ -375,35 +375,35 @@
                 <div class="space-y-3 mb-6">
                   <div class="flex items-center gap-2 text-sm">
                     <i class="fas fa-plug text-rep-black dark:text-rep-lime w-5"></i>
-                    <span class="text-gray-700">
+                    <span class="text-gray-700 dark:text-gray-200">
                       <strong>{{ allPlans[planKey].limits.maxAccounts === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAccounts }}</strong> 
                       Social Accounts
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
                     <i class="fas fa-users text-rep-black dark:text-rep-lime w-5"></i>
-                    <span class="text-gray-700">
+                    <span class="text-gray-700 dark:text-gray-200">
                       <strong>{{ allPlans[planKey].limits.maxUsers === -1 ? 'Unlimited' : allPlans[planKey].limits.maxUsers }}</strong> 
                       Team Members
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
                     <i class="fas fa-paper-plane text-rep-black dark:text-rep-lime w-5"></i>
-                    <span class="text-gray-700">
+                    <span class="text-gray-700 dark:text-gray-200">
                       <strong>{{ allPlans[planKey].limits.maxPostsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxPostsPerMonth }}</strong> 
                       Posts/Month
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
                     <i class="fas fa-robot text-rep-black dark:text-rep-lime w-5"></i>
-                    <span class="text-gray-700">
+                    <span class="text-gray-700 dark:text-gray-200">
                       <strong>{{ allPlans[planKey].limits.maxAutoRepliesPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAutoRepliesPerMonth }}</strong> 
                       Auto-Replies/Month
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
                     <i class="fas fa-magic text-rep-black dark:text-rep-lime w-5"></i>
-                    <span class="text-gray-700">
+                    <span class="text-gray-700 dark:text-gray-200">
                       <strong>{{ allPlans[planKey].limits.maxAICreditsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAICreditsPerMonth }}</strong> 
                       AI Credits/Month
                     </span>
@@ -411,11 +411,11 @@
                 </div>
 
                 <!-- Features -->
-                <div class="space-y-2 mb-6 pb-6 border-b border-gray-200">
-                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Features</p>
+                <div class="space-y-2 mb-6 pb-6 border-b border-gray-200 dark:border-gray-600">
+                  <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Features</p>
                   <div *ngFor="let feature of allPlans[planKey].features" class="flex items-start gap-2 text-sm">
-                    <i class="fas fa-check text-green-600 mt-0.5 flex-shrink-0"></i>
-                    <span class="text-gray-700">{{ formatFeatureName(feature) }}</span>
+                    <i class="fas fa-check text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0"></i>
+                    <span class="text-gray-700 dark:text-gray-200">{{ formatFeatureName(feature) }}</span>
                   </div>
                 </div>
 
@@ -430,28 +430,25 @@
                 </button>
 
                 <div *ngIf="subscriptionLimits?.planId === planKey"
-                     class="w-full py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-center">
+                     class="w-full py-3 bg-gray-100 dark:bg-gray-700/80 text-gray-600 dark:text-gray-300 rounded-xl font-bold text-center">
                   <i class="fas fa-check mr-2"></i>
                   Current Plan
                 </div>
 
                 <div *ngIf="allPlans[planKey].tier < (subscriptionLimits?.tier || 0)"
-                     class="w-full py-3 bg-gray-50 text-gray-400 rounded-xl font-bold text-center cursor-not-allowed">
-                  <i class="fas fa-arrow-down mr-2"></i>
-                  Downgrade Not Available
-                </div>
+                     class="w-full min-h-[3rem]" aria-hidden="true"></div>
               </div>
             </div>
           </div>
 
           <!-- Modal Footer -->
-          <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between rounded-b-2xl">
-            <p class="text-sm text-gray-600">
+          <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-b-2xl">
+            <p class="text-sm text-gray-600 dark:text-gray-400">
               <i class="fas fa-info-circle mr-2"></i>
               Need a custom plan? Contact our sales team
             </p>
             <button (click)="closePlansModal()" 
-                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all">
+                    class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all">
               Close
             </button>
           </div>
@@ -462,22 +459,22 @@
 
     <!-- Profile Tab -->
     <div *ngIf="activeTab === 'profile'" class="w-full">
-      <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
+      <div class="bg-rep-white dark:bg-gray-900 rounded-2xl shadow-xl p-8 border border-gray-800 dark:border-gray-700">
         <div class="flex items-center space-x-6 mb-8">
           <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black font-bold text-3xl">
             {{ (profileData.firstName?.charAt(0) || '') + (profileData.lastName?.charAt(0) || '') }}
           </div>
           <div>
-            <h2 class="text-3xl font-bold text-rep-black">Profile Settings</h2>
-            <p class="text-gray-600 mt-1">Update your personal information</p>
+            <h2 class="text-3xl font-bold text-rep-black dark:text-white">Profile Settings</h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Update your personal information</p>
           </div>
         </div>
         
         <form (ngSubmit)="saveProfile()" class="space-y-6">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-semibold text-rep-black mb-2">
-                <i class="fas fa-user mr-2 text-gray-400"></i>
+              <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">
+                <i class="fas fa-user mr-2 text-gray-400 dark:text-gray-500"></i>
                 First Name
               </label>
               <input 
@@ -485,11 +482,11 @@
                 [(ngModel)]="profileData.firstName" 
                 name="firstName"
                 required
-                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
+                class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition dark:bg-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
             </div>
             <div>
-              <label class="block text-sm font-semibold text-rep-black mb-2">
-                <i class="fas fa-user mr-2 text-gray-400"></i>
+              <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">
+                <i class="fas fa-user mr-2 text-gray-400 dark:text-gray-500"></i>
                 Last Name
               </label>
               <input 
@@ -497,13 +494,13 @@
                 [(ngModel)]="profileData.lastName" 
                 name="lastName"
                 required
-                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
+                class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition dark:bg-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-rep-black mb-2">
-              <i class="fas fa-envelope mr-2 text-gray-400"></i>
+            <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">
+              <i class="fas fa-envelope mr-2 text-gray-400 dark:text-gray-500"></i>
               Email Address
             </label>
             <input 
@@ -512,8 +509,8 @@
               name="email"
               required
               disabled
-              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-gray-100 cursor-not-allowed">
-            <p class="text-xs text-gray-500 mt-1">
+              class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-gray-100 dark:bg-gray-800/80 dark:text-gray-300 cursor-not-allowed">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
               <i class="fas fa-info-circle mr-1"></i>
               Email cannot be changed. Contact support if you need to update it.
             </p>
@@ -534,14 +531,14 @@
 
     <!-- Organization Tab -->
     <div *ngIf="activeTab === 'organization' && canViewTab('organization')" class="w-full">
-      <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
+      <div class="bg-rep-white dark:bg-gray-900 rounded-2xl shadow-xl p-8 border border-gray-800 dark:border-gray-700">
         <div class="flex items-center space-x-6 mb-8">
           <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black">
             <i class="fas fa-building text-3xl"></i>
           </div>
           <div>
-            <h2 class="text-3xl font-bold text-rep-black">Organization Settings</h2>
-            <p class="text-gray-600 mt-1">Manage your organization details</p>
+            <h2 class="text-3xl font-bold text-rep-black dark:text-white">Organization Settings</h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Manage your organization details</p>
           </div>
         </div>
         
@@ -549,8 +546,8 @@
 
           <!-- ── Logo Upload ────────────────────────────────────────────── -->
           <div>
-            <label class="block text-sm font-semibold text-rep-black mb-3">
-              <i class="fas fa-image mr-2 text-gray-400"></i>
+            <label class="block text-sm font-semibold text-rep-black dark:text-white mb-3">
+              <i class="fas fa-image mr-2 text-gray-400 dark:text-gray-500"></i>
               Organisation Logo
             </label>
 
@@ -558,13 +555,13 @@
 
               <!-- Current logo / placeholder -->
               <div class="shrink-0">
-                <div class="w-24 h-24 rounded-2xl border-2 border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden relative">
+                <div class="w-24 h-24 rounded-2xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center overflow-hidden relative">
                   <img *ngIf="logoPreview" [src]="logoPreview" alt="Organisation logo"
                     class="w-full h-full object-contain p-1" />
-                  <i *ngIf="!logoPreview" class="fas fa-image text-3xl text-gray-300"></i>
+                  <i *ngIf="!logoPreview" class="fas fa-image text-3xl text-gray-300 dark:text-gray-600"></i>
                   <!-- Loading overlay -->
-                  <div *ngIf="uploadingLogo" class="absolute inset-0 bg-white/80 flex items-center justify-center rounded-2xl">
-                    <i class="fas fa-spinner fa-spin text-rep-black text-xl"></i>
+                  <div *ngIf="uploadingLogo" class="absolute inset-0 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center rounded-2xl">
+                    <i class="fas fa-spinner fa-spin text-rep-black dark:text-white text-xl"></i>
                   </div>
                 </div>
                 <!-- Remove button -->
@@ -577,49 +574,35 @@
                 </button>
               </div>
 
-              <!-- Drop zone -->
-              <label
-                (dragover)="onLogoDragOver($event)"
-                (dragleave)="onLogoDragLeave()"
-                (drop)="onLogoDrop($event)"
-                [class]="logoDropOver
-                  ? 'border-rep-black bg-rep-black/5 scale-[1.01]'
-                  : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'"
-                class="flex-1 min-w-[180px] border-2 border-dashed rounded-2xl px-6 py-8 flex flex-col items-center justify-center gap-3
-                       cursor-pointer transition-all duration-150 select-none"
-                [attr.for]="'logo-file-input'">
-                <input id="logo-file-input" type="file" accept="image/*" class="sr-only"
-                  (change)="onLogoFileChange($event)"
-                  [disabled]="uploadingLogo" />
-                <div class="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center">
-                  <i class="fas fa-cloud-arrow-up text-xl text-gray-500"></i>
-                </div>
-                <div class="text-center">
-                  <p class="text-sm font-semibold text-rep-black">
-                    {{ uploadingLogo ? 'Uploading…' : 'Click or drag &amp; drop' }}
-                  </p>
-                  <p class="text-xs text-gray-500 mt-0.5">PNG, JPG, SVG or WebP — max 2 MB</p>
-                </div>
-                <span *ngIf="!uploadingLogo"
-                  class="px-4 py-1.5 rounded-lg bg-rep-black text-rep-white text-xs font-semibold hover:bg-gray-800 transition">
-                  Choose File
-                </span>
-                <span *ngIf="uploadingLogo"
-                  class="px-4 py-1.5 rounded-lg bg-gray-300 text-gray-600 text-xs font-semibold cursor-default">
-                  <i class="fas fa-spinner fa-spin mr-1"></i> Uploading…
-                </span>
-              </label>
+              <app-file-upload-zone
+                class="flex-1 min-w-[180px]"
+                [files]="logoUploadQueue"
+                (filesChange)="onOrganizationLogoFilesChange($event)"
+                [maxFiles]="1"
+                [multiple]="false"
+                [maxFileSizeBytes]="2 * 1024 * 1024"
+                accept="image/*"
+                [showFileList]="false"
+                [useRepDragAccent]="true"
+                [showChoosePill]="true"
+                [comfortable]="true"
+                [disabled]="uploadingLogo"
+                [openMediaGalleryOnClick]="true"
+                galleryMediaType="image"
+                [dropzoneTitle]="uploadingLogo ? 'Uploading…' : 'Open media library or drag'"
+                dropzoneHint="PNG, JPG, SVG or WebP — max 2 MB"
+              />
             </div>
 
-            <p class="text-xs text-gray-500 mt-2">
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
               <i class="fas fa-info-circle mr-1"></i>
               This logo is used as a watermark when generating AI posts in the Content Studio.
             </p>
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-rep-black mb-2">
-              <i class="fas fa-building mr-2 text-gray-400"></i>
+            <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">
+              <i class="fas fa-building mr-2 text-gray-400 dark:text-gray-500"></i>
               Organization Name
             </label>
             <input 
@@ -628,12 +611,12 @@
               name="name"
               required
               [disabled]="!permissionService.hasPermission('organization.update')"
-              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
+              class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition dark:bg-gray-800 dark:text-white">
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-rep-black mb-2">
-              <i class="fas fa-globe mr-2 text-gray-400"></i>
+            <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">
+              <i class="fas fa-globe mr-2 text-gray-400 dark:text-gray-500"></i>
               Website
             </label>
             <input 
@@ -642,20 +625,20 @@
               name="website"
               placeholder="https://example.com"
               [disabled]="!permissionService.hasPermission('organization.update')"
-              class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition">
+              class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition dark:bg-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-semibold text-rep-black mb-2">
-                <i class="fas fa-industry mr-2 text-gray-400"></i>
+              <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">
+                <i class="fas fa-industry mr-2 text-gray-400 dark:text-gray-500"></i>
                 Industry
               </label>
               <select 
                 [(ngModel)]="organizationData.industry" 
                 name="industry"
                 [disabled]="!permissionService.hasPermission('organization.update')"
-                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white">
+                class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white dark:bg-gray-800 dark:text-white">
                 <option value="">Select Industry</option>
                 <option value="technology">Technology</option>
                 <option value="retail">Retail & E-commerce</option>
@@ -672,15 +655,15 @@
             </div>
 
             <div>
-              <label class="block text-sm font-semibold text-rep-black mb-2">
-                <i class="fas fa-users mr-2 text-gray-400"></i>
+              <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">
+                <i class="fas fa-users mr-2 text-gray-400 dark:text-gray-500"></i>
                 Company Size
               </label>
               <select 
                 [(ngModel)]="organizationData.size" 
                 name="size"
                 [disabled]="!permissionService.hasPermission('organization.update')"
-                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white">
+                class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white dark:bg-gray-800 dark:text-white">
                 <option value="">Select Size</option>
                 <option value="1-10">1-10 employees</option>
                 <option value="11-50">11-50 employees</option>
@@ -763,26 +746,26 @@
 
     <!-- Notifications Tab -->
     <div *ngIf="activeTab === 'notifications'" class="w-full">
-      <div class="bg-rep-white rounded-2xl shadow-xl p-8 border border-gray-800">
+      <div class="bg-rep-white dark:bg-gray-900 rounded-2xl shadow-xl p-8 border border-gray-800 dark:border-gray-700">
         <div class="flex items-center space-x-6 mb-8">
           <div class="w-20 h-20 bg-rep-lime rounded-2xl flex items-center justify-center text-rep-black">
             <i class="fas fa-bell text-3xl"></i>
           </div>
           <div>
-            <h2 class="text-3xl font-bold text-rep-black">Notification Preferences</h2>
-            <p class="text-gray-600 mt-1">Choose how you want to be notified</p>
+            <h2 class="text-3xl font-bold text-rep-black dark:text-white">Notification Preferences</h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Choose how you want to be notified</p>
           </div>
         </div>
         
         <div class="space-y-4">
-          <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+          <div class="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900/40 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/60 transition border border-transparent dark:border-gray-700">
             <div class="flex items-center space-x-4">
-              <div class="w-12 h-12 bg-rep-lime/20 rounded-xl flex items-center justify-center border border-rep-lime/30">
-                <i class="fas fa-envelope text-xl text-rep-black"></i>
+              <div class="w-12 h-12 bg-rep-lime/20 dark:bg-rep-lime/10 rounded-xl flex items-center justify-center border border-rep-lime/30 dark:border-rep-lime/20">
+                <i class="fas fa-envelope text-xl text-rep-black dark:text-white"></i>
               </div>
               <div>
-                <h3 class="text-base font-semibold text-rep-black">Email Notifications</h3>
-                <p class="text-sm text-gray-600">Receive email updates about new interactions</p>
+                <h3 class="text-base font-semibold text-rep-black dark:text-white">Email Notifications</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Receive email updates about new interactions</p>
               </div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
@@ -791,14 +774,14 @@
             </label>
           </div>
 
-          <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+          <div class="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900/40 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/60 transition border border-transparent dark:border-gray-700">
             <div class="flex items-center space-x-4">
-              <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-300">
-                <i class="fas fa-exclamation-triangle text-xl text-gray-600"></i>
+              <div class="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center border border-gray-300 dark:border-gray-600">
+                <i class="fas fa-exclamation-triangle text-xl text-gray-600 dark:text-gray-400"></i>
               </div>
               <div>
-                <h3 class="text-base font-semibold text-rep-black">Negative Sentiment Alerts</h3>
-                <p class="text-sm text-gray-600">Get notified when negative comments are detected</p>
+                <h3 class="text-base font-semibold text-rep-black dark:text-white">Negative Sentiment Alerts</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Get notified when negative comments are detected</p>
               </div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
@@ -807,14 +790,14 @@
             </label>
           </div>
 
-          <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+          <div class="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900/40 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/60 transition border border-transparent dark:border-gray-700">
             <div class="flex items-center space-x-4">
-              <div class="w-12 h-12 bg-rep-lime/20 rounded-xl flex items-center justify-center border border-rep-lime/30">
-                <i class="fas fa-chart-bar text-xl text-rep-black"></i>
+              <div class="w-12 h-12 bg-rep-lime/20 dark:bg-rep-lime/10 rounded-xl flex items-center justify-center border border-rep-lime/30 dark:border-rep-lime/20">
+                <i class="fas fa-chart-bar text-xl text-rep-black dark:text-white"></i>
               </div>
               <div>
-                <h3 class="text-base font-semibold text-rep-black">Weekly Reports</h3>
-                <p class="text-sm text-gray-600">Receive weekly summary of your reputation metrics</p>
+                <h3 class="text-base font-semibold text-rep-black dark:text-white">Weekly Reports</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Receive weekly summary of your reputation metrics</p>
               </div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
@@ -823,14 +806,14 @@
             </label>
           </div>
 
-          <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+          <div class="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-900/40 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800/60 transition border border-transparent dark:border-gray-700">
             <div class="flex items-center space-x-4">
-              <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-300">
-                <i class="fas fa-mobile-alt text-xl text-gray-600"></i>
+              <div class="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center border border-gray-300 dark:border-gray-600">
+                <i class="fas fa-mobile-alt text-xl text-gray-600 dark:text-gray-400"></i>
               </div>
               <div>
-                <h3 class="text-base font-semibold text-rep-black">Push Notifications</h3>
-                <p class="text-sm text-gray-600">Receive instant push notifications on your device</p>
+                <h3 class="text-base font-semibold text-rep-black dark:text-white">Push Notifications</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Receive instant push notifications on your device</p>
               </div>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
@@ -844,18 +827,18 @@
 
     <!-- Auto-Reply Tab -->
     <div *ngIf="activeTab === 'auto-reply'" class="w-full">
-      <div class="bg-rep-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-800">
+      <div class="bg-rep-white dark:bg-gray-900 rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-800 dark:border-gray-700">
         <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 mb-5 sm:mb-6">
           <div class="w-12 h-12 bg-rep-lime rounded-xl flex items-center justify-center text-rep-black flex-shrink-0">
             <i class="fas fa-robot text-xl"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <h2 class="text-xl sm:text-2xl font-bold text-rep-black">AI Auto-Reply Settings</h2>
-            <p class="text-sm text-gray-600 mt-0.5">Configure automatic AI-powered responses using your knowledge base</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-rep-black dark:text-white">AI Auto-Reply Settings</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">Configure automatic AI-powered responses using your knowledge base</p>
           </div>
           <div class="flex items-center gap-2 w-full sm:w-auto">
-            <span class="text-xs text-gray-600">Status:</span>
-            <span [class]="autoReplySettings.enabled ? 'bg-rep-lime text-rep-black' : 'bg-gray-200 text-gray-600'" 
+            <span class="text-xs text-gray-600 dark:text-gray-400">Status:</span>
+            <span [class]="autoReplySettings.enabled ? 'bg-rep-lime text-rep-black' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'" 
                   class="px-3 py-1 rounded-full font-semibold text-xs whitespace-nowrap">
               {{ autoReplySettings.enabled ? 'Enabled' : 'Disabled' }}
             </span>
@@ -864,15 +847,15 @@
 
         <form class="space-y-6 sm:space-y-8">
           <!-- Master Enable/Disable -->
-          <div class="bg-gradient-to-r from-rep-lime/10 to-green-50 border-2 border-rep-lime/30 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6">
+          <div class="bg-gradient-to-r from-rep-lime/10 to-green-50 dark:from-rep-lime/5 dark:to-gray-900/60 border-2 border-rep-lime/30 dark:border-rep-lime/40 rounded-lg sm:rounded-xl p-4 sm:p-5 md:p-6">
             <div class="flex items-center justify-between gap-3 sm:gap-4">
               <div class="flex items-center gap-3 sm:gap-4 min-w-0">
                 <div class="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-rep-lime rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                   <i class="fas fa-power-off text-lg sm:text-xl md:text-2xl text-rep-black"></i>
                 </div>
                 <div class="min-w-0">
-                  <h3 class="text-base sm:text-lg md:text-xl font-bold text-rep-black">Enable Auto-Reply</h3>
-                  <p class="text-gray-700 text-xs sm:text-sm mt-0.5 sm:mt-1">Turn on AI-powered automatic responses</p>
+                  <h3 class="text-base sm:text-lg md:text-xl font-bold text-rep-black dark:text-white">Enable Auto-Reply</h3>
+                  <p class="text-gray-700 dark:text-gray-300 text-xs sm:text-sm mt-0.5 sm:mt-1">Turn on AI-powered automatic responses</p>
                 </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-2">
@@ -885,12 +868,12 @@
           <!-- Settings Grid Row 1: Confidence + Daily Limit -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Confidence Threshold -->
-            <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
-              <label class="block text-xs sm:text-sm font-bold text-rep-black mb-2">
-                <i class="fas fa-percentage mr-1 text-gray-600"></i>
+            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-600">
+              <label class="block text-xs sm:text-sm font-bold text-rep-black dark:text-white mb-2">
+                <i class="fas fa-percentage mr-1 text-gray-600 dark:text-gray-400"></i>
                 Confidence Threshold
               </label>
-              <p class="text-xs text-gray-600 mb-2">Minimum AI confidence to auto-send (0-100%). Lower = more automation; higher = safer replies.</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Minimum AI confidence to auto-send (0-100%). Lower = more automation; higher = safer replies.</p>
               <input 
                 type="range" 
                 [(ngModel)]="autoReplySettings.minConfidence" 
@@ -898,32 +881,32 @@
                 min="0" 
                 max="1" 
                 step="0.05"
-                class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-rep-lime"
+                class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-rep-lime"
               >
               <div class="flex justify-between items-center mt-2">
-                <span class="text-xs text-gray-600">Low</span>
-                <span class="text-lg font-bold text-rep-black">{{ (autoReplySettings.minConfidence * 100) | number:'1.0-0' }}%</span>
-                <span class="text-xs text-gray-600">High</span>
+                <span class="text-xs text-gray-600 dark:text-gray-400">Low</span>
+                <span class="text-lg font-bold text-rep-black dark:text-white">{{ (autoReplySettings.minConfidence * 100) | number:'1.0-0' }}%</span>
+                <span class="text-xs text-gray-600 dark:text-gray-400">High</span>
               </div>
-              <p class="text-xs text-gray-500 mt-1 italic">Recommended: 75-85%</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">Recommended: 75-85%</p>
             </div>
 
             <!-- Daily Limit -->
-            <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
-              <label class="block text-xs sm:text-sm font-bold text-rep-black mb-2">
-                <i class="fas fa-tachometer-alt mr-1 text-gray-600"></i>
+            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-600">
+              <label class="block text-xs sm:text-sm font-bold text-rep-black dark:text-white mb-2">
+                <i class="fas fa-tachometer-alt mr-1 text-gray-600 dark:text-gray-400"></i>
                 Daily Reply Limit
               </label>
-              <p class="text-xs text-gray-600 mb-2">Maximum auto-replies per day</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Maximum auto-replies per day</p>
               <input 
                 type="number" 
                 [(ngModel)]="autoReplySettings.maxRepliesPerDay" 
                 name="maxRepliesPerDay"
                 min="1" 
                 max="500"
-                class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-base font-semibold"
+                class="w-full px-3 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-base font-semibold dark:bg-gray-800 dark:text-white"
               >
-              <p class="text-xs text-gray-500 mt-2">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 Today's usage: <span class="font-semibold">{{ autoReplySettings.repliesCountToday || 0 }}</span> / {{ autoReplySettings.maxRepliesPerDay }}
               </p>
             </div>
@@ -931,14 +914,14 @@
 
           <!-- Settings Grid Row 2: Auto-Send + Require Approval -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-gray-200 dark:border-gray-600">
               <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-paper-plane text-base text-blue-500"></i>
+                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-paper-plane text-base text-blue-500 dark:text-blue-400"></i>
                 </div>
                 <div class="min-w-0">
-                  <h4 class="text-sm font-semibold text-gray-800">Auto-Send Replies</h4>
-                  <p class="text-xs text-gray-500">Send without approval (use with caution)</p>
+                  <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Auto-Send Replies</h4>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Send without approval (use with caution)</p>
                 </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-3">
@@ -946,14 +929,14 @@
                 <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
               </label>
             </div>
-            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-gray-200 dark:border-gray-600">
               <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-user-check text-base text-green-600"></i>
+                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-user-check text-base text-green-600 dark:text-green-400"></i>
                 </div>
                 <div class="min-w-0">
-                  <h4 class="text-sm font-semibold text-gray-800">Require Approval</h4>
-                  <p class="text-xs text-gray-500">Human review before sending (recommended)</p>
+                  <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Require Approval</h4>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">Human review before sending (recommended)</p>
                 </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-3">
@@ -962,220 +945,220 @@
               </label>
             </div>
           </div>
-          <p class="text-xs text-blue-900 bg-blue-50 border border-blue-200 rounded-md px-3 py-2 -mt-2">
+          <p class="text-xs text-blue-900 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2 -mt-2">
             <i class="fas fa-info-circle mr-1"></i>
             Messages won't post to Instagram until <strong>Auto-Send</strong> is ON and <strong>Require Approval</strong> is OFF.
           </p>
 
           <!-- Platform Filters -->
-          <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
-            <h3 class="text-sm font-bold text-rep-black mb-1">
-              <i class="fas fa-filter mr-1.5 text-gray-600"></i>
+          <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-600">
+            <h3 class="text-sm font-bold text-rep-black dark:text-white mb-1">
+              <i class="fas fa-filter mr-1.5 text-gray-600 dark:text-gray-400"></i>
               Enabled Platforms
             </h3>
-            <p class="text-xs text-gray-600 mb-3">Select which platforms should have auto-reply enabled</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Select which platforms should have auto-reply enabled</p>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('youtube')" (change)="togglePlatform('youtube')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-youtube text-red-600 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">YouTube</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">YouTube</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('instagram')" (change)="togglePlatform('instagram')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-instagram text-pink-600 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">Instagram</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">Instagram</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('facebook')" (change)="togglePlatform('facebook')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-facebook text-blue-600 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">Facebook</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">Facebook</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('google')" (change)="togglePlatform('google')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-google text-green-600 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">Google</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">Google</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('linkedin')" (change)="togglePlatform('linkedin')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-linkedin text-blue-700 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">LinkedIn</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">LinkedIn</span>
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Interaction Type Filters -->
-          <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
-            <h3 class="text-sm font-bold text-rep-black mb-1">
-              <i class="fas fa-list mr-1.5 text-gray-600"></i>
+          <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-600">
+            <h3 class="text-sm font-bold text-rep-black dark:text-white mb-1">
+              <i class="fas fa-list mr-1.5 text-gray-600 dark:text-gray-400"></i>
               Enabled Interaction Types
             </h3>
-            <p class="text-xs text-gray-600 mb-2">Select which types of interactions should receive auto-replies</p>
-            <p class="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Select which types of interactions should receive auto-replies</p>
+            <p class="text-xs text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 mb-3">
               <strong>Instagram / Messenger DMs:</strong> enable <strong>DMs</strong> here.
             </p>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('comment')" (change)="toggleType('comment')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fas fa-comment text-blue-600 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">Comments</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">Comments</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('review')" (change)="toggleType('review')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fas fa-star text-yellow-500 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">Reviews</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">Reviews</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('dm')" (change)="toggleType('dm')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fas fa-envelope text-purple-600 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">DMs</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">DMs</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 bg-white rounded-lg border-2 border-gray-200 hover:border-rep-lime cursor-pointer transition">
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledTypes.includes('mention')" (change)="toggleType('mention')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fas fa-at text-green-600 text-base flex-shrink-0"></i>
-                  <span class="font-semibold text-gray-800 text-xs truncate">Mentions</span>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">Mentions</span>
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Sentiment Filter -->
-          <div class="bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
-            <h3 class="text-sm font-bold text-rep-black mb-1">
-              <i class="fas fa-smile mr-1.5 text-purple-600"></i>
+          <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-600">
+            <h3 class="text-sm font-bold text-rep-black dark:text-white mb-1">
+              <i class="fas fa-smile mr-1.5 text-purple-600 dark:text-purple-400"></i>
               Sentiment Filter
             </h3>
-            <p class="text-xs text-gray-600 mb-3">Choose which sentiment types should receive auto-replies</p>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Choose which sentiment types should receive auto-replies</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white dark:hover:bg-gray-800 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'all'"
                      [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'all'">
                 <input type="radio" name="sentimentFilter" value="all" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
                 <div class="min-w-0">
-                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-circle text-gray-400 mr-1"></i>All Sentiments</span>
-                  <span class="text-[11px] text-gray-600">Positive, neutral &amp; negative</span>
+                  <span class="text-xs font-bold text-rep-black dark:text-white block"><i class="fas fa-circle text-gray-400 mr-1"></i>All Sentiments</span>
+                  <span class="text-[11px] text-gray-600 dark:text-gray-400">Positive, neutral &amp; negative</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white dark:hover:bg-gray-800 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'positive_neutral'"
                      [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'positive_neutral'">
                 <input type="radio" name="sentimentFilter" value="positive_neutral" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
                 <div class="min-w-0">
-                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-smile text-green-500 mr-1"></i>Positive &amp; Neutral</span>
-                  <span class="text-[11px] text-gray-600">Recommended for most brands</span>
+                  <span class="text-xs font-bold text-rep-black dark:text-white block"><i class="fas fa-smile text-green-500 mr-1"></i>Positive &amp; Neutral</span>
+                  <span class="text-[11px] text-gray-600 dark:text-gray-400">Recommended for most brands</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white dark:hover:bg-gray-800 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'negative_only'"
                      [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'negative_only'">
                 <input type="radio" name="sentimentFilter" value="negative_only" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
                 <div class="min-w-0">
-                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-frown text-red-500 mr-1"></i>Negative Only</span>
-                  <span class="text-[11px] text-gray-600">Damage control focus</span>
+                  <span class="text-xs font-bold text-rep-black dark:text-white block"><i class="fas fa-frown text-red-500 mr-1"></i>Negative Only</span>
+                  <span class="text-[11px] text-gray-600 dark:text-gray-400">Damage control focus</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white dark:hover:bg-gray-800 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'positive_only'"
                      [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'positive_only'">
                 <input type="radio" name="sentimentFilter" value="positive_only" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
                 <div class="min-w-0">
-                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-laugh-beam text-green-500 mr-1"></i>Positive Only</span>
-                  <span class="text-[11px] text-gray-600">Engage fans only</span>
+                  <span class="text-xs font-bold text-rep-black dark:text-white block"><i class="fas fa-laugh-beam text-green-500 mr-1"></i>Positive Only</span>
+                  <span class="text-[11px] text-gray-600 dark:text-gray-400">Engage fans only</span>
                 </div>
               </label>
-              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white transition bg-white/50 border-2"
+              <label class="flex items-center gap-2 p-2.5 cursor-pointer rounded-lg hover:bg-white dark:hover:bg-gray-800 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                      [class.border-purple-300]="autoReplySettings.sentimentFilter === 'neutral_only'"
                      [class.border-gray-200]="autoReplySettings.sentimentFilter !== 'neutral_only'">
                 <input type="radio" name="sentimentFilter" value="neutral_only" [(ngModel)]="autoReplySettings.sentimentFilter" class="w-4 h-4 text-purple-600 flex-shrink-0">
                 <div class="min-w-0">
-                  <span class="text-xs font-bold text-rep-black block"><i class="fas fa-meh text-gray-500 mr-1"></i>Neutral Only</span>
-                  <span class="text-[11px] text-gray-600">Questions &amp; informational</span>
+                  <span class="text-xs font-bold text-rep-black dark:text-white block"><i class="fas fa-meh text-gray-500 mr-1"></i>Neutral Only</span>
+                  <span class="text-[11px] text-gray-600 dark:text-gray-400">Questions &amp; informational</span>
                 </div>
               </label>
             </div>
           </div>
 
           <!-- Auto-Reply Timing Settings (Collapsible) -->
-          <div class="border-2 border-gray-200 rounded-lg overflow-hidden">
+          <div class="border-2 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
             <button type="button" (click)="showTimingAdvanced = !showTimingAdvanced"
-              class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition text-left">
-              <span class="flex items-center gap-2 text-sm font-semibold text-rep-black">
-                <i class="fas fa-clock text-blue-600"></i>
+              class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800/60 transition text-left">
+              <span class="flex items-center gap-2 text-sm font-semibold text-rep-black dark:text-white">
+                <i class="fas fa-clock text-blue-600 dark:text-blue-400"></i>
                 Advanced: Reply Timing
-                <span class="text-xs font-normal text-gray-500 ml-1">
+                <span class="text-xs font-normal text-gray-500 dark:text-gray-400 ml-1">
                   ({{ autoReplySettings.triggerMode || 'hybrid' }})
                 </span>
               </span>
-              <i class="fas text-gray-500 text-xs transition-transform"
+              <i class="fas text-gray-500 dark:text-gray-400 text-xs transition-transform"
                  [class.fa-chevron-down]="!showTimingAdvanced"
                  [class.fa-chevron-up]="showTimingAdvanced"></i>
             </button>
-            <div *ngIf="showTimingAdvanced" class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 space-y-5">
+            <div *ngIf="showTimingAdvanced" class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900/80 dark:to-indigo-950/50 space-y-5 border-t border-gray-200 dark:border-gray-600">
               <!-- Trigger Mode -->
               <div>
-                <label class="block text-sm font-semibold text-rep-black mb-2">When to Send Auto-Replies</label>
+                <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">When to Send Auto-Replies</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 transition bg-white/50 border-2"
+                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 dark:hover:bg-gray-800/80 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                          [class.border-blue-300]="autoReplySettings.triggerMode === 'webhook'"
                          [class.border-gray-200]="autoReplySettings.triggerMode !== 'webhook'">
                     <input type="radio" name="triggerMode" value="webhook" [(ngModel)]="autoReplySettings.triggerMode" class="mt-0.5 w-4 h-4 text-blue-600 flex-shrink-0">
                     <div>
-                      <span class="text-xs font-bold text-rep-black block">⚡ Immediate (Webhook)</span>
-                      <span class="text-[11px] text-gray-600">Reply as soon as comments arrive</span>
+                      <span class="text-xs font-bold text-rep-black dark:text-white block">⚡ Immediate (Webhook)</span>
+                      <span class="text-[11px] text-gray-600 dark:text-gray-400">Reply as soon as comments arrive</span>
                     </div>
                   </label>
-                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 transition bg-white/50 border-2"
+                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 dark:hover:bg-gray-800/80 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                          [class.border-blue-300]="autoReplySettings.triggerMode === 'scheduled'"
                          [class.border-gray-200]="autoReplySettings.triggerMode !== 'scheduled'">
                     <input type="radio" name="triggerMode" value="scheduled" [(ngModel)]="autoReplySettings.triggerMode" class="mt-0.5 w-4 h-4 text-blue-600 flex-shrink-0">
                     <div>
-                      <span class="text-xs font-bold text-rep-black block">📅 Scheduled (Periodic)</span>
-                      <span class="text-[11px] text-gray-600">Check at regular intervals</span>
+                      <span class="text-xs font-bold text-rep-black dark:text-white block">📅 Scheduled (Periodic)</span>
+                      <span class="text-[11px] text-gray-600 dark:text-gray-400">Check at regular intervals</span>
                     </div>
                   </label>
-                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 transition bg-white/50 border-2"
+                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 dark:hover:bg-gray-800/80 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                          [class.border-blue-300]="autoReplySettings.triggerMode === 'hybrid'"
                          [class.border-gray-200]="autoReplySettings.triggerMode !== 'hybrid'">
                     <input type="radio" name="triggerMode" value="hybrid" [(ngModel)]="autoReplySettings.triggerMode" class="mt-0.5 w-4 h-4 text-blue-600 flex-shrink-0">
                     <div>
-                      <span class="text-xs font-bold text-rep-black block">🚀 Hybrid (Recommended)</span>
-                      <span class="text-[11px] text-gray-600">Immediate + scheduled fallback</span>
+                      <span class="text-xs font-bold text-rep-black dark:text-white block">🚀 Hybrid (Recommended)</span>
+                      <span class="text-[11px] text-gray-600 dark:text-gray-400">Immediate + scheduled fallback</span>
                     </div>
                   </label>
-                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 transition bg-white/50 border-2"
+                  <label class="flex items-start gap-2 cursor-pointer p-3 rounded-lg hover:bg-white/70 dark:hover:bg-gray-800/80 transition bg-white/50 dark:bg-gray-800/40 border-2 dark:border-gray-600"
                          [class.border-blue-300]="autoReplySettings.triggerMode === 'manual'"
                          [class.border-gray-200]="autoReplySettings.triggerMode !== 'manual'">
                     <input type="radio" name="triggerMode" value="manual" [(ngModel)]="autoReplySettings.triggerMode" class="mt-0.5 w-4 h-4 text-blue-600 flex-shrink-0">
                     <div>
-                      <span class="text-xs font-bold text-rep-black block">👤 Manual Only</span>
-                      <span class="text-[11px] text-gray-600">Via API or button click only</span>
+                      <span class="text-xs font-bold text-rep-black dark:text-white block">👤 Manual Only</span>
+                      <span class="text-[11px] text-gray-600 dark:text-gray-400">Via API or button click only</span>
                     </div>
                   </label>
                 </div>
               </div>
               <!-- Schedule Interval -->
               <div *ngIf="autoReplySettings.triggerMode === 'scheduled' || autoReplySettings.triggerMode === 'hybrid'">
-                <label class="block text-xs font-semibold text-rep-black mb-1.5">
+                <label class="block text-xs font-semibold text-rep-black dark:text-white mb-1.5">
                   <i class="fas fa-calendar-alt mr-1"></i> Check for Auto-Replies Every
                 </label>
                 <select name="scheduleInterval" [(ngModel)]="autoReplySettings.scheduleInterval"
-                  class="w-full px-3 py-2 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white text-sm font-medium">
+                  class="w-full px-3 py-2 border-2 border-blue-200 dark:border-blue-800 rounded-lg focus:ring-2 focus:ring-blue-400 bg-white dark:bg-gray-800 dark:text-gray-100 text-sm font-medium">
                   <option value="15min">Every 15 Minutes</option>
                   <option value="30min">Every 30 Minutes</option>
                   <option value="1hour">Every Hour</option>
@@ -1183,23 +1166,23 @@
                   <option value="12hours">Every 12 Hours</option>
                   <option value="24hours">Every 24 Hours (Recommended)</option>
                 </select>
-                <p class="text-[11px] text-gray-600 mt-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Processes up to 20 interactions per run</p>
+                <p class="text-[11px] text-gray-600 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Processes up to 20 interactions per run</p>
               </div>
               <!-- Webhook Delay -->
               <div *ngIf="autoReplySettings.triggerMode === 'webhook' || autoReplySettings.triggerMode === 'hybrid'">
-                <label class="block text-xs font-semibold text-rep-black mb-1.5">
+                <label class="block text-xs font-semibold text-rep-black dark:text-white mb-1.5">
                   <i class="fas fa-hourglass-half mr-1"></i> Webhook Reply Delay (minutes)
                 </label>
                 <input type="number" name="webhookDelay" [(ngModel)]="autoReplySettings.webhookDelay" min="1" max="60"
-                  class="w-full px-3 py-2 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-400 text-sm font-medium">
-                <p class="text-[11px] text-gray-600 mt-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Allows AI processing to complete before sending</p>
+                  class="w-full px-3 py-2 border-2 border-blue-200 dark:border-blue-800 rounded-lg focus:ring-2 focus:ring-blue-400 text-sm font-medium dark:bg-gray-800 dark:text-white">
+                <p class="text-[11px] text-gray-600 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Allows AI processing to complete before sending</p>
               </div>
             </div>
           </div>
 
           <!-- Save Button -->
-          <div class="flex items-center justify-between pt-6 border-t-2 border-gray-200">
-            <div class="text-sm text-gray-600">
+          <div class="flex items-center justify-between pt-6 border-t-2 border-gray-200 dark:border-gray-600">
+            <div class="text-sm text-gray-600 dark:text-gray-400">
               <i class="fas fa-info-circle mr-2"></i>
               Changes will take effect immediately after saving
             </div>
@@ -1219,12 +1202,12 @@
 
     <!-- Brand Rules Tab -->
     <div *ngIf="activeTab === 'brand-rules'" class="w-full">
-      <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
-        <h2 class="text-xl md:text-2xl font-bold text-rep-black mb-2 flex items-center gap-2">
+      <div class="bg-rep-white dark:bg-gray-900 rounded-xl shadow-xl p-6 md:p-8 border border-gray-800 dark:border-gray-700">
+        <h2 class="text-xl md:text-2xl font-bold text-rep-black dark:text-white mb-2 flex items-center gap-2">
           <i class="fas fa-palette text-rep-black dark:text-rep-lime"></i>
           Brand Rules
         </h2>
-        <p class="text-gray-600 mb-6">Tone of voice, personality tags, banned words, and approved hashtags. Manage in Brand Hub.</p>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">Tone of voice, personality tags, banned words, and approved hashtags. Manage in Brand Hub.</p>
         <a routerLink="/app/brand-hub" class="inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg transition">
           <i class="fas fa-external-link-alt"></i>
           Open Brand Hub
@@ -1240,20 +1223,20 @@
     </div>
 
     <div *ngIf="activeTab === 'compliance'" class="w-full">
-      <div class="bg-rep-white rounded-xl shadow-xl p-6 md:p-8 border border-gray-800">
-        <h2 class="text-xl md:text-2xl font-bold text-rep-black mb-2 flex items-center gap-2">
+      <div class="bg-rep-white dark:bg-gray-900 rounded-xl shadow-xl p-6 md:p-8 border border-gray-800 dark:border-gray-700">
+        <h2 class="text-xl md:text-2xl font-bold text-rep-black dark:text-white mb-2 flex items-center gap-2">
           <i class="fas fa-shield-alt text-rep-black dark:text-rep-lime"></i>
           Compliance Rules
         </h2>
-        <p class="text-gray-600 mb-6">Required disclaimers, risk threshold, and content checks. Configure in Brand Hub (legal disclaimers) and review risk scores in the Approval Queue.</p>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">Required disclaimers, risk threshold, and content checks. Configure in Brand Hub (legal disclaimers) and review risk scores in the Approval Queue.</p>
         <div class="space-y-4 mb-6">
-          <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p class="font-semibold text-rep-black">Risk threshold</p>
-            <p class="text-sm text-gray-600">Posts with risk score ≥ 70 are flagged in the Approval Queue. Adjust in Brand Hub by updating banned words and disclaimers.</p>
+          <div class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-600">
+            <p class="font-semibold text-rep-black dark:text-white">Risk threshold</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Posts with risk score ≥ 70 are flagged in the Approval Queue. Adjust in Brand Hub by updating banned words and disclaimers.</p>
           </div>
-          <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p class="font-semibold text-rep-black">Legal disclaimers</p>
-            <p class="text-sm text-gray-600">Set required disclaimer text in Brand Hub. AI-generated content will follow these rules.</p>
+          <div class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-600">
+            <p class="font-semibold text-rep-black dark:text-white">Legal disclaimers</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Set required disclaimer text in Brand Hub. AI-generated content will follow these rules.</p>
           </div>
         </div>
         <a routerLink="/app/brand-hub" class="inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg transition">

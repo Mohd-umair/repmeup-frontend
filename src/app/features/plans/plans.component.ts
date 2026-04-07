@@ -118,14 +118,6 @@ export class PlansComponent implements OnInit {
   }
 
   /**
-   * Check if plan is downgrade
-   */
-  isDowngrade(planTier: number): boolean {
-    if (!this.subscriptionLimits) return false;
-    return planTier < this.subscriptionLimits.tier;
-  }
-
-  /**
    * Upgrade to specific plan
    */
   upgradeToPlan(planId: string, planName: string): void {

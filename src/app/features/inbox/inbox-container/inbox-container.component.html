@@ -805,7 +805,7 @@
       <div class="flex border-b border-gray-100 dark:border-gray-700">
         <button
           (click)="rightPanelTab = 'suggestions'"
-          class="flex-1 px-3 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5"
+          class="flex-1 px-2 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1"
           [class.text-rep-black]="rightPanelTab === 'suggestions'"
           [class.bg-rep-lime]="rightPanelTab === 'suggestions'"
           [class.rounded-t-md]="rightPanelTab === 'suggestions'"
@@ -816,11 +816,11 @@
           [class.hover:text-gray-700]="rightPanelTab !== 'suggestions'"
           [class.dark:hover:text-gray-200]="rightPanelTab !== 'suggestions'">
           <i class="fas fa-robot text-[10px]"></i>
-          AI Assistance
+          AI Help
         </button>
         <button
           (click)="rightPanelTab = 'actions'"
-          class="flex-1 px-3 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5"
+          class="flex-1 px-2 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1"
           [class.text-rep-black]="rightPanelTab === 'actions'"
           [class.bg-rep-lime]="rightPanelTab === 'actions'"
           [class.rounded-t-md]="rightPanelTab === 'actions'"
@@ -833,8 +833,23 @@
           <i class="fas fa-bolt text-[10px]"></i>
           Actions
         </button>
+        <button
+          (click)="rightPanelTab = 'summary'"
+          class="flex-1 px-2 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1"
+          [class.text-rep-black]="rightPanelTab === 'summary'"
+          [class.bg-rep-lime]="rightPanelTab === 'summary'"
+          [class.rounded-t-md]="rightPanelTab === 'summary'"
+          [class.border-b-2]="rightPanelTab === 'summary'"
+          [class.border-rep-lime]="rightPanelTab === 'summary'"
+          [class.text-gray-500]="rightPanelTab !== 'summary'"
+          [class.dark:text-gray-400]="rightPanelTab !== 'summary'"
+          [class.hover:text-gray-700]="rightPanelTab !== 'summary'"
+          [class.dark:hover:text-gray-200]="rightPanelTab !== 'summary'">
+          <i class="fas fa-file-alt text-[10px]"></i>
+          Summary
+        </button>
       </div>
-      <!-- Tab body: keep both panels mounted so AI suggestions survive tab switches -->
+      <!-- Tab body: keep all panels mounted so AI suggestions survive tab switches -->
       <div class="flex-1 min-h-0 overflow-hidden flex flex-col relative">
         <app-inbox-actions
           class="flex-1 min-h-0 overflow-hidden"
@@ -848,6 +863,12 @@
           [interaction]="selectedInteraction"
           (sendReply)="onAiSendReply($event)">
         </app-inbox-ai-assistant>
+        <app-inbox-summary
+          class="flex-1 min-h-0 overflow-hidden"
+          [style.display]="rightPanelTab === 'summary' ? 'block' : 'none'"
+          [interaction]="selectedInteraction"
+          (updated)="onInteractionUpdate()">
+        </app-inbox-summary>
       </div>
     </div>
   </div>

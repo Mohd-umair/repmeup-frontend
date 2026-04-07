@@ -1,0 +1,124 @@
+<div
+  role="button"
+  tabindex="0"
+  [attr.aria-label]="resolvedTitle"
+  (keydown.enter)="onDropZoneClick($event)"
+  (keydown.space)="$event.preventDefault(); onDropZoneClick($event)"
+  [ngClass]="dropZoneClassList"
+  (click)="onDropZoneClick($event)"
+  (dragenter)="onDragEnter($event)"
+  (dragleave)="onDragLeave($event)"
+  (dragover)="onDragOver($event)"
+  (drop)="onDrop($event)"
+>
+  <div *ngIf="galleryBusy" class="absolute inset-0 z-10 rounded-[inherit] bg-white/70 dark:bg-gray-900/70 flex items-center justify-center">
+    <i class="fas fa-spinner fa-spin text-rep-black dark:text-rep-lime text-xl"></i>
+  </div>
+
+  <div class="relative flex flex-col items-center justify-center gap-3" [class.gap-2]="!comfortable && !showChoosePill">
+    <div
+      class="flex items-center justify-center rounded-xl bg-gray-200 dark:bg-gray-700"
+      [class.w-12]="comfortable || showChoosePill"
+      [class.h-12]="comfortable || showChoosePill"
+      [class.w-10]="!comfortable && !showChoosePill"
+      [class.h-10]="!comfortable && !showChoosePill"
+    >
+      <i
+        *ngIf="openMediaGalleryOnClick"
+        class="fas fa-photo-video text-gray-500 dark:text-gray-400"
+        [class.text-xl]="comfortable || showChoosePill"
+        [class.text-lg]="!comfortable && !showChoosePill"
+      ></i>
+      <i
+        *ngIf="!openMediaGalleryOnClick"
+        class="fas fa-cloud-arrow-up text-gray-500 dark:text-gray-400"
+        [class.text-xl]="comfortable || showChoosePill"
+        [class.text-lg]="!comfortable && !showChoosePill"
+      ></i>
+    </div>
+
+    <div class="text-center px-1">
+      <p
+        class="font-semibold text-rep-black dark:text-white"
+        [class.text-sm]="!comfortable"
+        [class.text-base]="comfortable"
+      >
+        {{ resolvedTitle }}
+      </p>
+      <p *ngIf="dropzoneHint" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        {{ dropzoneHint }}
+      </p>
+    </div>
+
+    <ng-container *ngIf="showChoosePill">
+      <span
+        *ngIf="!disabled"
+        class="px-4 py-1.5 rounded-lg bg-rep-black text-rep-white text-xs font-semibold hover:bg-gray-800 transition pointer-events-none"
+      >
+        {{ openMediaGalleryOnClick ? 'Open library' : 'Choose File' }}
+      </span>
+      <span
+        *ngIf="disabled"
+        class="px-4 py-1.5 rounded-lg bg-gray-300 text-gray-600 text-xs font-semibold cursor-default pointer-events-none"
+      >
+        <i class="fas fa-spinner fa-spin mr-1"></i>
+        Uploading…
+      </span>
+    </ng-container>
+  </div>
+</div>
+
+<input
+  [id]="inputId"
+  type="file"
+  class="sr-only"
+  [multiple]="multiple"
+  [accept]="accept"
+  [disabled]="disabled"
+  (change)="onFileSelect($event)"
+  (click)="$event.stopPropagation()"
+/>
+
+<div *ngIf="openMediaGalleryOnClick" class="mt-2 text-center">
+  <button
+    type="button"
+    class="text-xs font-semibold text-rep-black dark:text-rep-lime underline-offset-2 hover:underline disabled:opacity-40"
+    [disabled]="disabled || galleryBusy"
+    (click)="openDeviceFilePicker($event)"
+  >
+    Or choose from device (PDF, Word, …)
+  </button>
+</div>
+
+<ul *ngIf="showFileList && files.length" class="mt-3 space-y-2">
+  <li
+    *ngFor="let f of files; let i = index"
+    class="flex items-center gap-3 px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800
+           border-2 border-gray-200 dark:border-gray-700 text-sm"
+  >
+    <i [class]="getFileIcon(f.type) + ' text-gray-400 dark:text-gray-500 flex-shrink-0'"></i>
+    <span class="flex-1 min-w-0 truncate text-rep-black dark:text-white font-medium">{{ f.name }}</span>
+    <span class="text-gray-400 text-xs flex-shrink-0">{{ formatBytes(f.size) }}</span>
+    <button
+      type="button"
+      (click)="removeAt(i); $event.preventDefault(); $event.stopPropagation()"
+      [disabled]="disabled"
+      class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg border-2 border-transparent
+             text-gray-400 hover:text-red-600 hover:border-red-200 dark:hover:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20
+             transition-colors disabled:opacity-40"
+      [attr.aria-label]="'Remove ' + f.name"
+    >
+      <i class="fas fa-xmark text-xs"></i>
+    </button>
+  </li>
+</ul>
+
+<!-- Above parent modals (e.g. raise ticket z-50) -->
+<div *ngIf="showGallery" class="fixed inset-0 z-[200]">
+  <app-media-selector-modal
+    [allowMultiple]="multiple"
+    [mediaType]="galleryMediaType"
+    (close)="closeGallery()"
+    (select)="onGallerySelect($event)"
+  />
+</div>

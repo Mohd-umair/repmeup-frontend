@@ -59,9 +59,11 @@
         <div class="flex items-center gap-2 flex-1 min-w-0">
           <i class="fas fa-exclamation-triangle text-amber-500 shrink-0"></i>
           <p class="text-sm text-amber-700 dark:text-amber-300">
-            <strong>Cancellation scheduled.</strong>
-            Your plan will be cancelled on <strong>{{ formatDate(billing?.currentPeriodEnd) }}</strong>.
-            You'll be downgraded to Free after that.
+            <strong>Your subscription will end at the end of this billing period</strong>
+            <ng-container *ngIf="billing?.currentPeriodEnd">
+              (<strong>{{ formatDate(billing?.currentPeriodEnd) }}</strong>).
+            </ng-container>
+            This notice stays until the period ends or you reactivate. You keep full access until then, then your workspace will be on the Free plan.
           </p>
         </div>
         <button
@@ -75,18 +77,6 @@
             <i class="fas fa-undo"></i> Reactivate
           </ng-template>
         </button>
-      </div>
-    </div>
-
-    <!-- ── Pending downgrade banner ── -->
-    <div *ngIf="billing?.pendingDowngradePlanId && !billing?.cancelAtPeriodEnd"
-      class="mt-5 pt-5 border-t border-blue-100 dark:border-blue-900/40">
-      <div class="flex items-center gap-2 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 px-4 py-3">
-        <i class="fas fa-info-circle text-blue-500 shrink-0"></i>
-        <p class="text-sm text-blue-700 dark:text-blue-300">
-          <strong>Downgrade scheduled.</strong>
-          Your plan will switch to <strong>{{ billing!.pendingDowngradePlanId }}</strong> at the end of the billing period on <strong>{{ formatDate(billing?.currentPeriodEnd) }}</strong>.
-        </p>
       </div>
     </div>
 
@@ -227,7 +217,7 @@
       Available Plans
     </h3>
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
-      Choose the plan that fits your team. Changes take effect immediately.
+      Choose the plan that fits your team. Upgrades take effect immediately.
     </p>
 
     <!-- Plans loading -->
@@ -330,24 +320,22 @@
             Current Plan
           </button>
 
-          <button *ngIf="!isCurrentPlan(planKey)"
+          <button *ngIf="!isCurrentPlan(planKey) && isUpgrade(getPlan(planKey).tier)"
             (click)="upgradePlan(planKey, getPlan(planKey).name ?? planKey)"
             [disabled]="upgradingPlan !== null"
-            class="w-full py-2.5 px-4 font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-            [ngClass]="isUpgrade(getPlan(planKey).tier)
-              ? 'bg-rep-lime text-rep-black hover:shadow-md hover:shadow-rep-lime/30'
-              : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400'">
+            class="w-full py-2.5 px-4 font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 bg-rep-lime text-rep-black hover:shadow-md hover:shadow-rep-lime/30">
             <ng-container *ngIf="upgradingPlan === planKey; else ctaLabel">
               <i class="fas fa-spinner fa-spin text-xs"></i>
               Processing…
             </ng-container>
             <ng-template #ctaLabel>
-              <i class="fas"
-                [ngClass]="isUpgrade(getPlan(planKey).tier) ? 'fa-arrow-up' : 'fa-arrow-down'"
-                style="font-size:10px"></i>
-              {{ isUpgrade(getPlan(planKey).tier) ? 'Upgrade' : 'Downgrade' }}
+              <i class="fas fa-arrow-up" style="font-size:10px"></i>
+              Upgrade
             </ng-template>
           </button>
+
+          <div *ngIf="!isCurrentPlan(planKey) && !isUpgrade(getPlan(planKey).tier)"
+            class="w-full min-h-[2.5rem]" aria-hidden="true"></div>
         </ng-template>
       </div>
     </div>

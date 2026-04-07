@@ -13,6 +13,7 @@ import { SocialAccountsService, ISocialAccount } from '../../core/services/socia
 import { PermissionService } from '../../core/services/permission.service';
 import { UserService, IAvailableAgent } from '../../core/services/user.service';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
+import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
 import { BillingComponent } from './components/billing/billing.component';
 import { RouterModule } from '@angular/router';
@@ -54,7 +55,7 @@ interface SettingsNavTab {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
@@ -115,7 +116,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   logoPreview: string | null = null;
   uploadingLogo = false;
   removingLogo = false;
-  logoDropOver = false;
+  /** Bound to shared file zone (always cleared after pick). */
+  logoUploadQueue: File[] = [];
 
   readonly tabs: SettingsNavTab[] = [
     { id: 'platforms', icon: 'fas fa-plug', label: 'Platforms', routeSegment: 'platforms', requiredPermission: 'settings.read' },
@@ -1608,27 +1610,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
     return `${base}${logo}`;
   }
 
-  onLogoDragOver(event: DragEvent): void {
-    event.preventDefault();
-    this.logoDropOver = true;
-  }
-
-  onLogoDragLeave(): void {
-    this.logoDropOver = false;
-  }
-
-  onLogoDrop(event: DragEvent): void {
-    event.preventDefault();
-    this.logoDropOver = false;
-    const file = event.dataTransfer?.files?.[0];
-    if (file) this.uploadLogoFile(file);
-  }
-
-  onLogoFileChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) this.uploadLogoFile(file);
-    input.value = ''; // reset so same file can be re-selected
+  onOrganizationLogoFilesChange(files: File[]): void {
+    if (files.length > 0) {
+      this.uploadLogoFile(files[0]);
+    }
+    this.logoUploadQueue = [];
   }
 
   uploadLogoFile(file: File): void {

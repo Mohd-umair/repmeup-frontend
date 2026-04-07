@@ -13,7 +13,7 @@
         Choose Your Plan
       </h1>
       <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-        Select the perfect plan for your business. Scale up or down anytime.
+        Select the perfect plan for your business. Upgrade anytime as you grow.
       </p>
 
       <!-- Current Plan Badge -->
@@ -173,12 +173,9 @@
             Contact Sales
           </button>
 
-          <!-- Downgrade Not Available -->
-          <div *ngIf="isDowngrade(allPlans[planKey].tier)"
-               class="w-full py-4 bg-gray-50 text-gray-400 rounded-xl font-bold text-center cursor-not-allowed">
-            <i class="fas fa-arrow-down mr-2"></i>
-            Downgrade Not Available
-          </div>
+          <!-- Lower tiers: no self-serve change (keeps card footer aligned) -->
+          <div *ngIf="!isCurrentPlan(planKey) && !canUpgradeToPlan(allPlans[planKey].tier) && allPlans[planKey].price !== 'custom'"
+               class="w-full min-h-[3.5rem]" aria-hidden="true"></div>
         </div>
       </div>
     </div>

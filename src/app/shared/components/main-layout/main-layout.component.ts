@@ -3,10 +3,13 @@ import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SubscriptionService } from '../../../core/services/subscription.service';
 import { NotificationComponent } from '../notification/notification.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { GlobalLoaderComponent } from '../global-loader/global-loader.component';
+
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'repmeup-sidebar-collapsed';
 
 /**
  * Main Layout Component - Single Responsibility Principle
@@ -22,11 +25,28 @@ import { GlobalLoaderComponent } from '../global-loader/global-loader.component'
 export class MainLayoutComponent {
   @ViewChild('mainScroll', { read: ElementRef }) private mainScroll?: ElementRef<HTMLElement>;
 
+  /** Mobile drawer open */
   sidebarOpen = false;
 
+  /** Desktop (lg+) collapsed rail — persisted */
+  sidebarCollapsed = false;
+
   private readonly router = inject(Router);
+  private readonly subscriptionService = inject(SubscriptionService);
+
+  /** Used for app-wide subscription cancellation notice */
+  readonly limits$ = this.subscriptionService.limits$;
 
   constructor() {
+    try {
+      const raw = localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY);
+      this.sidebarCollapsed = raw === '1' || raw === 'true';
+    } catch {
+      /* ignore */
+    }
+
+    this.subscriptionService.getLimits().pipe(takeUntilDestroyed()).subscribe();
+
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
@@ -62,6 +82,18 @@ export class MainLayoutComponent {
   closeSidebar(): void {
     if (window.innerWidth < 1024 && this.sidebarOpen) {
       this.toggleSidebar();
+    }
+  }
+
+  /**
+   * Toggle desktop sidebar width (icon rail vs full). No effect on mobile drawer width.
+   */
+  toggleSidebarCollapsed(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, this.sidebarCollapsed ? '1' : '0');
+    } catch {
+      /* ignore */
     }
   }
 }

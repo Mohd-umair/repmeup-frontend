@@ -33,6 +33,7 @@ import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { AboutComponent } from './features/about/about.component';
+import { FaqComponent } from './features/faq/faq.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 import { NotificationsComponent } from './features/notifications/notifications.component';
@@ -43,6 +44,7 @@ import { ContentStudioComponent } from './features/content-studio/content-studio
 import { ScheduledPostsComponent } from './features/scheduled-posts/scheduled-posts.component';
 import { DraftsComponent } from './features/drafts/drafts.component';
 import { BucketSettingsComponent } from './features/settings/components/bucket-settings/bucket-settings.component';
+import { SupportComponent } from './features/support/support.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -60,6 +62,7 @@ const routes: Routes = [
       { path: 'terms-conditions', component: TermsConditionsComponent },
       { path: 'contact', component: ContactComponent },
       { path: 'about', component: AboutComponent },
+      { path: 'faq', component: FaqComponent },
       { path: 'data-deletion-status', component: DataDeletionStatusComponent },
     ],
   },
@@ -131,7 +134,8 @@ const routes: Routes = [
       { path: 'agents', component: AgentsComponent, canActivate: [PermissionGuard], data: { permissions: ['users.read'] } },
       { path: 'plans', component: PlansComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.manage'] } },
       { path: 'ai-credits', component: AiCreditsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
-      { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } }
+      { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'support', component: SupportComponent }
     ]
   },
 

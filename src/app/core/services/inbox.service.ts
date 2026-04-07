@@ -167,6 +167,16 @@ export class InboxService {
     return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/ai-assist/regenerate`, { type });
   }
 
+  /** Generate AI chat summary (costs 1 credit). */
+  generateAISummary(id: string): Observable<IApiResponse<{ summary: string; generatedBy: string; generatedAt: Date }>> {
+    return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/summary/generate`, {});
+  }
+
+  /** Save a manual (or edited) chat summary. */
+  saveSummary(id: string, summary: string): Observable<IApiResponse<{ summary: string; generatedBy: string; generatedAt: Date }>> {
+    return this.apiService.put<IApiResponse<any>>(`/inbox/${id}/summary`, { summary });
+  }
+
   /**
    * Assign interaction to agent
    */

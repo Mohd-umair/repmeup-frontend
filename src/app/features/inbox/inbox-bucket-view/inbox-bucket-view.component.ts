@@ -10,6 +10,11 @@ import { Media } from '../../../core/models/media.model';
 import { MediaSelectorModalComponent } from '../../../shared/components/media-selector-modal/media-selector-modal.component';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { inboxFilterSerialize } from '../../../core/utils/inbox-filter-values';
+import {
+  buildBucketChatTimeline,
+  BucketChatTimelineItem,
+  isImagePlaceholderText
+} from '../../../core/utils/inbox-bucket-chat-timeline';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
 import { SentimentDonutChartComponent } from '../../../shared/components/charts/sentiment-donut-chart.component';
@@ -637,6 +642,23 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
 
   isSentByTeam(reply: IReply): boolean {
     return !reply.isPlatformReply;
+  }
+
+  /** Chronological thread (DM incoming history + replies) for the inline chat panel */
+  get chatTimelineItems(): BucketChatTimelineItem[] {
+    return buildBucketChatTimeline(this.activeChatInteraction);
+  }
+
+  trackByChatItem(_index: number, item: BucketChatTimelineItem): string {
+    if (item.kind === 'incoming') {
+      return `in-${item.at.getTime()}-${item.text?.slice(0, 24) ?? ''}`;
+    }
+    const id = (item.reply as { _id?: string })._id;
+    return id ? `re-${id}` : `re-${item.at.getTime()}`;
+  }
+
+  isBucketIncomingImagePlaceholder(content: string | undefined): boolean {
+    return isImagePlaceholderText(content);
   }
 
   getReplyAuthorInitials(reply: IReply): string {

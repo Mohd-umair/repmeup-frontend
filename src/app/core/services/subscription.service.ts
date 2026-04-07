@@ -11,7 +11,6 @@ export interface ISubscriptionBillingInfo {
   cancelAtPeriodEnd?: boolean;
   cancelledAt?: string | null;
   cancellationReason?: string | null;
-  pendingDowngradePlanId?: string | null;
   planHistory?: Array<{
     planId: string;
     planName: string;

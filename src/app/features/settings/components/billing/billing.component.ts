@@ -179,11 +179,6 @@ export class BillingComponent implements OnInit, OnDestroy {
     return planTier > this.subscriptionLimits.tier;
   }
 
-  isDowngrade(planTier: number): boolean {
-    if (!this.subscriptionLimits) return false;
-    return planTier < this.subscriptionLimits.tier;
-  }
-
   getUsagePercent(metric: UsageMetric): number {
     if (!this.subscriptionLimits) return 0;
     const used = this.subscriptionLimits.usage[metric.key] as number;

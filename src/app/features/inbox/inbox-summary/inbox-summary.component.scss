@@ -1,0 +1,4 @@
+/* Smooth fade-in when switching to editor */
+textarea {
+  transition: background-color 0.2s, color 0.2s;
+}

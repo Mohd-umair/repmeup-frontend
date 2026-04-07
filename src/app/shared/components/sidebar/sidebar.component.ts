@@ -2,10 +2,16 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   EventEmitter,
+  HostListener,
+  Input,
+  NgZone,
+  OnChanges,
   OnDestroy,
   OnInit,
-  Output
+  Output,
+  SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
@@ -47,11 +53,36 @@ interface SidebarSection {
   styleUrls: ['./sidebar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SidebarComponent implements OnInit, OnDestroy {
+export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
+  /** Desktop (lg+): narrow icon rail — controlled by main layout */
+  @Input() collapsed = false;
+
   @Output() menuItemClicked = new EventEmitter<void>();
 
   /** Only menu structure stored here — source of truth remains MenuService.groupedMenusValue */
   sidebarSections: SidebarSection[] = [];
+
+  /** When collapsed, submenu opens as flyout — key matches `submenuKey` */
+  flyoutKey: string | null = null;
+
+  /** Fixed flyout panel position (viewport) — avoids overflow clipping from sidebar/nav */
+  flyoutPosition: { top: number; left: number } | null = null;
+
+  private flyoutAnchorEl: HTMLElement | null = null;
+
+  private readonly boundScrollReposition = (): void => {
+    if (this.flyoutKey == null) return;
+    this.ngZone.run(() => {
+      this.repositionFlyout();
+    });
+  };
+
+  private readonly boundResizeReposition = (): void => {
+    if (this.flyoutKey == null) return;
+    this.ngZone.run(() => {
+      this.repositionFlyout();
+    });
+  };
 
   loadingMenus = true;
   currentUser: IUser | null = null;
@@ -77,8 +108,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private permissionService: PermissionService,
     public appearance: AppearanceService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private elementRef: ElementRef<HTMLElement>,
+    private ngZone: NgZone
   ) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['collapsed'] && !changes['collapsed'].firstChange) {
+      this.clearFlyoutState();
+      this.cdr.markForCheck();
+    }
+  }
 
   ngOnInit(): void {
     this.navUrl = this.normalizePath(this.router.url);
@@ -126,6 +166,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.notificationDataService.startPolling();
       });
 
+    // Reposition fixed flyout when any scroll container moves (main content) or window resizes
+    this.ngZone.runOutsideAngular(() => {
+      document.addEventListener('scroll', this.boundScrollReposition, true);
+      window.addEventListener('resize', this.boundResizeReposition);
+    });
+
     combineLatest([
       this.notificationDataService.inboxUnreadCount$,
       this.notificationDataService.publishUnreadCount$
@@ -139,6 +185,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    document.removeEventListener('scroll', this.boundScrollReposition, true);
+    window.removeEventListener('resize', this.boundResizeReposition);
     this.notificationPollStartSub?.unsubscribe();
     this.notificationDataService.stopPolling();
     this.destroy$.next();
@@ -185,6 +233,92 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   onMenuItemClick(): void {
     this.menuItemClicked.emit();
+  }
+
+  closeFlyout(): void {
+    if (this.flyoutKey == null) return;
+    this.clearFlyoutState();
+    this.cdr.markForCheck();
+  }
+
+  private clearFlyoutState(): void {
+    this.flyoutKey = null;
+    this.flyoutAnchorEl = null;
+    this.flyoutPosition = null;
+  }
+
+  /**
+   * Fixed positioning so the panel is not clipped by sidebar overflow-y / overflow-x.
+   */
+  private positionFlyoutFromAnchor(anchor: HTMLElement): void {
+    this.flyoutAnchorEl = anchor;
+    const r = anchor.getBoundingClientRect();
+    const gap = 4;
+    const panelWidth = 224; // matches w-56
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let left = r.right + gap;
+    let top = r.top;
+    if (left + panelWidth > vw - 8) {
+      left = Math.max(8, r.left - panelWidth - gap);
+    }
+    if (top < 8) top = 8;
+    const estPanelHeight = 360;
+    if (top + estPanelHeight > vh - 8) {
+      top = Math.max(8, vh - estPanelHeight - 8);
+    }
+    this.flyoutPosition = { top, left };
+  }
+
+  private repositionFlyout(): void {
+    if (this.flyoutKey == null || !this.flyoutAnchorEl) return;
+    this.positionFlyoutFromAnchor(this.flyoutAnchorEl);
+  }
+
+  isFlyoutOpen(section: SidebarSection, item: MenuItem): boolean {
+    if (!item.children?.length) return false;
+    return this.flyoutKey === this.submenuKey(section.id, item.route);
+  }
+
+  /**
+   * Parent row: accordion when expanded or on mobile drawer; flyout when collapsed on lg+ only.
+   */
+  onParentNavClick(event: MouseEvent, section: SidebarSection, item: MenuItem): void {
+    if (!item.children?.length) return;
+    const isLg =
+      typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
+    if (this.collapsed && isLg) {
+      event.preventDefault();
+      event.stopPropagation();
+      const key = this.submenuKey(section.id, item.route);
+      const el = event.currentTarget as HTMLElement;
+      if (this.flyoutKey === key) {
+        this.clearFlyoutState();
+      } else {
+        this.flyoutKey = key;
+        this.positionFlyoutFromAnchor(el);
+        requestAnimationFrame(() => {
+          if (this.flyoutKey === key && this.flyoutAnchorEl === el) {
+            this.positionFlyoutFromAnchor(el);
+            this.cdr.markForCheck();
+          }
+        });
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+    this.toggleSubmenu(section, item);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const isLg =
+      typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
+    if (!this.collapsed || !isLg || this.flyoutKey == null) return;
+    const t = event.target;
+    if (t instanceof Node && this.elementRef.nativeElement.contains(t)) return;
+    this.clearFlyoutState();
+    this.cdr.markForCheck();
   }
 
   submenuKey(sectionId: SidebarSectionId, parentRoute: string): string {

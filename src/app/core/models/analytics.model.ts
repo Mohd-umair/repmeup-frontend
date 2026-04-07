@@ -85,8 +85,16 @@ export interface ITopPerformers {
   }>;
 }
 
+export interface IIntentBucketMeta {
+  name: string;
+  color: string;
+  icon: string;
+}
+
 export interface IIntentBreakdown {
   data: { [key: string]: number };
+  /** Display metadata (name, color, icon) per bucket key — populated from IntentBucket collection */
+  meta?: { [key: string]: IIntentBucketMeta };
   total: number;
 }
 

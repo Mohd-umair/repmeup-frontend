@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, Input, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -21,6 +21,11 @@ import { environment } from '../../../../environments/environment';
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   @Output() menuToggle = new EventEmitter<void>();
+
+  /** Desktop sidebar collapsed (icon rail) — drives header collapse button icon */
+  @Input() sidebarCollapsed = false;
+
+  @Output() sidebarCollapseToggle = new EventEmitter<void>();
   
   currentUser: IUser | null = null;
   showUserMenu = false;
@@ -77,8 +82,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   onMenuToggle(): void {
-    console.log('🍔 Hamburger clicked!'); // Debug log
     this.menuToggle.emit();
+  }
+
+  onSidebarCollapseToggle(): void {
+    this.sidebarCollapseToggle.emit();
   }
 
   toggleUserMenu(): void {

@@ -343,59 +343,63 @@
       </div>
 
       <ng-container *ngIf="!chatLoading">
-        <!-- Original message -->
-        <div class="flex gap-2.5 items-start">
-          <div class="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm"
-               [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
-            <span>{{ getInitials(activeChatInteraction.author?.name) }}</span>
-          </div>
-          <div class="chat-bubble-customer flex-1 min-w-0">
-            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-              {{ activeChatInteraction.author?.name || 'Customer' }}
-              <span class="font-normal ml-1">{{ getRelativeTime(activeChatInteraction.platformCreatedAt || activeChatInteraction.createdAt) }}</span>
-            </p>
-            <div class="bubble-left">
-              <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">{{ activeChatInteraction.content }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Replies -->
-        <ng-container *ngFor="let reply of activeChatInteraction.replies">
-          <!-- Platform / customer reply -->
-          <div *ngIf="!isSentByTeam(reply)" class="flex gap-2.5 items-start">
+        <!-- Chronological: DM incoming history (metadata.incomingMessages) + replies interleaved -->
+        <ng-container *ngFor="let item of chatTimelineItems; trackBy: trackByChatItem">
+          <!-- Customer / incoming line -->
+          <div *ngIf="item.kind === 'incoming'" class="flex gap-2.5 items-start">
             <div class="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm"
                  [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
-              <span>{{ getReplyAuthorInitials(reply) }}</span>
+              <span>{{ getInitials(activeChatInteraction.author?.name) }}</span>
+            </div>
+            <div class="chat-bubble-customer flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                {{ activeChatInteraction.author?.name || 'Customer' }}
+                <span class="font-normal ml-1">{{ getRelativeTime(item.at) }}</span>
+              </p>
+              <div class="bubble-left">
+                <img *ngIf="item.attachmentType === 'image' && item.attachmentUrl"
+                     [src]="item.attachmentUrl" alt=""
+                     class="mb-1 max-w-[180px] rounded-lg border border-gray-200/40 dark:border-white/10 object-cover" />
+                <p *ngIf="item.text && !(item.attachmentType === 'image' && isBucketIncomingImagePlaceholder(item.text))"
+                   class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">{{ item.text }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Platform / customer reply -->
+          <div *ngIf="item.kind === 'reply' && !isSentByTeam(item.reply)" class="flex gap-2.5 items-start">
+            <div class="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm"
+                 [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
+              <span>{{ getReplyAuthorInitials(item.reply) }}</span>
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                {{ reply.author?.name || activeChatInteraction.author?.name || 'Customer' }}
-                <span class="font-normal ml-1">{{ getRelativeTime(reply.sentAt) }}</span>
+                {{ item.reply.author?.name || activeChatInteraction.author?.name || 'Customer' }}
+                <span class="font-normal ml-1">{{ getRelativeTime(item.reply.sentAt) }}</span>
               </p>
               <div class="bubble-left">
-                <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">{{ reply.content }}</p>
+                <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">{{ item.reply.content }}</p>
               </div>
             </div>
           </div>
           <!-- Team reply -->
-          <div *ngIf="isSentByTeam(reply)" class="flex gap-2.5 items-start flex-row-reverse">
+          <div *ngIf="item.kind === 'reply' && isSentByTeam(item.reply)" class="flex gap-2.5 items-start flex-row-reverse">
             <div class="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold bg-rep-lime text-rep-black flex-shrink-0 shadow-sm">
-              <span>{{ getReplyAuthorInitials(reply) }}</span>
+              <span>{{ getReplyAuthorInitials(item.reply) }}</span>
             </div>
             <div class="flex-1 min-w-0 flex flex-col items-end">
               <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
-                You <span class="font-normal ml-1">{{ getRelativeTime(reply.sentAt) }}</span>
-                <span *ngIf="reply.wasAutoGenerated" class="ml-1 px-1 py-0.5 rounded text-[9px] bg-rep-lime/20 text-rep-black dark:text-rep-lime">AI</span>
+                You <span class="font-normal ml-1">{{ getRelativeTime(item.reply.sentAt) }}</span>
+                <span *ngIf="item.reply.wasAutoGenerated" class="ml-1 px-1 py-0.5 rounded text-[9px] bg-rep-lime/20 text-rep-black dark:text-rep-lime">AI</span>
               </p>
               <div class="bubble-right">
-                <p *ngIf="reply.content" class="text-sm leading-relaxed whitespace-pre-wrap break-words">{{ reply.content }}</p>
-                <img *ngIf="reply.attachmentType === 'image' && reply.attachmentUrl"
-                     [src]="reply.attachmentUrl" alt="Image attachment"
+                <p *ngIf="item.reply.content" class="text-sm leading-relaxed whitespace-pre-wrap break-words">{{ item.reply.content }}</p>
+                <img *ngIf="item.reply.attachmentType === 'image' && item.reply.attachmentUrl"
+                     [src]="item.reply.attachmentUrl" alt="Image attachment"
                      class="mt-1 max-w-[180px] rounded-lg border border-white/20 object-cover cursor-pointer"
                      (click)="$event.stopPropagation()"/>
-                <audio *ngIf="reply.attachmentType === 'audio' && reply.attachmentUrl"
-                       [src]="reply.attachmentUrl" controls
+                <audio *ngIf="item.reply.attachmentType === 'audio' && item.reply.attachmentUrl"
+                       [src]="item.reply.attachmentUrl" controls
                        class="mt-1 h-8 w-full max-w-[200px] rounded-lg"
                        style="accent-color: var(--rep-lime, #c8f04e)"></audio>
               </div>

@@ -1,16 +1,30 @@
 <header class="bg-rep-black border-b border-gray-800 h-16 flex items-center justify-between px-3 sm:px-4 md:px-6">
-  <!-- Mobile Menu Button -->
-  <button 
-    (click)="onMenuToggle(); $event.stopPropagation()"
-    type="button"
-    class="lg:hidden p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition mr-2 cursor-pointer z-50"
-    aria-label="Toggle menu"
-    style="touch-action: manipulation;"
-  >
-    <svg class="h-6 w-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-    </svg>
-  </button>
+  <div class="flex items-center min-w-0 shrink-0">
+    <!-- Mobile Menu Button -->
+    <button 
+      (click)="onMenuToggle(); $event.stopPropagation()"
+      type="button"
+      class="lg:hidden p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition mr-2 cursor-pointer z-50"
+      aria-label="Toggle menu"
+      style="touch-action: manipulation;"
+    >
+      <svg class="h-6 w-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+      </svg>
+    </button>
+
+    <!-- Desktop: collapse / expand sidebar -->
+    <button
+      type="button"
+      (click)="onSidebarCollapseToggle()"
+      class="hidden lg:inline-flex items-center justify-center p-2 mr-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition cursor-pointer shrink-0"
+      [attr.aria-label]="sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      [attr.aria-pressed]="sidebarCollapsed"
+      title="{{ sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar' }}"
+    >
+      <i class="fas fa-angles-left text-lg" [class.rotate-180]="sidebarCollapsed" aria-hidden="true"></i>
+    </button>
+  </div>
 
   <!-- Search Bar -->
   <div class="flex-1 max-w-2xl hidden md:block">
@@ -160,12 +174,16 @@
       </span>
     </button>
 
-    <!-- Help -->
-    <button class="p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition">
-      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Help → public FAQ -->
+    <a
+      routerLink="/faq"
+      class="p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition inline-flex shrink-0"
+      title="Help & FAQ"
+      aria-label="Open frequently asked questions">
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
       </svg>
-    </button>
+    </a>
 
     <!-- User Menu -->
     <div class="relative">
