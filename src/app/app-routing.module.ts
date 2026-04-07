@@ -45,6 +45,7 @@ import { ScheduledPostsComponent } from './features/scheduled-posts/scheduled-po
 import { DraftsComponent } from './features/drafts/drafts.component';
 import { BucketSettingsComponent } from './features/settings/components/bucket-settings/bucket-settings.component';
 import { SupportComponent } from './features/support/support.component';
+import { CatalogComponent } from './features/catalog/catalog.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -135,7 +136,8 @@ const routes: Routes = [
       { path: 'plans', component: PlansComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.manage'] } },
       { path: 'ai-credits', component: AiCreditsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
       { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
-      { path: 'support', component: SupportComponent }
+      { path: 'support', component: SupportComponent },
+      { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } }
     ]
   },
 
