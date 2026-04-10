@@ -56,6 +56,19 @@ function mergeCaptionImagePairs(incoming: RawIncoming[]): RawIncoming[] {
 }
 
 /**
+ * Normalise a raw incoming-message timestamp to milliseconds.
+ * Old synced data stored timestamps in seconds (Unix epoch seconds) instead of
+ * milliseconds. Heuristic: any value < 10 billion is treated as seconds and
+ * multiplied by 1000 to convert to ms. Values >= 10 billion are already in ms.
+ */
+export function normalizeTimestampMs(raw: number | undefined | null, fallback: Date): Date {
+  if (raw == null) return fallback;
+  const ms = raw < 10_000_000_000 ? raw * 1000 : raw;
+  const d = new Date(ms);
+  return isNaN(d.getTime()) ? fallback : d;
+}
+
+/**
  * Chronological thread for bucket inline chat (DM history + team replies).
  * Aligns with inbox-detail timeline ordering so the latest message is last.
  */
@@ -81,7 +94,7 @@ export function buildBucketChatTimeline(interaction: IInteraction | null): Bucke
   if (incoming && incoming.length > 0) {
     const mergedIncoming = mergeCaptionImagePairs(incoming);
     mergedIncoming.forEach((msg) => {
-      const ts = msg.timestamp != null ? new Date(msg.timestamp) : fallbackAt;
+      const ts = normalizeTimestampMs(msg.timestamp, fallbackAt);
       items.push({
         kind: 'incoming',
         at: ts,

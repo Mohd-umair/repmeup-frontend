@@ -235,6 +235,63 @@
                        dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-500" />
             </div>
 
+            <!-- Event Template (Optional) -->
+            <div>
+              <button type="button" (click)="showEventPanel = !showEventPanel"
+                class="flex items-center gap-1.5 text-xs font-medium transition mb-1.5"
+                [class.text-rep-lime]="showEventPanel || selectedEventTemplateId"
+                [class.text-gray-500]="!showEventPanel && !selectedEventTemplateId"
+                [class.dark:text-gray-400]="!showEventPanel && !selectedEventTemplateId">
+                <i class="fas" [class.fa-calendar-star]="true"></i>
+                Seasonal / Event Post
+                <i class="fas fa-chevron-down text-[9px] transition" [class.rotate-180]="showEventPanel"></i>
+              </button>
+              <div *ngIf="showEventPanel" class="mt-1 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 space-y-2">
+                <div *ngIf="eventTemplatesLoading" class="text-center py-2">
+                  <i class="fas fa-spinner fa-spin text-gray-400"></i>
+                </div>
+                <div *ngIf="!eventTemplatesLoading && eventTemplates.length" class="flex flex-wrap gap-1.5">
+                  <button *ngFor="let t of eventTemplates" type="button"
+                    (click)="selectEventTemplate(t._id)"
+                    class="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition border"
+                    [class.bg-rep-lime]="selectedEventTemplateId === t._id"
+                    [class.text-rep-black]="selectedEventTemplateId === t._id"
+                    [class.border-rep-lime]="selectedEventTemplateId === t._id"
+                    [class.bg-white]="selectedEventTemplateId !== t._id"
+                    [class.dark:bg-gray-700]="selectedEventTemplateId !== t._id"
+                    [class.text-gray-600]="selectedEventTemplateId !== t._id"
+                    [class.dark:text-gray-300]="selectedEventTemplateId !== t._id"
+                    [class.border-gray-200]="selectedEventTemplateId !== t._id"
+                    [class.dark:border-gray-600]="selectedEventTemplateId !== t._id">
+                    <i class="fas" [ngClass]="getEventIcon(t.eventType)"></i>
+                    {{ t.name }}
+                  </button>
+                </div>
+                <div *ngIf="!eventTemplatesLoading && !eventTemplates.length" class="text-xs text-gray-400">
+                  No event templates yet. Create one below.
+                </div>
+                <details class="mt-1">
+                  <summary class="text-[11px] text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                    + Create new event template
+                  </summary>
+                  <div class="mt-2 space-y-1.5">
+                    <select [(ngModel)]="newEventType"
+                      class="w-full px-2 py-1 text-xs rounded border bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
+                      <option *ngFor="let o of eventTypeOptions" [value]="o.id">{{ o.label }}</option>
+                    </select>
+                    <input type="text" [(ngModel)]="newEventName" placeholder="Template name"
+                      class="w-full px-2 py-1 text-xs rounded border bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 placeholder-gray-400" />
+                    <input #eventFileInput type="file" accept="image/*" class="text-[10px] text-gray-400" />
+                    <button type="button" (click)="createEventTemplate(eventFileInput)"
+                      [disabled]="!newEventName.trim() || eventCreating"
+                      class="w-full px-2 py-1 text-xs rounded bg-rep-lime text-rep-black font-medium hover:opacity-90 disabled:opacity-50 transition">
+                      {{ eventCreating ? 'Creating...' : 'Create Template' }}
+                    </button>
+                  </div>
+                </details>
+              </div>
+            </div>
+
             <!-- Audience -->
             <div>
               <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1.5">Target Audience</label>
@@ -247,7 +304,7 @@
             <!-- Intent -->
             <div>
               <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1.5">Intent</label>
-              <select [(ngModel)]="intent" (ngModelChange)="onIntentChange($event)"
+              <select [(ngModel)]="intent"
                 class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg
                        focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm
                        dark:bg-gray-800 dark:border-gray-700 dark:text-white">
@@ -274,67 +331,15 @@
                 <span class="text-xs text-purple-400 font-medium px-1.5 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">AI</span>
               </label>
 
-              <!-- Image style controls -->
+              <!-- Image format selector -->
               <div *ngIf="includeImage" class="mt-2">
-                <div class="rounded-xl border border-purple-200/90 bg-purple-50/90 dark:border-purple-500/25 dark:bg-purple-500/5 p-3 space-y-3">
-                  <div class="flex items-center justify-between gap-2">
-                    <span class="text-xs font-semibold text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
-                      <i class="fas fa-palette text-[10px]"></i> Visual Style
-                      <span *ngIf="hasImageConfig"
-                        class="ml-1 px-1.5 py-0.5 rounded-full bg-purple-200 text-purple-900 dark:bg-purple-500/30 dark:text-purple-200 text-[9px] font-semibold">Custom</span>
-                    </span>
-                    <div class="flex items-center gap-1.5">
-                      <button type="button" (click)="randomizeImageConfig()"
-                        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-purple-200/90 text-purple-900 hover:bg-purple-300/90 dark:bg-purple-500/20 dark:text-purple-300 dark:hover:bg-purple-500/35 transition"
-                        title="Surprise me">
-                        <i class="fas fa-shuffle text-[9px]"></i> Surprise me
-                      </button>
-                      <button *ngIf="hasImageConfig" type="button" (click)="clearImageConfig()"
-                        class="flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition">
-                        <i class="fas fa-xmark text-[9px]"></i> Clear
-                      </button>
-                    </div>
+                <div class="rounded-xl border border-purple-200/90 bg-purple-50/90 dark:border-purple-500/25 dark:bg-purple-500/5 p-3 space-y-2">
+                  <div class="flex items-center gap-1.5 mb-1">
+                    <i class="fas fa-magic text-[10px] text-purple-600 dark:text-purple-400"></i>
+                    <span class="text-xs font-semibold text-purple-900 dark:text-purple-300">AI Image Generation</span>
                   </div>
-                  <div class="grid grid-cols-3 gap-1.5">
-                    <div *ngFor="let s of imageStyles" class="relative group/chip">
-                      <button type="button"
-                        (click)="selectVisualStyle(s.id)"
-                        (mouseenter)="hoverStyle(s.id)"
-                        (mouseleave)="unhoverStyle()"
-                        [class]="imageConfig.style === s.id
-                          ? 'border-purple-600 bg-purple-100 text-purple-950 dark:border-purple-400 dark:bg-purple-500/25 dark:text-purple-200 shadow-sm shadow-purple-300/40'
-                          : 'border-gray-300 bg-white text-gray-800 hover:border-purple-400 hover:text-purple-900 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
-                        class="w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition-all duration-150 text-center">
-                        <i [class]="'fas ' + s.icon + ' text-sm'"></i>
-                        <span class="text-[10px] font-medium leading-tight">{{ s.label }}</span>
-                        <span *ngIf="imageConfig.style === s.id" class="w-1 h-1 rounded-full bg-purple-600 dark:bg-purple-400"></span>
-                      </button>
-                      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[300] w-44
-                                  opacity-0 pointer-events-none group-hover/chip:opacity-100 group-hover/chip:pointer-events-auto
-                                  transition-all duration-150 ease-out scale-95 group-hover/chip:scale-100
-                                  bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600
-                                  rounded-xl shadow-xl shadow-black/20 dark:shadow-black/50 p-2" role="tooltip">
-                        <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0
-                                    border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent
-                                    border-t-[6px] border-t-white dark:border-t-gray-900"></div>
-                        <div class="grid grid-cols-3 gap-1 mb-1.5">
-                          <div *ngFor="let sUrl of s.samples; let si = index"
-                            class="aspect-square rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
-                            <img *ngIf="!isSampleFailed(sUrl)" [src]="sUrl.replace('/480/480','/120/120')"
-                              [alt]="s.label + ' sample ' + (si+1)" class="w-full h-full object-cover" loading="lazy"
-                              (error)="markSampleFailed(sUrl)" />
-                            <div *ngIf="isSampleFailed(sUrl)" class="w-full h-full flex items-center justify-center">
-                              <i class="fas fa-image text-gray-400 text-xs opacity-60"></i>
-                            </div>
-                          </div>
-                        </div>
-                        <p class="text-[10px] font-semibold text-gray-900 dark:text-gray-100 leading-none mb-0.5">{{ s.label }}</p>
-                        <p class="text-[9px] text-gray-500 dark:text-gray-400 leading-snug">{{ s.desc }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <p *ngIf="!imageConfig.style" class="text-[10px] text-gray-600 dark:text-gray-500 text-center -mt-1">
-                    <i class="fas fa-info-circle mr-1"></i>No style = auto. Pick one or hover to preview.
+                  <p class="text-[10px] text-gray-600 dark:text-gray-500 leading-snug -mt-1">
+                    Visual style is automatically matched to your brand profile from Brand Hub.
                   </p>
                   <div>
                     <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Format</label>
@@ -346,69 +351,6 @@
                           : 'border-gray-300 bg-white text-gray-800 hover:border-purple-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-purple-500/40'"
                         class="py-1.5 rounded-lg border text-[10px] font-semibold transition text-center"
                         [title]="f.tooltip">{{ f.label }}</button>
-                    </div>
-                  </div>
-                  <button type="button" (click)="showAdvancedImageConfig = !showAdvancedImageConfig"
-                    class="w-full flex items-center justify-center gap-1.5 text-[11px] text-gray-600 hover:text-gray-900 dark:text-gray-500 dark:hover:text-gray-300 transition py-0.5">
-                    <i [class]="showAdvancedImageConfig ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-[9px]"></i>
-                    {{ showAdvancedImageConfig ? 'Hide advanced' : 'Advanced options' }}
-                  </button>
-                  <div *ngIf="showAdvancedImageConfig" class="space-y-3 border-t border-purple-200/80 dark:border-purple-500/15 pt-3">
-                    <div>
-                      <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">
-                        Mood <span *ngIf="intent" class="text-purple-600 dark:text-purple-400 font-normal"> · {{ intent }}</span>
-                      </label>
-                      <p *ngIf="!intent" class="text-[9px] text-gray-500 dark:text-gray-500 leading-snug mb-1">
-                        Pick an <strong class="text-gray-700 dark:text-gray-400">Intent</strong> above — mood options update for that goal.
-                      </p>
-                      <div *ngIf="intent" class="flex flex-wrap gap-1">
-                        <button *ngFor="let o of intentMoodOptions; trackBy: trackMoodOption" type="button"
-                          (click)="imageConfig.mood = imageConfig.mood === o.value ? '' : o.value"
-                          [class]="imageConfig.mood === o.value
-                            ? 'bg-purple-200 text-purple-950 border-purple-500 dark:bg-purple-500/30 dark:text-purple-200 dark:border-purple-500/50'
-                            : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-purple-400 hover:text-purple-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
-                          class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ o.label }}</button>
-                      </div>
-                    </div>
-                    <div>
-                      <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Lighting</label>
-                      <select [(ngModel)]="imageConfig.lighting"
-                        class="w-full px-2 py-1.5 rounded-lg text-xs border transition bg-white border-gray-300 text-gray-900
-                               dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-purple-500/40 focus:border-purple-500">
-                        <option value="">Auto</option>
-                        <option *ngFor="let l of lightingOptions" [value]="l">{{ l }}</option>
-                      </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                      <div>
-                        <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Composition</label>
-                        <select [(ngModel)]="imageConfig.composition"
-                          class="w-full px-2 py-1.5 rounded-lg text-xs border transition bg-white border-gray-300 text-gray-900
-                                 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-purple-500/40 focus:border-purple-500">
-                          <option value="">Auto</option>
-                          <option *ngFor="let c of compositionOptions" [value]="c">{{ c }}</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Color Palette</label>
-                        <select [(ngModel)]="imageConfig.colorPalette"
-                          class="w-full px-2 py-1.5 rounded-lg text-xs border transition bg-white border-gray-300 text-gray-900
-                                 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-purple-500/40 focus:border-purple-500">
-                          <option value="">Auto</option>
-                          <option *ngFor="let p of colorPaletteOptions" [value]="p">{{ p }}</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Camera Angle</label>
-                      <div class="flex flex-wrap gap-1">
-                        <button *ngFor="let a of cameraAngleOptions" type="button"
-                          (click)="imageConfig.cameraAngle = imageConfig.cameraAngle === a ? '' : a"
-                          [class]="imageConfig.cameraAngle === a
-                            ? 'bg-purple-200 text-purple-950 border-purple-500 dark:bg-purple-500/30 dark:text-purple-200 dark:border-purple-500/50'
-                            : 'bg-gray-100 text-gray-800 border-gray-300 hover:border-purple-400 hover:text-purple-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 dark:hover:border-purple-500/40 dark:hover:text-purple-300'"
-                          class="px-2 py-0.5 rounded-full text-[10px] border transition">{{ a }}</button>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -650,177 +592,6 @@
     <!-- ── MIDDLE: Variants List ────────────────────────────────────────── -->
     <div class="xl:col-span-5 space-y-4">
 
-      <!-- ── Style Sample Preview — shown in the open middle column space ── -->
-      <div *ngIf="includeImage"
-        class="rounded-xl border bg-white dark:bg-gray-900/60 backdrop-blur-sm overflow-hidden transition-all duration-300"
-        [ngClass]="activePreviewStyle
-          ? 'border-purple-400 dark:border-purple-500/40'
-          : 'border-gray-200 dark:border-gray-700'">
-
-        <!-- Header bar -->
-        <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700/80">
-          <div class="flex items-center gap-2">
-            <i class="fas fa-eye text-xs text-purple-600 dark:text-purple-400"></i>
-            <span class="text-xs font-semibold text-gray-900 dark:text-gray-300">Style Preview</span>
-            <span *ngIf="activePreviewStyle"
-              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold
-                     bg-purple-100 text-purple-900 border border-purple-300
-                     dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30">
-              <i [class]="'fas ' + activePreviewStyle.icon + ' text-[8px]'"></i>
-              {{ activePreviewStyle.label }}
-              <span class="font-normal opacity-70">{{ hoveredStyleId ? '· hover' : '· selected' }}</span>
-            </span>
-          </div>
-          <!-- Dot nav (selected state only) -->
-          <div *ngIf="activePreviewStyle && !hoveredStyleId" class="flex items-center gap-1.5">
-            <button *ngFor="let sUrl of activePreviewStyle.samples; let si = index"
-              type="button" (click)="setPreviewSample(si)"
-              [class]="previewSampleIndex === si
-                ? 'bg-purple-500 dark:bg-purple-400 w-4 h-1.5 rounded-full'
-                : 'bg-gray-300 dark:bg-gray-600 w-1.5 h-1.5 rounded-full hover:bg-purple-400'"
-              class="transition-all duration-150"
-              [attr.aria-label]="'Sample ' + (si+1)">
-            </button>
-          </div>
-        </div>
-
-        <!-- Body: large image left + right panel -->
-        <div class="p-4">
-          <!-- When a style is active -->
-          <ng-container *ngIf="activePreviewStyle">
-            <div class="flex gap-4 items-start">
-
-              <!-- Large main image — click to open lightbox -->
-              <div
-                class="relative w-44 h-44 shrink-0 rounded-xl overflow-hidden
-                       border border-gray-200 dark:border-gray-600
-                       bg-gray-100 dark:bg-gray-800 shadow-md transition-all duration-300
-                       cursor-zoom-in group/bigimg"
-                (click)="!isSampleFailed(getSampleUrl(hoveredStyleId ? 0 : previewSampleIndex)) &&
-                         openLightbox(getSampleUrl(hoveredStyleId ? 0 : previewSampleIndex, 1200),
-                                      activePreviewStyle.label,
-                                      [getSampleUrl(0, 1200), getSampleUrl(1, 1200), getSampleUrl(2, 1200)],
-                                      hoveredStyleId ? 0 : previewSampleIndex)">
-                <img
-                  *ngIf="!isSampleFailed(getSampleUrl(hoveredStyleId ? 0 : previewSampleIndex))"
-                  [src]="getSampleUrl(hoveredStyleId ? 0 : previewSampleIndex)"
-                  [alt]="activePreviewStyle.label + ' sample'"
-                  class="w-full h-full object-cover transition-all duration-500 group-hover/bigimg:scale-105"
-                  [style.filter]="previewCssFilter"
-                  loading="lazy" decoding="async"
-                  (error)="markSampleFailed(getSampleUrl(hoveredStyleId ? 0 : previewSampleIndex))"
-                />
-                <!-- Zoom hint -->
-                <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/bigimg:bg-black/30
-                            transition-all duration-200 pointer-events-none">
-                  <i class="fas fa-magnifying-glass-plus text-white text-xl opacity-0 group-hover/bigimg:opacity-100 transition-opacity duration-200 drop-shadow-lg"></i>
-                </div>
-                <div *ngIf="isSampleFailed(getSampleUrl(hoveredStyleId ? 0 : previewSampleIndex))"
-                  class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center">
-                  <i class="fas fa-image text-2xl text-gray-500 opacity-60"></i>
-                  <span class="text-[9px] text-gray-500">Preview unavailable</span>
-                </div>
-                <!-- Hover chip hint -->
-                <div *ngIf="hoveredStyleId"
-                  class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-2 pointer-events-none">
-                  <p class="text-[9px] text-white/90 font-medium">Click chip to select</p>
-                </div>
-                <!-- Filters applied badge -->
-                <div *ngIf="hasAdvancedFilters && !hoveredStyleId"
-                  class="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full
-                         bg-black/60 backdrop-blur-sm pointer-events-none">
-                  <i class="fas fa-sliders text-[8px] text-purple-300"></i>
-                  <span class="text-[8px] text-white/90 font-medium">Filters active</span>
-                </div>
-              </div>
-
-              <!-- Right panel: thumbnails + style info + active filter badges -->
-              <div class="flex-1 min-w-0 flex flex-col gap-3">
-
-                <!-- Style name + description -->
-                <div>
-                  <p class="text-sm font-semibold text-gray-900 dark:text-gray-200 mb-0.5">{{ activePreviewStyle.label }}</p>
-                  <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{{ activePreviewStyle.desc }}.</p>
-                </div>
-
-                <!-- 3 sample thumbnails — all update dynamically with filters -->
-                <div>
-                  <p class="text-[10px] text-gray-500 dark:text-gray-600 mb-1.5 uppercase tracking-wide font-medium">Samples</p>
-                  <div class="flex gap-2">
-                    <button *ngFor="let si of [0,1,2]"
-                      type="button"
-                      (click)="!hoveredStyleId ? setPreviewSample(si) : null;
-                               !isSampleFailed(getSampleUrl(si, 120)) &&
-                               openLightbox(getSampleUrl(si, 1200), activePreviewStyle.label,
-                                            [getSampleUrl(0, 1200), getSampleUrl(1, 1200), getSampleUrl(2, 1200)], si)"
-                      [class]="!hoveredStyleId && previewSampleIndex === si
-                        ? 'ring-2 ring-purple-500 dark:ring-purple-400 ring-offset-1 ring-offset-white dark:ring-offset-gray-900'
-                        : 'ring-1 ring-gray-200 dark:ring-gray-700 hover:ring-purple-400'"
-                      class="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100 dark:bg-gray-800 transition-all duration-150 cursor-zoom-in group/thumb">
-                      <img *ngIf="!isSampleFailed(getSampleUrl(si, 120))"
-                        [src]="getSampleUrl(si, 120)"
-                        [alt]="activePreviewStyle.label + ' variation ' + (si+1)"
-                        class="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-200"
-                        [style.filter]="previewCssFilter"
-                        loading="lazy"
-                        (error)="markSampleFailed(getSampleUrl(si, 120))" />
-                      <!-- Zoom icon overlay -->
-                      <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover/thumb:bg-black/40 transition-all duration-150 pointer-events-none">
-                        <i class="fas fa-expand text-white text-[10px] opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-150"></i>
-                      </div>
-                      <div *ngIf="isSampleFailed(getSampleUrl(si, 120))"
-                        class="w-full h-full flex items-center justify-center">
-                        <i class="fas fa-image text-gray-500 text-xs opacity-60"></i>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Active filter badges — only when advanced filters are selected -->
-                <div *ngIf="hasAdvancedFilters && !hoveredStyleId">
-                  <p class="text-[10px] text-gray-500 dark:text-gray-600 mb-1.5 uppercase tracking-wide font-medium">
-                    <i class="fas fa-sliders mr-1 text-purple-500"></i>Applied Filters
-                  </p>
-                  <div class="flex flex-wrap gap-1">
-                    <span *ngFor="let badge of activeFilterBadges"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
-                             bg-purple-100 text-purple-900 border border-purple-300
-                             dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30">
-                      <i [class]="'fas ' + badge.icon + ' text-[8px]'"></i>
-                      <span class="opacity-60">{{ badge.label }}:</span> {{ badge.value }}
-                    </span>
-                  </div>
-                  <p class="text-[9px] text-gray-400 dark:text-gray-600 mt-2 leading-snug">
-                    <i class="fas fa-wand-magic-sparkles mr-1 text-purple-400 opacity-70"></i>
-                    Preview approximates your filters using CSS. Your AI image will fully match these settings.
-                  </p>
-                </div>
-
-                <!-- No filters note -->
-                <p *ngIf="!hasAdvancedFilters || hoveredStyleId"
-                  class="text-[10px] text-gray-400 dark:text-gray-600 leading-snug">
-                  <i class="fas fa-info-circle mr-1"></i>
-                  Reference samples. Open <strong>Advanced</strong> below to apply Mood, Lighting &amp; more — preview updates live.
-                </p>
-
-              </div>
-            </div>
-          </ng-container>
-
-          <!-- Empty state: no style hovered or selected -->
-          <div *ngIf="!activePreviewStyle" class="flex items-center gap-4 py-2">
-            <div class="w-14 h-14 shrink-0 rounded-xl bg-gray-100 dark:bg-gray-800/60 border border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
-              <i class="fas fa-hand-pointer text-xl text-gray-400 dark:text-gray-600"></i>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-800 dark:text-gray-300">Hover or select a Visual Style</p>
-              <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5">Sample images will appear here so you can see what each style looks like before generating.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <!-- /Style Sample Preview -->
 
       <!-- Section Header -->
       <div class="flex items-center justify-between">
@@ -1000,9 +771,15 @@
               <i class="fas fa-check text-[8px]"></i> In Library
             </span>
 
-            <!-- Replace overlay -->
+            <!-- Replace / Edit overlay -->
             <div class="absolute inset-0 rounded-lg flex items-center justify-center gap-2
                         bg-black/0 group-hover/imgpreview:bg-black/55 transition-all duration-200">
+              <button type="button" (click)="openPostEditor(i)"
+                class="opacity-0 group-hover/imgpreview:opacity-100 transition-opacity duration-200
+                       flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold
+                       bg-rep-lime text-rep-black hover:opacity-90 shadow-md">
+                <i class="fas fa-pen-ruler text-[10px]"></i> Edit
+              </button>
               <button type="button" (click)="openImagePicker(i)"
                 class="opacity-0 group-hover/imgpreview:opacity-100 transition-opacity duration-200
                        flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold
@@ -1396,64 +1173,14 @@
 </div>
 <!-- /Media Selector -->
 
-<!-- ── Image Lightbox ──────────────────────────────────────────────────────── -->
-<div *ngIf="lightboxUrl"
-  class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
-  (click)="closeLightbox()">
 
-  <!-- Card — stops click propagation -->
-  <div class="relative max-w-3xl w-full flex flex-col items-center gap-3" (click)="$event.stopPropagation()">
-
-    <!-- Top bar: label + close -->
-    <div class="w-full flex items-center justify-between px-1">
-      <span class="inline-flex items-center gap-2 text-sm font-semibold text-white/90">
-        <i class="fas fa-image text-purple-400 text-xs"></i>
-        {{ lightboxLabel }}
-        <span class="text-white/40 font-normal text-xs">{{ lightboxIndex + 1 }} / {{ lightboxUrls.length }}</span>
-      </span>
-      <button type="button" (click)="closeLightbox()"
-        class="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition">
-        <i class="fas fa-xmark text-sm"></i>
-      </button>
-    </div>
-
-    <!-- Main image -->
-    <div class="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-black/60
-                ring-1 ring-white/10 bg-gray-900">
-      <img [src]="lightboxUrl"
-        [style.filter]="previewCssFilter"
-        class="w-full object-contain max-h-[70vh]"
-        [alt]="lightboxLabel" />
-    </div>
-
-    <!-- Navigation row -->
-    <div *ngIf="lightboxUrls.length > 1" class="flex items-center gap-4">
-      <button type="button" (click)="lightboxNav(-1)"
-        class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition">
-        <i class="fas fa-chevron-left text-sm"></i>
-      </button>
-      <!-- Dot indicators -->
-      <div class="flex items-center gap-1.5">
-        <button *ngFor="let u of lightboxUrls; let di = index"
-          type="button"
-          (click)="lightboxIndex = di; lightboxUrl = lightboxUrls[di]"
-          [class]="di === lightboxIndex
-            ? 'w-5 h-1.5 bg-purple-400 rounded-full'
-            : 'w-1.5 h-1.5 bg-white/30 rounded-full hover:bg-white/60'"
-          class="transition-all duration-150">
-        </button>
-      </div>
-      <button type="button" (click)="lightboxNav(1)"
-        class="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition">
-        <i class="fas fa-chevron-right text-sm"></i>
-      </button>
-    </div>
-
-    <!-- Keyboard hint -->
-    <p class="text-[10px] text-white/30 flex items-center gap-3">
-      <span><kbd class="px-1 py-0.5 rounded bg-white/10 font-mono text-[9px]">←→</kbd> Navigate</span>
-      <span><kbd class="px-1 py-0.5 rounded bg-white/10 font-mono text-[9px]">Esc</kbd> Close</span>
-      <span class="opacity-60">or click outside</span>
-    </p>
-  </div>
-</div>
+<!-- ═══ Post Editor Overlay ═══════════════════════════════════════════════ -->
+<app-post-editor
+  *ngIf="showPostEditor"
+  [backgroundImageUrl]="editorBackgroundUrl"
+  [logoUrl]="orgLogo"
+  [headlineText]="editorHeadline"
+  [brandColors]="editorBrandColors"
+  (editorDone)="onEditorDone($event)"
+  (editorCancel)="onEditorCancel()"
+></app-post-editor>

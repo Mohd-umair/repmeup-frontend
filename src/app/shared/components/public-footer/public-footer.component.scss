@@ -2,4 +2,8 @@ footer.home-footer-dark {
   background-color: #0b0b0b !important;
   border-top: 1px solid #1f2937 !important;
   color: #d1d5db;
+  /* Stack above fixed UI (e.g. home “Book A Demo” FAB at z-50) so links stay clickable */
+  position: relative;
+  z-index: 60;
+  isolation: isolate;
 }

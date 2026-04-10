@@ -6,9 +6,274 @@
   overflow: hidden;
 }
 
+/* Neon primary actions — lime fill + dark text in light and dark mode */
+.catalog-btn-primary {
+  background-color: #d8ff00;
+  color: #0b0b0b;
+  border: none;
+  cursor: pointer;
+  box-shadow:
+    0 0 16px rgba(216, 255, 0, 0.45),
+    0 0 32px rgba(216, 255, 0, 0.2);
+  transition:
+    filter 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.97);
+    box-shadow:
+      0 0 22px rgba(216, 255, 0, 0.55),
+      0 0 40px rgba(216, 255, 0, 0.25);
+  }
+
+  &:active:not(:disabled) {
+    filter: brightness(0.9);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #0b0b0b;
+    outline-offset: 2px;
+  }
+}
+
+:host-context(.dark) .catalog-btn-primary {
+  box-shadow:
+    0 0 12px rgba(216, 255, 0, 0.35),
+    0 0 28px rgba(216, 255, 0, 0.15);
+
+  &:hover:not(:disabled) {
+    box-shadow:
+      0 0 18px rgba(216, 255, 0, 0.45),
+      0 0 36px rgba(216, 255, 0, 0.2);
+  }
+}
+
+/* Product images modal — light & dark via theme CSS variables */
+.catalog-image-modal-backdrop {
+  background-color: rgba(17, 24, 39, 0.48);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+:host-context(.dark) .catalog-image-modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.catalog-image-modal-panel {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+  box-shadow: var(--card-shadow), 0 25px 50px -12px rgb(0 0 0 / 0.22);
+}
+
+:host-context(.dark) .catalog-image-modal-panel {
+  box-shadow: var(--card-shadow), 0 25px 50px -12px rgb(0 0 0 / 0.55);
+}
+
+.catalog-image-modal-header,
+.catalog-image-modal-footer {
+  border-color: var(--card-border);
+  background-color: var(--card-bg);
+}
+
+.catalog-image-modal-body {
+  background-color: var(--surface-secondary);
+}
+
+.catalog-image-modal-icon-btn {
+  color: var(--text-muted);
+  background-color: transparent;
+
+  &:hover {
+    color: var(--text-primary);
+    background-color: var(--surface-tertiary);
+  }
+}
+
+.catalog-image-modal__drop-wrap {
+  background-color: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+
+:host-context(.dark) .catalog-image-modal__drop-wrap {
+  border-color: var(--card-border);
+}
+
+.catalog-image-modal-secondary-btn {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+
+  &:hover {
+    background-color: var(--surface-tertiary);
+    border-color: var(--border-secondary);
+  }
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Decorative icons & links: dark in light mode, neon only in dark */
+.catalog-accent-icon {
+  color: var(--text-primary);
+}
+
+:host-context(.dark) .catalog-accent-icon {
+  color: #d8ff00;
+}
+
+.catalog-link-action {
+  color: var(--text-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: var(--text-secondary);
+  }
+}
+
+:host-context(.dark) .catalog-link-action {
+  color: #d8ff00;
+
+  &:hover {
+    filter: brightness(0.92);
+  }
+}
+
+/* Emphasis stat (e.g. import “Created” count) */
+.catalog-stat-neon {
+  color: var(--text-primary);
+}
+
+:host-context(.dark) .catalog-stat-neon {
+  color: #d8ff00;
+}
+
+/* File input “Browse” — same radius & weight as toolbar buttons */
+.catalog-file-input {
+  width: 100%;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+
+  &::file-selector-button {
+    margin-right: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--card-border);
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  &::file-selector-button:hover {
+    background-color: var(--surface-tertiary);
+    border-color: var(--border-secondary);
+  }
+}
+
+:host-context(.dark) .catalog-file-input::file-selector-button {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  border-color: var(--card-border);
+}
+
+/* ── Import modal ───────────────────────────────────── */
+.catalog-import-panel {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+  box-shadow: var(--card-shadow), 0 25px 50px -12px rgb(0 0 0 / 0.22);
+}
+
+:host-context(.dark) .catalog-import-panel {
+  box-shadow: var(--card-shadow), 0 25px 50px -12px rgb(0 0 0 / 0.55);
+}
+
+.catalog-import-header {
+  border-color: var(--card-border);
+  background-color: var(--card-bg);
+}
+
+.catalog-import-source-tabs {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+}
+
+.catalog-import-tab {
+  color: var(--text-muted);
+  border-bottom-color: transparent;
+  background-color: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--text-primary);
+    background-color: var(--surface-primary);
+  }
+
+  &--active {
+    color: var(--text-primary);
+    border-bottom-color: var(--text-primary);
+  }
+}
+
+:host-context(.dark) .catalog-import-tab--active {
+  color: #d8ff00;
+  border-bottom-color: #d8ff00;
+}
+
+.catalog-import-info-box {
+  background-color: var(--surface-primary);
+  border: 1px solid var(--card-border);
+}
+
+.catalog-import-field {
+  background-color: var(--surface-primary);
+  border-color: var(--card-border);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    border-color: var(--text-secondary);
+    box-shadow: 0 0 0 2px rgba(128, 128, 128, 0.15);
+  }
+}
+
+:host-context(.dark) .catalog-import-field:focus {
+  border-color: #d8ff00;
+  box-shadow: 0 0 0 2px rgba(216, 255, 0, 0.12);
+}
+
+/* Page loaders: dark accent in light, lime ring in dark */
+.catalog-page-loader {
+  border-color: var(--surface-tertiary);
+  border-top-color: var(--text-primary);
+}
+
+:host-context(.dark) .catalog-page-loader {
+  border-color: rgb(216 255 0 / 0.2);
+  border-top-color: #d8ff00;
 }

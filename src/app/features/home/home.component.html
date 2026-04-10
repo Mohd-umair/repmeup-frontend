@@ -784,6 +784,67 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 4b — LEADERSHIP TEAM
+════════════════════════════════════════════════════════════════════════════ -->
+<section id="team" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
+  <div class="absolute left-0 top-1/3 w-80 h-80 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute right-0 bottom-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
+
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
+        Leadership Team<br>
+        <span class="gradient-text">Behind RepMeUp</span>
+      </h2>
+      <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-2xl mx-auto leading-relaxed">
+        Strategists and builders united around one mission: help every brand respond faster, smarter, and on-brand.
+      </p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+      <article
+        *ngFor="let member of teamMembers; let i = index"
+        [ngClass]="'animate-on-scroll delay-' + (i + 1)"
+        class="home-team-card premium-card rounded-3xl p-7 sm:p-8 text-center flex flex-col items-center">
+        <div
+          class="home-team-photo mb-5 w-28 h-28 sm:w-32 sm:h-32 rounded-2xl shadow-lg ring-2 ring-white bg-gray-100 relative shrink-0 dark:bg-rep-lime dark:p-1.5 dark:ring-rep-lime dark:shadow-[0_0_28px_rgba(216,255,0,0.45),0_0_48px_rgba(216,255,0,0.15)]">
+          <div class="relative w-full h-full rounded-[inherit] dark:rounded-xl overflow-hidden dark:bg-rep-black min-h-0">
+            <img
+              *ngIf="!teamPhotoFailed[member.name]"
+              [src]="member.imageSrc"
+              [alt]="'Photo of ' + member.name"
+              width="128"
+              height="128"
+              class="absolute inset-0 w-full h-full object-cover object-center"
+              loading="lazy"
+              decoding="async"
+              (error)="onTeamPhotoError(member.name)" />
+            <div
+              *ngIf="teamPhotoFailed[member.name]"
+              class="absolute inset-0 flex items-center justify-center text-white text-2xl sm:text-3xl font-black bg-gradient-to-br"
+              [ngClass]="member.avatarGradient"
+              aria-hidden="true">
+              {{ member.initials }}
+            </div>
+          </div>
+        </div>
+        <h3 class="home-team-name text-lg sm:text-xl font-black text-gray-900 dark:text-rep-white mb-1.5 leading-tight">
+          {{ member.name }}
+        </h3>
+        <p class="home-team-role text-xs sm:text-sm font-bold text-center leading-snug max-w-[14rem] mx-auto text-lime-700 dark:text-rep-lime">
+          {{ member.role }}
+        </p>
+        <div class="home-team-accent-bar mt-4 h-1 w-10 rounded-full bg-gradient-to-r from-transparent via-rep-lime/80 to-transparent opacity-60 dark:opacity-80"></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="section-divider absolute bottom-0 left-0 right-0"></div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
      SECTION 5 — PRODUCT ECOSYSTEM
 ════════════════════════════════════════════════════════════════════════════ -->
 <section id="ecosystem" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">

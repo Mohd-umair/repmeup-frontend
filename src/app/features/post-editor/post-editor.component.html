@@ -1,0 +1,369 @@
+<div class="fixed inset-0 z-[60] bg-gray-50 dark:bg-rep-black flex flex-col">
+
+  <!-- ── Top Bar ────────────────────────────────────────────── -->
+  <div class="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/80 shrink-0">
+    <div class="flex items-center gap-3">
+      <button type="button" (click)="cancel()"
+        class="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition">
+        <i class="fas fa-arrow-left mr-1"></i> Back
+      </button>
+      <h2 class="text-sm font-bold text-gray-800 dark:text-rep-white">Post Editor</h2>
+    </div>
+    <div class="flex items-center gap-2">
+      <!-- Aspect ratio -->
+      <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
+        <button *ngFor="let r of aspectRatios" type="button"
+          (click)="changeAspectRatio(r.id)"
+          class="px-2.5 py-1 text-[11px] font-medium rounded transition"
+          [class.bg-rep-lime]="aspectRatio === r.id"
+          [class.text-rep-black]="aspectRatio === r.id"
+          [class.text-gray-500]="aspectRatio !== r.id"
+          [class.dark:text-gray-400]="aspectRatio !== r.id">
+          {{ r.label }}
+        </button>
+      </div>
+      <button type="button" (click)="exportCanvas()"
+        class="px-4 py-1.5 bg-rep-lime text-rep-black text-sm font-bold rounded-lg hover:opacity-90 transition">
+        <i class="fas fa-check mr-1"></i> Done Editing
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Main Area ──────────────────────────────────────────── -->
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- ── Left Panel (Tools) ─────────────────────────────── -->
+    <div class="w-72 shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 overflow-y-auto">
+
+      <!-- Panel tabs -->
+      <div class="flex border-b border-gray-200 dark:border-gray-800">
+        <button *ngFor="let p of [
+          {id: 'layers', icon: 'fa-layer-group'},
+          {id: 'text', icon: 'fa-font'},
+          {id: 'cta', icon: 'fa-hand-pointer'},
+          {id: 'image', icon: 'fa-image'},
+          {id: 'overlay', icon: 'fa-circle-half-stroke'},
+          {id: 'templates', icon: 'fa-grid-2'}
+        ]" type="button" (click)="activePanel = p.id"
+          class="flex-1 py-2.5 text-xs font-medium transition text-center"
+          [class.text-rep-lime]="activePanel === p.id"
+          [class.border-b-2]="activePanel === p.id"
+          [class.border-rep-lime]="activePanel === p.id"
+          [class.text-gray-500]="activePanel !== p.id"
+          [class.dark:text-gray-400]="activePanel !== p.id">
+          <i class="fas" [ngClass]="p.icon"></i>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-4">
+
+        <!-- ═══ Layers Panel ═══ -->
+        <ng-container *ngIf="activePanel === 'layers'">
+          <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Layers</h3>
+          <div class="space-y-1">
+            <div *ngFor="let layer of layers; let i = index"
+              (click)="selectLayer(layer)"
+              class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+              [ngClass]="selectedLayerId === layer.id ? 'bg-rep-lime/10' : 'bg-transparent'">
+              <i class="fas text-[10px] w-3"
+                [ngClass]="{'fa-image': layer.type === 'background', 'fa-font': layer.type === 'text', 'fa-star': layer.type === 'logo', 'fa-hand-pointer': layer.type === 'cta', 'fa-circle-half-stroke': layer.type === 'overlay'}"
+                [class.text-rep-lime]="selectedLayerId === layer.id"
+                [class.text-gray-400]="selectedLayerId !== layer.id"></i>
+              <span class="flex-1 truncate text-gray-700 dark:text-gray-300"
+                [class.font-semibold]="selectedLayerId === layer.id">{{ layer.label }}</span>
+              <button type="button" (click)="toggleLayerVisibility(layer); $event.stopPropagation()"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <i class="fas" [class.fa-eye]="layer.visible" [class.fa-eye-slash]="!layer.visible"></i>
+              </button>
+              <button type="button" (click)="toggleLayerLock(layer); $event.stopPropagation()"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <i class="fas" [class.fa-lock]="layer.locked" [class.fa-lock-open]="!layer.locked"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <button type="button" (click)="addTextLayer()" class="px-2 py-1 text-[11px] rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+              <i class="fas fa-plus mr-0.5"></i> Text
+            </button>
+            <button type="button" (click)="addCtaLayer()" class="px-2 py-1 text-[11px] rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+              <i class="fas fa-plus mr-0.5"></i> CTA
+            </button>
+            <!-- Logo upload -->
+            <label class="px-2 py-1 text-[11px] rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition cursor-pointer">
+              <i class="fas fa-plus mr-0.5"></i> Logo
+              <input type="file" accept="image/*" class="hidden" (change)="onLogoFileChange($event)" />
+            </label>
+            <button *ngIf="!hasOverlayLayer" type="button" (click)="addOverlayLayer()" class="px-2 py-1 text-[11px] rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+              <i class="fas fa-plus mr-0.5"></i> Overlay
+            </button>
+          </div>
+          <div *ngIf="selectedLayerId" class="flex gap-1.5 pt-2">
+            <button type="button" (click)="bringForward()" class="px-2 py-1 text-[10px] rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" title="Bring forward">
+              <i class="fas fa-arrow-up"></i>
+            </button>
+            <button type="button" (click)="sendBackward()" class="px-2 py-1 text-[10px] rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" title="Send backward">
+              <i class="fas fa-arrow-down"></i>
+            </button>
+            <button type="button" (click)="deleteSelected()" class="px-2 py-1 text-[10px] rounded bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400" title="Delete">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- ═══ Text Panel ═══ -->
+        <ng-container *ngIf="activePanel === 'text'">
+          <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Text Properties</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Font</label>
+              <select [(ngModel)]="textFont" (ngModelChange)="applyTextProps()"
+                class="w-full mt-0.5 px-2 py-1.5 text-xs rounded border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+                <option *ngFor="let f of fonts" [value]="f">{{ f }}</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] text-gray-500 dark:text-gray-400">Size</label>
+                <input type="number" [(ngModel)]="textSize" (ngModelChange)="applyTextProps()" [min]="8" [max]="200"
+                  class="w-full mt-0.5 px-2 py-1.5 text-xs rounded border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300" />
+              </div>
+              <div>
+                <label class="text-[11px] text-gray-500 dark:text-gray-400">Weight</label>
+                <select [(ngModel)]="textWeight" (ngModelChange)="applyTextProps()"
+                  class="w-full mt-0.5 px-2 py-1.5 text-xs rounded border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
+                  <option value="300">Light</option>
+                  <option value="400">Regular</option>
+                  <option value="500">Medium</option>
+                  <option value="bold">Bold</option>
+                  <option value="800">Extra Bold</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Color</label>
+              <div class="flex items-center gap-2 mt-0.5">
+                <input type="color" [(ngModel)]="textColor" (ngModelChange)="applyTextProps()"
+                  class="w-8 h-8 rounded border border-gray-200 dark:border-gray-700 cursor-pointer" />
+                <div *ngIf="brandColors.length" class="flex gap-1">
+                  <button *ngFor="let c of brandColors" type="button"
+                    (click)="textColor = c; applyTextProps()"
+                    class="w-6 h-6 rounded border border-gray-300 dark:border-gray-600"
+                    [style.backgroundColor]="c" [title]="c"></button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Alignment</label>
+              <div class="flex gap-1 mt-0.5">
+                <button *ngFor="let a of ['left','center','right']" type="button"
+                  (click)="textAlign = a; applyTextProps()"
+                  class="px-2.5 py-1 text-xs rounded transition"
+                  [class.bg-rep-lime]="textAlign === a" [class.text-rep-black]="textAlign === a"
+                  [class.bg-gray-100]="textAlign !== a" [class.dark:bg-gray-800]="textAlign !== a"
+                  [class.text-gray-500]="textAlign !== a">
+                  <i class="fas" [ngClass]="'fa-align-' + a"></i>
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] text-gray-500 dark:text-gray-400">Letter Spacing</label>
+                <input type="range" [(ngModel)]="letterSpacing" (ngModelChange)="applyTextProps()" [min]="-5" [max]="20"
+                  class="w-full mt-0.5" />
+              </div>
+              <div>
+                <label class="text-[11px] text-gray-500 dark:text-gray-400">Line Height</label>
+                <input type="range" [(ngModel)]="lineHeight" (ngModelChange)="applyTextProps()" [min]="0.8" [max]="3" [step]="0.1"
+                  class="w-full mt-0.5" />
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <label class="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="textShadow" (ngModelChange)="applyTextProps()" class="rounded" /> Shadow
+              </label>
+              <label class="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="textOutline" (ngModelChange)="applyTextProps()" class="rounded" /> Outline
+              </label>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ═══ CTA Panel ═══ -->
+        <ng-container *ngIf="activePanel === 'cta'">
+          <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">CTA Button</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Label</label>
+              <input type="text" [(ngModel)]="ctaText"
+                class="w-full mt-0.5 px-2 py-1.5 text-xs rounded border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300" />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] text-gray-500 dark:text-gray-400">Fill</label>
+                <input type="color" [(ngModel)]="ctaFill"
+                  class="w-full h-8 rounded border border-gray-200 dark:border-gray-700 cursor-pointer mt-0.5" />
+              </div>
+              <div>
+                <label class="text-[11px] text-gray-500 dark:text-gray-400">Text Color</label>
+                <input type="color" [(ngModel)]="ctaTextColor"
+                  class="w-full h-8 rounded border border-gray-200 dark:border-gray-700 cursor-pointer mt-0.5" />
+              </div>
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Shape</label>
+              <div class="flex gap-1 mt-0.5">
+                <button *ngFor="let s of ['rounded','pill','circle']" type="button"
+                  (click)="ctaShape = s"
+                  class="px-2.5 py-1 text-[11px] rounded capitalize transition"
+                  [class.bg-rep-lime]="ctaShape === s" [class.text-rep-black]="ctaShape === s"
+                  [class.bg-gray-100]="ctaShape !== s" [class.dark:bg-gray-800]="ctaShape !== s"
+                  [class.text-gray-500]="ctaShape !== s">{{ s }}</button>
+              </div>
+            </div>
+            <button type="button" (click)="addCtaLayer()"
+              class="w-full py-1.5 text-xs font-medium rounded bg-rep-lime text-rep-black hover:opacity-90 transition">
+              <i class="fas fa-plus mr-1"></i> Add CTA
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- ═══ Image Panel ═══ -->
+        <ng-container *ngIf="activePanel === 'image'">
+          <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Background Image</h3>
+          <div class="space-y-3">
+
+            <!-- Replace background -->
+            <label class="flex items-center justify-center gap-2 w-full py-2 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 text-xs text-gray-500 dark:text-gray-400 hover:border-rep-lime hover:text-rep-lime transition cursor-pointer">
+              <i class="fas fa-upload text-[11px]"></i> Replace Background Image
+              <input type="file" accept="image/*" class="hidden" (change)="onBgFileChange($event)" />
+            </label>
+
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Brightness ({{ bgBrightness }}%)</label>
+              <input type="range" [(ngModel)]="bgBrightness" (ngModelChange)="applyImageFilters()" [min]="0" [max]="200" class="w-full" />
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Contrast ({{ bgContrast }}%)</label>
+              <input type="range" [(ngModel)]="bgContrast" (ngModelChange)="applyImageFilters()" [min]="0" [max]="200" class="w-full" />
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Saturation ({{ bgSaturation }}%)</label>
+              <input type="range" [(ngModel)]="bgSaturation" (ngModelChange)="applyImageFilters()" [min]="0" [max]="200" class="w-full" />
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Blur ({{ bgBlur }}%)</label>
+              <input type="range" [(ngModel)]="bgBlur" (ngModelChange)="applyImageFilters()" [min]="0" [max]="100" class="w-full" />
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ═══ Templates Panel ═══ -->
+        <ng-container *ngIf="activePanel === 'templates'">
+          <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Starter Templates</h3>
+          <div *ngIf="templatesLoading" class="text-center py-4">
+            <i class="fas fa-spinner fa-spin text-gray-400"></i>
+          </div>
+          <div *ngIf="!templatesLoading" class="space-y-2">
+            <button *ngFor="let t of templates" type="button"
+              (click)="applyTemplate(t)"
+              class="w-full text-left p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:border-rep-lime/50 hover:bg-rep-lime/5 transition">
+              <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400 shrink-0">
+                  <i class="fas fa-image text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 truncate">{{ t.name }}</p>
+                  <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">{{ t.description }}</p>
+                  <span class="text-[9px] px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400">{{ t.aspectRatio }}</span>
+                </div>
+              </div>
+            </button>
+            <p *ngIf="!templates.length" class="text-xs text-gray-400 text-center py-4">No templates available</p>
+          </div>
+        </ng-container>
+
+        <!-- ═══ Overlay Panel ═══ -->
+        <ng-container *ngIf="activePanel === 'overlay'">
+          <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Color Overlay</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Color</label>
+              <input type="color" [(ngModel)]="overlayColor" (ngModelChange)="updateOverlay()"
+                class="w-full h-8 rounded border border-gray-200 dark:border-gray-700 cursor-pointer mt-0.5" />
+            </div>
+            <div>
+              <label class="text-[11px] text-gray-500 dark:text-gray-400">Opacity ({{ overlayOpacity }}%)</label>
+              <input type="range" [(ngModel)]="overlayOpacity" (ngModelChange)="updateOverlay()" [min]="0" [max]="80" class="w-full" />
+            </div>
+            <button *ngIf="!hasOverlayLayer" type="button" (click)="addOverlayLayer()"
+              class="w-full py-1.5 text-xs font-medium rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+              <i class="fas fa-plus mr-1"></i> Add Overlay
+            </button>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- ── Canvas Area ────────────────────────────────────── -->
+    <div class="flex-1 flex items-center justify-center overflow-auto bg-gray-100 dark:bg-gray-950/50 p-4">
+      <div [style.transform]="'scale(' + displayScale + ')'"
+           [style.transformOrigin]="'center center'"
+           class="shadow-2xl rounded-lg overflow-hidden">
+        <canvas #editorCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- ── Right Panel (Live Preview) ─────────────────────── -->
+    <div class="w-64 shrink-0 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 overflow-y-auto p-4 space-y-4">
+      <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Platform Previews</h3>
+
+      <!-- Instagram Feed -->
+      <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
+          <i class="fab fa-instagram text-xs text-pink-500"></i>
+          <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">Instagram Feed</span>
+        </div>
+        <div class="bg-white dark:bg-gray-900 aspect-square flex items-center justify-center">
+          <canvas #previewIgFeed class="w-full h-full object-contain"></canvas>
+        </div>
+      </div>
+
+      <!-- Instagram Story -->
+      <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
+          <i class="fab fa-instagram text-xs text-pink-500"></i>
+          <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">Story (9:16)</span>
+        </div>
+        <div class="bg-white dark:bg-gray-900" style="aspect-ratio: 9/16; max-height: 180px;">
+          <div class="w-full h-full flex items-center justify-center text-[10px] text-gray-400">
+            {{ aspectRatio === '9:16' ? 'Current ratio matches' : 'Switch to 9:16' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Facebook Feed -->
+      <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
+          <i class="fab fa-facebook text-xs text-blue-600"></i>
+          <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">Facebook Feed</span>
+        </div>
+        <div class="bg-white dark:bg-gray-900 aspect-video flex items-center justify-center text-[10px] text-gray-400">
+          16:9 preview
+        </div>
+      </div>
+
+      <!-- LinkedIn -->
+      <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
+          <i class="fab fa-linkedin text-xs text-blue-700"></i>
+          <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">LinkedIn Feed</span>
+        </div>
+        <div class="bg-white dark:bg-gray-900 aspect-video flex items-center justify-center text-[10px] text-gray-400">
+          16:9 preview
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

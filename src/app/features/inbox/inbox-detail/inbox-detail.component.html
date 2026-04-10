@@ -135,6 +135,25 @@
           </span>
         </span>
       </div>
+
+      <!-- Post reference card (comment-type interactions) -->
+      <ng-container *ngIf="getPostRef() as ref">
+        <div class="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+          <i [class]="getPostRefIcon() + ' text-xs text-gray-700 dark:text-gray-400 flex-shrink-0'"></i>
+          <span class="text-xs text-gray-800 dark:text-gray-300 truncate flex-1 leading-snug font-medium">
+            {{ ref.title || 'Commented on post' }}
+          </span>
+          <a
+            [href]="ref.url"
+            target="_blank"
+            rel="noopener"
+            class="group text-xs text-gray-800 dark:text-rep-lime hover:text-gray-950 dark:hover:text-lime-300 hover:underline whitespace-nowrap flex items-center gap-1 flex-shrink-0 font-semibold"
+          >
+            View post
+            <i class="fas fa-arrow-up-right-from-square text-[9px] text-gray-800 dark:text-rep-lime group-hover:text-gray-950 dark:group-hover:text-lime-300"></i>
+          </a>
+        </div>
+      </ng-container>
     </div>
 
     <!-- Conversation Thread with Reply Form at End (overflow-anchor: none prevents scroll jump when audio/media loads) -->

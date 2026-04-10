@@ -5,7 +5,7 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
       <h1 class="text-2xl font-bold flex items-center gap-2" style="color: var(--text-primary);">
-        <i class="fas fa-store text-green-500"></i>
+        <i class="fas fa-store catalog-accent-icon"></i>
         Product Catalog
       </h1>
       <p class="text-sm mt-0.5" style="color: var(--text-secondary);">
@@ -33,6 +33,10 @@
       [style.color]="activeTab === 'automation' ? 'var(--accent)' : 'var(--text-muted)'"
       [style.border-bottom]="activeTab === 'automation' ? '2px solid var(--accent)' : '2px solid transparent'">
       <i class="fas fa-robot mr-2"></i>Comment-to-DM Automation
+      <span *ngIf="settings?.enabled"
+            class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+        ON
+      </span>
     </button>
   </div>
 
@@ -51,16 +55,24 @@
           class="w-full pl-9 pr-4 py-2 rounded-lg border text-sm"
           style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
       </div>
-      <button
-        (click)="openCreateModal()"
-        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition bg-gray-900 hover:bg-gray-800 text-white dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/80 whitespace-nowrap">
-        <i class="fas fa-plus"></i> Add Product
-      </button>
+      <div class="flex gap-2">
+        <button
+          (click)="openImportModal()"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap border transition-colors"
+          style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+          <i class="fas fa-file-import"></i> Import
+        </button>
+        <button
+          (click)="openCreateModal()"
+          class="catalog-btn-primary flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap">
+          <i class="fas fa-plus"></i> Add Product
+        </button>
+      </div>
     </div>
 
     <!-- Loading -->
     <div *ngIf="loadingProducts" class="flex justify-center py-16">
-      <div class="w-10 h-10 border-4 border-gray-300 dark:border-rep-lime/20 border-t-gray-900 dark:border-t-rep-lime rounded-full animate-spin"></div>
+      <div class="catalog-page-loader w-10 h-10 border-4 rounded-full animate-spin"></div>
     </div>
 
     <!-- Empty state -->
@@ -76,7 +88,7 @@
       </p>
       <button
         (click)="openCreateModal()"
-        class="px-5 py-2.5 rounded-lg font-bold text-sm transition bg-gray-900 hover:bg-gray-800 text-white dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/80">
+        class="catalog-btn-primary px-5 py-2.5 rounded-lg font-bold text-sm">
         <i class="fas fa-plus mr-2"></i> Add First Product
       </button>
     </div>
@@ -92,20 +104,15 @@
         <div class="h-44 rounded-t-xl overflow-hidden flex items-center justify-center relative"
              style="background-color: var(--surface-primary);">
           <img *ngIf="product.images.length > 0"
-               [src]="product.images[0]"
+               [src]="displayImageUrl(product.images[0])"
                class="w-full h-full object-cover"
                alt="{{ product.name }}"
                (error)="$any($event.target).style.display='none'" />
           <i *ngIf="product.images.length === 0" class="fas fa-image text-4xl" style="color: var(--text-muted);"></i>
-
-          <!-- Status badge -->
           <span class="absolute top-2 right-2 text-[11px] font-bold px-2 py-0.5 rounded-full"
-                [class.bg-green-100]="product.isActive"
-                [class.text-green-700]="product.isActive"
-                [class.bg-gray-100]="!product.isActive"
-                [class.text-gray-600]="!product.isActive"
-                [class.dark:bg-green-900]="product.isActive"
-                [class.dark:text-green-300]="product.isActive">
+                [class.bg-green-100]="product.isActive" [class.text-green-700]="product.isActive"
+                [class.bg-gray-100]="!product.isActive" [class.text-gray-600]="!product.isActive"
+                [class.dark:bg-green-900]="product.isActive" [class.dark:text-green-300]="product.isActive">
             {{ product.isActive ? 'Active' : 'Inactive' }}
           </span>
         </div>
@@ -119,7 +126,6 @@
             </p>
           </div>
 
-          <!-- Price row -->
           <div class="flex items-center gap-2">
             <span class="text-lg font-extrabold" style="color: var(--text-primary);">
               {{ product.currency }} {{ product.price | number:'1.0-2' }}
@@ -134,7 +140,6 @@
             </span>
           </div>
 
-          <!-- Sizes & colors pills -->
           <div *ngIf="product.sizes.length > 0" class="flex flex-wrap gap-1">
             <span *ngFor="let s of product.sizes"
                   class="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -143,11 +148,13 @@
             </span>
           </div>
 
-          <!-- IG Post links -->
           <div class="flex items-center justify-between pt-1 mt-auto">
             <div class="flex items-center gap-1.5 text-xs" style="color: var(--text-muted);">
               <i class="fab fa-instagram"></i>
-              <span>{{ product.instagramPostIds.length }} post{{ product.instagramPostIds.length !== 1 ? 's' : '' }} linked</span>
+              <span [class.text-green-600]="product.instagramPostIds.length > 0"
+                    [class.dark:text-green-400]="product.instagramPostIds.length > 0">
+                {{ product.instagramPostIds.length }} post{{ product.instagramPostIds.length !== 1 ? 's' : '' }} linked
+              </span>
             </div>
             <button (click)="openPostLinkModal(product)"
                     class="text-xs font-semibold px-2.5 py-1 rounded-lg transition"
@@ -178,12 +185,74 @@
   <div *ngIf="activeTab === 'automation'">
 
     <div *ngIf="loadingSettings" class="flex justify-center py-16">
-      <div class="w-10 h-10 border-4 border-gray-300 dark:border-rep-lime/20 border-t-gray-900 dark:border-t-rep-lime rounded-full animate-spin"></div>
+      <div class="catalog-page-loader w-10 h-10 border-4 rounded-full animate-spin"></div>
     </div>
 
-    <div *ngIf="!loadingSettings && settings" class="max-w-3xl space-y-6">
+    <div *ngIf="!loadingSettings && settings" class="max-w-3xl space-y-5">
 
-      <!-- Enable toggle -->
+      <!-- ─── Status checklist ─── -->
+      <div class="rounded-xl border p-5 space-y-3"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <h3 class="text-sm font-bold flex items-center gap-2" style="color: var(--text-primary);">
+          <i class="fas fa-tasks text-blue-500"></i>
+          Setup Checklist
+        </h3>
+        <ul class="space-y-2">
+          <!-- Step 1 -->
+          <li class="flex items-start gap-3">
+            <i class="mt-0.5 text-sm"
+               [ngClass]="settings.enabled ? 'fas fa-check-circle text-green-500' : 'fas fa-circle text-gray-300 dark:text-gray-600'"></i>
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">Automation is enabled</p>
+              <p class="text-xs" style="color: var(--text-muted);">
+                {{ settings.enabled ? 'ON — automation will fire for matching comments.' : 'OFF — toggle the switch below and save.' }}
+              </p>
+            </div>
+          </li>
+          <!-- Step 2 -->
+          <li class="flex items-start gap-3">
+            <i class="mt-0.5 text-sm"
+               [ngClass]="totalProducts > 0 ? 'fas fa-check-circle text-green-500' : 'fas fa-circle text-gray-300 dark:text-gray-600'"></i>
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">At least one product exists</p>
+              <p class="text-xs" style="color: var(--text-muted);">
+                {{ totalProducts > 0 ? totalProducts + ' product(s) in catalog.' : 'Create a product first on the Products tab.' }}
+              </p>
+            </div>
+          </li>
+          <!-- Step 3 -->
+          <li class="flex items-start gap-3">
+            <i class="mt-0.5 text-sm"
+               [ngClass]="productsWithPostsLinked > 0 ? 'fas fa-check-circle text-green-500' : 'fas fa-exclamation-circle text-yellow-500'"></i>
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">Product linked to an Instagram post</p>
+              <p class="text-xs" style="color: var(--text-muted);">
+                <ng-container *ngIf="productsWithPostsLinked > 0">
+                  {{ productsWithPostsLinked }} product(s) have posts linked.
+                </ng-container>
+                <ng-container *ngIf="productsWithPostsLinked === 0">
+                  No products have posts linked yet — open a product card and click "Manage Posts" to add the Instagram media ID of the post.
+                </ng-container>
+              </p>
+            </div>
+          </li>
+          <!-- Step 4 -->
+          <li class="flex items-start gap-3">
+            <i class="mt-0.5 text-sm fas fa-info-circle text-blue-400"></i>
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">How to find your Instagram Post ID</p>
+              <p class="text-xs" style="color: var(--text-muted);">
+                Open the post on Instagram → the URL looks like
+                <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">instagram.com/p/<strong>DWlBp0ZgG2C</strong>/</code>
+                — copy just the bold shortcode (e.g. <strong>DWlBp0ZgG2C</strong>) and paste it in "Manage Posts".
+                You can also paste the full URL — RepMeUp extracts the shortcode automatically.
+              </p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- ─── Enable toggle ─── -->
       <div class="rounded-xl border p-5 flex items-center justify-between gap-4"
            style="background-color: var(--card-bg); border-color: var(--card-border);">
         <div>
@@ -191,22 +260,20 @@
             <i class="fab fa-instagram mr-2 text-pink-500"></i>Comment-to-DM Automation
           </h3>
           <p class="text-xs mt-0.5" style="color: var(--text-secondary);">
-            When someone comments on a linked post with buy-intent words, RepMeUp posts a public stub and sends a product DM automatically.
+            When someone comments on a linked post with a buy-intent keyword, RepMeUp posts a public stub reply and sends a product DM automatically.
           </p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
           <input type="checkbox" [(ngModel)]="settings.enabled" class="sr-only peer" />
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:bg-gray-900 dark:peer-checked:bg-rep-lime transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:bg-rep-lime transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm peer-checked:after:translate-x-5 peer-checked:shadow-[0_0_14px_rgba(216,255,0,0.55)]"></div>
         </label>
       </div>
 
-      <!-- Trigger keywords -->
+      <!-- ─── Trigger keywords ─── -->
       <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
-        <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">
-          Trigger Keywords
-        </label>
+        <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">Trigger Keywords</label>
         <p class="text-xs mb-3" style="color: var(--text-muted);">
-          Comma-separated words/phrases. If a comment contains any of these (case-insensitive), the DM flow triggers.
+          Comma-separated. If a comment contains any of these (case-insensitive, partial match), the DM flow fires.
         </p>
         <textarea
           [(ngModel)]="keywordsInput"
@@ -216,13 +283,33 @@
           placeholder="price, buy, order, how much, interested, want this, link …"></textarea>
       </div>
 
-      <!-- Public comment reply template -->
+      <!-- ─── Default product (fallback) ─── -->
       <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
         <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">
-          Public Comment Reply <span class="text-green-500 text-xs font-normal ml-1">(never contains payment link)</span>
+          Default Product <span class="font-normal text-xs" style="color: var(--text-muted);">(fallback when post has no linked product)</span>
         </label>
         <p class="text-xs mb-3" style="color: var(--text-muted);">
-          Posted publicly on the comment. Use <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;username&#125;&#125;</code>.
+          If a comment arrives on a post that has no product linked, this product's details will be sent instead.
+          Leave blank to send no DM for unlinked posts.
+        </p>
+        <select [(ngModel)]="settings.defaultProductId"
+                class="w-full px-3 py-2 rounded-lg border text-sm"
+                style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+          <option [ngValue]="null">— No default product —</option>
+          <option *ngFor="let p of products; trackBy: trackByProduct" [value]="p._id">
+            {{ p.name }} ({{ p.currency }} {{ p.price }})
+          </option>
+        </select>
+      </div>
+
+      <!-- ─── Public reply template ─── -->
+      <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">
+          Public Comment Reply
+          <span class="ml-1 text-xs font-normal text-green-600 dark:text-green-400">(safe — never put payment links here)</span>
+        </label>
+        <p class="text-xs mb-3" style="color: var(--text-muted);">
+          Posted publicly on the comment. Supports <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;username&#125;&#125;</code>.
         </p>
         <textarea
           [(ngModel)]="settings.publicReplyTemplate"
@@ -232,12 +319,11 @@
           placeholder="Hi {{username}}! 👋 We've sent you the details in DM. 😊"></textarea>
       </div>
 
-      <!-- DM template -->
+      <!-- ─── DM template ─── -->
       <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
         <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">DM Template</label>
         <p class="text-xs mb-3" style="color: var(--text-muted);">
-          Sent privately to the commenter.
-          Supports:
+          Sent privately. Supports:
           <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;username&#125;&#125;</code>
           <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;product_name&#125;&#125;</code>
           <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;price&#125;&#125;</code>
@@ -254,13 +340,11 @@
           style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
       </div>
 
-      <!-- Confirmation template -->
+      <!-- ─── Confirmation template ─── -->
       <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
-        <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">
-          Payment Confirmation DM
-        </label>
+        <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">Payment Confirmation DM</label>
         <p class="text-xs mb-3" style="color: var(--text-muted);">
-          Sent after a payment webhook confirms payment. Supports
+          Sent after payment webhook confirms. Supports
           <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;username&#125;&#125;</code>
           <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;product_name&#125;&#125;</code>.
         </p>
@@ -271,19 +355,17 @@
           style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
       </div>
 
-      <!-- Guard options -->
+      <!-- ─── Guard options ─── -->
       <div class="rounded-xl border p-5 grid grid-cols-1 sm:grid-cols-2 gap-5"
            style="background-color: var(--card-bg); border-color: var(--card-border);">
         <div>
-          <label class="block text-sm font-bold mb-2" style="color: var(--text-primary);">
-            Max DMs / day
-          </label>
+          <label class="block text-sm font-bold mb-2" style="color: var(--text-primary);">Max DMs / day</label>
           <input
             [(ngModel)]="settings.maxDmsPerDay"
             type="number" min="1" max="1000"
             class="w-full px-3 py-2 rounded-lg border text-sm"
             style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-          <p class="text-[11px] mt-1" style="color: var(--text-muted);">Safety cap — prevents DM spam if many comments arrive at once.</p>
+          <p class="text-[11px] mt-1" style="color: var(--text-muted);">Prevents accidental DM floods.</p>
         </div>
         <div class="flex flex-col justify-center">
           <label class="flex items-center gap-3 cursor-pointer">
@@ -296,12 +378,12 @@
         </div>
       </div>
 
-      <!-- Save / feedback -->
+      <!-- ─── Save / feedback ─── -->
       <div class="flex items-center gap-3">
         <button
           (click)="saveSettings()"
           [disabled]="savingSettings"
-          class="px-6 py-2.5 rounded-lg font-bold text-sm transition bg-gray-900 hover:bg-gray-800 text-white dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/80 disabled:opacity-60">
+          class="catalog-btn-primary px-6 py-2.5 rounded-lg font-bold text-sm disabled:opacity-60 disabled:shadow-none">
           <i class="fas" [ngClass]="savingSettings ? 'fa-spinner fa-spin' : 'fa-save'" class="mr-1.5"></i>
           {{ savingSettings ? 'Saving…' : 'Save Settings' }}
         </button>
@@ -311,7 +393,7 @@
         <span *ngIf="settingsError" class="text-sm text-red-500">{{ settingsError }}</span>
       </div>
 
-      <!-- Webhook info box -->
+      <!-- ─── Webhook info box ─── -->
       <div class="rounded-xl border border-blue-200 dark:border-blue-800 p-5"
            style="background-color: var(--card-bg);">
         <h4 class="text-sm font-bold mb-2 flex items-center gap-2" style="color: var(--text-primary);">
@@ -319,7 +401,7 @@
           Payment Confirmation Webhook
         </h4>
         <p class="text-xs mb-2" style="color: var(--text-secondary);">
-          To automatically send order-confirmation DMs after payment, register this URL in your payment provider's webhook settings:
+          To auto-send confirmation DMs after payment, register this URL in your payment provider:
         </p>
         <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
           <code class="text-xs font-mono flex-1 break-all" style="color: var(--text-primary);">
@@ -327,10 +409,11 @@
           </code>
         </div>
         <p class="text-[11px] mt-2" style="color: var(--text-muted);">
-          Include <code>order_token</code> and <code>payment_ref</code> in the payload. Set
-          <code>PRODUCT_PAYMENT_SECRET</code> in your environment to enable HMAC verification.
+          Include <code>order_token</code> and <code>payment_ref</code> in the payload.
+          Set <code>PRODUCT_PAYMENT_SECRET</code> in your environment to enable HMAC signature verification.
         </p>
       </div>
+
     </div>
   </div>
 </div>
@@ -342,7 +425,6 @@
   <div class="w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
        style="background-color: var(--card-bg); border-color: var(--card-border);">
 
-    <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4 border-b" style="border-color: var(--card-border);">
       <h2 class="font-bold text-lg" style="color: var(--text-primary);">
         {{ editingProduct ? 'Edit Product' : 'New Product' }}
@@ -352,12 +434,10 @@
       </button>
     </div>
 
-    <!-- Body -->
     <div class="overflow-auto p-5 space-y-4 flex-1">
       <form [formGroup]="productForm">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Name -->
           <div class="sm:col-span-2">
             <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Product Name *</label>
             <input formControlName="name" type="text" placeholder="e.g. Blue Embroidered Suit"
@@ -365,7 +445,6 @@
                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
           </div>
 
-          <!-- Price / Currency -->
           <div>
             <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Price *</label>
             <input formControlName="price" type="number" min="0" placeholder="149"
@@ -379,7 +458,6 @@
                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
           </div>
 
-          <!-- Discount / Stock -->
           <div>
             <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Discount %</label>
             <input formControlName="discountPercent" type="number" min="0" max="100" placeholder="0"
@@ -396,12 +474,10 @@
           </div>
         </div>
 
-        <!-- Effective price hint -->
         <p *ngIf="productForm.value.discountPercent > 0" class="text-xs text-green-600 dark:text-green-400">
           Effective price after discount: {{ productForm.value.currency }} {{ effectivePrice | number:'1.0-2' }}
         </p>
 
-        <!-- Description -->
         <div>
           <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Description</label>
           <textarea formControlName="description" rows="2" placeholder="Short product description…"
@@ -409,24 +485,19 @@
                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
         </div>
 
-        <!-- Payment URL -->
         <div>
-          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
-            Payment / Checkout URL
-          </label>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Payment / Checkout URL</label>
           <input formControlName="paymentUrl" type="url" placeholder="https://pay.yourstore.com/product-123"
                  class="w-full px-3 py-2 rounded-lg border text-sm"
                  style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
         </div>
 
-        <!-- Sizes / Colors -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
               Sizes <span class="font-normal text-xs" style="color: var(--text-muted);">(comma-separated)</span>
             </label>
-            <input [(ngModel)]="sizesInput" [ngModelOptions]="{standalone: true}"
-                   type="text" placeholder="S, M, L, XL"
+            <input [(ngModel)]="sizesInput" [ngModelOptions]="{standalone: true}" type="text" placeholder="S, M, L, XL"
                    class="w-full px-3 py-2 rounded-lg border text-sm"
                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
           </div>
@@ -434,29 +505,58 @@
             <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
               Colors <span class="font-normal text-xs" style="color: var(--text-muted);">(comma-separated)</span>
             </label>
-            <input [(ngModel)]="colorsInput" [ngModelOptions]="{standalone: true}"
-                   type="text" placeholder="Blue, Red, Green"
+            <input [(ngModel)]="colorsInput" [ngModelOptions]="{standalone: true}" type="text" placeholder="Blue, Red, Green"
                    class="w-full px-3 py-2 rounded-lg border text-sm"
                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
           </div>
         </div>
 
-        <!-- Images -->
         <div>
-          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
-            Image URLs <span class="font-normal text-xs" style="color: var(--text-muted);">(one per line)</span>
-          </label>
-          <textarea [(ngModel)]="imagesInput" [ngModelOptions]="{standalone: true}"
-                    rows="3" placeholder="https://cdn.yourstore.com/image1.jpg"
-                    class="w-full px-3 py-2 rounded-lg border text-sm resize-none"
-                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Product images</label>
+          <p class="text-xs mb-2" style="color: var(--text-muted);">
+            Open your media library or upload from device. Images are stored in the library and linked here.
+          </p>
+
+          <div *ngIf="productImageUrls.length" class="flex flex-wrap gap-2 mb-3">
+            <div *ngFor="let url of productImageUrls; let i = index; trackBy: trackByImageUrl"
+                 class="relative group w-[4.5rem] h-[4.5rem] rounded-lg overflow-hidden border shrink-0"
+                 style="border-color: var(--card-border);">
+              <img [src]="displayImageUrl(url)" alt="" class="w-full h-full object-cover"
+                   loading="lazy" />
+              <button type="button"
+                      (click)="removeProductImageAt(i)"
+                      class="absolute inset-0 flex items-center justify-center text-white text-sm transition-opacity opacity-0 group-hover:opacity-100"
+                      style="background-color: rgba(0,0,0,0.55);"
+                      [attr.aria-label]="'Remove image ' + (i + 1)">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="button"
+                  (click)="openProductImagesModal()"
+                  class="catalog-btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold">
+            <i class="fas fa-image"></i>
+            Select images
+          </button>
+
+          <details class="mt-3 group">
+            <summary class="text-xs font-semibold cursor-pointer list-none flex items-center gap-1 outline-none [&::-webkit-details-marker]:hidden"
+                     style="color: var(--text-muted);">
+              <i class="fas fa-chevron-right text-[10px] transition-transform group-open:rotate-90"></i>
+              Paste image URLs instead
+            </summary>
+            <textarea [(ngModel)]="imagesInput" [ngModelOptions]="{standalone: true}" rows="3"
+                      placeholder="https://…"
+                      class="w-full mt-2 px-3 py-2 rounded-lg border text-sm resize-none"
+                      style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
+          </details>
         </div>
 
       </form>
       <p *ngIf="productError" class="text-sm text-red-500">{{ productError }}</p>
     </div>
 
-    <!-- Footer -->
     <div class="flex justify-end gap-3 px-5 py-4 border-t" style="border-color: var(--card-border);">
       <button (click)="closeProductModal()"
               class="px-4 py-2 rounded-lg text-sm font-bold transition"
@@ -465,9 +565,62 @@
       </button>
       <button (click)="saveProduct()"
               [disabled]="savingProduct || productForm.invalid"
-              class="px-5 py-2 rounded-lg text-sm font-bold transition bg-gray-900 hover:bg-gray-800 text-white dark:bg-rep-lime dark:text-rep-black dark:hover:bg-rep-lime/80 disabled:opacity-60">
+              class="catalog-btn-primary px-5 py-2 rounded-lg text-sm font-bold disabled:opacity-60 disabled:shadow-none">
         <i class="fas" [ngClass]="savingProduct ? 'fa-spinner fa-spin' : 'fa-save'" class="mr-1.5"></i>
         {{ savingProduct ? 'Saving…' : (editingProduct ? 'Update' : 'Create') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ PRODUCT IMAGES PICKER (upload zone + library) ══════════════════════════ -->
+<div *ngIf="showProductImagesModal"
+     class="catalog-image-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center p-4"
+     (click)="closeProductImagesModal()">
+  <div class="catalog-image-modal-panel w-full max-w-lg rounded-2xl border overflow-hidden flex flex-col max-h-[90vh]"
+       (click)="$event.stopPropagation()">
+    <div class="catalog-image-modal-header flex items-center justify-between px-5 py-4 border-b shrink-0">
+      <h2 class="font-bold text-base flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-cloud-upload-alt catalog-accent-icon"></i>
+        Add product images
+      </h2>
+      <button type="button"
+              (click)="closeProductImagesModal()"
+              class="catalog-image-modal-icon-btn w-9 h-9 rounded-lg flex items-center justify-center text-xl transition"
+              aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="catalog-image-modal-body p-5 overflow-y-auto space-y-3 flex-1 min-h-0">
+      <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
+        Choose from your media library or drag images here. Each file is uploaded to the library and added to this product.
+      </p>
+      <div class="catalog-image-modal__drop-wrap">
+        <app-file-upload-zone
+          [files]="productImageUploadQueue"
+          (filesChange)="onProductImageFilesChange($event)"
+          [maxFiles]="12"
+          [multiple]="true"
+          [maxFileSizeBytes]="20 * 1024 * 1024"
+          accept="image/*"
+          [showFileList]="true"
+          [disabled]="uploadingProductImages"
+          [openMediaGalleryOnClick]="true"
+          galleryMediaType="image"
+          dropzoneTitle="Open media library or drag images here"
+          dropzoneHint="JPG, PNG, GIF, WebP — max 20 MB each, up to 12 images"
+        />
+      </div>
+      <p *ngIf="uploadingProductImages" class="text-xs flex items-center gap-2" style="color: var(--text-secondary);">
+        <i class="fas fa-spinner fa-spin catalog-accent-icon"></i>
+        Uploading to your library…
+      </p>
+    </div>
+    <div class="catalog-image-modal-footer flex justify-end gap-2 px-5 py-4 border-t shrink-0">
+      <button type="button"
+              (click)="closeProductImagesModal()"
+              class="catalog-image-modal-secondary-btn px-4 py-2 rounded-lg text-sm font-bold transition">
+        Done
       </button>
     </div>
   </div>
@@ -480,7 +633,6 @@
   <div class="w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden"
        style="background-color: var(--card-bg); border-color: var(--card-border);">
 
-    <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4 border-b" style="border-color: var(--card-border);">
       <div>
         <h2 class="font-bold text-base" style="color: var(--text-primary);">
@@ -494,33 +646,32 @@
     </div>
 
     <div class="p-5 space-y-4">
-      <!-- Explanation -->
-      <p class="text-xs p-3 rounded-lg" style="background-color: var(--surface-primary); color: var(--text-secondary);">
-        <i class="fas fa-info-circle mr-1 text-blue-500"></i>
-        Paste an Instagram <strong>media ID</strong> (e.g. <code>17896129349000001</code>) or the post shortcode.
-        When someone comments on these posts with a buy-intent phrase, RepMeUp will DM them this product's details automatically.
-      </p>
 
-      <!-- Add new post link -->
-      <div class="flex gap-2">
-        <input [(ngModel)]="postIdInput"
-               type="text"
-               placeholder="Instagram media ID or shortcode"
-               class="flex-1 px-3 py-2 rounded-lg border text-sm"
-               style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
-               (keyup.enter)="addPostLink()" />
-        <button (click)="addPostLink()"
-                [disabled]="linkingPost || !postIdInput.trim()"
-                class="px-3 py-2 rounded-lg text-sm font-bold transition bg-gray-900 hover:bg-gray-800 text-white dark:bg-rep-lime dark:text-rep-black disabled:opacity-60">
-          <i class="fas" [ngClass]="linkingPost ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
-        </button>
+      <!-- Add post link -->
+      <div class="space-y-2">
+        <div class="flex gap-2">
+          <input [(ngModel)]="postIdInput"
+                 (ngModelChange)="onPostIdInputChange()"
+                 type="text"
+                 placeholder="e.g. DWlBp0ZgG2C  or  https://www.instagram.com/p/DWlBp0ZgG2C/"
+                 class="flex-1 px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+          <button (click)="addPostLink()"
+                  [disabled]="linkingPost || !postIdInput.trim()"
+                  title="Link this post to the product"
+                  class="catalog-btn-primary px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-60 disabled:shadow-none">
+            <i class="fas" [ngClass]="linkingPost ? 'fa-spinner fa-spin' : 'fa-link'"></i> Link
+          </button>
+        </div>
+        <p class="text-xs" style="color: var(--text-muted);">
+          Paste the shortcode (e.g. <code class="font-mono">DWlBp0ZgG2C</code>) or a full Instagram post URL — RepMeUp extracts the shortcode automatically.
+        </p>
+        <p *ngIf="linkError" class="text-xs text-red-500">{{ linkError }}</p>
       </div>
-      <p *ngIf="linkError" class="text-xs text-red-500">{{ linkError }}</p>
 
-      <!-- Linked posts list -->
       <div *ngIf="linkingProduct.instagramPostIds.length === 0"
            class="text-center py-6 text-sm" style="color: var(--text-muted);">
-        No posts linked yet. Add an Instagram media ID above.
+        No posts linked yet.
       </div>
 
       <ul *ngIf="linkingProduct.instagramPostIds.length > 0" class="space-y-2 max-h-48 overflow-y-auto">
@@ -528,12 +679,12 @@
             class="flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
             style="background-color: var(--surface-primary);">
           <a [href]="getPostIgUrl(postId)" target="_blank"
-             class="text-xs font-mono text-blue-500 hover:underline truncate flex-1">
-            {{ postId }}
+             class="text-xs font-mono text-blue-500 hover:underline truncate flex-1"
+             title="{{ postId }}">
+            {{ getPostIgLabel(postId) }}
           </a>
-          <button (click)="removePostLink(postId)"
-                  class="text-red-400 hover:text-red-600 text-xs px-1">
-            <i class="fas fa-times"></i>
+          <button (click)="removePostLink(postId)" class="text-red-400 hover:text-red-600 text-xs px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+            <i class="fas fa-unlink"></i>
           </button>
         </li>
       </ul>
@@ -541,7 +692,195 @@
 
     <div class="flex justify-end px-5 py-4 border-t" style="border-color: var(--card-border);">
       <button (click)="closePostLinkModal()"
-              class="px-4 py-2 rounded-lg text-sm font-bold transition bg-gray-900 hover:bg-gray-800 text-white dark:bg-rep-lime dark:text-rep-black">
+              class="catalog-btn-primary px-4 py-2 rounded-lg text-sm font-bold">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ IMPORT MODAL ══════════════════════════ -->
+<div *ngIf="showImportModal"
+     class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+     (click)="closeImportModal()">
+  <div class="catalog-import-panel w-full max-w-lg rounded-2xl border shadow-2xl flex flex-col max-h-[92vh] overflow-hidden"
+       (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="catalog-import-header flex items-center justify-between px-6 py-4 border-b shrink-0">
+      <h2 class="text-base font-bold flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-file-import catalog-accent-icon"></i>
+        Import Products
+      </h2>
+      <button (click)="closeImportModal()" class="catalog-image-modal-icon-btn w-8 h-8 rounded-lg flex items-center justify-center text-lg">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Source selector tabs -->
+    <div *ngIf="!importResult" class="catalog-import-source-tabs flex border-b shrink-0 overflow-x-auto">
+      <button *ngFor="let src of [{id:'excel',icon:'fa-file-excel',label:'Excel / CSV'},
+                                  {id:'woocommerce',icon:'fa-wordpress',label:'WooCommerce'},
+                                  {id:'shopify',icon:'fa-shopify',label:'Shopify'},
+                                  {id:'url',icon:'fa-globe',label:'Custom API'}]"
+              (click)="selectImportSource(src.id)"
+              class="catalog-import-tab flex-1 min-w-[7rem] flex flex-col items-center gap-1 py-3 text-xs font-bold transition-colors border-b-2"
+              [class.catalog-import-tab--active]="importSource === src.id">
+        <i class="fab {{ src.icon }} text-base" *ngIf="src.id === 'woocommerce' || src.id === 'shopify'"></i>
+        <i class="fas {{ src.icon }} text-base" *ngIf="src.id !== 'woocommerce' && src.id !== 'shopify'"></i>
+        {{ src.label }}
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 overflow-y-auto flex-1">
+
+      <!-- ── Success screen ── -->
+      <div *ngIf="importResult" class="text-center py-6">
+        <div class="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/40 text-green-500 flex items-center justify-center mx-auto mb-4 text-3xl">
+          <i class="fas fa-check"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-1" style="color: var(--text-primary);">Import Successful!</h3>
+        <p class="text-sm mb-6" style="color: var(--text-secondary);">Processed {{ importResult.totalProcessed }} records.</p>
+        <div class="grid grid-cols-2 gap-3 text-left">
+          <div class="p-3 rounded-lg border" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div class="text-2xl font-bold catalog-stat-neon">{{ importResult.upsertedCount }}</div>
+            <div class="text-xs font-semibold uppercase tracking-wider mt-0.5" style="color: var(--text-muted);">Created</div>
+          </div>
+          <div class="p-3 rounded-lg border" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div class="text-2xl font-bold text-blue-500">{{ importResult.modifiedCount }}</div>
+            <div class="text-xs font-semibold uppercase tracking-wider mt-0.5" style="color: var(--text-muted);">Updated</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Excel / CSV ── -->
+      <div *ngIf="!importResult && importSource === 'excel'">
+        <p class="text-sm mb-4" style="color: var(--text-secondary);">
+          Upload an Excel (.xlsx) or CSV file. Products are matched by SKU (or Name if no SKU) — re-uploading the same file updates existing products instead of duplicating them.
+        </p>
+        <button type="button" (click)="downloadImportTemplate()"
+                class="catalog-link-action text-sm mb-5 flex items-center gap-2 bg-transparent border-0 cursor-pointer p-0">
+          <i class="fas fa-download"></i> Download Template
+        </button>
+        <label class="block text-sm font-semibold mb-2" style="color: var(--text-primary);">Select File</label>
+        <input type="file"
+               accept=".csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+               (change)="onImportFileSelected($event)"
+               class="catalog-file-input block cursor-pointer" />
+        <p *ngIf="importFile" class="mt-2 text-xs" style="color: var(--text-secondary);">
+          <i class="fas fa-paperclip mr-1"></i>{{ importFile.name }}
+        </p>
+      </div>
+
+      <!-- ── WooCommerce ── -->
+      <div *ngIf="!importResult && importSource === 'woocommerce'" class="space-y-4">
+        <div class="catalog-import-info-box rounded-lg p-3 text-xs flex gap-2">
+          <i class="fas fa-info-circle mt-0.5 shrink-0 catalog-accent-icon"></i>
+          <span style="color: var(--text-secondary);">
+            Generate REST API keys in your WordPress dashboard under <strong>WooCommerce → Settings → Advanced → REST API</strong>.
+            Grant <strong>Read</strong> permissions.
+          </span>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Store URL</label>
+          <input [(ngModel)]="wooStoreUrl" type="url" placeholder="https://yourstore.com"
+                 class="catalog-import-field w-full px-3 py-2 rounded-lg border text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Consumer Key</label>
+          <input [(ngModel)]="wooConsumerKey" type="text" placeholder="ck_••••••••••••••••••••"
+                 class="catalog-import-field w-full px-3 py-2 rounded-lg border text-sm" autocomplete="off" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Consumer Secret</label>
+          <input [(ngModel)]="wooConsumerSecret" type="password" placeholder="cs_••••••••••••••••••••"
+                 class="catalog-import-field w-full px-3 py-2 rounded-lg border text-sm" autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- ── Shopify ── -->
+      <div *ngIf="!importResult && importSource === 'shopify'" class="space-y-4">
+        <div class="catalog-import-info-box rounded-lg p-3 text-xs flex gap-2">
+          <i class="fas fa-info-circle mt-0.5 shrink-0 catalog-accent-icon"></i>
+          <span style="color: var(--text-secondary);">
+            Create a <strong>Custom App</strong> in your Shopify Admin under <strong>Apps → Develop Apps</strong>.
+            Enable <strong>read_products</strong> in the Admin API scope, then install the app to get the Access Token.
+          </span>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Store Domain</label>
+          <input [(ngModel)]="shopifyDomain" type="text" placeholder="your-store.myshopify.com"
+                 class="catalog-import-field w-full px-3 py-2 rounded-lg border text-sm" autocomplete="off" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Admin API Access Token</label>
+          <input [(ngModel)]="shopifyToken" type="password" placeholder="shpat_••••••••••••••••••••"
+                 class="catalog-import-field w-full px-3 py-2 rounded-lg border text-sm" autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- ── Custom API URL ── -->
+      <div *ngIf="!importResult && importSource === 'url'" class="space-y-4">
+        <div class="catalog-import-info-box rounded-lg p-3 text-xs flex gap-2">
+          <i class="fas fa-info-circle mt-0.5 shrink-0 catalog-accent-icon"></i>
+          <span style="color: var(--text-secondary);">
+            Provide any REST endpoint that returns a JSON array of products (or an object with a
+            <code class="font-mono">data</code>, <code class="font-mono">products</code>, or <code class="font-mono">items</code> key).
+            RepMeUp will auto-map common field names.
+          </span>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">API URL</label>
+          <input [(ngModel)]="importApiUrl" type="url" placeholder="https://yourapi.com/products"
+                 class="catalog-import-field w-full px-3 py-2 rounded-lg border text-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
+            Authorization Header <span class="font-normal" style="color: var(--text-muted);">(optional)</span>
+          </label>
+          <input [(ngModel)]="importApiAuthHeader" type="text" placeholder="Bearer your_token_here"
+                 class="catalog-import-field w-full px-3 py-2 rounded-lg border text-sm" autocomplete="off" />
+        </div>
+        <details class="text-xs" style="color: var(--text-muted);">
+          <summary class="cursor-pointer font-semibold select-none">Supported field names</summary>
+          <div class="mt-2 p-3 rounded-lg font-mono leading-relaxed" style="background-color: var(--surface-primary);">
+            name / title / product_name<br>
+            sku / SKU<br>
+            price / sale_price / regular_price<br>
+            description / body_html / short_description<br>
+            currency / currency_code<br>
+            stock / stock_quantity<br>
+            images[] (url / src), image<br>
+            sizes[], colors[]<br>
+            paymentUrl / payment_url / permalink
+          </div>
+        </details>
+      </div>
+
+      <!-- ── Error ── -->
+      <div *ngIf="importError && !importResult"
+           class="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm flex items-start gap-2">
+        <i class="fas fa-exclamation-circle mt-0.5 shrink-0"></i>
+        <p>{{ importError }}</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-3 px-6 py-4 border-t shrink-0" style="border-color: var(--card-border);">
+      <button *ngIf="!importResult" (click)="closeImportModal()"
+              class="px-4 py-2 rounded-lg text-sm font-bold transition"
+              style="background-color: var(--surface-primary); color: var(--text-primary);">
+        Cancel
+      </button>
+      <button *ngIf="!importResult" (click)="runImport()"
+              [disabled]="!canImport"
+              class="catalog-btn-primary px-5 py-2 rounded-lg text-sm font-bold disabled:opacity-60 disabled:shadow-none flex items-center gap-2">
+        <i class="fas" [ngClass]="importing ? 'fa-spinner fa-spin' : 'fa-upload'"></i>
+        {{ importing ? 'Importing...' : 'Import' }}
+      </button>
+      <button *ngIf="importResult" (click)="closeImportModal()"
+              class="catalog-btn-primary px-5 py-2 rounded-lg text-sm font-bold">
         Done
       </button>
     </div>

@@ -132,6 +132,22 @@
             {{ interaction.content }}
           </p>
 
+          <!-- Post reference chip (comment-type interactions only) -->
+          <ng-container *ngIf="getPostRef(interaction) as ref">
+            <a
+              [href]="ref.url"
+              target="_blank"
+              rel="noopener"
+              (click)="$event.stopPropagation()"
+              class="group flex items-center gap-1 mb-1.5 text-[11px] text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition-colors max-w-full font-medium"
+              [title]="ref.title || 'View post'"
+            >
+              <i [class]="getPostRefIcon(interaction.platform) + ' text-[10px] flex-shrink-0 text-gray-700 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-rep-lime'"></i>
+              <span class="truncate">{{ ref.title || 'View post' }}</span>
+              <i class="fas fa-arrow-up-right-from-square text-[8px] flex-shrink-0 text-gray-700 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-rep-lime opacity-90"></i>
+            </a>
+          </ng-container>
+
           <!-- Meta Row: details on left, replied/not-replied status at row end -->
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center flex-wrap gap-1.5 min-w-0">

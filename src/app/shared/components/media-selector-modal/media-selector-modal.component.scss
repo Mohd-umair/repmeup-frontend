@@ -1,0 +1,205 @@
+/* Light / dark via :root and html.dark variables (styles.scss) */
+
+@keyframes msm-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.msm-animate-in {
+  animation: msm-modal-in 0.2s ease-out;
+}
+
+.msm-backdrop {
+  background-color: rgba(17, 24, 39, 0.48);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+:host-context(.dark) .msm-backdrop {
+  background-color: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.msm-panel {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow), 0 25px 50px -12px rgb(0 0 0 / 0.2);
+}
+
+:host-context(.dark) .msm-panel {
+  box-shadow: var(--card-shadow), 0 25px 50px -12px rgb(0 0 0 / 0.55);
+}
+
+.msm-divider {
+  border-color: var(--card-border);
+}
+
+.msm-title {
+  color: var(--text-primary);
+}
+
+.msm-subtitle,
+.msm-hint {
+  color: var(--text-secondary);
+}
+
+.msm-icon-btn {
+  color: var(--text-muted);
+  background-color: var(--surface-tertiary);
+
+  &:hover {
+    color: var(--text-primary);
+    background-color: var(--surface-secondary);
+  }
+}
+
+.msm-toolbar {
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.msm-filter-btn {
+  color: var(--text-secondary);
+
+  &:hover:not(.msm-filter-btn--active) {
+    color: var(--text-primary);
+    background-color: var(--surface-tertiary);
+  }
+
+  &.msm-filter-btn--active {
+    background-color: #d8ff00;
+    color: #0b0b0b;
+  }
+}
+
+.msm-sort-row {
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.msm-select {
+  color: var(--text-primary);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+
+  option {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+  }
+}
+
+.msm-sort-label {
+  color: var(--text-secondary);
+}
+
+.msm-ghost-btn {
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+
+  &:hover:not(:disabled) {
+    color: #d8ff00;
+    border-color: rgba(216, 255, 0, 0.45);
+  }
+}
+
+.msm-card {
+  background-color: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--text-muted);
+  }
+
+  &.msm-card--selected {
+    border-color: #d8ff00;
+    box-shadow: 0 0 0 2px rgba(216, 255, 0, 0.35);
+  }
+}
+
+.msm-select-indicator {
+  background-color: color-mix(in srgb, var(--surface-tertiary) 85%, transparent);
+
+  &.msm-select-indicator--on {
+    background-color: #d8ff00;
+  }
+}
+
+.msm-select-indicator-icon {
+  color: var(--text-muted);
+}
+
+.msm-thumb-bg {
+  background-color: var(--surface-tertiary);
+}
+
+.msm-thumb-audio {
+  background-color: var(--surface-tertiary);
+}
+
+.msm-card-name {
+  color: var(--text-primary);
+}
+
+.msm-card-meta {
+  color: var(--text-secondary);
+}
+
+.msm-empty-icon {
+  color: var(--text-muted);
+}
+
+.msm-footer {
+  background-color: var(--card-bg);
+}
+
+.msm-footer-muted {
+  color: var(--text-secondary);
+}
+
+.msm-btn-cancel {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+
+  &:hover:not(:disabled) {
+    background-color: var(--surface-tertiary);
+  }
+}
+
+.msm-btn-primary {
+  background-color: #d8ff00;
+  color: #0b0b0b;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.97);
+    box-shadow: 0 0 16px rgba(216, 255, 0, 0.35);
+  }
+}
+
+.msm-delete-one {
+  background-color: color-mix(in srgb, var(--card-bg) 88%, transparent);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+
+  &:hover:not(:disabled) {
+    background-color: #dc2626;
+    color: #fff;
+    border-color: #ef4444;
+  }
+
+  &:disabled:hover {
+    background-color: color-mix(in srgb, var(--card-bg) 88%, transparent);
+    color: var(--text-primary);
+    border-color: var(--border-primary);
+  }
+}

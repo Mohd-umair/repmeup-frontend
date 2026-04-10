@@ -86,7 +86,53 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.useCases[this.activeUseCaseTab];
   }
 
+  /** Leadership — home page team grid (Syed Iqbal listed last) */
+  readonly teamMembers: {
+    name: string;
+    role: string;
+    initials: string;
+    avatarGradient: string;
+    /** Square headshot under `src/assets/Images/` */
+    imageSrc: string;
+  }[] = [
+    {
+      name: 'Namitha Malhotra',
+      role: 'CEO & Director',
+      initials: 'NM',
+      avatarGradient: 'from-rose-500 to-pink-600',
+      imageSrc: 'assets/Images/namitha.jpeg'
+    },
+    {
+      name: 'Mohammed Umair',
+      role: 'Chief Technology Officer',
+      initials: 'MU',
+      avatarGradient: 'from-violet-500 to-indigo-600',
+      imageSrc: 'assets/Images/umair.png'
+    },
+    {
+      name: 'Nazish Parveen',
+      role: 'Chief Business Officer',
+      initials: 'NP',
+      avatarGradient: 'from-amber-500 to-orange-600',
+      imageSrc: 'assets/Images/nazish.jpg'
+    },
+    {
+      name: 'Syed Iqbal',
+      role: 'SME',
+      initials: 'SI',
+      avatarGradient: 'from-emerald-500 to-teal-600',
+      imageSrc: 'assets/Images/asif.jpeg'
+    }
+  ];
+
+  /** When a headshot fails to load, show initials fallback */
+  teamPhotoFailed: Record<string, boolean> = {};
+
   constructor(private router: Router) {}
+
+  onTeamPhotoError(memberName: string): void {
+    this.teamPhotoFailed[memberName] = true;
+  }
 
   ngOnInit(): void {
     const applyUseCaseFromUrl = (): void => {

@@ -13,7 +13,8 @@ import { SweetAlertService } from '../../../core/services/sweet-alert.service';
   selector: 'app-media-selector-modal',
   standalone: true,
   imports: [CommonModule, FormsModule, MediaUploadModalComponent],
-  templateUrl: './media-selector-modal.component.html'
+  templateUrl: './media-selector-modal.component.html',
+  styleUrls: ['./media-selector-modal.component.scss']
 })
 export class MediaSelectorModalComponent implements OnInit {
   @Input() allowMultiple = false; // Allow selecting multiple media for carousel

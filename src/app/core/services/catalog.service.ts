@@ -33,7 +33,8 @@ export class CatalogService {
   }
 
   unlinkPost(productId: string, postId: string): Observable<IApiResponse<IProduct>> {
-    return this.api.delete(`/products/${productId}/posts/${postId}`);
+    // Send postId in the request body to avoid URL-encoding issues with full URLs stored as IDs
+    return this.api.post(`/products/${productId}/posts/unlink`, { postId });
   }
 
   getProductsByPost(postId: string): Observable<IApiResponse<IProduct[]>> {
@@ -47,4 +48,33 @@ export class CatalogService {
   updateCommentToDmSettings(data: Partial<ICommentToDmSettings>): Observable<IApiResponse<ICommentToDmSettings>> {
     return this.api.put('/products/settings/comment-to-dm', data);
   }
+
+  resolvePostId(postId: string): Observable<IApiResponse<{ shortcode: string | null; numericId: string; alreadyNumeric?: boolean }>> {
+    return this.api.get('/products/resolve-post', { postId });
+  }
+
+  importProducts(file: File): Observable<IApiResponse<IImportSummary>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.postForm('/products/import', formData);
+  }
+
+  importFromWooCommerce(storeUrl: string, consumerKey: string, consumerSecret: string): Observable<IApiResponse<IImportSummary>> {
+    return this.api.post('/products/import/woocommerce', { storeUrl, consumerKey, consumerSecret });
+  }
+
+  importFromShopify(storeDomain: string, accessToken: string): Observable<IApiResponse<IImportSummary>> {
+    return this.api.post('/products/import/shopify', { storeDomain, accessToken });
+  }
+
+  importFromUrl(url: string, authHeader?: string): Observable<IApiResponse<IImportSummary>> {
+    return this.api.post('/products/import/url', { url, authHeader: authHeader || undefined });
+  }
+}
+
+export interface IImportSummary {
+  upsertedCount: number;
+  modifiedCount: number;
+  matchedCount: number;
+  totalProcessed: number;
 }

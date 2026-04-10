@@ -9,18 +9,56 @@
 
   <!-- Re-train Voice banner -->
   <div *ngIf="showRetrainBanner" class="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 flex flex-wrap items-center justify-between gap-3">
-    <p class="text-amber-200 font-medium">Brand config has changed. Re-train the voice model so new content matches your settings.</p>
+    <p class="text-amber-800 dark:text-amber-200 font-medium">Brand config has changed. Re-train the voice model so new content matches your settings.</p>
     <app-button variant="primary" size="sm" [loading]="retraining" (buttonClick)="retrain()">
       Re-train Voice Model
     </app-button>
+  </div>
+
+  <!-- Tabs -->
+  <div *ngIf="!loading" class="flex gap-1 mb-6 border-b border-gray-800">
+    <button
+      type="button"
+      (click)="activeTab = 'settings'"
+      class="px-4 py-2.5 text-sm font-medium transition border-b-2 -mb-px"
+      [ngClass]="activeTab === 'settings'
+        ? 'border-gray-900 dark:border-rep-lime text-gray-900 dark:text-rep-lime bg-gray-100 dark:bg-gray-800'
+        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'"
+    >
+      <i class="fas fa-sliders-h mr-1.5"></i>Brand Settings
+    </button>
+    <button
+      type="button"
+      (click)="activeTab = 'profile'"
+      class="px-4 py-2.5 text-sm font-medium transition border-b-2 -mb-px"
+      [ngClass]="activeTab === 'profile'
+        ? 'border-gray-900 dark:border-rep-lime text-gray-900 dark:text-rep-lime bg-gray-100 dark:bg-gray-800'
+        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'"
+    >
+      <i class="fas fa-chart-bar mr-1.5"></i>Brand Profile
+      <span *ngIf="profile" class="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700 dark:bg-rep-lime/20 dark:text-rep-lime">
+        {{ profile.confidence }}
+      </span>
+    </button>
+    <button
+      type="button"
+      (click)="activeTab = 'references'; onRefTabActivated()"
+      class="px-4 py-2.5 text-sm font-medium transition border-b-2 -mb-px"
+      [ngClass]="activeTab === 'references'
+        ? 'border-gray-900 dark:border-rep-lime text-gray-900 dark:text-rep-lime bg-gray-100 dark:bg-gray-800'
+        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'"
+    >
+      <i class="fas fa-images mr-1.5"></i>Reference Images
+      <span *ngIf="refTotal" class="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300">{{ refTotal }}/{{ refMax }}</span>
+    </button>
   </div>
 
   <div *ngIf="loading" class="flex justify-center py-12">
     <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
   </div>
 
-  <div *ngIf="!loading && config" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Left: structured fields -->
+  <!-- ═══════════════ TAB: Brand Settings ═══════════════ -->
+  <div *ngIf="!loading && config && activeTab === 'settings'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <div class="lg:col-span-2 space-y-6">
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
         <h2 class="text-lg font-bold text-rep-white mb-4">Brand overview</h2>
@@ -112,7 +150,6 @@
           <app-button variant="primary" [loading]="saving" (buttonClick)="save()">Save brand config</app-button>
         </div>
       </div>
-      <!-- Upload area (link to KB) -->
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
         <h2 class="text-lg font-bold text-rep-white mb-2">Knowledge base</h2>
         <p class="text-gray-400 text-sm mb-4">Upload documents and URLs to train AI on your brand. Manage entries in Knowledge Base.</p>
@@ -137,6 +174,378 @@
           Regenerate preview
         </app-button>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: Brand Profile (AI-Analyzed) ═══════════════ -->
+  <div *ngIf="!loading && config && activeTab === 'profile'" class="space-y-6">
+
+    <!-- Action bar -->
+    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-rep-white">AI Brand Analysis</h2>
+          <p class="text-gray-400 text-sm mt-1">Analyzes your last 10 published posts to learn your brand's writing style, visual identity, and content patterns.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Re-analyze -->
+          <app-button variant="primary" [loading]="analyzing" (buttonClick)="analyzeBrand()">
+            <i class="fas fa-magic mr-1.5" *ngIf="!analyzing"></i>
+            {{ profile ? 'Re-analyze' : 'Analyze My Content' }}
+          </app-button>
+          <!-- Edit overrides -->
+          <button *ngIf="profile && !editingProfile" type="button"
+            (click)="startEditProfile()"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white transition">
+            <i class="fas fa-pencil-alt text-xs"></i> Edit
+          </button>
+          <!-- Delete / Reset -->
+          <button *ngIf="profile && !confirmClear" type="button"
+            (click)="confirmClear = true"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">
+            <i class="fas fa-trash-alt text-xs"></i> Reset
+          </button>
+          <!-- Confirm clear -->
+          <div *ngIf="confirmClear" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-500/50 bg-red-500/15">
+            <span class="text-xs text-red-400">Reset brand profile?</span>
+            <button type="button" [disabled]="clearingProfile"
+              (click)="clearBrandProfile()"
+              class="px-2 py-0.5 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition disabled:opacity-50">
+              <i *ngIf="clearingProfile" class="fas fa-spinner fa-spin mr-0.5"></i>Yes, reset
+            </button>
+            <button type="button" (click)="confirmClear = false" class="text-gray-400 hover:text-gray-200 text-xs">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <p *ngIf="analyzeError" class="mt-3 text-sm text-red-400"><i class="fas fa-exclamation-circle mr-1"></i>{{ analyzeError }}</p>
+    </div>
+
+    <!-- ── EDIT MODE ── -->
+    <div *ngIf="editingProfile" class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-rep-lime/30 p-6 space-y-5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-rep-white"><i class="fas fa-pencil-alt text-rep-lime mr-1.5"></i>Edit Brand Profile</h3>
+        <span class="text-xs text-gray-500">Changes are saved as overrides — re-analysis won't overwrite them.</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Writing Style -->
+        <div>
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Writing Style</label>
+          <input type="text" [(ngModel)]="editProfile.writingStyle" placeholder="e.g. conversational, question-driven"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+        <!-- Emoji Usage -->
+        <div>
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Emoji Usage</label>
+          <select [(ngModel)]="editProfile.emojiUsage"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime">
+            <option value="heavy">Heavy</option>
+            <option value="moderate">Moderate</option>
+            <option value="minimal">Minimal</option>
+            <option value="none">None</option>
+          </select>
+        </div>
+        <!-- Recurring Emojis -->
+        <div>
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Frequent Emojis <span class="normal-case text-gray-400 dark:text-gray-600">(comma-separated)</span></label>
+          <input type="text" [(ngModel)]="editProfile.recurringEmojis" placeholder="fire, sparkles, rocket"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+        <!-- CTA Style -->
+        <div>
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">CTA Style <span class="normal-case text-gray-400 dark:text-gray-600">(comma-separated)</span></label>
+          <input type="text" [(ngModel)]="editProfile.ctaStyle" placeholder="link_in_bio, shop_now"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+        <!-- Personality Descriptors -->
+        <div class="md:col-span-2">
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Personality Traits <span class="normal-case text-gray-400 dark:text-gray-600">(comma-separated)</span></label>
+          <input type="text" [(ngModel)]="editProfile.personalityDescriptors" placeholder="bold, empathetic, modern, inspiring"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+        <!-- Color Palette -->
+        <div class="md:col-span-2">
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Color Palette <span class="normal-case text-gray-400 dark:text-gray-600">(hex codes, comma-separated)</span></label>
+          <input type="text" [(ngModel)]="editProfile.colorPalette" placeholder="#1A1A2E, #E94560, #F5F5F5"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+        <!-- Visual Composition -->
+        <div>
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Visual Composition</label>
+          <input type="text" [(ngModel)]="editProfile.visualComposition" placeholder="minimalist product-focused"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+        <!-- Typography -->
+        <div>
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Typography Style</label>
+          <input type="text" [(ngModel)]="editProfile.typographyStyle" placeholder="bold sans-serif with minimal overlay"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+        <!-- Image Mood -->
+        <div>
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Image Mood</label>
+          <input type="text" [(ngModel)]="editProfile.imageMood" placeholder="bright and airy, warm tones"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+        <!-- Logo Placement -->
+        <div>
+          <label class="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider">Logo Placement</label>
+          <input type="text" [(ngModel)]="editProfile.logoPlacement" placeholder="bottom-right corner"
+            class="w-full mt-1 px-3 py-2 text-sm rounded-lg border bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500 focus:ring-1 focus:ring-rep-lime focus:border-rep-lime" />
+        </div>
+      </div>
+
+      <!-- Edit actions -->
+      <div class="flex gap-3 pt-2 border-t border-gray-200 dark:border-gray-800">
+        <app-button variant="primary" [loading]="savingProfile" (buttonClick)="saveProfileEdits()">
+          <i class="fas fa-save mr-1.5" *ngIf="!savingProfile"></i>Save Changes
+        </app-button>
+        <button type="button" (click)="cancelEditProfile()"
+          class="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <!-- No profile yet -->
+    <div *ngIf="!profile && !editingProfile" class="text-center py-16">
+      <i class="fas fa-chart-pie text-5xl text-gray-600 mb-4"></i>
+      <p class="text-gray-400 text-lg">No brand profile yet</p>
+      <p class="text-gray-500 text-sm mt-1">Sync your social platforms and click "Analyze My Content" to build your brand profile.</p>
+    </div>
+
+    <!-- Profile results (read view) -->
+    <div *ngIf="profile && !editingProfile" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Text Style Card -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-pen-fancy text-rep-lime"></i>
+          <h3 class="text-base font-bold text-rep-white">Writing Style</h3>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Style</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ profile.writingStyle || 'Not detected' }}</p>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Emoji Usage</span>
+            <span class="ml-2 px-2 py-0.5 text-xs rounded-full font-medium"
+              [ngClass]="{
+                'bg-green-500/20 text-green-700 dark:text-green-400': profile.emojiUsage === 'heavy',
+                'bg-blue-500/20 text-blue-700 dark:text-blue-400': profile.emojiUsage === 'moderate',
+                'bg-gray-200 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400': profile.emojiUsage === 'minimal' || profile.emojiUsage === 'none'
+              }"
+            >{{ profile.emojiUsage }}</span>
+          </div>
+          <div *ngIf="profile.recurringEmojis?.length">
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Frequent Emojis</span>
+            <div class="flex flex-wrap gap-1.5 mt-1">
+              <span *ngFor="let e of profile.recurringEmojis" class="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">{{ e }}</span>
+            </div>
+          </div>
+          <div *ngIf="profile.ctaStyle?.length">
+            <span class="text-xs text-gray-500 uppercase tracking-wider">CTA Style</span>
+            <div class="flex flex-wrap gap-1.5 mt-1">
+              <span *ngFor="let c of profile.ctaStyle" class="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">{{ c }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personality Card -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-user-circle text-rep-lime"></i>
+          <h3 class="text-base font-bold text-rep-white">Brand Personality</h3>
+        </div>
+        <div class="space-y-3">
+          <div *ngIf="profile.personalityDescriptors?.length">
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Character Traits</span>
+            <div class="flex flex-wrap gap-2 mt-1.5">
+              <span *ngFor="let d of profile.personalityDescriptors"
+                class="px-2.5 py-1 text-xs rounded-full font-medium bg-rep-lime/15 text-rep-lime border border-rep-lime/30">{{ d }}</span>
+            </div>
+          </div>
+          <div *ngIf="profile.hashtagStrategy?.avgCount">
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Hashtag Strategy</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">~{{ profile.hashtagStrategy.avgCount }} per post</p>
+            <div *ngIf="profile.hashtagStrategy.branded?.length" class="flex flex-wrap gap-1 mt-1">
+              <span *ngFor="let h of profile.hashtagStrategy.branded" class="text-xs text-green-700 dark:text-rep-lime">{{ h }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Style Card -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-eye text-rep-lime"></i>
+          <h3 class="text-base font-bold text-rep-white">Visual Identity</h3>
+        </div>
+        <div class="space-y-3">
+          <div *ngIf="profile.colorPalette?.length">
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Color Palette</span>
+            <div class="flex gap-2 mt-1.5 flex-wrap">
+              <div *ngFor="let c of profile.colorPalette"
+                class="w-10 h-10 rounded-lg border border-gray-700 shadow-sm cursor-default"
+                [style.background-color]="c" [title]="c"></div>
+            </div>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Composition</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ profile.visualComposition || 'Not detected' }}</p>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Typography</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ profile.typographyStyle || 'Not detected' }}</p>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Image Mood</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ profile.imageMood || 'Not detected' }}</p>
+          </div>
+          <div *ngIf="profile.logoPlacement">
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Logo Placement</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ profile.logoPlacement }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metadata Card -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-info-circle text-rep-lime"></i>
+          <h3 class="text-base font-bold text-rep-white">Analysis Info</h3>
+        </div>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Confidence</span>
+            <span class="px-2 py-0.5 text-xs rounded-full font-semibold"
+              [ngClass]="{
+                'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400': profile.confidence === 'high',
+                'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400': profile.confidence === 'medium',
+                'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400': profile.confidence === 'low'
+              }">{{ profile.confidence }}</span>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Posts Analyzed</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ profile.analyzedPostCount }}</p>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Last Analyzed</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ profile.analyzedAt | date:'medium' }}</p>
+          </div>
+          <!-- Override indicator -->
+          <div *ngIf="config?.brandProfileOverrides" class="mt-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30">
+            <p class="text-xs text-amber-400 flex items-center gap-1.5">
+              <i class="fas fa-pencil-alt"></i>
+              Manual overrides are active — these values will take precedence over AI analysis.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: Reference Images ═══════════════ -->
+  <div *ngIf="!loading && config && activeTab === 'references'" class="space-y-6">
+
+    <!-- Upload area -->
+    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-rep-white">Visual Style References</h2>
+          <p class="text-gray-400 text-sm mt-1">Upload images that define your preferred visual style. The AI will match these when generating post images.</p>
+        </div>
+        <div class="text-sm text-gray-400">{{ refTotal }} / {{ refMax }} images</div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="mb-4">
+        <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div class="h-full bg-rep-lime rounded-full transition-all"
+            [style.width.%]="(refTotal / refMax) * 100"></div>
+        </div>
+        <p *ngIf="refTotal < 10" class="text-xs text-amber-400 mt-1.5">
+          <i class="fas fa-info-circle mr-1"></i>Upload at least 10 reference images for best results ({{ 10 - refTotal }} more needed).
+        </p>
+        <p *ngIf="refTotal >= 10" class="text-xs text-green-400 mt-1.5">
+          <i class="fas fa-check-circle mr-1"></i>Great! You have enough reference images for accurate style matching.
+        </p>
+      </div>
+
+      <!-- Upload zone -->
+      <label *ngIf="refTotal < refMax"
+        class="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-rep-lime/60 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition"
+        [class.opacity-50]="refUploading"
+        [class.pointer-events-none]="refUploading"
+      >
+        <i *ngIf="!refUploading" class="fas fa-cloud-upload-alt text-3xl text-gray-400 dark:text-gray-500 mb-2"></i>
+        <i *ngIf="refUploading" class="fas fa-spinner fa-spin text-3xl text-rep-lime mb-2"></i>
+        <span class="text-sm text-gray-600 dark:text-gray-400">{{ refUploading ? 'Uploading...' : 'Drop images here or click to browse' }}</span>
+        <span class="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, WebP (max 10 MB each, up to 5 at a time)</span>
+        <input type="file" class="hidden" accept="image/*" multiple (change)="onRefFilesSelected($event)" [disabled]="refUploading">
+      </label>
+    </div>
+
+    <!-- Style Summary -->
+    <div *ngIf="styleSummary" class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+      <h3 class="text-base font-bold text-rep-white mb-3">
+        <i class="fas fa-swatchbook text-rep-lime mr-1.5"></i>Aggregated Visual Style
+      </h3>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div *ngIf="styleSummary.colorPalette?.length">
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Colors</span>
+          <div class="flex gap-1.5 mt-1.5">
+            <div *ngFor="let c of styleSummary.colorPalette"
+              class="w-8 h-8 rounded border border-gray-700"
+              [style.background-color]="c" [title]="c"></div>
+          </div>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Composition</span>
+          <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.composition || '—' }}</p>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Mood</span>
+          <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.mood || '—' }}</p>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Layout</span>
+          <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.layout || '—' }}</p>
+        </div>
+        <div>
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Text Density</span>
+          <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.textDensity || '—' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Image grid -->
+    <div *ngIf="refLoading" class="flex justify-center py-12">
+      <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+    </div>
+    <div *ngIf="!refLoading && refImages.length" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div *ngFor="let img of refImages" class="group relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900">
+        <img [src]="img.imageUrl" [alt]="img.category" class="w-full aspect-square object-cover" loading="lazy" />
+        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-2">
+          <span *ngIf="img.analysis" class="text-[10px] text-gray-300 text-center leading-tight">
+            {{ img.analysis.mood }}
+          </span>
+          <span class="px-2 py-0.5 text-[10px] rounded bg-gray-700 text-gray-300">{{ img.category }}</span>
+          <button type="button" (click)="deleteRefImage(img._id)"
+            class="px-2 py-1 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition">
+            <i class="fas fa-trash-alt mr-1"></i>Delete
+          </button>
+        </div>
+        <div *ngIf="!img.analysis" class="absolute top-1 right-1">
+          <i class="fas fa-spinner fa-spin text-xs text-rep-lime" title="Analyzing..."></i>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!refLoading && !refImages.length" class="text-center py-12">
+      <i class="fas fa-image text-5xl text-gray-600 mb-4"></i>
+      <p class="text-gray-400">No reference images uploaded yet</p>
     </div>
   </div>
 </div>

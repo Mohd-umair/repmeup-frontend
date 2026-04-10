@@ -58,9 +58,9 @@
       </div>
     </div>
 
-    <div class="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-      <p class="text-gray-500 text-sm">
-        © 2026 RepMeUp. All rights reserved.
+    <div class="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <p class="text-gray-500 text-sm text-center sm:text-left">
+        © 2026 Zero Inequities Private Limited. All rights reserved.
       </p>
       <div class="flex items-center gap-4">
         <button (click)="appearance.toggle()"
@@ -75,7 +75,9 @@
           {{ appearance.isDark() ? 'Light Mode' : 'Dark Mode' }}
         </button>
       </div>
-      <div class="flex flex-wrap gap-5 justify-center">
+      <div
+        class="flex flex-wrap gap-5 justify-center sm:justify-end
+          pr-[max(0px,calc(env(safe-area-inset-right)+5.5rem))] sm:pr-[max(0px,calc(env(safe-area-inset-right)+9.5rem))]">
         <a routerLink="/privacy-policy" class="text-gray-500 hover:text-rep-lime text-xs transition">Privacy Policy</a>
         <a routerLink="/terms-conditions" class="text-gray-500 hover:text-rep-lime text-xs transition">Terms of Service</a>
         <a routerLink="/privacy-policy" fragment="cookies" class="text-gray-500 hover:text-rep-lime text-xs transition">Cookie Policy</a>

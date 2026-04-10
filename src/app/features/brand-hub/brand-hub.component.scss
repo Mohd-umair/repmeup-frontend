@@ -5,3 +5,26 @@
 }
 
 @include theme.light-mode-overrides;
+
+// ── Light mode tab & upload fixes ────────────────────────────────────────────
+:host-context(html:not(.dark)) {
+  // Keep the active tab indicator border visible in light mode
+  .border-gray-900 {
+    border-color: #111827 !important;
+  }
+
+  // Keep active-tab background clearly distinct (light grey pill)
+  .bg-gray-100 {
+    background-color: #f3f4f6 !important;
+  }
+
+  // Upload zone: prevent dark grey on hover
+  .hover\:bg-gray-50:hover {
+    background-color: #f9fafb !important;
+  }
+
+  // Retrain banner readable in light
+  .bg-amber-500\/10 {
+    background-color: rgb(245 158 11 / 0.12) !important;
+  }
+}

@@ -17,6 +17,7 @@ import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
 import { MediaSelectorModalComponent } from '../../../shared/components/media-selector-modal/media-selector-modal.component';
 import { Media } from '../../../core/models/media.model';
 import { Platform } from '../../../core/models/interaction.model';
+import { normalizeTimestampMs } from '../../../core/utils/inbox-bucket-chat-timeline';
 
 /** An in-flight or failed reply injected optimistically into the timeline */
 interface IOptimisticReply {
@@ -758,6 +759,68 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const r = (this.interaction as any).rating ?? this.interaction.metadata?.starRating;
     if (r == null || typeof r !== 'number') return undefined;
     return Math.min(5, Math.max(1, Math.round(r)));
+  }
+
+  /** Detect numeric-ID Instagram URLs that are invalid web addresses. */
+  private isNumericInstagramUrl(url: string): boolean {
+    const m = url.match(/instagram\.com\/p\/([^/?#]+)/);
+    if (!m) return false;
+    return /^\d{14,}$/.test(m[1]);
+  }
+
+  /**
+   * Returns post reference data for comment-type interactions.
+   * Used by the detail view to render a "post card" linking back to the
+   * original post/video that this comment belongs to.
+   */
+  getPostRef(): { title: string | null; url: string } | null {
+    if (!this.interaction || this.interaction.type !== 'comment') return null;
+
+    const m = (this.interaction as any).metadata as Record<string, unknown> | undefined;
+
+    const pickStr = (v: unknown): string | null => {
+      if (!v) return null;
+      const s = String(v).trim();
+      return s.length > 0 ? s : null;
+    };
+
+    const videoIdFromMeta = pickStr(m?.['videoId']);
+    const platform = (this.interaction.platform || '').toLowerCase();
+
+    const rawCandidates = [
+      pickStr(m?.['postUrl']),
+      videoIdFromMeta ? `https://www.youtube.com/watch?v=${videoIdFromMeta}` : null,
+      pickStr((this.interaction as any).platformUrl),
+    ];
+
+    const url = rawCandidates.find(c => {
+      if (!c) return false;
+      if (platform === 'instagram' && this.isNumericInstagramUrl(c)) return false;
+      return true;
+    }) ?? null;
+
+    if (!url) return null;
+
+    const rawCaption = pickStr(m?.['mediaCaption']) || pickStr(m?.['postTitle']);
+    const title =
+      pickStr(m?.['videoTitle']) ||
+      (rawCaption ? rawCaption.slice(0, 80) + (rawCaption.length > 80 ? '…' : '') : null);
+
+    return { title: title || null, url };
+  }
+
+  /** Platform icon class for the post reference card */
+  getPostRefIcon(): string {
+    const map: Record<string, string> = {
+      youtube: 'fa-brands fa-youtube',
+      instagram: 'fa-brands fa-instagram',
+      facebook: 'fa-brands fa-facebook',
+      linkedin: 'fa-brands fa-linkedin',
+      twitter: 'fa-brands fa-x-twitter',
+      x: 'fa-brands fa-x-twitter',
+    };
+    const platform = (this.interaction?.platform || '').toLowerCase();
+    return map[platform] || 'fas fa-link';
   }
 
   getSentimentIcon(sentiment?: string): string {
@@ -1552,7 +1615,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     }
     if (mergedIncoming.length > 0) {
       mergedIncoming.forEach((msg: { mid?: string; text?: string; timestamp?: number; attachmentUrl?: string; attachmentType?: string }) => {
-        const ts = msg.timestamp ? new Date(msg.timestamp) : new Date(this.interaction!.platformCreatedAt);
+        const ts = normalizeTimestampMs(msg.timestamp, new Date(this.interaction!.platformCreatedAt));
         timeline.push({
           type: 'message',
           data: {

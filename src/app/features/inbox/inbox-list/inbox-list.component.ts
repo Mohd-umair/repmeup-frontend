@@ -287,4 +287,68 @@ export class InboxListComponent implements OnInit, OnDestroy {
     }
     return this.appearance.isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
   }
+
+  /**
+   * Instagram numeric-ID URLs (e.g. /p/18104377792903993) are Graph API media IDs,
+   * not valid web shortcode URLs. Detect and discard them so we don't show broken links.
+   */
+  private isNumericInstagramUrl(url: string): boolean {
+    const m = url.match(/instagram\.com\/p\/([^/?#]+)/);
+    if (!m) return false;
+    return /^\d{14,}$/.test(m[1]);
+  }
+
+  /**
+   * Returns post reference data for comment-type interactions so the template
+   * can display a "post chip" linking back to the original post/video.
+   * Covers: YouTube, Instagram, Facebook, LinkedIn, Twitter/X.
+   */
+  getPostRef(interaction: IInteraction): { title: string | null; url: string } | null {
+    if (interaction.type !== 'comment') return null;
+
+    const m = interaction.metadata as Record<string, unknown> | undefined;
+
+    const pickStr = (v: unknown): string | null => {
+      if (!v) return null;
+      const s = String(v).trim();
+      return s.length > 0 ? s : null;
+    };
+
+    // Build the post URL — prefer stored postUrl, fall back to videoId, then platformUrl
+    const videoIdFromMeta = pickStr(m?.['videoId']);
+    const rawCandidates = [
+      pickStr(m?.['postUrl']),
+      videoIdFromMeta ? `https://www.youtube.com/watch?v=${videoIdFromMeta}` : null,
+      pickStr(interaction.platformUrl),
+    ];
+
+    const url = rawCandidates.find(c => {
+      if (!c) return false;
+      if (interaction.platform === 'instagram' && this.isNumericInstagramUrl(c)) return false;
+      return true;
+    }) ?? null;
+
+    if (!url) return null;
+
+    // Build the post title — prefer stored title, then caption excerpt
+    const rawCaption = pickStr(m?.['mediaCaption']) || pickStr(m?.['postTitle']);
+    const title =
+      pickStr(m?.['videoTitle']) ||
+      (rawCaption ? rawCaption.slice(0, 60) + (rawCaption.length > 60 ? '…' : '') : null);
+
+    return { title: title || null, url };
+  }
+
+  /** Platform icon class for the post reference chip */
+  getPostRefIcon(platform: string): string {
+    const map: Record<string, string> = {
+      youtube: 'fa-brands fa-youtube',
+      instagram: 'fa-brands fa-instagram',
+      facebook: 'fa-brands fa-facebook',
+      linkedin: 'fa-brands fa-linkedin',
+      twitter: 'fa-brands fa-x-twitter',
+      x: 'fa-brands fa-x-twitter',
+    };
+    return map[platform?.toLowerCase()] || 'fas fa-link';
+  }
 }

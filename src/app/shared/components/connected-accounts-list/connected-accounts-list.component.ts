@@ -98,15 +98,40 @@ export class ConnectedAccountsListComponent {
   getStatusBadge(status: string): { class: string, label: string, icon: string } {
     switch (status) {
       case 'connected':
-        return { class: 'bg-green-100 text-green-800 border-green-300', label: 'Connected', icon: 'fa-check-circle' };
+        return {
+          class:
+            'bg-green-100 text-green-800 border-green-300 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700',
+          label: 'Connected',
+          icon: 'fa-check-circle'
+        };
       case 'error':
-        return { class: 'bg-red-100 text-red-800 border-red-300', label: 'Error', icon: 'fa-exclamation-circle' };
+        return {
+          class:
+            'bg-red-100 text-red-800 border-red-300 dark:bg-red-950/45 dark:text-red-300 dark:border-red-800',
+          label: 'Error',
+          icon: 'fa-exclamation-circle'
+        };
       case 'token_expired':
-        return { class: 'bg-amber-100 text-amber-800 border-amber-300', label: 'Token Expired', icon: 'fa-clock' };
+        return {
+          class:
+            'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-700',
+          label: 'Token Expired',
+          icon: 'fa-clock'
+        };
       case 'disconnected':
-        return { class: 'bg-gray-100 text-gray-800 border-gray-300', label: 'Disconnected', icon: 'fa-times-circle' };
+        return {
+          class:
+            'bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800/80 dark:text-gray-200 dark:border-gray-600',
+          label: 'Disconnected',
+          icon: 'fa-times-circle'
+        };
       default:
-        return { class: 'bg-gray-100 text-gray-800 border-gray-300', label: status, icon: 'fa-circle' };
+        return {
+          class:
+            'bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800/80 dark:text-gray-200 dark:border-gray-600',
+          label: status,
+          icon: 'fa-circle'
+        };
     }
   }
 

@@ -26,6 +26,7 @@ export interface ICommentToDmSettings {
   confirmationTemplate: string;
   deduplicateDms: boolean;
   maxDmsPerDay: number;
+  defaultProductId?: string | null;
 }
 
 export interface IProductOrder {
