@@ -40,6 +40,243 @@
     </span>
   </div>
 
+  <!-- ── Generation Mode Selector ─────────────────────────────────────── -->
+  <div class="mb-6">
+    <p class="text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-2">Generation Mode</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+
+      <!-- Instant Create -->
+      <button type="button" (click)="selectGenerationMode('instant')"
+        [class]="generationMode === 'instant'
+          ? 'ring-2 ring-rep-lime border-rep-lime bg-rep-lime/5 dark:bg-rep-lime/10'
+          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-600'"
+        class="relative flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-all text-left group">
+        <div [class]="generationMode === 'instant'
+            ? 'bg-rep-lime text-rep-black'
+            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'"
+          class="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">
+          <i class="fas fa-bolt text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p [class]="generationMode === 'instant' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
+            class="text-sm font-semibold leading-tight">Instant Create</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Fast, generic generation — no brand context applied</p>
+        </div>
+        <i *ngIf="generationMode === 'instant'" class="fas fa-circle-check text-rep-lime absolute top-2.5 right-2.5 text-xs"></i>
+      </button>
+
+      <!-- Brand Voice Generation -->
+      <button type="button" (click)="selectGenerationMode('brand-voice')"
+        [class]="generationMode === 'brand-voice'
+          ? 'ring-2 ring-rep-lime border-rep-lime bg-rep-lime/5 dark:bg-rep-lime/10'
+          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-600'"
+        class="relative flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-all text-left group">
+        <div [class]="generationMode === 'brand-voice'
+            ? 'bg-rep-lime text-rep-black'
+            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'"
+          class="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">
+          <i class="fas fa-brain text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p [class]="generationMode === 'brand-voice' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
+            class="text-sm font-semibold leading-tight">Brand Voice</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Uses your AI brand analysis — tone, style &amp; visuals</p>
+          <!-- Status hint when selected -->
+          <ng-container *ngIf="generationMode === 'brand-voice'">
+            <div *ngIf="loadingModeContext" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-400">
+              <i class="fas fa-circle-notch fa-spin text-[9px]"></i> Loading brand data…
+            </div>
+            <div *ngIf="!loadingModeContext && brandVoiceInfo?.hasProfile"
+              class="mt-1.5 flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
+              <i class="fas fa-circle-check text-[9px]"></i>
+              {{ brandVoiceInfo?.confidence | titlecase }} confidence · analysed {{ brandVoiceInfo?.analyzedAt }}
+            </div>
+            <div *ngIf="!loadingModeContext && brandVoiceInfo && !brandVoiceInfo.hasProfile"
+              class="mt-1.5 flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+              <i class="fas fa-triangle-exclamation text-[9px]"></i>
+              No analysis yet —
+              <a routerLink="/app/brand-hub" class="underline font-medium">go to Brand Hub</a>
+            </div>
+          </ng-container>
+        </div>
+        <i *ngIf="generationMode === 'brand-voice'" class="fas fa-circle-check text-rep-lime absolute top-2.5 right-2.5 text-xs"></i>
+      </button>
+
+      <!-- Reference Generation -->
+      <button type="button" (click)="selectGenerationMode('reference')"
+        [class]="generationMode === 'reference'
+          ? 'ring-2 ring-rep-lime border-rep-lime bg-rep-lime/5 dark:bg-rep-lime/10'
+          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-600'"
+        class="relative flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-all text-left group">
+        <div [class]="generationMode === 'reference'
+            ? 'bg-rep-lime text-rep-black'
+            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'"
+          class="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">
+          <i class="fas fa-images text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p [class]="generationMode === 'reference' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
+            class="text-sm font-semibold leading-tight">Reference Images</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Images inspired by your Brand Hub reference uploads</p>
+          <!-- Status hint when selected -->
+          <ng-container *ngIf="generationMode === 'reference'">
+            <div *ngIf="loadingModeContext" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-400">
+              <i class="fas fa-circle-notch fa-spin text-[9px]"></i> Loading references…
+            </div>
+            <div *ngIf="!loadingModeContext && referenceImageCount > 0"
+              class="mt-1.5 flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
+              <i class="fas fa-circle-check text-[9px]"></i>
+              {{ referenceImageCount }} reference image{{ referenceImageCount !== 1 ? 's' : '' }} loaded
+            </div>
+            <div *ngIf="!loadingModeContext && referenceImageCount === 0"
+              class="mt-1.5 flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+              <i class="fas fa-triangle-exclamation text-[9px]"></i>
+              No reference images —
+              <a routerLink="/app/brand-hub" class="underline font-medium">upload in Brand Hub</a>
+            </div>
+          </ng-container>
+        </div>
+        <i *ngIf="generationMode === 'reference'" class="fas fa-circle-check text-rep-lime absolute top-2.5 right-2.5 text-xs"></i>
+      </button>
+
+      <!-- Occasion Templates -->
+      <button type="button" (click)="selectGenerationMode('template')"
+        [class]="generationMode === 'template'
+          ? 'ring-2 ring-rep-lime border-rep-lime bg-rep-lime/5 dark:bg-rep-lime/10'
+          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-600'"
+        class="relative flex items-start gap-3 px-4 py-3.5 rounded-xl border transition-all text-left group">
+        <div [class]="generationMode === 'template'
+            ? 'bg-rep-lime text-rep-black'
+            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700'"
+          class="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">
+          <i class="fas fa-calendar-alt text-sm"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p [class]="generationMode === 'template' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
+            class="text-sm font-semibold leading-tight">Occasion Templates</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Use a Brand Hub template directly or as AI visual reference</p>
+          <ng-container *ngIf="generationMode === 'template'">
+            <div *ngIf="eventTemplatesLoading" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-400">
+              <i class="fas fa-circle-notch fa-spin text-[9px]"></i> Loading templates…
+            </div>
+            <div *ngIf="!eventTemplatesLoading && eventTemplates.length === 0"
+              class="mt-1.5 flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400">
+              <i class="fas fa-triangle-exclamation text-[9px]"></i>
+              No templates —
+              <a routerLink="/app/brand-hub" class="underline font-medium">create in Brand Hub</a>
+            </div>
+            <div *ngIf="!eventTemplatesLoading && eventTemplates.length > 0"
+              class="mt-1.5 flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
+              <i class="fas fa-circle-check text-[9px]"></i>
+              {{ eventTemplates.length }} template{{ eventTemplates.length !== 1 ? 's' : '' }} available
+            </div>
+          </ng-container>
+        </div>
+        <i *ngIf="generationMode === 'template'" class="fas fa-circle-check text-rep-lime absolute top-2.5 right-2.5 text-xs"></i>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ── Template Picker Panel (visible only in template mode) ─────────────── -->
+  <div *ngIf="generationMode === 'template'" class="mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-4">
+
+    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+      <i class="fas fa-calendar-alt text-rep-lime mr-1"></i>Select an Occasion Template
+    </p>
+
+    <!-- Loading -->
+    <div *ngIf="eventTemplatesLoading" class="flex justify-center py-4">
+      <i class="fas fa-spinner fa-spin text-gray-400"></i>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!eventTemplatesLoading && eventTemplates.length === 0" class="py-4 text-center text-sm text-gray-400">
+      No occasion templates yet.
+      <a routerLink="/app/brand-hub" class="text-rep-lime underline font-medium ml-1">Create one in Brand Hub →</a>
+    </div>
+
+    <!-- Template cards grid -->
+    <div *ngIf="!eventTemplatesLoading && eventTemplates.length > 0"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-4 gap-3 mb-4">
+      <button *ngFor="let t of eventTemplates" type="button"
+        (click)="selectEventTemplate(t._id)"
+        class="group relative flex flex-col rounded-xl border overflow-hidden text-left transition"
+        [ngClass]="selectedEventTemplateId === t._id
+          ? 'ring-2 ring-rep-lime border-rep-lime'
+          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'">
+
+        <!-- Thumbnail -->
+        <div class="relative aspect-video bg-gray-100 dark:bg-gray-800">
+          <img *ngIf="t.referenceImageUrl" [src]="t.referenceImageUrl" [alt]="t.name"
+            class="w-full h-full object-cover" loading="lazy" />
+          <div *ngIf="!t.referenceImageUrl" class="w-full h-full flex items-center justify-center">
+            <i class="fas text-3xl text-gray-300 dark:text-gray-600" [ngClass]="getEventIcon(t.eventType)"></i>
+          </div>
+          <i *ngIf="selectedEventTemplateId === t._id"
+            class="fas fa-circle-check absolute top-1.5 right-1.5 text-rep-lime text-sm drop-shadow"></i>
+        </div>
+
+        <!-- Info -->
+        <div class="px-2.5 py-2 flex-1 bg-white dark:bg-gray-900/80">
+          <p class="text-xs font-semibold truncate"
+            [ngClass]="selectedEventTemplateId === t._id ? 'text-rep-lime' : 'text-gray-800 dark:text-gray-200'">{{ t.name }}</p>
+          <p *ngIf="t.sampleCaption" class="text-[10px] text-gray-400 dark:text-gray-500 truncate mt-0.5 italic">"{{ t.sampleCaption }}"</p>
+          <div *ngIf="!t.sampleCaption" class="text-[10px] text-gray-400 dark:text-gray-600 mt-0.5">No caption set</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- Use mode toggle (visible once a template is selected) -->
+    <div *ngIf="selectedEventTemplateId" class="mt-1 rounded-xl border border-rep-lime/30 bg-rep-lime/5 dark:bg-rep-lime/5 p-4 space-y-3">
+      <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">How would you like to use this template?</p>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+
+        <!-- Use same template -->
+        <button type="button" (click)="templateUseMode = 'direct'"
+          class="flex-1 flex items-start gap-3 px-4 py-3 rounded-xl border transition text-left"
+          [ngClass]="templateUseMode === 'direct'
+            ? 'ring-2 ring-rep-lime border-rep-lime bg-rep-lime/10 dark:bg-rep-lime/10'
+            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/60 hover:border-gray-300 dark:hover:border-gray-600'">
+          <div [ngClass]="templateUseMode === 'direct' ? 'bg-rep-lime text-rep-black' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+            class="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">
+            <i class="fas fa-copy text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p [ngClass]="templateUseMode === 'direct' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
+              class="text-sm font-semibold leading-tight">Use Same Template</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Use the template's caption, hashtags, and CTA directly as your post — no AI text generation</p>
+            <div *ngIf="selectedEventTemplate?.sampleCaption" class="mt-1.5 p-2 rounded-lg bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700">
+              <p class="text-[10px] text-gray-500 dark:text-gray-400 italic line-clamp-2">"{{ selectedEventTemplate?.sampleCaption }}"</p>
+            </div>
+          </div>
+          <i *ngIf="templateUseMode === 'direct'" class="fas fa-circle-check text-rep-lime text-xs flex-shrink-0 mt-1"></i>
+        </button>
+
+        <!-- Use as reference -->
+        <button type="button" (click)="templateUseMode = 'reference'"
+          class="flex-1 flex items-start gap-3 px-4 py-3 rounded-xl border transition text-left"
+          [ngClass]="templateUseMode === 'reference'
+            ? 'ring-2 ring-rep-lime border-rep-lime bg-rep-lime/10 dark:bg-rep-lime/10'
+            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/60 hover:border-gray-300 dark:hover:border-gray-600'">
+          <div [ngClass]="templateUseMode === 'reference' ? 'bg-rep-lime text-rep-black' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'"
+            class="mt-0.5 flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">
+            <i class="fas fa-wand-magic-sparkles text-sm"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p [ngClass]="templateUseMode === 'reference' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
+              class="text-sm font-semibold leading-tight">Generate with AI</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">AI generates new text guided by the template's tone and visual style — add your topic in Step 3</p>
+          </div>
+          <i *ngIf="templateUseMode === 'reference'" class="fas fa-circle-check text-rep-lime text-xs flex-shrink-0 mt-1"></i>
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+
   <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
     <!-- ── LEFT: Wizard Steps ──────────────────────────────────────────── -->
@@ -217,78 +454,84 @@
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-gray-900 dark:text-gray-100">Details &amp; Style</p>
               <p class="text-[10px] text-gray-500 dark:text-gray-500 truncate">
-                {{ topic.trim() ? '"' + topic.trim().slice(0,30) + (topic.trim().length>30?'…':'') + '"' : 'What\'s your post about?' }}
+                {{ topic.trim() ? '"' + topic.trim().slice(0,40) + (topic.trim().length>40?'…':'') + '"' : 'Describe what your post should be about' }}
               </p>
             </div>
           </div>
 
           <div *ngIf="currentStep === 3" class="px-4 pb-4 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-3">
 
-            <!-- Topic -->
+            <!-- Prompt / Topic -->
             <div>
               <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1.5">
-                Topic <span class="text-red-500 dark:text-red-400">*</span>
+                <ng-container *ngIf="generationMode === 'template' && templateUseMode === 'direct'; else promptLabel">
+                  Additional Notes <span class="text-gray-400 dark:text-gray-600 font-normal">(optional)</span>
+                </ng-container>
+                <ng-template #promptLabel>
+                  Describe your post <span class="text-red-500 dark:text-red-400">*</span>
+                </ng-template>
               </label>
-              <input type="text" [(ngModel)]="topic" placeholder="What's the post about?"
-                class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 placeholder-gray-500 rounded-lg
-                       focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm
-                       dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-500" />
+              <textarea [(ngModel)]="topic" rows="4"
+                [placeholder]="generationMode === 'template' && templateUseMode === 'direct'
+                  ? 'Any extra context for the template...'
+                  : 'e.g. Launching our new product line this summer — minimal, bold visuals, target young professionals'"
+                class="w-full px-3 py-2 bg-white border border-gray-300 text-gray-900 placeholder-gray-400 rounded-lg
+                       focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm resize-none
+                       dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:placeholder-gray-500"></textarea>
             </div>
 
-            <!-- Event Template (Optional) -->
-            <div>
-              <button type="button" (click)="showEventPanel = !showEventPanel"
-                class="flex items-center gap-1.5 text-xs font-medium transition mb-1.5"
-                [class.text-rep-lime]="showEventPanel || selectedEventTemplateId"
-                [class.text-gray-500]="!showEventPanel && !selectedEventTemplateId"
-                [class.dark:text-gray-400]="!showEventPanel && !selectedEventTemplateId">
-                <i class="fas" [class.fa-calendar-star]="true"></i>
-                Seasonal / Event Post
-                <i class="fas fa-chevron-down text-[9px] transition" [class.rotate-180]="showEventPanel"></i>
-              </button>
-              <div *ngIf="showEventPanel" class="mt-1 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 space-y-2">
-                <div *ngIf="eventTemplatesLoading" class="text-center py-2">
-                  <i class="fas fa-spinner fa-spin text-gray-400"></i>
-                </div>
-                <div *ngIf="!eventTemplatesLoading && eventTemplates.length" class="flex flex-wrap gap-1.5">
-                  <button *ngFor="let t of eventTemplates" type="button"
-                    (click)="selectEventTemplate(t._id)"
-                    class="flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition border"
-                    [class.bg-rep-lime]="selectedEventTemplateId === t._id"
-                    [class.text-rep-black]="selectedEventTemplateId === t._id"
-                    [class.border-rep-lime]="selectedEventTemplateId === t._id"
-                    [class.bg-white]="selectedEventTemplateId !== t._id"
-                    [class.dark:bg-gray-700]="selectedEventTemplateId !== t._id"
-                    [class.text-gray-600]="selectedEventTemplateId !== t._id"
-                    [class.dark:text-gray-300]="selectedEventTemplateId !== t._id"
-                    [class.border-gray-200]="selectedEventTemplateId !== t._id"
-                    [class.dark:border-gray-600]="selectedEventTemplateId !== t._id">
-                    <i class="fas" [ngClass]="getEventIcon(t.eventType)"></i>
-                    {{ t.name }}
-                  </button>
-                </div>
-                <div *ngIf="!eventTemplatesLoading && !eventTemplates.length" class="text-xs text-gray-400">
-                  No event templates yet. Create one below.
-                </div>
-                <details class="mt-1">
-                  <summary class="text-[11px] text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                    + Create new event template
-                  </summary>
-                  <div class="mt-2 space-y-1.5">
-                    <select [(ngModel)]="newEventType"
-                      class="w-full px-2 py-1 text-xs rounded border bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
-                      <option *ngFor="let o of eventTypeOptions" [value]="o.id">{{ o.label }}</option>
-                    </select>
-                    <input type="text" [(ngModel)]="newEventName" placeholder="Template name"
-                      class="w-full px-2 py-1 text-xs rounded border bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 placeholder-gray-400" />
-                    <input #eventFileInput type="file" accept="image/*" class="text-[10px] text-gray-400" />
-                    <button type="button" (click)="createEventTemplate(eventFileInput)"
-                      [disabled]="!newEventName.trim() || eventCreating"
-                      class="w-full px-2 py-1 text-xs rounded bg-rep-lime text-rep-black font-medium hover:opacity-90 disabled:opacity-50 transition">
-                      {{ eventCreating ? 'Creating...' : 'Create Template' }}
-                    </button>
-                  </div>
-                </details>
+            <!-- How many variants? (hidden for direct template mode and video) -->
+            <div *ngIf="contentType !== 'text-video' && !(generationMode === 'template' && templateUseMode === 'direct')">
+              <label class="block text-xs font-medium text-gray-600 dark:text-gray-500 mb-1.5">
+                How many variants?
+                <span class="ml-1.5 text-[10px] font-normal text-amber-600 dark:text-amber-400">
+                  <i class="fas fa-coins text-[9px]"></i> More variants = More credits
+                </span>
+              </label>
+              <div class="flex gap-1.5">
+                <button *ngFor="let n of variantCountOptions" type="button"
+                  (click)="customVariantCount = n"
+                  [ngClass]="customVariantCount === n
+                    ? 'bg-rep-lime text-rep-black shadow-sm'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'"
+                  class="w-9 h-9 rounded-lg text-sm font-bold transition flex items-center justify-center">
+                  {{ n }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Include people in design? (only for image-enabled content types, not direct template) -->
+            <div *ngIf="contentType !== 'text' && contentType !== 'text-video' && !(generationMode === 'template' && templateUseMode === 'direct')"
+              class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 p-3 space-y-2.5">
+              <p class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                <i class="fas fa-users text-rep-lime mr-1.5"></i>Include people in the design?
+              </p>
+              <div class="flex gap-2">
+                <button type="button" (click)="includePeople = true"
+                  [ngClass]="includePeople === true
+                    ? 'bg-rep-lime text-rep-black shadow-sm'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600'"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                  <i class="fas fa-check text-[10px]"></i> Yes
+                </button>
+                <button type="button" (click)="includePeople = false; peopleNationality = ''"
+                  [ngClass]="includePeople === false
+                    ? 'bg-rep-lime text-rep-black shadow-sm'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600'"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                  <i class="fas fa-xmark text-[10px]"></i> No
+                </button>
+              </div>
+              <!-- Nationality input (shown when Yes is selected) -->
+              <div *ngIf="includePeople === true">
+                <label class="block text-[10px] text-gray-500 dark:text-gray-500 mb-1">
+                  Nationality / Ethnicity <span class="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <input type="text" [(ngModel)]="peopleNationality"
+                  placeholder="e.g. South Asian, Middle Eastern, Latin American…"
+                  class="w-full px-3 py-1.5 text-sm rounded-lg border focus:ring-1 focus:ring-rep-lime focus:border-rep-lime
+                         bg-white border-gray-300 text-gray-900 placeholder-gray-400
+                         dark:bg-gray-800/80 dark:border-gray-600 dark:text-gray-200 dark:placeholder-gray-500" />
               </div>
             </div>
 
@@ -326,35 +569,9 @@
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="includeImage"
                   [disabled]="contentType !== 'text-image' && contentType !== 'image-layover'"
-                  class="w-4 h-4 text-purple-500 border-gray-300 rounded focus:ring-purple-500/20 disabled:opacity-40 dark:border-gray-700" />
+                  class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 disabled:opacity-40 dark:text-rep-lime dark:focus:ring-rep-lime/20 dark:border-gray-700" />
                 <span class="text-sm text-gray-700 dark:text-gray-300">Generate images</span>
-                <span class="text-xs text-purple-400 font-medium px-1.5 py-0.5 bg-purple-500/10 border border-purple-500/20 rounded-full">AI</span>
               </label>
-
-              <!-- Image format selector -->
-              <div *ngIf="includeImage" class="mt-2">
-                <div class="rounded-xl border border-purple-200/90 bg-purple-50/90 dark:border-purple-500/25 dark:bg-purple-500/5 p-3 space-y-2">
-                  <div class="flex items-center gap-1.5 mb-1">
-                    <i class="fas fa-magic text-[10px] text-purple-600 dark:text-purple-400"></i>
-                    <span class="text-xs font-semibold text-purple-900 dark:text-purple-300">AI Image Generation</span>
-                  </div>
-                  <p class="text-[10px] text-gray-600 dark:text-gray-500 leading-snug -mt-1">
-                    Visual style is automatically matched to your brand profile from Brand Hub.
-                  </p>
-                  <div>
-                    <label class="block text-[10px] text-gray-700 dark:text-gray-500 mb-1.5 font-medium">Format</label>
-                    <div class="grid grid-cols-4 gap-1">
-                      <button *ngFor="let f of formatOptions" type="button"
-                        (click)="imageConfig.format = f.id"
-                        [class]="imageConfig.format === f.id
-                          ? 'border-purple-600 bg-purple-100 text-purple-950 dark:border-purple-400 dark:bg-purple-500/20 dark:text-purple-200'
-                          : 'border-gray-300 bg-white text-gray-800 hover:border-purple-400 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-400 dark:hover:border-purple-500/40'"
-                        class="py-1.5 rounded-lg border text-[10px] font-semibold transition text-center"
-                        [title]="f.tooltip">{{ f.label }}</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               <!-- Video config panel -->
               <div *ngIf="includeVideo" class="mt-2">
@@ -561,11 +778,13 @@
 
             <!-- Generate button -->
             <app-button variant="primary" fullWidth [loading]="generating"
-        [disabled]="!topic.trim() || selectedPlatformIds.length === 0"
+              [disabled]="selectedPlatformIds.length === 0 ||
+                (generationMode === 'template' && templateUseMode === 'direct' ? !selectedEventTemplateId : !topic.trim())"
               (buttonClick)="generateVariants()">
-              <i class="fas fa-wand-magic-sparkles mr-2"></i>
-              Generate {{ variantCount === 1 ? '1 Variant' : variantCount + ' Variants' }}
-      </app-button>
+              <i class="fas fa-wand-magic-sparkles mr-2" *ngIf="!(generationMode === 'template' && templateUseMode === 'direct')"></i>
+              <i class="fas fa-copy mr-2" *ngIf="generationMode === 'template' && templateUseMode === 'direct'"></i>
+              {{ generationMode === 'template' && templateUseMode === 'direct' ? 'Use Template' : ('Generate ' + (variantCount === 1 ? '1 Variant' : variantCount + ' Variants')) }}
+            </app-button>
 
             <!-- Hint -->
             <p class="text-[10px] text-center text-gray-500 dark:text-gray-600 leading-snug">
@@ -633,7 +852,12 @@
         <div class="w-16 h-16 rounded-xl bg-white border border-gray-200 dark:bg-gray-900/50 dark:border-gray-800 flex items-center justify-center shadow-sm dark:shadow-none">
           <i class="fas fa-layer-group text-2xl text-gray-400 dark:text-gray-600"></i>
         </div>
-        <p class="text-sm text-gray-600 dark:text-gray-500">Set a topic and hit <strong class="text-gray-900 dark:text-gray-300">Generate Variants</strong></p>
+        <p class="text-sm text-gray-600 dark:text-gray-500">
+          <ng-container *ngIf="generationMode === 'template' && templateUseMode === 'direct'; else defaultHint">
+            Select a template above and hit <strong class="text-gray-900 dark:text-gray-300">Use Template</strong>
+          </ng-container>
+          <ng-template #defaultHint>Set a topic and hit <strong class="text-gray-900 dark:text-gray-300">Generate Variants</strong></ng-template>
+        </p>
       </div>
 
       <!-- Variant Cards -->

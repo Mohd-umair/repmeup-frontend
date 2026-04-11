@@ -2,8 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { BrandConfigService, IBrandConfig, IBrandProfile, IBrandReferenceImage, IVisualStyleSummary } from '../../core/services/brand-config.service';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { environment } from '../../../environments/environment';
 
 const TONE_OPTIONS = [
   'professional',
@@ -14,6 +16,42 @@ const TONE_OPTIONS = [
   'inspirational',
   'neutral'
 ];
+
+export const EVENT_TYPE_OPTIONS = [
+  { id: 'christmas', label: 'Christmas', icon: 'fa-tree' },
+  { id: 'new_year', label: 'New Year', icon: 'fa-champagne-glasses' },
+  { id: 'eid', label: 'Eid', icon: 'fa-moon' },
+  { id: 'ramadan', label: 'Ramadan', icon: 'fa-star-and-crescent' },
+  { id: 'diwali', label: 'Diwali', icon: 'fa-fire' },
+  { id: 'national_day', label: 'National Day', icon: 'fa-flag' },
+  { id: 'black_friday', label: 'Black Friday', icon: 'fa-tags' },
+  { id: 'cyber_monday', label: 'Cyber Monday', icon: 'fa-laptop' },
+  { id: 'valentines', label: "Valentine's", icon: 'fa-heart' },
+  { id: 'mothers_day', label: "Mother's Day", icon: 'fa-heart' },
+  { id: 'fathers_day', label: "Father's Day", icon: 'fa-user' },
+  { id: 'halloween', label: 'Halloween', icon: 'fa-ghost' },
+  { id: 'thanksgiving', label: 'Thanksgiving', icon: 'fa-wheat-awn' },
+  { id: 'custom', label: 'Custom', icon: 'fa-calendar-plus' }
+];
+
+export interface IOccasionTemplate {
+  _id: string;
+  name: string;
+  eventType: string;
+  referenceImageUrl: string | null;
+  sampleCaption: string;
+  hashtags: string[];
+  cta: string;
+  eventStyle: {
+    dominantColors?: string[];
+    decorativeElements?: string[];
+    typography?: string;
+    layoutPattern?: string;
+    mood?: string;
+  } | null;
+  isActive: boolean;
+  createdAt: string;
+}
 
 @Component({
   selector: 'app-brand-hub',
@@ -38,7 +76,8 @@ export class BrandHubComponent implements OnInit {
 
   analyzing = false;
   analyzeError = '';
-  activeTab: 'settings' | 'profile' | 'references' = 'settings';
+  activeTab: 'settings' | 'profile' | 'references' | 'occasions' = 'settings';
+  eventTypeOptions = EVENT_TYPE_OPTIONS;
 
   // Edit profile state
   editingProfile = false;
@@ -54,7 +93,20 @@ export class BrandHubComponent implements OnInit {
   refUploading = false;
   styleSummary: IVisualStyleSummary | null = null;
 
-  constructor(private brandConfig: BrandConfigService) {}
+  // ─── Occasions ───────────────────────────────────────────
+  occasionTemplates: IOccasionTemplate[] = [];
+  loadingOccasions = false;
+  savingOccasion = false;
+  deletingOccasionId: string | null = null;
+  selectedOccasion: IOccasionTemplate | null = null;
+  showOccasionPanel = false;
+  occasionDraft: Partial<IOccasionTemplate> & { hashtagsInput?: string } = {};
+  occasionDraftFile: File | null = null;
+  occasionDraftPreview: string | null = null;
+  occasionPanelMode: 'create' | 'edit' = 'create';
+  private _occasionsLoaded = false;
+
+  constructor(private brandConfig: BrandConfigService, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.load();
@@ -317,5 +369,122 @@ export class BrandHubComponent implements OnInit {
       },
       error: () => { this.clearingProfile = false; }
     });
+  }
+
+  // ─── Occasion Templates ──────────────────────────────────
+  onOccasionTabActivated(): void {
+    if (!this._occasionsLoaded) {
+      this.loadOccasions();
+    }
+  }
+
+  loadOccasions(): void {
+    this.loadingOccasions = true;
+    this.http.get<{ success: boolean; data: IOccasionTemplate[] }>(`${environment.apiUrl}/event-templates`).subscribe({
+      next: (res) => {
+        this.occasionTemplates = res.data || [];
+        this.loadingOccasions = false;
+        this._occasionsLoaded = true;
+      },
+      error: () => { this.loadingOccasions = false; }
+    });
+  }
+
+  openCreateOccasion(): void {
+    this.occasionPanelMode = 'create';
+    this.occasionDraft = { eventType: 'custom', name: '', sampleCaption: '', cta: '', hashtags: [], hashtagsInput: '' };
+    this.occasionDraftFile = null;
+    this.occasionDraftPreview = null;
+    this.selectedOccasion = null;
+    this.showOccasionPanel = true;
+  }
+
+  openEditOccasion(tpl: IOccasionTemplate): void {
+    this.occasionPanelMode = 'edit';
+    this.selectedOccasion = tpl;
+    this.occasionDraft = {
+      ...tpl,
+      hashtagsInput: (tpl.hashtags || []).join(', ')
+    };
+    this.occasionDraftFile = null;
+    this.occasionDraftPreview = null;
+    this.showOccasionPanel = true;
+  }
+
+  closeOccasionPanel(): void {
+    this.showOccasionPanel = false;
+    this.selectedOccasion = null;
+    this.occasionDraft = {};
+    this.occasionDraftFile = null;
+    this.occasionDraftPreview = null;
+  }
+
+  onOccasionImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.occasionDraftFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => { this.occasionDraftPreview = e.target?.result as string; };
+    reader.readAsDataURL(file);
+  }
+
+  saveOccasion(): void {
+    if (!this.occasionDraft.name || !this.occasionDraft.eventType) return;
+    this.savingOccasion = true;
+    const hashtagsArr = (this.occasionDraft.hashtagsInput || '')
+      .split(',').map(h => h.trim()).filter(Boolean);
+
+    const fd = new FormData();
+    fd.append('name', this.occasionDraft.name || '');
+    fd.append('eventType', this.occasionDraft.eventType || 'custom');
+    fd.append('sampleCaption', this.occasionDraft.sampleCaption || '');
+    fd.append('hashtags', JSON.stringify(hashtagsArr));
+    fd.append('cta', this.occasionDraft.cta || '');
+    if (this.occasionDraftFile) fd.append('referenceImage', this.occasionDraftFile);
+
+    if (this.occasionPanelMode === 'create') {
+      this.http.post<{ success: boolean; data: IOccasionTemplate }>(`${environment.apiUrl}/event-templates`, fd).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.occasionTemplates = [res.data, ...this.occasionTemplates];
+            this.closeOccasionPanel();
+          }
+          this.savingOccasion = false;
+        },
+        error: () => { this.savingOccasion = false; }
+      });
+    } else if (this.selectedOccasion) {
+      this.http.put<{ success: boolean; data: IOccasionTemplate }>(`${environment.apiUrl}/event-templates/${this.selectedOccasion._id}`, fd).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.occasionTemplates = this.occasionTemplates.map(t => t._id === res.data._id ? res.data : t);
+            this.closeOccasionPanel();
+          }
+          this.savingOccasion = false;
+        },
+        error: () => { this.savingOccasion = false; }
+      });
+    }
+  }
+
+  deleteOccasion(id: string): void {
+    this.deletingOccasionId = id;
+    this.http.delete<{ success: boolean }>(`${environment.apiUrl}/event-templates/${id}`).subscribe({
+      next: () => {
+        this.occasionTemplates = this.occasionTemplates.filter(t => t._id !== id);
+        if (this.selectedOccasion?._id === id) this.closeOccasionPanel();
+        this.deletingOccasionId = null;
+      },
+      error: () => { this.deletingOccasionId = null; }
+    });
+  }
+
+  getEventTypeLabel(eventType: string): string {
+    return EVENT_TYPE_OPTIONS.find(o => o.id === eventType)?.label || eventType;
+  }
+
+  getEventTypeIcon(eventType: string): string {
+    return EVENT_TYPE_OPTIONS.find(o => o.id === eventType)?.icon || 'fa-calendar';
   }
 }

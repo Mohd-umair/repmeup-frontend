@@ -19,6 +19,9 @@ export interface EventTemplateItem {
   name: string;
   eventType: string;
   referenceImageUrl: string | null;
+  sampleCaption?: string;
+  hashtags?: string[];
+  cta?: string;
   eventStyle: {
     dominantColors?: string[];
     decorativeElements?: string[];
@@ -91,6 +94,13 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   contentMode: 'ai' | 'custom' = 'ai';
   postFormat: 'post' | 'story' | 'reel' | 'video' | 'short' = 'post';
   contentType: 'text' | 'text-image' | 'text-video' | 'image-layover' = 'text';
+
+  // ─── Generation Mode (4-tab selector) ────────────────────────────────────────
+  generationMode: 'instant' | 'brand-voice' | 'reference' | 'template' = 'instant';
+  brandVoiceInfo: { confidence: string; analyzedAt: string | null; hasProfile: boolean } | null = null;
+  referenceImageCount = 0;
+  loadingModeContext = false;
+  templateUseMode: 'direct' | 'reference' = 'reference';
 
   // ─── Wizard Step State ───────────────────────────────────────────────────────
   currentStep = 1;
@@ -317,13 +327,6 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.closeImagePicker();
   }
 
-  formatOptions = [
-    { id: 'square',    label: '1:1',  tooltip: 'Square — Instagram' },
-    { id: 'portrait',  label: '4:5',  tooltip: 'Portrait — IG Feed' },
-    { id: 'landscape', label: '16:9', tooltip: 'Landscape — LinkedIn' },
-    { id: 'story',     label: '9:16', tooltip: 'Story / Reel' }
-  ];
-
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
   intentOptions: { value: string; label: string }[] = [
@@ -432,6 +435,58 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       });
   }
 
+  selectGenerationMode(mode: 'instant' | 'brand-voice' | 'reference' | 'template'): void {
+    if (this.generationMode === mode) return;
+    this.generationMode = mode;
+    // Reset wizard when switching modes
+    this.variants = [];
+    this.editedContent = '';
+    this.selectedTextIndex = 0;
+    this.selectedImageIndex = null;
+    this.selectedVideoIndex = null;
+    this.showWizardSummary = false;
+    this.completedSteps = new Set<number>();
+    this.currentStep = 1;
+    if (mode === 'template') {
+      // Load templates if not yet loaded
+      if (!this.eventTemplates.length && !this.eventTemplatesLoading) {
+        this.loadEventTemplates();
+      }
+      this.selectedEventTemplateId = null;
+      this.templateUseMode = 'reference';
+    } else if (mode !== 'instant') {
+      this.loadModeContextData();
+    }
+  }
+
+  loadModeContextData(): void {
+    this.loadingModeContext = true;
+    this.http.get<any>(`${environment.apiUrl}/brand-config`)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          const cfg = res.data || res;
+          const bp = cfg?.brandProfile;
+          this.brandVoiceInfo = {
+            hasProfile: !!(bp?.analyzedAt),
+            confidence: bp?.confidence || 'low',
+            analyzedAt: bp?.analyzedAt ? new Date(bp.analyzedAt).toLocaleDateString() : null
+          };
+        },
+        error: () => { this.brandVoiceInfo = { hasProfile: false, confidence: 'low', analyzedAt: null }; }
+      });
+
+    this.http.get<any>(`${environment.apiUrl}/brand-config/reference-images`)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.referenceImageCount = res.total ?? res.data?.length ?? 0;
+          this.loadingModeContext = false;
+        },
+        error: () => { this.referenceImageCount = 0; this.loadingModeContext = false; }
+      });
+  }
+
   togglePlatform(id: string): void {
     this.selectedPlatformIds = this.selectedPlatformIds.includes(id)
       ? this.selectedPlatformIds.filter(p => p !== id)
@@ -480,15 +535,30 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.router.navigate(['/app/publish']);
   }
 
+  // ─── Variant count (user-configurable) ───────────────────────────────────────
+  customVariantCount = 3;
+  variantCountOptions = [1, 2, 3, 4, 5];
+
+  // ─── Include people in design ─────────────────────────────────────────────────
+  includePeople: boolean | null = null;
+  peopleNationality = '';
+
   get variantCount(): number {
-    return this.contentType === 'text-video' ? 1 : 3;
+    return this.contentType === 'text-video' ? 1 : this.customVariantCount;
   }
 
   // ─── Generation ────────────────────────────────────────────────────────────
 
   generateVariants(): void {
-    if (!this.topic.trim() || this.selectedPlatformIds.length === 0) return;
-    this.generating = true;
+    const isTemplateDirectMode = this.generationMode === 'template' && this.templateUseMode === 'direct';
+    const isTemplatePlatformValid = this.selectedPlatformIds.length > 0;
+    // In direct template mode, topic is optional; a selected template is required
+    if (isTemplateDirectMode) {
+      if (!this.selectedEventTemplateId || !isTemplatePlatformValid) return;
+    } else {
+      if (!this.topic.trim() || !isTemplatePlatformValid) return;
+    }
+
     this.generatingImages = false;
     this.generatingVideos = false;
     this.variants = [];
@@ -501,17 +571,51 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.allDraftsSaved = false;
     this.allDraftsSavedCount = 0;
 
+    // ── Direct template mode: use template content + reference image as-is, no AI calls ──
+    if (isTemplateDirectMode && this.selectedEventTemplate) {
+      this.generating = true;
+      const tpl = this.selectedEventTemplate;
+      const hashtagStr = (tpl.hashtags || []).map(h => h.startsWith('#') ? h : '#' + h).join(' ');
+      const parts = [tpl.sampleCaption, hashtagStr, tpl.cta].filter(Boolean);
+      const content = parts.join('\n\n');
+      // Use the template's own reference image directly — no AI image generation
+      this.variants = [{
+        content,
+        imageUrl: tpl.referenceImageUrl || undefined,
+        loadingImage: false,
+        loadingVideo: false
+      }];
+      this.selectedTextIndex = 0;
+      this.editedContent = content;
+      if (tpl.referenceImageUrl) {
+        this.selectedImageIndex = 0;
+      }
+      this.completedSteps.add(3);
+      this.completedSteps.add(4);
+      this.showWizardSummary = true;
+      this.generating = false;
+      // No AI image or video generation — template content is used directly
+      return;
+    }
+
+    this.generating = true;
+
+    // Resolve the effective API generation mode for template reference usage
+    const apiGenerationMode = this.generationMode === 'template' ? 'instant' : this.generationMode;
+
     this.http.post<{ success: boolean; data: { variants: VariantItem[] } }>(
       `${environment.apiUrl}/posts/generate-variants`,
       {
-        topic: this.topic.trim(),
+        topic: this.topic.trim() || (this.selectedEventTemplate?.name ?? ''),
         platforms: this.selectedPlatformIds,
         count: this.variantCount,
         audience: this.audience.trim(),
         intent: this.intent || undefined,
         includeTrend: this.includeTrend,
         postFormat: this.postFormat,
-        contentType: this.contentType
+        contentType: this.contentType,
+        generationMode: apiGenerationMode,
+        eventTemplateId: this.selectedEventTemplateId || undefined
       }
     ).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
@@ -537,7 +641,8 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   fetchImagesForVariants(): void {
     this.generatingImages = true;
-    const topic = this.topic.trim();
+    const topic = this.topic.trim() || (this.selectedEventTemplate?.name ?? '');
+    const apiGenerationMode = this.generationMode === 'template' ? 'reference' : this.generationMode;
     this.variants.forEach(v => { v.loadingImage = true; v.imageError = null; v.savedToLibrary = false; });
     let completed = 0;
 
@@ -547,9 +652,13 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
         {
           topic, variantContent: v.content, imageConfig: this.imageConfig, variantIndex: idx,
           contentType: this.contentType,
+          generationMode: apiGenerationMode,
           logoOverlay: this.logoOverlay && !!this.orgLogo,
           logoPosition: this.logoPosition,
-          logoUrl: this.logoOverlay ? (this.orgLogo || undefined) : undefined
+          logoUrl: this.logoOverlay ? (this.orgLogo || undefined) : undefined,
+          eventTemplateId: this.selectedEventTemplateId || undefined,
+          includePeople: this.includePeople === true,
+          peopleNationality: this.includePeople === true ? (this.peopleNationality.trim() || undefined) : undefined
         }
       ).pipe(takeUntil(this.destroy$)).subscribe({
         next: (res) => {
@@ -573,15 +682,21 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.variants[idx].loadingImage = true;
     this.variants[idx].imageError = null;
     this.variants[idx].savedToLibrary = false;
+    const apiGenerationMode = this.generationMode === 'template' ? 'reference' : this.generationMode;
     this.http.post<{ success: boolean; imageUrl: string; savedToLibrary?: boolean }>(
       `${environment.apiUrl}/posts/generate-variant-image`,
       {
-        topic: this.topic.trim(), variantContent: this.variants[idx].content,
+        topic: this.topic.trim() || (this.selectedEventTemplate?.name ?? ''),
+        variantContent: this.variants[idx].content,
         imageConfig: this.imageConfig, variantIndex: idx,
         contentType: this.contentType,
+        generationMode: apiGenerationMode,
         logoOverlay: this.logoOverlay && !!this.orgLogo,
         logoPosition: this.logoPosition,
-        logoUrl: this.logoOverlay ? (this.orgLogo || undefined) : undefined
+        logoUrl: this.logoOverlay ? (this.orgLogo || undefined) : undefined,
+        eventTemplateId: this.selectedEventTemplateId || undefined,
+        includePeople: this.includePeople === true,
+        peopleNationality: this.includePeople === true ? (this.peopleNationality.trim() || undefined) : undefined
       }
     ).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {

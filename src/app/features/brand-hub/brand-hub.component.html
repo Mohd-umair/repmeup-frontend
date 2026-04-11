@@ -51,6 +51,17 @@
       <i class="fas fa-images mr-1.5"></i>Reference Images
       <span *ngIf="refTotal" class="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300">{{ refTotal }}/{{ refMax }}</span>
     </button>
+    <button
+      type="button"
+      (click)="activeTab = 'occasions'; onOccasionTabActivated()"
+      class="px-4 py-2.5 text-sm font-medium transition border-b-2 -mb-px"
+      [ngClass]="activeTab === 'occasions'
+        ? 'border-gray-900 dark:border-rep-lime text-gray-900 dark:text-rep-lime bg-gray-100 dark:bg-gray-800'
+        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'"
+    >
+      <i class="fas fa-calendar-alt mr-1.5"></i>Occasion Templates
+      <span *ngIf="occasionTemplates.length" class="ml-1.5 px-1.5 py-0.5 text-[10px] rounded-full bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300">{{ occasionTemplates.length }}</span>
+    </button>
   </div>
 
   <div *ngIf="loading" class="flex justify-center py-12">
@@ -546,6 +557,182 @@
     <div *ngIf="!refLoading && !refImages.length" class="text-center py-12">
       <i class="fas fa-image text-5xl text-gray-600 mb-4"></i>
       <p class="text-gray-400">No reference images uploaded yet</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: Occasion Templates ═══════════════ -->
+  <div *ngIf="!loading && config && activeTab === 'occasions'" class="space-y-6">
+
+    <!-- Header bar -->
+    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-5">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900 dark:text-rep-white">Occasion Templates</h2>
+          <p class="text-gray-400 text-sm mt-1">Create per-occasion profiles with reference images, sample captions, hashtags, and CTAs. These guide AI generation when selected in Content Studio.</p>
+        </div>
+        <button type="button" (click)="openCreateOccasion()"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-rep-lime text-rep-black font-semibold text-sm hover:bg-rep-lime/90 transition">
+          <i class="fas fa-plus"></i> New Template
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loadingOccasions" class="flex justify-center py-12">
+      <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+    </div>
+
+    <!-- Main layout: grid + panel -->
+    <div *ngIf="!loadingOccasions" class="flex gap-6">
+
+      <!-- Card grid -->
+      <div class="flex-1 min-w-0">
+        <!-- Empty state -->
+        <div *ngIf="!occasionTemplates.length" class="text-center py-16">
+          <i class="fas fa-calendar-alt text-5xl text-gray-600 mb-4"></i>
+          <p class="text-gray-400 text-lg">No occasion templates yet</p>
+          <p class="text-gray-500 text-sm mt-1">Click "New Template" to create your first occasion profile.</p>
+        </div>
+
+        <!-- Grid -->
+        <div *ngIf="occasionTemplates.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div *ngFor="let tpl of occasionTemplates"
+            class="group rounded-xl border overflow-hidden transition cursor-pointer"
+            [ngClass]="selectedOccasion?._id === tpl._id && showOccasionPanel
+              ? 'border-rep-lime/60 bg-gray-900/80 dark:bg-gray-900'
+              : 'border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900/50 hover:border-gray-300 dark:hover:border-gray-700'"
+            (click)="openEditOccasion(tpl)"
+          >
+            <!-- Thumbnail -->
+            <div class="relative aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden">
+              <img *ngIf="tpl.referenceImageUrl" [src]="tpl.referenceImageUrl" [alt]="tpl.name"
+                class="w-full h-full object-cover" loading="lazy" />
+              <div *ngIf="!tpl.referenceImageUrl" class="w-full h-full flex items-center justify-center">
+                <i [class]="'fas ' + getEventTypeIcon(tpl.eventType) + ' text-4xl text-gray-400 dark:text-gray-600'"></i>
+              </div>
+              <!-- Style analyzed badge -->
+              <div *ngIf="tpl.eventStyle" class="absolute top-2 right-2 px-1.5 py-0.5 text-[10px] rounded bg-rep-lime/90 text-rep-black font-semibold">
+                <i class="fas fa-magic mr-0.5"></i>Analyzed
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="p-3 space-y-1.5">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-rep-white leading-tight">{{ tpl.name }}</p>
+                  <span class="inline-block mt-0.5 text-[11px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">{{ getEventTypeLabel(tpl.eventType) }}</span>
+                </div>
+              </div>
+              <p *ngIf="tpl.sampleCaption" class="text-xs text-gray-500 dark:text-gray-500 line-clamp-2 italic">"{{ tpl.sampleCaption }}"</p>
+              <div *ngIf="tpl.hashtags?.length" class="flex flex-wrap gap-1 pt-0.5">
+                <span *ngFor="let h of tpl.hashtags.slice(0, 3)" class="text-[10px] text-rep-lime/80">{{ h.startsWith('#') ? h : '#' + h }}</span>
+                <span *ngIf="tpl.hashtags.length > 3" class="text-[10px] text-gray-500">+{{ tpl.hashtags.length - 3 }}</span>
+              </div>
+              <!-- Actions -->
+              <div class="flex items-center gap-2 pt-1">
+                <button type="button" (click)="openEditOccasion(tpl); $event.stopPropagation()"
+                  class="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-gray-700 transition">
+                  <i class="fas fa-pencil-alt"></i> Edit
+                </button>
+                <button type="button" (click)="deleteOccasion(tpl._id); $event.stopPropagation()"
+                  [disabled]="deletingOccasionId === tpl._id"
+                  class="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg border border-red-300 dark:border-red-500/40 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition disabled:opacity-50">
+                  <i *ngIf="deletingOccasionId === tpl._id" class="fas fa-spinner fa-spin"></i>
+                  <i *ngIf="deletingOccasionId !== tpl._id" class="fas fa-trash-alt"></i>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right-side detail/create panel -->
+      <div *ngIf="showOccasionPanel"
+        class="w-80 flex-shrink-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/80 backdrop-blur-sm p-5 space-y-4 self-start sticky top-4">
+
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-gray-900 dark:text-rep-white">
+            <i class="fas fa-calendar-alt text-rep-lime mr-1.5"></i>
+            {{ occasionPanelMode === 'create' ? 'New Template' : 'Edit Template' }}
+          </h3>
+          <button type="button" (click)="closeOccasionPanel()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition text-lg leading-none">&times;</button>
+        </div>
+
+        <!-- Occasion Type -->
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-1">Occasion Type</label>
+          <select [(ngModel)]="occasionDraft.eventType"
+            class="w-full px-3 py-2 text-sm rounded-lg border focus:ring-1 focus:ring-rep-lime focus:border-rep-lime bg-white border-gray-300 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200">
+            <option *ngFor="let opt of eventTypeOptions" [value]="opt.id">{{ opt.label }}</option>
+          </select>
+        </div>
+
+        <!-- Template Name -->
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-1">Template Name</label>
+          <input type="text" [(ngModel)]="occasionDraft.name" placeholder="e.g. Ramadan 2025 Campaign"
+            class="w-full px-3 py-2 text-sm rounded-lg border focus:ring-1 focus:ring-rep-lime focus:border-rep-lime bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500" />
+        </div>
+
+        <!-- Reference Image -->
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-1">Reference Image</label>
+          <div *ngIf="occasionDraftPreview || occasionDraft.referenceImageUrl" class="mb-2 relative">
+            <img [src]="occasionDraftPreview || occasionDraft.referenceImageUrl" alt="Preview"
+              class="w-full aspect-video object-cover rounded-lg border border-gray-200 dark:border-gray-700" />
+          </div>
+          <label class="flex flex-col items-center justify-center py-5 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-rep-lime/60 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition text-center">
+            <i class="fas fa-cloud-upload-alt text-xl text-gray-400 dark:text-gray-500 mb-1"></i>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ occasionDraftFile ? occasionDraftFile.name : 'Upload image' }}</span>
+            <input type="file" class="hidden" accept="image/*" (change)="onOccasionImageSelected($event)">
+          </label>
+        </div>
+
+        <!-- Sample Caption -->
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-1">Sample Caption</label>
+          <textarea [(ngModel)]="occasionDraft.sampleCaption" rows="3"
+            placeholder="Wishing you and your family a blessed Eid Mubarak! ✨🌙"
+            class="w-full px-3 py-2 text-sm rounded-lg border focus:ring-1 focus:ring-rep-lime focus:border-rep-lime resize-none bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500"></textarea>
+        </div>
+
+        <!-- Hashtags -->
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-1">Hashtags <span class="normal-case text-gray-400 dark:text-gray-600">(comma-separated)</span></label>
+          <input type="text" [(ngModel)]="occasionDraft.hashtagsInput"
+            placeholder="#eid, #ramadan, #celebration"
+            class="w-full px-3 py-2 text-sm rounded-lg border focus:ring-1 focus:ring-rep-lime focus:border-rep-lime bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500" />
+        </div>
+
+        <!-- CTA -->
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-1">CTA Style</label>
+          <input type="text" [(ngModel)]="occasionDraft.cta"
+            placeholder="e.g. Shop the sale, Link in bio"
+            class="w-full px-3 py-2 text-sm rounded-lg border focus:ring-1 focus:ring-rep-lime focus:border-rep-lime bg-white border-gray-300 text-gray-900 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500" />
+        </div>
+
+        <!-- Panel actions -->
+        <div class="flex items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-800">
+          <app-button variant="primary" size="sm" [loading]="savingOccasion" (buttonClick)="saveOccasion()">
+            <i class="fas fa-save mr-1" *ngIf="!savingOccasion"></i>Save
+          </app-button>
+          <button *ngIf="occasionPanelMode === 'edit' && selectedOccasion" type="button"
+            [disabled]="deletingOccasionId === selectedOccasion._id"
+            (click)="deleteOccasion(selectedOccasion._id)"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-red-300 dark:border-red-500/40 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition disabled:opacity-50">
+            <i *ngIf="deletingOccasionId === selectedOccasion._id" class="fas fa-spinner fa-spin"></i>
+            <i *ngIf="deletingOccasionId !== selectedOccasion._id" class="fas fa-trash-alt text-xs"></i>Delete
+          </button>
+          <button type="button" (click)="closeOccasionPanel()"
+            class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
