@@ -57,11 +57,21 @@ export interface PlatformOption {
   icon: string;
 }
 
+export interface DesignDna {
+  generationPrompt: string | null;
+  layoutType: string | null;
+  colors: string[];
+  medium: string | null;
+  style: string | null;
+}
+
 export interface VariantItem {
   content: string;
   imageUrl?: string;
   loadingImage?: boolean;
   savedToLibrary?: boolean;
+  /** Design DNA captured from the image generation response for the learning loop */
+  designDna?: DesignDna | null;
   /** Set when image generation fails — drives the inline error card on the variant */
   imageError?: { code: string; message: string } | null;
   videoUrl?: string;
@@ -647,7 +657,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     let completed = 0;
 
     this.variants.forEach((v, idx) => {
-      this.http.post<{ success: boolean; imageUrl: string; savedToLibrary?: boolean }>(
+      this.http.post<{ success: boolean; imageUrl: string; savedToLibrary?: boolean; designDna?: DesignDna }>(
         `${environment.apiUrl}/posts/generate-variant-image`,
         {
           topic, variantContent: v.content, imageConfig: this.imageConfig, variantIndex: idx,
@@ -664,6 +674,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
         next: (res) => {
           if (res.success && res.imageUrl) this.variants[idx].imageUrl = res.imageUrl;
           this.variants[idx].savedToLibrary = res.savedToLibrary ?? false;
+          if (res.designDna) this.variants[idx].designDna = res.designDna;
           this.variants[idx].loadingImage = false;
           if (++completed === this.variants.length) { this.generatingImages = false; this.loadCredits(); }
         },
@@ -683,7 +694,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.variants[idx].imageError = null;
     this.variants[idx].savedToLibrary = false;
     const apiGenerationMode = this.generationMode === 'template' ? 'reference' : this.generationMode;
-    this.http.post<{ success: boolean; imageUrl: string; savedToLibrary?: boolean }>(
+    this.http.post<{ success: boolean; imageUrl: string; savedToLibrary?: boolean; designDna?: DesignDna }>(
       `${environment.apiUrl}/posts/generate-variant-image`,
       {
         topic: this.topic.trim() || (this.selectedEventTemplate?.name ?? ''),
@@ -705,6 +716,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
           if (this.selectedImageIndex === null) this.selectedImageIndex = idx;
         }
         this.variants[idx].savedToLibrary = res.savedToLibrary ?? false;
+        if (res.designDna) this.variants[idx].designDna = res.designDna;
         this.variants[idx].loadingImage = false;
         this.loadCredits();
       },
@@ -919,9 +931,13 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     if (!scheduledFor) return;
     this.scheduling = true;
     const postType = this.selectedVideoUrl ? this.videoPostType : this.postFormat;
+    const scheduleDesignDna = this.selectedImageIndex !== null
+      ? (this.variants[this.selectedImageIndex]?.designDna ?? null)
+      : null;
     const body: any = { platform, content, scheduledFor, postType, generatedBy: 'ai' };
     if (this.selectedVideoUrl) body.mediaUrl = this.selectedVideoUrl;
     else if (this.selectedImageUrl) body.mediaUrl = this.selectedImageUrl;
+    if (scheduleDesignDna) body.designDna = scheduleDesignDna;
     this.http.post<any>(`${environment.apiUrl}/posts/schedule`, body)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -943,10 +959,14 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     if (!content || !this.selectedPlatformIds.length) return;
     this.publishing = true;
     const postType = this.selectedVideoUrl ? this.videoPostType : this.postFormat;
+    const publishDesignDna = this.selectedImageIndex !== null
+      ? (this.variants[this.selectedImageIndex]?.designDna ?? null)
+      : null;
     const calls = this.selectedPlatformIds.map(platformId => {
       const body: any = { platform: platformId, content, postType, generatedBy: 'ai' };
       if (this.selectedVideoUrl) body.mediaUrl = this.selectedVideoUrl;
       else if (this.selectedImageUrl) body.mediaUrl = this.selectedImageUrl;
+      if (publishDesignDna) body.designDna = publishDesignDna;
       return this.http.post<any>(`${environment.apiUrl}/posts/publish`, body);
     });
     forkJoin(calls).pipe(takeUntil(this.destroy$)).subscribe({
@@ -1038,6 +1058,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   // ─── Post Editor ─────────────────────────────────────────────────────────
   showPostEditor = false;
   editorBackgroundUrl: string | null = null;
+  editorLogoUrl: string | null = null;
   editorHeadline = '';
   editorBrandColors: string[] = [];
   uploadingEditorImage = false;
@@ -1045,9 +1066,10 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   openPostEditor(variantIdx: number): void {
     const v = this.variants[variantIdx];
     if (!v?.imageUrl) return;
-    // Route the image through our backend proxy so the canvas can draw it without CORS taint
-    const proxyUrl = `${environment.apiUrl}/media-library/proxy?url=${encodeURIComponent(v.imageUrl)}`;
-    this.editorBackgroundUrl = proxyUrl;
+    this.editorBackgroundUrl = `${environment.apiUrl}/media-library/proxy?url=${encodeURIComponent(v.imageUrl)}`;
+    this.editorLogoUrl = this.orgLogo
+      ? `${environment.apiUrl}/media-library/proxy?url=${encodeURIComponent(this.orgLogo)}`
+      : null;
     this.editorHeadline = (v.content || '').split('\n')[0]?.slice(0, 60) || '';
     this.showPostEditor = true;
   }
@@ -1114,6 +1136,9 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     const selectedVariant = this.variants[this.selectedTextIndex];
     const imageUrl = this.selectedImageIndex !== null ? this.variants[this.selectedImageIndex]?.imageUrl : undefined;
     const videoUrl = this.selectedVideoIndex !== null ? this.variants[this.selectedVideoIndex]?.videoUrl : undefined;
+    const selectedDesignDna = this.selectedImageIndex !== null
+      ? (this.variants[this.selectedImageIndex]?.designDna ?? null)
+      : null;
 
     this.savingDraft = true;
     const body: any = {
@@ -1127,7 +1152,8 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       contentType: this.contentType,
       postFormat: this.postFormat,
       logoOverlay: this.logoOverlay,
-      logoPosition: this.logoPosition
+      logoPosition: this.logoPosition,
+      ...(selectedDesignDna ? { designDna: selectedDesignDna } : {})
     };
 
     if (videoUrl) body.mediaUrl = videoUrl;
@@ -1176,6 +1202,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       const body: any = { platform, content: v.content, ...commonMeta };
       if (v.videoUrl) body.mediaUrl = v.videoUrl;
       else if (v.imageUrl) body.mediaUrl = v.imageUrl;
+      if (v.designDna) body.designDna = v.designDna;
       return this.http.post<any>(`${environment.apiUrl}/posts/save-draft`, body);
     });
 

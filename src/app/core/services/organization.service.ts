@@ -3,6 +3,13 @@ import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
 
+export interface AutoReplyFallbackSettings {
+  enabled: boolean;
+  message: string;
+  assignToAgent: boolean;
+  notifyByEmail: boolean;
+}
+
 export interface AutoReplySettings {
   enabled: boolean;
   enabledPlatforms: string[];
@@ -23,6 +30,8 @@ export interface AutoReplySettings {
   scheduleInterval?: '15min' | '30min' | '1hour' | '6hours' | '12hours' | '24hours';
   scheduleEnabled?: boolean;
   lastScheduledRun?: Date;
+  // Fallback settings — when AI cannot respond
+  fallbackSettings?: AutoReplyFallbackSettings;
 }
 
 export interface InboxSettings {

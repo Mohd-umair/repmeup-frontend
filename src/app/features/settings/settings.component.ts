@@ -104,6 +104,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     industry: '',
     size: '',
     logo: '' as string | undefined,
+    orgCode: '' as string,
     escalationSettings: { autoAssign: true, availableAgents: [] as string[] }
   };
   savingOrganization = false;
@@ -150,7 +151,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
     webhookImmediate: true,
     webhookDelay: 5,
     scheduleInterval: '24hours',
-    scheduleEnabled: true
+    scheduleEnabled: true,
+    // Fallback settings
+    fallbackSettings: {
+      enabled: false,
+      message: 'Our Agent will contact you within 24 hours.',
+      assignToAgent: true,
+      notifyByEmail: true
+    }
   };
 
   platforms: Platform[] = [
@@ -1470,6 +1478,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
             industry: data.industry || '',
             size: data.size || '',
             logo: data.logo || '',
+            orgCode: data.orgCode || '',
             escalationSettings: {
               autoAssign: data.escalationSettings?.autoAssign !== false,
               availableAgents
@@ -1554,6 +1563,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this.savingProfile = false;
       }
     });
+  }
+
+  /**
+   * Sanitize orgCode input: keep only alphanumeric, uppercase, max 6 chars.
+   */
+  onOrgCodeInput(event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    this.organizationData.orgCode = raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 6);
   }
 
   /**

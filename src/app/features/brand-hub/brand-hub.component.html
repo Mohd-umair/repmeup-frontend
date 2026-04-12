@@ -128,7 +128,11 @@
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-400 mb-2">Approved hashtags</label>
+            <label class="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">Approved hashtags</label>
+            <p class="text-xs text-gray-600 dark:text-gray-400 mb-2 leading-relaxed">
+              These are the <strong class="text-gray-800 dark:text-gray-200">only</strong> hashtags the AI is told to use when generating posts.
+              Leave empty to let the AI choose contextually. Adding tags here overrides any hashtags from the Brand Analysis.
+            </p>
             <div class="flex flex-wrap gap-2 mb-2">
               <span
                 *ngFor="let tag of config.approvedHashtags"
@@ -174,15 +178,46 @@
     <!-- Right: Brand Voice Preview -->
     <div class="lg:col-span-1">
       <div class="rounded-xl border p-6 sticky top-4 backdrop-blur-sm bg-white/95 border-gray-200 shadow-sm dark:bg-gray-900/50 dark:border-gray-800 dark:shadow-none">
-        <h2 class="text-lg font-bold text-rep-white mb-2">Brand voice preview</h2>
-        <p class="text-gray-400 text-sm mb-4">Sample post using your current brand settings.</p>
+        <h2 class="text-base font-bold text-gray-900 dark:text-rep-white mb-1">
+          <i class="fas fa-wand-magic-sparkles text-gray-700 dark:text-rep-lime mr-1.5 text-sm"></i>
+          Brand voice preview
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mb-1 leading-relaxed">
+          Tap the button below to generate a one-off sample post that uses your current
+          <strong class="text-gray-800 dark:text-gray-200">Tone of voice</strong>,
+          <strong class="text-gray-800 dark:text-gray-200">Personality tags</strong>,
+          and <strong class="text-gray-800 dark:text-gray-200">Approved hashtags</strong>.
+        </p>
+        <p class="text-xs text-amber-900 dark:text-amber-400/90 mb-4 flex items-start gap-1.5">
+          <i class="fas fa-coins mt-0.5 shrink-0"></i>
+          Each generation costs 1 AI credit. It is not generated automatically.
+        </p>
+
+        <!-- Loading -->
         <div *ngIf="loadingPreview" class="py-6 text-center">
-          <i class="fas fa-spinner fa-spin text-2xl text-rep-lime"></i>
+          <i class="fas fa-spinner fa-spin text-2xl text-gray-700 dark:text-rep-lime"></i>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Generating sample post…</p>
         </div>
-        <div *ngIf="!loadingPreview && preview" class="p-4 rounded-lg border text-sm whitespace-pre-wrap mb-4 bg-white border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200">{{ preview }}</div>
-        <div *ngIf="!loadingPreview && !preview" class="py-4 text-gray-500 text-sm">Generate a preview to see how your brand sounds.</div>
+
+        <!-- Preview output -->
+        <div *ngIf="!loadingPreview && preview"
+          class="p-4 rounded-lg border text-sm whitespace-pre-wrap mb-4 leading-relaxed bg-gray-50 border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200">
+          {{ preview }}
+        </div>
+
+        <!-- Empty nudge -->
+        <p *ngIf="!loadingPreview && !preview" class="py-3 text-sm text-gray-500 dark:text-gray-500 mb-4">
+          No preview yet. Click below to see a sample — it will be generated fresh using your saved settings.
+        </p>
+
+        <p class="text-xs text-gray-500 dark:text-gray-500 mb-3 leading-relaxed">
+          <i class="fas fa-info-circle mr-1"></i>
+          This preview is for testing only — it does not create or schedule any post.
+          The same AI voice is applied automatically when you generate posts via <strong class="text-gray-700 dark:text-gray-300">Content Studio</strong>.
+        </p>
+
         <app-button variant="primary" size="sm" [loading]="loadingPreview" (buttonClick)="loadPreview()">
-          Regenerate preview
+          {{ preview ? 'Regenerate preview' : 'Generate preview' }}
         </app-button>
       </div>
     </div>
@@ -379,10 +414,19 @@
             </div>
           </div>
           <div *ngIf="profile.hashtagStrategy?.avgCount">
-            <span class="text-xs text-gray-500 uppercase tracking-wider">Hashtag Strategy</span>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Hashtag Count (from analysis)</span>
             <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">~{{ profile.hashtagStrategy.avgCount }} per post</p>
-            <div *ngIf="profile.hashtagStrategy.branded?.length" class="flex flex-wrap gap-1 mt-1">
-              <span *ngFor="let h of profile.hashtagStrategy.branded" class="text-xs text-green-700 dark:text-rep-lime">{{ h }}</span>
+            <div *ngIf="profile.hashtagStrategy.branded?.length || profile.hashtagStrategy.generic?.length" class="mt-2 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-500/10 p-3">
+              <p class="text-xs font-semibold text-amber-900 dark:text-amber-300 mb-1.5">
+                <i class="fas fa-triangle-exclamation mr-1"></i>These hashtags are <strong>NOT</strong> injected into AI prompts
+              </p>
+              <p class="text-xs text-amber-800 dark:text-amber-400/90 leading-relaxed mb-2">
+                These were detected in your old posts. Only the <strong>Approved Hashtags</strong> you set in Brand Settings are used when generating posts. If these are outdated (e.g. old campaign tags), click <strong>Clear Profile</strong> and re-analyze once your posts reflect your current style.
+              </p>
+              <div *ngIf="profile.hashtagStrategy.branded?.length" class="flex flex-wrap gap-1">
+                <span *ngFor="let h of profile.hashtagStrategy.branded"
+                  class="text-xs line-through text-amber-700 dark:text-amber-500/80 px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/10">{{ h }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -461,103 +505,251 @@
   <!-- ═══════════════ TAB: Reference Images ═══════════════ -->
   <div *ngIf="!loading && config && activeTab === 'references'" class="space-y-6">
 
-    <!-- Upload area -->
-    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
-      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div>
-          <h2 class="text-lg font-bold text-rep-white">Visual Style References</h2>
-          <p class="text-gray-400 text-sm mt-1">Upload images that define your preferred visual style. The AI will match these when generating post images.</p>
-        </div>
-        <div class="text-sm text-gray-400">{{ refTotal }} / {{ refMax }} images</div>
-      </div>
-
-      <!-- Progress bar -->
-      <div class="mb-4">
-        <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
-          <div class="h-full bg-rep-lime rounded-full transition-all"
-            [style.width.%]="(refTotal / refMax) * 100"></div>
-        </div>
-        <p *ngIf="refTotal < 10" class="text-xs text-amber-400 mt-1.5">
-          <i class="fas fa-info-circle mr-1"></i>Upload at least 10 reference images for best results ({{ 10 - refTotal }} more needed).
-        </p>
-        <p *ngIf="refTotal >= 10" class="text-xs text-green-400 mt-1.5">
-          <i class="fas fa-check-circle mr-1"></i>Great! You have enough reference images for accurate style matching.
-        </p>
-      </div>
-
-      <!-- Upload zone -->
-      <label *ngIf="refTotal < refMax"
-        class="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-rep-lime/60 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition"
-        [class.opacity-50]="refUploading"
-        [class.pointer-events-none]="refUploading"
-      >
-        <i *ngIf="!refUploading" class="fas fa-cloud-upload-alt text-3xl text-gray-400 dark:text-gray-500 mb-2"></i>
-        <i *ngIf="refUploading" class="fas fa-spinner fa-spin text-3xl text-rep-lime mb-2"></i>
-        <span class="text-sm text-gray-600 dark:text-gray-400">{{ refUploading ? 'Uploading...' : 'Drop images here or click to browse' }}</span>
-        <span class="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, WebP (max 10 MB each, up to 5 at a time)</span>
-        <input type="file" class="hidden" accept="image/*" multiple (change)="onRefFilesSelected($event)" [disabled]="refUploading">
-      </label>
+    <!-- Sub-tab bar -->
+    <div class="flex gap-1 bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-1.5">
+      <button type="button"
+        class="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition"
+        [ngClass]="refSubTab === 'my-uploads'
+          ? 'bg-rep-lime text-rep-black shadow'
+          : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'"
+        (click)="switchRefSubTab('my-uploads')">
+        <i class="fas fa-cloud-upload-alt"></i> My Uploads
+      </button>
+      <button type="button"
+        class="flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-lg text-sm font-medium transition"
+        [ngClass]="refSubTab === 'inspiration'
+          ? 'bg-rep-lime text-rep-black shadow'
+          : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'"
+        (click)="switchRefSubTab('inspiration')">
+        <i class="fas fa-lightbulb"></i> Inspiration Library
+      </button>
     </div>
 
-    <!-- Style Summary -->
-    <div *ngIf="styleSummary" class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
-      <h3 class="text-base font-bold text-rep-white mb-3">
-        <i class="fas fa-swatchbook text-rep-lime mr-1.5"></i>Aggregated Visual Style
-      </h3>
-      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div *ngIf="styleSummary.colorPalette?.length">
-          <span class="text-xs text-gray-500 uppercase tracking-wider">Colors</span>
-          <div class="flex gap-1.5 mt-1.5">
-            <div *ngFor="let c of styleSummary.colorPalette"
-              class="w-8 h-8 rounded border border-gray-700"
-              [style.background-color]="c" [title]="c"></div>
+    <!-- ── My Uploads sub-tab ── -->
+    <ng-container *ngIf="refSubTab === 'my-uploads'">
+
+      <!-- Upload area -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-rep-white">Visual Style References</h2>
+            <p class="text-gray-400 text-sm mt-1">Upload images that define your preferred visual style. The AI will match these when generating post images.</p>
+          </div>
+          <div class="text-sm text-gray-400">{{ refTotal }} / {{ refMax }} images</div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="mb-4">
+          <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+            <div class="h-full bg-rep-lime rounded-full transition-all"
+              [style.width.%]="(refTotal / refMax) * 100"></div>
+          </div>
+          <p *ngIf="refTotal < 10" class="text-xs text-amber-400 mt-1.5">
+            <i class="fas fa-info-circle mr-1"></i>Upload at least 10 reference images for best results ({{ 10 - refTotal }} more needed).
+          </p>
+          <p *ngIf="refTotal >= 10" class="text-xs text-green-400 mt-1.5">
+            <i class="fas fa-check-circle mr-1"></i>Great! You have enough reference images for accurate style matching.
+          </p>
+        </div>
+
+        <!-- Upload zone -->
+        <label *ngIf="refTotal < refMax"
+          class="flex flex-col items-center justify-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-rep-lime/60 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition"
+          [class.opacity-50]="refUploading"
+          [class.pointer-events-none]="refUploading"
+        >
+          <i *ngIf="!refUploading" class="fas fa-cloud-upload-alt text-3xl text-gray-400 dark:text-gray-500 mb-2"></i>
+          <i *ngIf="refUploading" class="fas fa-spinner fa-spin text-3xl text-rep-lime mb-2"></i>
+          <span class="text-sm text-gray-600 dark:text-gray-400">{{ refUploading ? 'Uploading...' : 'Drop images here or click to browse' }}</span>
+          <span class="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, WebP (max 10 MB each, up to 5 at a time)</span>
+          <input type="file" class="hidden" accept="image/*" multiple (change)="onRefFilesSelected($event)" [disabled]="refUploading">
+        </label>
+      </div>
+
+      <!-- Style Summary -->
+      <div *ngIf="styleSummary" class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
+        <h3 class="text-base font-bold text-rep-white mb-3">
+          <i class="fas fa-swatchbook text-rep-lime mr-1.5"></i>Aggregated Visual Style
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div *ngIf="styleSummary.colorPalette?.length">
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Colors</span>
+            <div class="flex gap-1.5 mt-1.5">
+              <div *ngFor="let c of styleSummary.colorPalette"
+                class="w-8 h-8 rounded border border-gray-700"
+                [style.background-color]="c" [title]="c"></div>
+            </div>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Composition</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.composition || '—' }}</p>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Mood</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.mood || '—' }}</p>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Layout</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.layout || '—' }}</p>
+          </div>
+          <div>
+            <span class="text-xs text-gray-500 uppercase tracking-wider">Text Density</span>
+            <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.textDensity || '—' }}</p>
           </div>
         </div>
-        <div>
-          <span class="text-xs text-gray-500 uppercase tracking-wider">Composition</span>
-          <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.composition || '—' }}</p>
-        </div>
-        <div>
-          <span class="text-xs text-gray-500 uppercase tracking-wider">Mood</span>
-          <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.mood || '—' }}</p>
-        </div>
-        <div>
-          <span class="text-xs text-gray-500 uppercase tracking-wider">Layout</span>
-          <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.layout || '—' }}</p>
-        </div>
-        <div>
-          <span class="text-xs text-gray-500 uppercase tracking-wider">Text Density</span>
-          <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">{{ styleSummary.textDensity || '—' }}</p>
-        </div>
       </div>
-    </div>
 
-    <!-- Image grid -->
-    <div *ngIf="refLoading" class="flex justify-center py-12">
-      <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
-    </div>
-    <div *ngIf="!refLoading && refImages.length" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      <div *ngFor="let img of refImages" class="group relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900">
-        <img [src]="img.imageUrl" [alt]="img.category" class="w-full aspect-square object-cover" loading="lazy" />
-        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-2">
-          <span *ngIf="img.analysis" class="text-[10px] text-gray-300 text-center leading-tight">
-            {{ img.analysis.mood }}
-          </span>
-          <span class="px-2 py-0.5 text-[10px] rounded bg-gray-700 text-gray-300">{{ img.category }}</span>
-          <button type="button" (click)="deleteRefImage(img._id)"
-            class="px-2 py-1 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition">
-            <i class="fas fa-trash-alt mr-1"></i>Delete
-          </button>
-        </div>
-        <div *ngIf="!img.analysis" class="absolute top-1 right-1">
-          <i class="fas fa-spinner fa-spin text-xs text-rep-lime" title="Analyzing..."></i>
+      <!-- Image grid -->
+      <div *ngIf="refLoading" class="flex justify-center py-12">
+        <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+      </div>
+      <div *ngIf="!refLoading && refImages.length" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div *ngFor="let img of refImages" class="group relative rounded-xl overflow-hidden border border-gray-800 bg-gray-900">
+          <img [src]="img.imageUrl" [alt]="img.category" class="w-full aspect-square object-cover" loading="lazy" />
+          <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2 p-2">
+            <span *ngIf="img.analysis" class="text-[10px] text-gray-300 text-center leading-tight">
+              {{ img.analysis.mood }}
+            </span>
+            <span class="px-2 py-0.5 text-[10px] rounded bg-gray-700 text-gray-300">{{ img.category }}</span>
+            <button type="button" (click)="deleteRefImage(img._id)"
+              class="px-2 py-1 text-xs bg-red-600/80 hover:bg-red-600 text-white rounded transition">
+              <i class="fas fa-trash-alt mr-1"></i>Delete
+            </button>
+          </div>
+          <div *ngIf="!img.analysis" class="absolute top-1 right-1">
+            <i class="fas fa-spinner fa-spin text-xs text-rep-lime" title="Analyzing..."></i>
+          </div>
         </div>
       </div>
-    </div>
-    <div *ngIf="!refLoading && !refImages.length" class="text-center py-12">
-      <i class="fas fa-image text-5xl text-gray-600 mb-4"></i>
-      <p class="text-gray-400">No reference images uploaded yet</p>
-    </div>
+      <div *ngIf="!refLoading && !refImages.length" class="text-center py-12">
+        <i class="fas fa-image text-5xl text-gray-600 mb-4"></i>
+        <p class="text-gray-400">No reference images uploaded yet</p>
+      </div>
+
+    </ng-container>
+
+    <!-- ── Inspiration Library sub-tab ── -->
+    <ng-container *ngIf="refSubTab === 'inspiration'">
+
+      <div class="rounded-xl border backdrop-blur-sm p-6 space-y-6 bg-white/95 border-gray-200 shadow-sm dark:bg-gray-900/50 dark:border-gray-800 dark:shadow-none">
+        <!-- Intro -->
+        <div>
+          <h2 class="text-lg md:text-xl font-bold text-gray-900 dark:text-rep-white">
+            <i class="fas fa-lightbulb text-gray-800 dark:text-rep-lime mr-2"></i>Smart Inspiration Library
+          </h2>
+          <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 max-w-3xl">
+            Browse curated posts that match your sector. Pick several that fit your style, then add them as references for AI generation.
+          </p>
+        </div>
+
+        <!-- Industry -->
+        <div class="rounded-xl border p-4 md:p-5 bg-gray-50 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700">
+          <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+            <i class="fas fa-industry text-gray-700 dark:text-rep-lime mr-2 align-middle"></i>
+            Business type
+          </label>
+          <p *ngIf="!inspirationIndustry" class="text-amber-900 dark:text-amber-200/95 text-sm mb-3 flex items-start gap-2">
+            <i class="fas fa-info-circle mt-0.5 shrink-0 text-amber-800 dark:text-amber-300"></i>
+            <span>Choose your industry below to load inspiration images. If your team already set this under <strong class="text-amber-950 dark:text-amber-100">Settings → Organization</strong>, we will use that automatically next time you open this tab.</span>
+          </p>
+          <p *ngIf="inspirationIndustryFromOrg && inspirationIndustry" class="text-gray-800 dark:text-gray-300 text-sm mb-3 flex items-start gap-2">
+            <i class="fas fa-link mt-0.5 shrink-0 text-gray-700 dark:text-gray-400"></i>
+            <span>Showing inspirations for <strong>{{ getInspirationIndustryLabel() }}</strong> based on your organization’s industry. You can change the category anytime using the list below.</span>
+          </p>
+          <p *ngIf="inspirationIndustry && !inspirationIndustryFromOrg" class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+            Browsing: <span class="text-gray-900 font-medium dark:text-white">{{ getInspirationIndustryLabel() }}</span>
+          </p>
+
+          <select
+            [(ngModel)]="inspirationIndustry"
+            (ngModelChange)="onInspirationIndustryChange()"
+            name="inspirationIndustry"
+            class="w-full px-3 py-2 text-sm rounded-lg border focus:ring-2 focus:ring-rep-lime focus:border-rep-lime cursor-pointer appearance-none
+              bg-white border-gray-300 text-gray-900 dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100"
+            style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22%234b5563%22%3E%3Cpath stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.65rem center; background-size: 1rem; padding-right: 2.25rem;">
+            <option value="">Select your industry…</option>
+            <option *ngFor="let ind of inspirationFilterOptions" [value]="ind.id">{{ ind.label }}</option>
+          </select>
+
+          <a *ngIf="!inspirationIndustry"
+            routerLink="/app/settings/organization"
+            class="inline-flex items-center gap-2 mt-3 text-sm font-medium text-gray-800 hover:text-gray-950 underline-offset-2 hover:underline dark:text-rep-lime dark:hover:text-rep-lime/90">
+            <i class="fas fa-cog"></i>
+            Set your industry in Organization settings (optional)
+          </a>
+        </div>
+
+        <!-- Success banner -->
+        <div *ngIf="inspirationSuccess" class="flex items-center gap-2 px-4 py-3 rounded-lg text-sm border bg-green-100 border-green-300 text-green-900 dark:bg-green-900/30 dark:border-green-700 dark:text-green-400">
+          <i class="fas fa-check-circle"></i>{{ inspirationSuccess }}
+        </div>
+
+        <!-- Loading (only after a category is chosen) -->
+        <div *ngIf="inspirationIndustry && loadingInspirations" class="flex justify-center py-16">
+          <i class="fas fa-spinner fa-spin text-3xl text-gray-700 dark:text-rep-lime"></i>
+        </div>
+
+        <!-- Inspiration grid -->
+        <div *ngIf="inspirationIndustry && !loadingInspirations && inspirations.length"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div *ngFor="let img of inspirations"
+            class="group relative rounded-xl overflow-hidden border-2 cursor-pointer transition select-none"
+            [ngClass]="selectedInspirationIds.has(img._id)
+              ? 'border-gray-900 ring-2 ring-gray-900/25 dark:border-rep-lime dark:ring-rep-lime/30'
+              : 'border-gray-200 hover:border-gray-400 dark:border-gray-700 dark:hover:border-gray-500'"
+            (click)="toggleInspiration(img._id)">
+
+            <img [src]="img.imageUrl" [alt]="img.industry" class="w-full aspect-square object-cover" loading="lazy" />
+
+            <!-- Overlay on hover/selected -->
+            <div class="absolute inset-0 transition"
+              [ngClass]="selectedInspirationIds.has(img._id)
+                ? 'bg-gray-900/15 dark:bg-rep-lime/20'
+                : 'bg-black/0 group-hover:bg-black/25 dark:group-hover:bg-black/30'">
+            </div>
+
+            <!-- Checkmark -->
+            <div class="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition shadow-md text-sm"
+              [ngClass]="selectedInspirationIds.has(img._id)
+                ? 'bg-gray-900 text-white dark:bg-rep-lime dark:text-rep-black'
+                : 'bg-black/45 text-transparent group-hover:text-white dark:bg-black/50'">
+              <i class="fas fa-check text-sm"></i>
+            </div>
+
+            <!-- Industry badge -->
+            <div class="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-black/65 text-xs text-gray-200 capitalize opacity-0 group-hover:opacity-100 transition">
+              {{ img.industry.split('_').join(' ') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty: no images for this filter -->
+        <div *ngIf="inspirationIndustry && !loadingInspirations && !inspirations.length" class="text-center py-16 rounded-xl border border-dashed border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/30">
+          <i class="fas fa-images text-5xl text-gray-400 dark:text-gray-600 mb-4"></i>
+          <p class="text-gray-800 dark:text-gray-300 mb-1 font-medium">No inspiration images for {{ getInspirationIndustryLabel() }} yet</p>
+          <p class="text-gray-600 dark:text-gray-500 text-sm">Try another category or check back later.</p>
+        </div>
+      </div>
+
+      <!-- Sticky footer: Add selected button -->
+      <div *ngIf="inspirationIndustry && (selectedInspirationIds.size > 0 || addingInspirations)"
+        class="sticky bottom-4 z-10 flex justify-between items-center rounded-xl px-5 py-3 shadow-lg border backdrop-blur
+          bg-white/95 border-gray-200 dark:bg-gray-900/95 dark:border-rep-lime/40">
+        <span class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="font-bold text-gray-900 dark:text-rep-lime">{{ selectedInspirationIds.size }}</span> image{{ selectedInspirationIds.size !== 1 ? 's' : '' }} selected
+        </span>
+        <button type="button"
+          (click)="addSelectedToReferences()"
+          [disabled]="addingInspirations || selectedInspirationIds.size === 0"
+          class="flex items-center gap-2 px-5 py-2 rounded-lg bg-rep-lime text-rep-black font-semibold text-sm hover:bg-rep-lime/90 disabled:opacity-50 disabled:cursor-not-allowed transition">
+          <i *ngIf="!addingInspirations" class="fas fa-plus-circle"></i>
+          <i *ngIf="addingInspirations" class="fas fa-spinner fa-spin"></i>
+          {{ addingInspirations ? 'Adding...' : 'Add as My References' }}
+        </button>
+      </div>
+
+    </ng-container>
+
   </div>
 
   <!-- ═══════════════ TAB: Occasion Templates ═══════════════ -->

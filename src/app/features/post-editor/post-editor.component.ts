@@ -1,6 +1,6 @@
 import {
   Component, OnInit, OnDestroy, AfterViewInit,
-  ViewChild, ElementRef, Input, Output, EventEmitter
+  ViewChild, ElementRef, Input, Output, EventEmitter, ViewChildren, QueryList
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -36,6 +36,18 @@ const GOOGLE_FONTS = [
   'Cabin', 'DM Sans', 'Quicksand', 'Work Sans', 'Karla'
 ];
 
+function loadGoogleFonts(fonts: string[]): void {
+  if (typeof document === 'undefined') return;
+  const existing = document.getElementById('__post-editor-gfonts');
+  if (existing) return;
+  const families = fonts.map(f => f.replace(/ /g, '+')).join('&family=');
+  const link = document.createElement('link');
+  link.id = '__post-editor-gfonts';
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${families}&display=swap`;
+  document.head.appendChild(link);
+}
+
 @Component({
   selector: 'app-post-editor',
   standalone: true,
@@ -45,6 +57,7 @@ const GOOGLE_FONTS = [
 })
 export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('editorCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChildren('previewCanvas') previewCanvasRefs!: QueryList<ElementRef<HTMLCanvasElement>>;
 
   @Input() backgroundImageUrl: string | null = null;
   @Input() logoUrl: string | null = null;
@@ -89,9 +102,20 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   bgBlur = 0;
 
   overlayColor = '#000000';
-  overlayOpacity = 0;
+  overlayOpacity = 40;
 
-  activePanel: 'layers' | 'text' | 'cta' | 'image' | 'overlay' | 'templates' = 'layers';
+  private _activePanel: 'layers' | 'text' | 'cta' | 'image' | 'overlay' | 'templates' = 'layers';
+
+  get activePanel() { return this._activePanel; }
+  set activePanel(val: 'layers' | 'text' | 'cta' | 'image' | 'overlay' | 'templates') {
+    this._activePanel = val;
+    if (val === 'overlay' && !this.hasOverlayLayer && this.canvas) {
+      this.addOverlayLayer();
+    }
+    if (val === 'templates' && !this.templates.length) {
+      this.loadTemplates();
+    }
+  }
 
   get hasOverlayLayer(): boolean {
     return this.layers.some(l => l.type === 'overlay');
@@ -100,12 +124,21 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   templates: any[] = [];
   templatesLoading = false;
 
+  readonly platformPreviews = [
+    { label: 'Instagram Feed',  icon: 'fa-instagram', color: '#E1306C', aspect: '1/1'  },
+    { label: 'Instagram Story', icon: 'fa-instagram', color: '#E1306C', aspect: '9/16' },
+    { label: 'Facebook Feed',   icon: 'fa-facebook',  color: '#1877F2', aspect: '16/9' },
+    { label: 'LinkedIn',        icon: 'fa-linkedin',  color: '#0A66C2', aspect: '1.91/1' },
+    { label: 'Twitter / X',     icon: 'fa-x-twitter', color: '#ffffff', aspect: '16/9' },
+  ];
+
   constructor(private http: HttpClient) {}
 
   async ngOnInit(): Promise<void> {
     const ratio = ASPECT_RATIOS[this.aspectRatio] || ASPECT_RATIOS['1:1'];
     this.canvasWidth = ratio.w;
     this.canvasHeight = ratio.h;
+    loadGoogleFonts(GOOGLE_FONTS);
   }
 
   async ngAfterViewInit(): Promise<void> {
@@ -132,6 +165,8 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.canvas.on('selection:created', (e: any) => this.onObjectSelected(e));
     this.canvas.on('selection:updated', (e: any) => this.onObjectSelected(e));
     this.canvas.on('selection:cleared', () => { this.selectedLayerId = null; });
+    // Sync previews after every render
+    this.canvas.on('after:render', () => this.syncPreviews());
 
     if (this.backgroundImageUrl) {
       await this.addBackgroundImage(this.backgroundImageUrl);
@@ -153,6 +188,30 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.displayScale = maxWidth / this.canvasWidth;
   }
 
+  /** Copy the main canvas content into every platform preview canvas. */
+  syncPreviews(): void {
+    if (!this.canvas || !this.previewCanvasRefs) return;
+    const srcCanvas: HTMLCanvasElement = this.canvas.getElement();
+    this.previewCanvasRefs.forEach(ref => {
+      const el = ref.nativeElement;
+      const parent = el.parentElement;
+      if (!parent) return;
+      const maxW = parent.clientWidth || 200;
+      const maxH = parent.clientHeight || 200;
+      // Scale to fit inside the preview container maintaining aspect ratio
+      const sx = maxW / srcCanvas.width;
+      const sy = maxH / srcCanvas.height;
+      const s = Math.min(sx, sy);
+      el.width  = Math.round(srcCanvas.width  * s);
+      el.height = Math.round(srcCanvas.height * s);
+      const ctx = el.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, el.width, el.height);
+        ctx.drawImage(srcCanvas, 0, 0, el.width, el.height);
+      }
+    });
+  }
+
   private onObjectSelected(e: any): void {
     const obj = e.selected?.[0];
     if (obj?._layerId) {
@@ -163,40 +222,54 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   // ─── Background ──────────────────────────────────
   async addBackgroundImage(url: string): Promise<void> {
     const fabric = this.fabricModule;
-    // URL is expected to already be same-origin (proxied through backend).
-    // Load without crossOrigin restriction — this is required for canvas export.
-    return new Promise<void>((resolve) => {
-      fabric.FabricImage.fromURL(url).then((img: any) => {
-        if (!img || !img.width) {
-          console.warn('[PostEditor] Background image failed to load', url);
-          resolve();
-          return;
-        }
-        // Cover-fit: scale to fill canvas
-        const scaleX = this.canvasWidth / img.width;
-        const scaleY = this.canvasHeight / img.height;
-        const scale = Math.max(scaleX, scaleY);
-        img.set({
-          scaleX: scale,
-          scaleY: scale,
-          left: this.canvasWidth / 2,
-          top: this.canvasHeight / 2,
-          originX: 'center',
-          originY: 'center',
-          selectable: false,
-          evented: false
-        });
-        (img as any)._layerId = 'bg';
-        this.canvas.insertAt(img, 0);
-        this.layers = [
-          { id: 'bg', type: 'background', label: 'Background Image', fabricRef: img, locked: true, visible: true },
-          ...this.layers.filter(l => l.id !== 'bg')
-        ];
-        this.canvas.renderAll();
-        resolve();
-      }).catch((err: any) => {
-        console.warn('[PostEditor] FabricImage.fromURL failed', url, err);
-        resolve();
+    try {
+      const isAlreadyBlob = url.startsWith('blob:');
+      const blobUrl = await this.toBlobUrl(url);
+      const img: any = await fabric.FabricImage.fromURL(blobUrl);
+      if (!isAlreadyBlob) URL.revokeObjectURL(blobUrl);
+
+      if (!img || !img.width) {
+        console.warn('[PostEditor] Background image failed to load', url);
+        return;
+      }
+      const scaleX = this.canvasWidth / img.width;
+      const scaleY = this.canvasHeight / img.height;
+      const scale = Math.max(scaleX, scaleY); // cover/fill — no empty space, may crop edges
+      img.set({
+        scaleX: scale,
+        scaleY: scale,
+        left: this.canvasWidth / 2,
+        top: this.canvasHeight / 2,
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        evented: false
+      });
+      (img as any)._layerId = 'bg';
+      const existingBg = this.canvas.getObjects().find((o: any) => o._layerId === 'bg');
+      if (existingBg) this.canvas.remove(existingBg);
+
+      this.canvas.insertAt(0, img);
+      this.layers = [
+        { id: 'bg', type: 'background', label: 'Background Image', fabricRef: img, locked: true, visible: true },
+        ...this.layers.filter(l => l.id !== 'bg')
+      ];
+      this.canvas.renderAll();
+    } catch (err: any) {
+      console.warn('[PostEditor] addBackgroundImage failed', url, err);
+    }
+  }
+
+  /**
+   * Fetch any URL as a blob and return a same-origin object URL (avoids canvas CORS taint).
+   * If the URL is already a blob: URL, returns it as-is.
+   */
+  private toBlobUrl(url: string): Promise<string> {
+    if (url.startsWith('blob:')) return Promise.resolve(url);
+    return new Promise((resolve, reject) => {
+      this.http.get(url, { responseType: 'blob' }).subscribe({
+        next: (blob) => resolve(URL.createObjectURL(blob)),
+        error: (err) => reject(err)
       });
     });
   }
@@ -233,28 +306,30 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   // ─── Logo Layer ──────────────────────────────────
   async addLogoLayer(url: string): Promise<void> {
     const fabric = this.fabricModule;
-    return new Promise<void>((resolve) => {
-      fabric.FabricImage.fromURL(url).then((img: any) => {
-        if (!img || !img.width) { resolve(); return; }
-        const maxSize = this.canvasWidth * 0.18;
-        const scale = maxSize / Math.max(img.width, img.height);
-        img.set({
-          scaleX: scale,
-          scaleY: scale,
-          left: this.canvasWidth - 30,
-          top: this.canvasHeight - 30,
-          originX: 'right',
-          originY: 'bottom',
-          snapAngle: 15
-        });
-        const id = 'logo-' + Date.now();
-        (img as any)._layerId = id;
-        this.canvas.add(img);
-        this.layers.push({ id, type: 'logo', label: 'Logo', fabricRef: img, locked: false, visible: true });
-        this.canvas.renderAll();
-        resolve();
-      }).catch(() => resolve());
-    });
+    try {
+      const isAlreadyBlob = url.startsWith('blob:');
+      const blobUrl = await this.toBlobUrl(url);
+      const img: any = await fabric.FabricImage.fromURL(blobUrl);
+      if (!isAlreadyBlob) URL.revokeObjectURL(blobUrl);
+
+      if (!img || !img.width) return;
+      const maxSize = this.canvasWidth * 0.18;
+      const scale = maxSize / Math.max(img.width, img.height);
+      img.set({
+        scaleX: scale,
+        scaleY: scale,
+        left: this.canvasWidth - 30,
+        top: this.canvasHeight - 30,
+        originX: 'right',
+        originY: 'bottom',
+        snapAngle: 15
+      });
+      const id = 'logo-' + Date.now();
+      (img as any)._layerId = id;
+      this.canvas.add(img);
+      this.layers.push({ id, type: 'logo', label: 'Logo', fabricRef: img, locked: false, visible: true });
+      this.canvas.renderAll();
+    } catch { /* non-blocking */ }
   }
 
   // Upload a logo from file input — creates a local blob URL (same-origin, no CORS)
@@ -341,7 +416,7 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     (rect as any)._layerId = id;
     const bgIdx = this.canvas.getObjects().findIndex((o: any) => o._layerId === 'bg');
-    this.canvas.insertAt(rect, bgIdx + 1);
+    this.canvas.insertAt(bgIdx + 1, rect);
     this.layers.splice(1, 0, { id, type: 'overlay', label: 'Color Overlay', fabricRef: rect, locked: true, visible: true });
     this.canvas.renderAll();
   }
@@ -360,6 +435,9 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
   applyTextProps(): void {
     const layer = this.layers.find(l => l.id === this.selectedLayerId && l.type === 'text');
     if (!layer?.fabricRef) return;
+
+    const fontChanged = layer.fabricRef.fontFamily !== this.textFont;
+
     layer.fabricRef.set({
       fontFamily: this.textFont,
       fontSize: this.textSize,
@@ -379,7 +457,16 @@ export class PostEditorComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       layer.fabricRef.set({ stroke: null, strokeWidth: 0 });
     }
-    this.canvas.renderAll();
+
+    if (fontChanged && typeof document !== 'undefined' && document.fonts) {
+      const weight = this.textWeight === 'bold' ? 'bold' : this.textWeight;
+      document.fonts.load(`${weight} ${this.textSize}px "${this.textFont}"`).then(() => {
+        layer.fabricRef.initDimensions();
+        this.canvas.renderAll();
+      });
+    } else {
+      this.canvas.renderAll();
+    }
   }
 
   // ─── Image Controls ──────────────────────────────

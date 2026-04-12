@@ -553,6 +553,7 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
     }
     this.manualForm.patchValue({ content: '' });
     this.activeTab = 'manual';
+    this.cdr.markForCheck();
   }
 
   cancelEdit(): void {
@@ -647,11 +648,17 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
             this.notificationService.success('Entry Updated', 'Knowledge base entry has been updated successfully.');
             this.cancelEdit();
             this.loadKnowledgeBase();
+          } else {
+            this.notificationService.error('Update Failed', 'Could not update the entry. Please try again.');
           }
           this.submitting = false;
           this.cdr.markForCheck();
         },
-        error: () => { this.submitting = false; this.cdr.markForCheck(); }
+        error: () => {
+          this.notificationService.error('Update Failed', 'Could not update the entry. Please try again.');
+          this.submitting = false;
+          this.cdr.markForCheck();
+        }
       });
       return;
     }

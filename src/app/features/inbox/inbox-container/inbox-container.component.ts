@@ -196,6 +196,22 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       })
     );
 
+    // Real-time: an existing interaction was updated (e.g. AI auto-reply set status to 'replied')
+    this.subscriptions.push(
+      this.socketService.onInteractionUpdate().subscribe((data: any) => {
+        const updated: IInteraction = data?.interaction;
+        if (!updated) return;
+
+        // Always update the service so the list row reflects new status immediately
+        this.inboxService.prependOrUpdateInteraction(updated);
+
+        // If this is the open conversation, refresh the detail panel too
+        if (this.selectedInteraction?._id === updated._id) {
+          this.inboxService.setSelectedInteraction(updated);
+        }
+      })
+    );
+
     // Fallback poll every 30s in case socket misses an event (tab was backgrounded, etc.)
     this.inboxPollSubscription = interval(30000).subscribe(() => {
       if (typeof document !== 'undefined' && !document.hidden) {

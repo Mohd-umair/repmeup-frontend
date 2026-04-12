@@ -61,6 +61,12 @@
             <i class="fas fa-exclamation-triangle mr-1"></i>
             {{ getSetupWarning(connection) }}
           </div>
+          <!-- Warning: Instagram DMs disabled by account owner -->
+          <div *ngIf="connection.platform === 'instagram' && connection.metadata?.instagramDmEnabled === false"
+               class="mt-2 px-3 py-2 bg-orange-50 dark:bg-orange-950/40 border border-orange-300 dark:border-orange-700 rounded-lg text-xs text-orange-800 dark:text-orange-200">
+            <p class="font-semibold mb-0.5"><i class="fas fa-comment-slash mr-1"></i> DMs not accessible</p>
+            <p>{{ connection.metadata?.instagramDmDisabledReason || 'Enable message requests in Instagram → Settings → Privacy → Messages, then sync again.' }}</p>
+          </div>
         </td>
 
         <!-- Status -->
@@ -137,6 +143,13 @@
     <div class="flex items-center text-xs text-gray-600 dark:text-gray-400 mb-3">
       <i class="far fa-clock mr-1.5 text-gray-400 dark:text-gray-500"></i>
       Last synced: {{ formatLastSync(connection.lastSyncAt) }}
+    </div>
+
+    <!-- Instagram DM disabled warning (mobile) -->
+    <div *ngIf="connection.platform === 'instagram' && connection.metadata?.instagramDmEnabled === false"
+         class="mb-3 px-3 py-2 bg-orange-50 dark:bg-orange-950/40 border border-orange-300 dark:border-orange-700 rounded-lg text-xs text-orange-800 dark:text-orange-200">
+      <p class="font-semibold mb-0.5"><i class="fas fa-comment-slash mr-1"></i> DMs not accessible</p>
+      <p>Go to Instagram → Settings → Privacy → Messages and enable message requests, then tap Sync.</p>
     </div>
 
     <!-- Actions -->

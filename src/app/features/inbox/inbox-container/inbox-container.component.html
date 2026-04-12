@@ -192,34 +192,32 @@
   <div *ngIf="viewMode === 'buckets'" class="mb-2 flex-shrink-0 flex flex-col gap-2 px-3 py-2 bg-white dark:bg-gray-900/95 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
 
     <!-- Quick filters row (same chips as list view) -->
-    <div class="flex items-center gap-1.5 flex-wrap">
-      <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 flex-shrink-0">
-        <i class="fas fa-filter text-[10px]"></i>
-      </span>
+    <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/90 px-2.5 py-2 shadow-sm">
+      <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
+        <span class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 flex-shrink-0">
+          <i class="fas fa-filter text-xs"></i>
+        </span>
+        Filter conversations
+      </p>
+      <div class="flex items-center gap-1.5 flex-wrap">
       <!-- All -->
       <button
         type="button"
         (click)="clearAllConversationFilters()"
-        class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
-        [class.bg-gray-900]="isAllConversationFilterActive()"
-        [class.text-white]="isAllConversationFilterActive()"
-        [class.bg-gray-100]="!isAllConversationFilterActive()"
-        [class.dark:bg-gray-800]="!isAllConversationFilterActive()"
-        [class.text-gray-700]="!isAllConversationFilterActive()"
-        [class.dark:text-gray-300]="!isAllConversationFilterActive()">
+        class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border"
+        [ngClass]="isAllConversationFilterActive()
+          ? 'bg-gray-900 text-white ring-1 ring-gray-900 dark:ring-gray-100 border-transparent'
+          : 'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
         All
       </button>
       <!-- Unread -->
       <button
         type="button"
         (click)="toggleUnreadFilter()"
-        class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
-        [class.bg-amber-600]="isUnreadFilterActive()"
-        [class.text-white]="isUnreadFilterActive()"
-        [class.bg-amber-50]="!isUnreadFilterActive()"
-        [ngClass]="{'dark:bg-amber-950/45': !isUnreadFilterActive()}"
-        [class.text-amber-700]="!isUnreadFilterActive()"
-        [class.dark:text-amber-200]="!isUnreadFilterActive()">
+        class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border"
+        [ngClass]="isUnreadFilterActive()
+          ? 'bg-amber-600 text-white ring-1 ring-amber-500 border-transparent'
+          : 'bg-white dark:bg-gray-900 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/60 hover:bg-amber-50 dark:hover:bg-amber-950/40'">
         Unread
       </button>
       <!-- Intent dropdown -->
@@ -227,13 +225,13 @@
         <button
           type="button"
           (click)="toggleConversationIntentDropdown()"
-          class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
+          class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border inline-flex items-center gap-1.5"
           [ngClass]="(showConversationIntentDropdown || conversationIntentFilterActive())
-            ? 'bg-emerald-600 text-white'
-            : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200'"
+            ? 'bg-emerald-600 text-white border-emerald-500 ring-1 ring-emerald-400/40'
+            : 'bg-white dark:bg-gray-900 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'"
         >
           <span>Intent</span>
-          <i class="fas fa-chevron-down text-[9px]"></i>
+          <i class="fas fa-chevron-down text-[10px] opacity-90"></i>
         </button>
         <div
           *ngIf="showConversationIntentDropdown"
@@ -263,20 +261,17 @@
           </button>
         </div>
       </div>
-      <!-- Platforms dropdown -->
+      <!-- Platform dropdown -->
       <div class="relative">
         <button
           type="button"
           (click)="toggleConversationPlatformDropdown()"
-          class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
-          [class.bg-violet-600]="showConversationPlatformDropdown || conversationPlatformFilterCount() > 0"
-          [class.text-white]="showConversationPlatformDropdown || conversationPlatformFilterCount() > 0"
-          [class.bg-violet-50]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0"
-          [ngClass]="{'dark:bg-violet-950/45': !showConversationPlatformDropdown && conversationPlatformFilterCount() === 0}"
-          [class.text-violet-700]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0"
-          [class.dark:text-violet-200]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0">
-          <span>Platforms</span>
-          <i class="fas fa-chevron-down text-[9px]"></i>
+          class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border inline-flex items-center gap-1.5"
+          [ngClass]="(showConversationPlatformDropdown || conversationPlatformFilterCount() > 0)
+            ? 'bg-violet-600 text-white border-violet-500 ring-1 ring-violet-400/40'
+            : 'bg-white dark:bg-gray-900 text-violet-800 dark:text-violet-200 border-violet-200 dark:border-violet-800/60 hover:bg-violet-50 dark:hover:bg-violet-950/40'">
+          <span>Platform</span>
+          <i class="fas fa-chevron-down text-[10px] opacity-90"></i>
         </button>
         <div *ngIf="showConversationPlatformDropdown"
           class="absolute left-0 top-full mt-1 min-w-[160px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-40 py-1">
@@ -316,6 +311,7 @@
           <button type="button" (click)="toggleConversationPlatformFilter()" class="hover:text-violet-900 leading-none">×</button>
         </span>
       </ng-container>
+      </div>
     </div>
 
     <!-- Divider between filters and search/sort -->
@@ -447,61 +443,44 @@
       <!-- All conversations (no platform gate) -->
       <div class="h-full flex flex-col">
         <div class="p-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 class="text-sm font-bold flex items-center justify-between text-gray-900 dark:text-gray-100">
-            <span>
-              <i class="fas fa-comments mr-2"></i>
-              Conversations
-            </span>
-            <button
-              type="button"
-              class="text-xs font-normal text-gray-500 dark:text-gray-400 inline-flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-              (click)="showConversationSearch = !showConversationSearch"
-              [attr.aria-expanded]="showConversationSearch"
-              title="Toggle conversation search"
-            >
-              <span>{{ totalConversations }}</span>
-              <i class="fas text-[10px]" [class.fa-chevron-down]="!showConversationSearch" [class.fa-chevron-up]="showConversationSearch"></i>
-            </button>
-          </h2>
-          <div class="mt-2 flex items-center gap-1.5 flex-wrap">
-            <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-              <i class="fas fa-filter text-[10px]"></i>
-            </span>
+          <!-- Conversation filters: prominent bar above title -->
+          <div class="mb-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/90 px-2.5 py-2 shadow-sm">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
+              <span class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300">
+                <i class="fas fa-filter text-xs"></i>
+              </span>
+              Filter conversations
+            </p>
+            <div class="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               (click)="clearAllConversationFilters()"
-              class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
-              [class.bg-gray-900]="isAllConversationFilterActive()"
-              [class.text-white]="isAllConversationFilterActive()"
-              [class.bg-gray-100]="!isAllConversationFilterActive()"
-              [class.dark:bg-gray-800]="!isAllConversationFilterActive()"
-              [class.text-gray-700]="!isAllConversationFilterActive()"
-              [class.dark:text-gray-300]="!isAllConversationFilterActive()">
+              class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border"
+              [ngClass]="isAllConversationFilterActive()
+                ? 'bg-gray-900 text-white ring-1 ring-gray-900 dark:ring-gray-100 border-transparent'
+                : 'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
               All
             </button>
             <button
               type="button"
               (click)="toggleUnreadFilter()"
-              class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
-              [class.bg-amber-600]="isUnreadFilterActive()"
-              [class.text-white]="isUnreadFilterActive()"
-              [class.bg-amber-50]="!isUnreadFilterActive()"
-              [ngClass]="{'dark:bg-amber-950/45': !isUnreadFilterActive()}"
-              [class.text-amber-700]="!isUnreadFilterActive()"
-              [class.dark:text-amber-200]="!isUnreadFilterActive()">
+              class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border"
+              [ngClass]="isUnreadFilterActive()
+                ? 'bg-amber-600 text-white ring-1 ring-amber-500 border-transparent'
+                : 'bg-white dark:bg-gray-900 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/60 hover:bg-amber-50 dark:hover:bg-amber-950/40'">
               Unread
             </button>
             <div class="relative">
               <button
                 type="button"
                 (click)="toggleConversationIntentDropdown()"
-                class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
+                class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border inline-flex items-center gap-1.5"
                 [ngClass]="(showConversationIntentDropdown || conversationIntentFilterActive())
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200'"
+                  ? 'bg-emerald-600 text-white border-emerald-500 ring-1 ring-emerald-400/40'
+                  : 'bg-white dark:bg-gray-900 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'"
               >
                 <span>Intent</span>
-                <i class="fas fa-chevron-down text-[9px]"></i>
+                <i class="fas fa-chevron-down text-[10px] opacity-90"></i>
               </button>
               <div
                 *ngIf="showConversationIntentDropdown"
@@ -548,15 +527,12 @@
               <button
                 type="button"
                 (click)="toggleConversationPlatformDropdown()"
-                class="px-2 py-1 rounded-md text-[11px] font-medium transition-colors inline-flex items-center gap-1"
-                [class.bg-violet-600]="showConversationPlatformDropdown || conversationPlatformFilterCount() > 0"
-                [class.text-white]="showConversationPlatformDropdown || conversationPlatformFilterCount() > 0"
-                [class.bg-violet-50]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0"
-                [ngClass]="{'dark:bg-violet-950/45': !showConversationPlatformDropdown && conversationPlatformFilterCount() === 0}"
-                [class.text-violet-700]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0"
-                [class.dark:text-violet-200]="!showConversationPlatformDropdown && conversationPlatformFilterCount() === 0">
-                <span>Platforms</span>
-                <i class="fas fa-chevron-down text-[9px]"></i>
+                class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border inline-flex items-center gap-1.5"
+                [ngClass]="(showConversationPlatformDropdown || conversationPlatformFilterCount() > 0)
+                  ? 'bg-violet-600 text-white border-violet-500 ring-1 ring-violet-400/40'
+                  : 'bg-white dark:bg-gray-900 text-violet-800 dark:text-violet-200 border-violet-200 dark:border-violet-800/60 hover:bg-violet-50 dark:hover:bg-violet-950/40'">
+                <span>Platform</span>
+                <i class="fas fa-chevron-down text-[10px] opacity-90"></i>
               </button>
               <div
                 *ngIf="showConversationPlatformDropdown"
@@ -584,7 +560,25 @@
                 </button>
               </div>
             </div>
+            </div>
           </div>
+
+          <h2 class="text-sm font-bold flex items-center justify-between text-gray-900 dark:text-gray-100">
+            <span class="inline-flex items-center">
+              <i class="fas fa-comments mr-2 text-gray-600 dark:text-gray-300"></i>
+              Conversations
+            </span>
+            <button
+              type="button"
+              class="text-xs font-medium text-gray-600 dark:text-gray-400 inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              (click)="showConversationSearch = !showConversationSearch"
+              [attr.aria-expanded]="showConversationSearch"
+              title="Toggle conversation search"
+            >
+              <span>{{ totalConversations }}</span>
+              <i class="fas text-xs" [class.fa-chevron-down]="!showConversationSearch" [class.fa-chevron-up]="showConversationSearch"></i>
+            </button>
+          </h2>
         </div>
         <!-- Bulk actions bar (z-50 so dropdowns render above the list) -->
         <div *ngIf="selectedIds.size > 0" 

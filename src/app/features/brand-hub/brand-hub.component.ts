@@ -53,6 +53,61 @@ export interface IOccasionTemplate {
   createdAt: string;
 }
 
+export interface IInspirationImage {
+  _id: string;
+  industry: string;
+  imageUrl: string;
+  tags: string[];
+  sortOrder: number;
+}
+
+export const INDUSTRY_OPTIONS = [
+  { id: 'fashion', label: 'Fashion' },
+  { id: 'restaurant', label: 'Restaurant' },
+  { id: 'real_estate', label: 'Real Estate' },
+  { id: 'clinic', label: 'Clinic' },
+  { id: 'saas', label: 'SaaS' },
+  { id: 'retail', label: 'Retail' },
+  { id: 'education', label: 'Education' },
+  { id: 'fitness', label: 'Fitness' },
+  { id: 'beauty', label: 'Beauty' },
+  { id: 'hospitality', label: 'Hospitality' },
+  { id: 'finance', label: 'Finance' },
+  { id: 'automotive', label: 'Automotive' },
+  { id: 'other', label: 'Other' }
+];
+
+/** Organization settings (Settings → Organization) uses different option values — map to inspiration API keys */
+const ORG_INDUSTRY_TO_INSPIRATION: Record<string, string> = {
+  technology: 'saas',
+  retail: 'retail',
+  healthcare: 'clinic',
+  finance: 'finance',
+  education: 'education',
+  hospitality: 'hospitality',
+  'real-estate': 'real_estate',
+  real_estate: 'real_estate',
+  automotive: 'automotive',
+  food: 'restaurant',
+  entertainment: 'other',
+  other: 'other'
+};
+
+const INSPIRATION_ID_SET = new Set(INDUSTRY_OPTIONS.map((o) => o.id));
+
+function mapOrgIndustryToInspirationKey(raw: string | undefined | null): string | null {
+  if (raw == null || !String(raw).trim()) return null;
+  const normalized = String(raw)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/-/g, '_');
+  if (INSPIRATION_ID_SET.has(normalized)) return normalized;
+  const mapped = ORG_INDUSTRY_TO_INSPIRATION[normalized];
+  if (mapped && INSPIRATION_ID_SET.has(mapped)) return mapped;
+  return null;
+}
+
 @Component({
   selector: 'app-brand-hub',
   standalone: true,
@@ -106,6 +161,25 @@ export class BrandHubComponent implements OnInit {
   occasionPanelMode: 'create' | 'edit' = 'create';
   private _occasionsLoaded = false;
 
+  // ─── Inspiration Library ──────────────────────────────────
+  refSubTab: 'my-uploads' | 'inspiration' = 'my-uploads';
+  inspirations: IInspirationImage[] = [];
+  inspirationIndustry = '';
+  selectedInspirationIds = new Set<string>();
+  addingInspirations = false;
+  loadingInspirations = false;
+  inspirationSuccess = '';
+  /** True when the current filter came from Organization settings industry (user can still change) */
+  inspirationIndustryFromOrg = false;
+  private _inspirationPanelBootstrapped = false;
+
+  readonly INDUSTRY_OPTIONS = INDUSTRY_OPTIONS;
+  /** Dropdown: industries + browse all */
+  readonly inspirationFilterOptions = [
+    ...INDUSTRY_OPTIONS,
+    { id: 'all', label: 'All industries' }
+  ];
+
   constructor(private brandConfig: BrandConfigService, private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -123,7 +197,7 @@ export class BrandHubComponent implements OnInit {
         if (res.success && res.data) {
           this.config = res.data;
           this.checkRetrainBanner();
-          this.loadPreview();
+          // Preview is on-demand only — do NOT auto-call here (costs 1 AI credit per page load)
         }
         this.loading = false;
       },
@@ -186,7 +260,8 @@ export class BrandHubComponent implements OnInit {
         if (res.success && res.data) {
           this.config = res.data;
           this.showRetrainBanner = false;
-          this.loadPreview();
+          // Don't auto-generate preview — user must click manually
+          this.preview = '';
         }
         this.retraining = false;
       },
@@ -486,5 +561,119 @@ export class BrandHubComponent implements OnInit {
 
   getEventTypeIcon(eventType: string): string {
     return EVENT_TYPE_OPTIONS.find(o => o.id === eventType)?.icon || 'fa-calendar';
+  }
+
+  // ─── Inspiration Library ──────────────────────────────────
+  switchRefSubTab(tab: 'my-uploads' | 'inspiration'): void {
+    this.refSubTab = tab;
+    if (tab === 'inspiration' && !this._inspirationPanelBootstrapped) {
+      this._inspirationPanelBootstrapped = true;
+      this._bootstrapInspirationPanel();
+    }
+  }
+
+  /** First visit: load org industry → map to inspiration filter; if none, user must pick before grid loads */
+  private _bootstrapInspirationPanel(): void {
+    this.http.get<{ success: boolean; data: { industry?: string } }>(`${environment.apiUrl}/organizations/me`)
+      .subscribe({
+        next: (res) => {
+          const mapped = mapOrgIndustryToInspirationKey(res.data?.industry);
+          if (mapped) {
+            this.inspirationIndustry = mapped;
+            this.inspirationIndustryFromOrg = true;
+            this.loadInspirations();
+          } else {
+            this.inspirationIndustry = '';
+            this.inspirationIndustryFromOrg = false;
+            this.inspirations = [];
+            this.loadingInspirations = false;
+          }
+        },
+        error: () => {
+          this.inspirationIndustry = '';
+          this.inspirationIndustryFromOrg = false;
+          this.inspirations = [];
+          this.loadingInspirations = false;
+        }
+      });
+  }
+
+  loadInspirations(): void {
+    if (!this.inspirationIndustry) {
+      this.inspirations = [];
+      this.loadingInspirations = false;
+      return;
+    }
+    this.loadingInspirations = true;
+    const industry = this.inspirationIndustry;
+    const url = `${environment.apiUrl}/inspirations?industry=${encodeURIComponent(industry)}`;
+    this.http.get<{ success: boolean; data: IInspirationImage[] }>(url).subscribe({
+      next: (res) => {
+        this.inspirations = res.data || [];
+        this.selectedInspirationIds.clear();
+        this.selectedInspirationIds = new Set();
+        this.loadingInspirations = false;
+      },
+      error: () => {
+        this.loadingInspirations = false;
+      }
+    });
+  }
+
+  onInspirationIndustryChange(): void {
+    if (!this.inspirationIndustry) {
+      this.inspirationIndustryFromOrg = false;
+      this.inspirations = [];
+      this.selectedInspirationIds.clear();
+      this.selectedInspirationIds = new Set();
+      return;
+    }
+    this.inspirationIndustryFromOrg = false;
+    this.loadInspirations();
+  }
+
+  getInspirationIndustryLabel(): string {
+    if (!this.inspirationIndustry) return '';
+    if (this.inspirationIndustry === 'all') return 'All industries';
+    return INDUSTRY_OPTIONS.find((o) => o.id === this.inspirationIndustry)?.label || this.inspirationIndustry;
+  }
+
+  toggleInspiration(id: string): void {
+    if (this.selectedInspirationIds.has(id)) {
+      this.selectedInspirationIds.delete(id);
+    } else {
+      this.selectedInspirationIds.add(id);
+    }
+    // Trigger change detection for Set
+    this.selectedInspirationIds = new Set(this.selectedInspirationIds);
+  }
+
+  addSelectedToReferences(): void {
+    if (!this.selectedInspirationIds.size || this.addingInspirations) return;
+    this.addingInspirations = true;
+    this.inspirationSuccess = '';
+    const imageIds = Array.from(this.selectedInspirationIds);
+    this.http.post<{ success: boolean; added: number; message: string }>(
+      `${environment.apiUrl}/inspirations/add-to-references`,
+      { imageIds }
+    ).subscribe({
+      next: (res) => {
+        this.addingInspirations = false;
+        this.inspirationSuccess = res.message || `Added ${res.added} image(s) to your references.`;
+        this.selectedInspirationIds.clear();
+        this.selectedInspirationIds = new Set();
+        this.loadRefImages();
+        // Switch back to My Uploads tab after a short delay
+        setTimeout(() => {
+          this.refSubTab = 'my-uploads';
+          this.inspirationSuccess = '';
+        }, 2500);
+      },
+      error: (err) => {
+        this.addingInspirations = false;
+        const msg = err?.error?.error || 'Failed to add inspirations. Please try again.';
+        alert(msg);
+      }
+    });
   }
 }

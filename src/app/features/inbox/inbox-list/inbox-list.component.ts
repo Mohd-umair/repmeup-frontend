@@ -214,10 +214,13 @@ export class InboxListComponent implements OnInit, OnDestroy {
     };
 
     const isLatestReplied = interaction.status === 'replied' || interaction.status === 'resolved';
-    if (isLatestReplied && interaction.respondedAt) {
-      const responseMins = Math.floor((new Date(interaction.respondedAt).getTime() - created) / 60000);
-      if (responseMins < 0) return 'Replied';
-      return `Replied in ${formatDuration(responseMins)}`;
+    if (isLatestReplied) {
+      if (interaction.respondedAt) {
+        const responseMins = Math.floor((new Date(interaction.respondedAt).getTime() - created) / 60000);
+        if (responseMins < 0) return 'Replied';
+        return `Replied in ${formatDuration(responseMins)}`;
+      }
+      return 'Replied';
     }
 
     if (elapsedMins >= SLA_MINUTES) {
@@ -337,6 +340,16 @@ export class InboxListComponent implements OnInit, OnDestroy {
       (rawCaption ? rawCaption.slice(0, 60) + (rawCaption.length > 60 ? '…' : '') : null);
 
     return { title: title || null, url };
+  }
+
+  /** Support ticket / chat number: prefer chatRef (e.g. #ORGCODE-101), fallback to chatNumber */
+  getTicketDisplay(interaction: IInteraction): string | null {
+    const ref = interaction.chatRef?.trim();
+    if (ref) return ref;
+    if (interaction.chatNumber != null && !Number.isNaN(Number(interaction.chatNumber))) {
+      return `#${interaction.chatNumber}`;
+    }
+    return null;
   }
 
   /** Platform icon class for the post reference chip */

@@ -31,13 +31,30 @@
             </ng-container>
           </div>
           
-          <!-- User Info -->
+          <!-- User Info + ticket number (header row) -->
           <div class="min-w-0 flex-1">
-            <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 mb-0.5 truncate">{{ getAuthorDisplayName(interaction) }}</h2>
-            <p class="text-xs text-gray-600 dark:text-gray-400 flex items-center truncate">
-              <i class="fas fa-at mr-1 flex-shrink-0"></i>
-              <span class="truncate">{{ interaction.author?.username || 'user' }}</span>
-            </p>
+            <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap min-w-0 mb-0.5">
+              <h2 class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 truncate min-w-0">
+                {{ getAuthorDisplayName(interaction) }}
+              </h2>
+              <span
+                *ngIf="getTicketDisplay(interaction) as ticket"
+                class="inline-flex items-center gap-1 shrink-0 text-xs sm:text-sm font-mono font-bold px-2 sm:px-2.5 py-0.5 rounded-lg border
+                       bg-gray-100 dark:bg-gray-800/90 text-gray-800 dark:text-gray-100
+                       border-gray-200 dark:border-gray-600
+                       shadow-sm"
+                title="Support ticket number"
+              >
+                <i class="fas fa-ticket-alt text-[10px] sm:text-xs text-rep-lime dark:text-rep-lime opacity-90" aria-hidden="true"></i>
+                {{ ticket }}
+              </span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap min-w-0">
+              <p class="text-xs text-gray-600 dark:text-gray-400 flex items-center truncate">
+                <i class="fas fa-at mr-1 flex-shrink-0"></i>
+                <span class="truncate">{{ interaction.author?.username || 'user' }}</span>
+              </p>
+            </div>
           </div>
         </div>
 

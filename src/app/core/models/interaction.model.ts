@@ -45,6 +45,10 @@ export interface IInteraction {
   summary?: string | null;
   summaryGeneratedAt?: Date;
   summaryGeneratedBy?: 'ai' | 'manual' | null;
+  /** Support desk ticket number (sequential per org, starts at 101) */
+  chatNumber?: number;
+  /** Formatted ticket reference e.g. #REP-101 */
+  chatRef?: string;
 }
 
 export enum Platform {

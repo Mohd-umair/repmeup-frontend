@@ -629,6 +629,38 @@
               class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition dark:bg-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
           </div>
 
+          <!-- Support Code -->
+          <div class="rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-5">
+            <div class="flex items-start gap-4 mb-3">
+              <div class="w-10 h-10 bg-rep-lime/20 dark:bg-rep-lime/10 rounded-xl flex items-center justify-center border border-rep-lime/30 dark:border-rep-lime/20 flex-shrink-0">
+                <i class="fas fa-hashtag text-rep-black dark:text-white"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold text-rep-black dark:text-white">Support Code</h3>
+                <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                  2–6 letters used as a prefix in chat ticket numbers — e.g. <span class="font-mono font-bold text-gray-800 dark:text-gray-200">#REP-101</span>.
+                  Every new incoming conversation will automatically receive a unique ticket number.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+              <input
+                type="text"
+                [(ngModel)]="organizationData.orgCode"
+                name="orgCode"
+                maxlength="6"
+                placeholder="e.g. REP"
+                [disabled]="!permissionService.hasPermission('organization.update')"
+                class="w-36 px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition dark:bg-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 font-mono uppercase tracking-widest text-base font-bold"
+                (input)="onOrgCodeInput($event)"
+              />
+              <span *ngIf="organizationData.orgCode" class="text-xs text-gray-500 dark:text-gray-400">
+                Ticket numbers will look like
+                <span class="font-mono font-bold text-gray-800 dark:text-gray-200">#{{ organizationData.orgCode }}-101</span>
+              </span>
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label class="block text-sm font-semibold text-rep-black dark:text-white mb-2">
@@ -1177,6 +1209,101 @@
                 <input type="number" name="webhookDelay" [(ngModel)]="autoReplySettings.webhookDelay" min="1" max="60"
                   class="w-full px-3 py-2 border-2 border-blue-200 dark:border-blue-800 rounded-lg focus:ring-2 focus:ring-blue-400 text-sm font-medium dark:bg-gray-800 dark:text-white">
                 <p class="text-[11px] text-gray-600 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Allows AI processing to complete before sending</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Fallback Settings ──────────────────────────────────────── -->
+          <div *ngIf="autoReplySettings.enabled" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div class="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-800/50 flex items-center justify-center shrink-0">
+                  <i class="fas fa-user-clock text-amber-600 dark:text-amber-400 text-sm"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-base font-bold text-gray-900 dark:text-white">Fallback When AI Cannot Respond</h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                    When AI is unable to reply (low confidence, credits exhausted, or unresolvable query) — send a fallback message, assign the chat to an agent, and notify them by email.
+                  </p>
+                </div>
+              </div>
+              <!-- Toggle — same iOS-style switch as Enable Auto-Reply / Auto-Send -->
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 self-end sm:self-center">
+                <input type="checkbox" name="fallbackEnabled"
+                  [(ngModel)]="autoReplySettings.fallbackSettings!.enabled"
+                  class="sr-only peer">
+                <div class="w-16 h-8 bg-gray-300 dark:bg-gray-600 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
+              </label>
+            </div>
+
+            <!-- Fallback options — shown only when enabled -->
+            <div *ngIf="autoReplySettings.fallbackSettings?.enabled" class="space-y-4 border-t border-amber-200 dark:border-amber-700/40 pt-4">
+
+              <!-- Fallback message -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1.5">
+                  <i class="fas fa-comment-dots mr-1.5 text-amber-500"></i>
+                  Message to send to the customer
+                </label>
+                <textarea
+                  name="fallbackMessage"
+                  rows="2"
+                  [(ngModel)]="autoReplySettings.fallbackSettings!.message"
+                  placeholder="Our Agent will contact you within 24 hours."
+                  class="w-full px-3 py-2.5 border-2 border-amber-200 dark:border-amber-700/60 rounded-xl
+                         bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm
+                         focus:ring-2 focus:ring-amber-400 focus:border-amber-400 resize-none transition">
+                </textarea>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <i class="fas fa-info-circle mr-1 text-amber-500"></i>
+                  Sent only when <span class="font-semibold">Auto Send</span> is enabled and approval is not required above.
+                </p>
+              </div>
+
+              <!-- Assign to agent + notify by email -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                <!-- Assign to agent -->
+                <label class="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-amber-200 dark:border-amber-700/40 cursor-pointer hover:border-amber-400 transition">
+                  <div class="mt-0.5">
+                    <input type="checkbox" name="fallbackAssignToAgent"
+                      [checked]="autoReplySettings.fallbackSettings?.assignToAgent"
+                      (change)="autoReplySettings.fallbackSettings!.assignToAgent = $any($event.target).checked"
+                      class="w-4 h-4 text-amber-500 rounded border-gray-300 focus:ring-amber-400">
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                      <i class="fas fa-user-plus mr-1.5 text-amber-500"></i>
+                      Auto-assign to available agent
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Assigns the chat to the next available agent using round-robin.
+                    </p>
+                  </div>
+                </label>
+
+                <!-- Notify by email -->
+                <label class="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 rounded-xl border border-amber-200 dark:border-amber-700/40 cursor-pointer hover:border-amber-400 transition"
+                  [class.opacity-50]="!autoReplySettings.fallbackSettings?.assignToAgent"
+                  [class.pointer-events-none]="!autoReplySettings.fallbackSettings?.assignToAgent">
+                  <div class="mt-0.5">
+                    <input type="checkbox" name="fallbackNotifyByEmail"
+                      [checked]="autoReplySettings.fallbackSettings?.notifyByEmail"
+                      (change)="autoReplySettings.fallbackSettings!.notifyByEmail = $any($event.target).checked"
+                      [disabled]="!autoReplySettings.fallbackSettings?.assignToAgent"
+                      class="w-4 h-4 text-amber-500 rounded border-gray-300 focus:ring-amber-400 disabled:opacity-50">
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                      <i class="fas fa-envelope mr-1.5 text-amber-500"></i>
+                      Email the assigned agent
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Sends an assignment email so the agent is notified immediately.
+                    </p>
+                  </div>
+                </label>
+
               </div>
             </div>
           </div>

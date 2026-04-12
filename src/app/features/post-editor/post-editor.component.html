@@ -318,51 +318,21 @@
     <div class="w-64 shrink-0 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 overflow-y-auto p-4 space-y-4">
       <h3 class="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Platform Previews</h3>
 
-      <!-- Instagram Feed -->
-      <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
-          <i class="fab fa-instagram text-xs text-pink-500"></i>
-          <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">Instagram Feed</span>
-        </div>
-        <div class="bg-white dark:bg-gray-900 aspect-square flex items-center justify-center">
-          <canvas #previewIgFeed class="w-full h-full object-contain"></canvas>
-        </div>
-      </div>
-
-      <!-- Instagram Story -->
-      <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
-          <i class="fab fa-instagram text-xs text-pink-500"></i>
-          <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">Story (9:16)</span>
-        </div>
-        <div class="bg-white dark:bg-gray-900" style="aspect-ratio: 9/16; max-height: 180px;">
-          <div class="w-full h-full flex items-center justify-center text-[10px] text-gray-400">
-            {{ aspectRatio === '9:16' ? 'Current ratio matches' : 'Switch to 9:16' }}
+      <!-- Each preview container holds a canvas that is synced via syncPreviews() -->
+      <ng-container *ngFor="let p of platformPreviews">
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
+            <i class="fab text-xs" [ngClass]="p.icon" [style.color]="p.color"></i>
+            <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">{{ p.label }}</span>
+          </div>
+          <!-- Container sized to the platform's native aspect ratio -->
+          <div class="bg-gray-950 flex items-center justify-center overflow-hidden"
+               [style.aspectRatio]="p.aspect"
+               style="max-height: 200px;">
+            <canvas #previewCanvas class="block max-w-full max-h-full"></canvas>
           </div>
         </div>
-      </div>
-
-      <!-- Facebook Feed -->
-      <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
-          <i class="fab fa-facebook text-xs text-blue-600"></i>
-          <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">Facebook Feed</span>
-        </div>
-        <div class="bg-white dark:bg-gray-900 aspect-video flex items-center justify-center text-[10px] text-gray-400">
-          16:9 preview
-        </div>
-      </div>
-
-      <!-- LinkedIn -->
-      <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="flex items-center gap-2 px-2 py-1.5 bg-gray-50 dark:bg-gray-800">
-          <i class="fab fa-linkedin text-xs text-blue-700"></i>
-          <span class="text-[10px] font-medium text-gray-600 dark:text-gray-400">LinkedIn Feed</span>
-        </div>
-        <div class="bg-white dark:bg-gray-900 aspect-video flex items-center justify-center text-[10px] text-gray-400">
-          16:9 preview
-        </div>
-      </div>
+      </ng-container>
     </div>
 
   </div>

@@ -718,9 +718,11 @@
               </div>
             </div>
 
-            <!-- Next button -->
+            <!-- Next button (Additional Notes optional for "Use Same Template") -->
             <button type="button"
-              [disabled]="!topic.trim()"
+              [disabled]="(generationMode === 'template' && templateUseMode === 'direct')
+                ? !selectedEventTemplateId
+                : !topic.trim()"
               (click)="advanceStep()"
               class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold transition
                      bg-rep-lime text-rep-black hover:bg-rep-lime/90 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm">
@@ -1402,7 +1404,7 @@
 <app-post-editor
   *ngIf="showPostEditor"
   [backgroundImageUrl]="editorBackgroundUrl"
-  [logoUrl]="orgLogo"
+  [logoUrl]="editorLogoUrl"
   [headlineText]="editorHeadline"
   [brandColors]="editorBrandColors"
   (editorDone)="onEditorDone($event)"

@@ -287,6 +287,17 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     return 'Unknown';
   }
 
+  /** Support ticket / chat number shown in the header (#ORGCODE-101, or #101 if ref missing). */
+  getTicketDisplay(interaction: IInteraction | null): string | null {
+    if (!interaction) return null;
+    const ref = interaction.chatRef?.trim();
+    if (ref) return ref;
+    if (interaction.chatNumber != null && !Number.isNaN(Number(interaction.chatNumber))) {
+      return `#${interaction.chatNumber}`;
+    }
+    return null;
+  }
+
   getPlatformColors(): any {
     if (!this.interaction) return null;
     const theme = this.themeService.getTheme(this.interaction.platform);
