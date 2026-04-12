@@ -298,6 +298,20 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     return null;
   }
 
+  getConfidenceBadgeLabel(confidence: number | null): string {
+    if (confidence == null) return 'Auto';
+    if (confidence >= 0.85) return '✓ Auto';
+    if (confidence >= 0.65) return '~ Auto';
+    return '! Auto';
+  }
+
+  getConfidenceBadgeClass(confidence: number | null): string {
+    if (confidence == null) return 'text-gray-500 dark:text-gray-400';
+    if (confidence >= 0.85) return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20';
+    if (confidence >= 0.65) return 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20';
+    return 'text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20';
+  }
+
   getPlatformColors(): any {
     if (!this.interaction) return null;
     const theme = this.themeService.getTheme(this.interaction.platform);

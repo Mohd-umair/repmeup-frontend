@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { IInteraction, Platform } from '../../../core/models/interaction.model';
+import { IInteraction, IReply, Platform } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
 import { AppearanceService } from '../../../core/services/appearance.service';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
@@ -213,7 +213,15 @@ export class InboxListComponent implements OnInit, OnDestroy {
       return `${Math.floor(mins / MINS_PER_DAY)}d`;
     };
 
-    const isLatestReplied = interaction.status === 'replied' || interaction.status === 'resolved';
+    // A conversation counts as "replied" when:
+    //  - status is explicitly 'replied' or 'resolved', OR
+    //  - status is 'assigned' but a reply already exists (AI sent fallback then assigned to agent)
+    const hasReplies = !!(interaction as any).autoReplied ||
+                       !!interaction.respondedAt ||
+                       ((interaction as any).replies?.length > 0);
+    const isLatestReplied = interaction.status === 'replied' ||
+                            interaction.status === 'resolved' ||
+                            (interaction.status === 'assigned' && hasReplies);
     if (isLatestReplied) {
       if (interaction.respondedAt) {
         const responseMins = Math.floor((new Date(interaction.respondedAt).getTime() - created) / 60000);
@@ -340,6 +348,49 @@ export class InboxListComponent implements OnInit, OnDestroy {
       (rawCaption ? rawCaption.slice(0, 60) + (rawCaption.length > 60 ? '…' : '') : null);
 
     return { title: title || null, url };
+  }
+
+  /**
+   * Returns the text of the last message in the conversation, regardless of direction.
+   * For DM threads: compares the last outgoing reply against the last incoming message
+   * and returns whichever is newer. Falls back to interaction.content.
+   */
+  getLastMessage(interaction: IInteraction): string {
+    const { lastReply, lastIncoming } = this._resolveLastMessage(interaction);
+    const replyTime = lastReply ? new Date(lastReply.sentAt).getTime() : 0;
+    const incomingTime = this._incomingTime(lastIncoming);
+
+    if (!lastReply && !lastIncoming) return interaction.content ?? '';
+    if (replyTime >= incomingTime && lastReply) return lastReply.content ?? interaction.content ?? '';
+    if (lastIncoming?.text) return lastIncoming.text;
+    return lastReply?.content ?? interaction.content ?? '';
+  }
+
+  /** True when the last message in the conversation is an outgoing reply (sent by us / AI). */
+  isLastMessageOutgoing(interaction: IInteraction): boolean {
+    const { lastReply, lastIncoming } = this._resolveLastMessage(interaction);
+    if (!lastReply) return false;
+    const replyTime = new Date(lastReply.sentAt).getTime();
+    const incomingTime = this._incomingTime(lastIncoming);
+    return replyTime >= incomingTime;
+  }
+
+  private _resolveLastMessage(interaction: IInteraction): {
+    lastReply: IReply | null;
+    lastIncoming: { mid?: string; text?: string; timestamp?: number } | null;
+  } {
+    const replies = interaction.replies ?? [];
+    const incomingMessages: Array<{ mid?: string; text?: string; timestamp?: number }> =
+      (interaction as any).metadata?.incomingMessages ?? [];
+    return {
+      lastReply: replies.length > 0 ? replies[replies.length - 1] : null,
+      lastIncoming: incomingMessages.length > 0 ? incomingMessages[incomingMessages.length - 1] : null
+    };
+  }
+
+  private _incomingTime(msg: { timestamp?: number } | null): number {
+    if (!msg?.timestamp) return 0;
+    return msg.timestamp > 1e10 ? msg.timestamp : msg.timestamp * 1000;
   }
 
   /** Support ticket / chat number: prefer chatRef (e.g. #ORGCODE-101), fallback to chatNumber */

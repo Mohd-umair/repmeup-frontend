@@ -133,10 +133,16 @@
             </span>
           </div>
 
-          <!-- Message Preview (muted vs author name) -->
-          <p class="text-sm font-normal text-gray-500 dark:text-gray-400 line-clamp-2 leading-snug mb-1.5">
-            {{ interaction.content }}
-          </p>
+          <!-- Message Preview — always shows the last message (outgoing or incoming) -->
+          <div class="flex items-start gap-1 mb-1.5 min-w-0">
+            <!-- Sent tick: double-check shown when last message is outgoing -->
+            <i *ngIf="isLastMessageOutgoing(interaction)"
+               class="fas fa-check-double flex-shrink-0 mt-0.5 text-[11px] text-gray-700 dark:text-rep-lime opacity-90"
+               title="Sent"></i>
+            <p class="text-sm font-normal text-gray-500 dark:text-gray-400 line-clamp-2 leading-snug min-w-0">
+              {{ getLastMessage(interaction) }}
+            </p>
+          </div>
 
           <!-- Post reference chip (comment-type interactions only) -->
           <ng-container *ngIf="getPostRef(interaction) as ref">
