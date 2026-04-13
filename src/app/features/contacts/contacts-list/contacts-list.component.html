@@ -1,0 +1,160 @@
+<div class="h-full flex flex-col overflow-hidden">
+
+  <!-- Header & search -->
+  <div class="flex-shrink-0 px-4 pt-4 pb-3 space-y-3"
+       style="border-bottom: 1px solid var(--card-border);">
+
+    <!-- Title + count -->
+    <div class="flex items-center justify-between">
+      <h2 class="text-sm font-bold" style="color: var(--text-primary);">
+        Contacts
+        <span *ngIf="totalContacts > 0"
+              class="ml-1.5 text-xs font-normal px-1.5 py-0.5 rounded-full"
+              style="background-color: var(--surface-primary); color: var(--text-muted);">
+          {{ totalContacts }}
+        </span>
+      </h2>
+    </div>
+
+    <!-- Search -->
+    <div class="relative">
+      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs"
+         style="color: var(--text-muted);"></i>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (input)="onSearchChange()"
+        placeholder="Search by name, phone, email…"
+        class="w-full pl-8 pr-3 py-2 rounded-lg text-xs border focus:outline-none transition-colors"
+        style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
+    </div>
+
+    <!-- Platform filter chips -->
+    <div class="flex items-center gap-1.5 flex-wrap">
+      <button
+        *ngFor="let p of platforms"
+        type="button"
+        (click)="onPlatformFilter(p)"
+        class="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border transition-all"
+        [class.border-transparent]="selectedPlatform !== p"
+        [class.border-current]="selectedPlatform === p"
+        [ngClass]="selectedPlatform === p ? getPlatformColor(p) : 'text-gray-500 dark:text-gray-400'"
+        [style.background-color]="selectedPlatform === p ? '' : 'var(--surface-primary)'">
+        <i class="fab" [ngClass]="getPlatformIcon(p)"></i>
+        <span class="capitalize">{{ p }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex-1 flex items-center justify-center">
+    <i class="fas fa-spinner fa-spin text-xl" style="color: var(--text-muted);"></i>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error && !loading"
+       class="m-4 p-3 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-xs text-red-600 dark:text-red-300">
+    <i class="fas fa-exclamation-circle mr-1.5"></i>{{ error }}
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && !error && contacts.length === 0"
+       class="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
+    <div class="w-12 h-12 rounded-full flex items-center justify-center"
+         style="background-color: var(--surface-primary);">
+      <i class="fas fa-users text-xl opacity-40" style="color: var(--text-muted);"></i>
+    </div>
+    <div>
+      <p class="text-sm font-semibold" style="color: var(--text-secondary);">No contacts yet</p>
+      <p class="text-xs mt-0.5" style="color: var(--text-muted);">
+        Contacts are auto-created as customers message you.
+      </p>
+    </div>
+  </div>
+
+  <!-- Contact list -->
+  <div *ngIf="!loading && contacts.length > 0" class="flex-1 overflow-y-auto min-h-0">
+    <button
+      *ngFor="let contact of contacts"
+      type="button"
+      (click)="selectContact(contact)"
+      class="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+      style="border-bottom: 1px solid var(--card-border);">
+
+      <!-- Avatar -->
+      <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+           [style.background-color]="'var(--surface-primary)'"
+           style="color: var(--text-secondary);">
+        <img *ngIf="contact.channels[0]?.avatarUrl"
+             [src]="contact.channels[0].avatarUrl"
+             [alt]="contact.primaryName"
+             class="w-9 h-9 rounded-full object-cover" />
+        <span *ngIf="!contact.channels[0]?.avatarUrl">{{ getInitials(contact.primaryName) }}</span>
+      </div>
+
+      <!-- Info -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-1.5 mb-0.5">
+          <span class="text-xs font-semibold truncate" style="color: var(--text-primary);">
+            {{ contact.primaryName }}
+          </span>
+          <!-- AI sentiment dot -->
+          <span *ngIf="contact.aiInsights?.sentiment"
+                class="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                [ngClass]="getSentimentColor(contact.aiInsights?.sentiment)"
+                [title]="'Sentiment: ' + contact.aiInsights?.sentiment"
+                style="background: currentColor;"></span>
+        </div>
+
+        <!-- Phone or email -->
+        <p class="text-[11px] truncate" style="color: var(--text-muted);">
+          {{ contact.primaryPhone || contact.primaryEmail || 'No contact info' }}
+        </p>
+
+        <!-- Channel badges -->
+        <div class="flex items-center gap-1 mt-0.5">
+          <i *ngFor="let ch of contact.channels.slice(0, 4)"
+             class="fab text-[10px]"
+             [ngClass]="[getPlatformIcon(ch.platform), getPlatformColor(ch.platform)]"
+             [title]="ch.platform"></i>
+          <span *ngIf="contact.channels.length > 4"
+                class="text-[10px]" style="color: var(--text-muted);">
+            +{{ contact.channels.length - 4 }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Last seen -->
+      <div class="flex-shrink-0 text-[10px]" style="color: var(--text-muted);">
+        <span *ngIf="contact.lastInteractionAt">
+          {{ contact.lastInteractionAt | date:'MMM d' }}
+        </span>
+      </div>
+    </button>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="totalPages > 1"
+       class="flex-shrink-0 flex items-center justify-between px-4 py-2.5"
+       style="border-top: 1px solid var(--card-border);">
+    <button
+      type="button"
+      (click)="goToPage(currentPage - 1)"
+      [disabled]="currentPage === 1"
+      class="px-2 py-1 rounded text-xs disabled:opacity-40 transition"
+      style="color: var(--text-secondary);">
+      <i class="fas fa-chevron-left mr-1"></i> Prev
+    </button>
+    <span class="text-[11px]" style="color: var(--text-muted);">
+      {{ currentPage }} / {{ totalPages }}
+    </span>
+    <button
+      type="button"
+      (click)="goToPage(currentPage + 1)"
+      [disabled]="currentPage === totalPages"
+      class="px-2 py-1 rounded text-xs disabled:opacity-40 transition"
+      style="color: var(--text-secondary);">
+      Next <i class="fas fa-chevron-right ml-1"></i>
+    </button>
+  </div>
+</div>

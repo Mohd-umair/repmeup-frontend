@@ -168,7 +168,12 @@ export class InboxService {
   }
 
   /** Generate AI chat summary (costs 1 credit). */
-  generateAISummary(id: string): Observable<IApiResponse<{ summary: string; generatedBy: string; generatedAt: Date }>> {
+  generateAISummary(id: string): Observable<IApiResponse<{
+    summary: string;
+    suggestedAction?: string | null;
+    generatedBy: string;
+    generatedAt: Date;
+  }>> {
     return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/summary/generate`, {});
   }
 

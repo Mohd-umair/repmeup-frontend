@@ -20,6 +20,7 @@ import { InboxActionsComponent } from '../inbox-actions/inbox-actions.component'
 import { InboxAiAssistantComponent } from '../inbox-ai-assistant/inbox-ai-assistant.component';
 import { InboxBucketViewComponent } from '../inbox-bucket-view/inbox-bucket-view.component';
 import { InboxSummaryComponent } from '../inbox-summary/inbox-summary.component';
+import { InboxContactPanelComponent } from '../inbox-contact-panel/inbox-contact-panel.component';
 import { OrganizationService } from '../../../core/services/organization.service';
 import { forkJoin, timer, Subscription, of, from, interval } from 'rxjs';
 import { exhaustMap, catchError, take } from 'rxjs/operators';
@@ -31,7 +32,7 @@ import { exhaustMap, catchError, take } from 'rxjs/operators';
 @Component({
   selector: 'app-inbox-container',
   standalone: true,
-  imports: [CommonModule, FormsModule, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent, InboxSummaryComponent],
+  imports: [CommonModule, FormsModule, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent, InboxSummaryComponent, InboxContactPanelComponent],
   templateUrl: './inbox-container.component.html',
   styleUrls: ['./inbox-container.component.scss']
 })
@@ -48,7 +49,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   showBucketSentimentDropdown = false;
   conversationPlatformOptions: string[] = [];
   conversationIntentBuckets: IIntentBucket[] = [];
-  rightPanelTab: 'actions' | 'suggestions' | 'summary' = 'suggestions';
+  rightPanelTab: 'actions' | 'suggestions' | 'summary' | 'contact' = 'suggestions';
 
   interactions: IInteraction[] = [];
   selectedInteraction: IInteraction | null = null;

@@ -61,6 +61,10 @@ export class InboxSummaryComponent implements OnChanges, OnDestroy {
     return this.interaction?.summary ?? '';
   }
 
+  get savedSuggestedAction(): string | null {
+    return this.interaction?.summarySuggestedAction ?? null;
+  }
+
   get generatedByLabel(): string {
     if (!this.interaction?.summaryGeneratedBy) return '';
     return this.interaction.summaryGeneratedBy === 'ai' ? 'AI-generated' : 'Written manually';
@@ -100,8 +104,12 @@ export class InboxSummaryComponent implements OnChanges, OnDestroy {
       next: (res) => {
         this.generatingAI = false;
         if (res.success && res.data?.summary) {
-          // Put the AI result directly into the editor so the user can review/edit
+          // Put the AI summary into the editor for review/edit
           this.draftText = res.data.summary;
+          // Attach the suggested action to the interaction object so it renders immediately
+          if (this.interaction) {
+            this.interaction.summarySuggestedAction = res.data.suggestedAction ?? null;
+          }
           this.editing = true;
           this.notify.success('Summary generated', 'Review and save your AI summary below.');
           this.updated.emit();

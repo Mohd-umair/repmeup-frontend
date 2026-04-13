@@ -1,0 +1,37 @@
+<div class="h-full flex overflow-hidden" style="background-color: var(--page-bg);">
+
+  <!-- List panel — hidden on mobile when detail is open -->
+  <div class="flex-shrink-0 h-full overflow-hidden border-r"
+       [class.hidden]="showDetail"
+       [class.md:flex]="true"
+       [class.md:block]="true"
+       style="width: 320px; border-color: var(--card-border); background-color: var(--card-bg);">
+    <app-contacts-list
+      class="h-full block"
+      (contactSelected)="onContactSelected($event)">
+    </app-contacts-list>
+  </div>
+
+  <!-- Detail panel -->
+  <div class="flex-1 h-full overflow-hidden"
+       [class.hidden]="!showDetail"
+       [class.md:block]="true"
+       style="background-color: var(--card-bg);">
+    <app-contact-detail
+      class="h-full block"
+      [contactId]="selectedContactId"
+      (back)="onBack()"
+      (deleted)="onDeleted()">
+    </app-contact-detail>
+  </div>
+
+  <!-- Desktop: empty state when nothing selected -->
+  <div *ngIf="!showDetail"
+       class="hidden md:flex flex-1 h-full items-center justify-center"
+       style="background-color: var(--card-bg);">
+    <div class="text-center" style="color: var(--text-muted);">
+      <i class="fas fa-user-circle text-4xl mb-3 block opacity-30"></i>
+      <p class="text-sm">Select a contact to view their profile</p>
+    </div>
+  </div>
+</div>

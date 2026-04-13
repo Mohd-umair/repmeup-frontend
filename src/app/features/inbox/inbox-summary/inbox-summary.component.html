@@ -63,7 +63,9 @@
     </div>
 
     <!-- ── Saved summary display (view mode) ── -->
-    <div *ngIf="hasSaved && !editing">
+    <div *ngIf="hasSaved && !editing" class="space-y-3">
+
+      <!-- Summary card -->
       <div class="rounded-xl border p-4 space-y-3"
            style="background-color: var(--card-bg); border-color: var(--card-border);">
 
@@ -89,9 +91,27 @@
           </button>
         </div>
 
-        <!-- Summary text (markdown-like: preserve newlines) -->
+        <!-- Summary text -->
         <div class="text-xs leading-relaxed whitespace-pre-wrap" style="color: var(--text-primary);">{{ savedSummary }}</div>
       </div>
+
+      <!-- Suggested action card (AI only) -->
+      <div *ngIf="savedSuggestedAction && interaction?.summaryGeneratedBy === 'ai'"
+           class="rounded-xl border p-3 flex items-start gap-2.5"
+           style="background-color: var(--surface-primary); border-color: var(--card-border);">
+        <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-amber-100 dark:bg-amber-900/30 mt-0.5">
+          <i class="fas fa-lightbulb text-[10px] text-amber-500 dark:text-amber-400"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[10px] font-semibold uppercase tracking-wide mb-1 text-amber-600 dark:text-amber-400">
+            Suggested Action
+          </p>
+          <p class="text-xs leading-relaxed" style="color: var(--text-primary);">
+            {{ savedSuggestedAction }}
+          </p>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── No summary yet (view mode) ── -->
@@ -117,6 +137,22 @@
 
     <!-- ── Editor (edit mode) ── -->
     <div *ngIf="editing" class="space-y-3">
+
+      <!-- Suggested action preview (while editing AI-generated summary) -->
+      <div *ngIf="savedSuggestedAction && interaction?.summaryGeneratedBy === 'ai'"
+           class="rounded-xl border p-3 flex items-start gap-2.5"
+           style="background-color: var(--surface-primary); border-color: var(--card-border);">
+        <div class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-amber-100 dark:bg-amber-900/30 mt-0.5">
+          <i class="fas fa-lightbulb text-[10px] text-amber-500 dark:text-amber-400"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-[10px] font-semibold uppercase tracking-wide mb-1 text-amber-600 dark:text-amber-400">
+            Suggested Action
+          </p>
+          <p class="text-xs leading-relaxed" style="color: var(--text-primary);">{{ savedSuggestedAction }}</p>
+        </div>
+      </div>
+
       <div class="rounded-xl border overflow-hidden"
            style="border-color: var(--card-border);">
         <!-- Editor toolbar hint -->

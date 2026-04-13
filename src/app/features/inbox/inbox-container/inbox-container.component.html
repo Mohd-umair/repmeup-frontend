@@ -842,6 +842,21 @@
           <i class="fas fa-file-alt text-[10px]"></i>
           Summary
         </button>
+        <button
+          (click)="rightPanelTab = 'contact'"
+          class="flex-1 px-2 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1"
+          [class.text-rep-black]="rightPanelTab === 'contact'"
+          [class.bg-rep-lime]="rightPanelTab === 'contact'"
+          [class.rounded-t-md]="rightPanelTab === 'contact'"
+          [class.border-b-2]="rightPanelTab === 'contact'"
+          [class.border-rep-lime]="rightPanelTab === 'contact'"
+          [class.text-gray-500]="rightPanelTab !== 'contact'"
+          [class.dark:text-gray-400]="rightPanelTab !== 'contact'"
+          [class.hover:text-gray-700]="rightPanelTab !== 'contact'"
+          [class.dark:hover:text-gray-200]="rightPanelTab !== 'contact'">
+          <i class="fas fa-user text-[10px]"></i>
+          Contact
+        </button>
       </div>
       <!-- Tab body: keep all panels mounted so AI suggestions survive tab switches -->
       <div class="flex-1 min-h-0 overflow-hidden flex flex-col relative">
@@ -863,6 +878,11 @@
           [interaction]="selectedInteraction"
           (updated)="onInteractionUpdate()">
         </app-inbox-summary>
+        <app-inbox-contact-panel
+          class="flex-1 min-h-0 overflow-hidden"
+          [style.display]="rightPanelTab === 'contact' ? 'block' : 'none'"
+          [interaction]="selectedInteraction">
+        </app-inbox-contact-panel>
       </div>
     </div>
   </div>

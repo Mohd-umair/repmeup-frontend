@@ -46,6 +46,7 @@ import { DraftsComponent } from './features/drafts/drafts.component';
 import { BucketSettingsComponent } from './features/settings/components/bucket-settings/bucket-settings.component';
 import { SupportComponent } from './features/support/support.component';
 import { CatalogComponent } from './features/catalog/catalog.component';
+import { ContactsContainerComponent } from './features/contacts/contacts-container/contacts-container.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -137,7 +138,8 @@ const routes: Routes = [
       { path: 'ai-credits', component: AiCreditsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
       { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'support', component: SupportComponent },
-      { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } }
+      { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'contacts', component: ContactsContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } }
     ]
   },
 
