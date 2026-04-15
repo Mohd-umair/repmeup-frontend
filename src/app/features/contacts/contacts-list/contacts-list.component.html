@@ -1,160 +1,165 @@
-<div class="h-full flex flex-col overflow-hidden">
+<!-- Same list shell as Support: card + gradient toolbar + table + app-pagination -->
+<div class="flex flex-col h-full min-h-0 overflow-hidden">
 
-  <!-- Header & search -->
-  <div class="flex-shrink-0 px-4 pt-4 pb-3 space-y-3"
-       style="border-bottom: 1px solid var(--card-border);">
-
-    <!-- Title + count -->
-    <div class="flex items-center justify-between">
-      <h2 class="text-sm font-bold" style="color: var(--text-primary);">
-        Contacts
-        <span *ngIf="totalContacts > 0"
-              class="ml-1.5 text-xs font-normal px-1.5 py-0.5 rounded-full"
-              style="background-color: var(--surface-primary); color: var(--text-muted);">
-          {{ totalContacts }}
-        </span>
-      </h2>
-    </div>
-
-    <!-- Search -->
-    <div class="relative">
-      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs"
-         style="color: var(--text-muted);"></i>
-      <input
-        type="text"
-        [(ngModel)]="searchQuery"
-        (input)="onSearchChange()"
-        placeholder="Search by name, phone, email…"
-        class="w-full pl-8 pr-3 py-2 rounded-lg text-xs border focus:outline-none transition-colors"
-        style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
-    </div>
-
-    <!-- Platform filter chips -->
-    <div class="flex items-center gap-1.5 flex-wrap">
-      <button
-        *ngFor="let p of platforms"
-        type="button"
-        (click)="onPlatformFilter(p)"
-        class="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border transition-all"
-        [class.border-transparent]="selectedPlatform !== p"
-        [class.border-current]="selectedPlatform === p"
-        [ngClass]="selectedPlatform === p ? getPlatformColor(p) : 'text-gray-500 dark:text-gray-400'"
-        [style.background-color]="selectedPlatform === p ? '' : 'var(--surface-primary)'">
-        <i class="fab" [ngClass]="getPlatformIcon(p)"></i>
-        <span class="capitalize">{{ p }}</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Loading -->
-  <div *ngIf="loading" class="flex-1 flex items-center justify-center">
-    <i class="fas fa-spinner fa-spin text-xl" style="color: var(--text-muted);"></i>
-  </div>
-
-  <!-- Error -->
   <div *ngIf="error && !loading"
-       class="m-4 p-3 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-xs text-red-600 dark:text-red-300">
-    <i class="fas fa-exclamation-circle mr-1.5"></i>{{ error }}
+       class="mb-4 p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-sm text-red-700 dark:text-red-300 shrink-0">
+    <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
   </div>
 
-  <!-- Empty state -->
-  <div *ngIf="!loading && !error && contacts.length === 0"
-       class="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
-    <div class="w-12 h-12 rounded-full flex items-center justify-center"
-         style="background-color: var(--surface-primary);">
-      <i class="fas fa-users text-xl opacity-40" style="color: var(--text-muted);"></i>
-    </div>
-    <div>
-      <p class="text-sm font-semibold" style="color: var(--text-secondary);">No contacts yet</p>
-      <p class="text-xs mt-0.5" style="color: var(--text-muted);">
-        Contacts are auto-created as customers message you.
-      </p>
-    </div>
-  </div>
+  <div class="flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-900/90 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
 
-  <!-- Contact list -->
-  <div *ngIf="!loading && contacts.length > 0" class="flex-1 overflow-y-auto min-h-0">
-    <button
-      *ngFor="let contact of contacts"
-      type="button"
-      (click)="selectContact(contact)"
-      class="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-      style="border-bottom: 1px solid var(--card-border);">
-
-      <!-- Avatar -->
-      <div class="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-           [style.background-color]="'var(--surface-primary)'"
-           style="color: var(--text-secondary);">
-        <img *ngIf="contact.channels[0]?.avatarUrl"
-             [src]="contact.channels[0].avatarUrl"
-             [alt]="contact.primaryName"
-             class="w-9 h-9 rounded-full object-cover" />
-        <span *ngIf="!contact.channels[0]?.avatarUrl">{{ getInitials(contact.primaryName) }}</span>
-      </div>
-
-      <!-- Info -->
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-1.5 mb-0.5">
-          <span class="text-xs font-semibold truncate" style="color: var(--text-primary);">
-            {{ contact.primaryName }}
-          </span>
-          <!-- AI sentiment dot -->
-          <span *ngIf="contact.aiInsights?.sentiment"
-                class="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                [ngClass]="getSentimentColor(contact.aiInsights?.sentiment)"
-                [title]="'Sentiment: ' + contact.aiInsights?.sentiment"
-                style="background: currentColor;"></span>
+    <!-- Toolbar (matches Support tickets header) -->
+    <div class="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/80 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 shrink-0">
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div class="min-w-0">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-rep-white flex items-center">
+              <i class="fas fa-address-book mr-2 text-rep-lime"></i>
+              Contacts
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {{ totalContacts }} {{ totalContacts === 1 ? 'contact' : 'contacts' }}
+            </p>
+          </div>
         </div>
 
-        <!-- Phone or email -->
-        <p class="text-[11px] truncate" style="color: var(--text-muted);">
-          {{ contact.primaryPhone || contact.primaryEmail || 'No contact info' }}
+        <div class="flex flex-col xl:flex-row gap-3 xl:items-center xl:justify-between">
+          <div class="relative flex-1 min-w-0 max-w-xl">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm pointer-events-none"></i>
+            <input
+              type="search"
+              [(ngModel)]="searchQuery"
+              (input)="onSearchChange()"
+              placeholder="Search by name, phone, email…"
+              class="w-full pl-9 pr-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-rep-black dark:text-rep-white text-sm placeholder-gray-400 dark:placeholder-gray-500 focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition"
+              autocomplete="off"
+            />
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button
+              *ngFor="let p of platforms"
+              type="button"
+              (click)="onPlatformFilter(p)"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+              [ngClass]="selectedPlatform === p
+                ? 'bg-rep-lime text-rep-black border-rep-lime shadow-sm'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-rep-lime/60'">
+              <i class="fab text-sm" [ngClass]="getPlatformIcon(p)"></i>
+              <span class="capitalize">{{ p }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-x-auto overflow-y-auto" style="min-height:200px">
+      <!-- Loading -->
+      <div *ngIf="loading" class="flex flex-col items-center justify-center py-20 px-6">
+        <div class="w-10 h-10 rounded-full border-2 border-gray-200 dark:border-gray-600 border-t-rep-lime animate-spin"></div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">Loading contacts…</p>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!loading && !error && contacts.length === 0"
+           class="flex flex-col items-center justify-center py-16 sm:py-20 px-6 text-center">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4 border-2 border-gray-200 dark:border-gray-700">
+          <i class="fas fa-users text-2xl sm:text-3xl text-gray-400 dark:text-gray-500"></i>
+        </div>
+        <p class="text-lg font-bold text-rep-black dark:text-white">No contacts yet</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-2 max-w-md">
+          Contacts are auto-created as customers send you messages across any platform.
         </p>
-
-        <!-- Channel badges -->
-        <div class="flex items-center gap-1 mt-0.5">
-          <i *ngFor="let ch of contact.channels.slice(0, 4)"
-             class="fab text-[10px]"
-             [ngClass]="[getPlatformIcon(ch.platform), getPlatformColor(ch.platform)]"
-             [title]="ch.platform"></i>
-          <span *ngIf="contact.channels.length > 4"
-                class="text-[10px]" style="color: var(--text-muted);">
-            +{{ contact.channels.length - 4 }}
-          </span>
-        </div>
       </div>
 
-      <!-- Last seen -->
-      <div class="flex-shrink-0 text-[10px]" style="color: var(--text-muted);">
-        <span *ngIf="contact.lastInteractionAt">
-          {{ contact.lastInteractionAt | date:'MMM d' }}
-        </span>
-      </div>
-    </button>
+      <!-- Table -->
+      <table *ngIf="!loading && contacts.length > 0" class="w-full min-w-[720px]">
+        <thead class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
+          <tr>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Contact</th>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Info</th>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Platforms</th>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Sentiment</th>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Last seen</th>
+            <th class="px-4 sm:px-6 py-3 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-24">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr
+            *ngFor="let contact of contacts"
+            (click)="selectContact(contact)"
+            class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition cursor-pointer">
+            <td class="px-4 sm:px-6 py-4 align-top">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                  <img *ngIf="contact.channels[0]?.avatarUrl"
+                       [src]="contact.channels[0].avatarUrl"
+                       [alt]="contact.primaryName"
+                       class="w-full h-full object-cover" />
+                  <span *ngIf="!contact.channels[0]?.avatarUrl">{{ getInitials(contact.primaryName) }}</span>
+                </div>
+                <span class="text-sm font-bold text-gray-900 dark:text-rep-white truncate max-w-[200px]">
+                  {{ contact.primaryName }}
+                </span>
+              </div>
+            </td>
+            <td class="px-4 sm:px-6 py-4 align-top text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]">
+              {{ contact.primaryPhone || contact.primaryEmail || '—' }}
+            </td>
+            <td class="px-4 sm:px-6 py-4 align-top whitespace-nowrap">
+              <div class="flex items-center gap-1.5">
+                <i *ngFor="let ch of contact.channels.slice(0, 5)"
+                   class="fab text-base"
+                   [ngClass]="[getPlatformIcon(ch.platform), getPlatformColor(ch.platform)]"
+                   [title]="ch.platform"></i>
+                <span *ngIf="contact.channels.length > 5" class="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                  +{{ contact.channels.length - 5 }}
+                </span>
+              </div>
+            </td>
+            <td class="px-4 sm:px-6 py-4 align-top whitespace-nowrap">
+              <ng-container *ngIf="contact.aiInsights?.sentiment; else noSentiment">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold capitalize"
+                  [ngClass]="{
+                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': contact.aiInsights?.sentiment?.toLowerCase() === 'positive',
+                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': contact.aiInsights?.sentiment?.toLowerCase() === 'negative',
+                    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': contact.aiInsights?.sentiment?.toLowerCase() === 'neutral'
+                  }">
+                  <i class="fas fa-circle text-[6px]"></i>
+                  {{ contact.aiInsights?.sentiment }}
+                </span>
+              </ng-container>
+              <ng-template #noSentiment>
+                <span class="text-sm text-gray-400">—</span>
+              </ng-template>
+            </td>
+            <td class="px-4 sm:px-6 py-4 align-top whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+              {{ (contact.lastInteractionAt | date:'MMM d, y') || '—' }}
+            </td>
+            <td class="px-4 sm:px-6 py-4 align-top text-right" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                (click)="selectContact(contact)"
+                title="View contact"
+                class="p-1.5 rounded-lg text-xs transition bg-rep-lime/10 text-rep-black dark:text-rep-lime hover:bg-rep-lime/20">
+                <i class="fas fa-external-link-alt"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="!loading && totalContacts > 0" class="px-4 sm:px-6 pb-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
+      <app-pagination
+        [currentPage]="currentPage"
+        [totalPages]="totalPages"
+        [totalItems]="totalContacts"
+        [pageSize]="pageSize"
+        [loading]="loading"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+      ></app-pagination>
+    </div>
   </div>
 
-  <!-- Pagination -->
-  <div *ngIf="totalPages > 1"
-       class="flex-shrink-0 flex items-center justify-between px-4 py-2.5"
-       style="border-top: 1px solid var(--card-border);">
-    <button
-      type="button"
-      (click)="goToPage(currentPage - 1)"
-      [disabled]="currentPage === 1"
-      class="px-2 py-1 rounded text-xs disabled:opacity-40 transition"
-      style="color: var(--text-secondary);">
-      <i class="fas fa-chevron-left mr-1"></i> Prev
-    </button>
-    <span class="text-[11px]" style="color: var(--text-muted);">
-      {{ currentPage }} / {{ totalPages }}
-    </span>
-    <button
-      type="button"
-      (click)="goToPage(currentPage + 1)"
-      [disabled]="currentPage === totalPages"
-      class="px-2 py-1 rounded text-xs disabled:opacity-40 transition"
-      style="color: var(--text-secondary);">
-      Next <i class="fas fa-chevron-right ml-1"></i>
-    </button>
-  </div>
 </div>

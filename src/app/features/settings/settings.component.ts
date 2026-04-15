@@ -142,8 +142,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     replyToNegative: false,
     replyToComplaints: false,
     minConfidence: 0.75,
-    autoSend: false,
-    requireApproval: true,
+    autoSend: true,
+    requireApproval: false,
     maxRepliesPerDay: 50,
     repliesCountToday: 0,
     // Scheduling settings

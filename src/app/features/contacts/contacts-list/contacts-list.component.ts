@@ -7,13 +7,14 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ContactService } from '../../../core/services/contact.service';
 import { IContact } from '../../../core/models/contact.model';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 const PLATFORMS = ['instagram', 'facebook', 'whatsapp', 'youtube', 'google', 'linkedin'];
 
 @Component({
   selector: 'app-contacts-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './contacts-list.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -31,7 +32,7 @@ export class ContactsListComponent implements OnInit, OnDestroy {
   currentPage = 1;
   totalPages = 1;
   totalContacts = 0;
-  readonly pageSize = 20;
+  pageSize = 20;
   readonly platforms = PLATFORMS;
 
   private destroy$ = new Subject<void>();
@@ -94,9 +95,15 @@ export class ContactsListComponent implements OnInit, OnDestroy {
     this.loadContacts();
   }
 
-  goToPage(page: number): void {
+  onPageChange(page: number): void {
     if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;
+    this.loadContacts();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
     this.loadContacts();
   }
 
@@ -135,11 +142,4 @@ export class ContactsListComponent implements OnInit, OnDestroy {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
-  getSentimentColor(sentiment: string | null | undefined): string {
-    if (!sentiment) return 'text-gray-400';
-    const s = sentiment.toLowerCase();
-    if (s === 'positive') return 'text-green-500';
-    if (s === 'negative') return 'text-red-500';
-    return 'text-amber-500';
-  }
 }

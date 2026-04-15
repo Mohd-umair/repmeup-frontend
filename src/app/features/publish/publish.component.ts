@@ -86,10 +86,10 @@ export class PublishComponent implements OnInit {
   
   // Post type options
   postTypes = [
-    { value: 'post', label: 'Post', icon: 'fas fa-image', description: 'Regular feed post', platforms: ['instagram', 'facebook', 'linkedin'] },
+    { value: 'post', label: 'Post', icon: 'fas fa-image', description: 'Regular feed post', platforms: ['instagram', 'facebook', 'linkedin', 'youtube'] },
     { value: 'story', label: 'Story', icon: 'fas fa-clock', description: '24-hour temporary content', platforms: ['instagram', 'facebook'] },
     { value: 'reel', label: 'Reel', icon: 'fas fa-video', description: 'Short-form video content', platforms: ['instagram', 'facebook'] },
-    { value: 'short', label: 'Short', icon: 'fas fa-film', description: 'Vertical short video', platforms: ['facebook'] }
+    { value: 'short', label: 'Short', icon: 'fas fa-film', description: 'Vertical short video', platforms: ['facebook', 'youtube'] }
   ];
   
   // Scheduling
@@ -269,8 +269,8 @@ export class PublishComponent implements OnInit {
         
         connections.forEach((conn: any) => {
           const platform = conn.platform.toLowerCase();
-          // Exclude YouTube from publishing platforms
-          if (platform === 'youtube') {
+          // Publish targets social/video channels only — not Google Business Profile
+          if (platform === 'google') {
             return;
           }
           if (!platformMap.has(platform)) {
@@ -741,6 +741,7 @@ export class PublishComponent implements OnInit {
       instagram: 'Instagram',
       facebook: 'Facebook',
       linkedin: 'LinkedIn',
+      youtube: 'YouTube',
       google: 'Google My Business',
       whatsapp: 'WhatsApp'
     };
@@ -752,6 +753,7 @@ export class PublishComponent implements OnInit {
       instagram: 'fab fa-instagram',
       facebook: 'fab fa-facebook',
       linkedin: 'fab fa-linkedin',
+      youtube: 'fab fa-youtube',
       google: 'fab fa-google',
       whatsapp: 'fab fa-whatsapp'
     };
@@ -763,6 +765,7 @@ export class PublishComponent implements OnInit {
       instagram: 'from-pink-400 to-purple-400',
       facebook: 'from-blue-400 to-blue-500',
       linkedin: 'from-blue-400 to-blue-500',
+      youtube: 'from-red-500 to-red-700',
       google: 'from-green-500 to-green-700',
       whatsapp: 'from-green-400 to-green-500'
     };

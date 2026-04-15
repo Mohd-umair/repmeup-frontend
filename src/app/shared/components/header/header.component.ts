@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Output, Input, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, Input, EventEmitter, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -44,8 +44,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private notificationDataService: NotificationDataService,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private elRef: ElementRef<HTMLElement>
   ) {}
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(ev: MouseEvent): void {
+    if (!this.showUserMenu && !this.showNotifications) return;
+    if (this.elRef.nativeElement.contains(ev.target as Node)) return;
+    this.showUserMenu = false;
+    this.showNotifications = false;
+  }
 
   ngOnInit(): void {
     const userSub = this.authService.currentUser$.subscribe(user => {

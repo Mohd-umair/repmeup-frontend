@@ -945,43 +945,6 @@
             </div>
           </div>
 
-          <!-- Settings Grid Row 2: Auto-Send + Require Approval -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-gray-200 dark:border-gray-600">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-paper-plane text-base text-blue-500 dark:text-blue-400"></i>
-                </div>
-                <div class="min-w-0">
-                  <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Auto-Send Replies</h4>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Send without approval (use with caution)</p>
-                </div>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-3">
-                <input type="checkbox" [(ngModel)]="autoReplySettings.autoSend" name="autoSend" class="sr-only peer">
-                <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
-              </label>
-            </div>
-            <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-gray-200 dark:border-gray-600">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <i class="fas fa-user-check text-base text-green-600 dark:text-green-400"></i>
-                </div>
-                <div class="min-w-0">
-                  <h4 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Require Approval</h4>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Human review before sending (recommended)</p>
-                </div>
-              </div>
-              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 ml-3">
-                <input type="checkbox" [(ngModel)]="autoReplySettings.requireApproval" name="requireApproval" class="sr-only peer">
-                <div class="w-16 h-8 bg-gray-300 peer-focus:ring-4 peer-focus:ring-rep-lime/20 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-rep-lime shadow-inner"></div>
-              </label>
-            </div>
-          </div>
-          <p class="text-xs text-blue-900 dark:text-blue-200 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-md px-3 py-2 -mt-2">
-            <i class="fas fa-info-circle mr-1"></i>
-            Messages won't post to Instagram until <strong>Auto-Send</strong> is ON and <strong>Require Approval</strong> is OFF.
-          </p>
 
           <!-- Platform Filters -->
           <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-600">
@@ -1256,7 +1219,7 @@
                 </textarea>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   <i class="fas fa-info-circle mr-1 text-amber-500"></i>
-                  Sent only when <span class="font-semibold">Auto Send</span> is enabled and approval is not required above.
+                  Sent automatically when Auto Reply is enabled and AI confidence is below your minimum threshold.
                 </p>
               </div>
 

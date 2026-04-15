@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -21,9 +21,12 @@ import { InboxAiAssistantComponent } from '../inbox-ai-assistant/inbox-ai-assist
 import { InboxBucketViewComponent } from '../inbox-bucket-view/inbox-bucket-view.component';
 import { InboxSummaryComponent } from '../inbox-summary/inbox-summary.component';
 import { InboxContactPanelComponent } from '../inbox-contact-panel/inbox-contact-panel.component';
-import { OrganizationService } from '../../../core/services/organization.service';
+import { InboxSetupGuideComponent } from '../inbox-setup-guide/inbox-setup-guide.component';
+import { OrganizationService, AutoReplySettings } from '../../../core/services/organization.service';
+import { KnowledgeBaseService } from '../../../core/services/knowledge-base.service';
+import { PlatformConnectionService } from '../../../core/services/platform-connection.service';
 import { forkJoin, timer, Subscription, of, from, interval } from 'rxjs';
-import { exhaustMap, catchError, take } from 'rxjs/operators';
+import { exhaustMap, catchError, take, map } from 'rxjs/operators';
 
 /**
  * Inbox Container Component - Single Responsibility Principle
@@ -32,7 +35,7 @@ import { exhaustMap, catchError, take } from 'rxjs/operators';
 @Component({
   selector: 'app-inbox-container',
   standalone: true,
-  imports: [CommonModule, FormsModule, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent, InboxSummaryComponent, InboxContactPanelComponent],
+  imports: [CommonModule, FormsModule, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent, InboxSummaryComponent, InboxContactPanelComponent, InboxSetupGuideComponent],
   templateUrl: './inbox-container.component.html',
   styleUrls: ['./inbox-container.component.scss']
 })
@@ -50,6 +53,13 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   conversationPlatformOptions: string[] = [];
   conversationIntentBuckets: IIntentBucket[] = [];
   rightPanelTab: 'actions' | 'suggestions' | 'summary' | 'contact' = 'suggestions';
+
+  // Setup guide
+  orgAutoReplySettings: AutoReplySettings | null = null;
+  orgHasKnowledgeBase = false;
+  orgHasConnectedPlatform = false;
+  orgIdForGuide: string | null = null;
+  setupGuideDismissed = false;
 
   interactions: IInteraction[] = [];
   selectedInteraction: IInteraction | null = null;
@@ -99,10 +109,20 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     private userService: UserService,
     private authService: AuthService,
     private organizationService: OrganizationService,
+    private knowledgeBaseService: KnowledgeBaseService,
+    private platformConnectionService: PlatformConnectionService,
     private intentBucketService: IntentBucketService,
     private socketService: SocketService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private elRef: ElementRef<HTMLElement>
   ) {}
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(ev: MouseEvent): void {
+    if (!this.showMoreOptions) return;
+    if (this.elRef.nativeElement.contains(ev.target as Node)) return;
+    this.showMoreOptions = false;
+  }
 
   ngOnInit(): void {
     // Don't select any conversation by default
@@ -734,22 +754,50 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   private loadAutoSyncSetting(): void {
     const orgId = this.getOrgId();
     if (!orgId) return;
+    this.orgIdForGuide = orgId;
     this.organizationService.getOrganization(orgId).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          // Default to true if the field hasn't been set yet
           const saved = res.data.inboxSettings?.autoSyncEnabled;
           this.autoSyncEnabled = saved !== false;
           if (this.autoSyncEnabled) {
             this.startAutoSync();
           }
+          // Capture org auto-reply settings for the setup guide
+          this.orgAutoReplySettings = res.data.autoReplySettings ?? null;
+          this.checkKnowledgeBaseExists(orgId);
+          this.checkPlatformConnected();
         }
       },
       error: () => {
-        // If we can't reach the backend, keep the default (true) and start sync
         this.startAutoSync();
       }
     });
+  }
+
+  /** Check if org has at least one KB entry (used by setup guide) */
+  private checkKnowledgeBaseExists(_orgId: string): void {
+    this.knowledgeBaseService.getAllKnowledgeBase({ limit: 1 }).pipe(
+      map(res => (res.analytics?.totalEntries ?? (res.data?.length ?? 0)) > 0)
+    ).subscribe({
+      next: (hasEntries) => { this.orgHasKnowledgeBase = hasEntries; },
+      error: () => { this.orgHasKnowledgeBase = false; }
+    });
+  }
+
+  /** Check if org has at least one active platform connection (used by setup guide) */
+  private checkPlatformConnected(): void {
+    this.platformConnectionService.getConnections().pipe(
+      map(res => res.success && Array.isArray(res.data) &&
+        res.data.some(c => c.isActive && c.status === 'connected'))
+    ).subscribe({
+      next: (hasConnection) => { this.orgHasConnectedPlatform = hasConnection; },
+      error: () => { this.orgHasConnectedPlatform = false; }
+    });
+  }
+
+  onSetupGuideDismissed(): void {
+    this.setupGuideDismissed = true;
   }
 
   /** Persist the auto-sync preference to the backend */

@@ -1,268 +1,315 @@
-<div class="h-full flex flex-col overflow-hidden">
+<div class="flex flex-col h-full overflow-hidden bg-gray-50 dark:bg-rep-black">
 
-  <!-- Empty state -->
+  <!-- Empty state: no contact selected -->
   <div *ngIf="!contactId"
-       class="flex-1 flex items-center justify-center p-6 text-center">
-    <div style="color: var(--text-muted);" class="text-sm">
-      <i class="fas fa-user text-2xl mb-3 block opacity-40"></i>
-      Select a contact to view their profile
+       class="flex-1 flex items-center justify-center p-8 text-center">
+    <div>
+      <div class="w-20 h-20 bg-rep-lime/20 border border-rep-lime/30 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fas fa-user text-3xl text-rep-black dark:text-rep-lime"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 dark:text-rep-white mb-1">No contact selected</h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Select a contact from the list to view their profile</p>
     </div>
   </div>
 
   <!-- Loading -->
   <div *ngIf="loading && contactId" class="flex-1 flex items-center justify-center">
-    <i class="fas fa-spinner fa-spin text-xl" style="color: var(--text-muted);"></i>
+    <div class="text-center">
+      <div class="w-12 h-12 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mx-auto mb-3"></div>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Loading profile…</p>
+    </div>
   </div>
 
   <!-- Error -->
   <div *ngIf="error && !loading"
-       class="m-4 p-3 rounded-lg border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-xs text-red-600 dark:text-red-300">
-    <i class="fas fa-exclamation-circle mr-1.5"></i>{{ error }}
+       class="m-5 p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-sm text-red-700 dark:text-red-300">
+    <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
   </div>
 
   <!-- Contact content -->
   <div *ngIf="contact && !loading" class="flex-1 overflow-y-auto min-h-0">
 
-    <!-- Profile header -->
-    <div class="px-5 py-4" style="border-bottom: 1px solid var(--card-border);">
+    <!-- ── Profile header card ── -->
+    <div class="m-4 sm:m-6 bg-white dark:bg-gray-900/90 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
 
-      <!-- Back on mobile + actions -->
-      <div class="flex items-center justify-between mb-3">
+      <!-- Top bar: back + actions -->
+      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800">
         <button type="button" (click)="back.emit()"
-                class="flex items-center gap-1.5 text-xs"
-                style="color: var(--text-muted);">
-          <i class="fas fa-chevron-left"></i> Contacts
+                class="flex items-center gap-2 text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-rep-white transition lg:hidden">
+          <i class="fas fa-chevron-left"></i> Back
         </button>
+        <span class="hidden lg:block text-sm font-semibold text-gray-500 dark:text-gray-400">
+          <i class="fas fa-user mr-2"></i>Profile
+        </span>
 
-        <div class="flex items-center gap-1.5">
+        <!-- Action buttons -->
+        <div class="flex items-center gap-2">
           <button *ngIf="!editing" type="button" (click)="startEditing()"
-                  class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition"
-                  style="background-color: var(--surface-primary); color: var(--text-secondary);">
-            <i class="fas fa-pen text-[10px]"></i> Edit
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+            <i class="fas fa-pen text-xs"></i> Edit
           </button>
           <button type="button" (click)="openMergeDialog()"
-                  class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition"
-                  style="background-color: var(--surface-primary); color: var(--text-secondary);"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
                   title="Merge with another contact">
-            <i class="fas fa-code-merge text-[10px]"></i>
+            <i class="fas fa-code-merge text-xs"></i>
           </button>
           <button type="button" (click)="deleteContact()"
-                  class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-500 transition hover:bg-red-50 dark:hover:bg-red-900/20">
-            <i class="fas fa-trash text-[10px]"></i>
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 transition">
+            <i class="fas fa-trash text-xs"></i>
           </button>
         </div>
       </div>
 
-      <!-- Avatar + name -->
-      <div class="flex items-center gap-3">
-        <div class="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0 overflow-hidden"
-             style="background-color: var(--surface-primary); color: var(--text-secondary);">
+      <!-- Avatar + name section -->
+      <div class="px-5 py-5 flex items-start gap-4">
+        <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-xl font-bold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-2 border-gray-200 dark:border-gray-700">
           <img *ngIf="contact.channels[0]?.avatarUrl"
                [src]="contact.channels[0].avatarUrl"
                [alt]="contact.primaryName"
                class="w-full h-full object-cover" />
           <span *ngIf="!contact.channels[0]?.avatarUrl">{{ getInitials(contact.primaryName) }}</span>
         </div>
-        <div class="min-w-0">
-          <h2 class="text-base font-bold truncate" style="color: var(--text-primary);">
-            {{ contact.primaryName }}
-          </h2>
-          <div class="flex items-center gap-2 mt-0.5">
-            <!-- Platform badges -->
+
+        <div class="flex-1 min-w-0">
+          <h1 class="text-xl font-bold text-gray-900 dark:text-rep-white truncate">{{ contact.primaryName }}</h1>
+
+          <!-- Channel badges -->
+          <div class="flex flex-wrap items-center gap-2 mt-1.5">
             <span *ngFor="let ch of contact.channels"
-                  class="flex items-center gap-1 text-[10px] font-medium"
+                  class="flex items-center gap-1.5 text-sm font-medium"
                   [ngClass]="getPlatformColor(ch.platform)"
-                  [title]="ch.username ? '@' + ch.username : ch.platform">
-              <i class="fab text-xs" [ngClass]="getPlatformIcon(ch.platform)"></i>
-              <span *ngIf="ch.username" class="truncate max-w-[80px]">{{ '@' + ch.username }}</span>
+                  [title]="ch.platform">
+              <i class="fab text-base" [ngClass]="getPlatformIcon(ch.platform)"></i>
+              <span *ngIf="ch.username" class="text-xs truncate max-w-[90px]">{{ '@' + ch.username }}</span>
+            </span>
+          </div>
+
+          <!-- AI Insights badges -->
+          <div *ngIf="contact.aiInsights?.sentiment || contact.aiInsights?.intent || contact.aiInsights?.priority"
+               class="flex flex-wrap items-center gap-1.5 mt-2">
+            <span *ngIf="contact.aiInsights?.sentiment"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold"
+                  [ngClass]="getSentimentBadge(contact.aiInsights?.sentiment).cls">
+              <i class="fas fa-heart mr-1"></i>{{ getSentimentBadge(contact.aiInsights?.sentiment).label }}
+            </span>
+            <span *ngIf="contact.aiInsights?.intent"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+              <i class="fas fa-brain mr-1"></i>{{ contact.aiInsights?.intent }}
+            </span>
+            <span *ngIf="contact.aiInsights?.priority"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold"
+                  [ngClass]="getPriorityBadge(contact.aiInsights?.priority).cls">
+              <i class="fas fa-flag mr-1"></i>{{ getPriorityBadge(contact.aiInsights?.priority).label }}
+            </span>
+          </div>
+
+          <!-- Tags -->
+          <div *ngIf="contact.tags && contact.tags.length > 0" class="flex flex-wrap gap-1.5 mt-2">
+            <span *ngFor="let tag of contact.tags"
+                  class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+              {{ tag }}
             </span>
           </div>
         </div>
-      </div>
-
-      <!-- AI Insights -->
-      <div *ngIf="contact.aiInsights?.sentiment || contact.aiInsights?.intent || contact.aiInsights?.priority"
-           class="flex items-center gap-1.5 flex-wrap mt-3">
-        <span *ngIf="contact.aiInsights?.sentiment"
-              class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-              [ngClass]="getSentimentBadge(contact.aiInsights?.sentiment).cls">
-          <i class="fas fa-heart text-[9px] mr-1"></i>{{ getSentimentBadge(contact.aiInsights?.sentiment).label }}
-        </span>
-        <span *ngIf="contact.aiInsights?.intent"
-              class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
-          <i class="fas fa-brain text-[9px] mr-1"></i>{{ contact.aiInsights?.intent }}
-        </span>
-        <span *ngIf="contact.aiInsights?.priority"
-              class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-              [ngClass]="getPriorityBadge(contact.aiInsights?.priority).cls">
-          <i class="fas fa-flag text-[9px] mr-1"></i>{{ getPriorityBadge(contact.aiInsights?.priority).label }}
-        </span>
-      </div>
-
-      <!-- Tags -->
-      <div *ngIf="contact.tags && contact.tags.length > 0" class="flex flex-wrap gap-1 mt-2">
-        <span *ngFor="let tag of contact.tags"
-              class="px-2 py-0.5 rounded-full text-[10px] font-medium"
-              style="background-color: var(--surface-primary); color: var(--text-secondary);">
-          {{ tag }}
-        </span>
       </div>
     </div>
 
     <!-- ── View mode ── -->
-    <div *ngIf="!editing" class="px-5 py-4 space-y-4">
+    <div *ngIf="!editing" class="px-4 sm:px-6 pb-6 space-y-4">
 
-      <!-- Contact info -->
-      <div class="space-y-2">
-        <h3 class="text-[10px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Contact Info</h3>
-        <div *ngIf="contact.primaryPhone" class="flex items-center gap-2 text-xs" style="color: var(--text-primary);">
-          <i class="fas fa-phone w-4 text-center" style="color: var(--text-muted);"></i>
-          {{ contact.primaryPhone }}
-        </div>
-        <div *ngIf="contact.primaryEmail" class="flex items-center gap-2 text-xs" style="color: var(--text-primary);">
-          <i class="fas fa-envelope w-4 text-center" style="color: var(--text-muted);"></i>
-          {{ contact.primaryEmail }}
-        </div>
-        <div *ngIf="!contact.primaryPhone && !contact.primaryEmail"
-             class="text-xs" style="color: var(--text-muted);">No phone or email on record.</div>
-      </div>
-
-      <!-- Notes -->
-      <div *ngIf="contact.notes" class="space-y-1">
-        <h3 class="text-[10px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Notes</h3>
-        <p class="text-xs leading-relaxed whitespace-pre-wrap" style="color: var(--text-primary);">{{ contact.notes }}</p>
-      </div>
-
-      <!-- Channels detail -->
-      <div class="space-y-2">
-        <h3 class="text-[10px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Channels ({{ contact.channels.length }})</h3>
-        <div *ngFor="let ch of contact.channels"
-             class="flex items-center gap-2.5 p-2.5 rounded-lg"
-             style="background-color: var(--surface-primary);">
-          <i class="fab text-lg flex-shrink-0" [ngClass]="[getPlatformIcon(ch.platform), getPlatformColor(ch.platform)]"></i>
-          <div class="min-w-0">
-            <p class="text-xs font-semibold capitalize truncate" style="color: var(--text-primary);">{{ ch.platform }}</p>
-            <p *ngIf="ch.username" class="text-[11px] truncate" style="color: var(--text-muted);">{{ '@' + ch.username }}</p>
-            <p *ngIf="ch.name && ch.name !== ch.username" class="text-[11px] truncate" style="color: var(--text-muted);">{{ ch.name }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent interactions -->
-      <div *ngIf="contact.interactions && contact.interactions.length > 0" class="space-y-2">
-        <h3 class="text-[10px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">
-          Recent Conversations ({{ contact.interactions.length }})
+      <!-- Contact info card -->
+      <div class="bg-white dark:bg-gray-900/90 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
+        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <i class="fas fa-address-card text-gray-400"></i> Contact Info
         </h3>
-        <div *ngFor="let inx of contact.interactions"
-             class="p-2.5 rounded-lg space-y-1 cursor-pointer hover:opacity-80 transition-opacity"
-             [routerLink]="['/app/inbox']" [queryParams]="{ id: inx._id }"
-             style="background-color: var(--surface-primary);">
-          <div class="flex items-center justify-between gap-2">
-            <span class="text-[11px] font-semibold capitalize" style="color: var(--text-secondary);">
-              <i class="fab mr-1" [ngClass]="getPlatformIcon(inx.platform)"></i>{{ inx.platform }} · {{ inx.type }}
-            </span>
-            <span class="text-[10px]" style="color: var(--text-muted);">
-              {{ inx.platformCreatedAt | date:'MMM d' }}
-            </span>
+        <div class="space-y-2.5">
+          <div *ngIf="contact.primaryPhone" class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-phone text-sm text-gray-500 dark:text-gray-400"></i>
+            </div>
+            <span class="text-sm text-gray-800 dark:text-gray-100">{{ contact.primaryPhone }}</span>
           </div>
-          <p class="text-xs truncate" style="color: var(--text-primary);">{{ inx.content }}</p>
-          <div class="flex items-center gap-2">
-            <span *ngIf="inx.chatRef" class="text-[10px]" style="color: var(--text-muted);">{{ inx.chatRef }}</span>
-            <span class="text-[10px] font-medium capitalize" [ngClass]="getPlatformStatusClass(inx.status)">{{ inx.status }}</span>
+          <div *ngIf="contact.primaryEmail" class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-envelope text-sm text-gray-500 dark:text-gray-400"></i>
+            </div>
+            <span class="text-sm text-gray-800 dark:text-gray-100">{{ contact.primaryEmail }}</span>
+          </div>
+          <p *ngIf="!contact.primaryPhone && !contact.primaryEmail"
+             class="text-sm text-gray-400 dark:text-gray-500 italic">No phone or email on record.</p>
+        </div>
+      </div>
+
+      <!-- Notes card -->
+      <div *ngIf="contact.notes" class="bg-white dark:bg-gray-900/90 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
+        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+          <i class="fas fa-sticky-note text-gray-400"></i> Notes
+        </h3>
+        <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{{ contact.notes }}</p>
+      </div>
+
+      <!-- Channels card -->
+      <div class="bg-white dark:bg-gray-900/90 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
+        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <i class="fas fa-plug text-gray-400"></i> Channels ({{ contact.channels.length }})
+        </h3>
+        <div class="space-y-2.5">
+          <div *ngFor="let ch of contact.channels"
+               class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700">
+            <i class="fab text-xl flex-shrink-0" [ngClass]="[getPlatformIcon(ch.platform), getPlatformColor(ch.platform)]"></i>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold capitalize text-gray-900 dark:text-rep-white">{{ ch.platform }}</p>
+              <p *ngIf="ch.username" class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ '@' + ch.username }}</p>
+              <p *ngIf="ch.name && ch.name !== ch.username" class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ ch.name }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent interactions card -->
+      <div *ngIf="contact.interactions && contact.interactions.length > 0"
+           class="bg-white dark:bg-gray-900/90 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
+        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+          <i class="fas fa-comments text-gray-400"></i> Recent Conversations ({{ contact.interactions.length }})
+        </h3>
+        <div class="space-y-2.5">
+          <div *ngFor="let inx of contact.interactions"
+               class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700 cursor-pointer hover:border-rep-lime/40 hover:bg-rep-lime/5 transition-colors"
+               [routerLink]="['/app/inbox']" [queryParams]="{ id: inx._id }">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-sm font-semibold capitalize text-gray-700 dark:text-gray-200">
+                <i class="fab mr-1.5" [ngClass]="getPlatformIcon(inx.platform)"></i>{{ inx.platform }} · {{ inx.type }}
+              </span>
+              <span class="text-xs text-gray-400 dark:text-gray-500">{{ inx.platformCreatedAt | date:'MMM d' }}</span>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-300 truncate">{{ inx.content }}</p>
+            <div class="flex items-center gap-2 mt-1">
+              <span *ngIf="inx.chatNumber" class="text-xs text-gray-400 dark:text-gray-500">#{{ inx.chatNumber }}</span>
+              <span class="text-xs font-semibold capitalize" [ngClass]="getPlatformStatusClass(inx.status)">{{ inx.status }}</span>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Member since -->
-      <p class="text-[10px]" style="color: var(--text-muted);">
+      <p class="text-xs text-center text-gray-400 dark:text-gray-600">
         Contact created {{ contact.createdAt | date:'MMMM d, yyyy' }}
       </p>
     </div>
 
     <!-- ── Edit mode ── -->
-    <div *ngIf="editing" class="px-5 py-4 space-y-4">
+    <div *ngIf="editing" class="px-4 sm:px-6 pb-6">
+      <div class="bg-white dark:bg-gray-900/90 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 space-y-4">
+        <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300">Edit Contact</h3>
 
-      <div class="space-y-3">
         <div>
-          <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-muted);">Name</label>
+          <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Name</label>
           <input type="text" [(ngModel)]="draftName"
-                 class="w-full px-3 py-2 rounded-lg text-xs border focus:outline-none"
-                 style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
+                 class="w-full px-4 py-2.5 rounded-xl text-sm border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime transition" />
         </div>
         <div>
-          <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-muted);">Phone</label>
+          <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Phone</label>
           <input type="tel" [(ngModel)]="draftPhone"
-                 class="w-full px-3 py-2 rounded-lg text-xs border focus:outline-none"
-                 style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
+                 class="w-full px-4 py-2.5 rounded-xl text-sm border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime transition" />
         </div>
         <div>
-          <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-muted);">Email</label>
+          <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Email</label>
           <input type="email" [(ngModel)]="draftEmail"
-                 class="w-full px-3 py-2 rounded-lg text-xs border focus:outline-none"
-                 style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
+                 class="w-full px-4 py-2.5 rounded-xl text-sm border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime transition" />
         </div>
         <div>
-          <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-muted);">Notes</label>
+          <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Notes</label>
           <textarea [(ngModel)]="draftNotes" rows="3"
-                    class="w-full px-3 py-2 rounded-lg text-xs border focus:outline-none resize-none"
-                    style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"></textarea>
+                    class="w-full px-4 py-2.5 rounded-xl text-sm border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 resize-none focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime transition"></textarea>
         </div>
         <div>
-          <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-muted);">Tags</label>
-          <div class="flex flex-wrap gap-1 mb-1.5">
+          <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Tags</label>
+          <div class="flex flex-wrap gap-1.5 mb-2">
             <span *ngFor="let tag of draftTags"
-                  class="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px]"
-                  style="background-color: var(--surface-primary); color: var(--text-secondary);">
+                  class="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
               {{ tag }}
-              <button type="button" (click)="removeTag(tag)" class="hover:opacity-70 ml-0.5">
-                <i class="fas fa-xmark text-[9px]"></i>
+              <button type="button" (click)="removeTag(tag)" class="hover:text-red-500 transition">
+                <i class="fas fa-xmark text-[10px]"></i>
               </button>
             </span>
           </div>
           <input type="text" [(ngModel)]="draftTagInput" (keydown)="onTagKeyDown($event)"
-                 placeholder="Add tag, press Enter"
-                 class="w-full px-3 py-2 rounded-lg text-xs border focus:outline-none"
-                 style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
+                 placeholder="Type a tag and press Enter"
+                 class="w-full px-4 py-2.5 rounded-xl text-sm border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime transition" />
+        </div>
+
+        <div class="flex items-center gap-3 justify-end pt-2">
+          <button type="button" (click)="cancelEditing()" [disabled]="saving"
+                  class="px-4 py-2 rounded-xl text-sm font-bold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition disabled:opacity-50">
+            Cancel
+          </button>
+          <button type="button" (click)="saveContact()" [disabled]="saving"
+                  class="px-6 py-2 rounded-xl text-sm font-bold bg-rep-lime text-rep-black hover:shadow-lg hover:shadow-rep-lime/50 transition disabled:opacity-50">
+            <i *ngIf="saving" class="fas fa-spinner fa-spin mr-1.5"></i>
+            {{ saving ? 'Saving…' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end contact content -->
+
+  <!-- ── Merge dialog ── -->
+  <div *ngIf="showMergeDialog"
+       class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-rep-white">
+          <i class="fas fa-code-merge text-rep-lime mr-2"></i>Merge Contacts
+        </h3>
+        <button type="button" (click)="closeMergeDialog()"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          <i class="fas fa-xmark"></i>
+        </button>
+      </div>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Find the contact to merge into <strong class="text-gray-900 dark:text-rep-white">{{ contact?.primaryName }}</strong> by their phone number or email.
+        Their conversations will be moved here and their profile will be removed.
+      </p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
+            <i class="fas fa-phone mr-1.5 text-gray-400"></i>Phone number
+          </label>
+          <input type="tel" [(ngModel)]="mergePhone"
+                 placeholder="e.g. +91 9876543210"
+                 class="w-full px-4 py-2.5 rounded-xl text-sm border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime transition" />
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+          <span class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase">or</span>
+          <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5">
+            <i class="fas fa-envelope mr-1.5 text-gray-400"></i>Email address
+          </label>
+          <input type="email" [(ngModel)]="mergeEmail"
+                 placeholder="e.g. customer@example.com"
+                 class="w-full px-4 py-2.5 rounded-xl text-sm border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime transition" />
         </div>
       </div>
 
-      <div class="flex items-center gap-2 justify-end">
-        <button type="button" (click)="cancelEditing()" [disabled]="saving"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold transition disabled:opacity-50"
-                style="background-color: var(--surface-primary); color: var(--text-secondary);">Cancel</button>
-        <button type="button" (click)="saveContact()" [disabled]="saving"
-                class="px-4 py-1.5 bg-gray-900 hover:bg-gray-800 text-white dark:bg-rep-lime dark:hover:bg-rep-lime/80 dark:text-rep-black rounded-lg text-xs font-bold transition disabled:opacity-50">
-          <i *ngIf="saving" class="fas fa-spinner fa-spin mr-1"></i>
-          {{ saving ? 'Saving…' : 'Save' }}
+      <div class="flex gap-3 justify-end pt-1">
+        <button type="button" (click)="closeMergeDialog()" [disabled]="merging"
+                class="px-4 py-2 rounded-xl text-sm font-bold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition disabled:opacity-50">
+          Cancel
+        </button>
+        <button type="button" (click)="confirmMerge()" [disabled]="merging || (!mergePhone.trim() && !mergeEmail.trim())"
+                class="px-6 py-2 rounded-xl text-sm font-bold bg-rep-lime text-rep-black hover:shadow-lg hover:shadow-rep-lime/50 transition disabled:opacity-50">
+          <i *ngIf="merging" class="fas fa-spinner fa-spin mr-1.5"></i>
+          {{ merging ? 'Finding & merging…' : 'Merge Contact' }}
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Merge dialog -->
-  <div *ngIf="showMergeDialog"
-       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <div class="rounded-2xl shadow-2xl p-6 w-full max-w-sm space-y-4"
-         style="background-color: var(--card-bg); border: 1px solid var(--card-border);">
-      <h3 class="text-sm font-bold" style="color: var(--text-primary);">Merge Contacts</h3>
-      <p class="text-xs" style="color: var(--text-muted);">
-        Enter the ID of the contact to merge into <strong>{{ contact?.primaryName }}</strong>.
-        The target contact will be deleted and all its conversations moved here.
-      </p>
-      <input type="text" [(ngModel)]="mergingContactId"
-             placeholder="Target contact ID"
-             class="w-full px-3 py-2 rounded-lg text-xs border focus:outline-none"
-             style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
-      <div class="flex gap-2 justify-end">
-        <button type="button" (click)="closeMergeDialog()" [disabled]="merging"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold transition"
-                style="background-color: var(--surface-primary); color: var(--text-secondary);">Cancel</button>
-        <button type="button" (click)="confirmMerge()" [disabled]="merging || !mergingContactId.trim()"
-                class="px-4 py-1.5 bg-gray-900 text-white dark:bg-rep-lime dark:text-rep-black rounded-lg text-xs font-bold transition disabled:opacity-50">
-          <i *ngIf="merging" class="fas fa-spinner fa-spin mr-1"></i>
-          {{ merging ? 'Merging…' : 'Merge' }}
-        </button>
-      </div>
-    </div>
-  </div>
 </div>

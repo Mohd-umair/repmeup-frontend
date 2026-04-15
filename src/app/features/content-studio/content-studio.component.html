@@ -556,11 +556,47 @@
         </select>
       </div>
 
-            <!-- Include Trend -->
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="includeTrend"
-                class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime/20 dark:border-gray-700" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Include trend</span>
+            <!-- Include Trend — prominent toggle card -->
+            <label class="cursor-pointer block">
+              <input type="checkbox" [(ngModel)]="includeTrend" (ngModelChange)="onIncludeTrendChange()" class="sr-only" />
+              <div class="flex items-center gap-3 p-3 rounded-xl border-2 transition-all"
+                [ngClass]="includeTrend
+                  ? 'border-rep-lime bg-rep-lime/8 dark:bg-rep-lime/10'
+                  : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 hover:border-rep-lime/50 hover:bg-rep-lime/5 dark:hover:bg-rep-lime/5'">
+                <!-- Icon -->
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all"
+                  [ngClass]="includeTrend ? 'bg-rep-lime text-rep-black' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'">
+                  <i class="fas fa-fire-flame-curved text-base"></i>
+                </div>
+                <!-- Text -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm font-semibold"
+                      [ngClass]="includeTrend ? 'text-rep-black dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'">
+                      Include Trend
+                    </span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5"
+                      [ngClass]="includeTrend
+                        ? 'bg-rep-lime/30 text-rep-black dark:bg-rep-lime/20 dark:text-rep-lime'
+                        : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400'">
+                      <i class="fas fa-bolt text-[9px]"></i> 3 credits
+                    </span>
+                    <span *ngIf="includeTrend && loadingTrends" class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <i class="fas fa-spinner fa-spin text-[10px]"></i> Loading...
+                    </span>
+                  </div>
+                  <p class="text-[11px] mt-0.5"
+                    [ngClass]="includeTrend ? 'text-rep-black/70 dark:text-rep-lime/70' : 'text-gray-400 dark:text-gray-500'">
+                    Discover what's trending in your industry right now
+                  </p>
+                </div>
+                <!-- Toggle indicator -->
+                <div class="w-9 h-5 rounded-full shrink-0 transition-all relative"
+                  [ngClass]="includeTrend ? 'bg-rep-lime' : 'bg-gray-300 dark:bg-gray-600'">
+                  <div class="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all"
+                    [ngClass]="includeTrend ? 'left-[calc(100%-18px)]' : 'left-0.5'"></div>
+                </div>
+              </div>
             </label>
 
             <!-- Image / video style controls — hidden for Text-only content type -->
@@ -568,7 +604,7 @@
               <!-- Generate images toggle -->
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" [(ngModel)]="includeImage"
-                  [disabled]="contentType !== 'text-image' && contentType !== 'image-layover'"
+                  [disabled]="contentType !== 'text-image'"
                   class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 disabled:opacity-40 dark:text-rep-lime dark:focus:ring-rep-lime/20 dark:border-gray-700" />
                 <span class="text-sm text-gray-700 dark:text-gray-300">Generate images</span>
               </label>
@@ -1167,6 +1203,168 @@
     <!-- ── RIGHT: Preview & Publish ────────────────────────────────────── -->
     <div class="xl:col-span-4 space-y-4">
       <h2 class="text-base font-bold text-gray-900 dark:text-rep-white">Preview & Publish</h2>
+
+      <!-- ── Industry Trends Panel (visible when Include Trend is ON and no variants yet) ── -->
+      <!-- ── Industry selection prompt card ───────────────────────────────── -->
+      <div *ngIf="includeTrend && showTrendIndustryPrompt && variants.length === 0"
+        class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm dark:shadow-none">
+        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-rep-lime/15 dark:bg-rep-lime/10 flex items-center justify-center">
+            <i class="fas fa-fire-flame-curved text-rep-lime text-sm"></i>
+          </div>
+          <span class="text-sm font-bold text-gray-900 dark:text-rep-white">Find Trends For Your Industry</span>
+        </div>
+        <div class="px-4 py-4 space-y-4">
+          <!-- Industry input -->
+          <div>
+            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+              Industry
+            </label>
+            <input type="text" [(ngModel)]="trendsCustomIndustry"
+              placeholder="e.g. Restaurants, Technology, Fitness… (leave blank for your org industry)"
+              class="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-rep-lime/20 focus:border-rep-lime transition" />
+            <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+              Leave blank to use your organisation's default industry.
+            </p>
+          </div>
+
+          <!-- Cost notice -->
+          <div class="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
+            <i class="fas fa-bolt text-yellow-500 text-sm"></i>
+            <div class="flex-1">
+              <span class="text-xs font-semibold text-yellow-700 dark:text-yellow-400">Cost: 3 AI credits</span>
+              <span *ngIf="aiCredits && !aiCredits.isUnlimited" class="text-xs text-yellow-600 dark:text-yellow-500 ml-1.5">
+                ({{ aiCredits.remaining }} remaining)
+              </span>
+              <span *ngIf="aiCredits?.isUnlimited" class="text-xs text-yellow-600 dark:text-yellow-500 ml-1.5">
+                (∞ unlimited)
+              </span>
+            </div>
+            <span *ngIf="trendsCached && trends.length > 0"
+              class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">
+              cached · 0 credits
+            </span>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-2">
+            <button type="button"
+              (click)="loadIndustryTrends(trendsCustomIndustry || undefined)"
+              class="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-rep-lime text-rep-black font-semibold text-sm rounded-lg hover:bg-rep-lime/90 transition">
+              <i class="fas fa-fire-flame-curved text-sm"></i>
+              Generate Trends
+            </button>
+            <button type="button"
+              (click)="includeTrend = false; showTrendIndustryPrompt = false"
+              class="px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Industry Trends results panel ──────────────────────────────────── -->
+      <div *ngIf="includeTrend && !showTrendIndustryPrompt && variants.length === 0"
+        class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm dark:shadow-none">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="w-7 h-7 rounded-lg bg-rep-lime/15 dark:bg-rep-lime/10 flex items-center justify-center">
+              <i class="fas fa-fire-flame-curved text-rep-lime text-sm"></i>
+            </div>
+            <span class="text-sm font-bold text-gray-900 dark:text-rep-white">Trending in Your Industry</span>
+            <span *ngIf="trendsIndustry"
+              class="text-[10px] px-2 py-0.5 rounded-full bg-rep-lime/10 text-rep-lime border border-rep-lime/20 font-semibold uppercase tracking-wide">
+              {{ trendsIndustry }}
+            </span>
+            <span *ngIf="trendsCached"
+              class="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">
+              cached · 0 credits
+            </span>
+            <span *ngIf="!trendsCached && trends.length > 0"
+              class="text-[10px] px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 font-medium flex items-center gap-0.5">
+              <i class="fas fa-bolt text-[9px]"></i> 3 credits used
+            </span>
+          </div>
+          <!-- Refresh: shows prompt again so user can change industry -->
+          <button type="button" (click)="showTrendIndustryPrompt = true; trends = []" [disabled]="loadingTrends"
+            class="text-xs text-gray-400 hover:text-rep-lime dark:hover:text-rep-lime transition flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+            title="Change industry / refresh">
+            <i class="fas fa-rotate-right text-xs"></i>
+          </button>
+        </div>
+
+        <!-- Loading state -->
+        <div *ngIf="loadingTrends" class="py-10 flex flex-col items-center gap-3">
+          <i class="fas fa-spinner fa-spin text-2xl text-rep-lime"></i>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Analysing trends for your industry…</p>
+        </div>
+
+        <!-- Error state -->
+        <div *ngIf="!loadingTrends && trendsError" class="py-8 flex flex-col items-center gap-3 px-4 text-center">
+          <i class="fas fa-triangle-exclamation text-2xl text-amber-400"></i>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ trendsError }}</p>
+          <button type="button" (click)="showTrendIndustryPrompt = true; trendsError = null"
+            class="px-3 py-1.5 text-xs font-semibold bg-rep-lime text-rep-black rounded-lg hover:bg-rep-lime/90 transition">
+            Try Again
+          </button>
+        </div>
+
+        <!-- Trend cards list -->
+        <div *ngIf="!loadingTrends && !trendsError && trends.length > 0" class="divide-y divide-gray-100 dark:divide-gray-800">
+          <div *ngFor="let trend of trends"
+            class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition group"
+            [ngClass]="appliedTrendId === trend.id ? 'bg-rep-lime/5 dark:bg-rep-lime/5' : ''">
+
+            <!-- Row 1: platform + score -->
+            <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <i [class]="getTrendPlatformIcon(trend.platform) + ' text-xs'"></i>
+                <span>{{ trend.platform }}</span>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" [class]="getTrendScoreClass(trend.relevanceScore)">
+                {{ trend.relevanceScore }}% match
+              </span>
+            </div>
+
+            <!-- Row 2: title -->
+            <p class="text-sm font-semibold text-gray-900 dark:text-rep-white leading-snug mb-1">{{ trend.title }}</p>
+
+            <!-- Row 3: suggested angle -->
+            <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2 mb-2">{{ trend.suggestedAngle }}</p>
+
+            <!-- Row 4: hashtags + use button -->
+            <div class="flex items-end justify-between gap-2">
+              <div class="flex flex-wrap gap-1">
+                <span *ngFor="let tag of trend.hashtags"
+                  class="text-[10px] px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">
+                  {{ tag }}
+                </span>
+              </div>
+              <button type="button" (click)="useTrend(trend)"
+                class="shrink-0 flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg transition"
+                [class]="appliedTrendId === trend.id
+                  ? 'bg-rep-lime text-rep-black'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-rep-lime/20 hover:text-rep-lime dark:hover:bg-rep-lime/10 dark:hover:text-rep-lime'">
+                <i [class]="appliedTrendId === trend.id ? 'fas fa-check' : 'fas fa-plus'" class="text-[10px]"></i>
+                <span>{{ appliedTrendId === trend.id ? 'Added!' : 'Add to Topic' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state (no trends returned) -->
+        <div *ngIf="!loadingTrends && !trendsError && trends.length === 0" class="py-8 flex flex-col items-center gap-2 text-center px-4">
+          <i class="fas fa-magnifying-glass text-2xl text-gray-300 dark:text-gray-600"></i>
+          <p class="text-sm text-gray-500 dark:text-gray-400">No trends found for your industry.</p>
+          <button type="button" (click)="showTrendIndustryPrompt = true"
+            class="px-3 py-1.5 text-xs font-semibold bg-rep-lime text-rep-black rounded-lg hover:bg-rep-lime/90 transition">
+            Try Different Industry
+          </button>
+        </div>
+      </div>
+      <!-- /Industry Trends Panel -->
 
       <!-- Selection Chips -->
       <div *ngIf="variants.length > 0" class="flex flex-wrap gap-2">

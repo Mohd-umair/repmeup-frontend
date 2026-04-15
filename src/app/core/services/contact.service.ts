@@ -43,7 +43,7 @@ export class ContactService {
     return this.apiService.delete<IApiResponse<void>>(`${this.base}/${id}`);
   }
 
-  mergeContact(primaryId: string, targetContactId: string): Observable<IApiResponse<IContact>> {
-    return this.apiService.post<IApiResponse<IContact>>(`${this.base}/${primaryId}/merge`, { targetContactId });
+  mergeContact(primaryId: string, lookup: { phone?: string; email?: string }): Observable<IApiResponse<IContact>> {
+    return this.apiService.post<IApiResponse<IContact>>(`${this.base}/${primaryId}/merge`, lookup);
   }
 }

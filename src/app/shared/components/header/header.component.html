@@ -47,7 +47,7 @@
     <!-- Notifications -->
     <div class="relative">
       <button 
-        (click)="toggleNotifications()"
+        (click)="toggleNotifications(); $event.stopPropagation()"
         class="relative p-2 text-gray-400 hover:text-rep-lime rounded-lg hover:bg-gray-800 transition"
       >
         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +188,7 @@
     <!-- User Menu -->
     <div class="relative">
       <button 
-        (click)="toggleUserMenu()"
+        (click)="toggleUserMenu(); $event.stopPropagation()"
         class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 transition"
       >
         <div class="w-8 h-8 bg-rep-lime rounded-full flex items-center justify-center text-rep-black font-semibold text-sm">

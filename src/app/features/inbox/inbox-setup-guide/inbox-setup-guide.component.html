@@ -1,0 +1,104 @@
+<!-- Backdrop -->
+<div *ngIf="shouldShow && !manuallyDismissed"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     role="dialog" aria-modal="true" aria-labelledby="setup-guide-title">
+
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="dismiss()"></div>
+
+  <!-- Modal card -->
+  <div class="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden
+               border border-gray-200 dark:border-gray-700 animate-fade-in-up">
+
+    <!-- Coloured top bar -->
+    <div class="h-1.5 w-full bg-gradient-to-r from-rep-lime via-green-400 to-emerald-400"></div>
+
+    <!-- Header -->
+    <div class="px-6 pt-5 pb-4 flex items-start gap-4 border-b border-gray-100 dark:border-gray-800">
+      <div class="w-11 h-11 rounded-xl bg-rep-lime flex items-center justify-center flex-shrink-0 shadow">
+        <i class="fas fa-bolt text-rep-black text-base"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 id="setup-guide-title" class="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+          Get started with AI Auto Reply
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          Complete these steps to have AI reply to your customers automatically.
+        </p>
+      </div>
+      <button type="button" (click)="dismiss()"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition flex-shrink-0"
+              aria-label="Close">
+        <i class="fas fa-times text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="px-6 pt-4 pb-1">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Progress</span>
+        <span class="text-xs font-bold text-rep-black dark:text-rep-lime">{{ completedCount }}/{{ steps.length }} complete</span>
+      </div>
+      <div class="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div class="h-full bg-rep-lime rounded-full transition-all duration-700 ease-out"
+             [style.width.%]="progressPercent"></div>
+      </div>
+    </div>
+
+    <!-- Steps list -->
+    <div class="px-6 py-4 space-y-2.5 max-h-80 overflow-y-auto">
+      <div *ngFor="let step of steps; let i = index"
+           class="flex items-start gap-3.5 p-3.5 rounded-xl border transition-all duration-200"
+           [ngClass]="step.done
+             ? 'border-rep-lime/30 bg-rep-lime/5 dark:bg-rep-lime/5'
+             : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'">
+
+        <!-- Step number / check -->
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold mt-0.5"
+             [ngClass]="step.done
+               ? 'bg-rep-lime text-rep-black'
+               : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'">
+          <i *ngIf="step.done" class="fas fa-check text-xs"></i>
+          <i *ngIf="!step.done" class="{{ step.icon }} text-xs"></i>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold"
+             [ngClass]="step.done
+               ? 'text-gray-400 dark:text-gray-500 line-through'
+               : 'text-gray-900 dark:text-white'">
+            {{ step.label }}
+          </p>
+          <p *ngIf="!step.done" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-relaxed">
+            {{ step.description }}
+          </p>
+        </div>
+
+        <!-- Action button -->
+        <a *ngIf="!step.done && step.link"
+           [routerLink]="step.link"
+           (click)="dismiss()"
+           class="flex-shrink-0 self-center inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                  bg-rep-black dark:bg-rep-lime text-rep-lime dark:text-rep-black
+                  text-xs font-bold hover:opacity-90 transition whitespace-nowrap">
+          {{ step.linkLabel }}
+          <i class="fas fa-arrow-right text-[9px]"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 pb-5 pt-2 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
+      <button type="button" (click)="dismissPermanently()"
+              class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition hover:underline">
+        Don't show this again
+      </button>
+      <button type="button" (click)="dismiss()"
+              class="px-4 py-2 rounded-xl bg-rep-lime text-rep-black text-sm font-bold hover:opacity-90 transition shadow-sm">
+        Got it, set up later
+      </button>
+    </div>
+
+  </div>
+</div>

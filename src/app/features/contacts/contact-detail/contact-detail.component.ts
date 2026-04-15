@@ -36,7 +36,8 @@ export class ContactDetailComponent implements OnChanges, OnDestroy {
   draftTagInput = '';
   draftTags: string[] = [];
 
-  mergingContactId = '';
+  mergePhone = '';
+  mergeEmail = '';
   showMergeDialog = false;
   merging = false;
 
@@ -155,20 +156,27 @@ export class ContactDetailComponent implements OnChanges, OnDestroy {
   }
 
   openMergeDialog(): void {
-    this.mergingContactId = '';
+    this.mergePhone = '';
+    this.mergeEmail = '';
     this.showMergeDialog = true;
   }
 
   closeMergeDialog(): void {
     this.showMergeDialog = false;
-    this.mergingContactId = '';
+    this.mergePhone = '';
+    this.mergeEmail = '';
   }
 
   confirmMerge(): void {
-    if (!this.contact || !this.mergingContactId.trim()) return;
-    this.merging = true;
+    if (!this.contact) return;
+    const phone = this.mergePhone.trim();
+    const email = this.mergeEmail.trim();
+    if (!phone && !email) return;
 
-    this.contactService.mergeContact(this.contact._id, this.mergingContactId.trim())
+    this.merging = true;
+    const lookup = phone ? { phone } : { email };
+
+    this.contactService.mergeContact(this.contact._id, lookup)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {

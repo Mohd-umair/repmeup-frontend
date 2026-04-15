@@ -76,6 +76,8 @@ export class SocialPreviewComponent implements OnChanges {
         return 125; // Instagram shows ~125 chars in feed before "more"
       case 'linkedin':
         return 210; // LinkedIn shows ~210 chars before "...see more"
+      case 'youtube':
+        return 200; // Description preview (~2 lines in Studio-style UI)
       default:
         return 280;
     }
@@ -185,6 +187,9 @@ export class SocialPreviewComponent implements OnChanges {
       color = 'fff';
     } else if (this.platform.id === 'linkedin') {
       bg = '0A66C2'; // LinkedIn blue
+      color = 'fff';
+    } else if (this.platform.id === 'youtube') {
+      bg = 'FF0000'; // YouTube red
       color = 'fff';
     }
     

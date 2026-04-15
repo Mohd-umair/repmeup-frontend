@@ -92,6 +92,15 @@ export interface ImageConfig {
   format: string;
 }
 
+export interface TrendItem {
+  id: string;
+  title: string;
+  platform: string;
+  relevanceScore: number;
+  suggestedAngle: string;
+  hashtags: string[];
+}
+
 @Component({
   selector: 'app-content-studio',
   standalone: true,
@@ -103,7 +112,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   // ─── Mode & Flow State ───────────────────────────────────────────────────────
   contentMode: 'ai' | 'custom' = 'ai';
   postFormat: 'post' | 'story' | 'reel' | 'video' | 'short' = 'post';
-  contentType: 'text' | 'text-image' | 'text-video' | 'image-layover' = 'text';
+  contentType: 'text' | 'text-image' | 'text-video' = 'text';
 
   // ─── Generation Mode (4-tab selector) ────────────────────────────────────────
   generationMode: 'instant' | 'brand-voice' | 'reference' | 'template' = 'instant';
@@ -175,10 +184,11 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   /** All possible post format options — filtered dynamically by selected platforms */
   private readonly allPostFormatOptions = [
-    { id: 'post',  label: 'Post',  icon: 'fa-image',      platforms: ['instagram','facebook','linkedin'] },
+    { id: 'post',  label: 'Post',  icon: 'fa-image',      platforms: ['instagram','facebook','linkedin','youtube'] },
     { id: 'story', label: 'Story', icon: 'fa-circle-dot', platforms: ['instagram','facebook'] },
     { id: 'reel',  label: 'Reel',  icon: 'fa-film',       platforms: ['instagram','facebook'] },
-    { id: 'video', label: 'Video', icon: 'fa-video',      platforms: ['instagram','facebook','linkedin','youtube'] },
+    /** Long-form "Video" is for IG/FB/LinkedIn only — YouTube in this studio is Shorts-only */
+    { id: 'video', label: 'Video', icon: 'fa-video',      platforms: ['instagram','facebook','linkedin'] },
     { id: 'short', label: 'Short', icon: 'fa-bolt',       platforms: ['youtube'] },
   ];
 
@@ -189,12 +199,31 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       : this.allPostFormatOptions.filter(o => o.id !== 'short');
     if (!byPlatform.length) byPlatform = this.allPostFormatOptions.filter(o => o.id !== 'short');
 
-    // Filter by content type: video/short only valid for text-video; exclude them otherwise
+    // With YouTube selected, never offer long-form "Video" (Shorts only for YouTube)
+    if (ids.includes('youtube')) {
+      byPlatform = byPlatform.filter(o => o.id !== 'video');
+    }
+
+    // Filter by content type: video/reel/short for text-video; exclude long-form video formats otherwise
     if (this.contentType === 'text-video') {
-      const videoFmts = byPlatform.filter(o => o.id === 'video' || o.id === 'reel' || o.id === 'short');
+      let videoFmts = byPlatform.filter(o => o.id === 'video' || o.id === 'reel' || o.id === 'short');
+      // YouTube: feed/community-style post + Shorts (picture posts use Post; vertical video uses Short)
+      if (ids.includes('youtube')) {
+        const postFmt = byPlatform.find(o => o.id === 'post');
+        if (postFmt && !videoFmts.some(o => o.id === 'post')) {
+          videoFmts = [postFmt, ...videoFmts];
+        }
+      }
       return videoFmts.length ? videoFmts : byPlatform;
     } else {
-      const nonVideoFmts = byPlatform.filter(o => o.id !== 'video' && o.id !== 'short');
+      let nonVideoFmts = byPlatform.filter(o => o.id !== 'video' && o.id !== 'short');
+      // YouTube Shorts stay selectable next to Post (text / text+image flows)
+      if (ids.includes('youtube')) {
+        const shortOpt = byPlatform.find(o => o.id === 'short');
+        if (shortOpt && !nonVideoFmts.some(o => o.id === 'short')) {
+          nonVideoFmts = [...nonVideoFmts, shortOpt];
+        }
+      }
       return nonVideoFmts.length ? nonVideoFmts : byPlatform;
     }
   }
@@ -203,7 +232,6 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     { id: 'text',          label: 'Text Only',              icon: 'fa-align-left',    desc: 'Pure text post, no media' },
     { id: 'text-image',    label: 'Text + Image',           icon: 'fa-image',         desc: 'AI-generated image with your text' },
     { id: 'text-video',    label: 'Text + Video',           icon: 'fa-video',         desc: 'AI-generated video reel (1 variant)' },
-    { id: 'image-layover', label: 'Image with Text Layover', icon: 'fa-font',         desc: 'AI renders your headline into the image' },
   ];
 
   // ─── Logo Overlay ─────────────────────────────────────────────────────────────
@@ -230,6 +258,19 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   includeImage = false;
   includeVideo = false;
 
+  // ─── Industry Trends ────────────────────────────────────────────────────────
+  trends: TrendItem[] = [];
+  loadingTrends = false;
+  trendsError: string | null = null;
+  trendsIndustry: string = '';
+  trendsCached = false;
+  /** Whether the inline "choose industry" prompt is visible */
+  showTrendIndustryPrompt = false;
+  /** Bound to the industry text input in the prompt card */
+  trendsCustomIndustry = '';
+  /** Track which card just had "Use as Topic" applied (for brief flash feedback) */
+  appliedTrendId: string | null = null;
+
   generating = false;
   generatingImages = false;
   generatingVideos = false;
@@ -245,7 +286,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   /**
    * How the video will be posted.
    * Driven by the platform mix: Instagram/Facebook support reel|story|post,
-   * YouTube supports video|short, LinkedIn only supports post.
+   * YouTube is Shorts-only in this studio; LinkedIn only supports post.
    */
   videoPostType: 'reel' | 'story' | 'post' | 'video' | 'short' = 'reel';
   /** Inline-editable copy of the chosen text */
@@ -385,7 +426,10 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.loadEventTemplates();
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(q => {
       if (q['topic']) this.topic = q['topic'];
-      if (q['trend']) this.includeTrend = true;
+      if (q['trend']) {
+        this.includeTrend = true;
+        this.onIncludeTrendChange();
+      }
     });
   }
 
@@ -445,6 +489,71 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ─── Trend Methods ────────────────────────────────────────────────────────
+
+  onIncludeTrendChange(): void {
+    if (this.includeTrend) {
+      // Always show the industry prompt first so user can choose/override
+      this.showTrendIndustryPrompt = true;
+      this.trendsError = null;
+    } else {
+      this.showTrendIndustryPrompt = false;
+    }
+  }
+
+  /** Called by the "Generate Trends" button in the industry prompt card */
+  loadIndustryTrends(industry?: string): void {
+    this.showTrendIndustryPrompt = false;
+    this.loadingTrends = true;
+    this.trendsError = null;
+    const params = industry ? `?industry=${encodeURIComponent(industry)}` : '';
+    this.http.get<any>(`${environment.apiUrl}/trends/industry${params}`)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.trends = res.data || [];
+          this.trendsIndustry = res.industry || '';
+          this.trendsCached = !!res.cached;
+          this.loadingTrends = false;
+          this.loadCredits(); // refresh credit counter after deduction
+        },
+        error: (err) => {
+          const msg = err.error?.message || 'Could not load trends. Please try again.';
+          this.trendsError = msg;
+          this.loadingTrends = false;
+        }
+      });
+  }
+
+  useTrend(trend: TrendItem): void {
+    // Append to existing topic — do not replace, do not navigate
+    const append = trend.suggestedAngle;
+    this.topic = this.topic.trim() ? `${this.topic.trim()} ${append}` : append;
+    this.appliedTrendId = trend.id;
+    setTimeout(() => { this.appliedTrendId = null; }, 1500);
+  }
+
+  /** Platform icon for a trend's source platform string */
+  getTrendPlatformIcon(platform: string): string {
+    const map: Record<string, string> = {
+      instagram: 'fab fa-instagram',
+      linkedin: 'fab fa-linkedin',
+      youtube: 'fab fa-youtube',
+      facebook: 'fab fa-facebook',
+      tiktok: 'fab fa-tiktok',
+      x: 'fab fa-x-twitter',
+      twitter: 'fab fa-x-twitter',
+    };
+    return map[platform.toLowerCase()] || 'fas fa-hashtag';
+  }
+
+  /** Tailwind color classes for relevance score badge */
+  getTrendScoreClass(score: number): string {
+    if (score >= 80) return 'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400';
+    if (score >= 60) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400';
+    return 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400';
+  }
+
   selectGenerationMode(mode: 'instant' | 'brand-voice' | 'reference' | 'template'): void {
     if (this.generationMode === mode) return;
     this.generationMode = mode;
@@ -502,6 +611,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       ? this.selectedPlatformIds.filter(p => p !== id)
       : [...this.selectedPlatformIds, id];
     this.normalisePostFormat();
+    this.normaliseVideoPostType();
     // Auto-advance to step 2 when at least one platform is selected
     if (this.selectedPlatformIds.length > 0 && this.currentStep === 1) {
       this.completedSteps.add(1);
@@ -515,24 +625,41 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Keep videoPostType in sync when platform mix removes options (e.g. no YouTube long-form video) */
+  private normaliseVideoPostType(): void {
+    const allowed = this.videoPostTypeOptions.map(o => o.id);
+    if (!allowed.includes(this.videoPostType)) {
+      this.videoPostType = (allowed[0] as any) ?? 'reel';
+    }
+  }
+
   // ─── Content Type & Mode ─────────────────────────────────────────────────────
 
-  setContentType(type: 'text' | 'text-image' | 'text-video' | 'image-layover'): void {
+  setContentType(type: 'text' | 'text-image' | 'text-video'): void {
     this.contentType = type;
-    this.includeImage = type === 'text-image' || type === 'image-layover';
+    this.includeImage = type === 'text-image';
     this.includeVideo = type === 'text-video';
 
     // Sync postFormat: video/short only valid for text-video; reset if switching away
     const isVideoFormat = this.postFormat === 'video' || this.postFormat === 'short';
     if (type === 'text-video' && !isVideoFormat) {
-      // Switching to video content type — default to 'video' format
+      // Switching to video content type — prefer long-form Video, else YouTube Shorts, else Reel, else first
       const available = this.postFormatOptions.map(o => o.id);
-      this.postFormat = (available.find(id => id === 'video') ?? available[0] ?? 'video') as any;
+      const ids = this.selectedPlatformIds.map(p => p.toLowerCase());
+      const next =
+        (available.includes('video') ? 'video' : undefined) ||
+        (ids.includes('youtube') && available.includes('short') ? 'short' : undefined) ||
+        (available.includes('reel') ? 'reel' : undefined) ||
+        available[0] ||
+        'video';
+      this.postFormat = next as any;
     } else if (type !== 'text-video' && isVideoFormat) {
       // Switching away from video content type — reset to a non-video format
       const available = this.postFormatOptions.map(o => o.id);
       this.postFormat = (available.find(id => id === 'post') ?? available[0] ?? 'post') as any;
     }
+
+    this.normaliseVideoPostType();
 
     // Auto-advance to step 3 after picking content type
     if (this.currentStep === 2) {
@@ -870,8 +997,7 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
       opts.push({ id: 'post',  label: 'Feed Post', icon: 'fa-image',    platforms: ['Instagram', 'Facebook'] });
     }
     if (hasYouTube) {
-      opts.push({ id: 'video', label: 'YouTube Video', icon: 'fa-youtube',   platforms: ['YouTube'] });
-      opts.push({ id: 'short', label: 'YouTube Short', icon: 'fa-bolt',      platforms: ['YouTube'] });
+      opts.push({ id: 'short', label: 'YouTube Short', icon: 'fa-bolt', platforms: ['YouTube'] });
     }
     if (hasLinkedIn && !hasInstagram && !hasFacebook && !hasYouTube) {
       opts.push({ id: 'post',  label: 'Video Post', icon: 'fa-linkedin', platforms: ['LinkedIn'] });
