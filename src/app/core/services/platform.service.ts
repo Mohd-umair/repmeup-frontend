@@ -148,6 +148,48 @@ export class PlatformService {
   }
 
   /**
+   * Initiate Instagram Direct connect flow (Instagram API with Facebook Login).
+   * Redirects user to the Facebook OAuth dialog with Instagram scopes.
+   * On completion, all Instagram Professional accounts linked to the user's
+   * Facebook Pages are saved automatically — no Page Manager step required.
+   */
+  connectInstagramDirect(): void {
+    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/instagram-direct').subscribe({
+      next: (response) => {
+        if (response.success && response.authUrl) {
+          window.location.href = response.authUrl;
+        }
+      },
+      error: (error) => {
+        console.error('Error getting Instagram Direct authorization URL:', error);
+        const errorMessage =
+          error.error?.error || error.error?.message || 'Failed to initiate Instagram connection. Please try again.';
+        this.notificationService.error('Connection Failed', errorMessage);
+      }
+    });
+  }
+
+  /**
+   * Initiate Instagram Login OAuth flow (no Facebook account required).
+   * Uses "Instagram API with Instagram Login" — users log in with Instagram credentials directly.
+   */
+  connectInstagramLogin(): void {
+    this.apiService.get<{ success: boolean; authUrl: string }>('/auth/instagram-login').subscribe({
+      next: (response) => {
+        if (response.success && response.authUrl) {
+          window.location.href = response.authUrl;
+        }
+      },
+      error: (error) => {
+        console.error('Error getting Instagram Login authorization URL:', error);
+        const errorMessage =
+          error.error?.error || error.error?.message || 'Failed to initiate Instagram connection. Please try again.';
+        this.notificationService.error('Connection Failed', errorMessage);
+      }
+    });
+  }
+
+  /**
    * Initiate Facebook OAuth flow
    * Redirects user to Facebook/Meta authorization page
    * @param forceConsentScreen If true, adds auth_type=reauthorize so Meta shows the permission consent screen (for App Review screencast)

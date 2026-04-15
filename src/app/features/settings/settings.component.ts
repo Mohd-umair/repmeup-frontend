@@ -396,6 +396,93 @@ export class SettingsComponent implements OnInit, OnDestroy {
             queryParams: {}
           });
         }
+      } else if (params['connection'] === 'instagram-direct') {
+        // Instagram Direct connect callback (auto-saved without Page Manager)
+        if (params['status'] === 'success') {
+          const accounts = parseInt(params['accounts'] || '0', 10);
+          const names = decodeURIComponent(params['names'] || '');
+
+          this.loadPlatformConnections();
+          this.loadSubscriptionLimits();
+          this.platformConnectionService.refresh().subscribe();
+
+          this.subscriptions.push(
+            timer(500).pipe(take(1)).subscribe(() => {
+              this.notificationService.success(
+                'Instagram Connected',
+                names
+                  ? `${accounts} account(s) connected: ${names}`
+                  : `${accounts} Instagram account(s) connected successfully!`
+              );
+            })
+          );
+        } else if (params['status'] === 'error') {
+          const errorMessage = decodeURIComponent(params['message'] || 'Connection failed');
+          const details: string[] = [];
+
+          if (
+            errorMessage.toLowerCase().includes('no instagram') ||
+            errorMessage.toLowerCase().includes('business or creator') ||
+            errorMessage.toLowerCase().includes('professional')
+          ) {
+            details.push('1. Make sure your Instagram account is a Business or Creator account');
+            details.push('2. Link it to a Facebook Page (Instagram Settings → Linked Accounts)');
+            details.push('3. Ensure you have Admin/Editor role on the Facebook Page');
+            details.push('4. Try connecting again');
+          }
+
+          if (details.length > 0) {
+            this.notificationService.showWithDetails('error', 'Instagram Connection Failed', errorMessage, details, 12000);
+          } else {
+            this.notificationService.error('Instagram Connection Failed', errorMessage, 8000);
+          }
+        }
+
+        this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+
+      } else if (params['connection'] === 'instagram-login') {
+        // Instagram Login callback (Instagram API with Instagram Login — no Facebook required)
+        if (params['status'] === 'success') {
+          const accounts = parseInt(params['accounts'] || '0', 10);
+          const names = decodeURIComponent(params['names'] || '');
+
+          this.loadPlatformConnections();
+          this.loadSubscriptionLimits();
+          this.platformConnectionService.refresh().subscribe();
+
+          this.subscriptions.push(
+            timer(500).pipe(take(1)).subscribe(() => {
+              this.notificationService.success(
+                'Instagram Connected',
+                names
+                  ? `${accounts} account(s) connected: ${names}`
+                  : `${accounts} Instagram account(s) connected successfully!`
+              );
+            })
+          );
+        } else if (params['status'] === 'error') {
+          const errorMessage = decodeURIComponent(params['message'] || 'Connection failed');
+          const details: string[] = [];
+
+          if (
+            errorMessage.toLowerCase().includes('business') ||
+            errorMessage.toLowerCase().includes('creator') ||
+            errorMessage.toLowerCase().includes('professional')
+          ) {
+            details.push('1. Make sure your Instagram account is a Business or Creator account');
+            details.push('2. Go to Instagram → Settings → Account → Switch to Professional Account');
+            details.push('3. Try connecting again');
+          }
+
+          if (details.length > 0) {
+            this.notificationService.showWithDetails('error', 'Instagram Connection Failed', errorMessage, details, 12000);
+          } else {
+            this.notificationService.error('Instagram Connection Failed', errorMessage, 8000);
+          }
+        }
+
+        this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+
       } else if (params['connection'] === 'instagram') {
         // Instagram-specific callback handling
         if (params['status'] === 'success') {
@@ -1114,6 +1201,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
    */
   connectInstagramForceConsent(): void {
     this.platformService.connectInstagram(true);
+  }
+
+  /**
+   * Start the Instagram Direct connect flow.
+   * Uses Instagram API with Facebook Login — auto-saves all IG accounts without Page Manager.
+   */
+  connectInstagramDirect(): void {
+    this.platformService.connectInstagramDirect();
+  }
+
+  connectInstagramLogin(): void {
+    this.platformService.connectInstagramLogin();
   }
 
   /** URL for Facebook App Settings so the user can revoke our app (to force consent screen on next connect). */
