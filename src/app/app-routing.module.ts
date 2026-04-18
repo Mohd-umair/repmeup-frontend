@@ -47,6 +47,7 @@ import { BucketSettingsComponent } from './features/settings/components/bucket-s
 import { SupportComponent } from './features/support/support.component';
 import { CatalogComponent } from './features/catalog/catalog.component';
 import { ContactsContainerComponent } from './features/contacts/contacts-container/contacts-container.component';
+import { PlatformTroubleshootingComponent } from './features/settings/platform-troubleshooting/platform-troubleshooting.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -120,6 +121,7 @@ const routes: Routes = [
       { path: 'knowledge-base/create', component: KnowledgeBaseCreateComponent, canActivate: [PermissionGuard], data: { permissions: ['knowledge_base.read'] } },
       { path: 'settings', redirectTo: 'settings/platforms', pathMatch: 'full' },
       { path: 'settings/platforms', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/platform-troubleshooting', component: PlatformTroubleshootingComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/profile', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/organization', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['organization.read'] } },
       { path: 'settings/notifications', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },

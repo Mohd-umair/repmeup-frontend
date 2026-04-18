@@ -1203,14 +1203,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.platformService.connectInstagram(true);
   }
 
-  /**
-   * Start the Instagram Direct connect flow.
-   * Uses Instagram API with Facebook Login — auto-saves all IG accounts without Page Manager.
-   */
-  connectInstagramDirect(): void {
-    this.platformService.connectInstagramDirect();
-  }
-
   connectInstagramLogin(): void {
     this.platformService.connectInstagramLogin();
   }

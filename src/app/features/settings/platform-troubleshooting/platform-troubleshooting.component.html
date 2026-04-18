@@ -1,0 +1,128 @@
+<div class="min-h-screen bg-gray-50 dark:bg-rep-black p-4 md:p-6">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div>
+        <a
+          routerLink="/app/settings/platforms"
+          class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-rep-black dark:hover:text-rep-lime transition-colors"
+        >
+          <i class="fas fa-arrow-left text-xs"></i>
+          Back to Platform Settings
+        </a>
+        <h1 class="mt-3 text-3xl md:text-4xl font-bold text-rep-black dark:text-white">
+          Platform Troubleshooting Guide
+        </h1>
+        <p class="mt-2 max-w-3xl text-sm md:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+          Use this guide when platform connection, webhook, inbox, or reply issues appear in Repmeup.
+          It focuses on the most common Meta, Instagram, and Facebook connection problems and the exact next steps to resolve them.
+        </p>
+      </div>
+
+      <a
+        routerLink="/app/support"
+        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-rep-lime text-rep-black font-semibold hover:shadow-lg hover:shadow-rep-lime/25 transition-all"
+      >
+        <i class="fas fa-life-ring text-sm"></i>
+        Contact Support
+      </a>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div
+        *ngFor="let item of quickChecks"
+        class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 shadow-sm"
+      >
+        <div class="w-10 h-10 rounded-xl bg-rep-lime/15 dark:bg-rep-lime/10 flex items-center justify-center mb-3">
+          <i class="fas fa-circle-check text-rep-black dark:text-rep-lime"></i>
+        </div>
+        <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
+          {{ item }}
+        </p>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-amber-200 dark:border-amber-700/40 bg-amber-50 dark:bg-amber-950/20 p-5 md:p-6">
+      <div class="flex items-start gap-3">
+        <div class="w-11 h-11 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-triangle-exclamation text-amber-600 dark:text-amber-300"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-amber-900 dark:text-amber-100">Important rule for Instagram connections</h2>
+          <p class="mt-2 text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
+            The same Instagram professional account should not be actively connected through both
+            <strong>Facebook Login</strong> and <strong>Instagram Login</strong>. Meta can allow inbound events while still rejecting replies with thread owner errors for that account.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-5">
+      <section
+        *ngFor="let issue of issues; let index = index"
+        class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden"
+      >
+        <div class="border-b border-gray-200 dark:border-gray-700 px-5 md:px-6 py-4 bg-gray-50 dark:bg-gray-800/70">
+          <div class="flex items-start gap-4">
+            <div class="w-9 h-9 rounded-xl bg-rep-black dark:bg-rep-lime text-white dark:text-rep-black flex items-center justify-center font-bold flex-shrink-0">
+              {{ index + 1 }}
+            </div>
+            <div>
+              <h2 class="text-lg md:text-xl font-bold text-rep-black dark:text-white">{{ issue.title }}</h2>
+              <p class="mt-1 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                {{ issue.summary }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-5 md:grid-cols-2 px-5 md:px-6 py-5">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">Signs you will see</h3>
+            <ul class="space-y-2">
+              <li
+                *ngFor="let symptom of issue.symptoms"
+                class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-200"
+              >
+                <i class="fas fa-circle text-[7px] mt-1.5 text-rep-lime flex-shrink-0"></i>
+                <span>{{ symptom }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-3">What to do</h3>
+            <ol class="space-y-3">
+              <li
+                *ngFor="let step of issue.steps; let stepIndex = index"
+                class="flex items-start gap-3 text-sm text-gray-700 dark:text-gray-200"
+              >
+                <span class="w-6 h-6 rounded-full bg-rep-lime/15 dark:bg-rep-lime/10 text-rep-black dark:text-rep-lime font-bold text-xs flex items-center justify-center flex-shrink-0">
+                  {{ stepIndex + 1 }}
+                </span>
+                <span class="leading-relaxed">{{ step }}</span>
+              </li>
+            </ol>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 md:p-6 shadow-sm">
+      <h2 class="text-xl font-bold text-rep-black dark:text-white">Before you raise a support ticket</h2>
+      <ul class="mt-4 space-y-2 text-sm text-gray-700 dark:text-gray-200">
+        <li class="flex items-start gap-2">
+          <i class="fas fa-check text-rep-lime mt-1"></i>
+          Confirm which platform and login flow you used: Facebook Login or Instagram Login.
+        </li>
+        <li class="flex items-start gap-2">
+          <i class="fas fa-check text-rep-lime mt-1"></i>
+          Save the exact error text, affected Instagram or Facebook account, and the time of the failed action.
+        </li>
+        <li class="flex items-start gap-2">
+          <i class="fas fa-check text-rep-lime mt-1"></i>
+          Capture one screenshot from Meta dashboard or the connected account settings if the issue is Meta-related.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
