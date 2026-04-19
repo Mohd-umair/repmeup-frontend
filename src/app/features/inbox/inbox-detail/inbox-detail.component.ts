@@ -1605,7 +1605,9 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
           return true;
         })
       : rawIncoming;
-    // Merge caption + image: when Meta sends caption and image as two separate webhooks, show one bubble (caption with image)
+    // Merge caption + media: when Meta sends caption and media (image/video) as two separate webhooks, show one bubble
+    const MEDIA_PLACEHOLDER_RE = /^\[(image|video|audio|file)\]$/i;
+    const isMediaPlaceholder = (t?: string) => !t || MEDIA_PLACEHOLDER_RE.test(t.trim());
     const mergedIncoming: Array<{ mid?: string; text?: string; timestamp?: number; attachmentUrl?: string; attachmentType?: string }> = [];
     if (incoming && Array.isArray(incoming)) {
       for (let i = 0; i < incoming.length; i++) {
@@ -1615,6 +1617,9 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         const prevHasCaption = msg.text && msg.text.trim() && !msg.attachmentUrl;
         const msgIsImageOnly = msg.attachmentUrl && msg.attachmentType === 'image' && this.isImagePlaceholder(msg.text);
         const nextHasCaption = next?.text && next.text.trim() && !next.attachmentUrl;
+        // Same merging for video
+        const nextIsVideoOnly = next?.attachmentUrl && next?.attachmentType === 'video' && isMediaPlaceholder(next?.text);
+        const msgIsVideoOnly = msg.attachmentUrl && msg.attachmentType === 'video' && isMediaPlaceholder(msg.text);
         if (nextIsImageOnly && prevHasCaption) {
           mergedIncoming.push({
             mid: next!.mid,
@@ -1625,6 +1630,24 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
           });
           i++;
         } else if (msgIsImageOnly && nextHasCaption) {
+          mergedIncoming.push({
+            mid: msg.mid,
+            text: next!.text,
+            timestamp: next!.timestamp ?? msg.timestamp,
+            attachmentUrl: msg.attachmentUrl,
+            attachmentType: msg.attachmentType
+          });
+          i++;
+        } else if (nextIsVideoOnly && prevHasCaption) {
+          mergedIncoming.push({
+            mid: next!.mid,
+            text: msg.text,
+            timestamp: next!.timestamp ?? msg.timestamp,
+            attachmentUrl: next!.attachmentUrl,
+            attachmentType: next!.attachmentType
+          });
+          i++;
+        } else if (msgIsVideoOnly && nextHasCaption) {
           mergedIncoming.push({
             mid: msg.mid,
             text: next!.text,

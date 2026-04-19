@@ -360,9 +360,9 @@ export class InboxListComponent implements OnInit, OnDestroy {
     const replyTime = lastReply ? new Date(lastReply.sentAt).getTime() : 0;
     const incomingTime = this._incomingTime(lastIncoming);
 
-    if (!lastReply && !lastIncoming) return interaction.content ?? '';
+    if (!lastReply && !lastIncoming) return this._friendlyAttachmentText({ text: interaction.content ?? '' });
     if (replyTime >= incomingTime && lastReply) return lastReply.content ?? interaction.content ?? '';
-    if (lastIncoming?.text) return lastIncoming.text;
+    if (lastIncoming) return this._friendlyAttachmentText(lastIncoming) || lastReply?.content || interaction.content || '';
     return lastReply?.content ?? interaction.content ?? '';
   }
 
@@ -377,15 +377,29 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   private _resolveLastMessage(interaction: IInteraction): {
     lastReply: IReply | null;
-    lastIncoming: { mid?: string; text?: string; timestamp?: number } | null;
+    lastIncoming: { mid?: string; text?: string; timestamp?: number; attachmentType?: string; attachmentUrl?: string } | null;
   } {
     const replies = interaction.replies ?? [];
-    const incomingMessages: Array<{ mid?: string; text?: string; timestamp?: number }> =
+    const incomingMessages: Array<{ mid?: string; text?: string; timestamp?: number; attachmentType?: string; attachmentUrl?: string }> =
       (interaction as any).metadata?.incomingMessages ?? [];
     return {
       lastReply: replies.length > 0 ? replies[replies.length - 1] : null,
       lastIncoming: incomingMessages.length > 0 ? incomingMessages[incomingMessages.length - 1] : null
     };
+  }
+
+  /** Map raw attachment placeholder text to a human-readable label. */
+  private _friendlyAttachmentText(msg: { text?: string; attachmentType?: string; attachmentUrl?: string }): string {
+    const LABELS: Record<string, string> = { video: '🎥 Video', image: '📷 Photo', audio: '🎤 Voice message', file: '📎 File' };
+    const type = msg.attachmentType ?? '';
+    if (type && LABELS[type]) return LABELS[type];
+    // Fallback: detect placeholder bracket text
+    const t = msg.text?.trim() ?? '';
+    if (/^\[video\]$/i.test(t)) return '🎥 Video';
+    if (/^\[image\]$/i.test(t)) return '📷 Photo';
+    if (/^\[audio\]$/i.test(t)) return '🎤 Voice message';
+    if (/^\[file\]$/i.test(t)) return '📎 File';
+    return t;
   }
 
   private _incomingTime(msg: { timestamp?: number } | null): number {

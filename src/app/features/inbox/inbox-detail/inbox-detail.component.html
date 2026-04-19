@@ -227,6 +227,22 @@
                          (error)="$event.target.style.display='none'">
                   </ng-container>
                 </div>
+                <!-- Incoming video attachment -->
+                <div *ngIf="item.data.attachmentType === 'video' && item.data.attachmentUrl" class="mb-1 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5 dark:bg-black/20 max-w-xs">
+                  <video [src]="item.data.attachmentUrl"
+                         controls
+                         preload="metadata"
+                         class="max-w-full max-h-56 w-full"
+                         (error)="$event.target.style.display='none'">
+                    Your browser does not support video playback.
+                  </video>
+                </div>
+                <!-- Incoming video with no URL — show a placeholder pill -->
+                <div *ngIf="item.data.attachmentType === 'video' && !item.data.attachmentUrl"
+                     class="mb-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm w-fit">
+                  <i class="fas fa-video text-xs"></i>
+                  <span>Video (preview unavailable)</span>
+                </div>
                 <!-- Incoming audio attachment -->
                 <div *ngIf="item.data.attachmentType === 'audio' && item.data.attachmentUrl" class="mb-1 inbox-audio-message inbox-audio-message--incoming">
                   <div class="inbox-audio-bar">
@@ -239,7 +255,11 @@
                     </div>
                   </div>
                 </div>
-                <p *ngIf="item.data.content && !(item.data.attachmentType === 'image' && isImagePlaceholder(item.data.content)) && !(item.data.attachmentType === 'audio' && item.data.content === '[audio]')" class="text-sm text-gray-500 dark:text-gray-400 leading-snug whitespace-pre-wrap">{{ item.data.content }}</p>
+                <p *ngIf="item.data.content
+                          && !(item.data.attachmentType === 'image' && isImagePlaceholder(item.data.content))
+                          && !(item.data.attachmentType === 'audio' && item.data.content === '[audio]')
+                          && !(item.data.attachmentType === 'video' && item.data.content === '[video]')"
+                   class="text-sm text-gray-500 dark:text-gray-400 leading-snug whitespace-pre-wrap">{{ item.data.content }}</p>
               </div>
             </div>
           </div>
