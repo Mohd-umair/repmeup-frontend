@@ -16,6 +16,7 @@ import { ConnectedAccountsListComponent } from '../../shared/components/connecte
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
 import { BillingComponent } from './components/billing/billing.component';
+import { WhatsAppConnectComponent } from './whatsapp-connect/whatsapp-connect.component';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription, timer } from 'rxjs';
 import { take } from 'rxjs/operators';
@@ -55,7 +56,7 @@ interface SettingsNavTab {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent, WhatsAppConnectComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
@@ -822,35 +823,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
         // LinkedIn OAuth flow
         this.platformService.connectLinkedIn();
       } else if (platform.id === 'whatsapp') {
-        // WhatsApp Business API connection
-        this.platformService.connectWhatsApp().subscribe({
-          next: (response) => {
-            if (response.success) {
-              platform.connected = true;
-              platform.connectionId = response.data._id;
-              platform.connectedAccount = response.data.platformData.verifiedName || 
-                                         response.data.platformData.displayPhoneNumber || 
-                                         'WhatsApp Business';
-              this.notificationService.success(
-                'WhatsApp Connected',
-                'WhatsApp Business API connected successfully!'
-              );
-              this.loadPlatformConnections();
-              // CRITICAL: Refresh subscription limits to update connection count
-              this.loadSubscriptionLimits();
-            }
-            platform.loading = false;
-          },
-          error: (error) => {
-            console.error('Error connecting WhatsApp:', error);
-            const errorMessage = error.error?.error || error.error?.message || 'Failed to connect WhatsApp. Please check your credentials.';
-            this.notificationService.error(
-              'Connection Failed',
-              errorMessage
-            );
-            platform.loading = false;
-          }
-        });
+        // WhatsApp uses dedicated connectWhatsAppOAuth() — skip here
+        platform.loading = false;
       } else {
         // Other platforms - show coming soon
         platform.loading = false;
@@ -893,6 +867,25 @@ export class SettingsComponent implements OnInit, OnDestroy {
         platform.loading = false;
       }
     });
+  }
+
+  /** Open WhatsApp Embedded Signup popup and reload connections on close */
+  async connectWhatsAppOAuth(): Promise<void> {
+    const whatsappPlatform = this.platforms.find(p => p.id === 'whatsapp');
+    if (whatsappPlatform) whatsappPlatform.loading = true;
+    try {
+      await this.platformService.connectWhatsAppOAuth();
+      // After popup closes, reload connections — backend handled the save + redirect
+      this.loadPlatformConnections();
+      this.loadSubscriptionLimits();
+    } catch (err: any) {
+      this.notificationService.error(
+        'Connection Failed',
+        err?.message || 'Failed to open WhatsApp connection. Please allow popups and try again.'
+      );
+    } finally {
+      if (whatsappPlatform) whatsappPlatform.loading = false;
+    }
   }
 
   getConnectedCount(): number {

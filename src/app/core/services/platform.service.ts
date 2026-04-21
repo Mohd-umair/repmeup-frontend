@@ -236,17 +236,62 @@ export class PlatformService {
   }
 
   /**
-   * Connect WhatsApp Business API
+   * Initiate WhatsApp Embedded Signup OAuth — returns authUrl for popup/redirect.
+   */
+  initiateWhatsAppConnection(): Observable<{ success: boolean; data: { authUrl: string } }> {
+    return this.apiService.get<{ success: boolean; data: { authUrl: string } }>('/platforms/whatsapp/connect');
+  }
+
+  /**
+   * Open WhatsApp Embedded Signup in a popup window.
+   * Resolves when Meta redirects back and the backend saves the connection.
+   */
+  connectWhatsAppOAuth(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.initiateWhatsAppConnection().subscribe({
+        next: (response) => {
+          if (!response?.data?.authUrl) {
+            reject(new Error('No auth URL returned from server'));
+            return;
+          }
+          const popup = window.open(
+            response.data.authUrl,
+            'whatsapp_oauth',
+            'width=700,height=700,scrollbars=yes,resizable=yes'
+          );
+          if (!popup) {
+            reject(new Error('Popup blocked. Please allow popups for this site.'));
+            return;
+          }
+          // Poll for popup close
+          const timer = setInterval(() => {
+            if (popup.closed) {
+              clearInterval(timer);
+              resolve();
+            }
+          }, 800);
+        },
+        error: (err) => reject(err)
+      });
+    });
+  }
+
+  /**
+   * Connect WhatsApp using direct env credentials (dev/fallback — single-tenant).
    */
   connectWhatsApp(): Observable<SinglePlatformConnectionResponse> {
-    return this.apiService.post<SinglePlatformConnectionResponse>('/platforms/whatsapp/connect', {});
+    return this.apiService.post<SinglePlatformConnectionResponse>('/platforms/whatsapp/connect-direct', {});
   }
 
   /**
    * Disconnect WhatsApp Business API
+   * @param connectionId  Optional — disconnect a specific connection ID
    */
-  disconnectWhatsApp(): Observable<{ success: boolean; message: string }> {
-    return this.apiService.delete<{ success: boolean; message: string }>('/platforms/whatsapp/disconnect');
+  disconnectWhatsApp(connectionId?: string): Observable<{ success: boolean; message: string }> {
+    const url = connectionId
+      ? `/platforms/whatsapp/disconnect?connectionId=${connectionId}`
+      : '/platforms/whatsapp/disconnect';
+    return this.apiService.delete<{ success: boolean; message: string }>(url);
   }
 
   /**

@@ -251,14 +251,15 @@
             <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">LinkedIn</span>
           </button>
 
-          <!-- WhatsApp -->
-          <button 
-            (click)="connectPlatform(platforms[5])"
-            [disabled]="!canAddConnection || loading || platforms[5].connected"
+          <!-- WhatsApp — OAuth Embedded Signup -->
+          <button
+            (click)="connectWhatsAppOAuth()"
+            [disabled]="!canAddConnection || platforms[5].loading"
             class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            [title]="platforms[5].connected ? 'Already connected' : (canAddConnection ? 'Connect WhatsApp' : connectionLimitMessage)">
+            [title]="canAddConnection ? 'Connect WhatsApp Business' : connectionLimitMessage">
             <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-2">
-              <i class="fab fa-whatsapp text-white text-xl"></i>
+              <i *ngIf="!platforms[5].loading" class="fab fa-whatsapp text-white text-xl"></i>
+              <i *ngIf="platforms[5].loading" class="fas fa-spinner fa-spin text-white text-xl"></i>
             </div>
             <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">WhatsApp</span>
           </button>
