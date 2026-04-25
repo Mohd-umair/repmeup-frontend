@@ -130,6 +130,60 @@
   background-position: -1px -1px;
 }
 
+// ─── Hero: quieter backdrop (product demo is the hero) ─────────────────────────
+section.home-hero .hero-mesh {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.022) 1px, transparent 1px),
+    linear-gradient(rgba(216, 255, 0, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 255, 0, 0.055) 1px, transparent 1px);
+  background-size: 56px 56px, 56px 56px, 56px 56px, 56px 56px;
+}
+
+:host-context(html.dark) section.home-hero .hero-mesh {
+  background-image:
+    linear-gradient(rgba(216, 255, 0, 0.038) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 255, 0, 0.038) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+
+section.home-hero.noise-overlay::before {
+  opacity: 0.38;
+  background-size: 240px 240px;
+}
+
+:host-context(html.dark) section.home-hero.noise-overlay::before {
+  opacity: 0.2;
+}
+
+section.home-hero > .section-divider {
+  opacity: 0.38;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(216, 255, 0, 0.18) 32%,
+    rgba(216, 255, 0, 0.35) 50%,
+    rgba(216, 255, 0, 0.18) 68%,
+    transparent 100%
+  );
+}
+
+:host-context(html.dark) section.home-hero > .section-divider {
+  opacity: 0.28;
+}
+
+@keyframes hero-particle-subtle {
+  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.18; }
+  50%      { transform: translateY(-10px) rotate(90deg); opacity: 0.38; }
+}
+
+section.home-hero .hero-particle {
+  width: 4px;
+  height: 4px;
+  background: rgba(216, 255, 0, 0.28);
+  animation-name: hero-particle-subtle;
+}
+
 // Noise overlay (pseudo-element helper — apply to section::before)
 .noise-overlay::before {
   content: '';
@@ -820,6 +874,9 @@
   .pattern-phone-b .pattern-msg-pop--in,
   .pattern-phone-b .pattern-msg-pop--meta,
   .pattern-phone-b .pattern-msg-pop--out { transform: none; }
+
+  section.home-hero .bg-orb { animation: none; }
+  section.home-hero .hero-particle { animation: none; opacity: 0.12; }
 }
 
 .pattern-glow-green {
@@ -993,3 +1050,242 @@
     opacity: 1;
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── PIPELINE / FLOW ANIMATIONS ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Dot travels left→right along the pipeline connector
+@keyframes pipe-travel {
+  0%   { transform: translateX(-4px); opacity: 0; }
+  8%   { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateX(calc(var(--pipe-w, 120px) + 4px)); opacity: 0; }
+}
+
+.pipe-connector {
+  position: relative;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(216,255,0,0.25), rgba(216,255,0,0.08));
+  overflow: visible;
+  flex: 1;
+  min-width: 32px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(216,255,0,0.55) 48%, rgba(216,255,0,0.9) 50%, rgba(216,255,0,0.55) 52%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer-move 2.8s ease-in-out infinite;
+  }
+
+  .pipe-dot {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #D8FF00;
+    box-shadow: 0 0 10px rgba(216,255,0,0.8), 0 0 20px rgba(216,255,0,0.4);
+    transform: translateY(-50%);
+    animation: pipe-travel var(--dur, 2.4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    --pipe-w: 120px;
+  }
+}
+
+// ── Flow node ─────────────────────────────────────────────────────────────────
+@keyframes node-pulse-ring {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  70%  { transform: scale(1.9); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+.flow-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  &__ring {
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(216,255,0,0.5);
+    animation: node-pulse-ring 2.6s ease-out infinite;
+    animation-delay: var(--ring-delay, 0s);
+    pointer-events: none;
+  }
+
+  &__icon {
+    position: relative;
+    z-index: 1;
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    border: 1.5px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: transform 0.3s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px) scale(1.05);
+    }
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: center;
+    max-width: 80px;
+  }
+}
+
+// ── Chat → Lead card morph animation ──────────────────────────────────────────
+@keyframes card-float-in {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.92); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes chat-bubble-pop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.05); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes tag-slide-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.chat-bubble-anim   { animation: chat-bubble-pop 0.55s var(--bubble-delay, 0s) cubic-bezier(0.34,1.56,0.64,1) both; }
+.chat-bubble-anim-2 { animation: chat-bubble-pop 0.55s 0.18s cubic-bezier(0.34,1.56,0.64,1) both; }
+.chat-bubble-anim-3 { animation: chat-bubble-pop 0.55s 0.36s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+.lead-card-anim { animation: card-float-in 0.65s 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+.tag-anim       { animation: tag-slide-in 0.4s var(--tag-delay, 1s) cubic-bezier(0.22,1,0.36,1) both; }
+
+// ── Brain / AI node float ─────────────────────────────────────────────────────
+@keyframes brain-node-float {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-8px); }
+}
+
+@keyframes brain-core-pulse {
+  0%,100% { box-shadow: 0 0 0 0   rgba(216,255,0,0.6), 0 0 40px rgba(216,255,0,0.3); }
+  50%     { box-shadow: 0 0 0 16px rgba(216,255,0,0),   0 0 60px rgba(216,255,0,0.6); }
+}
+
+.brain-node {
+  animation: brain-node-float var(--node-dur, 5s) ease-in-out infinite;
+  animation-delay: var(--node-delay, 0s);
+}
+
+.brain-core-glow {
+  animation: brain-core-pulse 3s ease-in-out infinite;
+}
+
+// ── Stage tab content fade ────────────────────────────────────────────────────
+@keyframes stage-content-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.stage-content-enter { animation: stage-content-in 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+
+// ── Counter odometer pop ──────────────────────────────────────────────────────
+@keyframes counter-pop {
+  0%   { opacity: 0; transform: scale(0.6) translateY(12px); }
+  70%  { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.counter-num {
+  animation: counter-pop 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+  animation-delay: var(--counter-delay, 0s);
+}
+
+// ── Platform logo badge ───────────────────────────────────────────────────────
+@keyframes badge-appear {
+  from { opacity: 0; transform: scale(0.6) rotate(-8deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.platform-badge-anim {
+  animation: badge-appear 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  animation-delay: var(--badge-delay, 0s);
+}
+
+// ── Live dot pulse ─────────────────────────────────────────────────────────────
+@keyframes live-dot-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.6); }
+  50%     { box-shadow: 0 0 0 6px rgba(74,222,128,0); }
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  animation: live-dot-pulse 1.8s ease-in-out infinite;
+}
+
+// ── Audience card bottom cta arrow ───────────────────────────────────────────
+.audience-cta-arrow {
+  transition: transform 0.2s cubic-bezier(0.22,1,0.36,1);
+}
+.audience-card-wrap:hover .audience-cta-arrow {
+  transform: translateX(5px);
+}
+
+// ── Hero pipeline illustration ────────────────────────────────────────────────
+.hero-pipeline {
+  position: relative;
+
+  &__track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    transform: translateY(-50%);
+    background: linear-gradient(90deg, rgba(216,255,0,0.15), rgba(216,255,0,0.4), rgba(216,255,0,0.15));
+    pointer-events: none;
+  }
+}
+
+// ── Inbox message rows ────────────────────────────────────────────────────────
+@keyframes msg-slide-in {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.inbox-msg-row {
+  animation: msg-slide-in 0.4s cubic-bezier(0.22,1,0.36,1) both;
+
+  &:nth-child(1) { animation-delay: 0.05s; }
+  &:nth-child(2) { animation-delay: 0.15s; }
+  &:nth-child(3) { animation-delay: 0.25s; }
+  &:nth-child(4) { animation-delay: 0.35s; }
+  &:nth-child(5) { animation-delay: 0.45s; }
+}
+
+// ── WA bubble appearance ──────────────────────────────────────────────────────
+@keyframes wa-bubble-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.wa-bubble { animation: wa-bubble-in 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+.wa-bubble:nth-child(1) { animation-delay: 0.0s; }
+.wa-bubble:nth-child(2) { animation-delay: 0.1s; }
+.wa-bubble:nth-child(3) { animation-delay: 0.2s; }
+.wa-bubble:nth-child(4) { animation-delay: 0.3s; }
+.wa-bubble:nth-child(5) { animation-delay: 0.4s; }

@@ -33,16 +33,32 @@ export class InboxSetupGuideComponent implements OnChanges {
   manuallyDismissed = false;
   steps: SetupStep[] = [];
 
+  /** 24 hours in milliseconds — snooze duration for "Got it, set up later". */
+  private static readonly SNOOZE_MS = 24 * 60 * 60 * 1000;
+
   private get storageKey(): string {
     return `setup_guide_dismissed_${this.orgId ?? 'default'}`;
+  }
+
+  private get snoozeKey(): string {
+    return `setup_guide_snoozed_until_${this.orgId ?? 'default'}`;
   }
 
   get isPermanentlyDismissed(): boolean {
     try { return localStorage.getItem(this.storageKey) === '1'; } catch { return false; }
   }
 
+  /** True when the user clicked "Got it, set up later" within the last 24 hours. */
+  get isSnoozed(): boolean {
+    try {
+      const until = Number(localStorage.getItem(this.snoozeKey) || 0);
+      return Number.isFinite(until) && until > Date.now();
+    } catch { return false; }
+  }
+
   get shouldShow(): boolean {
     if (this.isPermanentlyDismissed) return false;
+    if (this.isSnoozed) return false;
     return !this.hasConnectedPlatform || !this.autoReplySettings?.enabled || !this.hasKnowledgeBase;
   }
 
@@ -58,8 +74,16 @@ export class InboxSetupGuideComponent implements OnChanges {
     this.buildSteps();
   }
 
-  /** Close for this session; reopens next time the user visits inbox */
+  /**
+   * Close for 24 hours. Setting a snooze-until timestamp in localStorage so the
+   * modal doesn't bounce back every time the user navigates back to the inbox.
+   * Setup progress is still re-checked on navigation — if the user completes all
+   * steps, `shouldShow` will return false regardless of snooze.
+   */
   dismiss(): void {
+    try {
+      localStorage.setItem(this.snoozeKey, String(Date.now() + InboxSetupGuideComponent.SNOOZE_MS));
+    } catch { /* storage unavailable — fall back to session-only */ }
     this.manuallyDismissed = true;
   }
 

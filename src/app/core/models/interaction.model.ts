@@ -62,14 +62,16 @@ export enum Platform {
   YOUTUBE = 'youtube',
   GOOGLE = 'google',
   LINKEDIN = 'linkedin',
-  WEBSITE = 'website'
+  WEBSITE = 'website',
+  EMAIL = 'email'
 }
 
 export enum InteractionType {
   COMMENT = 'comment',
   DM = 'dm',
   REVIEW = 'review',
-  MENTION = 'mention'
+  MENTION = 'mention',
+  EMAIL = 'email'
 }
 
 export enum InteractionStatus {

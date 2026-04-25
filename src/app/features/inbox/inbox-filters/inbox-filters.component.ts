@@ -41,6 +41,7 @@ export class InboxFiltersComponent {
     { value: Platform.GOOGLE, label: 'Google', icon: 'fab fa-google', color: 'text-blue-500', bgColor: '#4285F4', gradientFrom: '#4285F4', gradientTo: '#34A853' },
     { value: Platform.LINKEDIN, label: 'LinkedIn', icon: 'fab fa-linkedin', color: 'text-blue-700', bgColor: '#0A66C2', gradientFrom: '#0A66C2', gradientTo: '#004182' },
     { value: Platform.WHATSAPP, label: 'WhatsApp', icon: 'fab fa-whatsapp', color: 'text-green-500', bgColor: '#25D366', gradientFrom: '#25D366', gradientTo: '#128C7E' }
+    // { value: Platform.EMAIL, ... } — re-enable when email integration is turned on in Settings
   ];
 
   types = [
@@ -48,6 +49,7 @@ export class InboxFiltersComponent {
     { value: InteractionType.DM, label: 'Direct Messages', icon: '📧' },
     { value: InteractionType.REVIEW, label: 'Reviews', icon: '⭐' },
     { value: InteractionType.MENTION, label: 'Mentions', icon: '@' }
+    // { value: InteractionType.EMAIL, label: 'Emails', icon: '✉️' } — re-enable with email integration
   ];
 
   sentiments = [

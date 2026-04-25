@@ -328,7 +328,12 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
           this.submitting = false;
           this.cdr.markForCheck();
         },
-        error: () => { this.submitting = false; this.cdr.markForCheck(); }
+        error: (err) => {
+          const msg = err?.error?.error || 'Failed to create knowledge base entry. Please try again.';
+          this.notificationService.error('Creation Failed', msg);
+          this.submitting = false;
+          this.cdr.markForCheck();
+        }
       });
   }
 
@@ -357,7 +362,12 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
           this.submitting = false;
           this.cdr.markForCheck();
         },
-        error: () => { this.submitting = false; this.cdr.markForCheck(); }
+        error: (err) => {
+          const msg = err?.error?.error || 'Failed to process PDF. Please try again.';
+          this.notificationService.error('Upload Failed', msg);
+          this.submitting = false;
+          this.cdr.markForCheck();
+        }
       });
   }
 
@@ -392,7 +402,12 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
           this.submitting = false;
           this.cdr.markForCheck();
         },
-        error: () => { this.submitting = false; this.cdr.markForCheck(); }
+        error: (err) => {
+          const msg = err?.error?.error || 'Failed to import from URL. Please try again.';
+          this.notificationService.error('Import Failed', msg);
+          this.submitting = false;
+          this.cdr.markForCheck();
+        }
       });
   }
 

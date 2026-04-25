@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -18,7 +19,7 @@ import { InboxAvatarService } from '../../../core/services/inbox-avatar.service'
 @Component({
   selector: 'app-inbox-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './inbox-list.component.html',
   styleUrls: ['./inbox-list.component.scss']
 })
@@ -34,6 +35,8 @@ export class InboxListComponent implements OnInit, OnDestroy {
   @Output() searchChange = new EventEmitter<string>();
   @Output() selectionChange = new EventEmitter<Set<string>>();
   @Output() loadMore = new EventEmitter<void>();
+  /** Fired when the user clicks the empty-state Refresh button. */
+  @Output() refreshRequested = new EventEmitter<void>();
 
   searchTerm = '';
   private searchSubject = new Subject<string>();
@@ -76,6 +79,9 @@ export class InboxListComponent implements OnInit, OnDestroy {
     if (name) return name;
     if (interaction?.platform === 'instagram') return 'Instagram User';
     if (interaction?.platform === 'facebook') return 'Messenger User';
+    if (interaction?.platform === 'email') {
+      return interaction?.author?.email || (interaction.metadata as any)?.email?.from?.address || 'Email Sender';
+    }
     return 'Unknown';
   }
 
@@ -182,7 +188,10 @@ export class InboxListComponent implements OnInit, OnDestroy {
       'google_my_business': 'fab fa-google',
       [Platform.LINKEDIN]: 'fab fa-linkedin-in',
       [Platform.WHATSAPP]: 'fab fa-whatsapp',
-      [Platform.WEBSITE]: 'fas fa-globe'
+      [Platform.WEBSITE]: 'fas fa-globe',
+      [Platform.EMAIL]: 'fas fa-envelope',
+      'gmail': 'fab fa-google',
+      'outlook': 'fab fa-microsoft'
     };
     return icons[p] || 'fas fa-share-alt';
   }
@@ -356,6 +365,12 @@ export class InboxListComponent implements OnInit, OnDestroy {
    * and returns whichever is newer. Falls back to interaction.content.
    */
   getLastMessage(interaction: IInteraction): string {
+    // For email interactions, show the subject line as primary preview
+    if (interaction.platform === Platform.EMAIL) {
+      const subject = (interaction.metadata as any)?.email?.subject;
+      return subject || interaction.content || '(no subject)';
+    }
+
     const { lastReply, lastIncoming } = this._resolveLastMessage(interaction);
     const replyTime = lastReply ? new Date(lastReply.sentAt).getTime() : 0;
     const incomingTime = this._incomingTime(lastIncoming);

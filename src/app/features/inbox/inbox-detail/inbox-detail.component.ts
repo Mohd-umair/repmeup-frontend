@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, NgZone, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeUrl, SafeHtml } from '@angular/platform-browser';
 import { IInteraction, InteractionStatus, IAssignmentHistory } from '../../../core/models/interaction.model';
 import { InboxService } from '../../../core/services/inbox.service';
 import { ThemeService } from '../../../core/services/theme.service';
@@ -266,6 +266,44 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     if (!content || typeof content !== 'string') return false;
     const t = content.trim();
     return t === '[image]' || t === '[attachment]';
+  }
+
+  /**
+   * Return a SafeHtml value to use as [srcdoc] for email HTML rendering.
+   * The iframe uses sandbox="allow-same-origin" to prevent script execution.
+   */
+  getSafeEmailHtml(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  /**
+   * Auto-resize iframe height after its content loads.
+   */
+  onEmailIframeLoad(event: Event): void {
+    const iframe = event.target as HTMLIFrameElement;
+    try {
+      const body = iframe.contentDocument?.body;
+      if (body) {
+        iframe.style.height = Math.min(body.scrollHeight + 20, 600) + 'px';
+      }
+    } catch { /* cross-origin fallback — height remains at default */ }
+  }
+
+  /** Format an array of email address objects into a comma-separated display string. */
+  formatEmailAddressList(addresses: Array<{ name?: string; address?: string }> | undefined): string {
+    if (!addresses || addresses.length === 0) return '';
+    return addresses
+      .map(a => a.name ? `${a.name} <${a.address}>` : (a.address || ''))
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  /** Format attachment file size for display. */
+  formatAttachmentSize(bytes: number): string {
+    if (!bytes || bytes === 0) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   getAttachmentUrl$(interactionId: string, mid: string, platform: string, directUrl: string | undefined): Observable<SafeUrl | null> {

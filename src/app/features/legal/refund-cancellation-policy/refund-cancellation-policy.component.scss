@@ -1,0 +1,41 @@
+@use '../../../shared/styles/legal-document-dark' as legal;
+
+@include legal.legal-document-dark;
+
+.refund-cancellation-policy {
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #0b0b0b;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d8ff00;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #d8ff00;
+    opacity: 0.8;
+  }
+
+  scroll-behavior: smooth;
+
+  section {
+    scroll-margin-top: 2rem;
+  }
+
+  ul {
+    line-height: 1.8;
+  }
+
+  a {
+    transition: all 0.2s ease;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

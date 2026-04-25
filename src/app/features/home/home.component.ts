@@ -1,10 +1,11 @@
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
+import { HeroDemoSandboxComponent } from './hero-demo-sandbox/hero-demo-sandbox.component';
 
-type UseCaseTab = 'support' | 'social' | 'startup' | 'enterprise';
+type UseCaseTab = 'd2c' | 'creator' | 'fnb' | 'fashion';
 
 interface UseCase {
   title: string;
@@ -18,63 +19,63 @@ interface UseCase {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink, HeroDemoSandboxComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
-  activeUseCaseTab: UseCaseTab = 'support';
+  activeUseCaseTab: UseCaseTab = 'd2c';
   private observer?: IntersectionObserver;
   private readonly destroy$ = new Subject<void>();
 
   useCases: Record<UseCaseTab, UseCase> = {
-    support: {
-      title: 'Support Teams',
-      icon: 'fas fa-headset',
-      transformation: 'From ticket overload to resolved in minutes',
+    d2c: {
+      title: 'D2C Brands',
+      icon: 'fas fa-shopping-cart',
+      transformation: 'Turn your Instagram into a 24/7 storefront',
       points: [
-        'AI automatically routes and prioritises incoming issues',
-        'One unified inbox across every channel',
-        'Average response time cut by 70%'
+        'Catalog-aware AI recommends the right SKU based on size, skin type, occasion',
+        'WhatsApp commerce: close orders without leaving the chat',
+        'RTO reduction: auto-confirm COD orders before shipping'
       ],
-      stat: '70%',
-      statLabel: 'Faster Response'
+      stat: '3.2×',
+      statLabel: 'DM-to-sale conversion lift'
     },
-    social: {
-      title: 'Social Media Managers',
-      icon: 'fas fa-hashtag',
-      transformation: 'From comment chaos to brand control',
+    creator: {
+      title: 'Creators',
+      icon: 'fas fa-star',
+      transformation: 'Stop losing brand deals to slow DM replies',
       points: [
-        'Reply to comments & DMs across all platforms in one place',
-        'AI generates on-brand replies with a single click',
-        'Never miss a mention or negative comment again'
+        'Brand collab triage: AI auto-routes paid pitches vs. fan messages vs. spam',
+        'Auto-replies in your voice: trained on your tone, slang, and emoji style',
+        'Fan engagement at scale: respond to every DM, even at 100K followers'
       ],
-      stat: '5x',
-      statLabel: 'More Coverage'
+      stat: '4.2×',
+      statLabel: 'brand deals closed per month'
     },
-    startup: {
-      title: 'Startups',
-      icon: 'fas fa-rocket',
-      transformation: 'From overwhelmed founder to scaling team',
+    fnb: {
+      title: 'F&B & Restaurants',
+      icon: 'fas fa-utensils',
+      transformation: 'From 3.9 to 4.7 stars on Google in 90 days',
       points: [
-        'One person manages five platforms effortlessly',
-        'AI handles 80% of routine replies automatically',
-        'Focus on growth — not repetitive customer replies'
+        'Auto-collect Google reviews on autopilot via WhatsApp',
+        'Negative reviews caught privately before they hit Google',
+        'AI-drafted review replies within minutes — in your brand voice'
       ],
-      stat: '80%',
-      statLabel: 'Less Manual Work'
+      stat: '4.7★',
+      statLabel: 'avg Google rating in 90 days'
     },
-    enterprise: {
-      title: 'Enterprises',
-      icon: 'fas fa-building',
-      transformation: 'From scattered teams to unified brand control',
+    fashion: {
+      title: 'Fashion & Beauty',
+      icon: 'fas fa-tshirt',
+      transformation: 'Close more carts with WhatsApp commerce',
       points: [
-        'Role-based team access and multi-step approval workflows',
-        'Compliance-ready audit trails for every reply sent',
-        'Custom AI trained precisely on your brand voice'
+        'Smart cart recovery: 4-touch sequence in your brand voice',
+        '4-touch: 15min nudge → 2hr discount → 24hr final reminder',
+        'One-tap checkout with Razorpay, Cashfree, and PayU integration'
       ],
-      stat: '99%',
-      statLabel: 'Brand Consistency'
+      stat: '31%',
+      statLabel: 'cart abandonment recovered'
     }
   };
 
@@ -86,7 +87,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.useCases[this.activeUseCaseTab];
   }
 
-  /** Leadership — home page team grid (Syed Iqbal listed last) */
+  /** Leadership — home page team grid */
   readonly teamMembers: {
     name: string;
     role: string;
@@ -102,6 +103,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       avatarGradient: 'from-rose-500 to-pink-600',
       imageSrc: 'assets/Images/namitha.jpeg'
     },
+    /*
     {
       name: 'Mohammed Umair',
       role: 'Chief Technology Officer',
@@ -109,6 +111,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       avatarGradient: 'from-violet-500 to-indigo-600',
       imageSrc: 'assets/Images/umair.png'
     },
+    */
     {
       name: 'Nazish Parveen',
       role: 'Chief Business Officer',
@@ -116,6 +119,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       avatarGradient: 'from-amber-500 to-orange-600',
       imageSrc: 'assets/Images/nazish.jpg'
     },
+    /*
     {
       name: 'Syed Iqbal',
       role: 'SME',
@@ -123,6 +127,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       avatarGradient: 'from-emerald-500 to-teal-600',
       imageSrc: 'assets/Images/asif.jpeg'
     }
+    */
   ];
 
   /** When a headshot fails to load, show initials fallback */

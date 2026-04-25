@@ -164,6 +164,7 @@ export class MenuService {
     'about',
     'privacy-policy',
     'terms-conditions',
+    'refund-cancellation-policy',
     'terms',
     'data-deletion-status',
     'auth',

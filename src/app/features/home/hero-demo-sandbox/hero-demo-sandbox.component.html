@@ -1,0 +1,275 @@
+<div class="hero-sandbox relative mt-12 lg:mt-0 lg:pl-4 hidden sm:block">
+
+  <!-- Ambient glow -->
+  <div class="absolute -inset-6 bg-rep-lime/4 rounded-3xl blur-3xl pointer-events-none"></div>
+
+  <!-- Browser chrome shell -->
+  <div class="sandbox-shell relative rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-700/80 shadow-2xl shadow-black/10 dark:shadow-rep-lime/8">
+
+    <!-- Chrome bar -->
+    <div class="flex items-center gap-2 px-4 sm:px-6 py-3.5 bg-gray-100 dark:bg-gray-900/90 border-b border-gray-200 dark:border-gray-800">
+      <span class="w-3 h-3 rounded-full bg-red-500"></span>
+      <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+      <span class="w-3 h-3 rounded-full bg-green-500"></span>
+      <div class="flex-1 mx-4 px-4 py-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center gap-2 min-w-0">
+        <i class="fas fa-lock text-gray-400 dark:text-gray-500 text-xs shrink-0"></i>
+        <span class="text-xs text-gray-500 dark:text-gray-400 truncate">app.repmeup.in/app/inbox</span>
+      </div>
+      <div class="flex items-center gap-2 text-sm shrink-0">
+        <i class="fab fa-instagram text-pink-400"></i>
+        <i class="fab fa-whatsapp text-green-400"></i>
+        <i class="fab fa-facebook text-blue-400 hidden sm:inline"></i>
+      </div>
+    </div>
+
+    <!-- Platform tabs -->
+    <div class="flex border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+      <button
+        type="button"
+        class="sandbox-tab flex items-center gap-2 px-6 py-3 text-sm font-bold transition-all"
+        [class.active-instagram]="activeTab === 'instagram'"
+        [class.inactive-tab]="activeTab !== 'instagram'"
+        (click)="switchTab('instagram')">
+        <i class="fab fa-instagram text-sm"></i>
+        Instagram DM
+      </button>
+      <button
+        type="button"
+        class="sandbox-tab flex items-center gap-2 px-6 py-3 text-sm font-bold transition-all"
+        [class.active-whatsapp]="activeTab === 'whatsapp'"
+        [class.inactive-tab]="activeTab !== 'whatsapp'"
+        (click)="switchTab('whatsapp')">
+        <i class="fab fa-whatsapp text-sm"></i>
+        WhatsApp
+      </button>
+      <div class="ml-auto flex items-center px-4">
+        <span class="live-indicator flex items-center gap-1.5 text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+          <span class="w-1.5 h-1.5 rounded-full bg-rep-lime animate-pulse"></span>
+          Live demo
+        </span>
+      </div>
+    </div>
+
+    <!-- Chat + sidebar layout -->
+    <div class="sandbox-chat-shell flex bg-gray-50 dark:bg-gray-950">
+
+      <!-- Sidebar (desktop only) -->
+      <div class="hidden lg:flex flex-col w-48 xl:w-52 bg-white dark:bg-rep-black border-r border-gray-200 dark:border-gray-800/70 p-3.5 shrink-0">
+        <div class="flex items-center gap-2.5 px-2 py-3 mb-3">
+          <div class="w-7 h-7 bg-rep-lime rounded-lg shrink-0"></div>
+          <span class="text-sm font-bold text-gray-900 dark:text-rep-white">RepMeUp</span>
+        </div>
+        <nav class="space-y-0.5 flex-1">
+          <div class="flex items-center gap-2.5 px-3 py-2.5 bg-lime-50 dark:bg-rep-lime/12 border border-lime-200 dark:border-rep-lime/25 rounded-xl">
+            <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-xs w-4"></i>
+            <span class="text-xs font-semibold text-lime-700 dark:text-rep-lime">Inbox</span>
+            <span class="ml-auto bg-rep-lime text-rep-black text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">8</span>
+          </div>
+          <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
+            <i class="fas fa-chart-bar text-gray-400 text-xs w-4"></i>
+            <span class="text-xs text-gray-400">Analytics</span>
+          </div>
+          <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
+            <i class="fas fa-pen-to-square text-gray-400 text-xs w-4"></i>
+            <span class="text-xs text-gray-400">Publish</span>
+          </div>
+          <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
+            <i class="fas fa-robot text-gray-400 text-xs w-4"></i>
+            <span class="text-xs text-gray-400">AI Replies</span>
+          </div>
+        </nav>
+        <div class="mt-2 px-2 py-2.5 bg-gray-100 dark:bg-gray-900/70 rounded-xl">
+          <p class="text-xs text-gray-400 mb-2 font-semibold uppercase tracking-wide">Connected</p>
+          <div class="flex gap-1.5 flex-wrap">
+            <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:#1877F2"><i class="fab fa-facebook-f text-white" style="font-size:8px"></i></span>
+            <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white" style="font-size:8px"></i></span>
+            <span class="w-5 h-5 rounded-md flex items-center justify-center" style="background:#25D366"><i class="fab fa-whatsapp text-white" style="font-size:8px"></i></span>
+            <span class="w-5 h-5 rounded-md bg-white flex items-center justify-center border border-gray-200"><i class="fab fa-google text-red-500" style="font-size:8px"></i></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main chat panel -->
+      <div class="flex-1 flex flex-col min-w-0 bg-white dark:bg-transparent">
+
+        <!-- Contact header -->
+        <div class="px-4 sm:px-6 py-3 border-b border-gray-200 dark:border-gray-800/70 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-gradient-to-br"
+                 [ngClass]="'bg-gradient-to-br ' + displayAvatarGradient">
+              {{ displayCustomerInitial }}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-base font-bold text-gray-900 dark:text-rep-white truncate">{{ displayCustomerName }}</span>
+                <span class="px-1.5 py-0.5 rounded-full text-xs font-semibold shrink-0" [style]="platformBadgeStyle">
+                  <i [class]="platformIcon + ' text-xs'"></i> {{ platformLabel }}
+                </span>
+              </div>
+              <p class="text-xs text-gray-400 truncate">via RepMeUp · now</p>
+            </div>
+          </div>
+          <span *ngIf="state === 'ai_replied'"
+                class="ai-replied-badge shrink-0 px-2 py-1 bg-lime-50 dark:bg-rep-lime/10 text-lime-700 dark:text-rep-lime text-xs font-semibold rounded-full border border-lime-200 dark:border-rep-lime/25 flex items-center gap-1">
+            <i class="fas fa-check-double text-xs"></i> Replied
+          </span>
+          <span *ngIf="state !== 'ai_replied'"
+                class="shrink-0 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-semibold rounded-full border border-amber-200 dark:border-amber-800/40">
+            Unread
+          </span>
+        </div>
+
+        <!-- Messages area -->
+        <div class="flex-1 px-4 sm:px-6 py-4 space-y-3.5 overflow-hidden flex flex-col justify-end">
+
+          <!-- Customer message bubble -->
+          <div *ngIf="showCustomerMessage || showUserMessage"
+               class="message-in flex items-end gap-2">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-gradient-to-br"
+                 [ngClass]="'bg-gradient-to-br ' + displayAvatarGradient">
+              {{ displayCustomerInitial }}
+            </div>
+            <div class="bg-gray-100 dark:bg-gray-800/80 rounded-2xl rounded-bl-sm px-4 py-2.5 max-w-[85%]">
+              <p class="text-sm sm:text-base text-gray-800 dark:text-rep-white leading-snug">{{ displayMessage }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">just now</p>
+            </div>
+          </div>
+
+          <!-- Customer typing indicator -->
+          <div *ngIf="state === 'customer_typing'"
+               class="message-in flex items-end gap-2">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 bg-gradient-to-br"
+                 [ngClass]="'bg-gradient-to-br ' + currentScenario.avatarGradient">
+              {{ currentScenario.customerInitial }}
+            </div>
+            <div class="bg-gray-100 dark:bg-gray-800/80 rounded-2xl rounded-bl-sm px-4 py-3.5">
+              <div class="typing-dots flex gap-1 items-center">
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI typing indicator -->
+          <div *ngIf="state === 'ai_processing'"
+               class="message-out flex items-end gap-2 justify-end">
+            <div class="ai-typing-bubble rounded-2xl rounded-br-sm px-4 py-3.5 flex items-center gap-2">
+              <i class="fas fa-robot text-rep-black/70 text-sm"></i>
+              <div class="typing-dots flex gap-1 items-center">
+                <span class="dot dot-dark"></span>
+                <span class="dot dot-dark"></span>
+                <span class="dot dot-dark"></span>
+              </div>
+              <span class="text-sm text-rep-black/60 font-medium">AI writing…</span>
+            </div>
+            <div class="w-7 h-7 rounded-full bg-rep-lime flex items-center justify-center text-rep-black text-sm font-bold shrink-0">R</div>
+          </div>
+
+          <!-- AI reply with typewriter -->
+          <div *ngIf="showAiReply"
+               class="message-out flex items-end gap-2 justify-end">
+            <div class="bg-rep-lime rounded-2xl rounded-br-sm px-4 py-2.5 max-w-[85%]">
+              <p class="text-sm sm:text-base text-rep-black font-semibold leading-snug">{{ displayedAiText }}<span class="typewriter-cursor" *ngIf="displayedAiText.length < 999">|</span></p>
+              <div class="flex items-center justify-end gap-1 mt-1">
+                <p class="text-xs text-rep-black/60">just now</p>
+                <i class="fas fa-check-double text-rep-black/60 text-xs"></i>
+              </div>
+            </div>
+            <div class="w-7 h-7 rounded-full bg-rep-lime flex items-center justify-center text-rep-black text-sm font-bold shrink-0">R</div>
+          </div>
+
+          <!-- Empty state when idle -->
+          <div *ngIf="state === 'idle'" class="flex-1 flex items-center justify-center">
+            <div class="text-center">
+              <div class="w-10 h-10 rounded-full bg-rep-lime/20 flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-robot text-rep-lime text-base"></i>
+              </div>
+              <p class="text-xs text-gray-400">Starting demo…</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- AI status bar + try-it input -->
+        <div class="border-t border-gray-200 dark:border-gray-800/70 px-4 sm:px-6 py-3 space-y-2.5">
+
+          <!-- AI status chip -->
+          <div class="ai-status-bar flex items-center gap-2.5 px-3.5 py-2 rounded-xl"
+               [class.processing]="isProcessing">
+            <i class="fas fa-robot text-blue-400 text-sm shrink-0"></i>
+            <p *ngIf="!isProcessing" class="text-sm text-gray-600 dark:text-gray-300 flex-1 truncate">
+              AI is ready — brand-tuned drafts · replies in seconds
+            </p>
+            <p *ngIf="isProcessing" class="text-sm text-blue-600 dark:text-blue-300 flex-1 font-semibold">
+              <span class="inline-flex items-center gap-1.5">
+                <span class="processing-dot"></span>
+                AI is generating a reply…
+              </span>
+            </p>
+          </div>
+
+          <!-- Quick chips -->
+          <div class="flex gap-1.5 flex-wrap">
+            <button
+              *ngFor="let chip of quickChips"
+              type="button"
+              (click)="onQuickChip(chip)"
+              class="quick-chip px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all">
+              {{ chip.label }}
+            </button>
+          </div>
+
+          <!-- Try-it input -->
+          <div class="flex gap-2">
+            <input
+              type="text"
+              [(ngModel)]="userInput"
+              (focus)="onInputFocus()"
+              (keydown)="onInputKeydown($event)"
+              placeholder="Type a customer message and hit Enter…"
+              maxlength="120"
+              class="try-input flex-1 bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700/60 rounded-xl px-3.5 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rep-lime/40 focus:border-rep-lime transition" />
+            <button
+              type="button"
+              (click)="submitUserInput()"
+              [disabled]="!userInput.trim()"
+              class="send-btn px-4 py-2.5 bg-rep-lime text-rep-black font-bold rounded-xl text-sm transition disabled:opacity-40 disabled:cursor-not-allowed">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating badge: 5 Platforms -->
+  <div class="hidden lg:flex float-badge absolute -bottom-5 -left-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/50 px-4 py-3 border border-black/[0.07] dark:border-white/[0.08] items-center gap-3">
+    <div class="flex -space-x-2">
+      <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-sm" style="background:#1877F2"><i class="fab fa-facebook-f text-white text-xs"></i></span>
+      <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-sm" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white text-xs"></i></span>
+      <span class="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 flex items-center justify-center shadow-sm" style="background:#25D366"><i class="fab fa-whatsapp text-white text-xs"></i></span>
+    </div>
+    <div>
+      <p class="text-sm font-bold text-gray-900 dark:text-rep-white">5 Platforms</p>
+      <p class="text-xs text-gray-400">All Connected</p>
+    </div>
+    <div class="w-2 h-2 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse ml-1 shrink-0"></div>
+  </div>
+
+  <!-- Floating badge: AI Reply Ready -->
+  <div class="hidden lg:flex float-badge float-delay absolute -top-5 -right-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/50 px-4 py-3 border border-black/[0.07] dark:border-white/[0.08] items-center gap-3">
+    <div class="w-10 h-10 bg-rep-lime rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-rep-lime/30">
+      <i class="fas fa-robot text-rep-black text-sm"></i>
+    </div>
+    <div>
+      <p class="text-sm font-bold text-gray-900 dark:text-rep-white">AI Reply Ready</p>
+      <p class="text-xs text-gray-400 flex items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse"></span>
+        Matches your tone
+      </p>
+    </div>
+  </div>
+
+</div>

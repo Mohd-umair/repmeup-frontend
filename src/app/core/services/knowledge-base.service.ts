@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { IApiResponse, IPagination } from '../models/api-response.model';
 
@@ -71,6 +72,16 @@ export class KnowledgeBaseService {
    */
   getAllKnowledgeBase(params?: Record<string, string | number>): Observable<IKnowledgeBaseListResponse> {
     return this.apiService.get<IKnowledgeBaseListResponse>('/knowledge-base', params);
+  }
+
+  /**
+   * Lightweight check — returns true if the org has at least one KB entry.
+   * Used by the inbox setup guide to avoid running a full paginated query.
+   */
+  checkExists(): Observable<boolean> {
+    return this.apiService.get<{ success: boolean; exists: boolean }>('/knowledge-base/exists').pipe(
+      map(res => res.exists === true)
+    );
   }
 
   /**

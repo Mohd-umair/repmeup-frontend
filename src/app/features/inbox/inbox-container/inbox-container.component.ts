@@ -26,7 +26,8 @@ import { OrganizationService, AutoReplySettings } from '../../../core/services/o
 import { KnowledgeBaseService } from '../../../core/services/knowledge-base.service';
 import { PlatformConnectionService } from '../../../core/services/platform-connection.service';
 import { forkJoin, timer, Subscription, of, from, interval } from 'rxjs';
-import { exhaustMap, catchError, take, map } from 'rxjs/operators';
+import { exhaustMap, catchError, take, map, filter } from 'rxjs/operators';
+import { Router, NavigationEnd } from '@angular/router';
 
 /**
  * Inbox Container Component - Single Responsibility Principle
@@ -114,6 +115,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     private intentBucketService: IntentBucketService,
     private socketService: SocketService,
     private route: ActivatedRoute,
+    private router: Router,
     private elRef: ElementRef<HTMLElement>
   ) {}
 
@@ -159,6 +161,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
     // Load saved auto-sync preference from the organisation
     this.loadAutoSyncSetting();
+    // Refresh setup-guide KB/platform status whenever the user navigates back to inbox
+    this.watchSetupGuideRefresh();
     this.loadConversationPlatformOptions();
     this.intentBucketService.getBuckets().subscribe({
       next: (res) => {
@@ -765,7 +769,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           }
           // Capture org auto-reply settings for the setup guide
           this.orgAutoReplySettings = res.data.autoReplySettings ?? null;
-          this.checkKnowledgeBaseExists(orgId);
+          this.checkKnowledgeBaseExists();
           this.checkPlatformConnected();
         }
       },
@@ -776,11 +780,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   }
 
   /** Check if org has at least one KB entry (used by setup guide) */
-  private checkKnowledgeBaseExists(_orgId: string): void {
-    this.knowledgeBaseService.getAllKnowledgeBase({ limit: 1 }).pipe(
-      map(res => (res.analytics?.totalEntries ?? (res.data?.length ?? 0)) > 0)
-    ).subscribe({
-      next: (hasEntries) => { this.orgHasKnowledgeBase = hasEntries; },
+  private checkKnowledgeBaseExists(): void {
+    this.knowledgeBaseService.checkExists().subscribe({
+      next: (exists) => { this.orgHasKnowledgeBase = exists; },
       error: () => { this.orgHasKnowledgeBase = false; }
     });
   }
@@ -794,6 +796,19 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       next: (hasConnection) => { this.orgHasConnectedPlatform = hasConnection; },
       error: () => { this.orgHasConnectedPlatform = false; }
     });
+  }
+
+  /** Re-check setup guide status every time the user navigates back to the inbox */
+  private watchSetupGuideRefresh(): void {
+    this.subscriptions.push(
+      this.router.events.pipe(
+        filter(e => e instanceof NavigationEnd),
+        filter((e) => (e as NavigationEnd).urlAfterRedirects.includes('/inbox'))
+      ).subscribe(() => {
+        this.checkKnowledgeBaseExists();
+        this.checkPlatformConnected();
+      })
+    );
   }
 
   onSetupGuideDismissed(): void {

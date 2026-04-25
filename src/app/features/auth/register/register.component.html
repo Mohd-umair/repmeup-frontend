@@ -238,9 +238,9 @@
             <input id="terms" type="checkbox" formControlName="terms" />
             <label for="terms" class="text-[13px] text-gray-600 leading-snug cursor-pointer">
               I agree to the
-              <a href="#" class="font-semibold text-gray-800 hover:text-rep-black underline underline-offset-2 decoration-rep-lime">Terms and Conditions</a>
+              <a routerLink="/terms-conditions" target="_blank" rel="noopener" class="font-semibold text-gray-800 hover:text-rep-black underline underline-offset-2 decoration-rep-lime">Terms and Conditions</a>
               and
-              <a href="#" class="font-semibold text-gray-800 hover:text-rep-black underline underline-offset-2 decoration-rep-lime">Privacy Policy</a>
+              <a routerLink="/privacy-policy" target="_blank" rel="noopener" class="font-semibold text-gray-800 hover:text-rep-black underline underline-offset-2 decoration-rep-lime">Privacy Policy</a>
             </label>
           </div>
           <p *ngIf="hasError('terms', 'required')" class="field-error -mt-2">
@@ -273,7 +273,7 @@
         <div class="trust-strip">
           <span class="trust-item"><i class="fas fa-lock"></i> 256-bit SSL</span>
           <span class="trust-sep hidden sm:block"></span>
-          <span class="trust-item"><i class="fas fa-shield-halved"></i> SOC 2 compliant</span>
+          <span class="trust-item"><i class="fas fa-shield-halved"></i> Encrypted at rest</span>
           <span class="trust-sep hidden sm:block"></span>
           <span class="trust-item"><i class="fas fa-eye-slash"></i> Never shared</span>
         </div>

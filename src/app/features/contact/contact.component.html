@@ -42,7 +42,7 @@
             <i class="fas fa-arrow-right text-gray-500 group-hover:text-rep-lime group-hover:translate-x-1 transition-all"></i>
           </a>
 
-          <!-- Phone Card -->
+          <!-- Phone Card (hidden — remove public number from marketing site)
           <a 
             href="tel:+919911275112"
             class="group flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-rep-lime/30 hover:bg-white/[0.08] transition-all duration-300 backdrop-blur-sm"
@@ -56,6 +56,7 @@
             </div>
             <i class="fas fa-arrow-right text-gray-500 group-hover:text-rep-lime group-hover:translate-x-1 transition-all"></i>
           </a>
+          -->
 
           <!-- Address Card -->
           <div class="flex items-center gap-4 p-5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
@@ -193,6 +194,7 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <!-- Phone field hidden (no public number on site)
               <div>
                 <label for="phone" class="block text-sm font-medium text-gray-300 mb-2">Phone</label>
                 <input
@@ -203,8 +205,9 @@
                   placeholder="+91 99112 75112"
                 />
               </div>
+              -->
 
-              <div>
+              <div class="sm:col-span-2">
                 <label for="company" class="block text-sm font-medium text-gray-300 mb-2">Company</label>
                 <input
                   type="text"

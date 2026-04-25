@@ -106,6 +106,19 @@ export class ThemeService {
       icon: 'fab fa-whatsapp',
       name: 'WhatsApp'
     },
+    email: {
+      platform: 'email',
+      primaryColor: '#EA4335',
+      secondaryColor: '#c5221f',
+      gradientFrom: '#EA4335',
+      gradientTo: '#FBBC05',
+      accentColor: '#EA4335',
+      textColor: '#1F2937',
+      backgroundColor: '#FFF5F5',
+      borderColor: '#EA4335',
+      icon: 'fas fa-envelope',
+      name: 'Email'
+    },
     default: {
       platform: 'default',
       primaryColor: '#1F2937',

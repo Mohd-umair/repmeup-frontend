@@ -45,11 +45,21 @@
         <i class="fas fa-inbox text-4xl text-rep-black dark:text-rep-lime"></i>
       </div>
       <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">No conversations yet</h3>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">When customers interact with your platforms, they'll appear here</p>
-      <button class="px-4 py-2 bg-rep-lime text-rep-black rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-rep-lime/50 transition">
-        <i class="fas fa-sync mr-2"></i>
-        Refresh
-      </button>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">When customers interact with your platforms, they'll appear here.</p>
+      <div class="flex items-center justify-center gap-2 flex-wrap">
+        <button
+          type="button"
+          (click)="refreshRequested.emit()"
+          class="px-4 py-2 bg-rep-lime text-rep-black rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-rep-lime/50 transition inline-flex items-center">
+          <i class="fas fa-sync mr-2"></i>
+          Refresh
+        </button>
+        <a routerLink="/app/settings/platforms"
+           class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition inline-flex items-center">
+          <i class="fas fa-plug mr-2"></i>
+          Connect a platform
+        </a>
+      </div>
     </div>
   </div>
 

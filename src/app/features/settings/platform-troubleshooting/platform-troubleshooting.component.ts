@@ -72,11 +72,11 @@ export class PlatformTroubleshootingComponent {
       symptoms: [
         'Logs repeatedly show a different Instagram account id',
         'Logs say "No active Instagram Login connection for account ..."',
-        'The extra account is no longer connected inside Repmeup'
+        'The extra account is no longer connected inside RepMeUp'
       ],
       steps: [
         'Open Instagram -> Settings and privacy -> Apps and websites.',
-        'Remove any old Repmeup or Repmeup-IG authorization that does not belong to the account you want to keep.',
+        'Remove any old RepMeUp or RepMeUp-IG authorization that does not belong to the account you want to keep.',
         'Reconnect the correct Instagram account from Settings -> Platforms if needed.'
       ]
     },

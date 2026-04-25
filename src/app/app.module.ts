@@ -39,6 +39,7 @@ import { AnalyticsComponent } from './features/analytics/analytics.component';
 import { HomeComponent } from './features/home/home.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
+import { RefundCancellationPolicyComponent } from './features/legal/refund-cancellation-policy/refund-cancellation-policy.component';
 import { ContactComponent } from './features/contact/contact.component';
 import { AboutComponent } from './features/about/about.component';
 import { FaqComponent } from './features/faq/faq.component';
@@ -65,6 +66,7 @@ import { MediaLibraryComponent } from './features/media-library/media-library.co
     AgentsComponent,
     PrivacyPolicyComponent,
     TermsConditionsComponent,
+    RefundCancellationPolicyComponent,
     AboutComponent,
     FaqComponent,
     AiCreditsComponent

@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
 import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-plans',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './plans.component.html',
   styleUrls: ['./plans.component.scss']
 })

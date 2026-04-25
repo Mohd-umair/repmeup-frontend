@@ -17,6 +17,7 @@ import { FileUploadZoneComponent } from '../../shared/components/file-upload-zon
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
 import { BillingComponent } from './components/billing/billing.component';
 import { WhatsAppConnectComponent } from './whatsapp-connect/whatsapp-connect.component';
+import { EmailConnectComponent } from './email-connect/email-connect.component';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription, timer } from 'rxjs';
 import { take } from 'rxjs/operators';
@@ -56,11 +57,14 @@ interface SettingsNavTab {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent, WhatsAppConnectComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent, WhatsAppConnectComponent, EmailConnectComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent implements OnInit, OnDestroy {
+  /** Toggle on to show Email inbox (Gmail / Outlook / IMAP) in Settings and related UI. */
+  emailIntegrationEnabled = false;
+
   activeTab: SettingsTab = 'platforms';
   loading = false;
   savingSettings = false;
@@ -870,6 +874,15 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   /** Open WhatsApp Embedded Signup popup and reload connections on close */
+  scrollToEmailConnect(): void {
+    const el = document.getElementById('email-connect-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  onConnectionsChanged(): void {
+    this.loadPlatformConnections();
+  }
+
   async connectWhatsAppOAuth(): Promise<void> {
     const whatsappPlatform = this.platforms.find(p => p.id === 'whatsapp');
     if (whatsappPlatform) whatsappPlatform.loading = true;

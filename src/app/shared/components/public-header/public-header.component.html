@@ -56,16 +56,16 @@
             class="home-nav-user-menu absolute right-0 mt-2 w-56 rounded-lg shadow-xl border border-gray-800 py-1 z-50">
             <a (click)="navigateToDashboard(); showUserMenu = false"
               class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white cursor-pointer">
-              <div class="flex items-center space-x-2"><span>📊</span><span>Dashboard</span></div>
+              <div class="flex items-center gap-2"><i class="fas fa-chart-line w-4 text-center text-xs"></i><span>Dashboard</span></div>
             </a>
             <a routerLink="/app/settings" (click)="showUserMenu = false"
               class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white">
-              <div class="flex items-center space-x-2"><span>⚙️</span><span>Settings</span></div>
+              <div class="flex items-center gap-2"><i class="fas fa-gear w-4 text-center text-xs"></i><span>Settings</span></div>
             </a>
             <hr class="my-1 border-gray-800">
             <button (click)="logout()"
               class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-lime">
-              <div class="flex items-center space-x-2"><span>🚪</span><span>Logout</span></div>
+              <div class="flex items-center gap-2"><i class="fas fa-right-from-bracket w-4 text-center text-xs"></i><span>Logout</span></div>
             </button>
           </div>
         </div>
