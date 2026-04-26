@@ -20,471 +20,79 @@
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="grid lg:grid-cols-[42%_58%] gap-8 xl:gap-14 2xl:gap-16 items-center">
 
-      <!-- LEFT: Hero Text -->
+      <!-- LEFT: Hero Text (aligned with repmeup.html — badge, title, sub, CTAs, stats, trust) -->
       <div class="hero-content text-center lg:text-left">
 
-        <!-- Eyebrow badge -->
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 mb-6 rounded-full bg-rep-lime/10 border border-rep-lime/30 text-lime-700 dark:text-rep-lime text-sm font-semibold">
-          <span class="w-1.5 h-1.5 rounded-full bg-rep-lime animate-pulse shrink-0"></span>
-          AI agents that close deals while you sleep
+        <!-- Badge — same label + star icon treatment as repmeup.html -->
+        <div
+          class="inline-flex items-center gap-2 px-4 py-2 mb-7 rounded-full bg-white dark:bg-zinc-900/95 border border-gray-200 dark:border-white/12 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-900 dark:text-zinc-100 shadow-sm">
+          <svg class="w-3.5 h-3.5 shrink-0 text-lime-700 dark:text-rep-lime" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
+          </svg>
+          AI Revenue Platform for Social Commerce
         </div>
 
-        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.2rem] font-black mb-6 leading-[1.1] tracking-tight">
-          <span class="text-gray-900 dark:text-rep-white">Every DM is</span>
-          <span class="gradient-text"> a sale.</span>
-          <span class="block mt-2 sm:mt-3 text-gray-900 dark:text-rep-white">Every review is a</span>
-          <span class="gradient-text block"> customer.</span>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[4.2rem] font-black mb-6 leading-[1.05] tracking-tight">
+          <span class="text-gray-900 dark:text-rep-white">Your DMs Can</span><br>
+          <span class="text-gray-900 dark:text-rep-white">Make or Break</span><br>
+          <span class="text-gray-900 dark:text-rep-white">your </span><span class="gradient-text">Brand.</span>
         </h1>
 
-        <p class="text-base sm:text-lg lg:text-xl text-gray-500 dark:text-gray-400 mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
-          <strong class="text-gray-800 dark:text-gray-200 font-semibold">AI sales agents</strong> for D2C brands and creators: they capture every Instagram DM, close WhatsApp inquiries, and turn Google reviews into revenue—
-          <strong class="text-gray-800 dark:text-gray-200">automatically,</strong>
-          including overnight. They run on <strong class="text-gray-800 dark:text-gray-200 font-semibold">one AI-ready inbox</strong> so threads aren’t scattered across tools.
+        <p class="text-base sm:text-lg text-gray-500 dark:text-gray-400 mb-8 leading-relaxed max-w-[440px] mx-auto lg:mx-0">
+          RepMeUp turns Instagram, WhatsApp and Google conversations into revenue with AI replies, lead capture and lifecycle automation.
         </p>
 
-        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mb-10">
-          <button (click)="navigateToRegister()"
-            class="btn-primary group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-base glow-lime">
-            <i class="fas fa-rocket text-lg"></i>
-            Start 14-day free trial
-            <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start mb-10 sm:mb-12">
+          <button type="button" (click)="bookDemo()"
+            class="btn-primary group relative inline-flex items-center justify-center gap-2 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-base glow-lime">
+            Book Live Demo
+            <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
           </button>
-          <button (click)="bookDemo()"
-            class="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-rep-lime/60 hover:bg-rep-lime/5 hover:shadow-lg hover:shadow-rep-lime/10 transition-all text-base backdrop-blur-sm">
-            <span class="w-6 h-6 flex items-center justify-center bg-rep-lime/20 dark:bg-rep-lime/10 rounded-full shrink-0">
-              <i class="fas fa-calendar-check text-lime-700 dark:text-rep-lime" style="font-size:10px"></i>
-            </span>
-            Book a demo
+          <button type="button" (click)="scrollToSection('live-demo')"
+            class="group inline-flex items-center justify-center gap-2.5 px-8 py-4 bg-transparent border-[1.5px] border-gray-200 dark:border-white/15 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-gray-400 dark:hover:border-white/30 transition-all text-base">
+            <span class="text-xs opacity-80" aria-hidden="true">▷</span>
+            Watch 2-Min Demo
           </button>
         </div>
 
-        <!-- Trust row: only claims we can defend on a sales call -->
-        <div class="py-6 border-t border-black/[0.05] dark:border-white/[0.05] space-y-3">
-          <div class="flex flex-wrap items-center justify-center lg:justify-start gap-8 sm:gap-12">
-            <div class="text-center lg:text-left group cursor-default">
-              <p class="text-2xl sm:text-3xl font-black text-lime-600 dark:text-rep-lime group-hover:scale-105 transition-transform inline-block">14 days</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-medium">Full access trial · cancel anytime</p>
-            </div>
-            <div class="w-px h-10 bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent hidden sm:block"></div>
-            <div class="text-center lg:text-left group cursor-default">
-              <p class="text-2xl sm:text-3xl font-black text-lime-600 dark:text-rep-lime group-hover:scale-105 transition-transform inline-block">No card</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5 font-medium">Start without billing on file</p>
-            </div>
+        <!-- Hero stats — repmeup.html -->
+        <div class="flex flex-wrap justify-center lg:justify-start gap-10 sm:gap-12 mb-10">
+          <div class="text-center lg:text-left">
+            <p class="text-2xl sm:text-[26px] font-black text-gray-900 dark:text-rep-white leading-none">500+</p>
+            <p class="text-[13px] text-gray-500 dark:text-gray-400 mt-1">Brands Trust Us</p>
           </div>
-          <p class="text-center lg:text-left text-[11px] sm:text-xs text-gray-400 dark:text-gray-500 max-w-xl">
-            We don’t stack vanity metrics in the hero.
-            <a routerLink="/about" fragment="ai-quality" class="text-lime-600 dark:text-rep-lime font-medium hover:underline underline-offset-2">How we talk about training data &amp; AI quality</a>
+          <div class="text-center lg:text-left">
+            <p class="text-2xl sm:text-[26px] font-black text-gray-900 dark:text-rep-white leading-none">47M+</p>
+            <p class="text-[13px] text-gray-500 dark:text-gray-400 mt-1">Conversations</p>
+          </div>
+          <div class="text-center lg:text-left">
+            <p class="text-2xl sm:text-[26px] font-black text-gray-900 dark:text-rep-white leading-none">Live in 1hr</p>
+            <p class="text-[13px] text-gray-500 dark:text-gray-400 mt-1">Simple Setup</p>
+          </div>
+        </div>
+
+        <!-- Trusted by — repmeup.html -->
+        <div class="pt-2 border-t border-black/[0.05] dark:border-white/[0.06]">
+          <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 text-center lg:text-left">
+            Trusted by growth-focused brands
           </p>
+          <div class="flex flex-wrap justify-center lg:justify-start gap-x-7 gap-y-2 items-center">
+            <span class="font-black text-sm text-gray-400 dark:text-zinc-500 tracking-tight">boAt</span>
+            <span class="font-black text-sm text-gray-400 dark:text-zinc-500 tracking-tight">mamaearth</span>
+            <span class="font-black text-sm text-gray-400 dark:text-zinc-500 tracking-tight">derma co.</span>
+            <span class="font-black text-sm text-gray-400 dark:text-zinc-500 tracking-tight">BLUESTONE</span>
+            <span class="font-black text-sm text-gray-400 dark:text-zinc-500 tracking-tight">SUGAR</span>
+            <span class="font-black text-sm text-gray-400 dark:text-zinc-500 tracking-tight">BEARDO</span>
+          </div>
         </div>
       </div>
 
       <!-- RIGHT: Live Demo Sandbox -->
       <app-hero-demo-sandbox></app-hero-demo-sandbox>
-
-      <!-- Mobile trust strip -->
-      <div class="sm:hidden flex flex-wrap justify-center gap-3 mt-4">
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-white/80 dark:bg-gray-900/80 border border-black/[0.06] dark:border-gray-700 rounded-xl shadow-sm backdrop-blur-sm">
-          <div class="flex -space-x-1.5">
-            <span class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center" style="background:#1877F2"><i class="fab fa-facebook-f text-white" style="font-size:8px"></i></span>
-            <span class="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888)"><i class="fab fa-instagram text-white" style="font-size:8px"></i></span>
-          </div>
-          <span class="text-xs font-bold text-gray-800 dark:text-rep-white">5 Platforms</span>
-        </div>
-        <div class="flex items-center gap-2 px-4 py-2.5 bg-white/80 dark:bg-gray-900/80 border border-black/[0.06] dark:border-gray-700 rounded-xl shadow-sm backdrop-blur-sm">
-          <div class="w-5 h-5 bg-rep-lime rounded-md flex items-center justify-center shrink-0">
-            <i class="fas fa-calendar-check text-rep-black" style="font-size:9px"></i>
-          </div>
-          <span class="text-xs font-bold text-gray-800 dark:text-rep-white">14-day trial</span>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 2 — PATTERN INTERRUPT (two-phone comparison, screenshot-style)
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="pattern-comparison-section section-alt py-16 sm:py-24 lg:py-28 relative overflow-x-hidden">
-  <!-- Dot grid pattern -->
-  <div class="pattern-dot absolute inset-0 pointer-events-none"></div>
-  <div class="section-divider absolute top-0 left-0 right-0"></div>
-  <div class="section-divider absolute bottom-0 left-0 right-0"></div>
-
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <!-- Top headline -->
-    <header class="text-center mb-12 sm:mb-16 animate-on-scroll px-3 sm:px-2">
-      <h2
-        class="pi-headline flex flex-col items-center justify-center gap-y-1 sm:gap-y-1.5 md:flex-row md:flex-wrap md:justify-center md:gap-x-2 md:gap-y-2 lg:flex-nowrap lg:gap-y-0 lg:gap-x-3 text-xl sm:text-2xl md:text-2xl lg:text-[2.65rem] font-black text-gray-900 dark:text-white tracking-tight leading-snug lg:leading-tight text-balance max-w-[min(100%,36rem)] lg:max-w-none mx-auto"
-      >
-        <span class="pi-line shrink-0">Same service.</span>
-        <span class="pi-line shrink-0">Same price.</span>
-        <span class="pi-line shrink-0">Same city.</span>
-      </h2>
-    </header>
-
-    <!-- Phones grid + floating bridge -->
-    <div class="relative animate-on-scroll delay-1">
-      <!-- Central bridge (desktop): between phones -->
-      <div
-        class="pattern-bridge-pill pattern-glass hidden lg:flex absolute left-1/2 top-[44%] z-30 -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 px-5 py-3 rounded-full border border-white/50 dark:border-white/10 whitespace-nowrap shadow-lg"
-        aria-hidden="true"
-      >
-        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-white dark:bg-emerald-500 shrink-0">
-          <i class="fas fa-stopwatch text-sm"></i>
-        </span>
-        <span class="pattern-bridge-pill__label text-sm sm:text-base font-extrabold pr-1">Replies in 2 minutes.</span>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 lg:gap-24 xl:gap-32 2xl:gap-40 items-start justify-items-center">
-        <!-- ═══ Business A — fast winner (LEFT) ═══ -->
-        <div class="pattern-phone-wrap relative w-full max-w-[min(100%,360px)] flex flex-col items-center lg:items-end lg:pr-10">
-          <div
-            class="mb-4 inline-flex items-center gap-2 rounded-2xl border border-emerald-200/80 dark:border-emerald-500/40 bg-emerald-50/90 dark:bg-emerald-950/60 pattern-glass px-4 py-2 shadow-md"
-          >
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500 text-white text-sm">
-              <i class="fas fa-check"></i>
-            </span>
-            <span class="text-sm font-bold text-emerald-900 dark:text-emerald-100">Business A</span>
-          </div>
-
-          <div class="relative w-full">
-            <div class="pattern-glow-green absolute left-1/2 top-1/2 h-[520px] w-[380px] -translate-x-1/2 -translate-y-1/2 pointer-events-none -z-10"></div>
-
-            <div class="pattern-phone-a relative w-full">
-              <div class="pattern-device-chassis">
-                <div class="pattern-device-rail pattern-device-rail--left" aria-hidden="true">
-                  <span class="pattern-device-btn pattern-device-btn--mute"></span>
-                  <span class="pattern-device-btn pattern-device-btn--vol-up"></span>
-                  <span class="pattern-device-btn pattern-device-btn--vol-down"></span>
-                </div>
-                <div class="pattern-device-rail pattern-device-rail--right" aria-hidden="true">
-                  <span class="pattern-device-btn pattern-device-btn--power"></span>
-                </div>
-                <div
-                  class="pattern-device-face rounded-[2.15rem] bg-gray-100 dark:bg-gray-950 ring-1 ring-black/10 dark:ring-white/10"
-                >
-                  <div class="pattern-device-face-header">
-                    <!-- Notch + status -->
-                    <div class="flex flex-col items-center bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800/80">
-                      <div class="pt-2.5 pb-1 flex justify-center">
-                        <div class="pattern-device-notch" aria-hidden="true"></div>
-                      </div>
-                      <div class="flex w-full items-center justify-between px-4 pb-2 text-[10px] font-semibold text-gray-600 dark:text-gray-400">
-                        <span>9:41</span>
-                        <div class="flex items-center gap-1">
-                          <i class="fas fa-signal text-[9px]"></i>
-                          <i class="fas fa-wifi text-[9px]"></i>
-                          <i class="fas fa-battery-three-quarters text-[9px]"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Screen body (overflow visible so bubbles can pop out) -->
-                  <div class="pattern-device-screen pattern-glass bg-white/95 dark:bg-gray-900/95 px-4 pt-4 pb-5 sm:px-5">
-              <!-- User A -->
-              <div class="mb-4 flex items-center gap-3">
-                <div
-                  class="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-pink-400 to-rose-600 ring-2 ring-white dark:ring-gray-800 shadow-md flex items-center justify-center text-white text-xs font-black"
-                  aria-hidden="true"
-                >
-                  A
-                </div>
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-bold text-gray-900 dark:text-white">User A</p>
-                  <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Online</p>
-                </div>
-              </div>
-
-              <!-- Customer bubble -->
-              <div
-                class="pattern-msg-pop pattern-msg-pop--in mb-4 rounded-2xl rounded-bl-md border border-gray-100 dark:border-gray-700 bg-gray-50/90 dark:bg-gray-800/90 p-3"
-              >
-                <p class="text-[13px] leading-snug text-gray-800 dark:text-gray-100">Denim jacket ka price kya hai?</p>
-                <p class="mt-1.5 text-[11px] text-gray-400">12:20</p>
-              </div>
-
-              <!-- Fast reply pill -->
-              <div
-                class="pattern-msg-pop pattern-msg-pop--meta mb-4 inline-flex items-center gap-1.5 rounded-full border border-emerald-200/80 dark:border-emerald-400/50 bg-emerald-100/80 dark:bg-emerald-800/90 px-3 py-1.5 text-[11px] font-bold text-emerald-800 dark:text-white"
-              >
-                <i class="fas fa-circle-check text-emerald-600 dark:text-emerald-300"></i>
-                Replies in 2 minutes
-              </div>
-
-              <!-- Business reply -->
-              <div
-                class="pattern-msg-pop pattern-msg-pop--out relative mb-4 rounded-2xl rounded-br-md border border-emerald-200/60 dark:border-emerald-600/40 bg-emerald-50/95 dark:bg-emerald-950/50 p-3"
-              >
-                <div class="absolute -left-1 top-3 h-7 w-7 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold border-2 border-white dark:border-gray-900">B</div>
-                <p class="pl-7 text-[13px] leading-snug text-emerald-950 dark:text-emerald-50">
-                  Hi! Denim jacket ka price ₹1299 hai. Aapko aur kuch madad chahiye? 😊
-                </p>
-              </div>
-
-              <!-- Footer rating -->
-              <div class="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-700/80 pt-4">
-                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400">
-                  <i class="fas fa-thumbs-up"></i>
-                </span>
-                <div class="flex gap-0.5 text-amber-400 text-sm" aria-label="5 star rating">
-                  <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                </div>
-              </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mobile bridge (between phones; hidden on lg — desktop uses absolute pill) -->
-        <div class="flex justify-center lg:hidden -my-2 py-2">
-          <div
-            class="pattern-bridge-pill pattern-glass inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-white/50 dark:border-white/10 shadow-md"
-          >
-            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white text-xs">
-              <i class="fas fa-stopwatch"></i>
-            </span>
-            <span class="pattern-bridge-pill__label text-xs font-extrabold">Replies in 2 minutes.</span>
-          </div>
-        </div>
-
-        <!-- ═══ Business B — slow (RIGHT) ═══ -->
-        <div class="pattern-phone-wrap relative w-full max-w-[min(100%,360px)] flex flex-col items-center lg:items-start lg:pl-10">
-          <div
-            class="mb-4 inline-flex items-center gap-2 rounded-2xl border border-amber-200/90 dark:border-amber-500/40 bg-amber-50/90 dark:bg-amber-950/50 pattern-glass px-4 py-2 shadow-md"
-          >
-            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400 text-amber-950 text-sm">
-              <i class="fas fa-clock"></i>
-            </span>
-            <span class="text-sm font-bold text-amber-900 dark:text-amber-100">Business B</span>
-          </div>
-
-          <div class="relative w-full">
-            <div class="pattern-glow-amber absolute left-1/2 top-1/2 h-[520px] w-[380px] -translate-x-1/2 -translate-y-1/2 pointer-events-none -z-10"></div>
-
-            <div class="pattern-phone-b relative w-full">
-              <div class="pattern-device-chassis">
-                <div class="pattern-device-rail pattern-device-rail--left" aria-hidden="true">
-                  <span class="pattern-device-btn pattern-device-btn--mute"></span>
-                  <span class="pattern-device-btn pattern-device-btn--vol-up"></span>
-                  <span class="pattern-device-btn pattern-device-btn--vol-down"></span>
-                </div>
-                <div class="pattern-device-rail pattern-device-rail--right" aria-hidden="true">
-                  <span class="pattern-device-btn pattern-device-btn--power"></span>
-                </div>
-                <div
-                  class="pattern-device-face rounded-[2.15rem] bg-gray-100 dark:bg-gray-950 ring-1 ring-black/10 dark:ring-white/10"
-                >
-                  <div class="pattern-device-face-header">
-                    <div class="flex flex-col items-center bg-white dark:bg-gray-900 border-b border-gray-200/80 dark:border-gray-800/80">
-                      <div class="pt-2.5 pb-1 flex justify-center">
-                        <div class="pattern-device-notch" aria-hidden="true"></div>
-                      </div>
-                      <div class="flex w-full items-center justify-between px-4 pb-2 text-[10px] font-semibold text-gray-600 dark:text-gray-400">
-                        <span>9:41</span>
-                        <div class="flex items-center gap-1">
-                          <i class="fas fa-signal text-[9px]"></i>
-                          <i class="fas fa-wifi text-[9px]"></i>
-                          <i class="fas fa-battery-three-quarters text-[9px]"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="pattern-device-screen pattern-glass bg-white/95 dark:bg-gray-900/95 px-4 pt-4 pb-5 sm:px-5">
-              <div class="mb-4 flex items-center gap-3">
-                <div
-                  class="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-slate-400 to-slate-700 ring-2 ring-white dark:ring-gray-800 shadow-md flex items-center justify-center text-white text-xs font-black"
-                  aria-hidden="true"
-                >
-                  B
-                </div>
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-bold text-gray-900 dark:text-white">User B</p>
-                  <p class="text-xs text-amber-600 dark:text-amber-400 font-medium">Away</p>
-                </div>
-              </div>
-
-              <div
-                class="pattern-msg-pop pattern-msg-pop--in mb-4 rounded-2xl rounded-bl-md border border-gray-100 dark:border-gray-700 bg-gray-50/90 dark:bg-gray-800/90 p-3"
-              >
-                <p class="text-[13px] leading-snug text-gray-800 dark:text-gray-100">Denim jacket ka price kya hai?</p>
-                <p class="mt-1.5 text-[11px] text-gray-400">07:45</p>
-              </div>
-
-              <div
-                class="pattern-msg-pop pattern-msg-pop--meta mb-4 inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 dark:border-amber-500/30 bg-amber-100/80 dark:bg-amber-900/50 px-3 py-1.5 text-[11px] font-bold text-amber-900 dark:text-amber-200"
-              >
-                <i class="fas fa-clock text-amber-600 dark:text-amber-400"></i>
-                Replies in 2 hours
-              </div>
-
-              <div
-                class="pattern-msg-pop pattern-msg-pop--out relative mb-4 rounded-2xl rounded-br-md border border-amber-200/70 dark:border-amber-600/40 bg-amber-50/95 dark:bg-amber-950/45 p-3 pr-12"
-              >
-                <div class="absolute -left-1 top-3 h-7 w-7 rounded-full bg-amber-500 flex items-center justify-center text-[10px] text-amber-950 font-bold border-2 border-white dark:border-gray-900">B</div>
-                <p class="pl-7 text-[13px] leading-snug text-amber-950 dark:text-amber-50">
-                  Sorry raat ko late reply hua! Denim jacket ka price ₹1299 hai.
-                </p>
-                <span
-                  class="absolute right-2 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-amber-200/80 dark:bg-amber-800/60 text-lg"
-                  title="Slow response"
-                  aria-hidden="true"
-                >😴</span>
-              </div>
-
-              <div class="mt-auto flex items-center justify-between border-t border-gray-100 dark:border-gray-700/80 pt-4">
-                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400">
-                  <i class="fas fa-thumbs-down"></i>
-                </span>
-                <div class="flex gap-0.5 text-sm" aria-label="3 out of 5 stars">
-                  <i class="fas fa-star text-amber-400"></i><i class="fas fa-star text-amber-400"></i><i class="fas fa-star text-amber-400"></i><i class="fas fa-star text-gray-200 dark:text-gray-600 opacity-50"></i><i class="fas fa-star text-gray-200 dark:text-gray-600 opacity-50"></i>
-                </div>
-              </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer line + RepMeUp wordmark -->
-    <footer class="mt-16 sm:mt-20 text-center animate-on-scroll delay-2">
-      <p class="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
-        Guess who wins<span class="text-lime-700 dark:text-rep-lime">.</span>
-      </p>
-      <p class="mt-4 flex items-center justify-center gap-0.5 text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
-        RepMeUp<span class="inline-block h-2.5 w-2.5 translate-y-0.5 rounded-sm bg-rep-lime align-middle" aria-hidden="true"></span>
-      </p>
-      <p class="mt-6 max-w-md mx-auto text-sm text-gray-500 dark:text-gray-400">
-        Response speed is the new competitive advantage. Your buyer DM'd at 11pm — RepMeUp AI replied in 12 seconds.
-      </p>
-    </footer>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 2b — 3-SECOND PRODUCT EXPLAINER FLOW
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="relative py-24 sm:py-32 bg-white dark:bg-rep-black overflow-hidden">
-  <div class="bg-orb absolute -top-24 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-
-    <!-- Heading -->
-    <div class="text-center mb-16 sm:mb-20">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-5 leading-tight tracking-tight">
-        Watch your DMs turn into <span class="gradient-text">customers in real-time</span>
-      </h2>
-      <p class="text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-        From first message to closed lead — fully automated, always on.
-      </p>
-    </div>
-
-    <!-- Flow illustration row — desktop horizontal, mobile vertical -->
-    <div class="flex flex-col lg:flex-row items-center justify-center gap-0 lg:gap-0">
-
-      <!-- STEP 1: Incoming message -->
-      <div class="flow-step-card flex flex-col items-center text-center p-8 rounded-3xl bg-white dark:bg-gray-900/40 border border-black/[0.08] dark:border-white/[0.06] shadow-sm dark:shadow-none w-full max-w-[340px] lg:w-72 shrink-0">
-        <div class="mb-6 relative w-full max-w-[240px]">
-          <div class="chat-bubble-anim flex flex-col gap-2.5" style="--bubble-delay:0s">
-            <div class="self-start max-w-[210px] bg-gray-50 dark:bg-gray-800 border border-black/[0.08] dark:border-white/[0.07] rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
-              <span class="text-sm text-gray-800 dark:text-gray-200">Hey, is this dress available in M?</span>
-            </div>
-            <div class="self-start max-w-[210px] bg-gray-50 dark:bg-gray-800 border border-black/[0.08] dark:border-white/[0.07] rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm" style="animation-delay:0.18s">
-              <span class="text-sm text-gray-600 dark:text-gray-400 italic">...typing</span>
-            </div>
-          </div>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800/40 flex items-center justify-center mb-4">
-          <i class="fab fa-instagram text-lg" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></i>
-        </div>
-        <p class="text-base font-bold text-gray-900 dark:text-gray-200">Customer DM</p>
-        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">via Instagram</p>
-      </div>
-
-      <!-- Connector 1 -->
-      <div class="pipe-connector my-4 lg:my-0 rotate-90 lg:rotate-0" style="--pipe-w:90px">
-        <span class="pipe-dot" style="--dur:2s; --delay:0s"></span>
-      </div>
-
-      <!-- STEP 2: AI Brain -->
-      <div class="flow-step-card flex flex-col items-center text-center p-8 rounded-3xl bg-white dark:bg-gray-900/40 border border-black/[0.08] dark:border-white/[0.06] shadow-sm dark:shadow-none w-full max-w-[340px] lg:w-72 shrink-0">
-        <div class="mb-6 brain-node">
-          <div class="brain-core-glow w-24 h-24 rounded-2xl bg-rep-lime/15 dark:bg-rep-lime/10 border border-rep-lime/40 flex items-center justify-center">
-            <i class="fas fa-brain text-3xl text-lime-600 dark:text-rep-lime"></i>
-          </div>
-        </div>
-        <p class="text-base font-bold text-gray-900 dark:text-gray-200">AI Understands</p>
-        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">intent · sentiment · context</p>
-      </div>
-
-      <!-- Connector 2 -->
-      <div class="pipe-connector my-4 lg:my-0 rotate-90 lg:rotate-0" style="--pipe-w:90px">
-        <span class="pipe-dot" style="--dur:2s; --delay:0.6s"></span>
-      </div>
-
-      <!-- STEP 3: Auto Reply -->
-      <div class="flow-step-card flex flex-col items-center text-center p-8 rounded-3xl bg-white dark:bg-gray-900/40 border border-black/[0.08] dark:border-white/[0.06] shadow-sm dark:shadow-none w-full max-w-[340px] lg:w-72 shrink-0">
-        <div class="mb-6 w-full max-w-[240px]">
-          <div class="flex flex-col gap-2.5">
-            <div class="self-end max-w-[210px] bg-rep-lime text-rep-black rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm chat-bubble-anim-3" style="animation-delay:0.5s">
-              <span class="text-sm font-medium">Yes! Available in M &amp; L. Here's the link 🛍️</span>
-            </div>
-            <div class="flex items-center gap-1.5 justify-end">
-              <span class="live-dot"></span>
-              <span class="text-sm text-gray-500 dark:text-gray-500">Sent instantly</span>
-            </div>
-          </div>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-rep-lime/10 border border-rep-lime/30 flex items-center justify-center mb-4">
-          <i class="fas fa-paper-plane text-lg text-lime-600 dark:text-rep-lime"></i>
-        </div>
-        <p class="text-base font-bold text-gray-900 dark:text-gray-200">Auto-Reply Sent</p>
-        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">within seconds</p>
-      </div>
-
-      <!-- Connector 3 -->
-      <div class="pipe-connector my-4 lg:my-0 rotate-90 lg:rotate-0" style="--pipe-w:90px">
-        <span class="pipe-dot" style="--dur:2s; --delay:1.2s"></span>
-      </div>
-
-      <!-- STEP 4: Lead Card -->
-      <div class="flow-step-card flex flex-col items-center text-center p-8 rounded-3xl bg-white dark:bg-gray-900/40 border border-black/[0.08] dark:border-white/[0.06] shadow-sm dark:shadow-none w-full max-w-[340px] lg:w-72 shrink-0">
-        <div class="mb-6 lead-card-anim w-full max-w-[240px]">
-          <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl border border-black/[0.08] dark:border-white/[0.07] p-4 shadow-sm text-left">
-            <div class="flex items-center gap-3 mb-3">
-              <div class="w-11 h-11 rounded-full bg-gradient-to-br from-lime-400 to-green-500 flex items-center justify-center text-white text-sm font-bold shrink-0">P</div>
-              <div>
-                <p class="text-sm font-bold text-gray-900 dark:text-gray-200">Priya M.</p>
-                <p class="text-xs text-gray-500 dark:text-gray-500">Instagram DM</p>
-              </div>
-            </div>
-            <div class="flex flex-wrap gap-1.5">
-              <span class="tag-anim px-2.5 py-1 rounded-full text-xs font-semibold bg-rep-lime/15 text-lime-700 dark:text-rep-lime border border-rep-lime/25" style="--tag-delay:0s">Intent: Purchase</span>
-              <span class="tag-anim px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/30" style="--tag-delay:0.12s">Warm Lead</span>
-            </div>
-          </div>
-        </div>
-        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/40 flex items-center justify-center mb-4">
-          <i class="fas fa-user-check text-lg text-blue-500"></i>
-        </div>
-        <p class="text-base font-bold text-gray-900 dark:text-gray-200">Lead Captured</p>
-        <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">saved to your CRM</p>
-      </div>
-
-    </div>
-
-    <!-- Bottom call-to-action hint -->
-    <p class="text-center text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-14 flex items-center justify-center gap-2">
-      <i class="fas fa-infinity text-rep-lime text-lg"></i>
-      This loop runs 24/7, for every channel, for every customer.
-    </p>
-
-  </div>
-</section>
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
@@ -495,81 +103,184 @@
   <div class="absolute left-0 bottom-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 mb-5 bg-rep-lime/10 dark:bg-rep-lime/10 border border-rep-lime/25 rounded-full text-lime-700 dark:text-rep-lime text-[11px] font-bold uppercase tracking-wider">
-        <span class="w-1.5 h-1.5 rounded-full bg-rep-lime shrink-0 animate-pulse"></span>
-        The product · Pre-sale · Sale · Post-sale
-      </div>
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight leading-tight">
-        Three stages where revenue dies.<br>
-        <span class="gradient-text">One platform that saves it.</span>
-      </h2>
-      <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-2xl mx-auto">
-        <strong class="text-gray-700 dark:text-gray-300 font-semibold">AI agents</strong> carry revenue from the first DM through the final review—pre-sale, sale, and post-sale—so nothing leaks between handoffs. <span class="text-gray-600 dark:text-gray-400">One command center replaces juggling six tools.</span>
-      </p>
-    </div>
+    <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
 
-    <!-- 3-Stage Cards -->
-    <div class="grid sm:grid-cols-3 gap-5 mb-12">
-
-      <!-- Pre-sale -->
-      <div class="problem-card animate-on-scroll delay-1 premium-card rounded-2xl p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-9 h-9 rounded-xl bg-rep-lime flex items-center justify-center shrink-0">
-            <span class="text-rep-black font-black text-sm font-mono">01</span>
-          </div>
-          <span class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Pre-sale</span>
-        </div>
-        <h3 class="text-gray-900 dark:text-zinc-50 font-black text-lg mb-2">Capture &amp; Convert</h3>
-        <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">Your buyer DM'd at 11pm. Your team is asleep. RepMeUp AI replied in 12 seconds, recommended the right SKU, and dropped the cart link — all in your brand voice.</p>
-        <div class="flex items-center gap-4 pt-4 border-t border-black/[0.05] dark:border-white/[0.05]">
-          <div><p class="text-lg font-black text-lime-600 dark:text-rep-lime">+47%</p><p class="text-[10px] text-gray-400">DM-to-cart conversion</p></div>
-          <div><p class="text-lg font-black text-lime-600 dark:text-rep-lime">12 sec</p><p class="text-[10px] text-gray-400">avg first response</p></div>
-        </div>
-      </div>
-
-      <!-- Sale -->
-      <div class="problem-card animate-on-scroll delay-2 premium-card rounded-2xl p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-9 h-9 rounded-xl bg-rep-lime flex items-center justify-center shrink-0">
-            <span class="text-rep-black font-black text-sm font-mono">02</span>
-          </div>
-          <span class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Sale</span>
-        </div>
-        <h3 class="text-gray-900 dark:text-zinc-50 font-black text-lg mb-2">Close on WhatsApp</h3>
-        <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">Cart recovery, COD confirmation, RTO reduction — all on the channel where Indian buyers spend their time. 98% open rate vs. 22% on email.</p>
-        <div class="flex items-center gap-4 pt-4 border-t border-black/[0.05] dark:border-white/[0.05]">
-          <div><p class="text-lg font-black text-lime-600 dark:text-rep-lime">31%</p><p class="text-[10px] text-gray-400">cart abandonment recovered</p></div>
-          <div><p class="text-lg font-black text-lime-600 dark:text-rep-lime">22%</p><p class="text-[10px] text-gray-400">RTO reduction</p></div>
-        </div>
-      </div>
-
-      <!-- Post-sale -->
-      <div class="problem-card animate-on-scroll delay-3 premium-card rounded-2xl p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-9 h-9 rounded-xl bg-rep-lime flex items-center justify-center shrink-0">
-            <span class="text-rep-black font-black text-sm font-mono">03</span>
-          </div>
-          <span class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">Post-sale</span>
-        </div>
-        <h3 class="text-gray-900 dark:text-zinc-50 font-black text-lg mb-2">Retain &amp; Reputation</h3>
-        <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">The order ships. Most brands move on. RepMeUp keeps the conversation alive — collecting reviews, catching unhappy buyers privately, and triggering the next purchase.</p>
-        <div class="flex items-center gap-4 pt-4 border-t border-black/[0.05] dark:border-white/[0.05]">
-          <div><p class="text-lg font-black text-lime-600 dark:text-rep-lime">2.4×</p><p class="text-[10px] text-gray-400">repeat purchase rate</p></div>
-          <div><p class="text-lg font-black text-lime-600 dark:text-rep-lime">3.9→4.7★</p><p class="text-[10px] text-gray-400">avg Google rating in 90 days</p></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Closing punch line -->
-    <div class="animate-on-scroll text-center">
-      <div class="inline-block relative px-10 py-6 rounded-2xl overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-r from-lime-50 via-white to-lime-50 dark:from-rep-lime/8 dark:via-gray-900 dark:to-rep-lime/8 border border-lime-200/70 dark:border-rep-lime/20 rounded-2xl"></div>
-        <div class="shimmer-line absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl"></div>
-        <p class="relative text-xl sm:text-2xl font-bold text-gray-900 dark:text-rep-white">
-          No more juggling 6 tools.
-          <span class="gradient-text"> No more revenue leaking between teams.</span>
+      <!-- Left: Heading + 4 problem cards -->
+      <div class="animate-on-scroll">
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight leading-tight">
+          Most brands lose revenue<br>
+          <span class="gradient-text">before checkout.</span>
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-xl mb-10 leading-relaxed">
+          Not because demand is low. Because conversations are slow, messy, or missed.
         </p>
+
+        <div class="grid sm:grid-cols-2 gap-5">
+          <!-- Slow Replies -->
+          <div class="problem-card animate-on-scroll delay-1 premium-card rounded-2xl p-6">
+            <div class="w-10 h-10 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
+              <i class="fas fa-clock text-lime-700 dark:text-rep-lime"></i>
+            </div>
+            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2">Slow replies</h3>
+            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+              Customers don't wait. They buy from whoever responds first.
+            </p>
+            <div class="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+              <i class="fas fa-arrow-trend-up"></i>
+              67% switch to competitors
+            </div>
+          </div>
+
+          <!-- Missed DMs -->
+          <div class="problem-card animate-on-scroll delay-2 premium-card rounded-2xl p-6">
+            <div class="w-10 h-10 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
+              <i class="fas fa-comment-slash text-lime-700 dark:text-rep-lime"></i>
+            </div>
+            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2">Missed DMs</h3>
+            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+              Leads disappear silently when no one sees the message in time.
+            </p>
+            <div class="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+              <i class="fas fa-arrow-trend-up"></i>
+              38% of DMs go unseen
+            </div>
+          </div>
+
+          <!-- Cart Drop-offs -->
+          <div class="problem-card animate-on-scroll delay-3 premium-card rounded-2xl p-6">
+            <div class="w-10 h-10 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
+              <i class="fas fa-cart-arrow-down text-lime-700 dark:text-rep-lime"></i>
+            </div>
+            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2">Cart drop-offs</h3>
+            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+              Interest fades without follow-ups, offers, or payment nudges.
+            </p>
+            <div class="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+              <i class="fas fa-arrow-trend-up"></i>
+              70% abandon carts
+            </div>
+          </div>
+
+          <!-- Bad Reviews -->
+          <div class="problem-card animate-on-scroll delay-4 premium-card rounded-2xl p-6">
+            <div class="w-10 h-10 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
+              <i class="fas fa-face-frown text-lime-700 dark:text-rep-lime"></i>
+            </div>
+            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2">Bad reviews</h3>
+            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+              Unresolved issues go public and scare away future buyers.
+            </p>
+            <div class="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+              <i class="fas fa-arrow-trend-up"></i>
+              1 bad review ≈ 22 lost sales
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Revenue-leak diagram -->
+      <div class="animate-on-scroll delay-2">
+        <div class="bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-3xl p-5 sm:p-7 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-40 h-40 bg-rep-lime/5 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="flex justify-center mb-6">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800/40 text-red-500 dark:text-red-400 text-[11px] font-bold uppercase tracking-wider">
+              <i class="fas fa-droplet"></i>
+              Revenue leaks here
+            </span>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Leak 1 -->
+            <div class="flex items-center gap-3 sm:gap-4">
+              <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                <i class="fab fa-instagram text-pink-400"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-900 dark:text-rep-white truncate">Customer DM</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">"Hi, is this available in black?"</p>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <span class="hidden sm:block w-8 border-t-2 border-dashed border-red-300 dark:border-red-800/60"></span>
+                <span class="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/40 text-red-500 dark:text-red-400 text-[10px] font-black flex items-center justify-center">✕</span>
+              </div>
+              <div class="text-right text-[11px] leading-tight font-semibold text-red-500 dark:text-red-400 shrink-0">
+                No reply<br>Lost lead
+              </div>
+            </div>
+
+            <!-- Leak 2 -->
+            <div class="flex items-center gap-3 sm:gap-4">
+              <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                <i class="fas fa-cart-shopping text-gray-500 dark:text-gray-400"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-900 dark:text-rep-white truncate">Added to cart</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">1 item worth Rs.1,299</p>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <span class="hidden sm:block w-8 border-t-2 border-dashed border-red-300 dark:border-red-800/60"></span>
+                <span class="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/40 text-red-500 dark:text-red-400 text-[10px] font-black flex items-center justify-center">✕</span>
+              </div>
+              <div class="text-right text-[11px] leading-tight font-semibold text-red-500 dark:text-red-400 shrink-0">
+                No follow-up<br>Abandoned
+              </div>
+            </div>
+
+            <!-- Leak 3 -->
+            <div class="flex items-center gap-3 sm:gap-4">
+              <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                <i class="fas fa-truck text-gray-500 dark:text-gray-400"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-900 dark:text-rep-white truncate">COD order placed</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">No confirmation sent</p>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <span class="hidden sm:block w-8 border-t-2 border-dashed border-red-300 dark:border-red-800/60"></span>
+                <span class="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/40 text-red-500 dark:text-red-400 text-[10px] font-black flex items-center justify-center">✕</span>
+              </div>
+              <div class="text-right text-[11px] leading-tight font-semibold text-red-500 dark:text-red-400 shrink-0">
+                RTO risk<br>Margin lost
+              </div>
+            </div>
+
+            <!-- Leak 4 -->
+            <div class="flex items-center gap-3 sm:gap-4">
+              <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                <i class="fas fa-star text-gray-500 dark:text-gray-400"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-gray-900 dark:text-rep-white truncate">Product delivered</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">No review request sent</p>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <span class="hidden sm:block w-8 border-t-2 border-dashed border-red-300 dark:border-red-800/60"></span>
+                <span class="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/40 text-red-500 dark:text-red-400 text-[10px] font-black flex items-center justify-center">✕</span>
+              </div>
+              <div class="text-right text-[11px] leading-tight font-semibold text-red-500 dark:text-red-400 shrink-0">
+                No review<br>No repeat sale
+              </div>
+            </div>
+          </div>
+
+          <!-- Closing punch line -->
+          <div class="mt-6 relative rounded-2xl overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-lime-50 via-white to-lime-50 dark:from-rep-lime/10 dark:via-gray-900 dark:to-rep-lime/10 border border-lime-200/70 dark:border-rep-lime/20 rounded-2xl"></div>
+            <div class="shimmer-line absolute bottom-0 left-0 right-0 h-0.5 rounded-b-2xl"></div>
+            <div class="relative px-5 py-5 text-center">
+              <p class="text-base sm:text-lg font-black text-gray-900 dark:text-rep-white">
+                Revenue lost. <span class="gradient-text">Every single day.</span>
+              </p>
+              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1.5">Fix the leaks. Grow your revenue.</p>
+              <button (click)="navigateToRegister()"
+                class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-rep-lime text-rep-black font-black rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-sm">
+                That's where we come in
+                <i class="fas fa-arrow-right text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -577,606 +288,108 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 4 — THE SOLUTION
+     SECTION 4 — THE SOLUTION (Customer Lifecycle) — #ecosystem for nav "Products"
 ════════════════════════════════════════════════════════════════════════════ -->
-<section class="section-alt py-16 sm:py-24 relative overflow-hidden">
+<section id="ecosystem" class="section-alt py-16 sm:py-24 relative overflow-hidden">
   <div class="section-divider absolute top-0 left-0 right-0"></div>
   <div class="absolute left-1/2 top-0 -translate-x-1/2 w-[800px] h-[400px] bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
 
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.22fr)] gap-10 lg:gap-14 xl:gap-16 items-center">
-      <!-- Left -->
-      <div class="animate-on-scroll">
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-6 leading-tight tracking-tight">
-          One Platform.<br>
-          <span class="gradient-text">Your Entire</span><br>
-          Conversation Funnel.
-        </h2>
-        <p class="text-gray-500 text-lg mb-8 leading-relaxed">
-          Instagram DMs, WhatsApp carts, story replies, comments, and Google reviews — threaded by customer in one screen. No more juggling 6 tools.
-        </p>
-        <div class="space-y-4">
-          <div class="flex items-start gap-4">
-            <div class="w-9 h-9 bg-rep-lime rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-              <span class="text-rep-black font-black text-xs font-mono">01</span>
-            </div>
-            <div>
-              <p class="text-gray-900 dark:text-rep-white font-bold">Unified Inbox</p>
-              <p class="text-gray-500 text-sm">Instagram DMs, story replies, comments, WhatsApp, and Facebook — threaded by customer in one screen.</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-4">
-            <div class="w-9 h-9 bg-rep-lime rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-              <span class="text-rep-black font-black text-xs font-mono">02</span>
-            </div>
-            <div>
-              <p class="text-gray-900 dark:text-rep-white font-bold">Comment-to-DM auto-flows</p>
-              <p class="text-gray-500 text-sm">A "price?" comment on your reel auto-DMs the price, the link, and a discount nudge. Conversion in seconds.</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-4">
-            <div class="w-9 h-9 bg-rep-lime rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-              <span class="text-rep-black font-black text-xs font-mono">03</span>
-            </div>
-            <div>
-              <p class="text-gray-900 dark:text-rep-white font-bold">24/7 AI coverage</p>
-              <p class="text-gray-500 text-sm">Trained on your catalog and brand voice in 48 hours. Hands off to humans only when it matters.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: Before / After — 1 col on small screens, 2 cols from md (avoids crushed copy) -->
-      <div class="animate-on-scroll delay-2 w-full min-w-0">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6 lg:gap-8 w-full">
-          <!-- Before -->
-          <div class="min-w-0 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 lg:p-8">
-            <p class="text-red-500 dark:text-red-400 text-xs sm:text-sm md:text-base font-black uppercase tracking-wide mb-4 sm:mb-5 md:mb-6 flex items-center gap-2 sm:gap-2.5">
-              <i class="fas fa-circle-xmark text-sm sm:text-base md:text-lg shrink-0"></i> Before
-            </p>
-            <div class="space-y-3 sm:space-y-4 md:space-y-5">
-              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-red-100 dark:bg-red-900/20 rounded-lg sm:rounded-xl md:rounded-2xl border border-red-200 dark:border-red-800/20">
-                <i class="fab fa-instagram text-pink-400 text-sm sm:text-base md:text-lg shrink-0"></i>
-                <span class="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 font-medium min-w-0">Tab 1 of 7</span>
-              </div>
-              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-red-100 dark:bg-red-900/20 rounded-lg sm:rounded-xl md:rounded-2xl border border-red-200 dark:border-red-800/20">
-                <i class="fab fa-facebook text-blue-400 text-sm sm:text-base md:text-lg shrink-0"></i>
-                <span class="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 font-medium min-w-0">Tab 2 of 7</span>
-              </div>
-              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-red-100 dark:bg-red-900/20 rounded-lg sm:rounded-xl md:rounded-2xl border border-red-200 dark:border-red-800/20">
-                <i class="fas fa-envelope text-gray-500 dark:text-gray-400 text-sm sm:text-base md:text-lg shrink-0"></i>
-                <span class="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300 font-medium min-w-0">Tab 3 of 7</span>
-              </div>
-              <div class="px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 rounded-lg sm:rounded-xl md:rounded-2xl bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700/30 min-w-0">
-                <p class="text-xs sm:text-sm md:text-base text-red-600 dark:text-red-300 font-bold leading-snug break-words">12 unread · 3 tools down</p>
-              </div>
-            </div>
-          </div>
-          <!-- After -->
-          <div class="min-w-0 bg-rep-lime/5 border border-lime-200 dark:border-rep-lime/20 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 lg:p-8">
-            <p class="text-lime-700 dark:text-rep-lime text-xs sm:text-sm md:text-base font-black uppercase tracking-wide mb-4 sm:mb-5 md:mb-6 flex flex-wrap items-center gap-2 sm:gap-2.5">
-              <i class="fas fa-circle-check text-sm sm:text-base md:text-lg shrink-0"></i>
-              <span class="break-words leading-tight">After RepMeUp</span>
-            </p>
-            <div class="space-y-3 sm:space-y-4 md:space-y-5">
-              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-lime-50 dark:bg-rep-lime/10 rounded-lg sm:rounded-xl md:rounded-2xl border border-lime-200 dark:border-rep-lime/15">
-                <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-sm sm:text-base md:text-lg shrink-0"></i>
-                <span class="text-xs sm:text-sm md:text-base text-gray-800 dark:text-zinc-200 font-medium min-w-0">All in 1 place</span>
-              </div>
-              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-lime-50 dark:bg-rep-lime/10 rounded-lg sm:rounded-xl md:rounded-2xl border border-lime-200 dark:border-rep-lime/15">
-                <i class="fas fa-robot text-lime-700 dark:text-rep-lime text-sm sm:text-base md:text-lg shrink-0"></i>
-                <span class="text-xs sm:text-sm md:text-base text-gray-800 dark:text-zinc-200 font-medium min-w-0">AI suggests reply</span>
-              </div>
-              <div class="flex items-center gap-2 sm:gap-3 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 bg-lime-50 dark:bg-rep-lime/10 rounded-lg sm:rounded-xl md:rounded-2xl border border-lime-200 dark:border-rep-lime/15">
-                <i class="fas fa-bolt text-lime-700 dark:text-rep-lime text-sm sm:text-base md:text-lg shrink-0"></i>
-                <span class="text-xs sm:text-sm md:text-base text-gray-800 dark:text-zinc-200 font-medium min-w-0">Sent in 2 min</span>
-              </div>
-              <div class="px-3 sm:px-4 py-2.5 sm:py-3 md:py-3.5 rounded-lg sm:rounded-xl md:rounded-2xl bg-lime-50 dark:bg-rep-lime/15 border border-lime-200 dark:border-rep-lime/25 min-w-0">
-                <p class="text-xs sm:text-sm md:text-base text-lime-800 dark:text-rep-lime font-black leading-snug break-words">0 missed · All resolved</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 4b — LEADERSHIP TEAM
-════════════════════════════════════════════════════════════════════════════ -->
-<section id="team" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute left-0 top-1/3 w-80 h-80 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="absolute right-0 bottom-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="section-divider absolute top-0 left-0 right-0"></div>
-
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
-        Leadership Team<br>
-        <span class="gradient-text">Behind RepMeUp</span>
+    <div class="text-center mb-8 sm:mb-10 animate-on-scroll">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 leading-tight tracking-tight">
+        One platform across the entire<br>
+        <span class="gradient-text">customer lifecycle.</span>
       </h2>
       <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-2xl mx-auto leading-relaxed">
-        Strategists and builders united around one mission: help every brand respond faster, smarter, and on-brand.
+        From the first DM to repeat purchase, RepMeUp helps you acquire, convert, support, retain, and grow customers — all from one intelligent platform.
       </p>
-    </div>
-
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-      <article
-        *ngFor="let member of teamMembers; let i = index"
-        [ngClass]="'animate-on-scroll delay-' + (i + 1)"
-        class="home-team-card premium-card rounded-3xl p-7 sm:p-8 text-center flex flex-col items-center">
-        <div
-          class="home-team-photo mb-5 w-28 h-28 sm:w-32 sm:h-32 rounded-2xl shadow-lg ring-2 ring-white bg-gray-100 relative shrink-0 dark:bg-rep-lime dark:p-1.5 dark:ring-rep-lime dark:shadow-[0_0_28px_rgba(216,255,0,0.45),0_0_48px_rgba(216,255,0,0.15)]">
-          <div class="relative w-full h-full rounded-[inherit] dark:rounded-xl overflow-hidden dark:bg-rep-black min-h-0">
-            <img
-              *ngIf="!teamPhotoFailed[member.name]"
-              [src]="member.imageSrc"
-              [alt]="'Photo of ' + member.name"
-              width="128"
-              height="128"
-              class="absolute inset-0 w-full h-full object-cover object-center"
-              loading="lazy"
-              decoding="async"
-              (error)="onTeamPhotoError(member.name)" />
-            <div
-              *ngIf="teamPhotoFailed[member.name]"
-              class="absolute inset-0 flex items-center justify-center text-white text-2xl sm:text-3xl font-black bg-gradient-to-br"
-              [ngClass]="member.avatarGradient"
-              aria-hidden="true">
-              {{ member.initials }}
-            </div>
-          </div>
-        </div>
-        <h3 class="home-team-name text-lg sm:text-xl font-black text-gray-900 dark:text-rep-white mb-1.5 leading-tight">
-          {{ member.name }}
-        </h3>
-        <p class="home-team-role text-xs sm:text-sm font-bold text-center leading-snug max-w-[14rem] mx-auto text-lime-700 dark:text-rep-lime">
-          {{ member.role }}
-        </p>
-        <div class="home-team-accent-bar mt-4 h-1 w-10 rounded-full bg-gradient-to-r from-transparent via-rep-lime/80 to-transparent opacity-60 dark:opacity-80"></div>
-      </article>
     </div>
   </div>
 
-  <div class="section-divider absolute bottom-0 left-0 right-0"></div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 5 — PRODUCT ECOSYSTEM
-════════════════════════════════════════════════════════════════════════════ -->
-<section id="ecosystem" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute left-0 bottom-0 w-80 h-80 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
-
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
-        Three Products.<br>
-        <span class="gradient-text">Your Entire Revenue Loop.</span>
-      </h2>
-      <p class="text-gray-500 text-base sm:text-xl max-w-2xl mx-auto">
-        Pre-sale capture · WhatsApp commerce · Post-sale reviews — one platform that covers your full conversation funnel.
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-6 sm:gap-8">
-      <!-- RMP Inbox -->
-      <div class="animate-on-scroll delay-1 card-hover bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-rep-lime/4 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="w-14 h-14 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-2xl flex items-center justify-center mb-6">
-          <i class="fas fa-inbox text-lime-700 dark:text-rep-lime text-xl"></i>
-        </div>
-        <div class="mb-2 inline-block px-3 py-1 bg-lime-50 dark:bg-rep-lime/10 rounded-full text-lime-700 dark:text-rep-lime text-xs font-bold">RMP Inbox</div>
-        <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-rep-white mb-3">Control the Chaos</h3>
-        <p class="text-gray-500 text-sm mb-6 leading-relaxed">
-          All conversations. One inbox. AI included. Never miss a message across WhatsApp, Instagram, Facebook, Google, or YouTube.
-        </p>
-        <ul class="space-y-2.5 mb-8">
-          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> Unified multi-platform inbox</li>
-          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> AI reply suggestions</li>
-          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> Smart conversation routing</li>
-        </ul>
-        <a (click)="scrollToSection('how-it-works')" class="inline-flex items-center gap-2 text-lime-700 dark:text-rep-lime font-semibold text-sm cursor-pointer hover:gap-3 transition-all">
-          Learn More <i class="fas fa-arrow-right"></i>
-        </a>
-      </div>
-
-      <!-- RMP Publish — featured -->
-      <div class="animate-on-scroll delay-2 relative mt-4">
-        <!-- "Most Popular" badge — sits above the card, not clipped -->
-        <div class="absolute -top-4 left-8 z-10">
-          <span class="px-4 py-1.5 bg-rep-lime text-rep-black text-xs font-black rounded-full shadow-lg shadow-rep-lime/40">
-            ⭐ Most Popular
+  <!-- Segmented tab bar: same max width as page content; each tab sized to its label + icon -->
+  <div
+    class="mb-8 sm:mb-12 w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 animate-on-scroll delay-1"
+    role="tablist"
+    aria-label="Customer lifecycle stages"
+  >
+    <div
+      class="w-full max-w-full rounded-2xl border border-gray-200/95 dark:border-gray-700/90 bg-gray-100/90 dark:bg-gray-900/75 p-1 sm:p-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]"
+    >
+      <div
+        class="lifecycle-tabs-scroller flex w-full min-w-0 flex-nowrap items-stretch justify-start gap-1 sm:gap-1.5 overflow-x-auto scroll-smooth pb-0.5 sm:flex-wrap sm:justify-center sm:overflow-x-visible"
+      >
+        <button
+          *ngFor="let key of lifecycleTabKeys"
+          type="button"
+          role="tab"
+          [attr.id]="'lifecycle-tab-' + key"
+          (click)="setActiveLifecycleTab(key)"
+          [attr.aria-selected]="activeLifecycleTab === key"
+          [attr.tabindex]="activeLifecycleTab === key ? 0 : -1"
+          class="group lifecycle-tab-pill inline-flex shrink-0 flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-black uppercase tracking-wide transition-all duration-200 snap-center focus:outline-none focus-visible:ring-2 focus-visible:ring-rep-lime focus-visible:ring-offset-2 focus-visible:ring-offset-gray-100 dark:focus-visible:ring-offset-gray-900"
+          [ngClass]="
+            activeLifecycleTab === key
+              ? 'bg-rep-lime text-rep-black shadow-md ring-1 ring-lime-300/60 dark:ring-rep-lime/50 z-10 sm:scale-[1.01]'
+              : 'text-gray-500 dark:text-gray-400 bg-transparent hover:bg-white/80 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-rep-white'
+          "
+        >
+          <i
+            [class]="
+              lifecycle[key].icon +
+              ' text-sm sm:text-base shrink-0 ' +
+              (activeLifecycleTab === key ? 'text-rep-black' : 'text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300')
+            "
+            aria-hidden="true"
+          ></i>
+          <span class="whitespace-nowrap text-center leading-tight">
+            {{ lifecycle[key].label }}
           </span>
-        </div>
-
-        <!-- Card -->
-        <div class="card-hover h-full bg-lime-50 dark:bg-gray-900 border-2 border-lime-400 dark:border-rep-lime/60 rounded-3xl p-8 relative overflow-hidden shadow-2xl shadow-lime-300/40 dark:shadow-rep-lime/20">
-          <!-- Decorative glow orb -->
-          <div class="absolute top-0 right-0 w-48 h-48 bg-rep-lime/15 dark:bg-rep-lime/12 rounded-full blur-3xl pointer-events-none"></div>
-          <!-- Top accent bar -->
-          <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-rep-lime to-transparent rounded-t-3xl"></div>
-
-          <div class="w-14 h-14 bg-rep-lime rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-rep-lime/40">
-            <i class="fas fa-calendar-alt text-rep-black text-xl"></i>
-          </div>
-          <div class="mb-2 inline-block px-3 py-1 bg-lime-200 dark:bg-rep-lime/20 rounded-full text-lime-800 dark:text-rep-lime text-xs font-bold">RMP Publish</div>
-          <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-3">Control the Narrative</h3>
-          <p class="text-gray-600 dark:text-gray-300 text-sm mb-6 leading-relaxed">
-            Plan, post, and track content that performs. Schedule AI-generated posts across all platforms and measure what resonates.
-          </p>
-          <ul class="space-y-2.5 mb-8">
-            <li class="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> AI content generation</li>
-            <li class="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> Multi-platform scheduling</li>
-            <li class="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200"><i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i> Performance analytics</li>
-          </ul>
-          <a (click)="scrollToSection('how-it-works')" class="inline-flex items-center gap-2 text-lime-700 dark:text-rep-lime font-semibold text-sm cursor-pointer hover:gap-3 transition-all">
-            Learn More <i class="fas fa-arrow-right"></i>
-          </a>
-        </div>
-      </div>
-
-      <!-- RMP Desk -->
-      <div class="animate-on-scroll delay-3 card-hover bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/4 rounded-full blur-2xl pointer-events-none"></div>
-        <div class="w-14 h-14 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl flex items-center justify-center mb-6">
-          <i class="fas fa-headset text-blue-500 dark:text-blue-400 text-xl"></i>
-        </div>
-        <div class="mb-2 inline-block px-3 py-1 bg-blue-50 dark:bg-blue-500/10 rounded-full text-blue-500 dark:text-blue-400 text-xs font-bold">RMP Desk</div>
-        <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-rep-white mb-3">Control the Experience</h3>
-        <p class="text-gray-500 text-sm mb-6 leading-relaxed">
-          One continuous conversation across all channels. Support tickets, reviews, and DMs all managed in one intelligent desk.
-        </p>
-        <ul class="space-y-2.5 mb-8">
-          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-blue-400 text-xs"></i> Ticket management</li>
-          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-blue-400 text-xs"></i> Customer history threads</li>
-          <li class="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300"><i class="fas fa-check text-blue-400 text-xs"></i> SLA tracking & escalation</li>
-        </ul>
-        <a (click)="scrollToSection('how-it-works')" class="inline-flex items-center gap-2 text-blue-500 dark:text-blue-400 font-semibold text-sm cursor-pointer hover:gap-3 transition-all">
-          Learn More <i class="fas fa-arrow-right"></i>
-        </a>
+        </button>
       </div>
     </div>
   </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 6 — HOW IT WORKS
-════════════════════════════════════════════════════════════════════════════ -->
-<section id="how-it-works" class="section-alt py-16 sm:py-24 relative overflow-hidden">
-  <!-- Diagonal pattern -->
-  <div class="pattern-diagonal absolute inset-0 pointer-events-none"></div>
-  <div class="section-divider absolute top-0 left-0 right-0"></div>
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
-        Live on your channels in
-        <span class="gradient-text"> one afternoon</span>
-      </h2>
-      <p class="text-gray-500 text-base sm:text-xl max-w-xl mx-auto">No engineering required. No 6-month implementation. Just connect, train, and start closing.</p>
-    </div>
-
-    <div class="relative">
-      <!-- Connector line (desktop) -->
-      <div class="hidden lg:block absolute top-16 left-[calc(16.67%+1px)] right-[calc(16.67%+1px)] h-0.5 step-line z-0"></div>
-
-      <div class="grid sm:grid-cols-3 gap-8 relative z-10">
-        <!-- Step 1 -->
-        <div class="animate-on-scroll delay-1 text-center">
-          <div class="relative inline-flex mb-6">
-            <div class="w-16 h-16 bg-rep-lime rounded-2xl flex items-center justify-center shadow-xl shadow-rep-lime/30 glow-lime">
-              <i class="fas fa-plug text-rep-black text-xl"></i>
-            </div>
-            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-rep-lime rounded-full flex items-center justify-center text-lime-700 dark:text-rep-lime text-xs font-black">1</span>
-          </div>
-          <h3 class="text-lg font-black text-gray-900 dark:text-rep-white mb-2">Connect Your Channels</h3>
-          <p class="text-gray-500 text-sm leading-relaxed">Link Instagram, Facebook, Google, YouTube, and WhatsApp with one click using official OAuth.</p>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="animate-on-scroll delay-2 text-center">
-          <div class="relative inline-flex mb-6">
-            <div class="w-16 h-16 bg-white dark:bg-gray-800/60 border border-black/[0.06] dark:border-gray-700 rounded-2xl flex items-center justify-center shadow-md">
-              <i class="fas fa-inbox text-lime-600 dark:text-rep-lime text-xl"></i>
-            </div>
-            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-lime-400 dark:border-rep-lime/60 rounded-full flex items-center justify-center text-lime-600 dark:text-rep-lime text-xs font-black shadow-sm">2</span>
-          </div>
-          <h3 class="text-lg font-black text-gray-900 dark:text-rep-white mb-2">Centralise Conversations</h3>
-          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Every message from every platform flows into your single unified inbox — organised, tagged, and ready.</p>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="animate-on-scroll delay-3 text-center">
-          <div class="relative inline-flex mb-6">
-            <div class="w-16 h-16 bg-white dark:bg-gray-800/60 border border-black/[0.06] dark:border-gray-700 rounded-2xl flex items-center justify-center shadow-md">
-              <i class="fas fa-robot text-blue-500 dark:text-blue-400 text-xl"></i>
-            </div>
-            <span class="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-rep-black border-2 border-blue-400 dark:border-blue-500/60 rounded-full flex items-center justify-center text-blue-500 dark:text-blue-400 text-xs font-black shadow-sm">3</span>
-          </div>
-          <h3 class="text-lg font-black text-gray-900 dark:text-rep-white mb-2">Train AI on Your Brand</h3>
-          <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">We ingest your last 30 days of DMs, your catalog, your FAQ doc, and a short voice-tone brief. Two days later, the AI replies like your best human agent — just faster and never asleep.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- CTA -->
-    <div class="text-center mt-14 animate-on-scroll">
-      <button (click)="navigateToRegister()"
-        class="btn-primary group inline-flex items-center gap-3 px-8 py-4 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-base glow-lime">
-        <i class="fas fa-rocket"></i>
-        Start 14-day free trial — Free
-        <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
-      </button>
-      <p class="text-gray-400 text-xs mt-3">No credit card required. Cancel anytime.</p>
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 7 — AI DIFFERENTIATOR
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-50/35 to-transparent dark:from-transparent dark:via-zinc-900/50 dark:to-transparent pointer-events-none"></div>
-  <div class="section-divider absolute top-0 left-0 right-0"></div>
-  <div class="section-divider absolute bottom-0 left-0 right-0"></div>
 
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="grid lg:grid-cols-2 gap-12 items-center">
-
-      <!-- Left: AI Demo Card -->
-      <div class="animate-on-scroll delay-1 order-2 lg:order-1">
-        <div class="ai-gradient-bg rounded-3xl p-6 sm:p-8 space-y-5">
-          <!-- Header -->
-          <div class="flex items-center gap-3 mb-2">
-            <div class="brain-node w-10 h-10 bg-blue-50 dark:bg-blue-600/20 rounded-xl flex items-center justify-center border border-blue-200 dark:border-blue-600/20 brain-core-glow">
-              <i class="fas fa-robot text-blue-500 dark:text-blue-400"></i>
-            </div>
-            <div>
-              <p class="text-sm font-bold text-gray-900 dark:text-rep-white">RepMeUp AI</p>
-              <p class="text-xs text-gray-400">Brand-tuned · purpose-built</p>
-            </div>
-            <div class="ml-auto flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs rounded-full border border-green-200 dark:border-green-800/30">
-              <span class="live-dot"></span>
-              Active
-            </div>
-          </div>
-
-          <!-- Incoming message (animated) -->
-          <div class="chat-bubble-anim bg-white dark:bg-gray-800/60 rounded-2xl p-4 border border-gray-200 dark:border-gray-700/40" style="--bubble-delay:0s">
-            <div class="flex items-center gap-2 mb-2">
-              <i class="fab fa-instagram text-pink-400 text-xs"></i>
-              <span class="text-xs text-gray-400">Instagram DM · 0:12 ago</span>
-              <span class="ml-auto px-2 py-0.5 bg-rep-lime/10 dark:bg-rep-lime/10 text-lime-700 dark:text-rep-lime text-xs rounded-full border border-rep-lime/25">High Intent</span>
-            </div>
-            <p class="text-sm text-gray-600 dark:text-gray-300 italic">"Hey! Saw your reel. Is the Riya midi available in size M? 👀"</p>
-          </div>
-
-          <!-- Sentiment tags (animated) -->
-          <div class="flex items-center gap-3 flex-wrap">
-            <span class="tag-anim px-3 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs rounded-full border border-orange-200 dark:border-orange-800/25" style="--tag-delay:0s">
-              <i class="fas fa-tag mr-1"></i>Intent: Purchase
-            </span>
-            <span class="tag-anim px-3 py-1 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs rounded-full border border-yellow-200 dark:border-yellow-800/25" style="--tag-delay:0.12s">
-              <i class="fas fa-smile mr-1"></i>Sentiment: Neutral
-            </span>
-            <span class="tag-anim px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded-full border border-blue-200 dark:border-blue-800/25" style="--tag-delay:0.24s">
-              <i class="fas fa-bolt mr-1"></i>Urgent
-            </span>
-          </div>
-
-          <!-- AI suggestion (lead-card-anim) -->
-          <div class="lead-card-anim bg-blue-50 dark:bg-blue-950/40 rounded-2xl p-4 border border-blue-200 dark:border-blue-700/30">
-            <div class="flex items-center gap-2 mb-2">
-              <i class="fas fa-magic text-blue-500 dark:text-blue-400 text-xs"></i>
-              <span class="text-xs text-blue-600 dark:text-blue-300 font-semibold">AI Suggested Reply</span>
-              <span class="text-xs text-gray-400 ml-auto">Generated in 0.3s</span>
-            </div>
-            <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed typing-cursor">
-              Hi! Great news — the blue variant is back in stock next Friday. We'll send you a direct notification the moment it's live. Thank you for your patience! 💙
-            </p>
-            <div class="flex gap-2 mt-3">
-              <button class="flex-1 py-2 bg-lime-50 dark:bg-rep-lime/15 hover:bg-rep-lime/25 text-lime-700 dark:text-rep-lime text-xs rounded-xl font-bold transition border border-lime-200 dark:border-rep-lime/25">
-                <i class="fas fa-check mr-1"></i>Approve &amp; Send
-              </button>
-              <button class="px-4 py-2 bg-gray-100 dark:bg-gray-800/60 text-gray-500 text-xs rounded-xl font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-800">
-                <i class="fas fa-pen-to-square mr-1"></i>Edit
-              </button>
-            </div>
-          </div>
-
-          <!-- Smart routing -->
-          <div class="flex items-center gap-3 px-4 py-3 bg-purple-50 dark:bg-purple-950/30 rounded-xl border border-purple-200 dark:border-purple-800/25">
-            <i class="fas fa-route text-purple-500 dark:text-purple-400 text-sm"></i>
-            <p class="text-xs text-gray-600 dark:text-gray-400">
-              <span class="text-gray-800 dark:text-gray-300 font-semibold">Smart Routing:</span> Assigned to Sales team · Priority raised
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right: Copy -->
-      <div class="animate-on-scroll order-1 lg:order-2">
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 mb-5 bg-rep-lime/10 border border-rep-lime/25 rounded-full text-lime-700 dark:text-rep-lime text-[11px] font-bold uppercase tracking-wider">
-          <span class="w-1.5 h-1.5 rounded-full bg-rep-lime shrink-0 animate-pulse"></span>
-          The AI behind RepMeUp
-        </div>
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 leading-tight tracking-tight">
-          The AI model<br>
-          <span class="gradient-text">changing social commerce</span><br>
-          forever.
-        </h2>
-        <p class="text-gray-400 text-xs font-mono mb-6 leading-relaxed">v2.1 · tuned for Indian English + Hinglish<br>purpose-built for D2C commerce</p>
-        <p class="text-gray-500 text-lg mb-8 leading-relaxed">
-          Those agents are tuned for how real D2C buyers actually write—Indian English, Hinglish, and regional patterns—not a generic chatbot pasted on your inbox. <span class="text-gray-600 dark:text-gray-400 text-base">Same agent layer powers every channel we connect.</span>
-        </p>
-        <div class="space-y-5">
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 bg-rep-lime/10 border border-rep-lime/25 rounded-xl flex items-center justify-center shrink-0">
-              <i class="fas fa-check text-lime-600 dark:text-rep-lime"></i>
-            </div>
-            <div>
-              <p class="text-gray-900 dark:text-rep-white font-bold">Reply in 12 seconds, 24/7, in your brand voice</p>
-              <p class="text-gray-500 text-sm">Qualify buyers and recommend the right SKU based on size, skin type, occasion</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 bg-rep-lime/10 border border-rep-lime/25 rounded-xl flex items-center justify-center shrink-0">
-              <i class="fas fa-check text-lime-600 dark:text-rep-lime"></i>
-            </div>
-            <div>
-              <p class="text-gray-900 dark:text-rep-white font-bold">Escalate to humans when it matters</p>
-              <p class="text-gray-500 text-sm">When it detects VIPs, angry tones, or custom requests — it hands off intelligently</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-4">
-            <div class="w-10 h-10 bg-rep-lime/10 border border-rep-lime/25 rounded-xl flex items-center justify-center shrink-0">
-              <i class="fas fa-check text-lime-600 dark:text-rep-lime"></i>
-            </div>
-            <div>
-              <p class="text-gray-900 dark:text-rep-white font-bold">Admit uncertainty honestly</p>
-              <p class="text-gray-500 text-sm">"Let me check with the team" beats hallucination. It never invents products, prices, or policies.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 8 — BUSINESS IMPACT (ROI)
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="section-alt py-16 sm:py-24 relative overflow-hidden">
-  <!-- Diagonal stripe pattern -->
-  <div class="pattern-diagonal absolute inset-0 pointer-events-none"></div>
-  <div class="section-divider absolute top-0 left-0 right-0"></div>
-  <div class="section-divider absolute bottom-0 left-0 right-0"></div>
-  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] bg-rep-lime/6 rounded-full blur-3xl pointer-events-none"></div>
-
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 mb-5 bg-rep-lime rounded-full text-rep-black text-[11px] font-bold uppercase tracking-wider">
-        <span class="w-1.5 h-1.5 rounded-full bg-rep-black shrink-0 animate-pulse"></span>
-        Live — right now across RepMeUp
-      </div>
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
-        Conversations that just<br>
-        <span class="gradient-text">turned into revenue.</span>
-      </h2>
-    </div>
-
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-      <div class="animate-on-scroll delay-1 stat-card roi-card-glow text-center">
-        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-rep-lime to-transparent rounded-t-[1.25rem]"></div>
-        <div class="w-12 h-12 bg-lime-50 dark:bg-rep-lime/10 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-sm">
-          <i class="fas fa-bolt text-lime-600 dark:text-rep-lime text-lg"></i>
-        </div>
-        <p class="counter-num text-4xl sm:text-5xl font-black text-lime-600 dark:text-rep-lime mb-2" style="--counter-delay:0s">+47%</p>
-        <p class="text-gray-800 dark:text-zinc-200 font-semibold mb-1">DM-to-cart conversion</p>
-        <p class="text-gray-500 dark:text-zinc-400 text-xs">Pre-sale AI reply flow</p>
-      </div>
-
-      <div class="animate-on-scroll delay-2 stat-card roi-card-glow text-center">
-        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-green-400 to-transparent rounded-t-[1.25rem]"></div>
-        <div class="w-12 h-12 bg-green-50 dark:bg-green-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-sm">
-          <i class="fas fa-stopwatch text-green-500 dark:text-green-400 text-lg"></i>
-        </div>
-        <p class="counter-num text-4xl sm:text-5xl font-black text-green-500 dark:text-green-400 mb-2" style="--counter-delay:0.15s">12 sec</p>
-        <p class="text-gray-800 dark:text-zinc-200 font-semibold mb-1">Average first response</p>
-        <p class="text-gray-500 dark:text-zinc-400 text-xs">vs. 4hr industry average</p>
-      </div>
-
-      <div class="animate-on-scroll delay-3 stat-card roi-card-glow text-center">
-        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-blue-400 to-transparent rounded-t-[1.25rem]"></div>
-        <div class="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-sm">
-          <i class="fas fa-shopping-cart text-blue-500 dark:text-blue-400 text-lg"></i>
-        </div>
-        <p class="counter-num text-4xl sm:text-5xl font-black text-blue-500 dark:text-blue-400 mb-2" style="--counter-delay:0.30s">31%</p>
-        <p class="text-gray-800 dark:text-zinc-200 font-semibold mb-1">Cart abandonment recovered</p>
-        <p class="text-gray-500 dark:text-zinc-400 text-xs">WhatsApp recovery flows</p>
-      </div>
-
-      <div class="animate-on-scroll delay-4 stat-card roi-card-glow text-center">
-        <div class="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-amber-400 to-transparent rounded-t-[1.25rem]"></div>
-        <div class="w-12 h-12 bg-amber-50 dark:bg-amber-500/10 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-sm">
-          <i class="fas fa-star text-amber-500 dark:text-amber-400 text-lg"></i>
-        </div>
-        <p class="counter-num text-4xl sm:text-5xl font-black text-amber-500 dark:text-amber-400 mb-2" style="--counter-delay:0.45s">4.7★</p>
-        <p class="text-gray-800 dark:text-zinc-200 font-semibold mb-1">Avg Google rating in 90 days</p>
-        <p class="text-gray-500 dark:text-zinc-400 text-xs">Up from 3.9 — review engine</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 9 — USE CASES
-════════════════════════════════════════════════════════════════════════════ -->
-<section id="use-cases" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
-
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="text-center mb-10 sm:mb-14 animate-on-scroll">
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
-        Whether you sell products<br>
-        <span class="gradient-text">or build an audience.</span>
-      </h2>
-      <p class="text-gray-500 text-base sm:text-xl max-w-2xl mx-auto">
-        RepMeUp speaks fluent ecommerce and fluent influencer — pick your fit.
-      </p>
-    </div>
-
-    <!-- Tabs -->
-    <div class="flex flex-wrap justify-center gap-2 mb-10 animate-on-scroll delay-1">
-      <button *ngFor="let key of useCaseTabKeys"
-        (click)="setActiveUseCaseTab(key)"
-        [class.active]="activeUseCaseTab === key"
-        [ngClass]="{
-          'bg-rep-lime text-rep-black border-rep-lime': activeUseCaseTab === key,
-          'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700': activeUseCaseTab !== key
-        }"
-        class="tab-btn px-5 py-2.5 rounded-xl font-bold text-sm border transition-all">
-        <i [class]="useCases[key].icon + ' mr-2 text-xs'"></i>
-        {{ useCases[key].title }}
-      </button>
-    </div>
-
-    <!-- Active case content -->
-    <div class="animate-on-scroll delay-2 stage-content-enter">
-      <div class="grid lg:grid-cols-2 gap-8 items-center">
+    <!-- Active lifecycle panel -->
+    <div
+      id="lifecycle-panel"
+      role="tabpanel"
+      [attr.aria-labelledby]="'lifecycle-tab-' + activeLifecycleTab"
+      class="animate-on-scroll delay-2 stage-content-enter"
+    >
+      <div class="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-8 lg:gap-14 items-start">
+        <!-- Left: copy -->
         <div>
-          <h3 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-rep-white mb-4 leading-tight">
-            {{ activeCase.transformation }}
+          <h3 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-rep-white mb-3 leading-tight">
+            {{ activeLifecycleStage.title }}
           </h3>
-          <ul class="space-y-4 mb-8">
-            <li *ngFor="let point of activeCase.points" class="flex items-start gap-3">
-              <div class="w-6 h-6 bg-lime-50 dark:bg-rep-lime/15 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                <i class="fas fa-check text-lime-700 dark:text-rep-lime text-xs"></i>
+          <p class="text-gray-500 dark:text-gray-400 text-base sm:text-lg mb-7 leading-relaxed">
+            {{ activeLifecycleStage.summary }}
+          </p>
+          <div class="space-y-4 mb-8">
+            <div *ngFor="let feature of activeLifecycleStage.features" class="flex items-start gap-3.5">
+              <div class="w-6 h-6 bg-rep-lime rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                <i class="fas fa-check text-rep-black" style="font-size:10px"></i>
               </div>
-              <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{{ point }}</p>
-            </li>
-          </ul>
+              <div>
+                <p class="text-gray-900 dark:text-rep-white font-bold text-sm sm:text-base">{{ feature.title }}</p>
+                <p class="text-gray-500 dark:text-gray-400 text-sm">{{ feature.description }}</p>
+              </div>
+            </div>
+          </div>
           <button (click)="navigateToRegister()"
-            class="inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-rep-black font-black rounded-xl hover:shadow-xl hover:shadow-rep-lime/30 transition transform hover:scale-105 text-sm">
-            Start 14-day free trial
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-rep-lime text-rep-black font-black rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-sm">
+            See it in action
             <i class="fas fa-arrow-right text-xs"></i>
           </button>
         </div>
-        <div class="bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 text-center card-hover">
-          <div class="w-20 h-20 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <i [class]="activeCase.icon + ' text-lime-700 dark:text-rep-lime text-3xl'"></i>
-          </div>
-          <p class="text-5xl sm:text-6xl font-black gradient-text mb-2">{{ activeCase.stat }}</p>
-          <p class="text-gray-500 font-semibold text-lg mb-4">{{ activeCase.statLabel }}</p>
-          <p class="text-gray-400 text-sm max-w-xs mx-auto leading-relaxed">
-            Reported by businesses using RepMeUp for {{ activeCase.title }} management
-          </p>
+
+        <!-- Right: stage visual (same concepts as repmeup mini-dashboards, themed for this site) -->
+        <div class="relative z-0">
+          <app-lifecycle-stage-visual
+            [stage]="activeLifecycleTab"
+            [data]="activeLifecycleStage"
+          />
         </div>
       </div>
     </div>
@@ -1185,7 +398,402 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 10 — SOCIAL PROOF
+     SECTION 5 — EXPERIENCE REPMEUP LIVE
+════════════════════════════════════════════════════════════════════════════ -->
+<app-live-demo></app-live-demo>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 6 — REAL RESULTS. REAL REVENUE.
+════════════════════════════════════════════════════════════════════════════ -->
+<section id="results" class="relative py-20 sm:py-28 bg-gray-950 overflow-hidden">
+
+  <!-- Background layers -->
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_110%,rgba(188,239,74,0.07),transparent)] pointer-events-none"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_40%_30%_at_0%_50%,rgba(59,130,246,0.04),transparent)] pointer-events-none"></div>
+  <div class="absolute inset-0 results-grid-bg opacity-[0.03] pointer-events-none"></div>
+
+  <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+
+    <!-- Header -->
+    <div class="text-center mb-14 sm:mb-20 animate-on-scroll">
+      <p class="text-xs font-bold uppercase tracking-[0.18em] text-rep-lime mb-4">📊 Proven Results</p>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 leading-tight tracking-tight">
+        Real Results.<br class="sm:hidden">
+        <span class="text-rep-lime"> Real Revenue.</span>
+      </h2>
+      <p class="text-gray-400 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+        See the measurable impact RepMeUp creates for fast-growing brands.
+      </p>
+    </div>
+
+    <!-- 4 metric cards -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
+
+      <!-- Card 1 — DM-to-cart -->
+      <div class="animate-on-scroll delay-1 group relative rounded-2xl border border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.06] transition-colors p-6 sm:p-7 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-rep-lime to-transparent"></div>
+        <div class="absolute -bottom-12 -right-12 w-40 h-40 bg-rep-lime/5 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="w-10 h-10 rounded-xl bg-rep-lime/10 border border-rep-lime/20 flex items-center justify-center mb-5">
+          <i class="fas fa-comments-dollar text-rep-lime text-base"></i>
+        </div>
+        <p class="counter-num text-5xl sm:text-6xl font-black text-rep-lime leading-none mb-3" style="--counter-delay:0s">+47%</p>
+        <p class="text-white font-bold text-sm mb-1">DM-to-Cart Conversion</p>
+        <p class="text-gray-500 text-xs leading-relaxed">More conversations converted into carts and confirmed orders.</p>
+        <div class="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-1.5">
+          <i class="fas fa-arrow-trend-up text-rep-lime text-[10px]"></i>
+          <span class="text-[11px] text-gray-500">Pre-sale AI reply flow</span>
+        </div>
+      </div>
+
+      <!-- Card 2 — Response time -->
+      <div class="animate-on-scroll delay-2 group relative rounded-2xl border border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.06] transition-colors p-6 sm:p-7 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-green-400 to-transparent"></div>
+        <div class="absolute -bottom-12 -right-12 w-40 h-40 bg-green-500/5 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-5">
+          <i class="fas fa-bolt text-green-400 text-base"></i>
+        </div>
+        <p class="counter-num text-5xl sm:text-6xl font-black text-green-400 leading-none mb-3" style="--counter-delay:0.15s">12<span class="text-3xl sm:text-4xl ml-1">sec</span></p>
+        <p class="text-white font-bold text-sm mb-1">Avg First Response</p>
+        <p class="text-gray-500 text-xs leading-relaxed">Replies in seconds, 24/7 — even while your team sleeps.</p>
+        <div class="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-1.5">
+          <i class="fas fa-industry text-green-400 text-[10px]"></i>
+          <span class="text-[11px] text-gray-500">vs. 4hr industry average</span>
+        </div>
+      </div>
+
+      <!-- Card 3 — Cart recovery -->
+      <div class="animate-on-scroll delay-3 group relative rounded-2xl border border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.06] transition-colors p-6 sm:p-7 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
+        <div class="absolute -bottom-12 -right-12 w-40 h-40 bg-blue-500/5 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-5">
+          <i class="fas fa-cart-arrow-down text-blue-400 text-base"></i>
+        </div>
+        <p class="counter-num text-5xl sm:text-6xl font-black text-blue-400 leading-none mb-3" style="--counter-delay:0.30s">31%</p>
+        <p class="text-white font-bold text-sm mb-1">Abandoned Carts Recovered</p>
+        <p class="text-gray-500 text-xs leading-relaxed">Win back lost customers with smart WhatsApp follow-ups.</p>
+        <div class="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-1.5">
+          <i class="fas fa-whatsapp text-blue-400 text-[10px]"></i>
+          <span class="text-[11px] text-gray-500">WhatsApp recovery flows</span>
+        </div>
+      </div>
+
+      <!-- Card 4 — Review rating -->
+      <div class="animate-on-scroll delay-4 group relative rounded-2xl border border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.06] transition-colors p-6 sm:p-7 overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
+        <div class="absolute -bottom-12 -right-12 w-40 h-40 bg-amber-500/5 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-5">
+          <i class="fas fa-star text-amber-400 text-base"></i>
+        </div>
+        <p class="counter-num text-5xl sm:text-6xl font-black text-amber-400 leading-none mb-3" style="--counter-delay:0.45s">4.7<span class="text-3xl sm:text-4xl ml-0.5">★</span></p>
+        <p class="text-white font-bold text-sm mb-1">Avg Rating in 90 Days</p>
+        <p class="text-gray-500 text-xs leading-relaxed">Better reviews, stronger trust, more new customers.</p>
+        <div class="mt-4 pt-4 border-t border-white/[0.06] flex items-center gap-1.5">
+          <i class="fas fa-chart-line text-amber-400 text-[10px]"></i>
+          <span class="text-[11px] text-gray-500">Up from 3.9 — review engine</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom context bar -->
+    <div class="animate-on-scroll delay-4 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.025] px-6 py-4">
+      <div class="flex items-center gap-2.5 text-gray-500 text-xs">
+        <i class="fas fa-circle-info text-gray-600 shrink-0"></i>
+        <span>Based on early data from brands piloting RepMeUp's AI reply flows. Individual results vary.</span>
+      </div>
+      <a routerLink="/register" class="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rep-lime text-gray-900 text-xs font-black hover:bg-lime-300 transition-colors shadow-md shadow-rep-lime/15 whitespace-nowrap">
+        <i class="fas fa-rocket text-xs"></i>
+        See results yourself
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 7 — ONE PLATFORM. EVERY INDUSTRY.
+════════════════════════════════════════════════════════════════════════════ -->
+<section id="use-cases" class="py-12 sm:py-16 bg-white dark:bg-rep-black relative overflow-hidden">
+  <!-- Ambient blobs -->
+  <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rep-lime/4 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute right-0 top-0 w-72 h-72 bg-purple-500/4 rounded-full blur-3xl pointer-events-none"></div>
+
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+
+    <!-- Header -->
+    <div class="text-center mb-7 sm:mb-9 animate-on-scroll">
+      <p class="text-xs font-bold uppercase tracking-[0.18em] text-lime-700 dark:text-rep-lime mb-2">✦ Industry Solutions</p>
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 dark:text-rep-white mb-3 tracking-tight leading-tight">
+        One Platform.
+        <span class="gradient-text"> Every Industry.</span>
+      </h2>
+      <p class="text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
+        RepMeUp adapts to how your industry talks, sells, and grows.
+      </p>
+    </div>
+
+    <!-- Industry tab strip -->
+    <div class="industry-tabs-strip flex gap-1.5 overflow-x-auto pb-2 mb-6 justify-start lg:justify-center animate-on-scroll delay-1">
+      <button
+        *ngFor="let card of industryCards"
+        type="button"
+        (click)="setActiveIndustryTab(card.id)"
+        [class.industry-tab--active]="activeIndustryTab === card.id"
+        class="industry-tab shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap">
+        <i [class]="card.icon + ' text-xs'"></i>
+        {{ card.label }}
+      </button>
+    </div>
+
+    <!-- All 6 cards grid — each always visible, active one highlighted -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-start animate-on-scroll delay-2">
+      <div
+        *ngFor="let card of industryCards"
+        (click)="setActiveIndustryTab(card.id)"
+        class="industry-card group relative rounded-xl sm:rounded-2xl border overflow-hidden cursor-pointer transition-all duration-300 flex flex-col w-full"
+        [class.industry-card--active]="activeIndustryTab === card.id">
+
+        <!-- Top gradient accent bar -->
+        <div class="absolute top-0 left-0 right-0 h-[3px] industry-card__accent"
+             [style.background]="'linear-gradient(90deg,' + card.accentFrom + ',' + card.accentTo + ')'"></div>
+
+        <!-- Photo: 16:9 — less vertical space than 4:3; CDN 800×450 matches frame (full scene, pro card ratio) -->
+        <div
+          class="industry-card-hero relative w-full aspect-video overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0">
+          <img
+            [src]="card.imageUrl"
+            [alt]="card.imageAlt"
+            class="industry-card-hero-img absolute inset-0 h-full w-full object-cover object-[center_30%] pointer-events-none select-none"
+            loading="lazy"
+            decoding="async"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            width="800"
+            height="450" />
+          <div class="absolute bottom-0 left-0 right-0 h-px bg-black/[0.06] dark:bg-white/[0.08] pointer-events-none"></div>
+        </div>
+
+        <!-- Chat: compact preview (2 turns); scroll if needed -->
+        <div
+          class="industry-chat-panel shrink-0 px-1.5 py-1.5 bg-zinc-100/95 dark:bg-zinc-900/90 border-b border-zinc-200/80 dark:border-zinc-800/80">
+          <p class="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 px-0.5">Sample DM</p>
+          <div
+            class="flex flex-col rounded-lg overflow-hidden border border-zinc-200/90 dark:border-zinc-700/90 shadow-sm bg-white dark:bg-zinc-950">
+
+            <div class="relative flex items-center justify-between px-2 py-1 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0">
+              <span class="text-[9px] font-bold text-zinc-500">9:41</span>
+              <div class="absolute left-1/2 -translate-x-1/2 top-1 w-8 h-1.5 bg-zinc-900/90 rounded-full"></div>
+              <i class="fab fa-instagram text-pink-500 text-[10px]" aria-hidden="true"></i>
+            </div>
+            <div class="flex items-center gap-1 px-2 py-1 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+              <i class="fas fa-chevron-left text-[10px] text-zinc-600"></i>
+              <div
+                class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-white text-[10px]"
+                [style.background]="'linear-gradient(135deg,' + card.accentFrom + ',' + card.accentTo + ')'">
+                <i [class]="card.icon"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-[10px] font-bold text-zinc-800 dark:text-zinc-100 leading-tight truncate">{{ card.botName }}</p>
+                <p class="text-[9px] text-emerald-600 dark:text-emerald-400">Active now</p>
+              </div>
+            </div>
+
+            <div
+              class="industry-card-chat max-h-[5.75rem] min-h-[4.25rem] overflow-y-auto overscroll-contain px-2 py-1.5 space-y-1 bg-[#E8E8EA] dark:bg-zinc-950">
+              <ng-container *ngFor="let msg of card.chat | slice:0:4">
+                <div *ngIf="msg.from === 'customer'" class="flex justify-end">
+                  <div
+                    class="rounded-xl rounded-br-sm px-2 py-1 max-w-[94%] text-white text-[9px] leading-snug shadow-sm"
+                    [style.background]="'linear-gradient(135deg,' + card.accentFrom + ',' + card.accentTo + ')'">
+                    {{ msg.text }}
+                  </div>
+                </div>
+                <div *ngIf="msg.from === 'bot'" class="flex gap-1 items-end max-w-[98%]">
+                  <div
+                    class="w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-zinc-900"
+                    [style.background]="card.accentFrom">
+                    <i [class]="card.icon" class="text-[8px]"></i>
+                  </div>
+                  <div
+                    class="rounded-xl rounded-bl-sm px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700/60 max-w-full shadow-sm">
+                    <p class="text-[9px] text-zinc-800 dark:text-zinc-100 leading-snug whitespace-pre-line">
+                      {{ msg.text }}
+                    </p>
+                    <span
+                      *ngIf="msg.tag"
+                      class="inline-flex mt-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white"
+                      [style.background]="card.accentFrom + 'dd'">✓ {{ msg.tag }}</span>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card footer -->
+        <div class="p-2.5 sm:p-3 bg-white dark:bg-rep-black border-t border-gray-100 dark:border-gray-800/60 shrink-0">
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                   [style.background]="card.accentFrom + '22'">
+                <i [class]="card.icon" class="text-[10px]" [style.color]="card.accentFrom"></i>
+              </div>
+              <span class="text-xs sm:text-sm font-black text-gray-900 dark:text-white leading-tight truncate">{{ card.label }}</span>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-sm font-black leading-none" [style.color]="card.accentFrom">{{ card.stat }}</p>
+              <p class="text-[9px] text-gray-500 leading-tight">{{ card.statLabel }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <ng-container *ngFor="let ch of card.channels">
+              <i [class]="ch.icon + ' ' + ch.color" class="text-xs"></i>
+            </ng-container>
+            <span class="text-[9px] text-gray-400 ml-auto">RepMeUp AI</span>
+          </div>
+        </div>
+
+      </div><!-- /industry-card -->
+    </div><!-- /grid -->
+
+    <!-- Bottom bar -->
+    <div class="mt-7 sm:mt-8 flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 animate-on-scroll delay-3">
+      <p class="text-gray-600 dark:text-gray-400 text-sm font-medium text-center sm:text-left">
+        Your industry. Your customers. <span class="font-bold text-gray-900 dark:text-white">Your growth.</span>
+      </p>
+      <button (click)="navigateToRegister()"
+        class="shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-gray-900 font-black text-sm rounded-xl hover:bg-lime-300 hover:shadow-xl hover:shadow-rep-lime/25 transition-all">
+        See How It Works
+        <i class="fas fa-arrow-right text-xs"></i>
+      </button>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 7b — WHY SWITCH (Without vs With RepMeUp)
+════════════════════════════════════════════════════════════════════════════ -->
+<section id="why-switch" class="py-16 sm:py-24 bg-white dark:bg-rep-black relative overflow-hidden">
+  <div class="absolute right-0 top-0 w-80 h-80 bg-rep-lime/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute left-0 bottom-0 w-64 h-64 bg-blue-500/4 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="section-divider absolute top-0 left-0 right-0"></div>
+
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+    <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+
+      <!-- Left: heading + result pillars -->
+      <div class="animate-on-scroll">
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-5 leading-tight tracking-tight">
+          The smarter move for<br>
+          <span class="gradient-text">your business.</span>
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl mb-8 leading-relaxed max-w-xl">
+          Replace manual work and a stack of disconnected tools with one AI platform that actually moves the needle.
+        </p>
+
+        <div class="rounded-3xl bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 p-6 sm:p-7">
+          <p class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-5">The result?</p>
+          <ul class="space-y-4">
+            <li class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 flex items-center justify-center shrink-0">
+                <i class="fas fa-stopwatch text-lime-700 dark:text-rep-lime"></i>
+              </span>
+              <span class="font-bold text-gray-900 dark:text-rep-white">Save 70%+ time on DMs</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 flex items-center justify-center shrink-0">
+                <i class="fas fa-users text-lime-700 dark:text-rep-lime"></i>
+              </span>
+              <span class="font-bold text-gray-900 dark:text-rep-white">Capture 3× more leads</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 flex items-center justify-center shrink-0">
+                <i class="fas fa-arrow-trend-up text-lime-700 dark:text-rep-lime"></i>
+              </span>
+              <span class="font-bold text-gray-900 dark:text-rep-white">Lift conversion across the funnel</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 flex items-center justify-center shrink-0">
+                <i class="fas fa-rocket text-lime-700 dark:text-rep-lime"></i>
+              </span>
+              <span class="font-bold text-gray-900 dark:text-rep-white">Grow revenue, faster</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right: VS comparison table -->
+      <div class="animate-on-scroll delay-2">
+        <div class="vs-table rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm bg-white dark:bg-gray-900/60">
+
+          <!-- Header row -->
+          <div class="grid grid-cols-[1fr_auto_1fr] bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+            <div class="px-4 sm:px-5 py-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-red-500 dark:text-red-400 flex items-center gap-2">
+              <i class="fas fa-circle-xmark"></i>
+              <span class="hidden sm:inline">Without RepMeUp</span>
+              <span class="sm:hidden">Without</span>
+            </div>
+            <div class="px-2 sm:px-4 py-4 flex items-center justify-center text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              VS
+            </div>
+            <div class="px-4 sm:px-5 py-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-lime-700 dark:text-rep-lime flex items-center gap-2">
+              <i class="fas fa-circle-check"></i>
+              <span class="hidden sm:inline">With RepMeUp</span>
+              <span class="sm:hidden">With</span>
+            </div>
+          </div>
+
+          <!-- Rows -->
+          <div class="divide-y divide-gray-100 dark:divide-gray-800">
+            <div class="grid grid-cols-[1fr_auto_1fr] items-center">
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">Manual replies take hours</p>
+              <span class="px-2 sm:px-4 text-lime-600 dark:text-rep-lime"><i class="fas fa-bolt"></i></span>
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm font-semibold text-gray-900 dark:text-rep-white">AI replies instantly, 24/7</p>
+            </div>
+            <div class="grid grid-cols-[1fr_auto_1fr] items-center">
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">Leads get missed</p>
+              <span class="px-2 sm:px-4 text-lime-600 dark:text-rep-lime"><i class="fas fa-user-check"></i></span>
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm font-semibold text-gray-900 dark:text-rep-white">Every lead captured &amp; tracked</p>
+            </div>
+            <div class="grid grid-cols-[1fr_auto_1fr] items-center">
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">Too many tools, no clarity</p>
+              <span class="px-2 sm:px-4 text-lime-600 dark:text-rep-lime"><i class="fas fa-bullseye"></i></span>
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm font-semibold text-gray-900 dark:text-rep-white">One platform, everything in sync</p>
+            </div>
+            <div class="grid grid-cols-[1fr_auto_1fr] items-center">
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">No insights, hard to scale</p>
+              <span class="px-2 sm:px-4 text-lime-600 dark:text-rep-lime"><i class="fas fa-chart-column"></i></span>
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm font-semibold text-gray-900 dark:text-rep-white">Real insights that drive growth</p>
+            </div>
+            <div class="grid grid-cols-[1fr_auto_1fr] items-center">
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">Higher costs, lower ROI</p>
+              <span class="px-2 sm:px-4 text-lime-600 dark:text-rep-lime"><i class="fas fa-sack-dollar"></i></span>
+              <p class="px-4 sm:px-5 py-4 text-xs sm:text-sm font-semibold text-gray-900 dark:text-rep-white">Lower costs, higher ROI</p>
+            </div>
+          </div>
+
+          <!-- Footer CTA -->
+          <div class="px-5 py-5 bg-lime-50/70 dark:bg-rep-lime/5 border-t border-lime-200/70 dark:border-rep-lime/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-gray-600 dark:text-gray-300">Smarter conversations. Better results. Time to switch.</p>
+            <button (click)="navigateToRegister()"
+              class="inline-flex items-center gap-2 px-5 py-2.5 bg-rep-lime text-rep-black font-black rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition-all transform hover:scale-105 text-sm whitespace-nowrap">
+              Start free trial
+              <i class="fas fa-arrow-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     SECTION 8 — SOCIAL PROOF
 ════════════════════════════════════════════════════════════════════════════ -->
 <section id="testimonials" class="section-alt py-16 sm:py-24 relative overflow-hidden">
   <!-- Dot grid pattern -->
@@ -1194,14 +802,13 @@
 
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
     <div class="text-center mb-12 sm:mb-16 animate-on-scroll">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 mb-5 bg-rep-lime/10 border border-rep-lime/25 rounded-full text-lime-700 dark:text-rep-lime text-[11px] font-bold uppercase tracking-wider">
-        <span class="w-1.5 h-1.5 rounded-full bg-rep-lime shrink-0 animate-pulse"></span>
-        Customer stories
-      </div>
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight">
-        Founders say things like<br>
-        <span class="gradient-text">"this paid for itself."</span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight leading-tight">
+        Loved by businesses.<br>
+        <span class="gradient-text">Proven</span> by results.
       </h2>
+      <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-2xl mx-auto">
+        Real brands. Real conversations. Real growth.
+      </p>
     </div>
 
     <!-- Platform logos strip -->
@@ -1353,199 +960,284 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 10b — EDITORIAL BREAK (D2C insight quote)
+     SECTION 8b — GET STARTED (onboarding flow) — #get-started
 ════════════════════════════════════════════════════════════════════════════ -->
-<section class="py-16 sm:py-20 bg-white dark:bg-rep-black relative overflow-hidden">
-  <div class="section-divider absolute top-0 left-0 right-0 opacity-40"></div>
-  <div class="section-divider absolute bottom-0 left-0 right-0 opacity-40"></div>
-  <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="relative pl-16 sm:pl-20">
-      <!-- lime accent bar -->
-      <div class="absolute left-0 top-3 w-10 sm:w-14 h-1 bg-rep-lime rounded-full"></div>
-      <p class="text-2xl sm:text-3xl lg:text-4xl font-medium text-gray-900 dark:text-rep-white leading-tight tracking-tight max-w-3xl">
-        In 2026, your buyer decided on Instagram before she ever saw your website.
-        <em class="text-gray-400 dark:text-gray-500 font-normal not-italic"> The question isn't whether you should live in DMs — it's whether you want to live there alone.</em>
-      </p>
-      <p class="mt-6 text-sm text-gray-400 font-mono tracking-wider">— RepMeUp · D2C Industry Report, Vol. 3</p>
-    </div>
-  </div>
-</section>
+<section id="get-started"
+  class="onboard-section relative overflow-hidden py-16 sm:py-20 lg:py-24 bg-[#EEF1EA] dark:bg-[#0a0c08] pattern-dot">
+  <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/40 to-transparent dark:from-white/[0.02] dark:to-transparent"></div>
 
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 10c — AUDIENCES (D2C Brands + Creators)
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="py-16 sm:py-24 bg-gray-900 dark:bg-[#090c08] relative overflow-hidden" id="audiences">
-  <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(circle at 25% 25%, rgba(182,255,0,0.08), transparent 50%), radial-gradient(circle at 75% 75%, rgba(182,255,0,0.05), transparent 50%)"></div>
-  <div class="section-divider absolute top-0 left-0 right-0 opacity-30"></div>
-
-  <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="mb-10 sm:mb-14 animate-on-scroll">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 mb-5 rounded-full text-rep-lime text-[11px] font-bold uppercase tracking-wider" style="background:rgba(182,255,0,0.15); border: 1px solid rgba(182,255,0,0.25)">
-        <span class="w-1.5 h-1.5 rounded-full bg-rep-lime shrink-0 animate-pulse"></span>
-        Built for two audiences
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto mb-14 sm:mb-20 animate-on-scroll">
+      <div class="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-rep-lime/25 dark:bg-rep-lime/15 border border-rep-lime/40 dark:border-rep-lime/25 text-rep-black dark:text-rep-lime text-xs sm:text-sm font-bold uppercase tracking-wider mb-6">
+        <i class="fas fa-rocket text-sm" aria-hidden="true"></i>
+        Get started
       </div>
-      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 tracking-tight leading-tight">
-        Whether you sell products<br>
-        or your audience<span class="text-rep-lime">.</span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 dark:text-rep-white tracking-tight leading-tight mb-5">
+        Get Started in Minutes.<br>
+        <span class="text-lime-600 dark:text-rep-lime">Grow Forever.</span>
       </h2>
-      <p class="text-white/60 text-base sm:text-xl max-w-2xl">
-        RepMeUp speaks fluent ecommerce and fluent influencer. Two products in one platform — pick your fit, or use both.
+      <p class="text-lg sm:text-xl text-gray-600 dark:text-zinc-400 leading-relaxed">
+        Simple setup. Instant impact. Endless possibilities.
       </p>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-6">
+    <!-- Step timeline (desktop): numbered row + dotted connectors -->
+    <div class="hidden lg:flex items-start justify-center gap-0 mb-14 xl:mb-16 max-w-6xl mx-auto animate-on-scroll delay-1">
+      @for (step of onboardingSteps; track step.n; let last = $last) {
+        <div class="flex flex-col items-center text-center flex-1 min-w-0 max-w-[280px] px-2">
+          <div
+            class="w-14 h-14 rounded-full bg-rep-lime text-rep-black font-black text-xl flex items-center justify-center shadow-md shadow-rep-lime/25 mb-4 shrink-0">
+            {{ step.n }}
+          </div>
+          <h3 class="text-base font-bold text-gray-900 dark:text-rep-white mb-1.5">{{ step.title }}</h3>
+          <p class="text-sm text-gray-600 dark:text-zinc-500 leading-snug">{{ step.description }}</p>
+        </div>
+        @if (!last) {
+          <div class="onboard-connector self-start mt-[1.75rem]" aria-hidden="true"></div>
+        }
+      }
+    </div>
 
-      <!-- D2C Ecommerce -->
-      <div class="animate-on-scroll delay-1 rounded-3xl p-8 sm:p-10 relative overflow-hidden border transition-all hover:-translate-y-1" style="background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08)">
-        <div class="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl pointer-events-none" style="background:rgba(182,255,0,0.06)"></div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full text-rep-black text-[10px] font-bold uppercase tracking-widest bg-rep-lime">
-          <i class="fas fa-shopping-cart text-xs"></i>
-          For D2C ecommerce brands
-        </div>
-        <h3 class="text-2xl sm:text-3xl font-black text-white mb-3 leading-tight">Turn your Instagram into a 24/7 storefront.</h3>
-        <p class="text-white/60 text-base mb-6 leading-relaxed">Built for founders who run brands on Shopify, WooCommerce, and Magento. Native integrations with Razorpay, Shiprocket, and every tool in your stack.</p>
-        <div class="space-y-3 mb-6">
-          <div class="flex items-start gap-3 text-sm text-white/80">
-            <div class="w-5 h-5 rounded-full bg-rep-lime flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-check text-rep-black" style="font-size:9px"></i></div>
-            <span><strong class="text-white">Catalog-aware AI:</strong> recommends the right SKU based on size, skin type, occasion</span>
+    <!-- Step chips (mobile / tablet) -->
+    <div class="lg:hidden grid sm:grid-cols-2 gap-6 mb-14 animate-on-scroll delay-1">
+      @for (step of onboardingSteps; track step.n) {
+        <div class="flex gap-4 rounded-2xl border border-black/[0.06] dark:border-white/10 bg-white/70 dark:bg-white/[0.04] p-5 sm:p-6 backdrop-blur-sm">
+          <div
+            class="w-12 h-12 rounded-full bg-rep-lime text-rep-black font-black flex items-center justify-center shrink-0 text-base">
+            {{ step.n }}
           </div>
-          <div class="flex items-start gap-3 text-sm text-white/80">
-            <div class="w-5 h-5 rounded-full bg-rep-lime flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-check text-rep-black" style="font-size:9px"></i></div>
-            <span><strong class="text-white">WhatsApp commerce:</strong> close orders without leaving the chat</span>
-          </div>
-          <div class="flex items-start gap-3 text-sm text-white/80">
-            <div class="w-5 h-5 rounded-full bg-rep-lime flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-check text-rep-black" style="font-size:9px"></i></div>
-            <span><strong class="text-white">RTO reduction:</strong> auto-confirm COD orders before shipping</span>
-          </div>
-          <div class="flex items-start gap-3 text-sm text-white/80">
-            <div class="w-5 h-5 rounded-full bg-rep-lime flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-check text-rep-black" style="font-size:9px"></i></div>
-            <span><strong class="text-white">Reviews engine:</strong> auto-collect, screen, and reply to Google reviews</span>
+          <div class="min-w-0">
+            <h3 class="font-bold text-gray-900 dark:text-rep-white text-base">{{ step.title }}</h3>
+            <p class="text-sm text-gray-600 dark:text-zinc-500 mt-1 leading-relaxed">{{ step.description }}</p>
           </div>
         </div>
-        <div class="flex items-center gap-8 pt-5 mb-6" style="border-top:1px solid rgba(255,255,255,0.1)">
-          <div><p class="text-2xl font-black text-rep-lime">3.2×</p><p class="text-xs text-white/50 mt-0.5">DM-to-sale conversion lift</p></div>
-          <div><p class="text-2xl font-black text-rep-lime">22%</p><p class="text-xs text-white/50 mt-0.5">RTO reduction average</p></div>
+      }
+    </div>
+
+    <!-- Feature mockup cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 lg:gap-8 animate-on-scroll delay-2">
+
+      <!-- 1 — Sign up -->
+      <div
+        class="onboard-mock-card rounded-3xl p-6 border border-emerald-200/80 dark:border-emerald-900/40 bg-gradient-to-b from-emerald-50/90 to-emerald-100/50 dark:from-emerald-950/40 dark:to-emerald-950/20 shadow-md hover:shadow-lg transition-shadow xl:min-h-[30rem] flex flex-col">
+        <div
+          class="rounded-2xl bg-white/95 dark:bg-zinc-900/90 border border-black/[0.06] dark:border-white/10 shadow-sm overflow-hidden flex-1 flex flex-col">
+          <div class="px-5 py-4 bg-rep-lime/90 dark:bg-rep-lime/85 flex items-center gap-3">
+            <span class="w-9 h-9 rounded-lg bg-rep-black/10 dark:bg-rep-black/20 flex items-center justify-center">
+              <i class="fas fa-play text-rep-black text-xs pl-0.5" aria-hidden="true"></i>
+            </span>
+            <span class="text-sm sm:text-base font-bold text-rep-black">Welcome to RepMeUp 👋</span>
+          </div>
+          <div class="p-5 sm:p-6 space-y-3 flex-1 flex flex-col">
+            <div
+              class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-zinc-800/50 px-4 py-3.5 text-sm text-gray-500 dark:text-zinc-400">
+              <i class="fas fa-user text-gray-400 w-5 shrink-0 text-base" aria-hidden="true"></i>
+              <span>Full Name</span>
+            </div>
+            <div
+              class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-zinc-800/50 px-4 py-3.5 text-sm text-gray-500 dark:text-zinc-400">
+              <i class="fas fa-envelope text-gray-400 w-5 shrink-0 text-base" aria-hidden="true"></i>
+              <span>Work Email</span>
+            </div>
+            <div
+              class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-zinc-800/50 px-4 py-3.5 text-sm text-gray-500 dark:text-zinc-400">
+              <i class="fas fa-lock text-gray-400 w-5 shrink-0 text-base" aria-hidden="true"></i>
+              <span class="flex-1">Password</span>
+              <i class="far fa-eye text-gray-400 text-base" aria-hidden="true"></i>
+            </div>
+            <button type="button" (click)="navigateToRegister()"
+              class="w-full rounded-xl bg-rep-lime text-rep-black text-sm font-bold py-3.5 mt-auto hover:brightness-105 transition-[filter]">
+              Create Account
+            </button>
+            <p class="text-sm text-center text-gray-500 dark:text-zinc-500 pt-1">
+              Already have an account?
+              <a routerLink="/auth/login" class="text-lime-700 dark:text-rep-lime font-semibold hover:underline">Log in</a>
+            </p>
+          </div>
         </div>
-        <button (click)="navigateToRegister()" class="inline-flex items-center gap-2 text-rep-lime font-semibold text-sm hover:gap-3 transition-all">
-          Start ecommerce trial <i class="fas fa-arrow-right"></i>
-        </button>
       </div>
 
-      <!-- Creators -->
-      <div class="animate-on-scroll delay-2 rounded-3xl p-8 sm:p-10 relative overflow-hidden border transition-all hover:-translate-y-1" style="background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08)">
-        <div class="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl pointer-events-none" style="background:rgba(182,255,0,0.06)"></div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full text-rep-black text-[10px] font-bold uppercase tracking-widest bg-rep-lime">
-          <i class="fas fa-star text-xs"></i>
-          For creators &amp; influencers
+      <!-- 2 — Connect channels -->
+      <div
+        class="onboard-mock-card rounded-3xl p-6 border border-sky-200/80 dark:border-sky-900/40 bg-gradient-to-b from-sky-50/90 to-sky-100/40 dark:from-sky-950/35 dark:to-sky-950/15 shadow-md hover:shadow-lg transition-shadow relative xl:min-h-[30rem] flex flex-col">
+        <div class="absolute top-5 right-5 text-violet-500/90 dark:text-violet-400 text-2xl pointer-events-none" aria-hidden="true">
+          <i class="fas fa-paper-plane"></i>
         </div>
-        <h3 class="text-2xl sm:text-3xl font-black text-white mb-3 leading-tight">Stop losing brand deals to slow DM replies.</h3>
-        <p class="text-white/60 text-base mb-6 leading-relaxed">Built for creators with 10K+ followers. Manage brand collabs, fan DMs, and merch sales — without spending 4 hours a day in the inbox.</p>
-        <div class="space-y-3 mb-6">
-          <div class="flex items-start gap-3 text-sm text-white/80">
-            <div class="w-5 h-5 rounded-full bg-rep-lime flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-check text-rep-black" style="font-size:9px"></i></div>
-            <span><strong class="text-white">Brand collab triage:</strong> AI auto-routes paid pitches vs. fan messages vs. spam</span>
+        <div
+          class="rounded-2xl bg-white/95 dark:bg-zinc-900/90 border border-black/[0.06] dark:border-white/10 shadow-sm overflow-hidden flex-1 flex flex-col">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-white/10">
+            <p class="text-sm sm:text-base font-bold text-gray-900 dark:text-rep-white">Connect Your Channels</p>
+            <p class="text-sm text-gray-500 dark:text-zinc-500 mt-1">Engage with customers where they are.</p>
           </div>
-          <div class="flex items-start gap-3 text-sm text-white/80">
-            <div class="w-5 h-5 rounded-full bg-rep-lime flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-check text-rep-black" style="font-size:9px"></i></div>
-            <span><strong class="text-white">Auto-replies in your voice:</strong> AI trained on your tone, slang, and emoji style</span>
+          <div class="p-4 sm:p-5 space-y-2.5 text-sm flex-1">
+            <div
+              class="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-white/10 px-4 py-3 bg-gray-50/50 dark:bg-zinc-800/40">
+              <i class="fab fa-whatsapp text-green-500 w-5 text-lg"></i>
+              <span class="text-gray-700 dark:text-zinc-300 flex-1 font-medium">WhatsApp</span>
+              <span class="text-green-600 dark:text-green-400 font-semibold text-xs">Connected ✓</span>
+            </div>
+            <div
+              class="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-white/10 px-4 py-3 bg-gray-50/50 dark:bg-zinc-800/40">
+              <i class="fab fa-instagram text-pink-500 w-5 text-lg"></i>
+              <span class="text-gray-700 dark:text-zinc-300 flex-1 font-medium">Instagram</span>
+              <span class="text-green-600 dark:text-green-400 font-semibold text-xs">Connected ✓</span>
+            </div>
+            <div
+              class="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-white/10 px-4 py-3 bg-gray-50/50 dark:bg-zinc-800/40">
+              <i class="fab fa-facebook-messenger text-blue-500 w-5 text-lg"></i>
+              <span class="text-gray-700 dark:text-zinc-300 flex-1 font-medium">Messenger</span>
+              <span class="text-violet-600 dark:text-violet-400 font-semibold text-xs">Connect</span>
+            </div>
+            <div
+              class="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-white/10 px-4 py-3 bg-gray-50/50 dark:bg-zinc-800/40">
+              <i class="fas fa-envelope text-red-400 w-5 text-lg"></i>
+              <span class="text-gray-700 dark:text-zinc-300 flex-1 font-medium">Gmail</span>
+              <span class="text-violet-600 dark:text-violet-400 font-semibold text-xs">Connect</span>
+            </div>
+            <div
+              class="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-white/10 px-4 py-3 bg-gray-50/50 dark:bg-zinc-800/40">
+              <i class="fas fa-comment-dots text-sky-500 w-5 text-lg"></i>
+              <span class="text-gray-700 dark:text-zinc-300 flex-1 font-medium">Website Chat</span>
+              <span class="text-violet-600 dark:text-violet-400 font-semibold text-xs">Connect</span>
+            </div>
           </div>
-          <div class="flex items-start gap-3 text-sm text-white/80">
-            <div class="w-5 h-5 rounded-full bg-rep-lime flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-check text-rep-black" style="font-size:9px"></i></div>
-            <span><strong class="text-white">Merch &amp; affiliate revenue:</strong> drop product links and close sales in DM</span>
-          </div>
-          <div class="flex items-start gap-3 text-sm text-white/80">
-            <div class="w-5 h-5 rounded-full bg-rep-lime flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-check text-rep-black" style="font-size:9px"></i></div>
-            <span><strong class="text-white">Fan engagement at scale:</strong> respond to every DM, even at 100K followers</span>
+          <div class="px-4 pb-4">
+            <button type="button"
+              class="text-sm font-semibold text-violet-600 dark:text-violet-400 hover:underline w-full text-center py-2">
+              + Add More Channels
+            </button>
           </div>
         </div>
-        <div class="flex items-center gap-8 pt-5 mb-6" style="border-top:1px solid rgba(255,255,255,0.1)">
-          <div><p class="text-2xl font-black text-rep-lime">4.2×</p><p class="text-xs text-white/50 mt-0.5">brand deals closed per month</p></div>
-          <div><p class="text-2xl font-black text-rep-lime">3.5 hrs</p><p class="text-xs text-white/50 mt-0.5">saved per day on DMs</p></div>
-        </div>
-        <button (click)="navigateToRegister()" class="inline-flex items-center gap-2 text-rep-lime font-semibold text-sm hover:gap-3 transition-all">
-          Start creator trial <i class="fas fa-arrow-right"></i>
-        </button>
       </div>
 
+      <!-- 3 — AI -->
+      <div
+        class="onboard-mock-card rounded-3xl p-6 border border-violet-200/80 dark:border-violet-900/40 bg-gradient-to-b from-violet-50/90 to-violet-100/40 dark:from-violet-950/35 dark:to-violet-950/15 shadow-md hover:shadow-lg transition-shadow relative xl:min-h-[30rem] flex flex-col">
+        <div class="absolute top-5 right-5 pointer-events-none opacity-95" aria-hidden="true">
+          <app-ai-chat-bubble-icon iconClass="w-10 h-10 sm:w-12 sm:h-12" />
+        </div>
+        <div
+          class="rounded-2xl bg-white/95 dark:bg-zinc-900/90 border border-black/[0.06] dark:border-white/10 shadow-sm overflow-hidden flex-1 flex flex-col">
+          <div class="px-5 py-4 bg-gray-900 dark:bg-zinc-950 flex items-center justify-between gap-2">
+            <span class="text-sm font-bold text-white flex items-center gap-2">
+              <app-ai-chat-bubble-icon iconClass="w-7 h-7" />
+              AI Assistant
+            </span>
+            <span class="text-xs font-bold uppercase tracking-wide text-rep-lime bg-rep-lime/15 px-2.5 py-1 rounded-full">Active</span>
+          </div>
+          <div class="p-5 sm:p-6 space-y-4 flex-1 flex flex-col">
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-zinc-500 uppercase tracking-wide mb-1.5">Tone of Voice</p>
+              <div
+                class="flex items-center justify-between rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/50 px-4 py-3 text-sm text-gray-800 dark:text-zinc-200">
+                Friendly &amp; Professional
+                <i class="fas fa-chevron-down text-xs text-gray-400" aria-hidden="true"></i>
+              </div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 dark:text-zinc-500 uppercase tracking-wide mb-1.5">Auto Reply</p>
+              <div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-zinc-800/40 px-4 py-3 text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">
+                Hi! Thanks for reaching out. How can I help you today?
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-white/10 px-4 py-3">
+              <div class="min-w-0">
+                <p class="text-xs text-gray-500 dark:text-zinc-500">Workflow</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-rep-white truncate">Welcome New Lead</p>
+              </div>
+              <div class="onboard-toggle shrink-0 scale-110" aria-hidden="true">
+                <span class="onboard-toggle-track"></span>
+              </div>
+            </div>
+            <button type="button"
+              class="w-full rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold py-3.5 mt-auto transition-colors">
+              Save &amp; Activate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 — Dashboard + chat -->
+      <div
+        class="onboard-mock-card rounded-3xl p-6 border border-orange-200/80 dark:border-orange-900/40 bg-gradient-to-b from-orange-50/90 to-amber-100/40 dark:from-orange-950/35 dark:to-orange-950/15 shadow-md hover:shadow-lg transition-shadow relative xl:min-h-[30rem] flex flex-col">
+        <div class="absolute bottom-5 right-5 text-rep-lime/90 dark:text-rep-lime text-2xl pointer-events-none" aria-hidden="true">
+          <i class="fas fa-chart-column"></i>
+        </div>
+        <div
+          class="rounded-2xl bg-white/95 dark:bg-zinc-900/90 border border-black/[0.06] dark:border-white/10 shadow-sm overflow-hidden flex flex-col flex-1">
+          <div class="px-5 py-4 border-b border-gray-100 dark:border-white/10">
+            <p class="text-sm sm:text-base font-bold text-gray-900 dark:text-rep-white">Dashboard Overview</p>
+          </div>
+          <div class="p-4 sm:p-5 grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-gray-50 dark:bg-zinc-800/50 px-3 py-3 text-center border border-gray-100 dark:border-white/5">
+              <p class="text-xl font-black text-gray-900 dark:text-rep-white">128</p>
+              <p class="text-xs text-gray-500 dark:text-zinc-500 leading-tight mt-0.5">New Conversations</p>
+            </div>
+            <div class="rounded-xl bg-gray-50 dark:bg-zinc-800/50 px-3 py-3 text-center border border-gray-100 dark:border-white/5">
+              <p class="text-xl font-black text-gray-900 dark:text-rep-white">86</p>
+              <p class="text-xs text-gray-500 dark:text-zinc-500 leading-tight mt-0.5">Active Leads</p>
+            </div>
+            <div class="rounded-xl bg-gray-50 dark:bg-zinc-800/50 px-3 py-3 text-center border border-gray-100 dark:border-white/5">
+              <p class="text-xl font-black text-gray-900 dark:text-rep-white">32</p>
+              <p class="text-xs text-gray-500 dark:text-zinc-500 leading-tight mt-0.5">Closed Deals</p>
+            </div>
+            <div class="rounded-xl bg-rep-lime/25 dark:bg-rep-lime/20 px-3 py-3 text-center border border-rep-lime/30">
+              <p class="text-xl font-black text-lime-800 dark:text-rep-lime">₹3.2L</p>
+              <p class="text-xs text-gray-600 dark:text-zinc-400 leading-tight mt-0.5">Revenue</p>
+            </div>
+          </div>
+          <div class="px-4 sm:px-5 pb-5 pt-0 flex-1 min-h-0 flex flex-col">
+            <div class="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-zinc-800/40 p-4 space-y-2.5 flex-1">
+              <div class="flex items-center gap-3 mb-1">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-xs text-white font-bold">R</div>
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-gray-900 dark:text-rep-white">Riya Sharma</p>
+                  <p class="text-xs text-gray-500 dark:text-zinc-500">Instagram</p>
+                </div>
+              </div>
+              <div class="rounded-lg bg-white dark:bg-zinc-900 border border-gray-100 dark:border-white/10 px-3 py-2 text-sm text-gray-700 dark:text-zinc-300">
+                Price kya hai? Available in M?
+              </div>
+              <div class="rounded-lg bg-rep-lime/20 dark:bg-rep-lime/15 border border-rep-lime/25 px-3 py-2 text-sm text-gray-800 dark:text-zinc-200 leading-snug">
+                Hi Riya! Yes! It&apos;s available in size M. Price is ₹1,299. Shall I share the checkout link?
+              </div>
+            </div>
+            <p class="text-sm font-semibold text-green-600 dark:text-green-400 mt-3 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" aria-hidden="true"></span>
+              AI is live and growing your business!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom CTA strip -->
+    <div
+      class="mt-12 sm:mt-14 rounded-3xl border border-rep-lime/35 dark:border-rep-lime/25 bg-white/80 dark:bg-zinc-900/60 backdrop-blur-sm shadow-md px-6 py-8 sm:px-10 sm:py-9 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 animate-on-scroll delay-3">
+      <div class="flex items-start gap-5">
+        <div
+          class="w-14 h-14 rounded-2xl bg-rep-lime flex items-center justify-center text-rep-black shrink-0 shadow-lg shadow-rep-lime/20">
+          <i class="fas fa-bullseye text-2xl" aria-hidden="true"></i>
+        </div>
+        <div>
+          <p class="font-bold text-gray-900 dark:text-rep-white text-base sm:text-lg leading-snug">
+            That&apos;s it! You&apos;re all set to deliver unforgettable experiences
+          </p>
+          <p class="text-base text-gray-600 dark:text-zinc-400 mt-1">and grow your business with AI.</p>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row sm:items-center gap-5 shrink-0">
+        <button type="button" (click)="navigateToRegister()"
+          class="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-rep-lime text-rep-black font-black text-base sm:text-lg hover:brightness-105 shadow-lg shadow-rep-lime/25 transition-[filter,transform] hover:scale-[1.02] active:scale-[0.98]">
+          Start Your Free Trial
+          <i class="fas fa-arrow-right text-base" aria-hidden="true"></i>
+        </button>
+        <div class="text-sm text-gray-500 dark:text-zinc-500 space-y-1.5 sm:pl-2">
+          <p class="flex items-center gap-2"><i class="fas fa-check text-rep-lime text-xs" aria-hidden="true"></i> No credit card required</p>
+          <p class="flex items-center gap-2"><i class="fas fa-check text-rep-lime text-xs" aria-hidden="true"></i> Setup in less than 2 minutes</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
-
-
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 11 — FINAL CONVERSION BLOCK
-════════════════════════════════════════════════════════════════════════════ -->
-<section class="py-20 sm:py-28 bg-[#F6F8F2] dark:bg-rep-black relative overflow-hidden noise-overlay">
-  <!-- Mesh grid overlay -->
-  <div class="hero-mesh absolute inset-0 pointer-events-none opacity-60"></div>
-  <!-- Glow orbs -->
-  <div class="bg-orb absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-rep-lime/8 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="bg-orb orb-2 absolute left-0 bottom-0 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="section-divider absolute top-0 left-0 right-0"></div>
-
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 text-center relative z-10">
-    <div class="animate-on-scroll">
-      <p class="text-sm font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-5">The moment is now</p>
-
-      <h2 class="text-3xl sm:text-4xl lg:text-[3.5rem] font-black text-gray-900 dark:text-rep-white mb-4 leading-tight tracking-tight">
-        Your next customer just sent a DM.
-      </h2>
-      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-500 dark:text-gray-400 mb-8 leading-tight tracking-tight">
-        What do you want to happen next?
-      </h2>
-
-                <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-                  Live on your channels in one afternoon. No engineering required. No 6-month implementation. Just connect, train, and start closing.
-                </p>
-
-      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
-        <button (click)="navigateToRegister()"
-          class="btn-primary group inline-flex items-center justify-center gap-3 px-10 py-5 bg-rep-lime text-rep-black font-black rounded-2xl hover:shadow-2xl hover:shadow-rep-lime/50 transition-all transform hover:scale-105 text-lg glow-lime">
-          <i class="fas fa-rocket text-base"></i>
-          Start 14-day free trial
-          <i class="fas fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
-        </button>
-        <button (click)="bookDemo()"
-          class="group inline-flex items-center justify-center gap-3 px-10 py-5 bg-white/80 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-rep-white font-bold rounded-2xl hover:border-rep-lime/50 hover:bg-rep-lime/5 hover:shadow-lg hover:shadow-rep-lime/10 transition-all text-lg backdrop-blur-sm">
-          <span class="w-7 h-7 flex items-center justify-center bg-rep-lime/20 dark:bg-rep-lime/10 rounded-full shrink-0">
-            <i class="fas fa-play text-lime-700 dark:text-rep-lime" style="font-size:10px; margin-left:1px"></i>
-          </span>
-          Book a demo
-        </button>
-      </div>
-
-      <!-- Trust micro-strip -->
-      <div class="flex flex-wrap items-center justify-center gap-5 text-sm text-gray-400">
-        <span class="flex items-center gap-1.5">
-          <i class="fas fa-shield-alt text-lime-500 dark:text-rep-lime text-xs"></i>
-          No credit card required
-        </span>
-        <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
-        <span class="flex items-center gap-1.5">
-          <i class="fas fa-undo text-lime-500 dark:text-rep-lime text-xs"></i>
-          Cancel anytime
-        </span>
-        <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
-        <span class="flex items-center gap-1.5">
-          <i class="fas fa-bolt text-lime-500 dark:text-rep-lime text-xs"></i>
-          Live in one afternoon
-        </span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Floating Book a Demo — home marketing page only -->
-<button
-  type="button"
-  (click)="bookDemo()"
-  class="book-demo-fab fixed z-50 bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] sm:bottom-8 sm:right-8 flex items-center gap-2.5 pl-4 pr-5 py-3.5 rounded-full font-bold text-sm sm:text-base
-    bg-rep-lime text-rep-black shadow-xl shadow-rep-lime/35 border border-rep-lime/80
-    dark:shadow-rep-lime/25 hover:brightness-105 hover:scale-[1.03] active:scale-[0.98]
-    focus:outline-none focus-visible:ring-4 focus-visible:ring-rep-lime/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-rep-black
-    transition-[transform,box-shadow,filter] duration-200"
-  aria-label="Book a demo">
-  <i class="fas fa-calendar-check text-lg" aria-hidden="true"></i>
-  <span>Book A Demo</span>
-</button>

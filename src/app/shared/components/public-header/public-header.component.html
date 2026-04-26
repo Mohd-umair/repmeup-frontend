@@ -6,7 +6,7 @@
       </a>
 
       <div class="hidden md:flex items-center space-x-8">
-        <button type="button" (click)="goSection('how-it-works')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">How it Works</button>
+        <button type="button" (click)="goSection('live-demo')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">How it Works</button>
         <button type="button" (click)="goSection('ecosystem')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Products</button>
         <button type="button" (click)="goSection('use-cases')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Solutions</button>
         <button type="button" (click)="goSection('testimonials')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Testimonials</button>
@@ -86,7 +86,7 @@
 
   <div *ngIf="showMobileMenu"
     class="home-nav-mobile-drawer md:hidden border-t border-gray-800 bg-rep-black max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 py-4 space-y-1">
-    <button type="button" (click)="goSection('how-it-works'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">How it Works</button>
+    <button type="button" (click)="goSection('live-demo'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">How it Works</button>
     <button type="button" (click)="goSection('ecosystem'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Products</button>
     <button type="button" (click)="goSection('use-cases'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Solutions</button>
     <button type="button" (click)="goSection('testimonials'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Testimonials</button>

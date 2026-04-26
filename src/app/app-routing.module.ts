@@ -35,6 +35,7 @@ import { ContactComponent } from './features/contact/contact.component';
 import { AboutComponent } from './features/about/about.component';
 import { FaqComponent } from './features/faq/faq.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
+import { RefundCancellationPolicyComponent } from './features/legal/refund-cancellation-policy/refund-cancellation-policy.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 import { NotificationsComponent } from './features/notifications/notifications.component';
 import { BrandHubComponent } from './features/brand-hub/brand-hub.component';
@@ -67,6 +68,7 @@ const routes: Routes = [
       { path: 'about', component: AboutComponent },
       { path: 'faq', component: FaqComponent },
       { path: 'data-deletion-status', component: DataDeletionStatusComponent },
+      { path: 'refund-cancellation-policy', component: RefundCancellationPolicyComponent },
     ],
   },
   { path: 'terms', redirectTo: 'terms-conditions', pathMatch: 'full' },

@@ -74,7 +74,7 @@
             <span class="text-xs text-gray-400">Publish</span>
           </div>
           <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
-            <i class="fas fa-robot text-gray-400 text-xs w-4"></i>
+            <app-ai-chat-bubble-icon iconClass="w-5 h-5 opacity-70" />
             <span class="text-xs text-gray-400">AI Replies</span>
           </div>
         </nav>
@@ -155,7 +155,7 @@
           <div *ngIf="state === 'ai_processing'"
                class="message-out flex items-end gap-2 justify-end">
             <div class="ai-typing-bubble rounded-2xl rounded-br-sm px-4 py-3.5 flex items-center gap-2">
-              <i class="fas fa-robot text-rep-black/70 text-sm"></i>
+              <app-ai-chat-bubble-icon iconClass="w-7 h-7 opacity-90" />
               <div class="typing-dots flex gap-1 items-center">
                 <span class="dot dot-dark"></span>
                 <span class="dot dot-dark"></span>
@@ -183,7 +183,7 @@
           <div *ngIf="state === 'idle'" class="flex-1 flex items-center justify-center">
             <div class="text-center">
               <div class="w-10 h-10 rounded-full bg-rep-lime/20 flex items-center justify-center mx-auto mb-2">
-                <i class="fas fa-robot text-rep-lime text-base"></i>
+                <app-ai-chat-bubble-icon iconClass="w-8 h-8" />
               </div>
               <p class="text-xs text-gray-400">Starting demo…</p>
             </div>
@@ -197,7 +197,7 @@
           <!-- AI status chip -->
           <div class="ai-status-bar flex items-center gap-2.5 px-3.5 py-2 rounded-xl"
                [class.processing]="isProcessing">
-            <i class="fas fa-robot text-blue-400 text-sm shrink-0"></i>
+            <app-ai-chat-bubble-icon iconClass="w-7 h-7 shrink-0" />
             <p *ngIf="!isProcessing" class="text-sm text-gray-600 dark:text-gray-300 flex-1 truncate">
               AI is ready — brand-tuned drafts · replies in seconds
             </p>
@@ -260,8 +260,8 @@
 
   <!-- Floating badge: AI Reply Ready -->
   <div class="hidden lg:flex float-badge float-delay absolute -top-5 -right-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/50 px-4 py-3 border border-black/[0.07] dark:border-white/[0.08] items-center gap-3">
-    <div class="w-10 h-10 bg-rep-lime rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-rep-lime/30">
-      <i class="fas fa-robot text-rep-black text-sm"></i>
+    <div class="w-12 h-12 bg-white dark:bg-zinc-900 rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-rep-lime/20 border border-rep-lime/40">
+      <app-ai-chat-bubble-icon iconClass="w-9 h-9" />
     </div>
     <div>
       <p class="text-sm font-bold text-gray-900 dark:text-rep-white">AI Reply Ready</p>

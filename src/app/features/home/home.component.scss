@@ -32,7 +32,6 @@
 // Exclude animation elements from blanket transition
 .animate-on-scroll,
 .bg-orb,
-.book-demo-fab,
 .float-badge,
 .pi-line,
 .glow-lime,
@@ -1014,43 +1013,6 @@ section.home-hero .hero-particle {
     0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
-// ─── Leadership team — dark: neon cards + dark text ───────────────────────────
-:host-context(html.dark) #team .home-team-card.premium-card {
-  background: linear-gradient(165deg, #d8ff00 0%, #c8ef00 48%, #d4fc00 100%);
-  border: 1px solid rgba(11, 11, 11, 0.14);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.35) inset,
-    0 6px 32px rgba(216, 255, 0, 0.35),
-    0 16px 40px rgba(0, 0, 0, 0.35);
-
-  &:hover {
-    transform: translateY(-6px);
-    border-color: rgba(11, 11, 11, 0.22);
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.4) inset,
-      0 12px 44px rgba(216, 255, 0, 0.48),
-      0 20px 48px rgba(0, 0, 0, 0.4);
-  }
-
-  .home-team-name {
-    color: #0b0b0b;
-  }
-
-  .home-team-role {
-    color: rgba(11, 11, 11, 0.72);
-  }
-
-  .home-team-accent-bar {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(11, 11, 11, 0.35) 50%,
-      transparent 100%
-    );
-    opacity: 1;
-  }
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // ─── PIPELINE / FLOW ANIMATIONS ───────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1289,3 +1251,192 @@ section.home-hero .hero-particle {
 .wa-bubble:nth-child(3) { animation-delay: 0.2s; }
 .wa-bubble:nth-child(4) { animation-delay: 0.3s; }
 .wa-bubble:nth-child(5) { animation-delay: 0.4s; }
+
+// ── Lifecycle section: full-width tab scroller (mobile) ───────────────────────
+:host .lifecycle-tabs-scroller {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 9999px;
+  }
+}
+
+:host-context(.dark) .lifecycle-tabs-scroller,
+:host-context(html.dark) .lifecycle-tabs-scroller {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// ── Results section grid background ──────────────────────────────────────────
+:host .results-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+// ── Industry section — tabs strip ────────────────────────────────────────────
+:host .industry-tabs-strip {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// ── Industry card ─────────────────────────────────────────────────────────────
+:host .industry-card {
+  border-color: rgba(0, 0, 0, 0.07);
+  background: #fff;
+  transform: translateY(0);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.12);
+  }
+
+  &--active {
+    border-color: rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08), 0 16px 48px -12px rgba(0, 0, 0, 0.16);
+    transform: translateY(-4px);
+
+    .industry-card__accent {
+      opacity: 1;
+    }
+  }
+}
+
+:host-context(.dark) .industry-card,
+:host-context(html.dark) .industry-card {
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(17, 24, 39, 0.6);
+
+  &:hover {
+    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.35);
+  }
+
+  &--active {
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 20px 48px -12px rgba(0, 0, 0, 0.5);
+  }
+}
+
+// ── Industry tab button ───────────────────────────────────────────────────────
+:host .industry-tab {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: #f9fafb;
+  color: rgba(17, 24, 39, 0.65);
+
+  &:hover {
+    background: #f3f4f6;
+    color: rgba(17, 24, 39, 0.9);
+  }
+
+  &--active {
+    background: #111827;
+    border-color: #111827;
+    color: #bcef4a;
+  }
+}
+
+:host-context(.dark) .industry-tab,
+:host-context(html.dark) .industry-tab {
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.55);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  &--active {
+    background: rgba(188, 239, 74, 0.12);
+    border-color: rgba(188, 239, 74, 0.35);
+    color: #bcef4a;
+  }
+}
+
+// ── Industry card: hero image + in-phone scroll ─────────────────────────────
+/* Hero: 16:9 (aspect-video) + object-cover; Unsplash uses 800×450&fit=crop to match frame */
+:host .industry-card-hero-img {
+  transition: opacity 0.25s ease;
+}
+
+:host .industry-card:hover .industry-card-hero-img {
+  opacity: 0.96;
+}
+
+:host .industry-card-chat {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 9999px;
+  }
+}
+
+:host-context(.dark) .industry-card-chat,
+:host-context(html.dark) .industry-card-chat {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+// ── Get Started / onboarding flow ───────────────────────────────────────────────
+:host .onboard-section .onboard-connector {
+  flex: 1 1 0;
+  min-width: 0.75rem;
+  max-width: 3.5rem;
+  height: 0;
+  border-top: 2px dashed rgba(148, 163, 184, 0.65);
+  align-self: flex-start;
+}
+
+:host-context(.dark) .onboard-section .onboard-connector,
+:host-context(html.dark) .onboard-section .onboard-connector {
+  border-top-color: rgba(148, 163, 184, 0.35);
+}
+
+/* Decorative “on” toggle for AI workflow row */
+:host .onboard-toggle .onboard-toggle-track {
+  display: block;
+  width: 2.25rem;
+  height: 1.25rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.35);
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 type DemoState = 'idle' | 'customer_typing' | 'customer_sent' | 'ai_processing' | 'ai_replied';
 type PlatformTab = 'instagram' | 'whatsapp';
@@ -96,7 +97,7 @@ function getAiReplyForInput(input: string): string {
 @Component({
   selector: 'app-hero-demo-sandbox',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent],
   templateUrl: './hero-demo-sandbox.component.html',
   styleUrls: ['./hero-demo-sandbox.component.scss']
 })

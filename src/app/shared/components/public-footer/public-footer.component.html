@@ -1,88 +1,212 @@
-<footer class="home-footer-dark bg-rep-black border-t border-gray-800 pt-14 sm:pt-16 pb-8 relative overflow-hidden">
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+<footer
+  class="public-footer relative z-[60] overflow-hidden border-t border-gray-200/90 bg-white text-gray-900 dark:border-white/10 dark:bg-[#0B0D0F] dark:text-zinc-100">
+  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 pt-12 sm:pt-16 pb-8 sm:pb-10">
 
-      <div class="col-span-2 md:col-span-2">
-        <div class="flex items-center gap-3 mb-4">
-          <img src="assets/Images/logo.jpeg" alt="RepMeUp Logo" class="app-logo rounded-xl block shadow-sm">
-          <div>
-            <h3 class="text-lg font-black text-rep-white">RepMeUp</h3>
-            <p class="text-xs text-gray-500">Reputation that responds</p>
+    <!-- Tier 1 — Value card + newsletter -->
+    <div
+      class="rounded-2xl sm:rounded-3xl border border-gray-200/90 bg-gray-50/70 p-6 sm:p-8 lg:p-10 mb-12 sm:mb-14 dark:border-white/[0.08] dark:bg-zinc-900/45">
+      <!-- Brand + newsletter share one row (no longer sandwiching pillars) so feature columns get full width below -->
+      <div class="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
+        <!-- Brand -->
+        <div class="max-w-lg shrink-0">
+          <div class="flex items-center gap-3 mb-4">
+            <img src="assets/Images/logo.jpeg" alt="RepMeUp" class="app-logo h-11 w-11 rounded-xl object-cover shadow-sm dark:ring-1 dark:ring-white/10" width="44" height="44" />
+            <div>
+              <h3 class="text-lg font-black tracking-tight text-gray-900 dark:text-rep-white">RepMeUp</h3>
+              <p class="text-xs font-medium text-gray-500 dark:text-zinc-500">AI revenue platform</p>
+            </div>
+          </div>
+          <p class="text-sm leading-relaxed text-gray-600 dark:text-zinc-400 mb-3">
+            One platform to automate, engage and grow your business with AI.
+          </p>
+          <p class="font-['Georgia',_'Times_New_Roman',_serif] text-base italic text-lime-600 dark:text-rep-lime">
+            Conversations that convert.
+          </p>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="w-full shrink-0 lg:max-w-md xl:max-w-sm">
+          <h4 class="text-base font-black text-gray-900 dark:text-rep-white">Stay Ahead, Always</h4>
+          <p class="mt-1 text-xs leading-relaxed text-gray-500 dark:text-zinc-500">
+            Product updates, playbooks, and launch tips — straight to your inbox.
+          </p>
+          <form class="mt-4 flex gap-2" (submit)="submitNewsletter($event)">
+            <label class="sr-only" for="footer-newsletter-email">Email</label>
+            <input
+              id="footer-newsletter-email"
+              type="email"
+              name="newsletter-email"
+              [(ngModel)]="newsletterEmail"
+              autocomplete="email"
+              placeholder="you@company.com"
+              class="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-rep-lime focus:outline-none focus:ring-2 focus:ring-rep-lime/30 dark:border-white/10 dark:bg-zinc-950/80 dark:text-rep-white dark:placeholder:text-zinc-500" />
+            <button
+              type="submit"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rep-lime text-rep-black shadow-sm transition hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-rep-lime focus-visible:ring-offset-2 dark:ring-offset-[#0B0D0F]"
+              aria-label="Subscribe to newsletter">
+              <i class="fas fa-arrow-right text-sm" aria-hidden="true"></i>
+            </button>
+          </form>
+          <p class="mt-2 flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-500">
+            <i class="fas fa-check text-rep-lime text-[10px]" aria-hidden="true"></i>
+            No spam. Unsubscribe anytime.
+          </p>
+        </div>
+      </div>
+
+      <!-- Four pillars — full width row; min column width prevents one-word wrapping -->
+      <div class="footer-pillars mt-10 pt-10 border-t border-gray-200/80 dark:border-white/[0.08]">
+        <div class="footer-pillar">
+          <div
+            class="footer-pillar__icon flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-lime-100 dark:bg-rep-lime/15">
+            <app-ai-chat-bubble-icon iconClass="w-9 h-9" />
+          </div>
+          <div class="footer-pillar__text">
+            <p class="footer-pillar__title text-gray-900 dark:text-rep-white">All-in-One Platform</p>
+            <p class="footer-pillar__desc text-gray-600 dark:text-zinc-400">Inbox, AI, and channels in one place.</p>
           </div>
         </div>
-        <p class="text-gray-400 text-sm mb-5 leading-relaxed max-w-xs">
-          Every business has people behind it. We help them win every conversation — powered by AI.
-        </p>
-        <div class="flex space-x-2.5">
-          <a href="#" class="w-9 h-9 bg-gray-900 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime hover:shadow-md hover:shadow-rep-lime/20 transition-all text-sm">
-            <i class="fab fa-twitter"></i>
-          </a>
-          <a href="#" class="w-9 h-9 bg-gray-900 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime hover:shadow-md hover:shadow-rep-lime/20 transition-all text-sm">
-            <i class="fab fa-linkedin-in"></i>
-          </a>
-          <a href="#" class="w-9 h-9 bg-gray-900 border border-gray-700 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rep-lime hover:text-rep-black hover:border-rep-lime hover:shadow-md hover:shadow-rep-lime/20 transition-all text-sm">
-            <i class="fab fa-instagram"></i>
-          </a>
+        <div class="footer-pillar">
+          <div
+            class="footer-pillar__icon flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300">
+            <i class="fas fa-shield-halved text-xl" aria-hidden="true"></i>
+          </div>
+          <div class="footer-pillar__text">
+            <p class="footer-pillar__title text-gray-900 dark:text-rep-white">Secure &amp; Reliable</p>
+            <p class="footer-pillar__desc text-gray-600 dark:text-zinc-400">Built for teams who can&apos;t afford downtime.</p>
+          </div>
+        </div>
+        <div class="footer-pillar">
+          <div
+            class="footer-pillar__icon flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-950/40 dark:text-orange-300">
+            <i class="fas fa-bolt text-xl" aria-hidden="true"></i>
+          </div>
+          <div class="footer-pillar__text">
+            <p class="footer-pillar__title text-gray-900 dark:text-rep-white">Easy to Use</p>
+            <p class="footer-pillar__desc text-gray-600 dark:text-zinc-400">Go live fast — no engineering sprint.</p>
+          </div>
+        </div>
+        <div class="footer-pillar">
+          <div
+            class="footer-pillar__icon flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 dark:bg-sky-950/40 dark:text-sky-300">
+            <i class="fas fa-headset text-xl" aria-hidden="true"></i>
+          </div>
+          <div class="footer-pillar__text">
+            <p class="footer-pillar__title text-gray-900 dark:text-rep-white">24×7 Support</p>
+            <p class="footer-pillar__desc text-gray-600 dark:text-zinc-400">We&apos;re here when your peak season hits.</p>
+          </div>
         </div>
       </div>
+    </div>
 
+    <!-- Tier 2 — Essential links only -->
+    <div
+      class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-14 pb-12 sm:pb-14 border-b border-gray-200 dark:border-white/[0.08]">
       <div>
-        <h4 class="text-sm font-black text-rep-white mb-4 uppercase tracking-wider">Products</h4>
-        <ul class="space-y-3 text-gray-400 text-sm">
-          <li><button type="button" (click)="goSection('ecosystem')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">RMP Inbox</button></li>
-          <li><button type="button" (click)="goSection('ecosystem')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">RMP Publish</button></li>
-          <li><button type="button" (click)="goSection('ecosystem')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">RMP Desk</button></li>
-          <li><a href="#" class="hover:text-rep-lime transition">API & Integrations</a></li>
+        <h4 class="mb-4 text-xs font-black uppercase tracking-wider text-gray-900 dark:text-rep-white">Company</h4>
+        <ul class="space-y-2.5 text-sm text-gray-600 dark:text-zinc-400">
+          <li><a routerLink="/about" class="footer-link">About Us</a></li>
+          <li><a routerLink="/contact" class="footer-link">Contact</a></li>
+          <li><a routerLink="/faq" class="footer-link">FAQ</a></li>
         </ul>
       </div>
-
       <div>
-        <h4 class="text-sm font-black text-rep-white mb-4 uppercase tracking-wider">Solutions</h4>
-        <ul class="space-y-3 text-gray-400 text-sm">
-          <li><button type="button" (click)="goUseCase('support')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">Support Teams</button></li>
-          <li><button type="button" (click)="goUseCase('social')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">Social Media Managers</button></li>
-          <li><button type="button" (click)="goUseCase('startup')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">Startups</button></li>
-          <li><button type="button" (click)="goUseCase('enterprise')" class="hover:text-rep-lime transition cursor-pointer text-left bg-transparent border-0 p-0 text-inherit">Enterprises</button></li>
+        <h4 class="mb-4 text-xs font-black uppercase tracking-wider text-gray-900 dark:text-rep-white">Legal</h4>
+        <ul class="space-y-2.5 text-sm text-gray-600 dark:text-zinc-400">
+          <li><a routerLink="/terms-conditions" class="footer-link">Terms of Service</a></li>
+          <li><a routerLink="/privacy-policy" class="footer-link">Privacy Policy</a></li>
+          <li><a routerLink="/refund-cancellation-policy" class="footer-link">Refund Policy</a></li>
         </ul>
       </div>
-
-      <div>
-        <h4 class="text-sm font-black text-rep-white mb-4 uppercase tracking-wider">Company</h4>
-        <ul class="space-y-3 text-gray-400 text-sm">
-          <li><a routerLink="/about" class="hover:text-rep-lime transition">About</a></li>
-          <li><a routerLink="/faq" class="hover:text-rep-lime transition">FAQ</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">Careers</a></li>
-          <li><a routerLink="/contact" class="hover:text-rep-lime transition">Contact</a></li>
-          <li><a routerLink="/refund-cancellation-policy" class="hover:text-rep-lime transition">Refund &amp; Cancellation</a></li>
-          <li><a href="#" class="hover:text-rep-lime transition">Blog</a></li>
+      <div class="sm:col-span-2 lg:col-span-1">
+        <h4 class="mb-4 text-xs font-black uppercase tracking-wider text-gray-900 dark:text-rep-white">Let&apos;s Connect</h4>
+        <ul class="space-y-3 text-sm text-gray-600 dark:text-zinc-400">
+          <li class="flex gap-2.5">
+            <i class="fas fa-envelope mt-0.5 w-4 shrink-0 text-center text-rep-lime" aria-hidden="true"></i>
+            <a [href]="'mailto:' + supportEmail" class="footer-link break-all">{{ supportEmail }}</a>
+          </li>
+          <li class="flex gap-2.5">
+            <i class="fas fa-globe mt-0.5 w-4 shrink-0 text-center text-rep-lime" aria-hidden="true"></i>
+            <a href="https://www.repmeup.com" class="footer-link" rel="noopener noreferrer" target="_blank">www.repmeup.com</a>
+          </li>
+          <li class="flex gap-2.5">
+            <i class="fas fa-location-dot mt-0.5 w-4 shrink-0 text-center text-rep-lime" aria-hidden="true"></i>
+            <span class="leading-snug">RepMeUp Technologies Pvt. Ltd., Gurugram, Haryana, India</span>
+          </li>
         </ul>
       </div>
     </div>
 
-    <div class="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-      <p class="text-gray-500 text-sm text-center sm:text-left">
-        © 2026 Zero Inequities Private Limited. All rights reserved.
-      </p>
-      <div class="flex items-center gap-4">
-        <button (click)="appearance.toggle()"
-          class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-900 text-xs text-gray-300 hover:border-rep-lime hover:text-rep-lime transition">
-          <svg *ngIf="appearance.isDark()" class="w-3.5 h-3.5 text-rep-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="5" stroke-width="2"/>
-            <path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-          </svg>
-          <svg *ngIf="!appearance.isDark()" class="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-          </svg>
-          {{ appearance.isDark() ? 'Light Mode' : 'Dark Mode' }}
-        </button>
+    <!-- Tier 3 — Trust + social -->
+    <div
+      class="flex flex-col gap-8 py-10 sm:py-12 lg:flex-row lg:items-center lg:justify-between lg:gap-8 border-b border-gray-200 dark:border-white/[0.08]">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5 min-w-0 flex-1">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-lime-100 text-lime-700 dark:bg-rep-lime/15 dark:text-rep-lime">
+          <i class="fas fa-shield-halved" aria-hidden="true"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="text-sm font-bold text-gray-900 dark:text-rep-white">
+            Trusted by 3000+ businesses across 50+ countries worldwide.
+          </p>
+          <div class="mt-2 flex items-center gap-2">
+            <div class="flex -space-x-2">
+              <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-amber-400 to-rose-500 text-[10px] font-bold text-white dark:border-[#0B0D0F]">A</span>
+              <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-sky-400 to-indigo-600 text-[10px] font-bold text-white dark:border-[#0B0D0F]">B</span>
+              <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-emerald-400 to-teal-600 text-[10px] font-bold text-white dark:border-[#0B0D0F]">C</span>
+            </div>
+            <span
+              class="inline-flex items-center rounded-full bg-gray-900 px-2.5 py-1 text-[11px] font-bold text-rep-lime dark:bg-zinc-800">+3K</span>
+          </div>
+        </div>
       </div>
-      <div
-        class="flex flex-wrap gap-5 justify-center sm:justify-end
-          pr-[max(0px,calc(env(safe-area-inset-right)+5.5rem))] sm:pr-[max(0px,calc(env(safe-area-inset-right)+9.5rem))]">
-        <a routerLink="/privacy-policy" class="text-gray-500 hover:text-rep-lime text-xs transition">Privacy Policy</a>
-        <a routerLink="/terms-conditions" class="text-gray-500 hover:text-rep-lime text-xs transition">Terms of Service</a>
-        <a routerLink="/refund-cancellation-policy" class="text-gray-500 hover:text-rep-lime text-xs transition">Refund &amp; Cancellation</a>
-        <a routerLink="/privacy-policy" fragment="cookies" class="text-gray-500 hover:text-rep-lime text-xs transition">Cookie Policy</a>
+
+      <div class="shrink-0">
+        <p class="mb-3 text-center text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500 lg:text-right">Follow Us</p>
+        <div class="flex flex-wrap justify-center gap-2 lg:justify-end">
+          <a href="#" class="footer-social footer-social--wa" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+          <a href="#" class="footer-social footer-social--ig" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+          <a href="#" class="footer-social footer-social--fb" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+          <a href="#" class="footer-social footer-social--yt" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
+          <a href="#" class="footer-social footer-social--in" aria-label="LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a>
+          <a href="#" class="footer-social footer-social--x" aria-label="X"><i class="fab fa-x-twitter" aria-hidden="true"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 4 — Copyright + theme + language -->
+    <div
+      class="flex flex-col gap-6 pt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 pb-[max(1rem,env(safe-area-inset-bottom))] pr-[max(0px,calc(env(safe-area-inset-right)+5.5rem))] sm:pr-[max(0px,calc(env(safe-area-inset-right)+9.5rem))]">
+      <p class="text-center text-xs text-gray-500 dark:text-zinc-500 sm:text-left order-2 sm:order-1">
+        © {{ currentYear }} RepMeUp · Zero Inequities Private Limited. All rights reserved.
+      </p>
+      <p class="flex items-center justify-center gap-1.5 text-xs text-gray-500 dark:text-zinc-500 order-1 sm:order-2 sm:flex-1">
+        Made with
+        <i class="fas fa-heart text-rep-lime text-[11px]" aria-hidden="true"></i>
+        for businesses like yours.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-3 order-3 sm:justify-end">
+        <div class="relative">
+          <label class="sr-only" for="footer-lang">Language</label>
+          <select
+            id="footer-lang"
+            class="appearance-none rounded-lg border border-gray-200 bg-white py-2 pl-3 pr-8 text-xs font-medium text-gray-800 focus:border-rep-lime focus:outline-none focus:ring-2 focus:ring-rep-lime/25 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200">
+            <option value="en">English</option>
+          </select>
+          <i class="fas fa-chevron-down pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400" aria-hidden="true"></i>
+        </div>
+        <button
+          type="button"
+          (click)="appearance.toggle()"
+          class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-700 transition hover:border-rep-lime hover:text-gray-900 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-rep-lime dark:hover:text-rep-white">
+          <svg *ngIf="appearance.isDark()" class="h-3.5 w-3.5 text-rep-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="5" stroke-width="2" />
+            <path stroke-linecap="round" stroke-width="2" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+          </svg>
+          <svg *ngIf="!appearance.isDark()" class="h-3.5 w-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+          </svg>
+          {{ appearance.isDark() ? 'Light' : 'Dark' }}
+        </button>
       </div>
     </div>
   </div>

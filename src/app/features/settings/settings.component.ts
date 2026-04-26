@@ -57,7 +57,7 @@ interface SettingsNavTab {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent, WhatsAppConnectComponent, EmailConnectComponent],
+  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent, EmailConnectComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })

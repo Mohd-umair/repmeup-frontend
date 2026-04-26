@@ -1,27 +1,32 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { AppearanceService } from '../../../core/services/appearance.service';
-import { HomeUseCaseTab, PublicNavigationService } from '../../../core/services/public-navigation.service';
+import { AiChatBubbleIconComponent } from '../ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 @Component({
   selector: 'app-public-footer',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule, AiChatBubbleIconComponent],
   templateUrl: './public-footer.component.html',
   styleUrls: ['./public-footer.component.scss'],
 })
 export class PublicFooterComponent {
-  constructor(
-    public appearance: AppearanceService,
-    private publicNav: PublicNavigationService
-  ) {}
+  readonly currentYear = new Date().getFullYear();
+  readonly supportEmail = 'info@repmeup.in';
+  newsletterEmail = '';
 
-  goSection(id: string): void {
-    this.publicNav.goToHomeSection(id);
-  }
+  constructor(public appearance: AppearanceService) {}
 
-  goUseCase(tab: HomeUseCaseTab): void {
-    this.publicNav.goToUseCasesTab(tab);
+  submitNewsletter(event: Event): void {
+    event.preventDefault();
+    const email = this.newsletterEmail.trim();
+    if (!email) {
+      return;
+    }
+    const subject = encodeURIComponent('RepMeUp newsletter signup');
+    const body = encodeURIComponent(`Please add this email to your newsletter list:\n\n${email}`);
+    window.location.href = `mailto:${this.supportEmail}?subject=${subject}&body=${body}`;
   }
 }

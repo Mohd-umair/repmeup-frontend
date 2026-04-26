@@ -1,0 +1,109 @@
+:host {
+  display: block;
+}
+
+/* One consistent “product shot” size for every tab (match Convert height) */
+.lifecycle-canvas {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 25rem; /* 400px */
+  border-radius: 1.5rem;
+  overflow: hidden;
+
+  @media (min-width: 640px) {
+    height: 27rem; /* 432px */
+  }
+}
+
+.lifecycle-canvas__body {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.125rem;
+
+  @media (min-width: 640px) {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+/* Subtle grid texture — works on light + dark cards */
+.lifecycle-mesh {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    rgba(128, 128, 128, 0.12) 1px,
+    transparent 1px
+  );
+  background-size: 14px 14px;
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+:host-context(.dark) .lifecycle-mesh {
+  opacity: 0.35;
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.07) 1px,
+    transparent 1px
+  );
+}
+
+/* Dark panel noise (Convert) */
+.lifecycle-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Bento grid: gap from Tailwind; flex growth from parent */
+.bento {
+  min-height: 0;
+}
+
+/* Acquire: animated sheen on “new” strip */
+@keyframes acquire-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.acquire-sheen {
+  animation: acquire-glow 2.4s ease-in-out infinite;
+}
+
+/* Support: status pulse */
+@keyframes support-dot {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.support-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #22c55e;
+  animation: support-dot 1.4s ease-in-out infinite;
+}
+
+/* Retain: star row — colour from Tailwind (amber-600 light, amber-400 dark) */
+.retain-stars {
+  display: flex;
+  gap: 2px;
+  letter-spacing: -0.05em;
+}
+
