@@ -27,13 +27,17 @@ export class InboxListComponent implements OnInit, OnDestroy {
   @Input() interactions: IInteraction[] = [];
   @Input() loading = false;
   @Input() loadingMore = false;
+  /** Whether another page of chats exists after the current loaded slice (from API pagination.hasMore). */
   @Input() hasMore = false;
+  /** Total matching conversations on the server (for footer hint). */
+  @Input() totalConversations = 0;
   @Input() showSearch = false;
   @Input() selectedInteraction: IInteraction | null = null;
   @Input() selectedIds: Set<string> = new Set();
   @Output() interactionSelect = new EventEmitter<IInteraction>();
   @Output() searchChange = new EventEmitter<string>();
   @Output() selectionChange = new EventEmitter<Set<string>>();
+  /** Fired when the user scrolls near the bottom (lazy-load next page). */
   @Output() loadMore = new EventEmitter<void>();
   /** Fired when the user clicks the empty-state Refresh button. */
   @Output() refreshRequested = new EventEmitter<void>();
@@ -43,6 +47,8 @@ export class InboxListComponent implements OnInit, OnDestroy {
   private searchSubscription?: Subscription;
   /** Tracks avatar load errors so we can show initial fallback */
   avatarFallback: Record<string, boolean> = {};
+  /** Debounces repeated scroll-bottom firing while the parent loads more rows */
+  private loadMoreCooldownUntil = 0;
 
   constructor(
     public themeService: ThemeService,
@@ -139,14 +145,30 @@ export class InboxListComponent implements OnInit, OnDestroy {
     this.searchSubject.next('');
   }
 
+  /**
+   * trackBy for the conversation *ngFor — without this, every polling tick / socket event
+   * rebuilds every row from scratch (avatars reload, DOM thrashes, scroll position jumps).
+   * Keying on `_id` lets Angular update in place.
+   */
+  trackByInteractionId(_: number, interaction: IInteraction): string {
+    return interaction._id;
+  }
+
+  trackByLabelId(_: number, label: { _id: string }): string {
+    return label._id;
+  }
+
+  /** Infinite scroll: request next page when near bottom */
   onListScroll(event: Event): void {
-    if (this.loading || this.loadingMore || !this.hasMore) return;
     const el = event.target as HTMLElement;
-    const thresholdPx = 120;
-    const remaining = el.scrollHeight - (el.scrollTop + el.clientHeight);
-    if (remaining <= thresholdPx) {
-      this.loadMore.emit();
-    }
+    const thresholdPx = 100;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom > thresholdPx) return;
+    if (!this.hasMore || this.loading || this.loadingMore) return;
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    if (now < this.loadMoreCooldownUntil) return;
+    this.loadMoreCooldownUntil = now + 500;
+    this.loadMore.emit();
   }
 
   isSelected(interaction: IInteraction): boolean {
@@ -405,7 +427,18 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   /** Map raw attachment placeholder text to a human-readable label. */
   private _friendlyAttachmentText(msg: { text?: string; attachmentType?: string; attachmentUrl?: string }): string {
-    const LABELS: Record<string, string> = { video: '🎥 Video', image: '📷 Photo', audio: '🎤 Voice message', file: '📎 File' };
+    const LABELS: Record<string, string> = {
+      video: '🎥 Video',
+      image: '📷 Photo',
+      audio: '🎤 Voice message',
+      file: '📎 File',
+      ig_reel: '🎬 Shared reel',
+      reel: '🎬 Shared reel',
+      story: '📖 Shared story',
+      ig_story: '📖 Shared story',
+      share: '🔗 Shared post',
+      ig_post: '🔗 Shared post'
+    };
     const type = msg.attachmentType ?? '';
     if (type && LABELS[type]) return LABELS[type];
     // Fallback: detect placeholder bracket text
@@ -414,6 +447,9 @@ export class InboxListComponent implements OnInit, OnDestroy {
     if (/^\[image\]$/i.test(t)) return '📷 Photo';
     if (/^\[audio\]$/i.test(t)) return '🎤 Voice message';
     if (/^\[file\]$/i.test(t)) return '📎 File';
+    if (/^\[shared instagram reel\]$/i.test(t)) return '🎬 Shared reel';
+    if (/^\[shared instagram story\]$/i.test(t)) return '📖 Shared story';
+    if (/^\[shared instagram post\]$/i.test(t)) return '🔗 Shared post';
     return t;
   }
 

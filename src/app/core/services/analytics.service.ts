@@ -38,7 +38,7 @@ export class AnalyticsService {
   getDashboard(filters?: IAnalyticsFilters): Observable<IAnalyticsResponse> {
     const cacheKey = this.getCacheKey('dashboard', filters);
     const cached = this.getFromCache(cacheKey);
-    
+
     if (cached) {
       return new Observable(observer => {
         observer.next(cached);
@@ -46,7 +46,18 @@ export class AnalyticsService {
       });
     }
 
-    return this.apiService.post<IAnalyticsResponse>('/analytics/dashboard', filters);
+    return new Observable(observer => {
+      this.apiService.post<IAnalyticsResponse>('/analytics/dashboard', filters).subscribe({
+        next: (response) => {
+          if (response?.success) {
+            this.setCache(cacheKey, response);
+          }
+          observer.next(response);
+          observer.complete();
+        },
+        error: (err) => observer.error(err)
+      });
+    });
   }
 
   /**
@@ -160,8 +171,10 @@ export class AnalyticsService {
    * Helper: Generate date range presets
    */
   getDateRangePreset(preset: string): IAnalyticsDateRange {
-    const endDate = new Date();
-    const startDate = new Date();
+    // Round both ends to the current minute so cache keys are stable
+    // across burst requests within the same minute.
+    const endDate = this.roundToMinute(new Date());
+    const startDate = new Date(endDate);
 
     switch (preset) {
       case 'today':
@@ -181,6 +194,12 @@ export class AnalyticsService {
     }
 
     return { startDate, endDate, preset: preset as any };
+  }
+
+  private roundToMinute(d: Date): Date {
+    const t = new Date(d);
+    t.setSeconds(0, 0);
+    return t;
   }
 }
 

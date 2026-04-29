@@ -41,7 +41,9 @@ import { Router, NavigationEnd } from '@angular/router';
   styleUrls: ['./inbox-container.component.scss']
 })
 export class InboxContainerComponent implements OnInit, OnDestroy {
-  currentPage = 1;
+  /** Current inbox list page (1-based); server returns up to `conversationPageSize` chats per page. */
+  conversationListPage = 1;
+  readonly conversationPageSize = 10;
   hasMoreConversations = false;
   loadingMoreConversations = false;
   totalConversations = 0;
@@ -237,8 +239,10 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Fallback poll every 30s in case socket misses an event (tab was backgrounded, etc.)
-    this.inboxPollSubscription = interval(30000).subscribe(() => {
+    // Fallback poll every 2 min — socket handles real-time; this is a safety net only.
+    // 30 s was triggering a ~3 MB fetch every half-minute; 120 s keeps data fresh while
+    // reducing unnecessary traffic by 75%.
+    this.inboxPollSubscription = interval(120000).subscribe(() => {
       if (typeof document !== 'undefined' && !document.hidden) {
         this.refreshInboxListSilent();
       }
@@ -264,7 +268,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         next: (res) => {
           if (res.success && res.data) {
             this.availableAgents = res.data;
-            console.log('Available agents loaded:', this.availableAgents.length);
           }
         },
         error: (err) => {
@@ -279,7 +282,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       next: (res) => {
         if (res.success && res.data) {
           this.orgLabels = res.data;
-          console.log('Labels loaded:', this.orgLabels.length);
         }
       },
       error: (err) => {
@@ -914,7 +916,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
           forkJoin(syncObservables).subscribe({
             next: (results) => {
-              console.log('All platforms synced:', results);
               this.lastSyncTime = new Date();
               
               // Reload interactions after sync
@@ -989,37 +990,65 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    */
   private refreshInboxListSilent(): void {
     this.filters = this.buildInteractionRequestFilters(1);
-    this.inboxService.getInteractions(this.filters).subscribe({
+    this.inboxService.getInteractions(this.filters, { mergeFirstPage: true }).subscribe({
       next: (response) => {
         this.totalConversations = response?.data?.pagination?.total ?? this.totalConversations;
+        this.hasMoreConversations = response?.data?.pagination?.hasMore === true;
+        const p = response?.data?.pagination?.page;
+        if (typeof p === 'number' && p >= 1) {
+          this.conversationListPage = p;
+        }
       }
     });
     this.loadInboxStats();
   }
 
+  /**
+   * Loads inbox chats with server pagination (10 per page). Use reset=true after filters change (loads page 1).
+   * reset=false loads the next page and appends (infinite scroll).
+   */
   loadInteractions(reset = true): void {
     if (reset) {
-      this.currentPage = 1;
+      this.conversationListPage = 1;
       this.hasMoreConversations = false;
       this.inboxService.clearState();
       this.loading = true;
       this.loadingMoreConversations = false;
-    } else {
-      if (this.loading || this.loadingMoreConversations || !this.hasMoreConversations) return;
-      this.loadingMoreConversations = true;
+
+      this.filters = this.buildInteractionRequestFilters(1);
+
+      this.inboxService.getInteractions(this.filters).subscribe({
+        next: (response) => {
+          this.hasMoreConversations = response?.data?.pagination?.hasMore === true;
+          this.totalConversations = response?.data?.pagination?.total ?? this.totalConversations;
+          this.conversationListPage = response?.data?.pagination?.page ?? 1;
+
+          this.loading = false;
+          this.loadingMoreConversations = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.loadingMoreConversations = false;
+        }
+      });
+      return;
     }
 
-    this.filters = this.buildInteractionRequestFilters(this.currentPage);
+    this.loadMoreConversations();
+  }
 
-    this.inboxService.getInteractions(this.filters).subscribe({
+  /** Append next page when user scrolls to bottom of the conversation list (10 per request). */
+  loadMoreConversations(): void {
+    if (!this.hasMoreConversations || this.loading || this.loadingMoreConversations) return;
+    const target = this.conversationListPage + 1;
+    this.loadingMoreConversations = true;
+    this.filters = this.buildInteractionRequestFilters(target);
+
+    this.inboxService.getInteractions(this.filters, { append: true }).subscribe({
       next: (response) => {
-        // Backend sends hasMore — no need to know page size on the frontend
         this.hasMoreConversations = response?.data?.pagination?.hasMore === true;
         this.totalConversations = response?.data?.pagination?.total ?? this.totalConversations;
-
-        // Advance to the next page after any successful fetch.
-        // On reset, page 1 was just loaded, so next request must be page 2.
-        this.currentPage += 1;
+        this.conversationListPage = response?.data?.pagination?.page ?? target;
 
         this.loading = false;
         this.loadingMoreConversations = false;
@@ -1029,7 +1058,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         this.loadingMoreConversations = false;
       }
     });
-    this.loadInboxStats();
   }
 
   setViewMode(mode: InboxViewMode): void {
@@ -1154,6 +1182,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       ...this.platformFilters,
       ...this.topFilters,
       page: pageNum,
+      limit: this.conversationPageSize,
       viewMode: this.viewMode === 'all' ? undefined : this.viewMode,
       status: this.topFilters.status || undefined
     });
@@ -1438,11 +1467,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     this.loadInteractions(true);
   }
 
-  onLoadMoreConversations(): void {
-    if (!this.hasMoreConversations) return;
-    this.loadInteractions(false);
-  }
-
   mergedBucketFilters: IInboxFilters = {};
   bucketSearchTerm = '';
   bucketSortBy: 'newest' | 'oldest' = 'newest';
@@ -1475,10 +1499,19 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     // NOT pass markRead so they cannot override a manually-set 'unread' status.
     // Closed chats are NOT auto-reopened here; the user must explicitly click "Open Chat".
     this.inboxService.getInteraction(interaction._id, { markRead: true }).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.success && response.data) {
           const data = response.data;
           this.inboxService.setSelectedInteraction(data);
+
+          // Forward hasOlderMessages to the detail component.
+          // IMPORTANT: use setTimeout (macrotask) NOT Promise.resolve().then() (microtask).
+          // Microtasks run *before* Angular CD fires ngOnChanges on the detail component.
+          // If we use a microtask, ngOnChanges resets hasOlderMessages = false immediately after,
+          // making scroll-up pagination never trigger. A macrotask runs *after* ngOnChanges.
+          if (response.pagination) {
+            setTimeout(() => this.inboxDetail?.applyPaginationMeta(response.pagination));
+          }
 
           // Sync the list entry so the status badge updates immediately
           const index = this.interactions.findIndex(i => i._id === data._id);
@@ -1499,12 +1532,15 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     // Avoid full list reload so chat list doesn't refresh/flicker on send.
     if (this.selectedInteraction?._id) {
       this.inboxService.getInteraction(this.selectedInteraction._id).subscribe({
-        next: (res) => {
+        next: (res: any) => {
           if (res.success && res.data) {
             this.inboxService.setSelectedInteraction(res.data);
             const idx = this.interactions.findIndex(i => i._id === res.data!._id);
             if (idx !== -1) {
               this.interactions[idx] = res.data!;
+            }
+            if (res.pagination) {
+              setTimeout(() => this.inboxDetail?.applyPaginationMeta(res.pagination));
             }
           }
         }
@@ -1526,12 +1562,15 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     if (!this.selectedInteraction) return;
     if (!ids.includes(this.selectedInteraction._id)) return;
     this.inboxService.getInteraction(this.selectedInteraction._id).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         if (res.success && res.data) {
           this.inboxService.setSelectedInteraction(res.data);
           // Also update the item in the local list so the sidebar stays in sync
           const idx = this.interactions.findIndex(i => i._id === res.data!._id);
           if (idx !== -1) { this.interactions[idx] = res.data!; }
+          if (res.pagination) {
+            setTimeout(() => this.inboxDetail?.applyPaginationMeta(res.pagination));
+          }
         }
       }
     });

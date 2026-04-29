@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DomSanitizer, SafeUrl, SafeHtml } from '@angular/platform-browser';
 import { IInteraction, InteractionStatus, IAssignmentHistory } from '../../../core/models/interaction.model';
-import { InboxService } from '../../../core/services/inbox.service';
+import { InboxService, INBOX_THREAD_MESSAGE_PAGE_SIZE } from '../../../core/services/inbox.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -72,6 +72,16 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   /** Timeline order for chat thread. */
   timelineSortOrder: 'asc' | 'desc' = 'asc';
 
+  /** Server-side message pagination state */
+  hasOlderMessages = false;
+  private oldestMessageTimestamp: number | null = null;
+  loadingOlderFromServer = false;
+  /**
+   * Accumulated incoming messages across all loaded pages.
+   * Reset when switching conversations; prepended when loading older pages.
+   */
+  private allIncomingMessages: any[] = [];
+
   /** Whether the thread is scrolled near the bottom (controls FAB visibility) */
   isScrolledToBottom = true;
   
@@ -126,6 +136,26 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.loadAvailableAgents();
   }
 
+  /** Called by the container (or inline) after getInteraction resolves; captures pagination metadata. */
+  applyPaginationMeta(pagination?: { hasOlderMessages: boolean; oldestMessageTimestamp: number | null }): void {
+    if (!pagination) return;
+    this.hasOlderMessages = pagination.hasOlderMessages;
+    if (pagination.oldestMessageTimestamp != null) {
+      this.oldestMessageTimestamp = pagination.oldestMessageTimestamp as number;
+    } else {
+      this.syncOldestMessageCursorFromLoadedIncoming();
+    }
+  }
+
+  /** msgBefore must match BSON `timestamp` units; `allIncomingMessages` is chronological (oldest at [0]). */
+  private syncOldestMessageCursorFromLoadedIncoming(): void {
+    const row = this.allIncomingMessages[0];
+    const ts = row?.timestamp;
+    if (ts != null && typeof ts === 'number' && !Number.isNaN(ts)) {
+      this.oldestMessageTimestamp = ts;
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['interaction']) {
       const prev: IInteraction | null = changes['interaction'].previousValue;
@@ -136,16 +166,20 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         this.clearAISuggestion();
 
         if (!isSameConversation) {
-          // Switched to a different conversation — reset everything
+          // Switched to a different conversation — reset everything including pagination hints.
           this.replyForm.reset();
           this.resetReplyTextareaHeight();
           this.pendingAttachment = null;
           this.stopRecordingStream();
           this.optimisticReplies = [];
           this.visibleTimelineCount = this.timelinePageSize;
+          this.hasOlderMessages = false;
+          this.oldestMessageTimestamp = null;
+          this.allIncomingMessages = [...((next as any)?.metadata?.incomingMessages || [])];
+          this.syncOldestMessageCursorFromLoadedIncoming();
         } else if (next?.replies?.length) {
           // Same conversation refreshed — drop optimistic entries that now
-          // exist as confirmed replies in the server response
+          // exist as confirmed replies in the server response.
           this.optimisticReplies = this.optimisticReplies.filter(opt =>
             !next.replies!.some(r => !r.isPlatformReply && r.content === opt.content)
           );
@@ -167,6 +201,21 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
           if (hasNewContent) {
             this.scheduleScrollToBottom('smooth');
           }
+        }
+      }
+
+      // Initialise allIncomingMessages on the very first change or same-conversation refresh
+      if (changes['interaction'].firstChange || !isSameConversation) {
+        this.allIncomingMessages = [...((next as any)?.metadata?.incomingMessages || [])];
+        this.syncOldestMessageCursorFromLoadedIncoming();
+      } else {
+        // Same conversation refreshed — keep accumulated older messages, only merge latest page
+        const latestPage: any[] = (next as any)?.metadata?.incomingMessages || [];
+        // Use the mid as dedup key; fall back to index position
+        const existingMids = new Set(this.allIncomingMessages.map((m: any) => m.mid).filter(Boolean));
+        const newMsgs = latestPage.filter((m: any) => !m.mid || !existingMids.has(m.mid));
+        if (newMsgs.length) {
+          this.allIncomingMessages = [...this.allIncomingMessages, ...newMsgs];
         }
       }
 
@@ -654,8 +703,21 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     this.isScrolledToBottom = distanceFromBottom < 80;
 
-    // Lazy-load older timeline items when user scrolls near top.
-    if (el.scrollTop < 80 && this.visibleTimelineCount < this.conversationTimeline.length) {
+    if (el.scrollTop >= 80) return;
+
+    this.syncOldestMessageCursorFromLoadedIncoming();
+
+    // Prefer loading older *incoming DMs* from the API first. Previously we expanded the local
+    // timeline (messages + replies + assignments) first; threads with few DMs but many replies or
+    // history events exhausted many scroll-ups before hitting the API, which looked like
+    // "pagination never triggers".
+    if (this.hasOlderMessages && !this.loadingOlderFromServer && this.oldestMessageTimestamp != null) {
+      this.loadOlderMessagesFromServer(el);
+      return;
+    }
+
+    // Expand the visible window through locally cached timeline rows (same thread data).
+    if (this.visibleTimelineCount < this.conversationTimeline.length) {
       this.loadingOlderMessages = true;
       const previousHeight = el.scrollHeight;
       this.visibleTimelineCount = Math.min(
@@ -663,7 +725,6 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         this.conversationTimeline.length
       );
       this.updateVisibleTimeline();
-      // Preserve visual position after prepending older items.
       this.ngZone.runOutsideAngular(() => {
         requestAnimationFrame(() => {
           const newHeight = el.scrollHeight;
@@ -673,6 +734,61 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         });
       });
     }
+  }
+
+  /** Fetch the page of messages that precede the oldest currently loaded message. */
+  private loadOlderMessagesFromServer(scrollEl?: HTMLDivElement): void {
+    this.syncOldestMessageCursorFromLoadedIncoming();
+    if (!this.interaction?._id || this.oldestMessageTimestamp == null || this.loadingOlderFromServer) return;
+
+    this.loadingOlderFromServer = true;
+    this.cdr.markForCheck();
+
+    this.inboxService.getInteraction(this.interaction._id, {
+      sortOrder: this.timelineSortOrder,
+      msgBefore: this.oldestMessageTimestamp,
+      msgLimit: INBOX_THREAD_MESSAGE_PAGE_SIZE
+    }).subscribe({
+      next: (response: any) => {
+        this.loadingOlderFromServer = false;
+        if (response.success && response.data) {
+          const olderPage: any[] = response.data?.metadata?.incomingMessages || [];
+          if (olderPage.length > 0) {
+            // Prepend older messages; deduplicate by mid
+            const existingMids = new Set(this.allIncomingMessages.map((m: any) => m.mid).filter(Boolean));
+            const newOlder = olderPage.filter((m: any) => !m.mid || !existingMids.has(m.mid));
+            if (newOlder.length) {
+              const previousHeight = scrollEl?.scrollHeight ?? 0;
+              this.allIncomingMessages = [...newOlder, ...this.allIncomingMessages];
+              // Extend visible count so the newly prepended items show up
+              this.visibleTimelineCount += newOlder.length;
+              this.updateTimeline();
+              if (scrollEl) {
+                this.ngZone.runOutsideAngular(() => {
+                  requestAnimationFrame(() => {
+                    scrollEl.scrollTop += (scrollEl.scrollHeight - previousHeight);
+                    this.cdr.markForCheck();
+                  });
+                });
+              }
+            }
+          }
+          // Update pagination state for next scroll-up
+          const pagination = response.pagination;
+          this.hasOlderMessages = pagination?.hasOlderMessages ?? false;
+          if (pagination?.oldestMessageTimestamp != null) {
+            this.oldestMessageTimestamp = pagination.oldestMessageTimestamp as number;
+          } else {
+            this.syncOldestMessageCursorFromLoadedIncoming();
+          }
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingOlderFromServer = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   toggleTimelineSort(): void {
@@ -712,10 +828,19 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
-  getTimelineMessageKey(item: { type: 'message' | 'reply' | 'assignment' | 'note'; data: any; timestamp: Date }, index: number): string {
+  /**
+   * Angular trackBy signature is `(index, item)` — before this fix the args were swapped,
+   * which meant every CD cycle produced unstable keys and *ngFor rebuilt the entire
+   * timeline on every audio tick / socket event / scroll-up. Now the key is genuinely
+   * stable per message and *ngFor updates in place.
+   */
+  getTimelineMessageKey = (
+    index: number,
+    item: { type: 'message' | 'reply' | 'assignment' | 'note'; data: any; timestamp: Date }
+  ): string => {
     const id = item?.data?._id || item?.data?.mid || `idx-${index}`;
     return `${item.type}-${id}-${new Date(item.timestamp).getTime()}`;
-  }
+  };
 
   shouldShowLoadMore(content: string | undefined | null): boolean {
     return !!content && content.length > this.messagePreviewLimit;
@@ -1102,7 +1227,6 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.inboxService.assignInteraction(this.interaction._id, userId, 'manual').subscribe({
       next: (response) => {
         if (response.success) {
-          console.log('✅ Interaction assigned successfully');
           // Refresh the interaction to get updated assignedTo data
           this.inboxService.getInteraction(this.interaction!._id, { sortOrder: this.timelineSortOrder }).subscribe({
             next: (refreshResponse) => {
@@ -1144,7 +1268,6 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         this.inboxService.assignInteraction(this.interaction!._id, '', 'manual').subscribe({
           next: (response) => {
             if (response.success) {
-              console.log('✅ Interaction unassigned successfully');
               // Refresh the interaction
               this.inboxService.getInteraction(this.interaction!._id, { sortOrder: this.timelineSortOrder }).subscribe({
                 next: (refreshResponse) => {
@@ -1251,7 +1374,6 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         this.inboxService.updateStatus(this.interaction!._id, InteractionStatus.RESOLVED).subscribe({
           next: (response) => {
             if (response.success) {
-              console.log('✅ Interaction resolved successfully');
               // Refresh the interaction
               this.inboxService.getInteraction(this.interaction!._id, { sortOrder: this.timelineSortOrder }).subscribe({
                 next: (refreshResponse) => {
@@ -1293,7 +1415,6 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.inboxService.updateStatus(this.interaction._id, InteractionStatus.UNREAD).subscribe({
       next: (response) => {
         if (response.success) {
-          console.log('✅ Interaction reopened successfully');
           // Refresh the interaction
           this.inboxService.getInteraction(this.interaction!._id, { sortOrder: this.timelineSortOrder }).subscribe({
             next: (refreshResponse) => {
@@ -1538,9 +1659,6 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       // Mark each as read
       relatedNotifications.forEach(notification => {
         this.notificationDataService.markAsRead(notification._id).subscribe({
-          next: () => {
-            console.log(`✅ Marked notification ${notification._id} as read`);
-          },
           error: (error) => {
             console.error('Error marking notification as read:', error);
           }
@@ -1632,8 +1750,12 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
     const timeline: Array<{type: 'message' | 'reply' | 'assignment' | 'note', data: any, timestamp: Date}> = [];
 
-    // Incoming messages: use full history for DM threads (e.g. Instagram), else single original message
-    const rawIncoming = (this.interaction as any).metadata?.incomingMessages;
+    // Incoming messages: use the locally accumulated set (across all loaded server pages).
+    // allIncomingMessages is seeded from the initial getInteraction response and extended
+    // when the user scrolls up to load older pages from the server.
+    const rawIncoming = this.allIncomingMessages.length
+      ? this.allIncomingMessages
+      : (this.interaction as any).metadata?.incomingMessages;
     // Deduplicate by mid so a retried webhook never shows the same message twice
     const seen = new Set<string>();
     const incoming = Array.isArray(rawIncoming)

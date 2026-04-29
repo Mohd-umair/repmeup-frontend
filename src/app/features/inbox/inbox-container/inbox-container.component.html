@@ -702,11 +702,12 @@
             [loading]="loading"
             [loadingMore]="loadingMoreConversations"
             [hasMore]="hasMoreConversations"
+            [totalConversations]="totalConversations"
             [showSearch]="showConversationSearch"
             (interactionSelect)="onInteractionSelect($event)"
             (searchChange)="onSearchChange($event)"
             (selectionChange)="onSelectionChange($event)"
-            (loadMore)="onLoadMoreConversations()"
+            (loadMore)="loadMoreConversations()"
             (refreshRequested)="loadInteractions(true)"
           ></app-inbox-list>
         </div>

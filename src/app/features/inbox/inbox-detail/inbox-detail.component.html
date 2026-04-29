@@ -208,15 +208,23 @@
          #conversationThread
          (scroll)="onThreadScroll($event)">
       <div class="max-w-4xl mx-auto space-y-1.5 pb-4">
-        <div *ngIf="loadingOlderMessages" class="flex items-center justify-center py-1">
+        <!-- Loading indicator: virtual-window expansion from local cache -->
+        <div *ngIf="loadingOlderMessages && !loadingOlderFromServer" class="flex items-center justify-center py-1">
           <span class="inline-flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 bg-white/80 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-600 rounded-full px-2.5 py-1">
             <i class="fas fa-spinner fa-spin text-[10px]"></i>
             Loading older messages...
           </span>
         </div>
+        <!-- Loading indicator: fetching a previous page from server -->
+        <div *ngIf="loadingOlderFromServer" class="flex items-center justify-center py-2">
+          <span class="inline-flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 bg-white/80 dark:bg-gray-800/90 border border-gray-200 dark:border-gray-600 rounded-full px-3 py-1.5">
+            <i class="fas fa-cloud-download-alt fa-spin text-[10px]"></i>
+            Fetching older messages...
+          </span>
+        </div>
         
         <!-- Chronological Timeline (Messages, Replies, Assignment) -->
-        <ng-container *ngFor="let item of visibleConversationTimeline; let i = index">
+        <ng-container *ngFor="let item of visibleConversationTimeline; let i = index; trackBy: getTimelineMessageKey">
           
           <!-- Original Customer Message -->
           <div *ngIf="item.type === 'message'" class="flex justify-start">

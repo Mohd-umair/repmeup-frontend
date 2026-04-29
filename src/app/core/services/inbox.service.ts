@@ -5,6 +5,9 @@ import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
 import { IInteraction, IInboxFilters, IInboxStats } from '../models/interaction.model';
 
+/** DM thread page size — must match backend DEFAULT_INCOMING_MSG_LIMIT (GET /inbox/:id). */
+export const INBOX_THREAD_MESSAGE_PAGE_SIZE = 10;
+
 /**
  * Inbox Service - Single Responsibility Principle
  * Handles all inbox/interaction related operations
@@ -28,54 +31,45 @@ export class InboxService {
   constructor(private apiService: ApiService) {}
 
   /**
-   * Get all interactions with filters.
-   * Merges API response with current list so real-time socket updates are not overwritten
-   * by an in-flight or stale API response. Keeps newer version per id and sorts by updatedAt desc.
+   * Get interactions for one page (server default limit is 10 chats per request).
+   * - Default: replace list with this page (initial load / filter change).
+   * - `append`: concat next page for infinite scroll (dedupe by `_id`).
+   * - `mergeFirstPage`: refresh page-1 data while keeping tail rows loaded via scroll (polling).
    */
-  getInteractions(filters?: IInboxFilters): Observable<IApiResponse<any>> {
-    return this.apiService.get<IApiResponse<any>>('/inbox', filters)
-      .pipe(
-        tap(response => {
-          if (response.success && response.data) {
-            const fromApi = response.data.interactions || [];
-            const requestedPage = Number(filters?.page || 1);
-            // When API returns empty (e.g. no accounts connected), show empty inbox
-            if (fromApi.length === 0) {
-              // Only clear on first page. For lazy loading (page > 1), keep existing list.
-              if (requestedPage <= 1) {
-                this.interactionsSubject.next([]);
-              }
-              return;
-            }
-            const current = this.interactionsSubject.value;
-            // When filtering by platform, replace list so we don't carry over other platforms from a previous load
-            if (filters?.platform || requestedPage <= 1) {
-              this.interactionsSubject.next(fromApi);
-              return;
-            }
-            const merged = this.mergeInteractionsByNewest(current, fromApi);
-            this.interactionsSubject.next(merged);
-          }
-        })
-      );
-  }
+  getInteractions(
+    filters?: IInboxFilters,
+    opts?: { append?: boolean; mergeFirstPage?: boolean }
+  ): Observable<IApiResponse<any>> {
+    return this.apiService.get<IApiResponse<any>>('/inbox', filters).pipe(
+      tap(response => {
+        if (!response.success || !response.data) return;
+        const fromApi: IInteraction[] = response.data.interactions || [];
+        const append = opts?.append === true;
+        const mergeFirstPage = opts?.mergeFirstPage === true;
 
-  /**
-   * Merge two lists by _id, keeping the freshest document per id.
-   * Inbox ordering is by newest platform comment/message first.
-   */
-  private mergeInteractionsByNewest(current: IInteraction[], fromApi: IInteraction[]): IInteraction[] {
-    const byId = new Map<string, IInteraction>();
-    const freshnessTs = (i: IInteraction) => new Date(i.updatedAt || i.platformCreatedAt || 0).getTime();
-    const commentTs = (i: IInteraction) => new Date(i.platformCreatedAt || i.updatedAt || 0).getTime();
-    current.forEach(i => byId.set(i._id, i));
-    fromApi.forEach(i => {
-      const existing = byId.get(i._id);
-      if (!existing || freshnessTs(i) >= freshnessTs(existing)) {
-        byId.set(i._id, i);
-      }
-    });
-    return Array.from(byId.values()).sort((a, b) => commentTs(b) - commentTs(a));
+        if (mergeFirstPage && !append) {
+          const current = this.interactionsSubject.value;
+          const freshIds = new Set(fromApi.map(i => i._id));
+          const tail = current.filter(i => !freshIds.has(i._id));
+          this.interactionsSubject.next([...fromApi, ...tail]);
+          return;
+        }
+        if (append) {
+          const current = this.interactionsSubject.value;
+          const seen = new Set(current.map(i => i._id));
+          const merged = [...current];
+          for (const item of fromApi) {
+            if (!seen.has(item._id)) {
+              seen.add(item._id);
+              merged.push(item);
+            }
+          }
+          this.interactionsSubject.next(merged);
+          return;
+        }
+        this.interactionsSubject.next(fromApi);
+      })
+    );
   }
 
   /**
@@ -90,11 +84,26 @@ export class InboxService {
    * Pass `markRead: true` only when the user explicitly opens a conversation —
    * never from background refreshes, polling, or socket-triggered re-fetches.
    */
-  getInteraction(id: string, params?: { sortOrder?: 'asc' | 'desc'; markRead?: boolean }): Observable<IApiResponse<IInteraction>> {
-    return this.apiService.get<IApiResponse<IInteraction>>(`/inbox/${id}`, params)
+  getInteraction(
+    id: string,
+    params?: {
+      sortOrder?: 'asc' | 'desc';
+      markRead?: boolean;
+      /** Unix-ms cursor: load messages older than this timestamp (load-more flow) */
+      msgBefore?: number;
+      /** Max incoming DM messages per page (default INBOX_THREAD_MESSAGE_PAGE_SIZE; server cap 300) */
+      msgLimit?: number;
+    }
+  ): Observable<IApiResponse<IInteraction> & { pagination?: { hasOlderMessages: boolean; oldestMessageTimestamp: number | null; totalMessages: number; returnedMessages: number } }> {
+    const query = {
+      ...params,
+      msgLimit: params?.msgLimit ?? INBOX_THREAD_MESSAGE_PAGE_SIZE
+    };
+    return this.apiService.get<IApiResponse<IInteraction>>(`/inbox/${id}`, query as any)
       .pipe(
         tap(response => {
-          if (response.success && response.data) {
+          if (response.success && response.data && !(params as any)?.msgBefore) {
+            // Only update the global selected subject on initial load, not on load-more
             this.selectedInteractionSubject.next(response.data);
           }
         })

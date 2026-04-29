@@ -137,6 +137,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private loadImpactData(): void {
     this.loadingAnalytics = true;
+    // Backend invalidates Redis on interaction changes; clear client cache so counts/charts refresh on each visit.
+    this.analyticsService.clearCache();
     const dateRange = this.analyticsService.getDateRangePreset('30days');
 
     const sub = this.analyticsService.getDashboard({ dateRange }).subscribe({

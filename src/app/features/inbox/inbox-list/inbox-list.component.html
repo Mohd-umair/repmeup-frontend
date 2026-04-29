@@ -63,15 +63,14 @@
     </div>
   </div>
 
-  <!-- Interaction List - Fixed Height with Scroll -->
+  <!-- Interaction List — scroll for infinite load -->
   <div
     *ngIf="!loading && interactions.length > 0"
-    class="flex-1 overflow-y-auto p-3"
-    style="max-height: calc(100vh - 300px);"
+    class="flex-1 overflow-y-auto min-h-0 p-3"
     (scroll)="onListScroll($event)"
   >
     <div
-      *ngFor="let interaction of interactions; let i = index"
+      *ngFor="let interaction of interactions; let i = index; trackBy: trackByInteractionId"
       (click)="selectInteraction(interaction)"
       class="p-3 mb-2 rounded-xl cursor-pointer transition-all duration-300 border-l-4 border"
       [class.shadow-lg]="isSelected(interaction)"
@@ -215,7 +214,7 @@
                class="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700">
             <!-- Labels (First 2) -->
             <span 
-              *ngFor="let label of interaction.labels?.slice(0, 2)"
+              *ngFor="let label of interaction.labels?.slice(0, 2); trackBy: trackByLabelId"
               class="px-2 py-0.5 rounded text-xs font-medium"
               [style.background-color]="label.color + '15'"
               [style.color]="label.color"
@@ -234,9 +233,19 @@
         </div>
       </div>
     </div>
-    <div *ngIf="loadingMore" class="py-3 text-center">
-      <i class="fas fa-spinner fa-spin text-rep-black dark:text-rep-lime mr-2"></i>
-      <span class="text-xs text-gray-500">Loading more conversations...</span>
-    </div>
+  </div>
+
+  <!-- Footer hint + loading indicator for infinite scroll -->
+  <div
+    *ngIf="!loading && interactions.length > 0"
+    class="flex-shrink-0 flex items-center justify-between gap-2 px-3 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/60">
+    <p class="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400 min-w-0">
+      <span *ngIf="totalConversations > 0" class="font-medium text-gray-700 dark:text-gray-300">
+        Showing {{ interactions.length }} of {{ totalConversations }}
+      </span>
+      <span *ngIf="hasMore" class="text-gray-400 dark:text-gray-500 ml-1">· Scroll down for more</span>
+      <span *ngIf="!hasMore && totalConversations > 0" class="text-gray-400 dark:text-gray-500 ml-1">· All conversations loaded</span>
+    </p>
+    <i *ngIf="loadingMore" class="fas fa-spinner fa-spin text-rep-black dark:text-rep-lime text-sm flex-shrink-0" aria-hidden="true"></i>
   </div>
 </div>
