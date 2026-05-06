@@ -53,6 +53,12 @@ export class FileUploadZoneComponent {
   /** Strip audio when confirming gallery selection (e.g. ticket attachments). */
   @Input() excludeGalleryAudio = false;
 
+  /**
+   * z-index for the media-library fullscreen overlay — raise when embedding
+   * inside another modal (template wizard uses ~1040+).
+   */
+  @Input() galleryOverlayZIndex: number | string = 200;
+
   /** Drag depth avoids flicker when crossing children. */
   private dragDepth = 0;
   isDragOver = false;

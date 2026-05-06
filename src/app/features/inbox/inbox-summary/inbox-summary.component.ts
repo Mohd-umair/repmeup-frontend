@@ -11,13 +11,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { InboxService } from '../../../core/services/inbox.service';
+import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { NotificationService } from '../../../core/services/notification.service';
 import { IInteraction } from '../../../core/models/interaction.model';
 
 @Component({
   selector: 'app-inbox-summary',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent],
   templateUrl: './inbox-summary.component.html',
   styleUrls: ['./inbox-summary.component.scss']
 })

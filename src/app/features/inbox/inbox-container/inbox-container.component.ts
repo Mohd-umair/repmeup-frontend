@@ -22,6 +22,7 @@ import { InboxBucketViewComponent } from '../inbox-bucket-view/inbox-bucket-view
 import { InboxSummaryComponent } from '../inbox-summary/inbox-summary.component';
 import { InboxContactPanelComponent } from '../inbox-contact-panel/inbox-contact-panel.component';
 import { InboxSetupGuideComponent } from '../inbox-setup-guide/inbox-setup-guide.component';
+import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { OrganizationService, AutoReplySettings } from '../../../core/services/organization.service';
 import { KnowledgeBaseService } from '../../../core/services/knowledge-base.service';
 import { PlatformConnectionService } from '../../../core/services/platform-connection.service';
@@ -36,7 +37,7 @@ import { Router, NavigationEnd } from '@angular/router';
 @Component({
   selector: 'app-inbox-container',
   standalone: true,
-  imports: [CommonModule, FormsModule, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent, InboxSummaryComponent, InboxContactPanelComponent, InboxSetupGuideComponent],
+  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent, InboxDetailComponent, InboxListComponent, InboxTopFiltersComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxBucketViewComponent, InboxSummaryComponent, InboxContactPanelComponent, InboxSetupGuideComponent],
   templateUrl: './inbox-container.component.html',
   styleUrls: ['./inbox-container.component.scss']
 })

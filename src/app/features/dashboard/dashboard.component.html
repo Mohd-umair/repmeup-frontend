@@ -64,7 +64,7 @@
           <span class="font-bold text-xl" style="color: var(--text-primary);">2</span>
         </div>
         <div class="w-14 h-14 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
-          <i class="fas fa-robot text-purple-600 dark:text-purple-400 text-2xl"></i>
+          <app-ai-chat-bubble-icon iconClass="w-10 h-10"></app-ai-chat-bubble-icon>
         </div>
         <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Configure AI Agents</h3>
         <p class="mb-6" style="color: var(--text-secondary);">
@@ -73,7 +73,8 @@
         <button (click)="navigateTo('/app/agents')"
           class="w-full py-3 rounded-lg font-bold transition flex items-center justify-center gap-2"
           style="background-color: var(--surface-primary); color: var(--text-primary);">
-          <i class="fas fa-robot"></i> Setup AI Agents
+          <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
+          Setup AI Agents
         </button>
       </div>
     </div>
@@ -97,9 +98,10 @@
             <i class="fas fa-plug mr-2"></i> Connect Platforms
           </button>
           <button (click)="navigateTo('/app/agents')"
-            class="px-4 py-2 rounded-lg text-sm font-bold transition whitespace-nowrap"
+            class="px-4 py-2 rounded-lg text-sm font-bold transition whitespace-nowrap inline-flex items-center gap-2"
             style="background-color: var(--surface-primary); color: var(--text-primary);">
-            <i class="fas fa-robot mr-2"></i> Setup AI Agents
+            <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
+            Setup AI Agents
           </button>
         </div>
       </div>
@@ -171,7 +173,7 @@
            (click)="navigateTo('/app/analytics')">
         <div class="flex items-center justify-between mb-3">
           <div class="w-11 h-11 rounded-lg flex items-center justify-center bg-purple-100 dark:bg-purple-500/20">
-            <i class="fas fa-robot text-purple-600 dark:text-purple-400 text-lg"></i>
+            <app-ai-chat-bubble-icon iconClass="w-6 h-6"></app-ai-chat-bubble-icon>
           </div>
         </div>
         <p class="text-3xl font-bold" style="color: var(--text-primary);">
@@ -243,7 +245,7 @@
       <div class="rounded-xl border p-5"
            style="background-color: var(--card-bg); border-color: var(--card-border);">
         <h2 class="text-lg font-bold mb-4 flex items-center gap-2" style="color: var(--text-primary);">
-          <i class="fas fa-robot text-lime-600 dark:text-rep-lime"></i>
+          <app-ai-chat-bubble-icon iconClass="w-5 h-5 shrink-0"></app-ai-chat-bubble-icon>
           AI vs Human Replies
         </h2>
         <app-simple-donut-chart
@@ -373,8 +375,9 @@
             <i class="fas fa-plug mr-2"></i> Connect Platforms
           </button>
           <button (click)="navigateTo('/app/agents')"
-            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg text-sm font-bold transition whitespace-nowrap">
-            <i class="fas fa-robot mr-2"></i> Setup AI Agents
+            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg text-sm font-bold transition whitespace-nowrap inline-flex items-center gap-2">
+            <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
+            Setup AI Agents
           </button>
         </div>
       </div>

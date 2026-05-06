@@ -5,11 +5,12 @@ import { IntentBucketService, IIntentBucket } from '../../../../core/services/in
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SweetAlertService } from '../../../../core/services/sweet-alert.service';
 import { PaginationComponent, PaginationMeta } from '../../../../shared/components/pagination/pagination.component';
+import { AiChatBubbleIconComponent } from '../../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 @Component({
   selector: 'app-bucket-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, AiChatBubbleIconComponent],
   templateUrl: './bucket-settings.component.html',
   styleUrls: ['./bucket-settings.component.scss']
 })

@@ -48,7 +48,11 @@
             : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'"
           class="md:flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-2 md:px-3 rounded-lg sm:rounded-xl font-semibold text-[11px] sm:text-xs md:text-sm transition-all duration-200 cursor-pointer touch-manipulation min-h-[42px] select-none active:scale-95"
         >
-          <i [class]="tab.icon + ' text-xs md:text-sm pointer-events-none'"></i>
+          <app-ai-chat-bubble-icon *ngIf="tab.useAiBrandIcon"
+            class="pointer-events-none shrink-0"
+            [noDarkInvert]="activeTab === tab.id"
+            iconClass="w-3.5 h-3.5 md:w-[15px] md:h-[15px]" />
+          <i *ngIf="!tab.useAiBrandIcon" [class]="tab.icon + ' text-xs md:text-sm pointer-events-none'"></i>
           <span class="pointer-events-none">{{ tab.label }}</span>
         </button>
       </nav>
@@ -428,7 +432,9 @@
                     </span>
                   </div>
                   <div class="flex items-center gap-2 text-sm">
-                    <i class="fas fa-robot text-rep-black dark:text-rep-lime w-5"></i>
+                    <span class="w-5 h-5 shrink-0 flex items-center justify-center">
+                      <app-ai-chat-bubble-icon iconClass="w-5 h-5"></app-ai-chat-bubble-icon>
+                    </span>
                     <span class="text-gray-700 dark:text-gray-200">
                       <strong>{{ allPlans[planKey].limits.maxAutoRepliesPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAutoRepliesPerMonth }}</strong> 
                       Auto-Replies/Month
@@ -895,7 +901,7 @@
       <div class="bg-rep-white dark:bg-gray-900 rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-800 dark:border-gray-700">
         <div class="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 mb-5 sm:mb-6">
           <div class="w-12 h-12 bg-rep-lime rounded-xl flex items-center justify-center text-rep-black flex-shrink-0">
-            <i class="fas fa-robot text-xl"></i>
+            <app-ai-chat-bubble-icon iconClass="w-8 h-8" [noDarkInvert]="true"></app-ai-chat-bubble-icon>
           </div>
           <div class="flex-1 min-w-0">
             <h2 class="text-xl sm:text-2xl font-bold text-rep-black dark:text-white">AI Auto-Reply Settings</h2>

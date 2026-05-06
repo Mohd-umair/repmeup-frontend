@@ -155,7 +155,7 @@
           <div *ngIf="state === 'ai_processing'"
                class="message-out flex items-end gap-2 justify-end">
             <div class="ai-typing-bubble rounded-2xl rounded-br-sm px-4 py-3.5 flex items-center gap-2">
-              <app-ai-chat-bubble-icon iconClass="w-7 h-7 opacity-90" />
+              <app-ai-chat-bubble-icon iconClass="w-7 h-7 opacity-90" [noDarkInvert]="true" />
               <div class="typing-dots flex gap-1 items-center">
                 <span class="dot dot-dark"></span>
                 <span class="dot dot-dark"></span>
@@ -183,7 +183,7 @@
           <div *ngIf="state === 'idle'" class="flex-1 flex items-center justify-center">
             <div class="text-center">
               <div class="w-10 h-10 rounded-full bg-rep-lime/20 flex items-center justify-center mx-auto mb-2">
-                <app-ai-chat-bubble-icon iconClass="w-8 h-8" />
+                <app-ai-chat-bubble-icon iconClass="w-8 h-8" [noDarkInvert]="true" />
               </div>
               <p class="text-xs text-gray-400">Starting demo…</p>
             </div>

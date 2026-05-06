@@ -43,6 +43,8 @@ export interface IndustryCard {
   botName: string;
   stat: string;
   statLabel: string;
+  /** One-line outcome for the spotlight panel (shown next to hero image). */
+  summary: string;
   /** Unsplash (or CDN) — single human- / scene-focused photo for the industry */
   imageUrl: string;
   imageAlt: string;
@@ -78,8 +80,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       botName: 'RepMeUp AI',
       stat: '+47%',
       statLabel: 'DM-to-cart',
+      summary:
+        'Comment-to-cart flows, size and COD questions, and urgency that fits how shoppers browse Instagram and WhatsApp.',
       imageUrl:
-        'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&h=450&fit=crop&crop=entropy&q=80&auto=format',
+        'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&h=750&fit=crop&crop=faces&f=auto&q=85',
       imageAlt: 'Woman with shopping bags in a city — retail and D2C',
       channels: [
         { icon: 'fab fa-instagram', color: 'text-pink-500' },
@@ -102,8 +106,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       botName: 'Course Bot',
       stat: '3×',
       statLabel: 'Enrollment rate',
+      summary:
+        'Syllabus-aware answers, fee and discount handling, and enrollment nudges in the same tone as your brand.',
       imageUrl:
-        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=450&fit=crop&crop=entropy&q=80&auto=format',
+        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&h=750&fit=crop&crop=faces&f=auto&q=85',
       imageAlt: 'People learning together with laptops — online courses and edtech',
       channels: [
         { icon: 'fab fa-whatsapp', color: 'text-green-500' },
@@ -126,8 +132,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       botName: 'Banking Bot',
       stat: '60%',
       statLabel: 'Lead qualification',
+      summary:
+        'Trust-first language, eligibility triage, and advisor handoff without losing context across WhatsApp and email.',
       imageUrl:
-        'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&h=450&fit=crop&crop=entropy&q=80&auto=format',
+        'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=1200&h=750&fit=crop&f=auto&q=85',
       imageAlt: 'Financial advisor in a suit — banking and BFSI',
       channels: [
         { icon: 'fab fa-whatsapp', color: 'text-green-500' },
@@ -150,8 +158,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       botName: 'Property AI',
       stat: '2×',
       statLabel: 'Site visits booked',
+      summary:
+        'Inventory Q&A, brochure follow-ups, and site-visit booking where buyers already ask questions—on chat.',
       imageUrl:
-        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=450&fit=crop&crop=entropy&q=80&auto=format',
+        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&h=750&fit=crop&f=auto&q=85',
       imageAlt: 'Modern home exterior — real estate and property',
       channels: [
         { icon: 'fab fa-whatsapp', color: 'text-green-500' },
@@ -174,8 +184,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       botName: 'Travel Bot',
       stat: '38%',
       statLabel: 'Booking conversion',
+      summary:
+        'Package-fit questions, dates, travellers count, and payment links—recovery for browse abandonment in-season.',
       imageUrl:
-        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=450&fit=crop&crop=entropy&q=80&auto=format',
+        'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&h=750&fit=crop&f=auto&q=85',
       imageAlt: 'Tropical beach and ocean — travel and holidays',
       channels: [
         { icon: 'fab fa-whatsapp', color: 'text-green-500' },
@@ -198,8 +210,10 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       botName: 'Service Bot',
       stat: '45%',
       statLabel: 'Appointments booked',
+      summary:
+        'Calendar-ready booking, intake questions, and reminders on the channels professionals already rely on.',
       imageUrl:
-        'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&h=450&fit=crop&crop=entropy&q=80&auto=format',
+        'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1200&h=750&fit=crop&f=auto&q=85',
       imageAlt: 'Two professionals shaking hands — consulting, legal, and client services',
       channels: [
         { icon: 'fab fa-whatsapp', color: 'text-green-500' },

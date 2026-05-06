@@ -455,8 +455,80 @@
                   </p>
                 </div>
 
+                <!-- WhatsApp template — layout similar to customer's received bubble -->
+                <div *ngIf="item.data.whatsappTemplatePreview as waTpl"
+                     class="mb-2 rounded-xl overflow-hidden border border-rep-black/10 dark:border-white/10 bg-white dark:bg-gray-900 shadow-sm text-left">
+                  <div class="px-2.5 py-1 flex items-center justify-between gap-2 bg-gray-100/90 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-teal-600/10 text-teal-700 dark:bg-teal-400/15 dark:text-teal-300"
+                          [attr.title]="'WhatsApp template: ' + waTpl.templateName + ' (' + waTpl.languageCode + ')'"
+                          role="img"
+                          [attr.aria-label]="'WhatsApp template: ' + waTpl.templateName + ', ' + waTpl.languageCode">
+                      <i class="fab fa-whatsapp text-base leading-none" aria-hidden="true"></i>
+                    </span>
+                    <span class="text-[9px] text-gray-500 dark:text-gray-400 truncate max-w-[45%]"
+                          [title]="waTpl.templateName + ' · ' + waTpl.languageCode">
+                      {{ waTpl.templateName }} · {{ waTpl.languageCode }}
+                    </span>
+                  </div>
+                  <div *ngIf="waTpl.headerImageUrl" class="bg-gray-100 dark:bg-gray-800">
+                    <img [src]="waTpl.headerImageUrl"
+                         alt=""
+                         class="w-full max-h-52 object-cover"
+                         loading="lazy"
+                         (error)="$any($event.target).style.display='none'">
+                  </div>
+                  <div class="px-3 py-2 space-y-1">
+                    <p *ngIf="waTpl.headerText"
+                       class="text-sm font-semibold text-gray-900 dark:text-gray-50 leading-snug whitespace-pre-wrap">
+                      {{ waTpl.headerText }}
+                    </p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100 leading-snug whitespace-pre-wrap">{{ waTpl.bodyText }}</p>
+                    <p *ngIf="waTpl.footerText"
+                       class="text-[11px] text-gray-500 dark:text-gray-400 leading-snug pt-0.5">
+                      {{ waTpl.footerText }}
+                    </p>
+                  </div>
+                  <div *ngIf="waTpl.buttons?.length"
+                       class="flex flex-col border-t border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
+                    <ng-container *ngFor="let btn of waTpl.buttons">
+                      <a *ngIf="btn.type === 'URL' && btn.url"
+                         [href]="btn.url"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="block w-full px-3 py-2.5 text-center text-sm font-semibold text-[#039BE5] dark:text-sky-400 hover:bg-gray-50 dark:hover:bg-gray-800/70">
+                        {{ btn.text }}
+                      </a>
+                      <span *ngIf="btn.type === 'URL' && !btn.url"
+                            class="block w-full px-3 py-2.5 text-center text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/60">
+                        {{ btn.text }}
+                      </span>
+                      <a *ngIf="btn.type === 'PHONE_NUMBER' && btn.phone_number"
+                         [href]="'tel:' + btn.phone_number"
+                         class="block w-full px-3 py-2.5 text-center text-sm font-semibold text-[#039BE5] dark:text-sky-400 hover:bg-gray-50 dark:hover:bg-gray-800/70">
+                        {{ btn.text }}
+                      </a>
+                      <span *ngIf="btn.type === 'PHONE_NUMBER' && !btn.phone_number"
+                            class="block w-full px-3 py-2.5 text-center text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/60">
+                        {{ btn.text }}
+                      </span>
+                      <span *ngIf="btn.type === 'QUICK_REPLY' || btn.type === 'OTP'"
+                            class="block w-full px-3 py-2.5 text-center text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/60">
+                        {{ btn.text }}
+                      </span>
+                      <span *ngIf="btn.type === 'COPY_CODE'"
+                            class="block w-full px-3 py-2.5 text-center text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800/60">
+                        {{ btn.text }}
+                      </span>
+                      <span *ngIf="btn.type !== 'URL' && btn.type !== 'PHONE_NUMBER' && btn.type !== 'QUICK_REPLY' && btn.type !== 'OTP' && btn.type !== 'COPY_CODE'"
+                            class="block w-full px-3 py-2 text-center text-xs text-gray-500 dark:text-gray-400 bg-gray-50/50 dark:bg-gray-800/40">
+                        {{ btn.text }}
+                      </span>
+                    </ng-container>
+                  </div>
+                </div>
+
                 <!-- Attachment (image, video, or audio) sent with this reply -->
-                <div *ngIf="item.data.attachmentUrl && (item.data.attachmentType === 'image' || item.data.attachmentType === 'video' || item.data.attachmentType === 'audio')" class="mb-2">
+                <div *ngIf="!item.data.whatsappTemplatePreview && item.data.attachmentUrl && (item.data.attachmentType === 'image' || item.data.attachmentType === 'video' || item.data.attachmentType === 'audio')" class="mb-2">
                   <img *ngIf="item.data.attachmentType === 'image'"
                        [src]="item.data.attachmentUrl"
                        alt="Attachment"
@@ -477,8 +549,8 @@
                   </div>
                 </div>
 
-                <!-- Caption: hide when it's only the placeholder for attachment (e.g. "[image]", "[audio]") -->
-                <ng-container *ngIf="item.data.content && !(item.data.attachmentUrl && (item.data.content === '[image]' || item.data.content === '[video]' || item.data.content === '[audio]')) && getTimelineMessageKey(item, i) as msgKey">
+                <!-- Caption: omit when WhatsApp template card already shows body; hide attachment placeholders -->
+                <ng-container *ngIf="!item.data.whatsappTemplatePreview && item.data.content && !(item.data.attachmentUrl && (item.data.content === '[image]' || item.data.content === '[video]' || item.data.content === '[audio]')) && getTimelineMessageKey(item, i) as msgKey">
                   <p class="text-sm leading-snug whitespace-pre-wrap"
                       [ngClass]="item.data.status === 'failed' ? 'text-red-800' : 'text-rep-black/70 dark:text-rep-black/55'">
                     {{ isMessageExpanded(msgKey) ? item.data.content : getMessagePreview(item.data.content) }}
@@ -552,7 +624,7 @@
             <div class="p-3 bg-rep-lime/10 dark:bg-rep-lime/5 border border-rep-lime/30 dark:border-rep-lime/25 rounded-lg animate-fadeIn">
               <div class="flex items-start justify-between gap-2 mb-1.5">
                 <span class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-1">
-                  <i class="fas fa-robot text-rep-black dark:text-rep-lime"></i>
+                  <app-ai-chat-bubble-icon iconClass="w-7 h-7 sm:w-8 sm:h-8 shrink-0" />
                   AI Suggestion <span class="text-gray-500 dark:text-gray-400 font-normal">({{ (aiSuggestion.confidence * 100).toFixed(0) }}%)</span>
                 </span>
                 <div class="flex items-center gap-0.5">
@@ -622,7 +694,71 @@
         </p>
       </div>
 
-      <form *ngIf="canReply()" [formGroup]="replyForm" (ngSubmit)="submitReply()">
+      <ng-container *ngIf="canReply()">
+
+        <div *ngIf="interaction?.platform === 'whatsapp' && waReplyMode === 'template'"
+             class="mb-3 space-y-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/60 p-3">
+          <div class="flex flex-wrap items-center gap-2 pb-2 mb-1 border-b border-gray-200 dark:border-gray-600">
+            <div class="inbox-reply-toolbar-plate shrink-0" role="toolbar" aria-label="Message type">
+              <button type="button"
+                (click)="setWaReplyMode('text')"
+                [attr.aria-pressed]="waReplyMode === 'text'"
+                class="inbox-reply-toolbar-plate__btn"
+                [class.is-mode-active]="waReplyMode === 'text'"
+                title="Free message"
+                aria-label="Free message">
+                <i class="far fa-comment-dots text-sm leading-none" aria-hidden="true"></i>
+              </button>
+              <button type="button"
+                (click)="setWaReplyMode('template')"
+                [attr.aria-pressed]="waReplyMode === 'template'"
+                class="inbox-reply-toolbar-plate__btn inbox-reply-toolbar-plate__btn--accent"
+                [class.is-mode-active]="waReplyMode === 'template'"
+                title="Approved WhatsApp template"
+                aria-label="Approved WhatsApp template">
+                <i class="fab fa-whatsapp text-sm leading-none" aria-hidden="true"></i>
+              </button>
+            </div>
+            <i *ngIf="waTemplatesLoading" class="fas fa-spinner fa-spin text-xs text-gray-400" aria-hidden="true"></i>
+            <span *ngIf="!waTemplatesLoading && !waApprovedTemplates.length"
+                  class="text-[10px] text-amber-600 dark:text-amber-400 max-w-[12rem]">
+              No approved templates.
+            </span>
+          </div>
+          <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-200">Approved template</label>
+          <select
+            class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
+            [value]="waSelectedTemplate?.name || ''"
+            (change)="onWaTemplatePick($event)">
+            <option value="">Select template…</option>
+            <option *ngFor="let tmpl of waApprovedTemplates" [value]="tmpl.name">{{ tmpl.name }} · {{ tmpl.language }}</option>
+          </select>
+          <div *ngFor="let slot of waTemplateSlots" class="flex flex-col gap-0.5">
+            <label class="text-[10px] font-medium text-gray-600 dark:text-gray-400">{{ slot.label }}</label>
+            <input
+              type="text"
+              name="waSlot_{{slot.storageKey}}"
+              [(ngModel)]="waTemplateParamValues[slot.storageKey]"
+              class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100"
+              [placeholder]="slot.paramKind === 'image' ? 'https://your-cdn.example.com/image.jpg' : ''"
+              [ngModelOptions]="{standalone: true}">
+          </div>
+          <p *ngIf="waSelectedTemplate && !waTemplateSlots.length" class="text-[10px] text-gray-500 dark:text-gray-400">
+            This template has no variables — you can send it as-is.
+          </p>
+          <button type="button"
+            (click)="submitWhatsAppTemplateReply()"
+            [disabled]="submittingReply || waTemplatesLoading || !waSelectedTemplate"
+            class="mt-2 w-full rounded-xl bg-rep-lime py-2 text-sm font-bold text-rep-black transition hover:bg-rep-lime/85 disabled:opacity-40">
+            <i *ngIf="submittingReply" class="fas fa-spinner fa-spin mr-1"></i>
+            Send template to customer
+          </button>
+          <p class="text-[10px] leading-snug text-gray-500 dark:text-gray-400">
+            Template messages follow Meta&apos;s WhatsApp policies (e.g. marketing requires opt‑in outside the session window).
+          </p>
+        </div>
+
+        <form [formGroup]="replyForm" (ngSubmit)="submitReply()">
 
         <!-- Pending attachment pill -->
         <div *ngIf="pendingAttachment" class="mb-2 flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/80">
@@ -645,32 +781,56 @@
           </button>
         </div>
 
-        <!-- WhatsApp-style input bar -->
-        <div class="relative flex items-end gap-1.5 inbox-emoji-picker-container">
+        <!-- Composer: textarea + grouped tool plates -->
+        <div class="relative flex items-end gap-2 sm:gap-2.5 inbox-emoji-picker-container"
+             *ngIf="interaction?.platform !== 'whatsapp' || waReplyMode === 'text'">
 
-          <!-- Left icons: emoji + AI + attach -->
-          <div class="flex items-center gap-0.5 flex-shrink-0 pb-1">
-            <!-- Emoji -->
+          <!-- Left plate: emoji, AI, attach, WhatsApp modes -->
+          <div class="inbox-reply-toolbar-plate shrink-0 self-end pb-0.5" role="toolbar" aria-label="Reply tools">
             <button type="button"
-              class="inbox-emoji-trigger-btn w-8 h-8 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              [class.text-rep-black]="showEmojiPicker"
-              [class.bg-rep-lime]="showEmojiPicker"
+              class="inbox-reply-toolbar-plate__btn inbox-emoji-trigger-btn"
+              [class.is-active]="showEmojiPicker"
               (click)="toggleEmojiPicker()"
               title="Emoji">
-              <i class="far fa-smile text-base leading-none"></i>
+              <i class="far fa-smile text-sm leading-none"></i>
             </button>
-            <!-- AI suggest -->
             <button type="button" (click)="generateAISuggestion()" [disabled]="generatingSuggestion || !interaction"
-              class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-rep-black hover:bg-rep-lime/20 transition-colors disabled:opacity-40"
-              title="AI suggestion">
+              class="inbox-reply-toolbar-plate__btn disabled:opacity-40"
+              title="AI suggestion"
+              aria-label="AI suggestion">
               <i *ngIf="generatingSuggestion" class="fas fa-spinner fa-spin text-sm leading-none"></i>
-              <i *ngIf="!generatingSuggestion" class="fas fa-robot text-sm leading-none"></i>
+              <app-ai-chat-bubble-icon *ngIf="!generatingSuggestion" iconClass="w-7 h-7 shrink-0" />
             </button>
-            <!-- Attach -->
-            <button type="button" (click)="openMediaSelector()" [disabled]="!interaction || isRecording"
-              class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-40"
-              title="Attach">
+            <button type="button" (click)="openMediaSelector()" [disabled]="!interaction || isRecording || (interaction?.platform === 'whatsapp' && waReplyMode === 'template')"
+              class="inbox-reply-toolbar-plate__btn disabled:opacity-40"
+              title="Attach"
+              aria-label="Attach file">
               <i class="fas fa-paperclip text-sm leading-none"></i>
+            </button>
+
+            <span *ngIf="interaction?.platform === 'whatsapp'"
+                  class="inbox-reply-toolbar-plate__divider"
+                  role="presentation"
+                  aria-hidden="true"></span>
+
+            <button type="button" *ngIf="interaction?.platform === 'whatsapp'"
+              (click)="setWaReplyMode('text')"
+              [attr.aria-pressed]="waReplyMode === 'text'"
+              class="inbox-reply-toolbar-plate__btn"
+              [class.is-mode-active]="waReplyMode === 'text'"
+              title="Free message"
+              aria-label="Free message">
+              <i class="far fa-comment-dots text-sm leading-none" aria-hidden="true"></i>
+            </button>
+            <button type="button" *ngIf="interaction?.platform === 'whatsapp'"
+              (click)="setWaReplyMode('template')"
+              [attr.aria-pressed]="waReplyMode === 'template'"
+              class="inbox-reply-toolbar-plate__btn inbox-reply-toolbar-plate__btn--accent"
+              [class.is-mode-active]="waReplyMode === 'template'"
+              title="Approved WhatsApp template"
+              aria-label="Approved WhatsApp template">
+              <i *ngIf="waTemplatesLoading" class="fas fa-spinner fa-spin text-sm leading-none" aria-hidden="true"></i>
+              <i *ngIf="!waTemplatesLoading" class="fab fa-whatsapp text-sm leading-none" aria-hidden="true"></i>
             </button>
           </div>
 
@@ -699,36 +859,29 @@
             ></textarea>
           </div>
 
-          <!-- Right: mic / send -->
-          <div class="flex-shrink-0 pb-1">
-            <!-- Voice record (show when no text typed and not uploading) -->
+          <!-- Right plate: voice / send (single shell, one control visible at a time) -->
+          <div class="inbox-reply-toolbar-plate inbox-reply-toolbar-plate--send shrink-0 self-end pb-0.5"
+               aria-label="Send or voice">
             <button type="button"
               *ngIf="!replyForm.get('content')?.value && !pendingAttachment"
               (click)="isRecording ? stopVoiceRecording() : startVoiceRecording()"
               [disabled]="!interaction || isUploadingRecording"
-              class="w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-40"
-              [class.bg-red-500]="isRecording"
-              [class.text-white]="isRecording"
-              [class.animate-pulse]="isRecording"
-              [class.bg-gray-100]="!isRecording"
-              [class.dark:bg-gray-800]="!isRecording"
-              [class.text-gray-500]="!isRecording"
-              [class.dark:text-gray-400]="!isRecording"
-              [class.hover:bg-gray-200]="!isRecording"
-              [class.dark:hover:bg-gray-700]="!isRecording"
-              [title]="isRecording ? 'Stop · ' + recordingDurationSec + 's' : 'Record voice'">
+              class="inbox-reply-toolbar-plate__btn text-sm transition-all"
+              [class.is-recording]="isRecording && !isUploadingRecording"
+              [title]="isRecording ? 'Stop · ' + recordingDurationSec + 's' : 'Record voice'"
+              aria-label="Record voice message">
               <i *ngIf="isUploadingRecording" class="fas fa-spinner fa-spin text-sm"></i>
-              <i *ngIf="!isUploadingRecording && !isRecording" class="fas fa-microphone text-sm"></i>
-              <i *ngIf="!isUploadingRecording && isRecording" class="fas fa-stop text-sm"></i>
+              <i *ngIf="!isUploadingRecording && !isRecording" class="fas fa-microphone text-sm leading-none"></i>
+              <i *ngIf="!isUploadingRecording && isRecording" class="fas fa-stop text-sm leading-none"></i>
             </button>
-            <!-- Send button (show when there is text or an attachment) -->
             <button type="submit"
               *ngIf="replyForm.get('content')?.value || pendingAttachment"
               [disabled]="submittingReply"
-              class="w-9 h-9 rounded-full flex items-center justify-center bg-rep-lime hover:bg-rep-lime/80 text-rep-black transition-all disabled:opacity-50 shadow-sm"
-              title="Send (Enter)">
+              class="inbox-reply-toolbar-plate__btn is-send text-sm shadow-sm disabled:opacity-50"
+              title="Send (Enter)"
+              aria-label="Send reply">
               <i *ngIf="submittingReply" class="fas fa-spinner fa-spin text-sm"></i>
-              <i *ngIf="!submittingReply" class="fas fa-paper-plane text-sm"></i>
+              <i *ngIf="!submittingReply" class="fas fa-paper-plane text-sm leading-none"></i>
             </button>
           </div>
         </div>
@@ -738,6 +891,7 @@
           <i class="fas fa-circle text-[6px] mr-1 animate-pulse"></i>Recording {{ recordingDurationSec }}s — tap stop to send
         </p>
       </form>
+      </ng-container>
     </div>
 
   </div>

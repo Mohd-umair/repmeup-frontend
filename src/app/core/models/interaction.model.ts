@@ -3,6 +3,8 @@ export interface IInteraction {
   organization: string;
   platform: Platform;
   type: InteractionType;
+  /** Populated platform connection (e.g. WhatsApp) when API returns it for template sending */
+  platformConnection?: string | { _id?: string };
   platformId: string;
   platformUrl?: string;
   content: string;
@@ -163,6 +165,21 @@ export interface IReply {
   };
   sentiment?: 'positive' | 'negative' | 'neutral';
   platformUrl?: string;
+
+  /** Outbound WhatsApp template rich preview (inbox mirrors customer message layout) */
+  whatsappTemplatePreview?: WhatsAppTemplatePreviewInline;
+}
+
+/** Subset persisted by backend — keep in sync with `whatsapp-template-preview.helpers` */
+export interface WhatsAppTemplatePreviewInline {
+  templateName: string;
+  languageCode: string;
+  category?: string | null;
+  headerImageUrl?: string | null;
+  headerText?: string | null;
+  bodyText: string;
+  footerText?: string | null;
+  buttons?: Array<{ type: string; text: string; url?: string | null; phone_number?: string | null }>;
 }
 
 export interface INote {

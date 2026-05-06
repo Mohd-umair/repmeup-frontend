@@ -4,6 +4,21 @@ import { ApiService } from './api.service';
 import { NotificationService } from './notification.service';
 
 /**
+ * Posted from the OAuth popup (/whatsapp-oauth-callback) to the opener tab.
+ */
+export const WHATSAPP_OAUTH_POSTMESSAGE_TYPE = 'repmeup-whatsapp-oauth';
+
+export interface WhatsAppOAuthPopupResult {
+  /** True after Meta returned success (may be absent if popup closed manually). */
+  success: boolean;
+  count?: number;
+  /** User-visible error message from Graph / signup. */
+  error?: string;
+  /** Popup closed without notifying (user cancelled). */
+  cancelled?: boolean;
+}
+
+/**
  * Platform Service - Single Responsibility Principle
  * Handles platform connection management
  */
@@ -244,34 +259,75 @@ export class PlatformService {
 
   /**
    * Open WhatsApp Embedded Signup in a popup window.
-   * Resolves when Meta redirects back and the backend saves the connection.
+   * Resolves after the popup notifies via postMessage (/whatsapp-oauth-callback), or closes.
    */
-  connectWhatsAppOAuth(): Promise<void> {
+  connectWhatsAppOAuth(): Promise<WhatsAppOAuthPopupResult> {
     return new Promise((resolve, reject) => {
+      let popup: Window | null = null;
+      let timer: ReturnType<typeof setInterval> | null = null;
+      let finished = false;
+
+      const finalize = () => {
+        if (timer != null) {
+          clearInterval(timer);
+          timer = null;
+        }
+        window.removeEventListener('message', onMessage as (e: MessageEvent) => void);
+      };
+
+      const onMessage = (ev: MessageEvent) => {
+        if (finished) return;
+        if (ev.origin !== window.location.origin) return;
+        const d = ev.data;
+        if (!d || d.type !== WHATSAPP_OAUTH_POSTMESSAGE_TYPE) return;
+        finished = true;
+        finalize();
+        try {
+          if (popup && !popup.closed) {
+            popup.close();
+          }
+        } catch {
+          /* ignore — some browsers sandbox cross-window close */
+        }
+        resolve({
+          success: !!d.success,
+          count: d.count != null ? Number(d.count) : undefined,
+          error: typeof d.error === 'string' ? d.error : undefined
+        });
+      };
+
+      window.addEventListener('message', onMessage as (e: MessageEvent) => void);
+
       this.initiateWhatsAppConnection().subscribe({
         next: (response) => {
           if (!response?.data?.authUrl) {
+            finalize();
             reject(new Error('No auth URL returned from server'));
             return;
           }
-          const popup = window.open(
+          popup = window.open(
             response.data.authUrl,
             'whatsapp_oauth',
             'width=700,height=700,scrollbars=yes,resizable=yes'
           );
           if (!popup) {
+            finalize();
             reject(new Error('Popup blocked. Please allow popups for this site.'));
             return;
           }
-          // Poll for popup close
-          const timer = setInterval(() => {
-            if (popup.closed) {
-              clearInterval(timer);
-              resolve();
+          timer = setInterval(() => {
+            if (finished) return;
+            if (popup?.closed) {
+              finished = true;
+              finalize();
+              resolve({ success: false, cancelled: true });
             }
-          }, 800);
+          }, 400);
         },
-        error: (err) => reject(err)
+        error: (err) => {
+          finalize();
+          reject(err);
+        }
       });
     });
   }

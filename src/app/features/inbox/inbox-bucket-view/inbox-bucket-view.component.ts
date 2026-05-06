@@ -17,6 +17,7 @@ import {
 } from '../../../core/utils/inbox-bucket-chat-timeline';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
+import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { SentimentDonutChartComponent } from '../../../shared/components/charts/sentiment-donut-chart.component';
 import { Subscription, timer, interval } from 'rxjs';
 import { take } from 'rxjs/operators';
@@ -41,7 +42,7 @@ interface SentimentStats {
 @Component({
   selector: 'app-inbox-bucket-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, SentimentDonutChartComponent, MediaSelectorModalComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, AiChatBubbleIconComponent, SentimentDonutChartComponent, MediaSelectorModalComponent],
   templateUrl: './inbox-bucket-view.component.html',
   styleUrls: ['./inbox-bucket-view.component.scss']
 })

@@ -1,346 +1,663 @@
 <div [ngSwitch]="stage" class="block w-full max-w-2xl mx-auto text-sm sm:text-[15px]">
-  <!-- ACQUIRE — bento: live signal + profile card -->
+  <!-- ACQUIRE — inbound pipeline rail + lead jewel (brand: rep-lime / zinc · no stray accent colours) -->
   <div
     *ngSwitchCase="'acquire'"
-    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-700/90 bg-gradient-to-b from-white to-gray-50/90 dark:from-gray-900 dark:to-gray-950/95 shadow-xl shadow-gray-200/30 dark:shadow-black/30"
+    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-700/90 bg-gradient-to-b from-white via-zinc-50/40 to-gray-50/90 shadow-xl shadow-gray-200/30 dark:bg-gradient-to-b dark:from-gray-900 dark:via-gray-900 dark:to-[#070707] dark:shadow-black/35"
   >
     <div class="lifecycle-mesh" aria-hidden="true"></div>
-    <div class="relative flex h-full min-h-0 flex-col p-4 sm:p-5">
-      <div class="mb-3 flex items-center justify-between gap-2 shrink-0">
-        <div>
-          <p class="text-xs font-black uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-            Inbound feed
+    <div
+      class="absolute -right-8 top-10 h-36 w-36 rounded-full bg-rep-lime/12 blur-3xl dark:bg-rep-lime/14"
+      aria-hidden="true"
+    ></div>
+    <div
+      class="absolute -left-6 bottom-24 h-24 w-24 rounded-full bg-emerald-500/8 blur-3xl dark:bg-emerald-500/10"
+      aria-hidden="true"
+    ></div>
+    <div class="relative flex h-full min-h-0 flex-col gap-3 p-4 sm:p-5">
+      <!-- Header -->
+      <div class="flex shrink-0 items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p
+            class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-gray-400"
+          >
+            Acquire leads
           </p>
-          <p class="text-base font-black text-gray-900 dark:text-rep-white">From comments &amp; DMs</p>
+          <p class="text-sm font-black leading-snug tracking-tight text-gray-900 dark:text-rep-white">
+            Unified inbound
+          </p>
+          <p class="mt-0.5 truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">
+            Comments · DMs · every touchpoint
+          </p>
         </div>
         <div
-          class="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400"
+          class="flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-50/95 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide text-emerald-900 shadow-sm dark:border-emerald-500/30 dark:bg-emerald-950/50 dark:text-emerald-300"
         >
-          <span class="h-2 w-2 rounded-full bg-emerald-500 acquire-sheen"></span>
+          <span class="h-2 w-2 rounded-full bg-emerald-500 acquire-sheen ring-2 ring-emerald-400/30 dark:ring-emerald-400/25"></span>
           Live
         </div>
       </div>
+
+      <!-- Bento: thread queue | lead jewel -->
       <div
         class="bento grid min-h-0 flex-1 grid-cols-1 grid-rows-[1fr_auto] gap-3 sm:grid-cols-5 sm:grid-rows-1 sm:gap-3"
       >
+        <!-- Thread rail -->
         <div
-          class="flex min-h-0 flex-col rounded-2xl border border-gray-200/80 dark:border-gray-700/80 bg-white/80 dark:bg-gray-900/50 p-3 shadow-sm sm:col-span-3"
+          class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-white/90 shadow-sm ring-1 ring-black/[0.03] backdrop-blur-[2px] dark:border-zinc-800/90 dark:bg-zinc-900/55 dark:ring-white/[0.05] sm:col-span-3"
         >
-          <p class="mb-2.5 text-xs font-bold uppercase tracking-wide text-gray-500">Recent threads</p>
-          <div class="space-y-2">
+          <div
+            class="flex shrink-0 items-center justify-between border-b border-zinc-100/95 px-3 py-2 dark:border-zinc-800/80"
+          >
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400">Signals</p>
+            <span class="rounded-md bg-gray-900 px-2 py-0.5 font-mono text-[9px] font-bold text-rep-lime dark:bg-zinc-950">prioritising</span>
+          </div>
+          <div class="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-2.5 [scrollbar-width:thin]">
+            <!-- Hot IG thread — zinc + lime strip (brand accent) -->
             <div
-              class="flex items-center gap-2.5 rounded-xl bg-pink-500/5 dark:bg-pink-500/10 px-2.5 py-2 ring-1 ring-pink-500/20"
+              class="relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-50/95 pl-[3px] dark:border-zinc-700 dark:bg-zinc-950/60"
             >
-              <div
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-pink-500 to-rose-600 text-xs font-black text-white"
-              >
-                R
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-bold text-gray-900 dark:text-rep-white">“Price for the black dress?”</p>
-                <p class="text-xs text-pink-700 dark:text-pink-400">Instagram</p>
+              <span
+                class="absolute bottom-2 left-0 top-2 w-[3px] rounded-full bg-rep-lime shadow-[0_0_12px_rgba(216,255,0,0.55)] dark:shadow-[0_0_16px_rgba(216,255,0,0.35)]"
+                aria-hidden="true"
+              ></span>
+              <div class="relative flex flex-1 items-start gap-2.5 pl-3 pr-2.5 py-2">
+                <div
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-zinc-700 via-zinc-800 to-black text-[11px] font-black uppercase text-white ring-2 ring-black/25 dark:from-zinc-600 dark:via-zinc-800 dark:to-zinc-950"
+                >
+                  R
+                </div>
+                <div class="min-w-0 flex-1 pt-0.5">
+                  <div class="mb-1 flex flex-wrap items-center gap-1.5">
+                    <i class="fab fa-instagram shrink-0 text-[11px] text-zinc-500 dark:text-gray-400" aria-hidden="true"></i>
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-zinc-500 dark:text-gray-400">IG</span>
+                    <span class="rounded bg-rep-lime/25 px-1.5 py-px text-[9px] font-black text-zinc-900 dark:bg-rep-lime/25 dark:text-rep-black">High intent</span>
+                  </div>
+                  <p class="truncate text-xs font-bold text-gray-900 dark:text-zinc-100">
+                    “Price for the black dress?”
+                  </p>
+                </div>
               </div>
             </div>
+
+            <!-- WA thread — subdued -->
             <div
-              class="flex items-center gap-2.5 rounded-xl px-2.5 py-2 opacity-80"
+              class="flex items-start gap-2.5 rounded-xl border border-transparent bg-gray-50/80 px-2.5 py-2 opacity-95 dark:bg-zinc-900/35"
             >
               <div
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-800 dark:bg-slate-700 dark:text-slate-200"
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-200/60 bg-white text-emerald-700 shadow-sm dark:border-emerald-800/50 dark:bg-emerald-950/40 dark:text-emerald-400"
               >
-                A
+                <i class="fab fa-whatsapp text-sm" aria-hidden="true"></i>
               </div>
-              <p class="truncate text-xs text-gray-600 dark:text-gray-400">Delivers to NCR? · WhatsApp</p>
+              <div class="min-w-0 pt-0.5">
+                <span class="font-mono text-[9px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">WA</span>
+                <p class="truncate text-xs text-gray-600 dark:text-gray-400">Delivers to NCR? · routing…</p>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Lead card — jewel panel (lime is brand spine) -->
         <div
-          class="relative flex min-h-0 flex-col overflow-hidden rounded-2xl border-2 border-lime-300 bg-lime-50/80 p-3 dark:border-rep-lime/50 dark:bg-rep-lime/[0.07] sm:col-span-2"
+          class="relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-white p-3 shadow-[0_12px_40px_-12px_rgba(11,11,11,0.12)] ring-1 ring-black/[0.04] dark:border-rep-lime/35 dark:bg-gradient-to-br dark:from-zinc-900 dark:via-[#0c0c0c] dark:to-black dark:ring-rep-lime/15 sm:col-span-2"
         >
           <div
-            class="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-lime-200/50 blur-2xl dark:bg-rep-lime/30"
+            class="absolute -right-2 -top-8 h-24 w-24 rounded-full bg-rep-lime/20 blur-2xl dark:bg-rep-lime/22"
             aria-hidden="true"
           ></div>
-          <p class="mb-2 text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300">
-            Lead card
-          </p>
-          <div class="relative z-[1] flex items-start gap-2.5">
+          <div
+            class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rep-lime/65 to-transparent dark:via-rep-lime/35"
+            aria-hidden="true"
+          ></div>
+          <div class="relative z-[1] mb-3 flex shrink-0 items-center justify-between gap-2 border-b border-zinc-100/95 pb-2.5 dark:border-zinc-800/85">
+            <p class="text-[10px] font-black uppercase tracking-[0.18em] text-gray-600 dark:text-gray-300">
+              Lead captured
+            </p>
+            <span class="rounded-full border border-rep-lime/40 bg-rep-lime/15 px-2 py-0.5 text-[10px] font-black tabular-nums text-zinc-900 dark:bg-rep-lime/25 dark:text-rep-lime">hot</span>
+          </div>
+          <div class="relative z-[1] mb-3 flex min-h-0 flex-1 items-start gap-2.5">
             <div
-              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-lime-200 text-base font-black text-gray-900 ring-2 ring-lime-400 dark:bg-rep-lime/50 dark:text-rep-black dark:ring-rep-lime/60"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-rep-lime/50 bg-gradient-to-br from-zinc-100 to-white text-[13px] font-black text-black shadow-inner dark:border-rep-lime/55 dark:bg-rep-lime dark:text-rep-black"
             >
               RS
             </div>
-            <div class="min-w-0">
-              <p class="text-sm font-black text-gray-900 dark:text-rep-white">Riya Sharma</p>
-              <p class="text-xs text-gray-600 dark:text-gray-400">Intent: purchase</p>
+            <div class="min-w-0 pt-0.5">
+              <p class="truncate font-black leading-snug text-gray-900 dark:text-rep-white">Riya Sharma</p>
+              <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">Intent · purchase · today</p>
             </div>
           </div>
           <div
-            class="mt-auto space-y-2 border-t border-lime-200/60 pt-3 text-xs text-gray-700 dark:text-gray-300"
+            class="relative z-[1] mt-auto shrink-0 space-y-2.5 rounded-xl bg-zinc-50/95 p-3 dark:bg-black/55 dark:ring-1 dark:ring-white/10"
           >
-            <div class="flex justify-between">
-              <span>Score</span>
+            <div class="flex justify-between gap-2 text-[11px] font-semibold">
+              <span class="uppercase tracking-wide text-zinc-500 dark:text-gray-400">Confidence</span>
               <span class="font-black text-gray-900 dark:text-rep-lime">High</span>
             </div>
-            <div class="h-2 overflow-hidden rounded-full bg-gray-200/80 dark:bg-gray-800">
-              <div
-                class="h-full w-[88%] rounded-full bg-emerald-600 dark:bg-rep-lime"
-              ></div>
+            <div class="h-2 overflow-hidden rounded-full bg-zinc-200/95 dark:bg-zinc-800">
+            <div
+              class="h-full w-[88%] rounded-full bg-gradient-to-r from-emerald-600 via-rep-lime to-rep-lime shadow-[0_0_14px_rgba(216,255,0,0.35)] dark:from-emerald-500 dark:via-rep-lime dark:to-rep-lime dark:shadow-[0_0_16px_rgba(216,255,0,0.45)]"
+            ></div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Pipeline metric dock -->
       <div
-        class="mt-3 flex items-center justify-between border-t border-gray-200/70 pt-3 dark:border-gray-700/70"
+        class="flex shrink-0 items-center justify-between gap-4 rounded-xl border border-zinc-200/95 bg-[#0B0B0B] px-3.5 py-2.5 text-white shadow-lg ring-1 ring-white/10 dark:bg-zinc-950 dark:border-zinc-800"
       >
-        <span class="text-xs font-bold uppercase text-gray-500">Pipeline lift</span>
-        <span class="text-base font-black tabular-nums text-gray-900 dark:text-rep-lime">{{
-          data.highlightStat
-        }}</span>
+        <div class="min-w-0">
+          <p class="truncate font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">Pipeline lift</p>
+          <p class="truncate text-[10px] font-medium text-zinc-300">
+            Qualified leads vs baseline
+          </p>
+        </div>
+        <div class="shrink-0 text-right">
+          <span class="block text-2xl font-black tabular-nums leading-none tracking-tight text-rep-lime sm:text-[1.65rem]">{{ data.highlightStat }}</span>
+          <span class="hidden text-[9px] font-semibold uppercase tracking-wide text-zinc-400 sm:inline">
+            captured
+          </span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- CONVERT — dark channel card (lime accents OK: dark background) -->
+  <!-- CONVERT — recovery command: framed thread + rep-lime win bar + metric dock (brand-aligned) -->
   <div
     *ngSwitchCase="'convert'"
-    class="lifecycle-canvas border border-white/10 bg-gradient-to-b from-slate-900 via-gray-900 to-rep-black shadow-2xl"
-  >
-    <div class="lifecycle-noise" aria-hidden="true"></div>
-    <div
-      class="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(216,255,0,0.12),transparent)]"
-      aria-hidden="true"
-    ></div>
-    <div class="relative flex h-full min-h-0 flex-col p-4 sm:p-5">
-      <div class="mb-3 flex shrink-0 items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-base text-white shadow-lg shadow-emerald-900/30"
-          >
-            <i class="fab fa-whatsapp"></i>
-          </div>
-          <div>
-            <p class="text-base font-black text-white">Abandoned cart nudge</p>
-            <p class="text-xs text-white/50">Branded nudge · 1:1</p>
-          </div>
-        </div>
-        <span class="rounded-md bg-white/5 px-2 py-1 text-xs text-white/50">12:04</span>
-      </div>
-      <div class="min-h-0 flex-1 space-y-2.5 overflow-y-auto pr-0.5 [scrollbar-width:thin]">
-        <div
-          class="max-w-[92%] rounded-2xl rounded-tl-sm border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm leading-snug text-white/95"
-        >
-          You still have
-          <span class="text-rep-lime">Denim jacket</span> in your cart
-          <span class="whitespace-nowrap">· ₹1,899</span>
-        </div>
-        <div
-          class="ml-auto max-w-[85%] rounded-2xl rounded-tr-sm border border-white/5 bg-slate-800/90 px-3.5 py-2.5 text-sm text-white/85"
-        >
-          Wasn’t sure about the fit
-        </div>
-        <div
-          class="max-w-[92%] rounded-2xl rounded-tl-sm border border-rep-lime/30 bg-rep-lime/10 px-3.5 py-2.5 text-sm text-white/95"
-        >
-          True to size · relaxed. Code
-          <span class="font-black text-rep-lime">SAVE5</span>
-          <span
-            class="mt-0.5 block break-all text-xs text-rep-lime/90 underline decoration-rep-lime/30"
-            >yoursite.com/c/abc123</span>
-        </div>
-        <div
-          class="ml-auto max-w-[70%] rounded-2xl rounded-tr-sm border border-white/5 bg-slate-800/90 px-3.5 py-2.5 text-sm text-white/85"
-        >
-          Placed ✓
-        </div>
-      </div>
-      <div
-        class="mt-3 shrink-0 rounded-2xl border border-rep-lime/50 bg-rep-lime p-3 text-center shadow-lg shadow-rep-lime/20"
-      >
-        <p class="text-sm font-black text-rep-black">Order back in the funnel</p>
-        <p class="mt-0.5 text-xs font-semibold text-rep-black/60">₹1,899 · in-chat checkout</p>
-      </div>
-      <p class="mt-2 shrink-0 text-center text-xs text-white/40">
-        Outcome
-        <span class="text-rep-lime font-bold">{{ data.highlightStat }}</span>
-        {{ data.highlightLabel }}
-      </p>
-    </div>
-  </div>
-
-  <!-- SUPPORT -->
-  <div
-    *ngSwitchCase="'support'"
-    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-800 bg-white dark:bg-gray-900/90 shadow-xl"
+    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-700/90 bg-gradient-to-b from-white via-zinc-50/50 to-gray-50/95 shadow-xl shadow-gray-200/25 dark:bg-gradient-to-b dark:from-gray-900 dark:via-zinc-950 dark:to-[#070707] dark:shadow-black/35"
   >
     <div class="lifecycle-mesh" aria-hidden="true"></div>
     <div
-      class="absolute right-0 top-0 h-32 w-32 rounded-full bg-blue-500/5 blur-3xl dark:bg-blue-500/10"
+      class="absolute -right-6 top-6 h-32 w-32 rounded-full bg-rep-lime/14 blur-3xl dark:bg-rep-lime/16"
       aria-hidden="true"
     ></div>
-    <div class="relative flex h-full min-h-0 flex-col p-4 sm:p-5">
-      <div class="mb-3 flex shrink-0 items-center justify-between">
-        <div>
-          <p class="text-xs font-black uppercase tracking-widest text-gray-500">Inbox + tickets</p>
-          <p class="text-base font-black text-gray-900 dark:text-rep-white">Triage, AI, escalation</p>
-        </div>
-        <div class="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400">
-          <span class="support-live-dot"></span> AI online
-        </div>
-      </div>
-      <div class="mb-3 grid flex-shrink-0 grid-cols-3 gap-2.5">
-        <div
-          class="rounded-2xl border border-gray-100 bg-gray-50/90 py-3 text-center dark:border-gray-800 dark:bg-gray-800/50"
-        >
-          <p class="text-xl font-black tabular-nums text-gray-900 dark:text-rep-white sm:text-2xl">24</p>
-          <p class="text-xs font-bold text-gray-500">Queue</p>
-        </div>
-        <div
-          class="rounded-2xl border border-lime-200/80 bg-lime-50 py-3 text-center dark:border-rep-lime/30 dark:bg-rep-lime/5"
-        >
-          <p
-            class="text-xl font-black tabular-nums text-emerald-800 dark:text-rep-lime sm:text-2xl"
-          >
-            12
-          </p>
-          <p class="text-xs font-bold text-gray-600 dark:text-gray-400">Cleared</p>
-        </div>
-        <div
-          class="rounded-2xl border border-gray-100 bg-gray-50/90 py-3 text-center dark:border-gray-800 dark:bg-gray-800/50"
-        >
-          <p class="text-base font-black text-gray-800 dark:text-gray-100">now</p>
-          <p class="text-xs font-bold text-gray-500">First touch</p>
-        </div>
-      </div>
-      <div
-        class="min-h-0 flex-1 space-y-2 overflow-hidden rounded-2xl border border-gray-200/80 bg-gray-50/50 p-3 dark:border-gray-700/80 dark:bg-gray-800/30"
-      >
-        <p class="px-0.5 text-xs font-black uppercase tracking-widest text-gray-500">This hour</p>
-        <div
-          class="flex items-center justify-between gap-2 rounded-xl bg-white/90 px-3 py-2 dark:bg-gray-900/50"
-        >
-          <span class="truncate text-sm font-semibold text-gray-800 dark:text-gray-200">Order status</span>
-          <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900">Queue</span>
-        </div>
-        <div
-          class="flex items-center justify-between gap-2 rounded-xl bg-white/90 px-3 py-2 dark:bg-gray-900/50"
-        >
-          <span class="truncate text-sm font-semibold text-gray-800 dark:text-gray-200">Return label</span>
-          <span
-            class="shrink-0 rounded-full bg-lime-200 px-2 py-0.5 text-xs font-bold text-emerald-900 dark:bg-rep-lime/20 dark:text-rep-lime"
-            >AI</span>
-        </div>
-        <div
-          class="flex items-center justify-between gap-2 rounded-xl bg-white/90 px-3 py-2 dark:bg-gray-900/50"
-        >
-          <span class="truncate text-sm font-semibold text-gray-800 dark:text-gray-200">Refund</span>
-          <span class="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-900">Team</span>
-        </div>
-      </div>
-      <p class="mt-2 shrink-0 text-center text-xs text-gray-600 dark:text-gray-400">
-        Aiming for
-        <span class="font-bold text-gray-900 dark:text-rep-lime">{{ data.highlightStat }}</span>
-        {{ data.highlightLabel }}
-      </p>
-    </div>
-  </div>
-
-  <!-- RETAIN -->
-  <div
-    *ngSwitchCase="'retain'"
-    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-800 bg-gradient-to-br from-amber-50/40 via-white to-white dark:from-amber-950/20 dark:via-gray-900 dark:to-gray-950 shadow-xl"
-  >
     <div
-      class="absolute -left-8 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-amber-200/20 blur-3xl dark:bg-amber-500/10"
+      class="absolute -left-4 bottom-16 h-28 w-28 rounded-full bg-emerald-500/10 blur-3xl dark:bg-emerald-500/12"
       aria-hidden="true"
     ></div>
-    <div class="relative flex h-full min-h-0 flex-col p-4 sm:p-5">
-      <p class="mb-3 text-xs font-black uppercase tracking-widest text-gray-500">Reputation</p>
-      <div class="mb-3 flex items-center gap-4">
+    <div class="relative flex h-full min-h-0 flex-col gap-2.5 p-4 sm:p-5">
+      <div class="flex shrink-0 items-start justify-between gap-2">
+        <div class="min-w-0">
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-gray-400">Convert sales</p>
+          <p class="text-sm font-black leading-tight text-gray-900 dark:text-rep-white">Recovery thread</p>
+          <p class="mt-0.5 truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">
+            WhatsApp · cart nudge · 1:1
+          </p>
+        </div>
+        <div class="flex shrink-0 flex-col items-end gap-1">
+          <span class="rounded-full border border-zinc-200/90 bg-white/90 px-2.5 py-1 font-mono text-[10px] font-bold text-zinc-600 shadow-sm dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-300">12:04</span>
+          <span class="text-[9px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">live session</span>
+        </div>
+      </div>
+
+      <!-- Thread surface -->
+      <div
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] ring-1 ring-black/[0.04] dark:border-zinc-800 dark:bg-zinc-900/50 dark:ring-white/[0.06]"
+      >
         <div
-          class="relative flex h-[5.5rem] w-[5.5rem] shrink-0 items-center justify-center rounded-full border-4 border-amber-300 bg-gradient-to-br from-amber-100/80 to-white dark:border-amber-500/50 dark:from-amber-900/40 dark:to-gray-900"
+          class="flex shrink-0 items-center justify-between border-b border-zinc-100/95 bg-zinc-50/80 px-3 py-1.5 dark:border-zinc-800 dark:bg-zinc-950/60"
         >
-          <div class="text-center">
-            <p class="text-3xl font-black leading-none text-gray-900 dark:text-rep-white">
-              {{ data.highlightStat }}
-            </p>
-            <p class="mt-1 text-[10px] font-bold uppercase text-gray-600 dark:text-gray-400">Google</p>
+          <span class="font-mono text-[9px] font-semibold uppercase tracking-[0.15em] text-zinc-400"> cart · 89f2 </span>
+          <span class="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+            <i class="fas fa-lock text-[8px] opacity-70"></i> TLS
+          </span>
+        </div>
+        <div class="min-h-0 flex-1 space-y-2.5 overflow-y-auto p-2.5 pr-1 [scrollbar-width:thin]">
+          <div
+            class="max-w-[92%] rounded-2xl rounded-tl-sm border border-zinc-200/90 bg-zinc-50/90 px-3.5 py-2.5 text-sm leading-snug text-gray-900 shadow-sm dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-100"
+          >
+            You still have
+            <span class="font-semibold text-emerald-800 dark:text-rep-lime">Denim jacket</span>
+            in your cart
+            <span class="whitespace-nowrap text-zinc-500 dark:text-zinc-400">· ₹1,899</span>
+          </div>
+          <div
+            class="ml-auto max-w-[85%] rounded-2xl rounded-tr-sm border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm dark:border-emerald-800/60 dark:from-emerald-950/40 dark:to-zinc-900 dark:text-emerald-100"
+          >
+            Wasn’t sure about the fit
+          </div>
+          <div
+            class="max-w-[92%] rounded-2xl rounded-tl-sm border border-rep-lime/40 bg-gradient-to-br from-rep-lime/20 via-white to-zinc-50/80 px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm dark:border-rep-lime/35 dark:from-rep-lime/10 dark:via-zinc-900/80 dark:to-zinc-950 dark:text-zinc-50"
+          >
+            True to size · relaxed. Code
+            <span class="font-black text-emerald-900 dark:text-rep-lime">SAVE5</span>
+            <span class="mt-0.5 block break-all text-xs font-medium text-emerald-800 underline decoration-emerald-400/50 dark:text-rep-lime/90 dark:decoration-rep-lime/40">yoursite.com/c/abc123</span>
+          </div>
+          <div
+            class="ml-auto max-w-[70%] rounded-2xl rounded-tr-sm border border-zinc-200/90 bg-zinc-100/95 px-3.5 py-2.5 text-sm font-semibold text-zinc-800 dark:border-zinc-700 dark:bg-zinc-800/90 dark:text-zinc-200"
+          >
+            Placed ✓
           </div>
         </div>
-        <div class="min-w-0 flex-1">
-          <p class="retain-stars text-xl text-amber-600 dark:text-amber-400">
-            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-            <i class="fas fa-star"></i><i class="fas fa-star"></i>
-          </p>
-          <p class="mt-1.5 line-clamp-2 text-xs leading-relaxed text-gray-700 dark:text-gray-300">
-            {{ data.highlightLabel }}
-          </p>
-        </div>
       </div>
+
       <div
-        class="min-h-0 flex-1 space-y-2 overflow-hidden rounded-2xl border border-amber-200/50 bg-white/60 p-3 dark:border-amber-900/30 dark:bg-gray-800/40"
+        class="shrink-0 overflow-hidden rounded-xl border border-rep-lime/45 bg-gradient-to-r from-rep-lime via-rep-lime to-emerald-400 p-2.5 text-center shadow-lg shadow-rep-lime/25 dark:from-rep-lime dark:via-rep-lime dark:to-emerald-600 dark:shadow-rep-lime/20"
       >
-        <p class="px-0.5 text-xs font-black uppercase text-gray-500">Nudges out</p>
-        <div class="flex items-center gap-2.5 text-xs sm:text-sm">
-          <i class="fab fa-instagram shrink-0 text-pink-600"></i>
-          <span class="min-w-0 flex-1 truncate text-gray-800 dark:text-gray-200">#4521 review ask</span>
-          <span class="shrink-0 text-emerald-700 dark:text-emerald-400">✓</span>
+        <p class="text-xs font-black text-rep-black">Order back in the funnel</p>
+        <p class="mt-0.5 text-[11px] font-semibold text-rep-black/70">₹1,899 · in-chat checkout</p>
+      </div>
+
+      <div
+        class="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-zinc-200/95 bg-[#0B0B0B] px-3.5 py-2.5 text-white shadow-lg ring-1 ring-white/10 dark:bg-zinc-950 dark:border-zinc-800"
+      >
+        <div class="min-w-0">
+          <p class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">Recovery outcome</p>
+          <p class="truncate text-[10px] font-medium text-zinc-300">{{ data.highlightLabel }}</p>
         </div>
-        <div class="flex items-center gap-2.5 text-xs sm:text-sm">
-          <i class="fab fa-whatsapp shrink-0 text-emerald-700"></i>
-          <span class="min-w-0 flex-1 truncate text-gray-600 dark:text-gray-400">#4520 CSAT</span>
-          <span class="shrink-0 text-amber-700">⏱</span>
-        </div>
-        <div class="flex items-center gap-2.5 text-xs sm:text-sm">
-          <i class="fab fa-google shrink-0 text-blue-600"></i>
-          <span class="min-w-0 flex-1 truncate text-gray-800 dark:text-gray-200">#4519 GMB</span>
-          <span class="shrink-0 text-emerald-700 dark:text-emerald-400">✓</span>
+        <div class="shrink-0 text-right">
+          <span class="block text-xl font-black tabular-nums leading-none text-rep-lime sm:text-2xl">{{ data.highlightStat }}</span>
+          <span class="text-[9px] font-semibold uppercase tracking-wide text-zinc-500">vs baseline</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- REPEAT -->
+  <!-- SUPPORT — ops cockpit: KPI jewels + ranked queue (brand zinc / lime / emerald) -->
   <div
-    *ngSwitchCase="'repeat'"
-    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-800 bg-white dark:bg-gray-900/90 shadow-xl"
+    *ngSwitchCase="'support'"
+    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-800 bg-gradient-to-b from-white via-zinc-50/40 to-gray-50/95 shadow-xl shadow-zinc-200/30 dark:bg-gradient-to-b dark:from-gray-900 dark:via-zinc-950 dark:to-[#070707] dark:shadow-black/35"
   >
+    <div class="lifecycle-mesh" aria-hidden="true"></div>
     <div
-      class="absolute right-0 bottom-0 h-24 w-24 rounded-full bg-lime-200/30 blur-3xl dark:bg-rep-lime/15"
+      class="absolute right-0 top-0 h-36 w-36 rounded-full bg-rep-lime/10 blur-3xl dark:bg-rep-lime/12"
       aria-hidden="true"
     ></div>
-    <div class="relative flex h-full min-h-0 flex-col p-4 sm:p-5">
-      <p class="mb-3 text-xs font-black uppercase tracking-widest text-gray-500">Lifecycle loop</p>
-      <div
-        class="mb-3 rounded-2xl border border-lime-200 border-l-4 border-l-emerald-700 bg-lime-50/90 p-3 dark:border-gray-700 dark:border-l-rep-lime/60 dark:bg-rep-lime/[0.06]"
-      >
-        <p
-          class="text-xs font-black uppercase text-emerald-800 dark:text-rep-lime"
-        >
-          Winback
-        </p>
-        <p class="mt-1.5 text-sm font-semibold leading-relaxed text-gray-900 dark:text-gray-100">
-          Your segment: “<span class="text-gray-800 dark:text-rep-lime">Haven’t ordered in 30d</span>” → sent
-          personalised offer.
-        </p>
-      </div>
-      <div class="min-h-0 flex-1 grid grid-cols-2 gap-3">
-        <div
-          class="flex flex-col justify-center rounded-2xl border border-gray-200/80 bg-gray-50/90 p-3 text-center dark:border-gray-700 dark:bg-gray-800/50"
-        >
-          <p
-            class="text-3xl font-black tabular-nums text-gray-900 dark:text-rep-lime sm:text-4xl"
-          >
-            {{ data.highlightStat }}
-          </p>
-          <p class="mt-1 text-xs font-semibold text-gray-600 dark:text-gray-400">
-            {{ data.highlightLabel }}
+    <div
+      class="absolute left-0 bottom-0 h-24 w-24 rounded-full bg-emerald-500/8 blur-3xl dark:bg-emerald-500/10"
+      aria-hidden="true"
+    ></div>
+    <div class="relative flex h-full min-h-0 flex-col gap-2.5 p-4 sm:p-5">
+      <div class="flex shrink-0 items-start justify-between gap-2">
+        <div class="min-w-0">
+          <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-gray-400">Support customers</p>
+          <p class="text-sm font-black leading-tight text-gray-900 dark:text-rep-white">Ops cockpit</p>
+          <p class="mt-0.5 truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">
+            Triage · AI · human handoff
           </p>
         </div>
         <div
-          class="flex flex-col justify-center rounded-2xl border border-dashed border-lime-300/80 bg-lime-50/50 p-3 text-center dark:border-rep-lime/40 dark:bg-rep-lime/5"
+          class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-50/95 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wide text-emerald-900 shadow-sm dark:border-emerald-800/50 dark:bg-emerald-950/50 dark:text-emerald-300"
         >
-          <p class="text-sm font-black text-gray-800 dark:text-gray-100">Next best action</p>
-          <p class="mt-1.5 text-xs text-gray-600 dark:text-gray-400">Bundles · winback · loyalty in one flow</p>
+          <span class="support-live-dot"></span>
+          AI online
+        </div>
+      </div>
+
+      <div class="grid shrink-0 grid-cols-3 gap-2">
+        <div
+          class="rounded-xl border border-zinc-200/90 bg-white/95 py-2.5 text-center shadow-sm ring-1 ring-black/[0.03] dark:border-zinc-800 dark:bg-zinc-900/60"
+        >
+          <p class="text-lg font-black tabular-nums text-zinc-900 dark:text-rep-white sm:text-xl">24</p>
+          <p class="text-[9px] font-bold uppercase tracking-wide text-zinc-500">Queue</p>
+        </div>
+        <div
+          class="rounded-xl border border-rep-lime/40 bg-gradient-to-b from-rep-lime/25 to-white py-2.5 text-center shadow-md shadow-rep-lime/15 dark:from-rep-lime/20 dark:to-zinc-900/80 dark:shadow-rep-lime/10"
+        >
+          <p class="text-lg font-black tabular-nums text-emerald-900 dark:text-rep-lime sm:text-xl">12</p>
+          <p class="text-[9px] font-bold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">Cleared</p>
+        </div>
+        <div
+          class="rounded-xl border border-zinc-200/90 bg-white/95 py-2.5 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60"
+        >
+          <p class="text-sm font-black uppercase leading-tight text-zinc-900 dark:text-rep-white">now</p>
+          <p class="text-[9px] font-bold uppercase tracking-wide text-zinc-500">1st touch</p>
+        </div>
+      </div>
+
+      <div
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200/90 bg-zinc-50/80 p-2.5 dark:border-zinc-800 dark:bg-zinc-950/50"
+      >
+        <div class="mb-2 flex shrink-0 items-center justify-between px-0.5">
+          <p class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Resolve queue</p>
+          <span class="rounded bg-zinc-900 px-2 py-0.5 font-mono text-[9px] font-bold text-rep-lime dark:bg-black">this hour</span>
+        </div>
+        <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-0.5 [scrollbar-width:thin]">
+          <div
+            class="flex items-center gap-2.5 rounded-xl border border-zinc-200/80 bg-white/95 px-2.5 py-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70"
+          >
+            <span class="h-8 w-1 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-600" aria-hidden="true"></span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-xs font-bold text-zinc-900 dark:text-zinc-100">Order status</p>
+              <p class="truncate text-[10px] text-zinc-500">Awaiting carrier scan</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-black uppercase text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">Queue</span>
+          </div>
+          <div
+            class="flex items-center gap-2.5 rounded-xl border border-rep-lime/35 bg-gradient-to-r from-rep-lime/12 to-transparent px-2.5 py-2 dark:border-rep-lime/25 dark:from-rep-lime/8"
+          >
+            <span class="h-8 w-1 shrink-0 rounded-full bg-rep-lime shadow-[0_0_12px_rgba(216,255,0,0.45)]" aria-hidden="true"></span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-xs font-bold text-zinc-900 dark:text-white">Return label</p>
+              <p class="truncate text-[10px] text-zinc-500 dark:text-zinc-400">Policy · auto reply</p>
+            </div>
+            <span class="shrink-0 rounded-full border border-rep-lime/50 bg-rep-lime/90 px-2 py-0.5 text-[10px] font-black uppercase text-rep-black dark:bg-rep-lime dark:text-rep-black">AI</span>
+          </div>
+          <div
+            class="flex items-center gap-2.5 rounded-xl border border-zinc-200/80 bg-white/95 px-2.5 py-2 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/70"
+          >
+            <span class="h-8 w-1 shrink-0 rounded-full bg-zinc-900 dark:bg-rep-white" aria-hidden="true"></span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-xs font-bold text-zinc-900 dark:text-zinc-100">Refund</p>
+              <p class="truncate text-[10px] text-zinc-500">Finance · SLA 2h</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-zinc-200 px-2 py-0.5 text-[10px] font-black uppercase text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100">Team</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-zinc-200/95 bg-[#0B0B0B] px-3.5 py-2.5 text-white shadow-lg ring-1 ring-white/10 dark:bg-zinc-950 dark:border-zinc-800"
+      >
+        <div class="min-w-0">
+          <p class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">SLA target</p>
+          <p class="truncate text-[10px] font-medium text-zinc-300">{{ data.highlightLabel }}</p>
+        </div>
+        <div class="shrink-0 text-right">
+          <span class="block text-xl font-black tabular-nums leading-none text-rep-lime sm:text-2xl">{{ data.highlightStat }}</span>
+          <span class="text-[9px] font-semibold uppercase tracking-wide text-zinc-500">velocity</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETAIN — reputation hero + channel nudge stack (matches premium product-shot quality) -->
+  <div
+    *ngSwitchCase="'retain'"
+    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-800 bg-gradient-to-b from-white via-amber-50/25 to-white dark:from-gray-900 dark:via-amber-950/10 dark:to-gray-950 shadow-xl shadow-amber-100/40 dark:shadow-black/30"
+  >
+    <div class="lifecycle-mesh" aria-hidden="true"></div>
+    <div
+      class="absolute -right-8 top-0 h-36 w-36 rounded-full bg-gradient-to-br from-amber-200/50 to-orange-100/30 blur-3xl dark:from-amber-600/15 dark:to-transparent"
+      aria-hidden="true"
+    ></div>
+    <div
+      class="absolute -left-6 bottom-0 h-28 w-28 rounded-full bg-amber-100/40 blur-2xl dark:bg-amber-500/10"
+      aria-hidden="true"
+    ></div>
+    <div class="relative flex h-full min-h-0 flex-col p-4 sm:p-5">
+      <div class="mb-3 flex shrink-0 items-start justify-between gap-2">
+        <div class="min-w-0">
+          <p class="text-[10px] font-black uppercase tracking-[0.18em] text-amber-800/85 dark:text-amber-400/90">
+            Retain &amp; delight
+          </p>
+          <p class="text-sm font-black leading-tight text-gray-900 dark:text-rep-white">Reputation pulse</p>
+        </div>
+        <span
+          class="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200/90 bg-emerald-50/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-800 shadow-sm dark:border-emerald-800/50 dark:bg-emerald-950/50 dark:text-emerald-400"
+        >
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-400/40 dark:ring-emerald-500/30"></span>
+          Synced
+        </span>
+      </div>
+
+      <!-- Rating hero: embossed tile + stars (replaces plain circle) -->
+      <div
+        class="mb-3 shrink-0 overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-br from-white via-amber-50/60 to-amber-100/35 p-3 shadow-md dark:border-amber-900/35 dark:from-gray-800/80 dark:via-amber-950/25 dark:to-gray-900/90"
+      >
+        <div class="flex items-stretch gap-3 sm:gap-4">
+          <div
+            class="relative flex min-h-[4.75rem] w-[4.75rem] shrink-0 flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 p-2 text-center shadow-lg shadow-amber-500/30 dark:from-amber-600 dark:via-amber-700 dark:to-amber-900 dark:shadow-amber-900/40"
+          >
+            <div
+              class="absolute inset-0 rounded-2xl bg-[linear-gradient(135deg,rgba(255,255,255,0.35)_0%,transparent_45%,transparent_100%)] opacity-70 dark:opacity-40"
+              aria-hidden="true"
+            ></div>
+            <p class="relative text-2xl font-black leading-none tabular-nums text-white drop-shadow-sm sm:text-[1.65rem]">
+              {{ data.highlightStat }}
+            </p>
+            <div class="relative mt-1 flex items-center justify-center gap-0.5 rounded-md bg-black/15 px-1.5 py-0.5">
+              <i class="fab fa-google text-[10px] text-white"></i>
+              <span class="text-[9px] font-bold uppercase tracking-wider text-white/95">Biz</span>
+            </div>
+          </div>
+          <div class="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="retain-stars text-lg leading-none text-amber-500 dark:text-amber-400">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+              </p>
+              <span class="rounded-full border border-amber-200/80 bg-white/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">Trending ↑</span>
+            </div>
+            <p class="line-clamp-2 text-[11px] font-semibold leading-snug text-gray-700 dark:text-gray-300 sm:text-xs">
+              {{ data.highlightLabel }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Outbound nudges: row cards with status pills (replaces flat list box) -->
+      <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+        <div class="flex items-baseline justify-between gap-2 px-0.5">
+          <p class="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">Outbound nudges</p>
+          <span class="text-[10px] font-semibold tabular-nums text-gray-400">3 flows</span>
+        </div>
+        <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-0.5 [scrollbar-width:thin]">
+          <div
+            class="flex items-center gap-2.5 rounded-xl border border-gray-200/90 bg-white/95 p-2 shadow-sm ring-1 ring-black/[0.02] dark:border-gray-700 dark:bg-gray-800/65 dark:ring-white/5"
+          >
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/50 dark:to-rose-950/30"
+            >
+              <i class="fab fa-instagram text-lg text-pink-600 dark:text-pink-400"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-xs font-bold text-gray-900 dark:text-white">Review ask · #4521</p>
+              <p class="truncate text-[10px] text-gray-500 dark:text-gray-400">Post-delivery · Instagram</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">Sent</span>
+          </div>
+          <div
+            class="flex items-center gap-2.5 rounded-xl border border-amber-200/60 bg-gradient-to-r from-amber-50/80 to-white p-2 shadow-sm dark:border-amber-900/40 dark:from-amber-950/30 dark:to-gray-800/50"
+          >
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/20"
+            >
+              <i class="fab fa-whatsapp text-lg text-emerald-700 dark:text-emerald-400"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-xs font-bold text-gray-900 dark:text-white">CSAT pulse · #4520</p>
+              <p class="truncate text-[10px] text-gray-500 dark:text-gray-400">2-tap survey · WhatsApp</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-amber-900 dark:bg-amber-950/50 dark:text-amber-300">Queued</span>
+          </div>
+          <div
+            class="flex items-center gap-2.5 rounded-xl border border-gray-200/90 bg-white/95 p-2 shadow-sm ring-1 ring-black/[0.02] dark:border-gray-700 dark:bg-gray-800/65 dark:ring-white/5"
+          >
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-950/40 dark:to-sky-950/25"
+            >
+              <i class="fab fa-google text-lg text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-xs font-bold text-gray-900 dark:text-white">GMB follow-up · #4519</p>
+              <p class="truncate text-[10px] text-gray-500 dark:text-gray-400">Verified · Google</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">Sent</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-zinc-200/95 bg-[#0B0B0B] px-3.5 py-2.5 text-white shadow-lg ring-1 ring-white/10 dark:bg-zinc-950 dark:border-zinc-800"
+      >
+        <div class="min-w-0">
+          <p class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">Reputation impact</p>
+          <p class="truncate text-[10px] font-medium text-zinc-300">{{ data.highlightLabel }}</p>
+        </div>
+        <div class="shrink-0 text-right">
+          <span class="block text-xl font-black tabular-nums leading-none text-rep-lime sm:text-2xl">{{ data.highlightStat }}</span>
+          <span class="text-[9px] font-semibold uppercase tracking-wide text-zinc-500">signal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPEAT — LTV runway: curated journey card + kinetic stat slab (premium product-shot parity) -->
+  <div
+    *ngSwitchCase="'repeat'"
+    class="lifecycle-canvas border border-gray-200/90 dark:border-gray-800 bg-gradient-to-b from-white via-emerald-50/[0.35] to-lime-50/40 dark:from-gray-900 dark:via-emerald-950/[0.35] dark:to-gray-950 shadow-xl shadow-lime-200/30 dark:shadow-black/40"
+  >
+    <div class="lifecycle-mesh opacity-[0.35] dark:opacity-30" aria-hidden="true"></div>
+    <div
+      class="absolute -left-10 top-8 h-40 w-40 rounded-full bg-gradient-to-br from-emerald-200/50 to-transparent blur-3xl dark:from-emerald-600/15"
+      aria-hidden="true"
+    ></div>
+    <div
+      class="absolute -right-6 -bottom-4 h-32 w-32 rounded-full bg-rep-lime/25 blur-3xl dark:bg-rep-lime/15"
+      aria-hidden="true"
+    ></div>
+    <div class="relative flex h-full min-h-0 flex-col gap-2.5 p-4 sm:p-5">
+      <!-- Header -->
+      <div class="flex shrink-0 items-start justify-between gap-2">
+        <div class="min-w-0">
+          <p
+            class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-800/85 dark:text-rep-lime/90"
+          >
+            Drive repeat sales
+          </p>
+          <p class="text-sm font-black leading-tight text-gray-900 dark:text-rep-white">Loyalty runway</p>
+        </div>
+        <span
+          class="inline-flex shrink-0 items-center gap-1 rounded-full border border-lime-200/90 bg-white/85 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-900 shadow-sm backdrop-blur-sm dark:border-rep-lime/35 dark:bg-gray-900/70 dark:text-rep-lime"
+        >
+          <i class="fas fa-bolt text-[9px] opacity-80"></i>
+          Flows live
+        </span>
+      </div>
+
+      <!-- Winback journey — narrative card -->
+      <div
+        class="relative shrink-0 overflow-hidden rounded-2xl border border-emerald-200/65 bg-white/85 p-3 shadow-md ring-1 ring-emerald-500/10 backdrop-blur-[2px] dark:border-emerald-900/45 dark:bg-gray-800/72 dark:ring-emerald-500/5"
+      >
+        <div class="relative z-[1]">
+          <div class="mb-2 flex flex-wrap items-center gap-2">
+            <span
+              class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-400"
+            >
+              <i class="fas fa-rotate-left text-emerald-600 dark:text-emerald-400"></i>
+              Winback
+            </span>
+            <span class="font-mono text-[10px] font-semibold text-gray-400">#WB-204</span>
+          </div>
+          <!-- Segment → action pipeline -->
+          <div class="flex flex-wrap items-center gap-y-2">
+            <span
+              class="inline-flex items-center rounded-full border border-amber-200/90 bg-gradient-to-br from-amber-50 to-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-900 shadow-sm dark:border-amber-800/50 dark:from-amber-950/50 dark:to-gray-900 dark:text-amber-200"
+            >
+              <i class="fas fa-user-clock mr-1 text-amber-600 dark:text-amber-400"></i>
+              30d quiet
+            </span>
+            <span class="mx-0.5 text-gray-300 dark:text-gray-600">
+              <i class="fas fa-arrow-right text-[11px]"></i>
+            </span>
+            <span
+              class="inline-flex items-center rounded-full border border-lime-300/90 bg-gradient-to-r from-rep-lime/25 to-emerald-100/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-950 dark:border-rep-lime/35 dark:from-rep-lime/15 dark:to-emerald-950/40 dark:text-rep-lime"
+            >
+              <i class="fas fa-wand-magic-sparkles mr-1 opacity-90"></i>
+              Tailored bundle
+            </span>
+          </div>
+          <p
+            class="mt-2 border-t border-gray-100/90 pt-2 text-[11px] font-semibold leading-snug text-gray-700 dark:border-gray-700/80 dark:text-gray-300"
+          >
+            Segment
+            <span class="rounded-md bg-gray-900/[0.04] px-1 font-bold text-emerald-800 dark:bg-white/10 dark:text-rep-lime">
+              Haven’t ordered in 30d
+            </span>
+            — offer sent · track opens automatically.
+          </p>
+        </div>
+      </div>
+
+      <!-- KPI slab + playbook rail -->
+      <div class="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-3">
+        <div
+          class="relative flex min-h-0 min-w-0 flex-col justify-between overflow-hidden rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-950 p-3 text-white shadow-xl shadow-emerald-900/20 dark:border-emerald-800/70 dark:from-emerald-800 dark:via-emerald-900 dark:to-rep-black"
+        >
+          <div
+            class="pointer-events-none absolute -right-4 -top-6 h-20 w-20 rounded-full bg-white/25 blur-2xl"
+            aria-hidden="true"
+          ></div>
+          <div class="relative z-[1] text-center">
+            <p class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-100/90">Pulse</p>
+            <p class="mt-0.5 text-4xl font-black tabular-nums leading-none tracking-tighter drop-shadow-[0_2px_20px_rgba(16,185,129,0.35)] sm:text-5xl">
+              {{ data.highlightStat }}
+            </p>
+            <p class="mt-2 text-[11px] font-semibold leading-snug text-emerald-50/95">
+              {{ data.highlightLabel }}
+            </p>
+          </div>
+          <div
+            class="relative z-[1] mt-3 flex justify-center gap-4 border-t border-white/15 pt-2.5 text-[10px] font-bold uppercase tracking-wide text-emerald-100/80"
+          >
+            <span class="inline-flex items-center gap-1"><i class="fas fa-chart-line opacity-75"></i> LTV</span>
+            <span class="inline-flex items-center gap-1 text-rep-lime"><i class="fas fa-bolt opacity-90"></i> Lift</span>
+          </div>
+        </div>
+
+        <div class="flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden">
+          <p
+            class="shrink-0 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-gray-400"
+          >
+            Automation mix
+          </p>
+          <div class="flex min-h-0 flex-1 flex-col justify-between gap-1.5 overflow-y-auto pr-0.5 [scrollbar-width:thin]">
+            <div
+              class="group flex shrink-0 items-center gap-2.5 rounded-xl border border-gray-100 bg-white/90 p-2 shadow-sm ring-1 ring-black/[0.03] dark:border-gray-700 dark:bg-gray-800/70 dark:ring-white/5"
+            >
+              <span
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-100 to-purple-50 text-violet-700 dark:from-violet-950/50 dark:to-purple-950/30 dark:text-violet-300"
+              >
+                <i class="fas fa-route"></i>
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-xs font-bold text-gray-900 dark:text-white">Upsell journeys</p>
+                <p class="truncate text-[10px] text-gray-500">Best-next SKU from behaviour</p>
+              </div>
+              <span class="shrink-0 rounded-md bg-emerald-50 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-400">on</span>
+            </div>
+            <div
+              class="group flex shrink-0 items-center gap-2.5 rounded-xl border border-lime-200/70 bg-gradient-to-r from-rep-lime/[0.12] to-transparent p-2 dark:border-rep-lime/25 dark:from-rep-lime/[0.08]"
+            >
+              <span
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rep-lime/25 text-rep-black dark:bg-rep-lime/35 dark:text-rep-black"
+              >
+                <i class="fas fa-gifts"></i>
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-xs font-bold text-gray-900 dark:text-white">Loyalty & winback</p>
+                <p class="truncate text-[10px] text-gray-600 dark:text-gray-400">Tiered perks · dormancy rescue</p>
+              </div>
+              <span class="shrink-0 rounded-full bg-rep-lime/40 px-1.5 py-0.5 text-[10px] font-black text-emerald-950 dark:bg-rep-lime/30 dark:text-rep-black">●</span>
+            </div>
+            <div
+              class="group flex shrink-0 items-center gap-2.5 rounded-xl border border-gray-100 bg-white/90 p-2 shadow-sm dark:border-gray-700 dark:bg-gray-800/65"
+            >
+              <span
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-sky-100 to-blue-50 text-blue-700 dark:from-blue-950/40 dark:to-sky-950/25 dark:text-sky-400"
+              >
+                <i class="fas fa-gears"></i>
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-xs font-bold text-gray-900 dark:text-white">Repeat revenue</p>
+                <p class="truncate text-[10px] text-gray-500">One engine · every trigger</p>
+              </div>
+              <span class="shrink-0 font-mono text-[9px] font-bold uppercase text-gray-400">auto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="flex shrink-0 items-center justify-between gap-3 rounded-xl border border-zinc-200/95 bg-[#0B0B0B] px-3.5 py-2.5 text-white shadow-lg ring-1 ring-white/10 dark:bg-zinc-950 dark:border-zinc-800"
+      >
+        <div class="min-w-0">
+          <p class="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">LTV impact</p>
+          <p class="truncate text-[10px] font-medium text-zinc-300">{{ data.highlightLabel }}</p>
+        </div>
+        <div class="shrink-0 text-right">
+          <span class="block text-xl font-black tabular-nums leading-none text-rep-lime sm:text-2xl">{{ data.highlightStat }}</span>
+          <span class="text-[9px] font-semibold uppercase tracking-wide text-zinc-500">multiplier</span>
         </div>
       </div>
     </div>

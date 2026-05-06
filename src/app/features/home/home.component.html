@@ -103,74 +103,75 @@
   <div class="absolute left-0 bottom-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+    <!-- Heading spans full width; next row aligns 4 cards (left) with revenue diagram (right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 lg:gap-x-14 gap-y-6 lg:gap-y-8 items-start">
 
-      <!-- Left: Heading + 4 problem cards -->
-      <div class="animate-on-scroll">
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-4 tracking-tight leading-tight">
-          Most brands lose revenue<br>
-          <span class="gradient-text">before checkout.</span>
-        </h2>
-        <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-xl mb-10 leading-relaxed">
-          Not because demand is low. Because conversations are slow, messy, or missed.
-        </p>
+      <h2 class="lg:col-span-2 animate-on-scroll text-center text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white tracking-tight leading-tight">
+        Most brands lose revenue<br>
+        <span class="gradient-text">before checkout.</span>
+      </h2>
+      <p class="lg:col-span-2 animate-on-scroll text-center text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-2xl mx-auto mb-2 lg:mb-0 leading-relaxed">
+        Not because demand is low. Because conversations are slow, messy, or missed.
+      </p>
 
-        <div class="grid sm:grid-cols-2 gap-5">
+      <!-- Left: 4 problem cards — top aligns with diagram card -->
+      <div class="animate-on-scroll lg:col-span-1 min-w-0">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 items-stretch">
           <!-- Slow Replies -->
-          <div class="problem-card animate-on-scroll delay-1 premium-card rounded-2xl p-6">
-            <div class="w-10 h-10 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
+          <div class="problem-card animate-on-scroll delay-1 premium-card rounded-2xl p-6 flex flex-col h-full">
+            <div class="w-10 h-10 shrink-0 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
               <i class="fas fa-clock text-lime-700 dark:text-rep-lime"></i>
             </div>
-            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2">Slow replies</h3>
-            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2 shrink-0">Slow replies</h3>
+            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed flex-1 mb-0">
               Customers don't wait. They buy from whoever responds first.
             </p>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+            <div class="mt-auto pt-4 flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400 shrink-0">
               <i class="fas fa-arrow-trend-up"></i>
               67% switch to competitors
             </div>
           </div>
 
           <!-- Missed DMs -->
-          <div class="problem-card animate-on-scroll delay-2 premium-card rounded-2xl p-6">
-            <div class="w-10 h-10 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
+          <div class="problem-card animate-on-scroll delay-2 premium-card rounded-2xl p-6 flex flex-col h-full">
+            <div class="w-10 h-10 shrink-0 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
               <i class="fas fa-comment-slash text-lime-700 dark:text-rep-lime"></i>
             </div>
-            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2">Missed DMs</h3>
-            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2 shrink-0">Missed DMs</h3>
+            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed flex-1 mb-0">
               Leads disappear silently when no one sees the message in time.
             </p>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+            <div class="mt-auto pt-4 flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400 shrink-0">
               <i class="fas fa-arrow-trend-up"></i>
               38% of DMs go unseen
             </div>
           </div>
 
           <!-- Cart Drop-offs -->
-          <div class="problem-card animate-on-scroll delay-3 premium-card rounded-2xl p-6">
-            <div class="w-10 h-10 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
+          <div class="problem-card animate-on-scroll delay-3 premium-card rounded-2xl p-6 flex flex-col h-full">
+            <div class="w-10 h-10 shrink-0 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
               <i class="fas fa-cart-arrow-down text-lime-700 dark:text-rep-lime"></i>
             </div>
-            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2">Cart drop-offs</h3>
-            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2 shrink-0">Cart drop-offs</h3>
+            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed flex-1 mb-0">
               Interest fades without follow-ups, offers, or payment nudges.
             </p>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+            <div class="mt-auto pt-4 flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400 shrink-0">
               <i class="fas fa-arrow-trend-up"></i>
               70% abandon carts
             </div>
           </div>
 
           <!-- Bad Reviews -->
-          <div class="problem-card animate-on-scroll delay-4 premium-card rounded-2xl p-6">
-            <div class="w-10 h-10 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
+          <div class="problem-card animate-on-scroll delay-4 premium-card rounded-2xl p-6 flex flex-col h-full">
+            <div class="w-10 h-10 shrink-0 bg-lime-50 dark:bg-rep-lime/10 border border-lime-200 dark:border-rep-lime/25 rounded-xl flex items-center justify-center mb-4">
               <i class="fas fa-face-frown text-lime-700 dark:text-rep-lime"></i>
             </div>
-            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2">Bad reviews</h3>
-            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed mb-4">
+            <h3 class="text-gray-900 dark:text-zinc-50 font-black text-base mb-2 shrink-0">Bad reviews</h3>
+            <p class="text-gray-500 dark:text-zinc-300 text-sm leading-relaxed flex-1 mb-0">
               Unresolved issues go public and scare away future buyers.
             </p>
-            <div class="flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400">
+            <div class="mt-auto pt-4 flex items-center gap-1.5 text-xs font-bold text-red-500 dark:text-red-400 shrink-0">
               <i class="fas fa-arrow-trend-up"></i>
               1 bad review ≈ 22 lost sales
             </div>
@@ -178,8 +179,8 @@
         </div>
       </div>
 
-      <!-- Right: Revenue-leak diagram -->
-      <div class="animate-on-scroll delay-2">
+      <!-- Right: Revenue-leak diagram — same vertical start as card row -->
+      <div class="animate-on-scroll delay-2 lg:col-span-1 min-w-0 w-full">
         <div class="bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 rounded-3xl p-5 sm:p-7 relative overflow-hidden">
           <div class="absolute top-0 right-0 w-40 h-40 bg-rep-lime/5 rounded-full blur-2xl pointer-events-none"></div>
 
@@ -513,162 +514,214 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════════════════════
-     SECTION 7 — ONE PLATFORM. EVERY INDUSTRY.
+     SECTION 7 — ONE PLATFORM · EVERY INDUSTRY (Spotlight story + thumbnails)
 ════════════════════════════════════════════════════════════════════════════ -->
-<section id="use-cases" class="py-12 sm:py-16 bg-white dark:bg-rep-black relative overflow-hidden">
-  <!-- Ambient blobs -->
-  <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-rep-lime/4 rounded-full blur-3xl pointer-events-none"></div>
-  <div class="absolute right-0 top-0 w-72 h-72 bg-purple-500/4 rounded-full blur-3xl pointer-events-none"></div>
+<section id="use-cases" class="relative overflow-hidden bg-[#FAFAF8] py-14 sm:py-20 dark:bg-[#060606]">
+  <div class="pattern-plus absolute inset-0 pointer-events-none opacity-[0.65] dark:opacity-[0.5]" aria-hidden="true"></div>
+  <div
+    class="pointer-events-none absolute -left-20 top-0 h-[380px] w-[380px] rounded-full bg-rep-lime/[0.06] blur-3xl dark:bg-rep-lime/[0.07]"
+    aria-hidden="true"
+  ></div>
+  <div
+    class="pointer-events-none absolute -right-12 bottom-0 h-72 w-72 rounded-full bg-zinc-400/[0.07] blur-3xl dark:bg-zinc-500/[0.08]"
+    aria-hidden="true"
+  ></div>
 
-  <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-
-    <!-- Header -->
-    <div class="text-center mb-7 sm:mb-9 animate-on-scroll">
-      <p class="text-xs font-bold uppercase tracking-[0.18em] text-lime-700 dark:text-rep-lime mb-2">✦ Industry Solutions</p>
-      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 dark:text-rep-white mb-3 tracking-tight leading-tight">
-        One Platform.
-        <span class="gradient-text"> Every Industry.</span>
-      </h2>
-      <p class="text-gray-500 text-sm sm:text-base max-w-xl mx-auto">
-        RepMeUp adapts to how your industry talks, sells, and grows.
+  <div class="relative z-10 mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-12">
+    <!-- Headline + proposition -->
+    <div class="animate-on-scroll mx-auto mb-10 max-w-3xl text-center sm:mb-14">
+      <p class="mb-3 text-[11px] font-black uppercase tracking-[0.22em] text-lime-800/90 dark:text-rep-lime/90">
+        Industry playbook
       </p>
+      <h2 class="mb-4 text-[1.65rem] font-black tracking-tight text-gray-900 dark:text-rep-white sm:text-3xl lg:text-[2.75rem] lg:leading-[1.1]">
+        One platform<span class="text-zinc-400 dark:text-zinc-500">.</span>
+        <span class="gradient-text"><span class="hidden sm:inline"><br /></span>Every industry.</span>
+      </h2>
+      <p class="mx-auto mb-8 max-w-2xl text-base leading-relaxed text-gray-600 dark:text-zinc-400 sm:text-[1.05rem]">
+        RepMeUp adapts vocabulary, objections, and next steps to how your industry talks, sells, and grows—without
+        another siloed tool stack.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+        <span
+          class="inline-flex items-center gap-2 rounded-full border border-gray-200/90 bg-white/90 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-sm dark:border-white/[0.08] dark:bg-zinc-900/70 dark:text-zinc-200">
+          <i class="fas fa-language text-emerald-600 dark:text-rep-lime"></i>
+          Industry-aware tone
+        </span>
+        <span
+          class="inline-flex items-center gap-2 rounded-full border border-gray-200/90 bg-white/90 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-sm dark:border-white/[0.08] dark:bg-zinc-900/70 dark:text-zinc-200">
+          <i class="fas fa-wand-magic-sparkles text-emerald-600 dark:text-rep-lime"></i>
+          One AI, tuned per vertical
+        </span>
+        <span
+          class="inline-flex items-center gap-2 rounded-full border border-gray-200/90 bg-white/90 px-3.5 py-2 text-xs font-bold text-gray-800 shadow-sm dark:border-white/[0.08] dark:bg-zinc-900/70 dark:text-zinc-200">
+          <i class="fas fa-comments text-emerald-600 dark:text-rep-lime"></i>
+          Omnichannel-ready
+        </span>
+      </div>
     </div>
 
-    <!-- Industry tab strip -->
-    <div class="industry-tabs-strip flex gap-1.5 overflow-x-auto pb-2 mb-6 justify-start lg:justify-center animate-on-scroll delay-1">
-      <button
-        *ngFor="let card of industryCards"
-        type="button"
-        (click)="setActiveIndustryTab(card.id)"
-        [class.industry-tab--active]="activeIndustryTab === card.id"
-        class="industry-tab shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs sm:text-sm font-semibold transition-all duration-200 whitespace-nowrap">
-        <i [class]="card.icon + ' text-xs'"></i>
-        {{ card.label }}
-      </button>
-    </div>
-
-    <!-- All 6 cards grid — each always visible, active one highlighted -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 items-start animate-on-scroll delay-2">
+    <!-- Industry picker -->
+    <div class="animate-on-scroll mb-8 delay-1 lg:mb-10" role="tablist" aria-label="Choose industry">
+      <p class="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-500">Explore by industry</p>
       <div
-        *ngFor="let card of industryCards"
-        (click)="setActiveIndustryTab(card.id)"
-        class="industry-card group relative rounded-xl sm:rounded-2xl border overflow-hidden cursor-pointer transition-all duration-300 flex flex-col w-full"
-        [class.industry-card--active]="activeIndustryTab === card.id">
+        class="industry-pill-strip no-scrollbar mx-auto flex max-w-full snap-x gap-2 overflow-x-auto pb-1 sm:justify-center">
+        <button
+          *ngFor="let card of industryCards"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeIndustryTab === card.id"
+          (click)="setActiveIndustryTab(card.id)"
+          class="industry-pill group inline-flex shrink-0 snap-center items-center gap-2 rounded-xl border px-3.5 py-2.5 text-left text-[13px] font-bold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-rep-lime focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950"
+          [class.industry-pill--active]="activeIndustryTab === card.id"
+          [class.industry-pill--idle]="activeIndustryTab !== card.id">
+          <span
+            class="industry-pill-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700 transition-colors dark:bg-zinc-800 dark:text-zinc-200">
+            <i [class]="card.icon + ' text-[13px]'"></i>
+          </span>
+          <span class="whitespace-nowrap text-gray-900 dark:text-white">{{ card.label }}</span>
+        </button>
+      </div>
+    </div>
 
-        <!-- Top gradient accent bar -->
-        <div class="absolute top-0 left-0 right-0 h-[3px] industry-card__accent"
-             [style.background]="'linear-gradient(90deg,' + card.accentFrom + ',' + card.accentTo + ')'"></div>
-
-        <!-- Photo: 16:9 — less vertical space than 4:3; CDN 800×450 matches frame (full scene, pro card ratio) -->
-        <div
-          class="industry-card-hero relative w-full aspect-video overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0">
+    <!-- Spotlight panel -->
+    <div
+      class="animate-on-scroll delay-2 grid gap-8 rounded-[1.75rem] border border-black/[0.06] bg-white/80 p-4 shadow-[0_28px_80px_-32px_rgba(0,0,0,0.35)] ring-1 ring-black/[0.03] backdrop-blur-sm dark:border-white/[0.06] dark:bg-[#0c0c0c]/95 dark:shadow-[0_40px_100px_-40px_rgba(0,0,0,0.85)] sm:p-6 lg:grid-cols-12 lg:gap-10 lg:p-9">
+      <!-- Hero photo -->
+      <div class="relative min-h-0 lg:col-span-7">
+        <div class="relative overflow-hidden rounded-2xl sm:rounded-3xl lg:aspect-auto lg:min-h-[340px]">
           <img
-            [src]="card.imageUrl"
-            [alt]="card.imageAlt"
-            class="industry-card-hero-img absolute inset-0 h-full w-full object-cover object-[center_30%] pointer-events-none select-none"
+            [src]="activeIndustry.imageUrl"
+            [alt]="activeIndustry.imageAlt"
+            class="aspect-[16/10] h-full max-h-[min(52vw,440px)] w-full object-cover object-center sm:max-h-none lg:min-h-full lg:max-h-none"
             loading="lazy"
             decoding="async"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            width="800"
-            height="450" />
-          <div class="absolute bottom-0 left-0 right-0 h-px bg-black/[0.06] dark:bg-white/[0.08] pointer-events-none"></div>
+            sizes="(max-width: 1024px) 100vw, 58vw"
+            width="1200"
+            height="750"
+          />
+          <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/82 via-black/25 to-transparent" aria-hidden="true"></div>
+          <div class="pointer-events-none absolute left-4 top-4 hidden items-center gap-2 sm:flex">
+            <span
+              class="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white ring-1 ring-white/25 backdrop-blur-md">Real playbook</span>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+            <div class="mb-3 flex flex-wrap gap-2">
+              <span
+                class="inline-flex items-center gap-2 rounded-xl border border-white/[0.2] bg-white/[0.12] px-3 py-1.5 text-[11px] font-black text-white ring-1 ring-white/[0.15] backdrop-blur-md">
+                <span class="text-lg font-black leading-none tabular-nums text-rep-lime" style="text-shadow: 0 0 22px rgba(216,255,0,0.35)">{{ activeIndustry.stat }}</span>
+                <span class="text-[11px] font-semibold text-white/90">{{ activeIndustry.statLabel }}</span>
+              </span>
+            </div>
+            <h3 class="text-xl font-black tracking-tight text-white sm:text-2xl">{{ activeIndustry.label }}</h3>
+          </div>
         </div>
+      </div>
 
-        <!-- Chat: compact preview (2 turns); scroll if needed -->
-        <div
-          class="industry-chat-panel shrink-0 px-1.5 py-1.5 bg-zinc-100/95 dark:bg-zinc-900/90 border-b border-zinc-200/80 dark:border-zinc-800/80">
-          <p class="text-[8px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-1 px-0.5">Sample DM</p>
-          <div
-            class="flex flex-col rounded-lg overflow-hidden border border-zinc-200/90 dark:border-zinc-700/90 shadow-sm bg-white dark:bg-zinc-950">
+      <!-- Narrative + one conversation preview -->
+      <div class="flex min-h-0 flex-col lg:col-span-5">
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+          <span
+            class="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200/90 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-zinc-900 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
+            <span class="h-2 w-2 animate-pulse rounded-full bg-rep-lime shadow-[0_0_12px_rgba(216,255,0,0.45)]" aria-hidden="true"></span>
+            {{ activeIndustry.botName }}
+          </span>
+          <span class="font-mono text-[10px] font-semibold text-zinc-400">scenario preview</span>
+        </div>
+        <p class="mb-6 text-[15px] leading-relaxed text-gray-700 dark:text-zinc-300">{{ activeIndustry.summary }}</p>
 
-            <div class="relative flex items-center justify-between px-2 py-1 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shrink-0">
-              <span class="text-[9px] font-bold text-zinc-500">9:41</span>
-              <div class="absolute left-1/2 -translate-x-1/2 top-1 w-8 h-1.5 bg-zinc-900/90 rounded-full"></div>
-              <i class="fab fa-instagram text-pink-500 text-[10px]" aria-hidden="true"></i>
-            </div>
-            <div class="flex items-center gap-1 px-2 py-1 bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-              <i class="fas fa-chevron-left text-[10px] text-zinc-600"></i>
-              <div
-                class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-white text-[10px]"
-                [style.background]="'linear-gradient(135deg,' + card.accentFrom + ',' + card.accentTo + ')'">
-                <i [class]="card.icon"></i>
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-[10px] font-bold text-zinc-800 dark:text-zinc-100 leading-tight truncate">{{ card.botName }}</p>
-                <p class="text-[9px] text-emerald-600 dark:text-emerald-400">Active now</p>
-              </div>
-            </div>
-
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-zinc-200/85 bg-zinc-100/90 shadow-inner dark:border-zinc-800 dark:bg-zinc-950">
+          <div class="relative flex items-center justify-between border-b border-zinc-200/95 bg-white/90 px-3 py-1.5 dark:border-zinc-800 dark:bg-zinc-900/95">
+            <span class="text-[9px] font-bold tabular-nums text-zinc-500">9:41</span>
             <div
-              class="industry-card-chat max-h-[5.75rem] min-h-[4.25rem] overflow-y-auto overscroll-contain px-2 py-1.5 space-y-1 bg-[#E8E8EA] dark:bg-zinc-950">
-              <ng-container *ngFor="let msg of card.chat | slice:0:4">
-                <div *ngIf="msg.from === 'customer'" class="flex justify-end">
-                  <div
-                    class="rounded-xl rounded-br-sm px-2 py-1 max-w-[94%] text-white text-[9px] leading-snug shadow-sm"
-                    [style.background]="'linear-gradient(135deg,' + card.accentFrom + ',' + card.accentTo + ')'">
-                    {{ msg.text }}
-                  </div>
-                </div>
-                <div *ngIf="msg.from === 'bot'" class="flex gap-1 items-end max-w-[98%]">
-                  <div
-                    class="w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-zinc-900"
-                    [style.background]="card.accentFrom">
-                    <i [class]="card.icon" class="text-[8px]"></i>
-                  </div>
-                  <div
-                    class="rounded-xl rounded-bl-sm px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700/60 max-w-full shadow-sm">
-                    <p class="text-[9px] text-zinc-800 dark:text-zinc-100 leading-snug whitespace-pre-line">
-                      {{ msg.text }}
-                    </p>
-                    <span
-                      *ngIf="msg.tag"
-                      class="inline-flex mt-0.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold text-white"
-                      [style.background]="card.accentFrom + 'dd'">✓ {{ msg.tag }}</span>
-                  </div>
-                </div>
-              </ng-container>
+              class="pointer-events-none absolute left-1/2 top-2 h-1.5 w-8 max-w-[32px] -translate-x-1/2 rounded-full bg-zinc-900/85 dark:bg-zinc-200/85"
+              aria-hidden="true"></div>
+            <i class="fab fa-instagram text-zinc-500 text-[11px]" aria-hidden="true"></i>
+          </div>
+          <div class="relative flex shrink-0 items-center gap-1.5 border-b border-zinc-200/95 bg-white px-2 py-1.5 dark:border-zinc-800 dark:bg-zinc-900">
+            <i class="fas fa-chevron-left text-[10px] text-zinc-500"></i>
+            <div
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0B0B0B] text-rep-lime shadow-sm dark:bg-zinc-800">
+              <i [class]="activeIndustry.icon + ' text-[11px]'"></i>
+            </div>
+            <div class="min-w-0 flex-1 leading-tight">
+              <p class="truncate text-[11px] font-bold text-zinc-900 dark:text-zinc-100">{{ activeIndustry.botName }}</p>
+              <p class="text-[9px] font-semibold text-lime-800 dark:text-rep-lime">Active now</p>
             </div>
           </div>
-        </div>
-
-        <!-- Card footer -->
-        <div class="p-2.5 sm:p-3 bg-white dark:bg-rep-black border-t border-gray-100 dark:border-gray-800/60 shrink-0">
-          <div class="flex items-center justify-between gap-2 mb-1.5">
-            <div class="flex items-center gap-1.5 min-w-0">
-              <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                   [style.background]="card.accentFrom + '22'">
-                <i [class]="card.icon" class="text-[10px]" [style.color]="card.accentFrom"></i>
+          <div
+            class="industry-mini-chat max-h-[200px] min-h-[132px] flex-1 space-y-2 overflow-y-auto bg-[#E8E8EA] px-2.5 py-2.5 dark:bg-zinc-950 [scrollbar-width:thin]">
+            <ng-container *ngFor="let msg of activeIndustry.chat | slice: 0 : 4">
+              <div *ngIf="msg.from === 'customer'" class="flex justify-end">
+                <div
+                  class="max-w-[92%] rounded-2xl rounded-br-sm border border-zinc-200/90 bg-zinc-200/98 px-2.5 py-1.5 text-[11px] font-semibold leading-snug text-zinc-900 shadow-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100">
+                  {{ msg.text }}
+                </div>
               </div>
-              <span class="text-xs sm:text-sm font-black text-gray-900 dark:text-white leading-tight truncate">{{ card.label }}</span>
-            </div>
-            <div class="text-right shrink-0">
-              <p class="text-sm font-black leading-none" [style.color]="card.accentFrom">{{ card.stat }}</p>
-              <p class="text-[9px] text-gray-500 leading-tight">{{ card.statLabel }}</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <ng-container *ngFor="let ch of card.channels">
-              <i [class]="ch.icon + ' ' + ch.color" class="text-xs"></i>
+              <div *ngIf="msg.from === 'bot'" class="flex items-end gap-1.5">
+                <div
+                  class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0B0B0B] text-rep-lime shadow-sm dark:bg-zinc-800">
+                  <i [class]="activeIndustry.icon + ' text-[9px]'"></i>
+                </div>
+                <div class="flex-1 rounded-2xl rounded-bl-sm border border-zinc-200/90 bg-white px-2.5 py-1.5 text-[11px] leading-snug text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
+                  <p class="whitespace-pre-line">{{ msg.text }}</p>
+                  <span
+                    *ngIf="msg.tag"
+                    class="mt-2 inline-flex rounded-full border border-rep-lime/55 bg-rep-lime px-2 py-0.5 text-[9px] font-black text-rep-black">
+                    ✓ {{ msg.tag }}</span>
+                </div>
+              </div>
             </ng-container>
-            <span class="text-[9px] text-gray-400 ml-auto">RepMeUp AI</span>
+          </div>
+          <div class="flex flex-wrap gap-3 border-t border-zinc-200/95 bg-white/95 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/80">
+            <ng-container *ngFor="let ch of activeIndustry.channels">
+              <i [class]="ch.icon + ' text-sm text-zinc-400 opacity-95 dark:text-zinc-500'" aria-hidden="true"></i>
+            </ng-container>
+            <span class="ml-auto text-[10px] font-bold uppercase tracking-wide text-zinc-400">RepMeUp AI</span>
           </div>
         </div>
-
-      </div><!-- /industry-card -->
-    </div><!-- /grid -->
-
-    <!-- Bottom bar -->
-    <div class="mt-7 sm:mt-8 flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-800 animate-on-scroll delay-3">
-      <p class="text-gray-600 dark:text-gray-400 text-sm font-medium text-center sm:text-left">
-        Your industry. Your customers. <span class="font-bold text-gray-900 dark:text-white">Your growth.</span>
-      </p>
-      <button (click)="navigateToRegister()"
-        class="shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-gray-900 font-black text-sm rounded-xl hover:bg-lime-300 hover:shadow-xl hover:shadow-rep-lime/25 transition-all">
-        See How It Works
-        <i class="fas fa-arrow-right text-xs"></i>
-      </button>
+      </div>
     </div>
 
+    <!-- Thumbnail rail -->
+    <div class="animate-on-scroll mt-8 delay-3 lg:mt-10">
+      <p class="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-500">Switch scenario</p>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <button
+          *ngFor="let card of industryCards"
+          type="button"
+          (click)="setActiveIndustryTab(card.id)"
+          class="industry-thumb group relative overflow-hidden rounded-2xl border border-zinc-200/85 bg-white text-left transition-all duration-200 hover:border-zinc-300 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-rep-lime dark:border-white/[0.08] dark:bg-zinc-900 dark:hover:border-zinc-600"
+          [class.industry-thumb--active]="activeIndustryTab === card.id">
+          <div class="relative aspect-[4/3] w-full overflow-hidden">
+            <img
+              [src]="card.imageUrl"
+              [alt]="card.imageAlt"
+              class="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+              loading="lazy" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" aria-hidden="true"></div>
+            <div class="absolute bottom-2 left-2 right-2">
+              <p class="truncate text-[11px] font-black text-white drop-shadow-sm">{{ card.label }}</p>
+              <p class="truncate font-mono text-[9px] font-bold tabular-nums text-rep-lime">{{ card.stat }} · {{ card.statLabel }}</p>
+            </div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer CTA -->
+    <div
+      class="animate-on-scroll mt-10 delay-4 flex flex-col items-center justify-between gap-4 rounded-2xl border border-gray-200/90 bg-gray-50/90 px-5 py-4 dark:border-white/[0.08] dark:bg-white/[0.03] sm:flex-row sm:px-8 sm:py-5">
+      <p class="text-center text-[15px] font-medium leading-snug text-gray-700 dark:text-zinc-300 sm:text-left">
+        Your segment. Your tone. Your channels.<span class="mt-1 block font-black text-gray-900 dark:text-rep-white">One stack to run them.</span>
+      </p>
+      <button
+        type="button"
+        (click)="navigateToRegister()"
+        class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-rep-lime px-7 py-3.5 text-sm font-black text-gray-950 shadow-[0_12px_32px_-8px_rgba(216,255,0,0.45)] transition-all hover:bg-lime-300 hover:shadow-xl dark:text-rep-black">
+        See How It Works
+        <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
+      </button>
+    </div>
   </div>
 </section>
 
@@ -682,18 +735,19 @@
   <div class="section-divider absolute top-0 left-0 right-0"></div>
 
   <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-    <div class="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+    <!-- Heading + subcopy full width; next row aligns “The result?” (left) with VS table (right) — matches “Problem” section pattern -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-10 lg:gap-x-14 gap-y-6 lg:gap-y-8 items-start">
 
-      <!-- Left: heading + result pillars -->
-      <div class="animate-on-scroll">
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white mb-5 leading-tight tracking-tight">
-          The smarter move for<br>
-          <span class="gradient-text">your business.</span>
-        </h2>
-        <p class="text-gray-500 dark:text-gray-400 text-base sm:text-xl mb-8 leading-relaxed max-w-xl">
-          Replace manual work and a stack of disconnected tools with one AI platform that actually moves the needle.
-        </p>
+      <h2 class="lg:col-span-2 animate-on-scroll text-center text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 dark:text-rep-white tracking-tight leading-tight">
+        The smarter move for<br>
+        <span class="gradient-text">your business.</span>
+      </h2>
+      <p class="lg:col-span-2 animate-on-scroll text-center text-gray-500 dark:text-gray-400 text-base sm:text-xl max-w-2xl mx-auto mb-2 lg:mb-0 leading-relaxed">
+        Replace manual work and a stack of disconnected tools with one AI platform that actually moves the needle.
+      </p>
 
+      <!-- Left: result pillars only — top aligns with VS card -->
+      <div class="animate-on-scroll lg:col-span-1 min-w-0">
         <div class="rounded-3xl bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 p-6 sm:p-7">
           <p class="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-5">The result?</p>
           <ul class="space-y-4">
@@ -725,8 +779,8 @@
         </div>
       </div>
 
-      <!-- Right: VS comparison table -->
-      <div class="animate-on-scroll delay-2">
+      <!-- Right: VS comparison table — same vertical start as left panel -->
+      <div class="animate-on-scroll delay-2 lg:col-span-1 min-w-0 w-full">
         <div class="vs-table rounded-3xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm bg-white dark:bg-gray-900/60">
 
           <!-- Header row -->

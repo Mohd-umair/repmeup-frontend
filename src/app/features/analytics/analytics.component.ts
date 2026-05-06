@@ -22,6 +22,7 @@ import { SentimentDonutChartComponent } from '../../shared/components/charts/sen
 import { PlatformBarChartComponent } from '../../shared/components/charts/platform-bar-chart.component';
 import { ResponseTimeHistogramComponent } from '../../shared/components/charts/response-time-histogram.component';
 import { AgentPerformanceChartComponent } from '../../shared/components/charts/agent-performance-chart.component';
+import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 /**
  * Analytics Component - Scalable analytics dashboard
@@ -34,7 +35,8 @@ import { AgentPerformanceChartComponent } from '../../shared/components/charts/a
     CommonModule, ReactiveFormsModule, FormsModule,
     TimeSeriesChartComponent, SentimentDonutChartComponent,
     PlatformBarChartComponent, ResponseTimeHistogramComponent,
-    AgentPerformanceChartComponent
+    AgentPerformanceChartComponent,
+    AiChatBubbleIconComponent
   ],
   templateUrl: './analytics.component.html',
   styleUrls: ['./analytics.component.scss']

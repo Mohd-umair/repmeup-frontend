@@ -7,6 +7,7 @@ import { CatalogService, IImportSummary } from '../../core/services/catalog.serv
 import { MediaLibraryService } from '../../core/services/media-library.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
+import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { IProduct, ICommentToDmSettings } from '../../core/models/product.model';
 import { environment } from '../../../environments/environment';
 
@@ -17,7 +18,7 @@ type ActiveTab = 'products' | 'automation';
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadZoneComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadZoneComponent, AiChatBubbleIconComponent],
   templateUrl: './catalog.component.html',
   styleUrls: ['./catalog.component.scss'],
 })

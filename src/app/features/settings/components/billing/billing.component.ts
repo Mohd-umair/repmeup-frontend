@@ -11,10 +11,13 @@ import {
 } from '../../../../core/services/subscription.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { RazorpayService } from '../../../../core/services/razorpay.service';
+import { AiChatBubbleIconComponent } from '../../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 interface UsageMetric {
   label: string;
+  /** Font Awesome classes when iconKind is 'fontawesome' */
   icon: string;
+  iconKind?: 'fontawesome' | 'ai-bubble';
   key: keyof ISubscriptionLimits['usage'];
   limitKey: keyof ISubscriptionLimits['limits'];
   color: string;
@@ -40,7 +43,7 @@ interface PlanCard {
 @Component({
   selector: 'app-billing',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent],
   templateUrl: './billing.component.html',
   styleUrls: ['./billing.component.scss']
 })
@@ -81,7 +84,8 @@ export class BillingComponent implements OnInit, OnDestroy {
     },
     {
       label: 'AI Replies This Month',
-      icon: 'fas fa-robot',
+      icon: '',
+      iconKind: 'ai-bubble',
       key: 'autoRepliesThisMonth',
       limitKey: 'maxAutoRepliesPerMonth',
       color: 'orange'

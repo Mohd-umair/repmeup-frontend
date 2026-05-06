@@ -9,13 +9,14 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { SimpleDonutChartComponent, DonutSegment } from '../../shared/components/charts/simple-donut-chart.component';
 import { NotificationService } from '../../core/services/notification.service';
 import { SweetAlertService } from '../../core/services/sweet-alert.service';
+import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 export interface KbTemplateField { key: string; value: string; }
 
 @Component({
   selector: 'app-knowledge-base',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, DecimalPipe, PaginationComponent, SimpleDonutChartComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, DecimalPipe, PaginationComponent, SimpleDonutChartComponent, AiChatBubbleIconComponent],
   templateUrl: './knowledge-base.component.html',
   styleUrls: ['./knowledge-base.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

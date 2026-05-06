@@ -8,6 +8,143 @@
   height: 100%;
 }
 
+// Single “plate” grouping reply toolbar icons (emoji, AI, attach, WhatsApp mode)
+.inbox-reply-toolbar-plate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgb(229 231 235 / 0.95);
+  background: rgb(255 255 255 / 0.92);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.04),
+    inset 0 1px 0 rgb(255 255 255 / 0.6);
+
+  .dark &,
+  :host-context(.dark) & {
+    border-color: rgb(55 65 81 / 0.85);
+    background: rgb(31 41 55 / 0.75);
+    box-shadow:
+      0 1px 3px rgb(0 0 0 / 0.2),
+      inset 0 1px 0 rgb(255 255 255 / 0.04);
+  }
+}
+
+.inbox-reply-toolbar-plate__divider {
+  width: 1px;
+  height: 1rem;
+  margin: 0 0.125rem;
+  flex-shrink: 0;
+  background: rgb(229 231 235);
+
+  .dark &,
+  :host-context(.dark) & {
+    background: rgb(55 65 81);
+  }
+}
+
+.inbox-reply-toolbar-plate__btn {
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: 0.625rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: rgb(107 114 128);
+  transition: color 0.15s ease, background-color 0.15s ease;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &:hover:not(:disabled) {
+    color: rgb(55 65 81);
+    background: rgb(243 244 246 / 0.95);
+
+    .dark &,
+    :host-context(.dark) & {
+      color: rgb(209 213 219);
+      background: rgb(55 65 81 / 0.55);
+    }
+  }
+
+  &--accent:hover:not(:disabled) {
+    color: rgb(17 118 116);
+
+    .dark &,
+    :host-context(.dark) & {
+      color: rgb(94 234 212);
+    }
+  }
+
+  &.is-active {
+    color: var(--platform-text-on-primary, #0a0a0a);
+    background: rgb(208 255 0 / 0.42);
+
+    .dark &,
+    :host-context(.dark) & {
+      background: rgb(208 255 0 / 0.2);
+      color: rgb(232 239 217);
+    }
+  }
+
+  /** WhatsApp free vs template mode (rep-lime affordance) */
+  &.is-mode-active {
+    box-shadow: 0 0 0 2px rgb(216 255 0 / 0.5);
+    background: rgb(208 255 0 / 0.16);
+
+    .dark &,
+    :host-context(.dark) & {
+      background: rgb(208 255 0 / 0.12);
+    }
+  }
+}
+
+// Compact plate for mic / send (same shell, slightly roomier tap targets)
+.inbox-reply-toolbar-plate--send {
+  padding: 0.125rem;
+
+  .inbox-reply-toolbar-plate__btn {
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 0.75rem;
+
+    &.is-send:not(:disabled) {
+      background: rgb(208 255 0);
+      color: var(--platform-text-on-primary, #0a0a0a);
+
+      &:hover {
+        filter: brightness(0.94);
+      }
+    }
+
+    &.is-recording {
+      background: rgb(239 68 68);
+      color: white;
+      animation: inbox-rec-pulse 1.2s ease-in-out infinite;
+
+      &:hover:not(:disabled) {
+        background: rgb(220 38 38);
+        color: white;
+      }
+    }
+  }
+}
+
+@keyframes inbox-rec-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgb(239 68 68 / 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgb(239 68 68 / 0.12);
+  }
+}
+
 @include theme.light-mode-overrides;
 
 // Empty state animations

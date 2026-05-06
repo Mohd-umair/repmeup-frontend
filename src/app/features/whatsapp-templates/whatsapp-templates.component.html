@@ -1,0 +1,157 @@
+<div class="wa-templates-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header animate-fade-in-up">
+    <div class="page-header__left">
+      <div class="page-icon">
+        <i class="fab fa-whatsapp"></i>
+      </div>
+      <div>
+        <h1 class="page-title">WhatsApp Templates</h1>
+        <p class="page-subtitle">Create and manage message templates for WhatsApp Business</p>
+      </div>
+    </div>
+    <button class="btn-wa-primary" (click)="openCreateModal()" [disabled]="!selectedConnectionId">
+      <i class="fas fa-plus"></i> New Template
+    </button>
+  </div>
+
+  <!-- ── Alerts ────────────────────────────────────────────────────────────  -->
+  <div *ngIf="dataSource === 'db_fallback'" class="alert-warning-themed">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    Meta API is temporarily unavailable. Showing cached data.
+  </div>
+  <div *ngIf="error && !loading" class="alert-danger-themed mb-4">
+    <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+  </div>
+
+  <!-- ── Toolbar ──────────────────────────────────────────────────────────── -->
+  <div class="toolbar animate-fade-in-up" style="animation-delay:.08s">
+
+    <div class="toolbar__field" *ngIf="connections.length > 0">
+      <span class="toolbar__label"><i class="fab fa-whatsapp me-1" style="color:#25D366"></i>Connection</span>
+      <select [(ngModel)]="selectedConnectionId" (change)="onConnectionChange()">
+        <option *ngFor="let c of connections" [value]="c._id">
+          {{ c.platformData?.displayPhoneNumber || c.platformUsername || c._id }}
+        </option>
+      </select>
+    </div>
+
+    <div class="toolbar__field">
+      <span class="toolbar__label">Category</span>
+      <select [(ngModel)]="filterCategory" (change)="onFilterChange()">
+        <option *ngFor="let cat of categories" [value]="cat.value">{{ cat.label }}</option>
+      </select>
+    </div>
+
+    <div class="toolbar__field">
+      <span class="toolbar__label">Status</span>
+      <select [(ngModel)]="filterStatus" (change)="onFilterChange()">
+        <option *ngFor="let s of statuses" [value]="s.value">{{ s.label }}</option>
+      </select>
+    </div>
+
+    <div class="toolbar__field toolbar__field--grow">
+      <span class="toolbar__label">Search</span>
+      <div style="display:flex;gap:.4rem;align-items:center">
+        <input type="text" placeholder="Search by template name…"
+          [(ngModel)]="searchQuery" (input)="onSearch()">
+      </div>
+    </div>
+
+    <button class="btn-icon-refresh" (click)="loadTemplates()" [disabled]="loading" title="Refresh from Meta">
+      <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+    </button>
+  </div>
+
+  <!-- ── No WhatsApp connection ────────────────────────────────────────────  -->
+  <div *ngIf="connections.length === 0 && !loading" class="empty-state animate-fade-in-up">
+    <i class="fab fa-whatsapp empty-state__icon"></i>
+    <h3 class="empty-state__title">No WhatsApp Connection</h3>
+    <p class="empty-state__text">Connect a WhatsApp Business account in <strong>Settings → Platforms</strong> first, then return here to manage your templates.</p>
+  </div>
+
+  <!-- ── Loading skeleton ─────────────────────────────────────────────────── -->
+  <div *ngIf="loading" class="skeleton-grid">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
+  </div>
+
+  <!-- ── Empty list ───────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && filteredTemplates.length === 0 && connections.length > 0 && !error"
+       class="empty-state animate-fade-in-up">
+    <i class="fas fa-file-alt empty-state__icon"></i>
+    <h3 class="empty-state__title">No Templates Found</h3>
+    <p class="empty-state__text">Create your first template to start messaging customers outside of the 24-hour window.</p>
+    <button class="btn-wa-primary mt-3" (click)="openCreateModal()">
+      <i class="fas fa-plus"></i> Create Template
+    </button>
+  </div>
+
+  <!-- ── Template grid ────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && filteredTemplates.length > 0" class="template-grid">
+    <div class="template-card animate-fade-in-up"
+         *ngFor="let t of filteredTemplates; trackBy: trackByTemplate; let i = index"
+         [style.animation-delay]="(i * 0.05) + 's'">
+
+      <div class="template-card__header">
+        <div class="template-card__meta">
+          <span class="template-cat" [ngClass]="categoryClass(t.category)">
+            <i class="fas" [ngClass]="categoryIcon(t.category)"></i>
+            {{ t.category | titlecase }}
+          </span>
+          <span class="template-card__lang">{{ t.language }}</span>
+        </div>
+        <span class="status-badge" [ngClass]="statusClass(t.status)">
+          <i class="fas" [ngClass]="statusIcon(t.status)"></i>
+          {{ t.status | titlecase }}
+        </span>
+      </div>
+
+      <h3 class="template-card__name">{{ t.name }}</h3>
+
+      <p class="template-card__preview">{{ bodyText(t) || '— no body text —' }}</p>
+
+      <div class="template-card__quality" *ngIf="t.quality_score?.score || t.qualityScore">
+        <span class="quality-label">Quality</span>
+        <span class="d-flex align-items-center gap-1" [ngClass]="getQualityClass(t.quality_score?.score || t.qualityScore)">
+          <i class="fas fa-circle" style="font-size:.5rem"></i>
+          {{ t.quality_score?.score || t.qualityScore }}
+        </span>
+      </div>
+
+      <div class="template-card__rejection"
+           *ngIf="t.status === 'REJECTED' && (t.rejected_reason || t.rejectedReason)">
+        <i class="fas fa-info-circle me-1"></i>
+        {{ t.rejected_reason || t.rejectedReason }}
+      </div>
+
+      <div class="template-card__footer">
+        <span class="template-card__id" *ngIf="t.id || t.metaTemplateId">
+          ID: {{ t.id || t.metaTemplateId }}
+        </span>
+        <button
+          type="button"
+          class="btn-icon-danger"
+          (click)="$event.stopPropagation(); deleteTemplate(t)"
+          title="Delete template">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Create Template Modal ──────────────────────────────────────────────── -->
+<div class="modal-overlay" *ngIf="showCreateModal" (click)="closeCreateModal()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <button class="modal-close-btn" (click)="closeCreateModal()" aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
+    <app-template-create
+      [connectionId]="selectedConnectionId"
+      (created)="onTemplateCreated()"
+      (cancelled)="closeCreateModal()">
+    </app-template-create>
+  </div>
+</div>

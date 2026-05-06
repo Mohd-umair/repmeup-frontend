@@ -113,8 +113,8 @@
   </li>
 </ul>
 
-<!-- Above parent modals (e.g. raise ticket z-50) -->
-<div *ngIf="showGallery" class="fixed inset-0 z-[200]">
+<!-- Stack above embedding modals when galleryOverlayZIndex is raised -->
+<div *ngIf="showGallery" class="fixed inset-0" [style.z-index]="galleryOverlayZIndex">
   <app-media-selector-modal
     [allowMultiple]="multiple"
     [mediaType]="galleryMediaType"

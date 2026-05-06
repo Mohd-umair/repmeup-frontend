@@ -4,10 +4,12 @@ import { Router, RouterModule } from '@angular/router';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
 import { NotificationService } from '../../core/services/notification.service';
 
+import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
+
 @Component({
   selector: 'app-plans',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AiChatBubbleIconComponent],
   templateUrl: './plans.component.html',
   styleUrls: ['./plans.component.scss']
 })

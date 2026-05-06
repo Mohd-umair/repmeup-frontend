@@ -89,10 +89,18 @@ export class WhatsAppConnectComponent implements OnInit, OnDestroy {
   async connect(): Promise<void> {
     this.connecting = true;
     try {
-      await this.platformService.connectWhatsAppOAuth();
-      // Popup closed — backend has handled redirect; reload connections
+      const result = await this.platformService.connectWhatsAppOAuth();
       this.connectionsChanged.emit();
       this.platformConnectionService.refresh().subscribe();
+
+      if (result.success) {
+        this.notificationService.success(
+          'WhatsApp Connected',
+          `${result.count ?? 1} WhatsApp Business number(s) connected successfully!`
+        );
+      } else if (!result.cancelled && result.error) {
+        this.notificationService.error('WhatsApp Connection Failed', result.error);
+      }
     } catch (err: any) {
       this.notificationService.error(
         'Connection Failed',

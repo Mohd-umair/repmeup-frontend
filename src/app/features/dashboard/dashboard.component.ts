@@ -21,6 +21,7 @@ import { TimeSeriesChartComponent } from '../../shared/components/charts/time-se
 import { SentimentDonutChartComponent } from '../../shared/components/charts/sentiment-donut-chart.component';
 import { SimpleDonutChartComponent, DonutSegment } from '../../shared/components/charts/simple-donut-chart.component';
 import { PlatformBarChartComponent } from '../../shared/components/charts/platform-bar-chart.component';
+import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 export interface IntentBucket {
   key: string;
@@ -41,7 +42,8 @@ export interface IntentBucket {
     TimeSeriesChartComponent,
     SentimentDonutChartComponent,
     SimpleDonutChartComponent,
-    PlatformBarChartComponent
+    PlatformBarChartComponent,
+    AiChatBubbleIconComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']

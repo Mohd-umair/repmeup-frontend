@@ -59,7 +59,8 @@
                ? 'bg-rep-lime text-rep-black'
                : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'">
           <i *ngIf="step.done" class="fas fa-check text-xs"></i>
-          <i *ngIf="!step.done" class="{{ step.icon }} text-xs"></i>
+          <app-ai-chat-bubble-icon *ngIf="!step.done && step.useAiBrandIcon" iconClass="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+          <i *ngIf="!step.done && !step.useAiBrandIcon" class="{{ step.icon }} text-xs"></i>
         </div>
 
         <!-- Content -->

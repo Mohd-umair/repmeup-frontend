@@ -1402,6 +1402,105 @@ section.home-hero .hero-particle {
   }
 }
 
+// ── Industry section (v2) — pill strip, spotlight, thumbnail rail ───────────
+:host .no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+:host .industry-pill-strip {
+  -webkit-overflow-scrolling: touch;
+}
+
+:host .industry-pill {
+  &--idle {
+    border-color: rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.92);
+    color: rgba(17, 24, 39, 0.9);
+
+    &:hover {
+      border-color: rgba(0, 0, 0, 0.12);
+      box-shadow: 0 8px 28px -14px rgba(0, 0, 0, 0.14);
+    }
+  }
+
+  &--active {
+    border-color: rgba(188, 239, 74, 0.45);
+    background: linear-gradient(165deg, rgba(188, 239, 74, 0.12) 0%, rgba(255, 255, 255, 1) 52%);
+    box-shadow:
+      0 0 0 1px rgba(188, 239, 74, 0.2),
+      0 16px 42px -22px rgba(0, 0, 0, 0.22);
+
+    .industry-pill-icon {
+      background: rgba(17, 24, 39, 0.94) !important;
+      color: #bcef4a !important;
+    }
+  }
+}
+
+:host-context(html.dark) .industry-pill.industry-pill--idle {
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.88);
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+:host-context(html.dark) .industry-pill.industry-pill--active {
+  border-color: rgba(216, 255, 0, 0.45);
+  background: linear-gradient(165deg, rgba(216, 255, 0, 0.1) 0%, rgba(12, 12, 12, 0.92) 56%);
+  box-shadow:
+    0 0 0 1px rgba(216, 255, 0, 0.28),
+    0 20px 50px -24px rgba(0, 0, 0, 0.85);
+
+  .industry-pill-icon {
+    background: rgba(216, 255, 0, 0.9) !important;
+    color: #0b0b0b !important;
+  }
+}
+
+:host .industry-mini-chat {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.14) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 9999px;
+  }
+}
+
+:host-context(html.dark) .industry-mini-chat {
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}
+
+:host .industry-thumb--active {
+  border-color: rgba(216, 255, 0, 0.55) !important;
+  box-shadow:
+    0 0 0 2px rgba(216, 255, 0, 0.35),
+    0 14px 40px -18px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(html.dark) .industry-thumb--active {
+  box-shadow:
+    0 0 0 2px rgba(216, 255, 0, 0.45),
+    0 22px 50px -20px rgba(0, 0, 0, 0.7);
+}
+
 // ── Get Started / onboarding flow ───────────────────────────────────────────────
 :host .onboard-section .onboard-connector {
   flex: 1 1 0;

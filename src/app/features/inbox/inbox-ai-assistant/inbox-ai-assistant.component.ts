@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { InboxService } from '../../../core/services/inbox.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { IInteraction } from '../../../core/models/interaction.model';
+import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 export interface AiReplyCard {
   type: 'short' | 'detailed' | 'sales';
@@ -19,7 +20,7 @@ export interface AiReplyCard {
 @Component({
   selector: 'app-inbox-ai-assistant',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent],
   templateUrl: './inbox-ai-assistant.component.html',
   styleUrls: ['./inbox-ai-assistant.component.scss']
 })

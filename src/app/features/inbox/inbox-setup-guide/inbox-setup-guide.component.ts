@@ -9,16 +9,21 @@ export interface SetupStep {
   id: string;
   label: string;
   description: string;
+  /** Font Awesome classes when useAiBrandIcon is false */
   icon: string;
+  /** Brand AI mark (same as home) instead of font icon */
+  useAiBrandIcon?: boolean;
   done: boolean;
   link?: string;
   linkLabel?: string;
 }
 
+import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
+
 @Component({
   selector: 'app-inbox-setup-guide',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AiChatBubbleIconComponent],
   templateUrl: './inbox-setup-guide.component.html'
 })
 export class InboxSetupGuideComponent implements OnChanges {
@@ -119,7 +124,8 @@ export class InboxSetupGuideComponent implements OnChanges {
         id: 'autoreply',
         label: 'Enable Auto Reply',
         description: 'Turn on AI-powered replies so every customer message gets an instant, personalised response.',
-        icon: 'fas fa-robot',
+        icon: '',
+        useAiBrandIcon: true,
         done: !!ar?.enabled,
         link: '/app/settings/auto-reply',
         linkLabel: 'Enable'

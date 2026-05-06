@@ -12,6 +12,7 @@ import { RazorpayService } from '../../core/services/razorpay.service';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
 import { PermissionService } from '../../core/services/permission.service';
 import { UserService, IAvailableAgent } from '../../core/services/user.service';
+import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
 import { MetaPageSelectorComponent } from '../../shared/components/meta-page-selector/meta-page-selector.component';
@@ -48,7 +49,10 @@ interface Platform {
 
 interface SettingsNavTab {
   id: SettingsTab;
+  /** Font Awesome classes (ignored when useAiBrandIcon is true) */
   icon: string;
+  /** Use shared brand mark (same as home “AI Assistant”) instead of a font icon */
+  useAiBrandIcon?: boolean;
   label: string;
   requiredPermission?: string | string[];
   routeSegment: string;
@@ -57,7 +61,7 @@ interface SettingsNavTab {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent, EmailConnectComponent],
+  imports: [CommonModule, FormsModule, RouterModule, AiChatBubbleIconComponent, ConnectedAccountsListComponent, MetaPageSelectorComponent, BillingComponent, FileUploadZoneComponent, EmailConnectComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
@@ -130,7 +134,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
     { id: 'profile', icon: 'fas fa-user', label: 'Profile', routeSegment: 'profile', requiredPermission: 'settings.read' },
     { id: 'organization', icon: 'fas fa-building', label: 'Organization', routeSegment: 'organization', requiredPermission: 'organization.read' },
     { id: 'notifications', icon: 'fas fa-bell', label: 'Notifications', routeSegment: 'notifications', requiredPermission: 'settings.read' },
-    { id: 'auto-reply', icon: 'fas fa-robot', label: 'Auto-Reply', routeSegment: 'auto-reply', requiredPermission: 'settings.read' },
+    {
+      id: 'auto-reply',
+      icon: '',
+      useAiBrandIcon: true,
+      label: 'Auto-Reply',
+      routeSegment: 'auto-reply',
+      requiredPermission: 'settings.read'
+    },
     { id: 'brand-rules', icon: 'fas fa-palette', label: 'Brand Rules', routeSegment: 'brand-rules', requiredPermission: 'settings.read' },
     { id: 'compliance', icon: 'fas fa-shield-alt', label: 'Compliance', routeSegment: 'compliance', requiredPermission: 'settings.read' },
     { id: 'accounts', icon: 'fas fa-credit-card', label: 'Plans & Billing', routeSegment: 'accounts', requiredPermission: 'billing.read' },
@@ -887,10 +898,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
     const whatsappPlatform = this.platforms.find(p => p.id === 'whatsapp');
     if (whatsappPlatform) whatsappPlatform.loading = true;
     try {
-      await this.platformService.connectWhatsAppOAuth();
-      // After popup closes, reload connections — backend handled the save + redirect
+      const result = await this.platformService.connectWhatsAppOAuth();
       this.loadPlatformConnections();
       this.loadSubscriptionLimits();
+
+      if (result.success) {
+        this.notificationService.success(
+          'WhatsApp Connected',
+          `${result.count ?? 1} WhatsApp Business number(s) connected successfully!`
+        );
+      } else if (!result.cancelled && result.error) {
+        this.notificationService.error('WhatsApp Connection Failed', result.error);
+      }
     } catch (err: any) {
       this.notificationService.error(
         'Connection Failed',

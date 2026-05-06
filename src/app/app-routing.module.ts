@@ -36,6 +36,8 @@ import { AboutComponent } from './features/about/about.component';
 import { FaqComponent } from './features/faq/faq.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
 import { RefundCancellationPolicyComponent } from './features/legal/refund-cancellation-policy/refund-cancellation-policy.component';
+import { WhatsappOAuthResultComponent } from './features/oauth/whatsapp-oauth-result.component';
+import { WhatsAppTemplatesComponent } from './features/whatsapp-templates/whatsapp-templates.component';
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 import { NotificationsComponent } from './features/notifications/notifications.component';
 import { BrandHubComponent } from './features/brand-hub/brand-hub.component';
@@ -69,6 +71,7 @@ const routes: Routes = [
       { path: 'faq', component: FaqComponent },
       { path: 'data-deletion-status', component: DataDeletionStatusComponent },
       { path: 'refund-cancellation-policy', component: RefundCancellationPolicyComponent },
+      { path: 'whatsapp-oauth-callback', component: WhatsappOAuthResultComponent },
     ],
   },
   { path: 'terms', redirectTo: 'terms-conditions', pathMatch: 'full' },
@@ -143,7 +146,8 @@ const routes: Routes = [
       { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'support', component: SupportComponent },
       { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
-      { path: 'contacts', component: ContactsContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } }
+      { path: 'contacts', component: ContactsContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
+      { path: 'whatsapp-templates', component: WhatsAppTemplatesComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } }
     ]
   },
 

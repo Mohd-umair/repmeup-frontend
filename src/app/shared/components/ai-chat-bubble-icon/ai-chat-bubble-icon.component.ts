@@ -11,8 +11,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule],
   template: `
     <svg
-      [ngClass]="iconClass"
-      class="inline-block shrink-0 align-middle"
+      [class]="svgClasses"
       viewBox="0 0 40 40"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -38,6 +37,17 @@ import { CommonModule } from '@angular/common';
 export class AiChatBubbleIconComponent {
   /** Tailwind size utilities, e.g. <code>w-7 h-7</code> */
   @Input() iconClass = 'w-7 h-7';
+  /** When true, do not apply dark-mode inversion (e.g. icon on a solid rep-lime button). */
+  @Input() noDarkInvert = false;
   /** Optional accessible label when the graphic conveys meaning alone */
   @Input() label = '';
+
+  /** Navy/lime/light artwork inverts cleanly on dark UIs (`html.dark`). */
+  get svgClasses(): string {
+    const pieces = ['inline-block', 'shrink-0', 'align-middle', 'transition-[filter]', 'duration-200'];
+    const size = (this.iconClass ?? '').trim();
+    if (size) pieces.push(size);
+    if (!this.noDarkInvert) pieces.push('dark:invert');
+    return pieces.join(' ');
+  }
 }

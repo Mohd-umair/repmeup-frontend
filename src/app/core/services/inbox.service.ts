@@ -4,6 +4,7 @@ import { tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
 import { IInteraction, IInboxFilters, IInboxStats } from '../models/interaction.model';
+import { WhatsAppTemplatePreviewDisplay } from '../utils/whatsapp-template-preview.helpers';
 
 /** DM thread page size — must match backend DEFAULT_INCOMING_MSG_LIMIT (GET /inbox/:id). */
 export const INBOX_THREAD_MESSAGE_PAGE_SIZE = 10;
@@ -130,7 +131,8 @@ export class InboxService {
   }
 
   /**
-   * Reply to an interaction
+   * Reply to an interaction.
+   * Optional `whatsappTemplate` sends a WhatsApp Cloud API template (inbox → WhatsApp only).
    */
   replyToInteraction(
     id: string,
@@ -138,11 +140,23 @@ export class InboxService {
     useTemplate?: boolean,
     templateId?: string,
     attachmentUrl?: string,
-    attachmentType?: 'image' | 'video' | 'file' | 'audio'
+    attachmentType?: 'image' | 'video' | 'file' | 'audio',
+    whatsappTemplate?: {
+      name: string;
+      languageCode: string;
+      components?: { type: string; parameters: Record<string, unknown>[] }[];
+      /** Rich inbox bubble; never sent to Meta (backend strips when building outbound template). */
+      inboxUiPreview?: WhatsAppTemplatePreviewDisplay | null;
+    }
   ): Observable<IApiResponse> {
-    const body: Record<string, unknown> = { content, useTemplate, templateId };
+    const body: Record<string, unknown> = {
+      content,
+      useTemplate,
+      templateId
+    };
     if (attachmentUrl) body['attachmentUrl'] = attachmentUrl;
     if (attachmentType) body['attachmentType'] = attachmentType;
+    if (whatsappTemplate) body['whatsappTemplate'] = whatsappTemplate;
     return this.apiService.post<IApiResponse>(`/inbox/${id}/reply`, body);
   }
 
