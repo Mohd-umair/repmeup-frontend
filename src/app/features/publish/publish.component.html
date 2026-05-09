@@ -507,10 +507,12 @@
           <div class="grid grid-cols-3 gap-2 mt-3">
             <button
               (click)="saveDraft()"
-              [disabled]="publishing"
-              class="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-xs hover:bg-gray-600 transition disabled:opacity-50"
+              [disabled]="publishing || !entitlements.can(FEATURE_KEY.POSTS_SAVE_DRAFT)"
+              [title]="entitlements.can(FEATURE_KEY.POSTS_SAVE_DRAFT) ? 'Save as draft' : 'Upgrade your plan to save drafts'"
+              class="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg font-semibold text-xs hover:bg-gray-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <i class="fas fa-save mr-1"></i>
+              <i class="fas fa-save mr-1" *ngIf="entitlements.can(FEATURE_KEY.POSTS_SAVE_DRAFT)"></i>
+              <i class="fas fa-lock mr-1 text-[10px]" *ngIf="!entitlements.can(FEATURE_KEY.POSTS_SAVE_DRAFT)"></i>
               <span class="hidden sm:inline">Draft</span>
             </button>
             <button

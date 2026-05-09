@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SubscriptionService } from '../../../core/services/subscription.service';
+import { EntitlementsStore } from '../../../core/services/entitlements.store';
 import { NotificationComponent } from '../notification/notification.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
@@ -33,6 +34,7 @@ export class MainLayoutComponent {
 
   private readonly router = inject(Router);
   private readonly subscriptionService = inject(SubscriptionService);
+  private readonly entitlements = inject(EntitlementsStore);
 
   /** Used for app-wide subscription cancellation notice */
   readonly limits$ = this.subscriptionService.limits$;
@@ -46,6 +48,11 @@ export class MainLayoutComponent {
     }
 
     this.subscriptionService.getLimits().pipe(takeUntilDestroyed()).subscribe();
+
+    // Single source of truth for "what can this org do?" — load once on mount,
+    // subscribe to socket invalidation so plan changes propagate instantly.
+    this.entitlements.load();
+    this.entitlements.wireSocketInvalidation();
 
     this.router.events
       .pipe(

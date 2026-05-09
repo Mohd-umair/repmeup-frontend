@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef
+  Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -8,6 +8,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { KnowledgeBaseService } from '../../../core/services/knowledge-base.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../../core/services/entitlements.store';
 
 export interface KbCreateTemplateField { key: string; value: string; }
 
@@ -20,6 +21,10 @@ export interface KbCreateTemplateField { key: string; value: string; }
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
+
+  /** Entitlements store — drives the URL/PDF tab gates and the entries cap banner. */
+  protected readonly entitlements = inject(EntitlementsStore);
+  protected readonly FEATURE_KEY = FEATURE_KEY;
 
   activeTab: 'manual' | 'pdf' | 'url' = 'manual';
   submitting = false;

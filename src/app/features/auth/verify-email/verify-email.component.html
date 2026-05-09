@@ -1,0 +1,44 @@
+<div class="auth-split-root">
+  <aside class="brand-panel hidden lg:flex lg:flex-col lg:w-[46%] xl:w-[42%]">
+    <div class="brand-panel-inner">
+      <div class="brand-panel-hero">
+        <a routerLink="/" class="brand-panel-logo-link inline-block mb-7 focus:outline-none focus-visible:ring-2 focus-visible:ring-rep-lime rounded-xl">
+          <img src="assets/Images/logo.jpeg" alt="RepMeUp" class="brand-panel-logo">
+        </a>
+        <h1 class="text-[42px] xl:text-[50px] font-black leading-[1.08] mb-5 headline-gradient">Almost there.</h1>
+        <p class="text-gray-500 text-[15px] leading-relaxed max-w-xs">We’re confirming your email so your workspace stays secure.</p>
+      </div>
+      <div class="mt-auto">
+        <a routerLink="/" class="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors w-fit">
+          <i class="fas fa-arrow-left text-[10px]"></i> Back to homepage
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="form-panel flex-1">
+    <a routerLink="/" class="form-panel-home"><i class="fas fa-arrow-left text-[10px]"></i> Home</a>
+    <div class="form-panel-inner form-panel-inner--wide">
+      <div class="form-card">
+        <h2 class="text-[28px] font-black tracking-tight text-gray-900 mb-2">Email verification</h2>
+
+        <div *ngIf="loading" class="flex flex-col items-center gap-4 py-8">
+          <i class="fas fa-spinner fa-spin text-2xl text-rep-lime"></i>
+          <p class="text-sm text-gray-600 m-0">Verifying your email…</p>
+        </div>
+
+        <div *ngIf="!loading && error" class="space-y-4">
+          <div class="alert-error">
+            <i class="fas fa-circle-exclamation text-sm mt-0.5 shrink-0"></i>
+            <span>{{ error }}</span>
+          </div>
+          <a routerLink="/auth/login" class="btn-primary inline-flex items-center justify-center no-underline">Go to sign in</a>
+          <p class="text-sm text-gray-500 m-0">
+            Need a new link?
+            <a routerLink="/auth/check-email" class="font-semibold text-gray-800 underline decoration-rep-lime underline-offset-2">Resend verification</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

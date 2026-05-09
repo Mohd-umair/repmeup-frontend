@@ -28,6 +28,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   loading = false;
   error = '';
   returnUrl = '/app/dashboard';
+  /** When login fails due to unverified email, guide user to resend flow */
+  verificationHelpEmail: string | null = null;
 
   // ─── Email + Password form ───────────────────────────────────────────────
   passwordForm!: FormGroup;
@@ -93,6 +95,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     this.error = '';
+    this.verificationHelpEmail = null;
     const { email, password } = this.passwordForm.value;
 
     this.authService.login(email, password)
@@ -102,12 +105,16 @@ export class LoginComponent implements OnInit, OnDestroy {
           if (res.success) {
             this.router.navigate([this.returnUrl]);
           } else {
+            this.verificationHelpEmail = null;
             this.error = res.error || 'Login failed';
             this.loading = false;
           }
         },
         error: (err) => {
-          this.error = err.error?.error || 'Invalid email or password.';
+          const msg = err.error?.error || 'Invalid email or password.';
+          this.verificationHelpEmail =
+            /verify your email/i.test(msg) ? (this.passwordForm.value.email as string) : null;
+          this.error = msg;
           this.loading = false;
         }
       });

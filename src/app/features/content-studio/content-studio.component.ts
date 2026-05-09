@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
@@ -13,6 +13,7 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { MediaSelectorModalComponent } from '../../shared/components/media-selector-modal/media-selector-modal.component';
 import { PostEditorComponent, PostEditorOutput } from '../post-editor/post-editor.component';
 import { Media } from '../../core/models/media.model';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
 
 export interface EventTemplateItem {
   _id: string;
@@ -109,6 +110,14 @@ export interface TrendItem {
   styleUrls: ['./content-studio.component.scss']
 })
 export class ContentStudioComponent implements OnInit, OnDestroy {
+  /**
+   * Plan-driven feature gates — wire into templates so Trends/Logo/SaveDraft
+   * controls hide or disable when the active plan doesn't include them, and
+   * the variant-count selector caps at the plan's `posts.ai.variants.max`.
+   */
+  protected readonly entitlements = inject(EntitlementsStore);
+  protected readonly FEATURE_KEY = FEATURE_KEY;
+
   // ─── Mode & Flow State ───────────────────────────────────────────────────────
   contentMode: 'ai' | 'custom' = 'ai';
   postFormat: 'post' | 'story' | 'reel' | 'video' | 'short' = 'post';
@@ -607,9 +616,21 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   }
 
   togglePlatform(id: string): void {
-    this.selectedPlatformIds = this.selectedPlatformIds.includes(id)
-      ? this.selectedPlatformIds.filter(p => p !== id)
-      : [...this.selectedPlatformIds, id];
+    const cap = this.entitlements.limit(FEATURE_KEY.POSTS_PLATFORMS_MAX);
+    const isUnlimited = cap === undefined || cap === -1;
+
+    if (this.selectedPlatformIds.includes(id)) {
+      this.selectedPlatformIds = this.selectedPlatformIds.filter((p) => p !== id);
+    } else {
+      // Free plan: only one platform per post. Block the toggle, surface a hint.
+      if (!isUnlimited && this.selectedPlatformIds.length >= (cap as number)) {
+        this.notify.warning(
+          `Your plan only allows ${cap} platform${cap === 1 ? '' : 's'} per post. Upgrade to add more.`
+        );
+        return;
+      }
+      this.selectedPlatformIds = [...this.selectedPlatformIds, id];
+    }
     this.normalisePostFormat();
     this.normaliseVideoPostType();
     // Auto-advance to step 2 when at least one platform is selected
@@ -672,16 +693,33 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     this.router.navigate(['/app/publish']);
   }
 
-  // ─── Variant count (user-configurable) ───────────────────────────────────────
+  // ─── Variant count (user-configurable, plan-capped) ─────────────────────────
   customVariantCount = 3;
-  variantCountOptions = [1, 2, 3, 4, 5];
+
+  /**
+   * Variant options shown to the user. Capped to the plan's
+   * `posts.ai.variants.max` value so Free-tier users only see [1, 2].
+   */
+  get variantCountOptions(): number[] {
+    const all = [1, 2, 3, 4, 5];
+    const cap = this.entitlements.limit(FEATURE_KEY.POSTS_AI_VARIANTS_MAX);
+    if (cap === undefined || cap === -1) return all;
+    return all.filter((n) => n <= cap);
+  }
 
   // ─── Include people in design ─────────────────────────────────────────────────
   includePeople: boolean | null = null;
   peopleNationality = '';
 
   get variantCount(): number {
-    return this.contentType === 'text-video' ? 1 : this.customVariantCount;
+    if (this.contentType === 'text-video') return 1;
+    // Belt-and-braces: even if the user mutates customVariantCount via dev tools,
+    // never exceed the plan cap when reading variantCount in the publish flow.
+    const cap = this.entitlements.limit(FEATURE_KEY.POSTS_AI_VARIANTS_MAX);
+    if (typeof cap === 'number' && cap !== -1) {
+      return Math.min(this.customVariantCount, cap);
+    }
+    return this.customVariantCount;
   }
 
   // ─── Generation ────────────────────────────────────────────────────────────

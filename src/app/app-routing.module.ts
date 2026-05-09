@@ -9,6 +9,8 @@ import { RegisterComponent } from './features/auth/register/register.component';
 import { GoogleCallbackComponent } from './features/auth/google-callback/google-callback.component';
 import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './features/auth/reset-password/reset-password.component';
+import { VerifyEmailComponent } from './features/auth/verify-email/verify-email.component';
+import { CheckEmailComponent } from './features/auth/check-email/check-email.component';
 
 // Layout
 import { MainLayoutComponent } from './shared/components/main-layout/main-layout.component';
@@ -85,7 +87,9 @@ const routes: Routes = [
       { path: 'register', component: RegisterComponent },
       { path: 'google-callback', component: GoogleCallbackComponent },
       { path: 'forgot-password', component: ForgotPasswordComponent },
-      { path: 'reset-password', component: ResetPasswordComponent }
+      { path: 'reset-password', component: ResetPasswordComponent },
+      { path: 'verify-email', component: VerifyEmailComponent },
+      { path: 'check-email', component: CheckEmailComponent }
     ]
   },
 

@@ -23,3 +23,12 @@ export interface IAuthResponse {
   refreshToken: string;
 }
 
+/** Payload from POST /auth/register when email verification is required */
+export interface IRegisterResponse {
+  user: any;
+  organization?: any;
+  requiresEmailVerification?: boolean;
+  message?: string;
+  token?: string;
+  refreshToken?: string;
+}

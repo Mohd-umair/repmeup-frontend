@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { ApiService } from './api.service';
 import { StorageService } from './storage.service';
-import { IApiResponse, IAuthResponse } from '../models/api-response.model';
+import { IApiResponse, IAuthResponse, IRegisterResponse } from '../models/api-response.model';
 import { IUser } from '../models/user.model';
 import { Router } from '@angular/router';
 import { InboxService } from './inbox.service';
@@ -66,17 +66,49 @@ export class AuthService {
   }
 
   /**
-   * Register new user
+   * Register new user (email/password). Tokens are only returned after email verification.
    */
-  register(data: any): Observable<IApiResponse<IAuthResponse>> {
-    return this.apiService.post<IApiResponse<IAuthResponse>>('/auth/register', data)
+  register(data: any): Observable<IApiResponse<IRegisterResponse>> {
+    return this.apiService.post<IApiResponse<IRegisterResponse>>('/auth/register', data).pipe(
+      tap((response) => {
+        const d = response.data;
+        if (response.success && d?.token && d?.refreshToken && d?.user) {
+          this.handleAuthSuccess({
+            token: d.token,
+            refreshToken: d.refreshToken,
+            user: d.user
+          });
+        }
+      })
+    );
+  }
+
+  /**
+   * Confirm signup email and receive auth tokens.
+   */
+  verifySignupEmail(token: string): Observable<IApiResponse<IAuthResponse & { message?: string }>> {
+    return this.apiService
+      .post<IApiResponse<IAuthResponse & { message?: string }>>('/auth/verify-email', { token })
       .pipe(
-        tap(response => {
-          if (response.success && response.data) {
-            this.handleAuthSuccess(response.data);
+        tap((response) => {
+          if (response.success && response.data?.token && response.data?.user) {
+            this.handleAuthSuccess({
+              token: response.data.token,
+              refreshToken: response.data.refreshToken,
+              user: response.data.user
+            });
           }
         })
       );
+  }
+
+  /**
+   * Resend signup verification link (throttled on server).
+   */
+  resendVerificationEmail(email: string): Observable<IApiResponse<{ message: string }>> {
+    return this.apiService.post<IApiResponse<{ message: string }>>('/auth/resend-verification', {
+      email
+    });
   }
 
   /**

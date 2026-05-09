@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -9,6 +9,7 @@ import { Media } from '../../core/models/media.model';
 import { MediaSelectorModalComponent } from '../../shared/components/media-selector-modal/media-selector-modal.component';
 import { MediaUploadGuideComponent } from '../../shared/components/media-upload-guide/media-upload-guide.component';
 import { SocialPreviewComponent } from '../publish/social-preview/social-preview.component';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
 
 interface Platform {
   id: string;
@@ -64,7 +65,15 @@ interface Draft {
 export class PublishComponent implements OnInit {
   // Expose Object for template
   Object = Object;
-  
+
+  /**
+   * Entitlements store — drives plan gating for platform fan-out and draft saves.
+   * Exposed as `protected` so the template can read `entitlements.can(...)` directly
+   * without re-introducing helper getters per feature.
+   */
+  protected readonly entitlements = inject(EntitlementsStore);
+  protected readonly FEATURE_KEY = FEATURE_KEY;
+
   // Platforms
   platforms: Platform[] = [];
   selectedPlatforms: Platform[] = [];
@@ -302,17 +311,39 @@ export class PublishComponent implements OnInit {
    * Toggle platform selection
    */
   togglePlatform(platform: Platform): void {
+    // Deselecting is always free; only selection has to clear the plan cap.
+    if (!platform.selected) {
+      const cap = this.entitlements.limit(FEATURE_KEY.POSTS_PLATFORMS_MAX);
+      const nextCount = this.platforms.filter(p => p.selected).length + 1;
+      if (typeof cap === 'number' && cap > 0 && nextCount > cap) {
+        this.notificationService.warning(
+          'Plan limit reached',
+          `Your plan allows publishing to ${cap} platform${cap === 1 ? '' : 's'} per post. Upgrade to add more.`
+        );
+        return;
+      }
+    }
+
     platform.selected = !platform.selected;
     this.selectedPlatforms = this.platforms.filter(p => p.selected);
     this.onPlatformSelectionChange();
   }
 
   /**
-   * Select all platforms
+   * Select all platforms (capped to `posts.platforms.maxPerPost`).
    */
   selectAllPlatforms(): void {
-    this.platforms.forEach(p => p.selected = true);
-    this.selectedPlatforms = [...this.platforms];
+    const cap = this.entitlements.limit(FEATURE_KEY.POSTS_PLATFORMS_MAX);
+    const allowed = typeof cap === 'number' && cap > 0 ? cap : this.platforms.length;
+    this.platforms.forEach((p, idx) => p.selected = idx < allowed);
+    this.selectedPlatforms = this.platforms.filter(p => p.selected);
+
+    if (typeof cap === 'number' && cap > 0 && cap < this.platforms.length) {
+      this.notificationService.warning(
+        'Plan limit reached',
+        `Selected the first ${cap} platform${cap === 1 ? '' : 's'} (your plan limit per post).`
+      );
+    }
   }
 
   /**

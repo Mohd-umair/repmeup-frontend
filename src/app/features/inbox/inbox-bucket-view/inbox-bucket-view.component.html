@@ -285,7 +285,7 @@
   </div>
 
   <!-- ──────────────────── RIGHT: Chat Panel OR AI Insights ──────────────────── -->
-  <ng-container *ngIf="activeChatInteraction; else insightsPanel">
+  <ng-container *ngIf="activeChatInteraction && entitlements.can(FEATURE_KEY.INBOX_BUCKET_CHAT); else insightsPanel">
   <!-- ── Mini Inline Chat Panel ── -->
   <div class="chat-panel flex flex-col rounded-2xl overflow-hidden flex-shrink-0 bg-white border border-gray-100 dark:border-gray-700 shadow-md"
        style="flex: 0 0 380px; width: 380px;">

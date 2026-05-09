@@ -95,6 +95,13 @@ export class RegisterComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success) {
             this.success = true;
+            this.loading = false;
+            if (response.data?.requiresEmailVerification) {
+              void this.router.navigate(['/auth/check-email'], {
+                queryParams: { email: formData.email }
+              });
+              return;
+            }
             timer(2000)
               .pipe(take(1), takeUntil(this.destroy$))
               .subscribe(() => this.router.navigate(['/app/dashboard']));

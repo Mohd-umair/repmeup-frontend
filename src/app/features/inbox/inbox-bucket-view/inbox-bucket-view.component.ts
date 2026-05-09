@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy, OnChanges, SimpleChanges, Input, Output, EventEmitter, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, OnChanges, SimpleChanges, Input, Output, EventEmitter, ViewChild, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { InboxService } from '../../../core/services/inbox.service';
 import { IIntentBucket } from '../../../core/services/intent-bucket.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../../core/services/entitlements.store';
 import { IInteraction, IInboxFilters, IReply, InteractionStatus, Platform } from '../../../core/models/interaction.model';
 import { Media } from '../../../core/models/media.model';
 import { MediaSelectorModalComponent } from '../../../shared/components/media-selector-modal/media-selector-modal.component';
@@ -47,6 +48,13 @@ interface SentimentStats {
   styleUrls: ['./inbox-bucket-view.component.scss']
 })
 export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
+  /**
+   * Free plan: bucket view is read-only — chat composer hidden, replies route
+   * users to the standard inbox detail page. The bucket data itself stays visible.
+   */
+  protected readonly entitlements = inject(EntitlementsStore);
+  protected readonly FEATURE_KEY = FEATURE_KEY;
+
   @Input() filters: IInboxFilters = {};
   @Output() interactionSelect = new EventEmitter<IInteraction>();
 

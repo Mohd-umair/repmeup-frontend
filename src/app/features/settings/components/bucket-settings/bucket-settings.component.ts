@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IntentBucketService, IIntentBucket } from '../../../../core/services/intent-bucket.service';
@@ -6,6 +6,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { SweetAlertService } from '../../../../core/services/sweet-alert.service';
 import { PaginationComponent, PaginationMeta } from '../../../../shared/components/pagination/pagination.component';
 import { AiChatBubbleIconComponent } from '../../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
+import { EntitlementsStore, FEATURE_KEY } from '../../../../core/services/entitlements.store';
 
 @Component({
   selector: 'app-bucket-settings',
@@ -15,6 +16,10 @@ import { AiChatBubbleIconComponent } from '../../../../shared/components/ai-chat
   styleUrls: ['./bucket-settings.component.scss']
 })
 export class BucketSettingsComponent implements OnInit {
+  /** Plan gate: hide the "Add Bucket" CTA on plans without `inbox.bucket.create`. */
+  protected readonly entitlements = inject(EntitlementsStore);
+  protected readonly FEATURE_KEY = FEATURE_KEY;
+
   buckets: IIntentBucket[] = [];
   loading = true;
   saving = false;
