@@ -9,6 +9,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ContactService } from '../../../core/services/contact.service';
 import { IInteraction } from '../../../core/models/interaction.model';
 import { IContact } from '../../../core/models/contact.model';
+import { getContactAvatarUrl } from '../../../core/utils/contact-display.util';
 
 @Component({
   selector: 'app-inbox-contact-panel',
@@ -69,6 +70,11 @@ export class InboxContactPanelComponent implements OnChanges, OnDestroy {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  /** First channel with a non-empty avatar URL (order of `channels` is not guaranteed). */
+  get contactAvatarUrl(): string | null {
+    return getContactAvatarUrl(this.contact);
   }
 
   getPlatformIcon(platform: string): string {

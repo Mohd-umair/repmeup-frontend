@@ -11,6 +11,7 @@ import {
 } from '../../../../core/services/subscription.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { RazorpayService } from '../../../../core/services/razorpay.service';
+import { formatPlanPriceMonthly } from '../../../../core/utils/plan-price-format';
 import { AiChatBubbleIconComponent } from '../../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 
 interface UsageMetric {
@@ -49,6 +50,9 @@ interface PlanCard {
 })
 export class BillingComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+
+  /** Expose for template (next-tier price line). */
+  readonly formatPlanPriceMonthly = formatPlanPriceMonthly;
 
   subscriptionLimits: ISubscriptionLimits | null = null;
   allPlans: Record<string, PlanCard> | null = null;
@@ -242,12 +246,11 @@ export class BillingComponent implements OnInit, OnDestroy {
   }
 
   formatPrice(price: number | string): string {
-    if (price === 'custom') return 'Custom';
-    if (typeof price === 'number') {
-      if (price === 0) return 'Free';
-      return `$${price}`;
+    const full = formatPlanPriceMonthly(price);
+    if (typeof price === 'number' && price > 0) {
+      return full.replace(/\/mo$/, '');
     }
-    return price;
+    return full;
   }
 
   formatLimit(val: number): string {
@@ -299,7 +302,7 @@ export class BillingComponent implements OnInit, OnDestroy {
 
     // Paid plan — open Razorpay checkout
     this.upgradingPlan = planId;
-    const priceLabel = this.formatPrice(plan.price) + '/mo';
+    const priceLabel = formatPlanPriceMonthly(plan.price);
 
     this.razorpayService.initiateUpgrade({ planId, planName, priceLabel })
       .then((res) => {

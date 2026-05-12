@@ -39,6 +39,20 @@
             class="media-video"
             controls
           ></video>
+          <div
+            *ngIf="getCurrentMedia()?.type === 'audio'"
+            class="media-image flex items-center justify-center bg-gray-900"
+            style="aspect-ratio: 1; max-height: 320px;"
+          >
+            <i class="fas fa-music text-4xl text-amber-500"></i>
+          </div>
+          <div
+            *ngIf="getCurrentMedia()?.type === 'file'"
+            class="media-image flex items-center justify-center bg-gray-900"
+            style="aspect-ratio: 1; max-height: 320px;"
+          >
+            <i class="fas fa-file-pdf text-4xl text-red-500"></i>
+          </div>
 
           <!-- Carousel controls -->
           <div class="carousel-controls" *ngIf="isCarousel()">
@@ -126,6 +140,20 @@
           class="media-video"
           controls
         ></video>
+        <div
+          *ngIf="getCurrentMedia()?.type === 'audio'"
+          class="media-image flex items-center justify-center bg-gray-900"
+          style="aspect-ratio: 1; max-height: 320px;"
+        >
+          <i class="fas fa-music text-4xl text-amber-500"></i>
+        </div>
+        <div
+          *ngIf="getCurrentMedia()?.type === 'file'"
+          class="media-image flex items-center justify-center bg-gray-900"
+          style="aspect-ratio: 1; max-height: 320px;"
+        >
+          <i class="fas fa-file-pdf text-4xl text-red-500"></i>
+        </div>
 
         <!-- Carousel indicator -->
         <div class="carousel-indicator" *ngIf="isCarousel()">
@@ -228,6 +256,20 @@
             class="media-video"
             controls
           ></video>
+          <div
+            *ngIf="getCurrentMedia()?.type === 'audio'"
+            class="media-image flex items-center justify-center bg-gray-900"
+            style="aspect-ratio: 1; max-height: 320px;"
+          >
+            <i class="fas fa-music text-4xl text-amber-500"></i>
+          </div>
+          <div
+            *ngIf="getCurrentMedia()?.type === 'file'"
+            class="media-image flex items-center justify-center bg-gray-900"
+            style="aspect-ratio: 1; max-height: 320px;"
+          >
+            <i class="fas fa-file-pdf text-4xl text-red-500"></i>
+          </div>
 
           <!-- Carousel controls -->
           <div class="carousel-controls" *ngIf="isCarousel()">
@@ -309,6 +351,20 @@
       <div class="media-container" *ngIf="mediaFiles.length > 0">
         <img *ngIf="getCurrentMedia()?.type === 'image'" [src]="getCurrentMedia()?.preview" alt="Media" class="media-image" />
         <video *ngIf="getCurrentMedia()?.type === 'video'" [src]="getCurrentMedia()?.preview" class="media-video" controls></video>
+        <div
+          *ngIf="getCurrentMedia()?.type === 'audio'"
+          class="media-image flex items-center justify-center bg-gray-900"
+          style="aspect-ratio: 1; max-height: 320px;"
+        >
+          <i class="fas fa-music text-4xl text-amber-500"></i>
+        </div>
+        <div
+          *ngIf="getCurrentMedia()?.type === 'file'"
+          class="media-image flex items-center justify-center bg-gray-900"
+          style="aspect-ratio: 1; max-height: 320px;"
+        >
+          <i class="fas fa-file-pdf text-4xl text-red-500"></i>
+        </div>
       </div>
     </div>
   </div>

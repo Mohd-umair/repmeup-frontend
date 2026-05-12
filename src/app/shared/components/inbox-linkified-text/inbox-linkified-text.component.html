@@ -1,0 +1,14 @@
+<span [class]="hostClass">
+  <ng-container *ngFor="let seg of segments">
+    <a
+      *ngIf="seg.kind === 'url'"
+      [href]="seg.href"
+      target="_blank"
+      rel="noopener noreferrer"
+      [class]="resolvedLinkClass()"
+      (click)="$event.stopPropagation()"
+      >{{ seg.value }}</a
+    >
+    <ng-container *ngIf="seg.kind === 'text'">{{ seg.value }}</ng-container>
+  </ng-container>
+</span>

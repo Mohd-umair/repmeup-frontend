@@ -27,6 +27,7 @@
                    [src]="avatarUrl"
                    (error)="onAvatarError(interaction.platformId)"
                    alt=""
+                   referrerpolicy="no-referrer"
                    class="absolute inset-0 w-full h-full rounded-xl object-cover shadow-md border border-white dark:border-gray-700">
             </ng-container>
           </div>
@@ -242,6 +243,7 @@
                            [src]="avatarUrl"
                            (error)="onAvatarError(item.data.platformId + '_msg')"
                            alt=""
+                           referrerpolicy="no-referrer"
                            class="absolute inset-0 w-full h-full rounded-md object-cover">
                     </ng-container>
                   </div>
@@ -293,6 +295,19 @@
                     </div>
                   </div>
                 </div>
+                <!-- Incoming PDF / file -->
+                <button *ngIf="item.data.attachmentType === 'file' && item.data.attachmentUrl"
+                        type="button"
+                        (click)="downloadInboxPdfReply(item.data.attachmentUrl, item.data)"
+                        class="mb-1 w-full max-w-[240px] flex items-center gap-2.5 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/90 dark:hover:bg-gray-800 text-left transition-colors shadow-sm cursor-pointer group">
+                  <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-red-700 text-white"
+                        aria-hidden="true">
+                    <i class="fas fa-file-pdf text-lg"></i>
+                  </span>
+                  <span class="min-w-0 flex-1 text-sm font-medium text-gray-800 dark:text-gray-100 truncate group-hover:underline">{{ incomingFileAttachmentLabel(item.data) }}</span>
+                  <i class="fas fa-download text-xs text-gray-500 dark:text-gray-400 shrink-0" aria-hidden="true"></i>
+                  <span class="sr-only">Download file</span>
+                </button>
                 <!-- Email HTML body rendered in sandboxed iframe -->
                 <ng-container *ngIf="item.data.platform === 'email' && item.data.metadata?.email?.htmlBody; else emailTextFallback">
                   <iframe
@@ -318,8 +333,11 @@
                   <p *ngIf="item.data.content
                             && !(item.data.attachmentType === 'image' && isImagePlaceholder(item.data.content))
                             && !(item.data.attachmentType === 'audio' && item.data.content === '[audio]')
-                            && !(item.data.attachmentType === 'video' && item.data.content === '[video]')"
-                     class="text-sm text-gray-500 dark:text-gray-400 leading-snug whitespace-pre-wrap">{{ item.data.content }}</p>
+                            && !(item.data.attachmentType === 'video' && item.data.content === '[video]')
+                            && !(item.data.attachmentType === 'file' && item.data.content === '[file]')"
+                     class="text-sm text-gray-500 dark:text-gray-400 leading-snug whitespace-pre-wrap">
+                    <app-inbox-linkified-text [text]="item.data.content" />
+                  </p>
                 </ng-template>
               </div>
             </div>
@@ -329,7 +347,9 @@
           <div *ngIf="item.type === 'note'" class="flex justify-center my-3">
             <div class="max-w-[72%] bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg px-3 py-2">
               <span class="text-[11px] text-amber-800 dark:text-amber-200">{{ item.data.addedByName }} · {{ formatDate(item.data.addedAt) }}{{ item.data.isPrivate ? ' (Private)' : '' }}</span>
-              <p class="text-xs text-amber-900 dark:text-amber-100 whitespace-pre-wrap mt-0.5">{{ item.data.note }}</p>
+              <p class="text-xs text-amber-900 dark:text-amber-100 whitespace-pre-wrap mt-0.5">
+                <app-inbox-linkified-text [text]="item.data.note" />
+              </p>
             </div>
           </div>
 
@@ -381,6 +401,7 @@
                            [src]="avatarUrl"
                            (error)="onAvatarError(item.data.platformId + '_platform')"
                            alt=""
+                           referrerpolicy="no-referrer"
                            class="absolute inset-0 w-full h-full rounded-md object-cover">
                     </ng-container>
                   </div>
@@ -392,7 +413,8 @@
                 </div>
                 <ng-container *ngIf="getTimelineMessageKey(item, i) as msgKey">
                   <p class="text-sm text-gray-500 dark:text-gray-400 leading-snug whitespace-pre-wrap">
-                    {{ isMessageExpanded(msgKey) ? item.data.content : getMessagePreview(item.data.content) }}
+                    <app-inbox-linkified-text
+                      [text]="isMessageExpanded(msgKey) ? item.data.content : getMessagePreview(item.data.content)" />
                   </p>
                   <button
                     *ngIf="!isMessageExpanded(msgKey) && shouldShowLoadMore(item.data.content)"
@@ -480,12 +502,14 @@
                   <div class="px-3 py-2 space-y-1">
                     <p *ngIf="waTpl.headerText"
                        class="text-sm font-semibold text-gray-900 dark:text-gray-50 leading-snug whitespace-pre-wrap">
-                      {{ waTpl.headerText }}
+                      <app-inbox-linkified-text [text]="waTpl.headerText" />
                     </p>
-                    <p class="text-sm text-gray-900 dark:text-gray-100 leading-snug whitespace-pre-wrap">{{ waTpl.bodyText }}</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100 leading-snug whitespace-pre-wrap">
+                      <app-inbox-linkified-text [text]="waTpl.bodyText" />
+                    </p>
                     <p *ngIf="waTpl.footerText"
-                       class="text-[11px] text-gray-500 dark:text-gray-400 leading-snug pt-0.5">
-                      {{ waTpl.footerText }}
+                       class="text-[11px] text-gray-500 dark:text-gray-400 leading-snug pt-0.5 whitespace-pre-wrap">
+                      <app-inbox-linkified-text [text]="waTpl.footerText" />
                     </p>
                   </div>
                   <div *ngIf="waTpl.buttons?.length"
@@ -527,8 +551,8 @@
                   </div>
                 </div>
 
-                <!-- Attachment (image, video, or audio) sent with this reply -->
-                <div *ngIf="!item.data.whatsappTemplatePreview && item.data.attachmentUrl && (item.data.attachmentType === 'image' || item.data.attachmentType === 'video' || item.data.attachmentType === 'audio')" class="mb-2">
+                <!-- Attachment (image, video, audio, or file/PDF) sent with this reply -->
+                <div *ngIf="!item.data.whatsappTemplatePreview && item.data.attachmentUrl && (item.data.attachmentType === 'image' || item.data.attachmentType === 'video' || item.data.attachmentType === 'audio' || item.data.attachmentType === 'file')" class="mb-2">
                   <img *ngIf="item.data.attachmentType === 'image'"
                        [src]="item.data.attachmentUrl"
                        alt="Attachment"
@@ -547,13 +571,26 @@
                       </div>
                     </div>
                   </div>
+                  <button *ngIf="item.data.attachmentType === 'file'"
+                          type="button"
+                          (click)="downloadInboxPdfReply(item.data.attachmentUrl, item.data)"
+                          [attr.aria-label]="'Download PDF: ' + replyPdfFileLabel(item.data)"
+                          class="w-full max-w-[260px] flex items-center gap-2.5 px-3 py-2 rounded-lg border border-rep-black/15 bg-white/95 hover:bg-white dark:bg-gray-900/85 dark:border-white/12 dark:hover:bg-gray-900 text-left transition-colors shadow-sm cursor-pointer group">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-red-700 text-white"
+                          aria-hidden="true">
+                      <i class="fas fa-file-pdf text-lg"></i>
+                    </span>
+                    <span class="min-w-0 flex-1 text-sm font-medium text-rep-black dark:text-gray-100 truncate group-hover:underline">{{ replyPdfFileLabel(item.data) }}</span>
+                    <i class="fas fa-download text-xs text-rep-black/50 dark:text-gray-400 shrink-0" aria-hidden="true"></i>
+                  </button>
                 </div>
 
                 <!-- Caption: omit when WhatsApp template card already shows body; hide attachment placeholders -->
-                <ng-container *ngIf="!item.data.whatsappTemplatePreview && item.data.content && !(item.data.attachmentUrl && (item.data.content === '[image]' || item.data.content === '[video]' || item.data.content === '[audio]')) && getTimelineMessageKey(item, i) as msgKey">
+                <ng-container *ngIf="!item.data.whatsappTemplatePreview && item.data.content && !(item.data.attachmentUrl && (item.data.content === '[image]' || item.data.content === '[video]' || item.data.content === '[audio]' || item.data.content === '[file]')) && getTimelineMessageKey(item, i) as msgKey">
                   <p class="text-sm leading-snug whitespace-pre-wrap"
                       [ngClass]="item.data.status === 'failed' ? 'text-red-800' : 'text-rep-black/70 dark:text-rep-black/55'">
-                    {{ isMessageExpanded(msgKey) ? item.data.content : getMessagePreview(item.data.content) }}
+                    <app-inbox-linkified-text
+                      [text]="isMessageExpanded(msgKey) ? item.data.content : getMessagePreview(item.data.content)" />
                   </p>
                   <button
                     *ngIf="!isMessageExpanded(msgKey) && shouldShowLoadMore(item.data.content)"
@@ -632,7 +669,9 @@
                   <button (click)="clearAISuggestion()" class="p-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" title="Dismiss"><i class="fas fa-xmark text-[10px]"></i></button>
                 </div>
               </div>
-              <p class="text-xs text-gray-800 dark:text-gray-200 leading-relaxed">{{ aiSuggestion.content }}</p>
+              <p class="text-xs text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                <app-inbox-linkified-text [text]="aiSuggestion.content" />
+              </p>
             </div>
           </div>
         </div>
@@ -770,9 +809,12 @@
             <div *ngIf="pendingAttachment.mediaType === 'audio'" class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-400 to-purple-500">
               <i class="fas fa-microphone-alt text-white text-sm"></i>
             </div>
+            <div *ngIf="pendingAttachment.mediaType === 'file'" class="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500 to-red-700">
+              <i class="fas fa-file-pdf text-white text-sm"></i>
+            </div>
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-gray-700 dark:text-gray-200 capitalize">{{ pendingAttachment.mediaType }}</p>
+            <p class="text-xs font-medium text-gray-700 dark:text-gray-200 capitalize">{{ pendingAttachment.mediaType === 'file' ? 'PDF' : pendingAttachment.mediaType }}</p>
             <p class="text-[10px] text-gray-400 dark:text-gray-500">Add a caption (optional), then Enter to send.</p>
           </div>
           <button type="button" (click)="removePendingAttachment()"

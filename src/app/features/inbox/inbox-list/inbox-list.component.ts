@@ -397,10 +397,22 @@ export class InboxListComponent implements OnInit, OnDestroy {
     const replyTime = lastReply ? new Date(lastReply.sentAt).getTime() : 0;
     const incomingTime = this._incomingTime(lastIncoming);
 
-    if (!lastReply && !lastIncoming) return this._friendlyAttachmentText({ text: interaction.content ?? '' });
-    if (replyTime >= incomingTime && lastReply) return lastReply.content ?? interaction.content ?? '';
-    if (lastIncoming) return this._friendlyAttachmentText(lastIncoming) || lastReply?.content || interaction.content || '';
-    return lastReply?.content ?? interaction.content ?? '';
+    if (!lastReply && !lastIncoming) {
+      return this._friendlyAttachmentText({ text: interaction.content ?? '' });
+    }
+    if (replyTime >= incomingTime && lastReply) {
+      const out = this._previewTextForReply(lastReply);
+      return out || interaction.content || '';
+    }
+    if (lastIncoming) {
+      return (
+        this._friendlyAttachmentText(lastIncoming) ||
+        (lastReply ? this._previewTextForReply(lastReply) : '') ||
+        interaction.content ||
+        ''
+      );
+    }
+    return this._previewTextForReply(lastReply!) || interaction.content || '';
   }
 
   /** True when the last message in the conversation is an outgoing reply (sent by us / AI). */
@@ -425,6 +437,29 @@ export class InboxListComponent implements OnInit, OnDestroy {
     };
   }
 
+  /**
+   * List preview for an app-originated reply: real text wins over attachment metadata
+   * (avoids stale attachmentType after a later text send).
+   */
+  private _previewTextForReply(reply: IReply): string {
+    const raw = reply.content ?? '';
+    const t = raw.trim();
+    if (t.length > 0 && !InboxListComponent._isBracketAttachmentPlaceholder(t)) {
+      return raw;
+    }
+    return this._friendlyAttachmentText({
+      text: raw,
+      attachmentType: reply.attachmentType,
+      attachmentUrl: reply.attachmentUrl
+    });
+  }
+
+  private static _isBracketAttachmentPlaceholder(t: string): boolean {
+    return /^\[(image|video|audio|file|attachment|shared instagram reel|shared instagram story|shared instagram post)\]$/i.test(
+      t.trim()
+    );
+  }
+
   /** Map raw attachment placeholder text to a human-readable label. */
   private _friendlyAttachmentText(msg: { text?: string; attachmentType?: string; attachmentUrl?: string }): string {
     const LABELS: Record<string, string> = {
@@ -439,18 +474,30 @@ export class InboxListComponent implements OnInit, OnDestroy {
       share: '🔗 Shared post',
       ig_post: '🔗 Shared post'
     };
-    const type = msg.attachmentType ?? '';
-    if (type && LABELS[type]) return LABELS[type];
-    // Fallback: detect placeholder bracket text
-    const t = msg.text?.trim() ?? '';
+    const raw = msg.text ?? '';
+    const t = raw.trim();
+    const hasUrl = !!(msg.attachmentUrl && String(msg.attachmentUrl).trim());
+    const type = (msg.attachmentType ?? '').trim();
+
     if (/^\[video\]$/i.test(t)) return '🎥 Video';
     if (/^\[image\]$/i.test(t)) return '📷 Photo';
     if (/^\[audio\]$/i.test(t)) return '🎤 Voice message';
     if (/^\[file\]$/i.test(t)) return '📎 File';
+    if (/^\[attachment\]$/i.test(t)) return '📎 File';
     if (/^\[shared instagram reel\]$/i.test(t)) return '🎬 Shared reel';
     if (/^\[shared instagram story\]$/i.test(t)) return '📖 Shared story';
     if (/^\[shared instagram post\]$/i.test(t)) return '🔗 Shared post';
-    return t;
+
+    // Substantive DM text must win over attachmentType (platform webhooks often leave stale type on text messages)
+    if (t.length > 0 && !InboxListComponent._isBracketAttachmentPlaceholder(t)) {
+      return raw;
+    }
+
+    if (type && LABELS[type] && (hasUrl || InboxListComponent._isBracketAttachmentPlaceholder(t))) {
+      return LABELS[type];
+    }
+
+    return raw;
   }
 
   private _incomingTime(msg: { timestamp?: number } | null): number {

@@ -10,7 +10,7 @@ interface Platform {
 
 interface MediaFile {
   preview: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'audio' | 'file';
 }
 
 @Component({

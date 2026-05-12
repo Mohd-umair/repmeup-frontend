@@ -114,10 +114,17 @@
           <div class="card-content px-3 pt-3 pb-2.5" [class.opacity-50]="interaction.status === 'resolved'">
             <div class="flex items-start gap-3">
               <div class="relative flex-shrink-0 self-start">
-                <div class="w-11 h-11 rounded-lg flex items-center justify-center text-base font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800"
+                <div class="w-11 h-11 rounded-lg flex items-center justify-center text-base font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800 relative"
                      [style.backgroundColor]="getPlatformColor(interaction.platform)">
-                  <img *ngIf="getAvatarUrl(interaction)" [src]="getAvatarUrl(interaction)" class="w-full h-full object-cover rounded-lg" (error)="$any($event.target).style.display='none'" />
-                  <span *ngIf="!getAvatarUrl(interaction)">{{ getInitials(interaction.author?.name) }}</span>
+                  <span class="absolute inset-0 flex items-center justify-center z-0">{{ getInitials(interaction.author?.name) }}</span>
+                  <ng-container *ngIf="(getAuthorAvatar$(interaction) | async) as avatarUrl">
+                    <img *ngIf="avatarUrl && !avatarFallback[bucketAvatarKey(interaction)]"
+                         [src]="avatarUrl"
+                         (error)="onBucketAvatarError(interaction)"
+                         alt=""
+                         referrerpolicy="no-referrer"
+                         class="absolute inset-0 w-full h-full object-cover rounded-lg z-[1]" />
+                  </ng-container>
                 </div>
                 <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800"
                      [style.backgroundColor]="getPlatformColor(interaction.platform)">
@@ -240,10 +247,17 @@
           <div class="card-content px-3 pt-3 pb-2.5" [class.opacity-50]="interaction.status === 'resolved'">
             <div class="flex items-start gap-3">
               <div class="relative flex-shrink-0 self-start">
-                <div class="w-11 h-11 rounded-lg flex items-center justify-center text-base font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800"
+                <div class="w-11 h-11 rounded-lg flex items-center justify-center text-base font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800 relative"
                      [style.backgroundColor]="getPlatformColor(interaction.platform)">
-                  <img *ngIf="getAvatarUrl(interaction)" [src]="getAvatarUrl(interaction)" class="w-full h-full object-cover rounded-lg" (error)="$any($event.target).style.display='none'" />
-                  <span *ngIf="!getAvatarUrl(interaction)">{{ getInitials(interaction.author?.name) }}</span>
+                  <span class="absolute inset-0 flex items-center justify-center z-0">{{ getInitials(interaction.author?.name) }}</span>
+                  <ng-container *ngIf="(getAuthorAvatar$(interaction) | async) as avatarUrl">
+                    <img *ngIf="avatarUrl && !avatarFallback[bucketAvatarKey(interaction)]"
+                         [src]="avatarUrl"
+                         (error)="onBucketAvatarError(interaction)"
+                         alt=""
+                         referrerpolicy="no-referrer"
+                         class="absolute inset-0 w-full h-full object-cover rounded-lg z-[1]" />
+                  </ng-container>
                 </div>
                 <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800" [style.backgroundColor]="getPlatformColor(interaction.platform)">
                   <i [class]="getPlatformIcon(interaction.platform) + ' text-white text-[9px] leading-none'"></i>
@@ -296,13 +310,17 @@
          [style.background]="'linear-gradient(135deg,' + (activeChatInteraction.intentBucket?.color || '#6B7280') + '18,' + (activeChatInteraction.intentBucket?.color || '#6B7280') + '06)'">
       <!-- Avatar -->
       <div class="relative flex-shrink-0">
-        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800"
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold text-white overflow-hidden shadow-md ring-2 ring-white dark:ring-gray-800 relative"
              [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
-          <img *ngIf="getAvatarUrl(activeChatInteraction)"
-               [src]="getAvatarUrl(activeChatInteraction)"
-               class="w-full h-full object-cover rounded-lg"
-               (error)="$any($event.target).style.display='none'" />
-          <span *ngIf="!getAvatarUrl(activeChatInteraction)">{{ getInitials(activeChatInteraction.author?.name) }}</span>
+          <span class="absolute inset-0 flex items-center justify-center z-0">{{ getInitials(activeChatInteraction.author?.name) }}</span>
+          <ng-container *ngIf="(getAuthorAvatar$(activeChatInteraction) | async) as avatarUrl">
+            <img *ngIf="avatarUrl && !avatarFallback[bucketAvatarKey(activeChatInteraction)]"
+                 [src]="avatarUrl"
+                 (error)="onBucketAvatarError(activeChatInteraction)"
+                 alt=""
+                 referrerpolicy="no-referrer"
+                 class="absolute inset-0 w-full h-full object-cover rounded-lg z-[1]" />
+          </ng-container>
         </div>
         <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-md flex items-center justify-center shadow-sm border border-white dark:border-gray-800"
              [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
@@ -365,8 +383,20 @@
                 <img *ngIf="item.attachmentType === 'image' && item.attachmentUrl"
                      [src]="item.attachmentUrl" alt=""
                      class="mb-1 max-w-[180px] rounded-lg border border-gray-200/40 dark:border-white/10 object-cover" />
-                <p *ngIf="item.text && !(item.attachmentType === 'image' && isBucketIncomingImagePlaceholder(item.text))"
-                   class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">{{ item.text }}</p>
+                <button *ngIf="item.attachmentType === 'file' && item.attachmentUrl"
+                        type="button"
+                        (click)="downloadBucketIncomingPdf(item.attachmentUrl)"
+                        class="mb-1 w-full max-w-[220px] flex items-center gap-2 px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/90 dark:hover:bg-gray-800 text-left text-sm shadow-sm cursor-pointer group">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-red-700 text-white" aria-hidden="true">
+                    <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span class="min-w-0 flex-1 font-medium text-gray-800 dark:text-gray-100 truncate group-hover:underline">{{ incomingBucketFileLabel(item) }}</span>
+                  <i class="fas fa-download text-xs text-gray-500 dark:text-gray-400 shrink-0" aria-hidden="true"></i>
+                </button>
+                <p *ngIf="item.text && !(item.attachmentType === 'image' && isBucketIncomingImagePlaceholder(item.text)) && !(item.attachmentType === 'file' && item.text.trim() === '[file]')"
+                   class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">
+                  <app-inbox-linkified-text [text]="item.text" />
+                </p>
               </div>
             </div>
           </div>
@@ -383,7 +413,9 @@
                 <span class="font-normal ml-1">{{ getRelativeTime(item.reply.sentAt) }}</span>
               </p>
               <div class="bubble-left">
-                <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">{{ item.reply.content }}</p>
+                <p *ngIf="item.reply.content?.trim()" class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words">
+                  <app-inbox-linkified-text [text]="item.reply.content" />
+                </p>
               </div>
             </div>
           </div>
@@ -403,11 +435,25 @@
                   <i class="fab fa-whatsapp" aria-hidden="true"></i>
                   Template message
                 </p>
-                <p *ngIf="item.reply.content" class="text-sm leading-relaxed whitespace-pre-wrap break-words">{{ item.reply.content }}</p>
+                <p *ngIf="item.reply.content && !(item.reply.attachmentType === 'file' && item.reply.attachmentUrl && item.reply.content.trim() === '[file]')"
+                   class="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                  <app-inbox-linkified-text [text]="item.reply.content" />
+                </p>
                 <img *ngIf="item.reply.attachmentType === 'image' && item.reply.attachmentUrl"
                      [src]="item.reply.attachmentUrl" alt="Image attachment"
                      class="mt-1 max-w-[180px] rounded-lg border border-white/20 object-cover cursor-pointer"
                      (click)="$event.stopPropagation()"/>
+                <button *ngIf="item.reply.attachmentType === 'file' && item.reply.attachmentUrl"
+                        type="button"
+                        (click)="downloadBucketPdf(item.reply.attachmentUrl, item.reply)"
+                        [attr.aria-label]="'Download PDF: ' + replyPdfFileLabel(item.reply)"
+                        class="mt-1 w-full max-w-[220px] flex items-center gap-2 px-2.5 py-2 rounded-lg border border-white/25 bg-white/15 hover:bg-white/25 dark:bg-gray-900/40 dark:border-white/15 dark:hover:bg-gray-900/55 text-left text-sm cursor-pointer shadow-sm group">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-red-500 to-red-700 text-white" aria-hidden="true">
+                    <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span class="min-w-0 flex-1 font-medium text-rep-black dark:text-gray-100 truncate group-hover:underline">{{ replyPdfFileLabel(item.reply) }}</span>
+                  <i class="fas fa-download text-xs text-rep-black/60 dark:text-gray-400 shrink-0" aria-hidden="true"></i>
+                </button>
                 <audio *ngIf="item.reply.attachmentType === 'audio' && item.reply.attachmentUrl"
                        [src]="item.reply.attachmentUrl" controls
                        class="mt-1 h-8 w-full max-w-[200px] rounded-lg"
@@ -472,9 +518,13 @@
                class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-400 to-purple-500">
             <i class="fas fa-microphone-alt text-white text-sm"></i>
           </div>
+          <div *ngIf="pendingMediaAttachment.mediaType === 'file'"
+               class="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500 to-red-700">
+            <i class="fas fa-file-pdf text-white text-sm"></i>
+          </div>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-xs font-medium text-gray-700 dark:text-gray-200 capitalize">{{ pendingMediaAttachment.mediaType }}</p>
+          <p class="text-xs font-medium text-gray-700 dark:text-gray-200 capitalize">{{ pendingMediaAttachment.mediaType === 'file' ? 'PDF' : pendingMediaAttachment.mediaType }}</p>
           <p class="text-[10px] text-gray-400 dark:text-gray-500 truncate">{{ pendingMediaAttachment.name || 'From library' }}</p>
         </div>
         <button type="button" (click)="clearAttachment()"

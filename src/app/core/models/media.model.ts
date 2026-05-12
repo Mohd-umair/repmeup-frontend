@@ -5,7 +5,7 @@ export interface Media {
   filePath: string;
   publicUrl: string;
   mimeType: string;
-  mediaType: 'image' | 'video' | 'audio';
+  mediaType: 'image' | 'video' | 'audio' | 'file';
   size: number;
   width?: number;
   height?: number;
@@ -31,7 +31,7 @@ export interface MediaUploadRequest {
 }
 
 export interface MediaLibraryParams {
-  mediaType?: 'image' | 'video' | 'audio';
+  mediaType?: 'image' | 'video' | 'audio' | 'file';
   tags?: string[];
   page?: number;
   limit?: number;
@@ -58,6 +58,14 @@ export interface MediaStatsResponse {
         totalSize: number;
       };
       video?: {
+        count: number;
+        totalSize: number;
+      };
+      audio?: {
+        count: number;
+        totalSize: number;
+      };
+      file?: {
         count: number;
         totalSize: number;
       };

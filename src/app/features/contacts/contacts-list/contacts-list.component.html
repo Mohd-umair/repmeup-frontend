@@ -91,11 +91,12 @@
             <td class="px-4 sm:px-6 py-4 align-top">
               <div class="flex items-center gap-3 min-w-0">
                 <div class="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
-                  <img *ngIf="contact.channels[0]?.avatarUrl"
-                       [src]="contact.channels[0].avatarUrl"
+                  <img *ngIf="avatarUrl(contact)"
+                       [src]="avatarUrl(contact)!"
                        [alt]="contact.primaryName"
+                       referrerpolicy="no-referrer"
                        class="w-full h-full object-cover" />
-                  <span *ngIf="!contact.channels[0]?.avatarUrl">{{ getInitials(contact.primaryName) }}</span>
+                  <span *ngIf="!avatarUrl(contact)">{{ getInitials(contact.primaryName) }}</span>
                 </div>
                 <span class="text-sm font-bold text-gray-900 dark:text-rep-white truncate max-w-[200px]">
                   {{ contact.primaryName }}

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
-import { IProduct, ICommentToDmSettings } from '../models/product.model';
+import { IProduct, ICommentToDmSettings, ICommentFollowInviteSettings } from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
@@ -47,6 +47,16 @@ export class CatalogService {
 
   updateCommentToDmSettings(data: Partial<ICommentToDmSettings>): Observable<IApiResponse<ICommentToDmSettings>> {
     return this.api.put('/products/settings/comment-to-dm', data);
+  }
+
+  getCommentFollowInviteSettings(): Observable<IApiResponse<ICommentFollowInviteSettings>> {
+    return this.api.get('/products/settings/comment-follow-invite');
+  }
+
+  updateCommentFollowInviteSettings(
+    data: Partial<ICommentFollowInviteSettings>
+  ): Observable<IApiResponse<ICommentFollowInviteSettings>> {
+    return this.api.put('/products/settings/comment-follow-invite', data);
   }
 
   resolvePostId(postId: string): Observable<IApiResponse<{ shortcode: string | null; numericId: string; alreadyNumeric?: boolean }>> {

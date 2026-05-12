@@ -35,7 +35,11 @@
       <app-ai-chat-bubble-icon class="mr-2 inline-block align-middle" iconClass="w-4 h-4"></app-ai-chat-bubble-icon>Comment-to-DM Automation
       <span *ngIf="settings?.enabled"
             class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
-        ON
+        Sales ON
+      </span>
+      <span *ngIf="followInviteSettings?.enabled"
+            class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
+        Follow ON
       </span>
     </button>
   </div>
@@ -184,11 +188,11 @@
   <!-- ══════════════════════════ AUTOMATION TAB ══════════════════════════ -->
   <div *ngIf="activeTab === 'automation'">
 
-    <div *ngIf="loadingSettings" class="flex justify-center py-16">
+    <div *ngIf="loadingAutomation" class="flex justify-center py-16">
       <div class="catalog-page-loader w-10 h-10 border-4 rounded-full animate-spin"></div>
     </div>
 
-    <div *ngIf="!loadingSettings && settings" class="max-w-3xl space-y-5">
+    <div *ngIf="!loadingAutomation && settings" class="max-w-3xl space-y-5">
 
       <!-- ─── Status checklist ─── -->
       <div class="rounded-xl border p-5 space-y-3"
@@ -392,6 +396,142 @@
         </span>
         <span *ngIf="settingsError" class="text-sm text-red-500">{{ settingsError }}</span>
       </div>
+
+      <div *ngIf="followInviteSettingsLoadError"
+           class="rounded-xl border border-amber-300 dark:border-amber-700 p-4 text-sm flex gap-2"
+           style="background-color: var(--card-bg); color: var(--text-primary);">
+        <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5 shrink-0"></i>
+        <div>
+          <p class="font-semibold">Follow-invite settings</p>
+          <p class="text-xs mt-1" style="color: var(--text-secondary);">{{ followInviteSettingsLoadError }}</p>
+        </div>
+      </div>
+
+      <!-- ─── Comment → Follow invite DM (Instagram, top-level comments) ─── -->
+      <ng-container *ngIf="followInviteSettings as fi">
+        <div class="rounded-xl border p-5 flex items-center justify-between gap-4"
+             style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <div>
+            <h3 class="font-bold text-base" style="color: var(--text-primary);">
+              <i class="fab fa-instagram mr-2 text-pink-500"></i>Comment → Follow invite (DM)
+            </h3>
+            <p class="text-xs mt-0.5" style="color: var(--text-secondary);">
+              On each <strong>top-level</strong> Instagram comment (not replies), send a private DM with a
+              <strong>Follow</strong> button. Runs after the product comment-to-DM flow when both are active.
+            </p>
+            <p class="text-[11px] mt-2 p-2 rounded-lg border border-amber-200/80 dark:border-amber-800/60"
+               style="background-color: var(--surface-primary); color: var(--text-muted);">
+              Sending a DM on every comment can feel spammy and may conflict with Meta messaging policies.
+              Use the daily limit and thoughtful copy. Generic templates may require the right app permissions; the backend falls back to plain text if the template fails.
+            </p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+            <input type="checkbox" [(ngModel)]="fi.enabled" class="sr-only peer" />
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:bg-purple-500 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+
+        <div class="rounded-xl border p-5 grid grid-cols-1 sm:grid-cols-2 gap-4"
+             style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <div class="sm:col-span-2">
+            <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">Card title</label>
+            <input [(ngModel)]="fi.title" type="text" maxlength="80"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">Subtitle</label>
+            <input [(ngModel)]="fi.subtitle" type="text" maxlength="80"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">
+              Image URL <span class="font-normal text-xs" style="color: var(--text-muted);">(optional, https)</span>
+            </label>
+            <input [(ngModel)]="fi.imageUrl" type="url" placeholder="https://…"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+          </div>
+          <div>
+            <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">Button label</label>
+            <input [(ngModel)]="fi.buttonTitle" type="text" maxlength="20"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+          </div>
+          <div>
+            <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">
+              Follow URL <span class="font-normal text-xs" style="color: var(--text-muted);">(optional)</span>
+            </label>
+            <input [(ngModel)]="fi.buttonUrl" type="url" placeholder="Leave blank to use your connected Instagram profile"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+            <p class="text-[11px] mt-1" style="color: var(--text-muted);">Must be <code class="font-mono">https://</code> if set.</p>
+          </div>
+        </div>
+
+        <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">
+            Public comment reply <span class="font-normal text-xs" style="color: var(--text-muted);">(optional)</span>
+          </label>
+          <p class="text-xs mb-3" style="color: var(--text-muted);">
+            If enabled below, posts publicly on the comment thread. Supports
+            <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;username&#125;&#125;</code>.
+          </p>
+          <textarea [(ngModel)]="fi.publicReplyTemplate" rows="2"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                    placeholder="Thanks {{username}} — check your DMs!"></textarea>
+          <label class="flex items-center gap-3 cursor-pointer mt-3">
+            <input type="checkbox" [(ngModel)]="fi.postPublicReply" class="w-4 h-4 rounded" />
+            <span class="text-sm font-bold" style="color: var(--text-primary);">Post public reply when sending follow-invite DM</span>
+          </label>
+        </div>
+
+        <div class="rounded-xl border p-5 grid grid-cols-1 sm:grid-cols-2 gap-5"
+             style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <div>
+            <label class="block text-sm font-bold mb-2" style="color: var(--text-primary);">Max follow-invite DMs / day</label>
+            <input [(ngModel)]="fi.maxDmsPerDay" type="number" min="1" max="10000"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+            <p class="text-[11px] mt-1" style="color: var(--text-muted);">Separate quota from product comment-to-DM above.</p>
+            <p *ngIf="fi.dmsSentToday != null" class="text-[11px] mt-1 font-semibold" style="color: var(--text-secondary);">
+              Sent today (this feature): {{ fi.dmsSentToday }}
+            </p>
+          </div>
+          <div class="flex flex-col gap-4 justify-center">
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="fi.deduplicateDms" class="w-4 h-4 rounded" />
+              <div>
+                <span class="text-sm font-bold" style="color: var(--text-primary);">One invite per user per post</span>
+                <p class="text-[11px]" style="color: var(--text-muted);">Do not send twice for the same commenter and post.</p>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="fi.skipIfProductDmSent" class="w-4 h-4 rounded" />
+              <div>
+                <span class="text-sm font-bold" style="color: var(--text-primary);">Skip if product DM was sent</span>
+                <p class="text-[11px]" style="color: var(--text-muted);">Avoid two DMs when the sales flow already messaged for this comment.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            (click)="saveFollowInviteSettings()"
+            [disabled]="savingFollowInviteSettings"
+            class="catalog-btn-primary px-6 py-2.5 rounded-lg font-bold text-sm disabled:opacity-60 disabled:shadow-none">
+            <i class="fas" [ngClass]="savingFollowInviteSettings ? 'fa-spinner fa-spin' : 'fa-save'" class="mr-1.5"></i>
+            {{ savingFollowInviteSettings ? 'Saving…' : 'Save follow-invite settings' }}
+          </button>
+          <span *ngIf="followInviteSettingsSaved" class="text-sm text-green-600 dark:text-green-400 font-semibold">
+            <i class="fas fa-check mr-1"></i>Saved!
+          </span>
+          <span *ngIf="followInviteSettingsError" class="text-sm text-red-500">{{ followInviteSettingsError }}</span>
+        </div>
+      </ng-container>
 
       <!-- ─── Webhook info box ─── -->
       <div class="rounded-xl border border-blue-200 dark:border-blue-800 p-5"

@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 export interface RazorpayCheckoutOptions {
   planId: string;
   planName: string;
-  /** Price label shown to user e.g. "$29/mo" */
+  /** Price label shown to user e.g. "₹2,499/mo" */
   priceLabel: string;
   /** User's name for prefill */
   userName?: string;

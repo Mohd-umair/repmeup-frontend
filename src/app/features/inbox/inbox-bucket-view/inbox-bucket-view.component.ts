@@ -16,12 +16,20 @@ import {
   BucketChatTimelineItem,
   isImagePlaceholderText
 } from '../../../core/utils/inbox-bucket-chat-timeline';
+import {
+  downloadInboxAttachmentFile,
+  inboxAttachmentFilenameFromUrl,
+  inboxReplyPdfDisplayName
+} from '../../../core/utils/inbox-attachment-display';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
 import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { SentimentDonutChartComponent } from '../../../shared/components/charts/sentiment-donut-chart.component';
-import { Subscription, timer, interval } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { Observable, Subscription, timer, interval } from 'rxjs';
+import { map, take } from 'rxjs/operators';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { InboxLinkifiedTextComponent } from '../../../shared/components/inbox-linkified-text/inbox-linkified-text.component';
+import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 
 interface BucketColumn {
   bucket: IIntentBucket;
@@ -43,7 +51,7 @@ interface SentimentStats {
 @Component({
   selector: 'app-inbox-bucket-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, AiChatBubbleIconComponent, SentimentDonutChartComponent, MediaSelectorModalComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, AiChatBubbleIconComponent, SentimentDonutChartComponent, MediaSelectorModalComponent, InboxLinkifiedTextComponent],
   templateUrl: './inbox-bucket-view.component.html',
   styleUrls: ['./inbox-bucket-view.component.scss']
 })
@@ -87,7 +95,7 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   showEmojiPicker = false;
   showMediaModal = false;
   /** Attachment chosen from media library (URL already public — no upload step). */
-  pendingMediaAttachment: { publicUrl: string; mediaType: 'image' | 'video' | 'audio'; name?: string } | null = null;
+  pendingMediaAttachment: { publicUrl: string; mediaType: 'image' | 'video' | 'audio' | 'file'; name?: string } | null = null;
   isRecording = false;
   recordingSeconds = 0;
   recordedAudioUrl: string | null = null;
@@ -114,11 +122,15 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   bucketTopics: { name: string; color: string; count: number; percent: number }[] = [];
   aiRecommendation = '';
   totalMessagesAnalysed = 0;
+  /** Hide broken avatar images so initials show (same pattern as inbox list). */
+  avatarFallback: Record<string, boolean> = {};
 
   constructor(
     private inboxService: InboxService,
     private notify: NotificationService,
-    private sweetAlertService: SweetAlertService
+    private sweetAlertService: SweetAlertService,
+    private sanitizer: DomSanitizer,
+    private avatarService: InboxAvatarService
   ) {}
 
   ngOnInit(): void {
@@ -416,7 +428,13 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     if (hasLibraryMedia) {
       const { publicUrl, mediaType } = this.pendingMediaAttachment!;
       const defaultCaption =
-        mediaType === 'audio' ? '🎤 Voice message' : mediaType === 'video' ? '🎬 Video' : '🖼️ Image';
+        mediaType === 'audio'
+          ? '🎤 Voice message'
+          : mediaType === 'video'
+            ? '🎬 Video'
+            : mediaType === 'file'
+              ? '📄 PDF'
+              : '🖼️ Image';
       const replyContent = text || defaultCaption;
       this.inboxService.replyToInteraction(id, replyContent, false, undefined, publicUrl, mediaType).subscribe({
         next: () => this.onReplySent(id),
@@ -526,7 +544,12 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     const isImage = media.mediaType === 'image';
     const isVideo = media.mediaType === 'video';
     const isAudio = media.mediaType === 'audio';
-    const maxBytes = isImage ? limits.imageMaxBytes : isAudio ? limits.audioMaxBytes : limits.videoMaxBytes;
+    const isFile = media.mediaType === 'file';
+    const maxBytes = isImage
+      ? limits.imageMaxBytes
+      : isAudio
+        ? limits.audioMaxBytes
+        : limits.videoMaxBytes;
     if (size > maxBytes) {
       const maxMB = Math.round(maxBytes / (1024 * 1024));
       void this.sweetAlertService.toast('error', `This ${media.mediaType} is too large. Max ${maxMB}MB for this platform.`);
@@ -748,9 +771,22 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  getAvatarUrl(interaction: IInteraction): string | null {
-    const author = interaction.author;
-    return author?.avatarUrl || author?.profilePicture || null;
+  /** Avatar for bucket cards / chat header — proxied via API when Graph URL or FB/IG needs token. */
+  getAuthorAvatar$(interaction: IInteraction): Observable<SafeUrl | null> {
+    const pageId = (interaction.metadata as { facebookPageId?: string } | undefined)?.facebookPageId;
+    return this.avatarService.getAvatarUrl(interaction.platform, interaction.author, pageId).pipe(
+      map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
+    );
+  }
+
+  bucketAvatarKey(interaction: IInteraction): string {
+    return String(interaction.platformId || interaction._id || '');
+  }
+
+  onBucketAvatarError(interaction: IInteraction): void {
+    const key = this.bucketAvatarKey(interaction);
+    if (!key) return;
+    this.avatarFallback = { ...this.avatarFallback, [key]: true };
   }
 
   getInitials(name: string): string {
@@ -786,6 +822,25 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
       youtube: '#FF0000', google: '#4285F4', linkedin: '#0A66C2', website: '#6B7280'
     };
     return map[platform] || '#6B7280';
+  }
+
+  replyPdfFileLabel(reply: IReply): string {
+    return inboxReplyPdfDisplayName(reply);
+  }
+
+  downloadBucketPdf(url: string | undefined, reply: IReply): void {
+    if (!url) return;
+    const name = inboxReplyPdfDisplayName({ ...reply, attachmentUrl: url });
+    void downloadInboxAttachmentFile(url, name);
+  }
+
+  incomingBucketFileLabel(item: { attachmentUrl?: string }): string {
+    return inboxAttachmentFilenameFromUrl(item.attachmentUrl);
+  }
+
+  downloadBucketIncomingPdf(url: string | undefined): void {
+    if (!url) return;
+    void downloadInboxAttachmentFile(url, inboxAttachmentFilenameFromUrl(url));
   }
 
   getSentimentEmoji(sentiment?: string): string {

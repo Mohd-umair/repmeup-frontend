@@ -61,6 +61,14 @@
           <i class="fas fa-microphone"></i>
           Audio
         </button>
+        <button type="button"
+                *ngIf="mediaType === 'all' || mediaType === 'file'"
+                class="msm-filter-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2"
+                [class.msm-filter-btn--active]="filterType === 'file'"
+                (click)="onFilterChange('file')">
+          <i class="fas fa-file-pdf"></i>
+          PDF
+        </button>
       </div>
 
       <div class="flex items-center gap-2">
@@ -104,10 +112,19 @@
             <div *ngIf="isAudio(media)" class="msm-thumb-audio w-full h-full flex items-center justify-center">
               <i class="fas fa-music text-4xl msm-empty-icon"></i>
             </div>
+            <div *ngIf="isFile(media)" class="msm-thumb-audio w-full h-full flex items-center justify-center">
+              <i class="fas fa-file-pdf text-4xl text-red-500"></i>
+            </div>
 
             <!-- Type Badge -->
-            <div class="absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold" [ngClass]="{'bg-blue-500': isImage(media), 'bg-purple-500': isVideo(media), 'bg-amber-500': isAudio(media)}">
-              <i [class]="isImage(media) ? 'fas fa-image text-white' : (isVideo(media) ? 'fas fa-video text-white' : 'fas fa-music text-white')"></i>
+            <div class="absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold"
+                 [ngClass]="{
+                   'bg-blue-500': isImage(media),
+                   'bg-purple-500': isVideo(media),
+                   'bg-amber-500': isAudio(media),
+                   'bg-red-600': isFile(media)
+                 }">
+              <i [class]="isImage(media) ? 'fas fa-image text-white' : (isVideo(media) ? 'fas fa-video text-white' : (isFile(media) ? 'fas fa-file-pdf text-white' : 'fas fa-music text-white'))"></i>
             </div>
 
             <!-- Usage Badge -->

@@ -8,7 +8,7 @@ import { MediaLibraryService } from '../../core/services/media-library.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
-import { IProduct, ICommentToDmSettings } from '../../core/models/product.model';
+import { IProduct, ICommentToDmSettings, ICommentFollowInviteSettings } from '../../core/models/product.model';
 import { environment } from '../../../environments/environment';
 
 type ImportSource = 'excel' | 'woocommerce' | 'shopify' | 'url';
@@ -90,6 +90,13 @@ export class CatalogComponent implements OnInit, OnDestroy {
   settingsSaved = false;
   keywordsInput = '';
 
+  followInviteSettings: ICommentFollowInviteSettings | null = null;
+  loadingFollowInviteSettings = false;
+  savingFollowInviteSettings = false;
+  followInviteSettingsError = '';
+  followInviteSettingsSaved = false;
+  followInviteSettingsLoadError = '';
+
   constructor(
     private catalogService: CatalogService,
     private mediaLibraryService: MediaLibraryService,
@@ -102,6 +109,12 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.buildProductForm();
     this.loadProducts();
     this.loadSettings();
+    this.loadFollowInviteSettings();
+  }
+
+  /** Both automation panels load independently; the tab shows a spinner until both finish. */
+  get loadingAutomation(): boolean {
+    return this.loadingSettings || this.loadingFollowInviteSettings;
   }
 
   ngOnDestroy(): void {
@@ -493,6 +506,76 @@ export class CatalogComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: err => { this.settingsError = err.error?.error || 'Failed to save settings'; this.cdr.markForCheck(); }
+      });
+  }
+
+  loadFollowInviteSettings(): void {
+    this.loadingFollowInviteSettings = true;
+    this.followInviteSettingsLoadError = '';
+    this.catalogService.getCommentFollowInviteSettings()
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.loadingFollowInviteSettings = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: r => {
+          this.followInviteSettings = r.data ?? null;
+          this.cdr.markForCheck();
+        },
+        error: _err => {
+          this.followInviteSettings = null;
+          this.followInviteSettingsLoadError = 'Could not load follow-invite settings. Refresh the page or try again.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  saveFollowInviteSettings(): void {
+    if (!this.followInviteSettings) return;
+    this.savingFollowInviteSettings = true;
+    this.followInviteSettingsSaved = false;
+    this.followInviteSettingsError = '';
+
+    const s = this.followInviteSettings;
+    const payload: Partial<ICommentFollowInviteSettings> = {
+      enabled: s.enabled,
+      title: s.title,
+      subtitle: s.subtitle,
+      imageUrl: s.imageUrl,
+      buttonTitle: s.buttonTitle,
+      buttonUrl: s.buttonUrl,
+      publicReplyTemplate: s.publicReplyTemplate,
+      postPublicReply: s.postPublicReply,
+      deduplicateDms: s.deduplicateDms,
+      maxDmsPerDay: Number(s.maxDmsPerDay),
+      skipIfProductDmSent: s.skipIfProductDmSent
+    };
+
+    this.catalogService.updateCommentFollowInviteSettings(payload)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.savingFollowInviteSettings = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: r => {
+          this.followInviteSettings = r.data ?? null;
+          this.followInviteSettingsSaved = true;
+          setTimeout(() => {
+            this.followInviteSettingsSaved = false;
+            this.cdr.markForCheck();
+          }, 3000);
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          this.followInviteSettingsError = err.error?.error || 'Failed to save follow-invite settings';
+          this.cdr.markForCheck();
+        }
       });
   }
 

@@ -107,7 +107,7 @@
         and more.
       </p>
       <span class="text-sm font-bold text-gray-800 dark:text-gray-200">
-        {{ subscriptionLimits!.nextTier!.price === 'custom' ? 'Contact Sales' : '$' + subscriptionLimits!.nextTier!.price + '/mo' }}
+        {{ subscriptionLimits!.nextTier!.price === 'custom' ? 'Contact Sales' : formatPlanPriceMonthly(subscriptionLimits!.nextTier!.price) }}
       </span>
     </div>
   </div>

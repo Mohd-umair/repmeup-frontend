@@ -16,9 +16,9 @@ const FAILED = '__FAILED__';
  *    (fbsbx.com / lookaside.fbsbx.com) and stores it in `author.avatarUrl`.
  *    CDN URLs are publicly accessible — no proxy, no auth header needed.
  *
- * 2. Legacy records created before this fix may have a `graph.facebook.com/{id}/picture`
- *    URL in `author.profilePicture`.  Those URLs require a Page access token, so we
- *    proxy them through `/api/inbox/avatar/facebook/:id` which adds the token server-side.
+ * 2. Legacy records may store `graph.facebook.com/{id}/picture` (Facebook or Instagram
+ *    PSIDs). Those require a Page access token — proxy via `/api/inbox/avatar/facebook/:id`
+ *    or `/api/inbox/avatar/instagram/:id` so the backend adds the token.
  *
  * 3. If no URL is stored at all, or if the CDN URL has expired (Facebook CDN URLs are
  *    time-limited), we fall back to an initials avatar immediately rather than hammering
@@ -48,32 +48,41 @@ export class InboxAvatarService {
     if (!author) return of(null);
 
     const storedUrl = author.avatarUrl || author.profilePicture || null;
-
-    // Non-Facebook: use whatever URL is stored (or null).
-    if (platform !== 'facebook') {
-      return of(storedUrl);
-    }
+    const platformKey = (platform || '').toLowerCase();
 
     // --- Facebook path ---
-    // We must have a platformId to fetch an avatar (proxy or stored).
-    if (!author.platformId) return of(null);
-
-    // Case 1: we have a CDN URL (fbsbx / lookaside / scontent) — use directly, no proxy.
-    if (storedUrl && isFacebookCdnUrl(storedUrl)) {
-      const key = `cdn_${storedUrl}`;
-      const cached = this.resolved.get(key);
-      if (cached !== undefined) return of(cached === FAILED ? null : cached);
-      this.setCache(key, storedUrl);
-      return of(storedUrl);
+    if (platformKey === 'facebook') {
+      if (!author.platformId) return of(null);
+      if (storedUrl && isFacebookCdnUrl(storedUrl)) {
+        const key = `cdn_${storedUrl}`;
+        const cached = this.resolved.get(key);
+        if (cached !== undefined) return of(cached === FAILED ? null : cached);
+        this.setCache(key, storedUrl);
+        return of(storedUrl);
+      }
+      const proxyKey = pageId ? `proxy_fb_${author.platformId}_${pageId}` : `proxy_fb_${author.platformId}`;
+      const proxyUrl = pageId
+        ? `${this.apiUrl}/inbox/avatar/facebook/${encodeURIComponent(author.platformId)}?pageId=${encodeURIComponent(pageId)}`
+        : `${this.apiUrl}/inbox/avatar/facebook/${encodeURIComponent(author.platformId)}`;
+      return this.fetchViaProxy(proxyKey, proxyUrl);
     }
 
-    // Case 2 & 3: legacy graph.facebook.com URL OR no URL stored — use backend proxy.
-    // Proxy adds the Page access token so GET /{user-id}/picture works (commenters/messengers).
-    const proxyKey = pageId ? `proxy_fb_${author.platformId}_${pageId}` : `proxy_fb_${author.platformId}`;
-    const proxyUrl = pageId
-      ? `${this.apiUrl}/inbox/avatar/facebook/${author.platformId}?pageId=${encodeURIComponent(pageId)}`
-      : `${this.apiUrl}/inbox/avatar/facebook/${author.platformId}`;
-    return this.fetchViaProxy(proxyKey, proxyUrl);
+    // --- Instagram path (same Graph picture semantics; browser cannot load graph URLs without token) ---
+    if (platformKey === 'instagram') {
+      if (!author.platformId) return of(null);
+      if (storedUrl && isFacebookCdnUrl(storedUrl)) {
+        const key = `cdn_${storedUrl}`;
+        const cached = this.resolved.get(key);
+        if (cached !== undefined) return of(cached === FAILED ? null : cached);
+        this.setCache(key, storedUrl);
+        return of(storedUrl);
+      }
+      const proxyKey = `proxy_ig_${author.platformId}`;
+      const proxyUrl = `${this.apiUrl}/inbox/avatar/instagram/${encodeURIComponent(author.platformId)}`;
+      return this.fetchViaProxy(proxyKey, proxyUrl);
+    }
+
+    return of(storedUrl);
   }
 
   /**

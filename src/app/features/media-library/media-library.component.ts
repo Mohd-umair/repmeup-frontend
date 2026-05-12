@@ -22,7 +22,7 @@ export class MediaLibraryComponent implements OnInit {
   uploading = false;
   
   // Filters
-  filterType: 'all' | 'image' | 'video' = 'all';
+  filterType: 'all' | 'image' | 'video' | 'file' = 'all';
   sortBy: string = '-createdAt';
   searchTags: string[] = [];
   
@@ -127,7 +127,7 @@ export class MediaLibraryComponent implements OnInit {
   /**
    * Change filter type
    */
-  onFilterChange(type: 'all' | 'image' | 'video'): void {
+  onFilterChange(type: 'all' | 'image' | 'video' | 'file'): void {
     this.filterType = type;
     this.currentPage = 1;
     this.loadMediaLibrary();
@@ -236,6 +236,9 @@ export class MediaLibraryComponent implements OnInit {
     if (media.mediaType === 'video') {
       return '/assets/video-placeholder.png';
     }
+    if (media.mediaType === 'file') {
+      return '';
+    }
     return '';
   }
 
@@ -258,6 +261,10 @@ export class MediaLibraryComponent implements OnInit {
    */
   isAudio(media: Media): boolean {
     return media.mediaType === 'audio';
+  }
+
+  isFile(media: Media): boolean {
+    return media.mediaType === 'file';
   }
 
   /**

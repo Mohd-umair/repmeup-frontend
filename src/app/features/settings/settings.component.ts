@@ -9,6 +9,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
 import { RazorpayService } from '../../core/services/razorpay.service';
+import { formatPlanPriceMonthly } from '../../core/utils/plan-price-format';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
 import { PermissionService } from '../../core/services/permission.service';
 import { UserService, IAvailableAgent } from '../../core/services/user.service';
@@ -1491,7 +1492,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     // Paid plan — open Razorpay checkout
     this.upgradingPlan = true;
-    const priceLabel = price === 'custom' ? 'Custom' : `$${price}/mo`;
+    const priceLabel = formatPlanPriceMonthly(price);
 
     this.razorpayService.initiateUpgrade({ planId, planName, priceLabel })
       .then((res) => {
@@ -1525,9 +1526,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
    * Format price display
    */
   formatPrice(price: number | string): string {
-    if (price === 'custom') return 'Custom';
-    if (typeof price === 'number') return `$${price}/mo`;
-    return price;
+    return formatPlanPriceMonthly(price);
   }
 
   /**

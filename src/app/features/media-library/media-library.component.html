@@ -54,6 +54,18 @@
       </div>
     </div>
 
+    <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800/50" *ngIf="stats.byType.file">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center">
+          <i class="fas fa-file-pdf text-white text-xl"></i>
+        </div>
+        <div>
+          <div class="text-gray-400 text-xs">PDFs</div>
+          <div class="text-rep-white text-2xl font-bold">{{ stats.byType.file.count }}</div>
+        </div>
+      </div>
+    </div>
+
     <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800/50">
       <div class="flex items-center gap-3">
         <div class="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
@@ -99,6 +111,16 @@
         <i class="fas fa-video"></i>
         <span class="hidden sm:inline">Videos</span>
       </button>
+      <button 
+        class="flex-1 sm:flex-none px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2"
+        [class.bg-rep-lime]="filterType === 'file'"
+        [class.text-rep-black]="filterType === 'file'"
+        [class.text-gray-400]="filterType !== 'file'"
+        [class.hover:text-rep-white]="filterType !== 'file'"
+        (click)="onFilterChange('file')">
+        <i class="fas fa-file-pdf"></i>
+        <span class="hidden sm:inline">PDF</span>
+      </button>
     </div>
 
     <div class="flex items-center gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-800">
@@ -139,14 +161,20 @@
           class="w-full h-full flex items-center justify-center bg-gray-700">
           <i class="fas fa-music text-4xl text-amber-500"></i>
         </div>
+        <div 
+          *ngIf="isFile(media)" 
+          class="w-full h-full flex items-center justify-center bg-gray-700">
+          <i class="fas fa-file-pdf text-5xl text-red-500"></i>
+        </div>
         
         <!-- Type Badge -->
         <div 
           class="absolute top-2 left-2 px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1"
           [class.bg-blue-500]="isImage(media)"
           [class.bg-purple-500]="isVideo(media)"
-          [class.bg-amber-500]="isAudio(media)">
-          <i [class]="isImage(media) ? 'fas fa-image' : (isVideo(media) ? 'fas fa-video' : 'fas fa-music')"></i>
+          [class.bg-amber-500]="isAudio(media)"
+          [class.bg-red-600]="isFile(media)">
+          <i [class]="isImage(media) ? 'fas fa-image' : (isVideo(media) ? 'fas fa-video' : (isFile(media) ? 'fas fa-file-pdf' : 'fas fa-music'))"></i>
           <span class="text-white uppercase">{{ media.mediaType }}</span>
         </div>
 
@@ -296,6 +324,14 @@
         <div *ngIf="isAudio(selectedMedia)" class="p-6 flex items-center justify-center">
           <audio [src]="selectedMedia.publicUrl" controls class="w-full max-w-md"></audio>
         </div>
+        <div *ngIf="isFile(selectedMedia)" class="p-6 flex flex-col items-center justify-center gap-4">
+          <i class="fas fa-file-pdf text-6xl text-red-500"></i>
+          <a [href]="selectedMedia.publicUrl" target="_blank" rel="noopener noreferrer"
+             class="px-4 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition inline-flex items-center gap-2">
+            <i class="fas fa-external-link-alt"></i>
+            Open PDF
+          </a>
+        </div>
       </div>
 
       <!-- Media Info -->
@@ -307,7 +343,7 @@
         <div class="flex gap-4">
           <span class="text-gray-400 w-32 flex-shrink-0">Type:</span>
           <span class="text-rep-white flex items-center gap-2">
-            <i [class]="isImage(selectedMedia) ? 'fas fa-image text-blue-500' : (isVideo(selectedMedia) ? 'fas fa-video text-purple-500' : 'fas fa-music text-amber-500')"></i>
+            <i [class]="isImage(selectedMedia) ? 'fas fa-image text-blue-500' : (isVideo(selectedMedia) ? 'fas fa-video text-purple-500' : (isFile(selectedMedia) ? 'fas fa-file-pdf text-red-500' : 'fas fa-music text-amber-500'))"></i>
             {{ selectedMedia.mediaType | titlecase }}
           </span>
         </div>

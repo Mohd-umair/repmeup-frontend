@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
+import { validateScheduleDateTimeStrings } from '../../shared/utils/schedule-validation';
 
 interface ScheduledPost {
   _id?: string;
@@ -298,7 +299,12 @@ export class CalendarComponent implements OnInit {
 
   confirmReschedule(): void {
     if (!this.reschedulePostId || !this.rescheduleDate || !this.rescheduleTime) return;
-    const scheduledFor = new Date(`${this.rescheduleDate}T${this.rescheduleTime}`).toISOString();
+    const v = validateScheduleDateTimeStrings(this.rescheduleDate, this.rescheduleTime);
+    if (!v.ok) {
+      this.notificationService.error('Reschedule', v.message);
+      return;
+    }
+    const scheduledFor = v.scheduled.toISOString();
     this.http.patch(`${environment.apiUrl}/posts/scheduled/${this.reschedulePostId}/reschedule`, { scheduledFor }).subscribe({
       next: () => {
         this.reschedulePostId = null;
@@ -319,7 +325,12 @@ export class CalendarComponent implements OnInit {
     if (!this.duplicatingId) return;
     const post = this.scheduledPosts.find(p => p._id === this.duplicatingId);
     if (!post || !post.content || !post.platform) return;
-    const scheduledFor = new Date(`${this.duplicateDate}T${this.duplicateTime}`).toISOString();
+    const v = validateScheduleDateTimeStrings(this.duplicateDate, this.duplicateTime);
+    if (!v.ok) {
+      this.notificationService.error('Schedule', v.message);
+      return;
+    }
+    const scheduledFor = v.scheduled.toISOString();
     this.http.post(`${environment.apiUrl}/posts/schedule`, {
       platform: post.platform,
       content: post.content,

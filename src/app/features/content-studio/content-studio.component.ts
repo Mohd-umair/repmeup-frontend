@@ -14,6 +14,7 @@ import { MediaSelectorModalComponent } from '../../shared/components/media-selec
 import { PostEditorComponent, PostEditorOutput } from '../post-editor/post-editor.component';
 import { Media } from '../../core/models/media.model';
 import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import { validateScheduleDateTimeStrings } from '../../shared/utils/schedule-validation';
 
 export interface EventTemplateItem {
   _id: string;
@@ -1090,9 +1091,12 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
     const content = this.selectedContent;
     const platform = this.selectedPlatformIds[0];
     if (!content || !platform) return;
-    const scheduledFor = this.scheduleDate && this.scheduleTime
-      ? new Date(`${this.scheduleDate}T${this.scheduleTime}`).toISOString() : null;
-    if (!scheduledFor) return;
+    const scheduleCheck = validateScheduleDateTimeStrings(this.scheduleDate || '', this.scheduleTime || '');
+    if (!scheduleCheck.ok) {
+      this.notify.error('Schedule', scheduleCheck.message);
+      return;
+    }
+    const scheduledFor = scheduleCheck.scheduled.toISOString();
     this.scheduling = true;
     const postType = this.selectedVideoUrl ? this.videoPostType : this.postFormat;
     const scheduleDesignDna = this.selectedImageIndex !== null

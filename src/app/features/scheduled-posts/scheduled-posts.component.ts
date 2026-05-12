@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subject, takeUntil } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
+import { validateScheduleDateTimeStrings } from '../../shared/utils/schedule-validation';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 
 interface ScheduledPost {
@@ -109,8 +110,13 @@ export class ScheduledPostsComponent implements OnInit, OnDestroy {
 
   submitReschedule(): void {
     if (!this.rescheduleId || !this.rescheduleDate || !this.rescheduleTime) return;
+    const v = validateScheduleDateTimeStrings(this.rescheduleDate, this.rescheduleTime);
+    if (!v.ok) {
+      this.notify.error('Reschedule', v.message);
+      return;
+    }
     this.rescheduling = true;
-    const scheduledFor = new Date(`${this.rescheduleDate}T${this.rescheduleTime}`).toISOString();
+    const scheduledFor = v.scheduled.toISOString();
     this.http.patch<any>(`${environment.apiUrl}/posts/scheduled/${this.rescheduleId}/reschedule`, { scheduledFor })
       .pipe(takeUntil(this.destroy$))
       .subscribe({

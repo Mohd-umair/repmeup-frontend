@@ -18,7 +18,7 @@ export class MediaUploadModalComponent {
   // File data
   selectedFile: File | null = null;
   filePreview: string | null = null;
-  fileType: 'image' | 'video' | 'audio' | null = null;
+  fileType: 'image' | 'video' | 'audio' | 'file' | null = null;
 
   // Form data
   tags: string = '';
@@ -85,9 +85,22 @@ export class MediaUploadModalComponent {
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     const validVideoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
     const validAudioTypes = ['audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/ogg', 'audio/wav', 'audio/webm', 'audio/x-m4a', 'audio/aac'];
-    
-    if (!validImageTypes.includes(file.type) && !validVideoTypes.includes(file.type) && !validAudioTypes.includes(file.type)) {
-      this.notificationService.error('Invalid file type', 'Please upload an image (JPG, PNG, GIF, WEBP), video (MP4, MOV, AVI), or audio (MP3, OGG, WAV, M4A)');
+    const validPdfTypes = ['application/pdf'];
+    const looksPdf =
+      validPdfTypes.includes(file.type) ||
+      /\.pdf$/i.test(file.name || '') ||
+      (file.type === '' && /\.pdf$/i.test(file.name || ''));
+
+    if (
+      !validImageTypes.includes(file.type) &&
+      !validVideoTypes.includes(file.type) &&
+      !validAudioTypes.includes(file.type) &&
+      !looksPdf
+    ) {
+      this.notificationService.error(
+        'Invalid file type',
+        'Please upload an image (JPG, PNG, GIF, WEBP), video (MP4, MOV, AVI), audio (MP3, OGG, WAV, M4A), or a PDF document.'
+      );
       return;
     }
 
@@ -98,10 +111,18 @@ export class MediaUploadModalComponent {
     }
 
     this.selectedFile = file;
-    this.fileType = validImageTypes.includes(file.type) ? 'image' : (validVideoTypes.includes(file.type) ? 'video' : 'audio');
+    if (validImageTypes.includes(file.type)) {
+      this.fileType = 'image';
+    } else if (validVideoTypes.includes(file.type)) {
+      this.fileType = 'video';
+    } else if (validAudioTypes.includes(file.type)) {
+      this.fileType = 'audio';
+    } else {
+      this.fileType = 'file';
+    }
 
-    // Create preview (image/video only; audio has no visual preview)
-    if (this.fileType === 'audio') {
+    // Create preview (image/video only; audio/PDF have no inline image preview)
+    if (this.fileType === 'audio' || this.fileType === 'file') {
       this.filePreview = null;
     } else {
       const reader = new FileReader();

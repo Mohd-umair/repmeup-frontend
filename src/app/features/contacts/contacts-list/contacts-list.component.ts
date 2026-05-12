@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { ContactService } from '../../../core/services/contact.service';
 import { IContact } from '../../../core/models/contact.model';
+import { getContactAvatarUrl } from '../../../core/utils/contact-display.util';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 const PLATFORMS = ['instagram', 'facebook', 'whatsapp', 'youtube', 'google', 'linkedin'];
@@ -140,6 +141,11 @@ export class ContactsListComponent implements OnInit, OnDestroy {
   getInitials(name: string): string {
     if (!name || name === 'Unknown') return '?';
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  /** Profile image from any channel that has an avatar (not only `channels[0]`). */
+  avatarUrl(contact: IContact): string | null {
+    return getContactAvatarUrl(contact);
   }
 
 }

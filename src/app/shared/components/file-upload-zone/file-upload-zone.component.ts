@@ -49,7 +49,7 @@ export class FileUploadZoneComponent {
    */
   @Input() openMediaGalleryOnClick = false;
   /** Passed to {@link MediaSelectorModalComponent#mediaType}. */
-  @Input() galleryMediaType: 'image' | 'video' | 'audio' | 'all' = 'all';
+  @Input() galleryMediaType: 'image' | 'video' | 'audio' | 'file' | 'all' = 'all';
   /** Strip audio when confirming gallery selection (e.g. ticket attachments). */
   @Input() excludeGalleryAudio = false;
 

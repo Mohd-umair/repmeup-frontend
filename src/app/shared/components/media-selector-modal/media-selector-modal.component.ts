@@ -18,7 +18,7 @@ import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 })
 export class MediaSelectorModalComponent implements OnInit {
   @Input() allowMultiple = false; // Allow selecting multiple media for carousel
-  @Input() mediaType: 'image' | 'video' | 'audio' | 'all' = 'all'; // Filter by type
+  @Input() mediaType: 'image' | 'video' | 'audio' | 'file' | 'all' = 'all'; // Filter by type
   @Output() close = new EventEmitter<void>();
   @Output() select = new EventEmitter<Media | Media[]>();
 
@@ -27,7 +27,7 @@ export class MediaSelectorModalComponent implements OnInit {
   loading = false;
   currentPage = 1;
   totalPages = 1;
-  filterType: 'all' | 'image' | 'video' | 'audio' = 'all';
+  filterType: 'all' | 'image' | 'video' | 'audio' | 'file' = 'all';
   sortBy = '-createdAt';
   showUploadModal = false;
   deletingId: string | null = null;
@@ -90,7 +90,7 @@ export class MediaSelectorModalComponent implements OnInit {
     return this.selectedMedia.some(m => m._id === media._id);
   }
 
-  onFilterChange(type: 'all' | 'image' | 'video' | 'audio'): void {
+  onFilterChange(type: 'all' | 'image' | 'video' | 'audio' | 'file'): void {
     this.filterType = type;
     this.currentPage = 1;
     this.loadMedia();
@@ -133,6 +133,10 @@ export class MediaSelectorModalComponent implements OnInit {
 
   isAudio(media: Media): boolean {
     return media.mediaType === 'audio';
+  }
+
+  isFile(media: Media): boolean {
+    return media.mediaType === 'file';
   }
 
   formatSize(bytes: number): string {

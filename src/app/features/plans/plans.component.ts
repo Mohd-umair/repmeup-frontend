@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
+import { formatPlanPriceMonthly } from '../../core/utils/plan-price-format';
 import { NotificationService } from '../../core/services/notification.service';
 
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
@@ -85,12 +86,7 @@ export class PlansComponent implements OnInit {
    * Format price display
    */
   formatPrice(price: number | string): string {
-    if (price === 'custom') return 'Contact Sales';
-    if (typeof price === 'number') {
-      if (price === 0) return 'Free';
-      return `$${price}/mo`;
-    }
-    return price;
+    return formatPlanPriceMonthly(price);
   }
 
   /**

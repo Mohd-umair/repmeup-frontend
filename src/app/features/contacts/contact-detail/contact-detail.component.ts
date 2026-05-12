@@ -10,6 +10,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ContactService } from '../../../core/services/contact.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { IContact } from '../../../core/models/contact.model';
+import { getContactAvatarUrl } from '../../../core/utils/contact-display.util';
 
 @Component({
   selector: 'app-contact-detail',
@@ -215,6 +216,10 @@ export class ContactDetailComponent implements OnChanges, OnDestroy {
   getInitials(name: string): string {
     if (!name || name === 'Unknown') return '?';
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  }
+
+  contactAvatarUrl(): string | null {
+    return getContactAvatarUrl(this.contact);
   }
 
   getSentimentBadge(sentiment: string | null | undefined): { label: string; cls: string } {

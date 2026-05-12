@@ -29,6 +29,24 @@ export interface ICommentToDmSettings {
   defaultProductId?: string | null;
 }
 
+/** Instagram: top-level comment → private DM with Follow (generic template). */
+export interface ICommentFollowInviteSettings {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  buttonTitle: string;
+  /** Empty = use https://www.instagram.com/{connected handle}/ on send */
+  buttonUrl: string;
+  publicReplyTemplate: string;
+  postPublicReply: boolean;
+  deduplicateDms: boolean;
+  maxDmsPerDay: number;
+  skipIfProductDmSent: boolean;
+  dmsSentToday?: number;
+  dmsSentResetDate?: string;
+}
+
 export interface IProductOrder {
   _id: string;
   organization: string;

@@ -7,6 +7,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { NotificationService } from '../../core/services/notification.service';
 import { ButtonComponent } from '../../shared/components/button/button.component';
+import { validateScheduleDateTimeStrings } from '../../shared/utils/schedule-validation';
 import { PaginationComponent, PaginationMeta } from '../../shared/components/pagination/pagination.component';
 
 interface DraftMetadata {
@@ -233,8 +234,13 @@ export class DraftsComponent implements OnInit, OnDestroy {
 
   submitSchedule(): void {
     if (!this.scheduleDate || !this.scheduleTime || !this.schedulingId) return;
+    const v = validateScheduleDateTimeStrings(this.scheduleDate, this.scheduleTime);
+    if (!v.ok) {
+      this.notify.error('Schedule', v.message);
+      return;
+    }
     this.scheduling = true;
-    const scheduledFor = new Date(`${this.scheduleDate}T${this.scheduleTime}`).toISOString();
+    const scheduledFor = v.scheduled.toISOString();
     this.http
       .patch<{ success: boolean }>(
         `${environment.apiUrl}/posts/drafts/${this.schedulingId}/schedule`,

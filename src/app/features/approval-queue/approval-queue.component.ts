@@ -11,6 +11,7 @@ import { ButtonComponent } from '../../shared/components/button/button.component
 import { MediaSelectorModalComponent } from '../../shared/components/media-selector-modal/media-selector-modal.component';
 import { AuthService } from '../../core/services/auth.service';
 import { PaginationComponent, PaginationMeta } from '../../shared/components/pagination/pagination.component';
+import { validateScheduleDateTimeStrings } from '../../shared/utils/schedule-validation';
 
 export interface PostUser {
   name: string;
@@ -496,7 +497,13 @@ export class ApprovalQueueComponent implements OnInit, OnDestroy {
 
   confirmSchedule(): void {
     if (!this.selectedPost || !this.scheduleDate || !this.scheduleTime) return;
-    const scheduledFor = new Date(`${this.scheduleDate}T${this.scheduleTime}`).toISOString();
+    const v = validateScheduleDateTimeStrings(this.scheduleDate, this.scheduleTime);
+    if (!v.ok) {
+      this.approveError = v.message;
+      this.clearFlashAfter(7000, () => { this.approveError = ''; });
+      return;
+    }
+    const scheduledFor = v.scheduled.toISOString();
     const post = this.selectedPost;
     this.approveSuccess = '';
     this.approveError = '';

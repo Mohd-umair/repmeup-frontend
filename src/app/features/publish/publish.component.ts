@@ -10,6 +10,7 @@ import { MediaSelectorModalComponent } from '../../shared/components/media-selec
 import { MediaUploadGuideComponent } from '../../shared/components/media-upload-guide/media-upload-guide.component';
 import { SocialPreviewComponent } from '../publish/social-preview/social-preview.component';
 import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import { validateScheduleDateTimeStrings } from '../../shared/utils/schedule-validation';
 
 interface Platform {
   id: string;
@@ -25,7 +26,7 @@ interface Platform {
 interface MediaFile {
   file?: File;
   preview: string;
-  type: 'image' | 'video' | 'audio';
+  type: 'image' | 'video' | 'audio' | 'file';
   order: number;
   libraryMediaId?: string; // ID from media library
   publicUrl?: string; // URL from media library
@@ -509,9 +510,32 @@ export class PublishComponent implements OnInit {
   }
 
   /**
+   * True when there is something worth saving or publishing (caption, media, first comment,
+   * or custom per-platform AI text). Prevents empty API/local draft saves.
+   */
+  composerHasSubstance(): boolean {
+    if ((this.postContent || '').trim().length > 0) return true;
+    if (this.mediaFiles?.length > 0) return true;
+    if ((this.firstComment || '').trim().length > 0) return true;
+    if (this.aiMode === 'custom' && this.platformPosts && typeof this.platformPosts === 'object') {
+      return Object.values(this.platformPosts).some(
+        (t) => typeof t === 'string' && t.trim().length > 0
+      );
+    }
+    return false;
+  }
+
+  /**
    * Save as draft
    */
   saveDraft(): void {
+    if (!this.composerHasSubstance()) {
+      this.notificationService.error(
+        'Nothing to save',
+        'Add post text, media, or a first comment before saving a draft.'
+      );
+      return;
+    }
     const draft: Draft = {
       id: Date.now().toString(),
       content: this.postContent,
@@ -570,9 +594,23 @@ export class PublishComponent implements OnInit {
       this.notificationService.error('Validation Error', 'Please select at least one platform');
       return;
     }
-    
-    if (!this.postContent.trim() && this.mediaFiles.length === 0) {
-      this.notificationService.error('Validation Error', 'Please add some content or media');
+
+    if (this.scheduleEnabled) {
+      const scheduleCheck = validateScheduleDateTimeStrings(
+        this.scheduledDate || '',
+        this.scheduledTime || ''
+      );
+      if (!scheduleCheck.ok) {
+        this.notificationService.error('Schedule', scheduleCheck.message);
+        return;
+      }
+    }
+
+    if (!this.composerHasSubstance()) {
+      this.notificationService.error(
+        'Nothing to post',
+        'Add post text, media, or a first comment before publishing or scheduling.'
+      );
       return;
     }
     
@@ -586,7 +624,12 @@ export class PublishComponent implements OnInit {
       for (const platform of this.selectedPlatforms) {
         const formData = new FormData();
         formData.append('platform', platform.id);
-        formData.append('content', this.postContent);
+        let bodyContent = this.postContent;
+        if (this.aiMode === 'custom') {
+          const per = (this.platformPosts[platform.id] || '').trim();
+          if (per) bodyContent = per;
+        }
+        formData.append('content', bodyContent);
         formData.append('postType', this.postType);
         
         if (this.firstComment) {

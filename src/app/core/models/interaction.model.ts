@@ -150,6 +150,8 @@ export interface IReply {
   /** Attachment sent with this reply (image/video/file) */
   attachmentUrl?: string;
   attachmentType?: 'image' | 'video' | 'file' | 'audio';
+  /** Friendly filename for PDF/file replies when known (e.g. from media library). */
+  attachmentDisplayName?: string;
 
   // Platform reply fields (for replies from other users on YouTube/Instagram/etc)
   isPlatformReply?: boolean; // True if this is a reply from the platform, false if from app
