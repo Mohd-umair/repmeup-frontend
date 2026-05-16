@@ -8,7 +8,7 @@ import { MediaLibraryService } from '../../core/services/media-library.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
-import { IProduct, ICommentToDmSettings } from '../../core/models/product.model';
+import { IProduct, ICommentToDmSettings, ISalesFlowSettings, ISalesFlowCtaButton } from '../../core/models/product.model';
 import { environment } from '../../../environments/environment';
 
 type ImportSource = 'excel' | 'woocommerce' | 'shopify' | 'url';
@@ -90,6 +90,13 @@ export class CatalogComponent implements OnInit, OnDestroy {
   settingsSaved = false;
   keywordsInput = '';
 
+  // ── Sales flow settings ────────────────────
+  salesFlowSettings: ISalesFlowSettings | null = null;
+  loadingSalesFlow = false;
+  savingSalesFlow = false;
+  salesFlowLoadError = '';
+  hesitancyKeywordsInput = '';
+
   constructor(
     private catalogService: CatalogService,
     private mediaLibraryService: MediaLibraryService,
@@ -102,6 +109,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.buildProductForm();
     this.loadProducts();
     this.loadSettings();
+    this.loadSalesFlowSettings();
   }
 
   ngOnDestroy(): void {
@@ -493,6 +501,87 @@ export class CatalogComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: err => { this.settingsError = err.error?.error || 'Failed to save settings'; this.cdr.markForCheck(); }
+      });
+  }
+
+  // ── Sales flow settings ──────────────────────
+  loadSalesFlowSettings(): void {
+    this.loadingSalesFlow = true;
+    this.salesFlowLoadError = '';
+    this.catalogService.getSalesFlowSettings()
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingSalesFlow = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.salesFlowSettings = r.data ?? null;
+          if (this.salesFlowSettings) {
+            this.hesitancyKeywordsInput = (this.salesFlowSettings.hesitancyKeywords || []).join(', ');
+            // Ensure ctaButtons is always a mutable array
+            if (!Array.isArray(this.salesFlowSettings.ctaButtons)) {
+              this.salesFlowSettings.ctaButtons = [];
+            }
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.salesFlowLoadError = 'Could not load Sales Flow settings.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  addCtaButton(): void {
+    if (!this.salesFlowSettings) return;
+    if (!Array.isArray(this.salesFlowSettings.ctaButtons)) {
+      this.salesFlowSettings.ctaButtons = [];
+    }
+    if (this.salesFlowSettings.ctaButtons.length >= 3) return;
+    this.salesFlowSettings.ctaButtons = [...this.salesFlowSettings.ctaButtons, { label: '', url: '' }];
+    this.cdr.markForCheck();
+  }
+
+  removeCtaButton(index: number): void {
+    if (!this.salesFlowSettings?.ctaButtons) return;
+    this.salesFlowSettings.ctaButtons = this.salesFlowSettings.ctaButtons.filter((_, i) => i !== index);
+    this.cdr.markForCheck();
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  saveSalesFlowSettings(): void {
+    if (!this.salesFlowSettings) return;
+    this.savingSalesFlow = true;
+    const s = this.salesFlowSettings;
+    const payload: Partial<ISalesFlowSettings> = {
+      enabled: s.enabled,
+      ctaTitle: s.ctaTitle,
+      ctaSubtitle: s.ctaSubtitle,
+      ctaImageUrl: s.ctaImageUrl,
+      ctaButtons: (s.ctaButtons || []).map((b: ISalesFlowCtaButton) => ({ label: b.label, url: b.url })),
+      hesitancyKeywords: this.hesitancyKeywordsInput.split(',').map(k => k.trim()).filter(Boolean),
+      whatsappCaptureMessage: s.whatsappCaptureMessage,
+      whatsappCaptureConfirmation: s.whatsappCaptureConfirmation
+    };
+    this.catalogService.updateSalesFlowSettings(payload)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.savingSalesFlow = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.salesFlowSettings = r.data ?? null;
+          if (this.salesFlowSettings) {
+            this.hesitancyKeywordsInput = (this.salesFlowSettings.hesitancyKeywords || []).join(', ');
+            if (!Array.isArray(this.salesFlowSettings.ctaButtons)) {
+              this.salesFlowSettings.ctaButtons = [];
+            }
+          }
+          this.notify.success('Saved', 'Sales Flow settings updated.');
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          const msg = err.error?.error || err.error?.message || 'Failed to save Sales Flow settings.';
+          this.notify.error('Save failed', msg);
+          this.cdr.markForCheck();
+        }
       });
   }
 

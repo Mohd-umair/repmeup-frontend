@@ -49,6 +49,23 @@ export interface ICommentFollowInviteSettings {
   dmsSentResetDate?: string;
 }
 
+export interface ISalesFlowCtaButton {
+  label: string;
+  url: string;
+}
+
+export interface ISalesFlowSettings {
+  enabled: boolean;
+  ctaTitle: string;
+  ctaSubtitle: string;
+  ctaImageUrl: string;
+  /** Dynamic array of CTA buttons (max 3 per Instagram Generic Template limit) */
+  ctaButtons: ISalesFlowCtaButton[];
+  hesitancyKeywords: string[];
+  whatsappCaptureMessage: string;
+  whatsappCaptureConfirmation: string;
+}
+
 export interface IProductOrder {
   _id: string;
   organization: string;
