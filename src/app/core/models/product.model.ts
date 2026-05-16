@@ -22,7 +22,10 @@ export interface ICommentToDmSettings {
   enabled: boolean;
   triggerKeywords: string[];
   publicReplyTemplate: string;
-  dmTemplate: string;
+  /** @deprecated Legacy plain-text template — no longer sent. CTA buttons in
+   *  salesFlowSettings.ctaButtons replace this. Kept here so existing API
+   *  responses still type-check. */
+  dmTemplate?: string;
   confirmationTemplate: string;
   deduplicateDms: boolean;
   maxDmsPerDay: number;
@@ -49,9 +52,16 @@ export interface ICommentFollowInviteSettings {
   dmsSentResetDate?: string;
 }
 
+export type SalesFlowCtaButtonType = 'postback' | 'web_url';
+
 export interface ISalesFlowCtaButton {
   label: string;
-  url: string;
+  /** Defaults to 'postback' if omitted */
+  type?: SalesFlowCtaButtonType;
+  /** Required when type === 'postback'. Recognized: 'details' | 'payment' | 'hesitant' */
+  payload?: string;
+  /** Required when type === 'web_url'. Must be https:// */
+  url?: string;
 }
 
 export interface ISalesFlowSettings {

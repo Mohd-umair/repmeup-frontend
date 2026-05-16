@@ -97,6 +97,11 @@ export class CatalogComponent implements OnInit, OnDestroy {
   salesFlowLoadError = '';
   hesitancyKeywordsInput = '';
 
+  // ── Post ID backfill ───────────────────────
+  backfilling = false;
+  backfillResult: { resolved: number; failed: number } | null = null;
+  backfillError = '';
+
   constructor(
     private catalogService: CatalogService,
     private mediaLibraryService: MediaLibraryService,
@@ -486,8 +491,9 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.settingsSaved = false;
     this.settingsError = '';
 
+    const { dmTemplate: _legacyDmTemplate, ...rest } = this.settings;
     const payload: Partial<ICommentToDmSettings> = {
-      ...this.settings,
+      ...rest,
       triggerKeywords: this.keywordsInput.split(',').map(k => k.trim()).filter(Boolean)
     };
 
@@ -535,7 +541,10 @@ export class CatalogComponent implements OnInit, OnDestroy {
       this.salesFlowSettings.ctaButtons = [];
     }
     if (this.salesFlowSettings.ctaButtons.length >= 3) return;
-    this.salesFlowSettings.ctaButtons = [...this.salesFlowSettings.ctaButtons, { label: '', url: '' }];
+    this.salesFlowSettings.ctaButtons = [
+      ...this.salesFlowSettings.ctaButtons,
+      { label: '', type: 'postback', payload: '' }
+    ];
     this.cdr.markForCheck();
   }
 
@@ -558,7 +567,12 @@ export class CatalogComponent implements OnInit, OnDestroy {
       ctaTitle: s.ctaTitle,
       ctaSubtitle: s.ctaSubtitle,
       ctaImageUrl: s.ctaImageUrl,
-      ctaButtons: (s.ctaButtons || []).map((b: ISalesFlowCtaButton) => ({ label: b.label, url: b.url })),
+      ctaButtons: (s.ctaButtons || []).map((b: ISalesFlowCtaButton) => {
+        const type = b.type === 'web_url' ? 'web_url' : 'postback';
+        return type === 'web_url'
+          ? { label: b.label, type, url: b.url || '' }
+          : { label: b.label, type, payload: b.payload || '' };
+      }),
       hesitancyKeywords: this.hesitancyKeywordsInput.split(',').map(k => k.trim()).filter(Boolean),
       whatsappCaptureMessage: s.whatsappCaptureMessage,
       whatsappCaptureConfirmation: s.whatsappCaptureConfirmation
@@ -580,6 +594,26 @@ export class CatalogComponent implements OnInit, OnDestroy {
         error: err => {
           const msg = err.error?.error || err.error?.message || 'Failed to save Sales Flow settings.';
           this.notify.error('Save failed', msg);
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  // ── Post ID backfill ──────────────────────────────────────────────────────
+  backfillPostIds(): void {
+    this.backfilling = true;
+    this.backfillResult = null;
+    this.backfillError = '';
+    this.catalogService.backfillPostNumericIds()
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.backfilling = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.backfillResult = r.data ?? null;
+          this.notify.success('Done', `Backfill complete — ${r.data?.resolved ?? 0} post(s) fixed.`);
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          this.backfillError = err.error?.error || err.error?.message || 'Backfill failed. Make sure Instagram is connected.';
           this.cdr.markForCheck();
         }
       });

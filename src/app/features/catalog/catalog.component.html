@@ -319,25 +319,18 @@
           placeholder="Hi {{username}}! 👋 We've sent you the details in DM. 😊"></textarea>
       </div>
 
-      <!-- ─── DM template ─── -->
-      <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
-        <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">DM Template</label>
-        <p class="text-xs mb-3" style="color: var(--text-muted);">
-          Sent privately. Supports:
-          <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;username&#125;&#125;</code>
-          <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;product_name&#125;&#125;</code>
-          <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;price&#125;&#125;</code>
-          <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;currency&#125;&#125;</code>
-          <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;sizes&#125;&#125;</code>
-          <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;colors&#125;&#125;</code>
-          <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;description&#125;&#125;</code>
-          <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;payment_url&#125;&#125;</code>
-        </p>
-        <textarea
-          [(ngModel)]="settings.dmTemplate"
-          rows="8"
-          class="w-full px-3 py-2 rounded-lg border text-sm font-mono"
-          style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
+      <!-- ─── DM Template removed — replaced by the CTA Buttons in Sales DM Flow ─── -->
+      <div class="rounded-xl border p-4 flex items-start gap-3"
+           style="background-color: var(--surface-secondary); border-color: var(--card-border);">
+        <span class="text-lg leading-none" style="color: var(--accent-primary);">ⓘ</span>
+        <div class="text-xs leading-relaxed" style="color: var(--text-muted);">
+          <strong style="color: var(--text-primary);">Product DM is now CTA-only.</strong>
+          The plain-text DM template has been removed. The bot now sends an
+          Instagram CTA card with the buttons configured in the
+          <strong>Sales DM Flow</strong> section below. Product details, price
+          and the payment link are revealed only after the user taps a button or
+          replies in DM.
+        </div>
       </div>
 
       <!-- ─── Confirmation template ─── -->
@@ -495,8 +488,9 @@
               <div>
                 <h4 class="text-xs font-bold uppercase tracking-wide" style="color: var(--text-muted);">CTA Buttons</h4>
                 <p class="text-[11px] mt-0.5" style="color: var(--text-muted);">
-                  Max <strong>3</strong> per Instagram limit — URLs must be <code>https://</code>.
-                  Use <code>&#123;&#123;orderToken&#125;&#125;</code> in a payment URL to track orders.
+                  Max <strong>3</strong> per Instagram limit. Use
+                  <strong>Action</strong> for click-to-reply (recommended) or
+                  <strong>Open Link</strong> to send the user to a URL.
                 </p>
               </div>
               <button type="button"
@@ -532,7 +526,9 @@
                   <i class="fas fa-times text-xs"></i>
                 </button>
               </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <!-- Label -->
                 <div>
                   <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-secondary);">
                     Label <span class="font-normal text-gray-400">(max 20 chars)</span>
@@ -545,12 +541,44 @@
                   <p *ngIf="btn.label && btn.label.length > 20"
                      class="text-[10px] text-red-500 mt-0.5">{{ 20 - btn.label.length }} chars over limit</p>
                 </div>
+
+                <!-- Type selector -->
                 <div>
+                  <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-secondary);">
+                    Type
+                  </label>
+                  <select [(ngModel)]="btn.type" [name]="'sfBtnType_' + i"
+                    class="w-full px-2.5 py-1.5 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm
+                           dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-orange-400">
+                    <option value="postback">Action (click-to-reply)</option>
+                    <option value="web_url">Open Link</option>
+                  </select>
+                </div>
+
+                <!-- Action picker (postback) -->
+                <div *ngIf="(btn.type || 'postback') === 'postback'">
+                  <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-secondary);">
+                    Action
+                  </label>
+                  <select [(ngModel)]="btn.payload" [name]="'sfBtnPayload_' + i"
+                    class="w-full px-2.5 py-1.5 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm
+                           dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-orange-400"
+                    [class.border-red-400]="!btn.payload">
+                    <option value="">— select —</option>
+                    <option value="details">Send product details</option>
+                    <option value="payment">Send payment link</option>
+                    <option value="hesitant">Ask for WhatsApp number</option>
+                  </select>
+                  <p *ngIf="!btn.payload" class="text-[10px] text-red-500 mt-0.5">Action required</p>
+                </div>
+
+                <!-- URL field (web_url) -->
+                <div *ngIf="btn.type === 'web_url'">
                   <label class="block text-[11px] font-semibold mb-1" style="color: var(--text-secondary);">
                     URL <span class="font-normal text-gray-400">(https:// required)</span>
                   </label>
                   <input [(ngModel)]="btn.url" [name]="'sfBtnUrl_' + i" type="text"
-                    placeholder="https://…  or  https://pay.example.com?ref=&#123;&#123;orderToken&#125;&#125;"
+                    placeholder="https://…"
                     class="w-full px-2.5 py-1.5 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm
                            dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-orange-400"
                     [class.border-red-400]="btn.url && !btn.url.startsWith('https://')" />
@@ -621,6 +649,40 @@
         </ng-container>
       </div>
       <!-- ─── end Sales DM Flow ─── -->
+
+      <!-- ─── Post ID backfill tool ─── -->
+      <div class="rounded-xl border border-yellow-200 dark:border-yellow-800/50 p-4"
+           style="background-color: var(--card-bg);">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div class="flex items-start gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-lg bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center shrink-0">
+              <i class="fas fa-sync-alt text-yellow-600 dark:text-yellow-400"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-bold" style="color: var(--text-primary);">Fix post-ID mismatch</p>
+              <p class="text-xs mt-0.5 leading-relaxed" style="color: var(--text-secondary);">
+                If products are linked by <strong>shortcode</strong> but comments arrive with a <strong>numeric media ID</strong>,
+                run this once after reconnecting Instagram to backfill the numeric IDs.
+              </p>
+              <p *ngIf="backfillResult" class="text-xs mt-1.5 font-medium text-green-700 dark:text-green-400">
+                <i class="fas fa-check mr-1"></i>
+                Fixed {{ backfillResult.resolved }} post(s) — {{ backfillResult.failed }} failed.
+              </p>
+              <p *ngIf="backfillError" class="text-xs mt-1.5 text-red-500">
+                <i class="fas fa-exclamation-triangle mr-1"></i>{{ backfillError }}
+              </p>
+            </div>
+          </div>
+          <button type="button" (click)="backfillPostIds()"
+            [disabled]="backfilling"
+            class="px-4 py-2 rounded-lg text-xs font-bold shrink-0
+                   bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300
+                   hover:bg-yellow-200 dark:hover:bg-yellow-900/70 disabled:opacity-50 transition-colors">
+            <i [class]="backfilling ? 'fas fa-spinner fa-spin mr-1.5' : 'fas fa-sync-alt mr-1.5'"></i>
+            {{ backfilling ? 'Fixing…' : 'Fix now' }}
+          </button>
+        </div>
+      </div>
 
       <!-- ─── Webhook info box ─── -->
       <div class="rounded-xl border border-blue-200 dark:border-blue-800 p-5"

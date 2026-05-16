@@ -67,6 +67,10 @@ export class CatalogService {
     return this.api.put('/products/settings/sales-flow', data);
   }
 
+  backfillPostNumericIds(): Observable<IApiResponse<{ resolved: number; skipped: number; failed: number; details: { product: string; shortcode: string; numericId: string }[] }>> {
+    return this.api.post('/products/backfill-post-ids', {});
+  }
+
   resolvePostId(postId: string): Observable<IApiResponse<{ shortcode: string | null; numericId: string; alreadyNumeric?: boolean }>> {
     return this.api.get('/products/resolve-post', { postId });
   }
