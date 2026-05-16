@@ -1128,6 +1128,128 @@
             </div>
           </div>
 
+          <!-- Instagram: Comment → Follow invite DM (private DM with Follow CTA) -->
+          <div class="rounded-lg p-4 sm:p-6 border-2 border-pink-200 dark:border-pink-800/50 bg-gradient-to-br from-pink-50/90 to-purple-50/90 dark:from-pink-950/20 dark:to-purple-950/25 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div class="flex items-start gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md">
+                  <i class="fab fa-instagram text-white text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-base font-bold text-rep-black dark:text-white">Instagram: Follow invite DM</h3>
+                  <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 leading-relaxed">
+                    Sends a <strong>private DM</strong> with a <strong>Follow</strong> button on <strong>top-level</strong> Instagram comments
+                    (after AI analysis). Use limits and filters to stay policy-safe.
+                    <span class="text-gray-500 dark:text-gray-500">Sales comment-to-DM stays under <strong>Catalog</strong>.</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="loadingFollowInviteSettings" class="flex justify-center py-10">
+              <i class="fas fa-spinner fa-spin text-3xl text-pink-500"></i>
+            </div>
+
+            <div *ngIf="followInviteSettingsLoadError"
+                 class="rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 text-sm text-amber-900 dark:text-amber-200 flex gap-2">
+              <i class="fas fa-exclamation-triangle mt-0.5 shrink-0"></i>
+              <div>{{ followInviteSettingsLoadError }}</div>
+            </div>
+
+            <ng-container *ngIf="!loadingFollowInviteSettings && followInviteSettings as fi">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-white/80 dark:bg-gray-800/60 border border-pink-100 dark:border-pink-900/30">
+                <div>
+                  <p class="text-sm font-semibold text-rep-black dark:text-white">Enable follow-invite DMs</p>
+                  <p class="text-[11px] text-gray-600 dark:text-gray-400 mt-0.5">Off by default — turn on when copy and limits are ready.</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input type="checkbox" [(ngModel)]="fi.enabled" name="followInviteEnabled" class="sr-only peer" />
+                  <div class="w-16 h-8 bg-gray-300 dark:bg-gray-600 peer-focus:ring-4 peer-focus:ring-pink-300/30 rounded-full peer peer-checked:after:translate-x-8 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-pink-500 peer-checked:to-purple-600 shadow-inner"></div>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-bold text-rep-black dark:text-white mb-1">Card title</label>
+                  <input [(ngModel)]="fi.title" name="followInviteTitle" type="text" maxlength="80"
+                    class="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-pink-400" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-bold text-rep-black dark:text-white mb-1">Subtitle</label>
+                  <input [(ngModel)]="fi.subtitle" name="followInviteSubtitle" type="text" maxlength="80"
+                    class="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-pink-400" />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-xs font-bold text-rep-black dark:text-white mb-1">Image URL <span class="font-normal text-gray-500">(optional)</span></label>
+                  <input [(ngModel)]="fi.imageUrl" name="followInviteImage" type="url" placeholder="https://…"
+                    class="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-rep-black dark:text-white mb-1">Button label</label>
+                  <input [(ngModel)]="fi.buttonTitle" name="followInviteBtnTitle" type="text" maxlength="20"
+                    class="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-rep-black dark:text-white mb-1">Follow URL <span class="font-normal text-gray-500">(optional)</span></label>
+                  <input [(ngModel)]="fi.buttonUrl" name="followInviteUrl" type="url"
+                    placeholder="Leave blank to use connected Instagram profile"
+                    class="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white" />
+                  <p class="text-[11px] text-gray-500 mt-1">Must be <code class="font-mono">https://</code> if set.</p>
+                </div>
+              </div>
+
+              <div class="p-4 rounded-xl bg-white/80 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-600">
+                <label class="block text-xs font-bold text-rep-black dark:text-white mb-1">Public comment reply <span class="font-normal text-gray-500">(optional)</span></label>
+                <textarea [(ngModel)]="fi.publicReplyTemplate" name="followInvitePublic" rows="2"
+                  placeholder="Thanks — we've sent you a DM!"
+                  class="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white resize-none"></textarea>
+                <label class="flex items-center gap-3 cursor-pointer mt-3">
+                  <input type="checkbox" [(ngModel)]="fi.postPublicReply" name="followInvitePostPublic" class="w-4 h-4 rounded border-gray-300 text-pink-600" />
+                  <span class="text-sm font-medium text-rep-black dark:text-white">Also post a public reply on the comment</span>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5 p-4 rounded-xl bg-white/80 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-600">
+                <div>
+                  <label class="block text-xs font-bold text-rep-black dark:text-white mb-1">Max follow-invite DMs / day</label>
+                  <input [(ngModel)]="fi.maxDmsPerDay" name="followInviteMax" type="number" min="1" max="10000"
+                    class="w-full px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white" />
+                  <p *ngIf="fi.dmsSentToday != null" class="text-[11px] text-gray-600 dark:text-gray-400 mt-1">
+                    Sent today: <span class="font-semibold">{{ fi.dmsSentToday }}</span>
+                  </p>
+                </div>
+                <div class="flex flex-col gap-3 justify-center">
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" [(ngModel)]="fi.deduplicateDms" name="followInviteDedup" class="w-4 h-4 mt-0.5 rounded" />
+                    <span class="text-sm text-gray-800 dark:text-gray-200"><strong class="text-rep-black dark:text-white">One invite per user per post (24h)</strong><span class="block text-[11px] text-gray-500">No repeat DM on the same post within 24 hours.</span></span>
+                  </label>
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" [(ngModel)]="fi.skipIfProductDmSent" name="followInviteSkipProduct" class="w-4 h-4 mt-0.5 rounded" />
+                    <span class="text-sm text-gray-800 dark:text-gray-200"><strong class="text-rep-black dark:text-white">Skip if product DM was sent</strong><span class="block text-[11px] text-gray-500">Avoid double DM when Catalog sales flow already messaged.</span></span>
+                  </label>
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" [(ngModel)]="fi.filterNegativeSentiment" name="followInviteNeg" class="w-4 h-4 mt-0.5 rounded" />
+                    <span class="text-sm text-gray-800 dark:text-gray-200"><strong class="text-rep-black dark:text-white">Skip negative sentiment</strong><span class="block text-[11px] text-gray-500">AI must classify first — pairs with timing below.</span></span>
+                  </label>
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" [(ngModel)]="fi.filterSalesIntent" name="followInviteSales" class="w-4 h-4 mt-0.5 rounded" />
+                    <span class="text-sm text-gray-800 dark:text-gray-200"><strong class="text-rep-black dark:text-white">Skip sales / inquiry comments</strong><span class="block text-[11px] text-gray-500">Keeps purchase-intent threads for your sales DM flow.</span></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <button type="button"
+                  (click)="saveFollowInviteSettings()"
+                  [disabled]="savingFollowInviteSettings"
+                  class="px-6 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:opacity-95 disabled:opacity-50 shadow-md">
+                  <i [class]="savingFollowInviteSettings ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-paper-plane mr-2'"></i>
+                  {{ savingFollowInviteSettings ? 'Saving…' : 'Save follow-invite settings' }}
+                </button>
+              </div>
+            </ng-container>
+          </div>
+
           <!-- Auto-Reply Timing Settings (Collapsible) -->
           <div class="border-2 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
             <button type="button" (click)="showTimingAdvanced = !showTimingAdvanced"

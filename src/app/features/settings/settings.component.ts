@@ -13,6 +13,8 @@ import { formatPlanPriceMonthly } from '../../core/utils/plan-price-format';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
 import { PermissionService } from '../../core/services/permission.service';
 import { UserService, IAvailableAgent } from '../../core/services/user.service';
+import { CatalogService } from '../../core/services/catalog.service';
+import { ICommentFollowInviteSettings } from '../../core/models/product.model';
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
@@ -22,7 +24,7 @@ import { WhatsAppConnectComponent } from './whatsapp-connect/whatsapp-connect.co
 import { EmailConnectComponent } from './email-connect/email-connect.component';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription, timer } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { take, finalize } from 'rxjs/operators';
 
 /**
  * Settings Component - Single Responsibility Principle
@@ -178,6 +180,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     }
   };
 
+  /** Instagram: top-level comment → private DM with Follow CTA (runs after AI; separate from AI auto-reply text). */
+  followInviteSettings: ICommentFollowInviteSettings | null = null;
+  loadingFollowInviteSettings = false;
+  savingFollowInviteSettings = false;
+  followInviteSettingsLoadError = '';
+
   platforms: Platform[] = [
     {
       id: 'instagram',
@@ -259,7 +267,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private subscriptionService: SubscriptionService,
     private socialAccountsService: SocialAccountsService,
     private razorpayService: RazorpayService,
-    private userService: UserService
+    private userService: UserService,
+    private catalogService: CatalogService
   ) {
     // Initialize observables (reactive state management)
     this.usage$ = this.platformConnectionService.usage$;
@@ -277,6 +286,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         if (user && user.organization) {
           this.organizationId = typeof user.organization === 'string' ? user.organization : user.organization._id;
           this.loadAutoReplySettings();
+          this.loadFollowInviteSettings();
           this.loadProfileData(user);
           this.loadOrganizationData();
         }
@@ -1006,6 +1016,77 @@ export class SettingsComponent implements OnInit, OnDestroy {
         this.savingSettings = false;
       }
     });
+  }
+
+  /**
+   * Load Instagram comment → follow-invite DM settings (Catalog / products API).
+   */
+  loadFollowInviteSettings(): void {
+    if (!this.organizationId) {
+      return;
+    }
+    this.loadingFollowInviteSettings = true;
+    this.followInviteSettingsLoadError = '';
+    this.catalogService
+      .getCommentFollowInviteSettings()
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.loadingFollowInviteSettings = false;
+        })
+      )
+      .subscribe({
+        next: (r) => {
+          this.followInviteSettings = r.data ?? null;
+        },
+        error: () => {
+          this.followInviteSettings = null;
+          this.followInviteSettingsLoadError =
+            'Could not load Instagram follow-invite settings. Try again or check your connection.';
+        }
+      });
+  }
+
+  saveFollowInviteSettings(): void {
+    if (!this.organizationId || !this.followInviteSettings) {
+      return;
+    }
+    this.savingFollowInviteSettings = true;
+    const s = this.followInviteSettings;
+    const payload: Partial<ICommentFollowInviteSettings> = {
+      enabled: s.enabled,
+      title: s.title,
+      subtitle: s.subtitle,
+      imageUrl: s.imageUrl,
+      buttonTitle: s.buttonTitle,
+      buttonUrl: s.buttonUrl,
+      publicReplyTemplate: s.publicReplyTemplate,
+      postPublicReply: s.postPublicReply,
+      deduplicateDms: s.deduplicateDms,
+      maxDmsPerDay: Number(s.maxDmsPerDay),
+      skipIfProductDmSent: s.skipIfProductDmSent,
+      filterNegativeSentiment: s.filterNegativeSentiment,
+      filterSalesIntent: s.filterSalesIntent
+    };
+
+    this.catalogService
+      .updateCommentFollowInviteSettings(payload)
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.savingFollowInviteSettings = false;
+        })
+      )
+      .subscribe({
+        next: (r) => {
+          this.followInviteSettings = r.data ?? null;
+          this.notificationService.success('Saved', 'Instagram follow-invite settings updated.');
+        },
+        error: (err) => {
+          const msg = err.error?.error || err.error?.message || 'Failed to save follow-invite settings.';
+          this.notificationService.error('Save failed', msg);
+        }
+      });
   }
 
   /**

@@ -43,6 +43,8 @@ export interface ICommentFollowInviteSettings {
   deduplicateDms: boolean;
   maxDmsPerDay: number;
   skipIfProductDmSent: boolean;
+  filterNegativeSentiment: boolean;
+  filterSalesIntent: boolean;
   dmsSentToday?: number;
   dmsSentResetDate?: string;
 }
