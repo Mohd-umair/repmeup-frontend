@@ -1,0 +1,121 @@
+:host {
+  display: block;
+  /* RepMeUp brand — matches Tailwind `rep.lime` / WhatsApp Templates */
+  --vi-accent: #D8FF00;
+  --vi-accent-hover: #e4ff33;
+  --vi-accent-foreground: #0B0B0B;
+  --vi-accent-soft: rgba(216, 255, 0, 0.14);
+  --vi-accent-glow: rgba(216, 255, 0, 0.35);
+}
+
+.voice-ivr-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 1.5rem;
+  gap: 1.25rem;
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.voice-ivr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      max-width: 720px;
+      margin-top: 0.25rem;
+    }
+  }
+
+  &__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--vi-accent, #D8FF00);
+    color: var(--vi-accent-foreground, #0B0B0B);
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+    box-shadow: 0 8px 20px var(--vi-accent-glow, rgba(216, 255, 0, 0.35));
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 1.05rem;
+      background: var(--vi-accent, #D8FF00);
+      opacity: 0.2;
+      filter: blur(8px);
+      z-index: -1;
+    }
+  }
+}
+
+.voice-ivr-tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.4rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  width: fit-content;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.voice-ivr-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background-color: var(--surface-tertiary);
+    color: var(--text-primary);
+  }
+
+  &--active {
+    background: var(--vi-accent, #D8FF00);
+    color: var(--vi-accent-foreground, #0B0B0B) !important;
+    font-weight: 800;
+    box-shadow: 0 4px 14px var(--vi-accent-glow, rgba(216, 255, 0, 0.35));
+
+    i {
+      color: var(--vi-accent-foreground, #0B0B0B);
+    }
+  }
+
+  i {
+    font-size: 0.85rem;
+  }
+}
+
+.voice-ivr-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

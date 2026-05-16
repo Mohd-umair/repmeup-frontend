@@ -1,0 +1,179 @@
+<div class="voice-agents">
+  <div class="voice-agents__top">
+    <div>
+      <h2><i class="fas fa-robot"></i> Voice Agents</h2>
+      <p>Create industry-tuned AI receptionists with their own prompts, tools, and workflow.</p>
+    </div>
+    <button class="vi-btn vi-btn-primary" (click)="openCreate()">
+      <i class="fas fa-plus"></i> New Agent
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="vi-empty">
+    <i class="fas fa-spinner fa-spin"></i><span>Loading agents…</span>
+  </div>
+
+  <div *ngIf="!loading && !agents.length" class="vi-empty">
+    <i class="fas fa-microphone-alt"></i>
+    <span>No voice agents yet. Pick an industry template to get started in seconds.</span>
+  </div>
+
+  <div *ngIf="!loading && agents.length" class="vi-grid vi-grid-cols-3 agents-grid">
+    <article *ngFor="let agent of agents" class="agent-card">
+      <header class="agent-card__head">
+        <div class="agent-card__icon"><i class="fas" [ngClass]="industryIcon(agent.industry)"></i></div>
+        <div>
+          <strong>{{ agent.name }}</strong>
+          <span class="agent-card__sub">{{ industryLabel(agent.industry) }} · {{ agent.language }}</span>
+        </div>
+        <span class="vi-badge" [class.vi-badge-success]="agent.isActive" [class.vi-badge-warning]="!agent.isActive">
+          {{ agent.isActive ? 'Active' : 'Paused' }}
+        </span>
+      </header>
+
+      <p class="agent-card__greeting">"{{ agent.greetingMessage }}"</p>
+
+      <div class="agent-card__tools">
+        <span *ngFor="let t of agent.tools | slice:0:4" class="vi-badge vi-badge-info">
+          {{ prettyToolName(t.action) }}
+        </span>
+        <span *ngIf="agent.tools.length > 4" class="vi-badge">+{{ agent.tools.length - 4 }}</span>
+      </div>
+
+      <footer class="agent-card__foot">
+        <button class="vi-icon-btn" (click)="openEdit(agent)" aria-label="Edit"><i class="fas fa-pen"></i></button>
+        <button class="vi-icon-btn" (click)="delete(agent)" aria-label="Delete"><i class="fas fa-trash"></i></button>
+      </footer>
+    </article>
+  </div>
+</div>
+
+<!-- Builder Modal -->
+<div *ngIf="builderOpen" class="vi-modal-backdrop" (click)="closeBuilder()">
+  <div class="vi-modal builder-modal" (click)="$event.stopPropagation()">
+    <div class="vi-modal__header">
+      <h3>
+        <i class="fas fa-robot"></i>
+        {{ editing ? 'Edit voice agent' : (builderStep === 'template' ? 'Choose an industry template' : 'Configure your voice agent') }}
+      </h3>
+      <button class="vi-icon-btn" (click)="closeBuilder()" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="vi-modal__body">
+
+      <!-- STEP 1: template picker -->
+      <div *ngIf="builderStep === 'template'" class="template-grid">
+        <button *ngFor="let tpl of templates" class="template-card" (click)="pickTemplate(tpl)">
+          <div class="template-card__icon"><i class="fas" [ngClass]="tpl.icon"></i></div>
+          <strong>{{ tpl.name }}</strong>
+          <span>{{ tpl.description }}</span>
+          <div class="template-card__tools">
+            <span class="vi-badge" *ngFor="let t of tpl.tools | slice:0:3">{{ prettyToolName(t) }}</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- STEP 2: editor -->
+      <div *ngIf="builderStep === 'edit'" class="builder-form">
+        <div class="vi-grid vi-grid-cols-2">
+          <div>
+            <label class="vi-label">Agent name</label>
+            <input class="vi-input" type="text" [(ngModel)]="draft.name" placeholder="Clinic Reception" />
+          </div>
+          <div>
+            <label class="vi-label">Industry</label>
+            <select class="vi-select" [(ngModel)]="draft.industry">
+              <option *ngFor="let tpl of templates" [value]="tpl.industry">{{ tpl.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="vi-label">Language</label>
+            <select class="vi-select" [(ngModel)]="draft.language">
+              <option *ngFor="let l of languageOptions" [value]="l.value">{{ l.label }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="vi-label">Voice</label>
+            <select class="vi-select" [(ngModel)]="draft.voiceId">
+              <option *ngFor="let v of voiceOptions" [value]="v.value">{{ v.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="vi-label">Greeting message (first thing the AI says)</label>
+          <input class="vi-input" type="text" [(ngModel)]="draft.greetingMessage" />
+        </div>
+
+        <div>
+          <label class="vi-label">System prompt (sets the AI's personality + goals)</label>
+          <textarea class="vi-textarea" [(ngModel)]="draft.systemPrompt" rows="5"></textarea>
+        </div>
+
+        <div>
+          <label class="vi-label">Tools the agent can call</label>
+          <div class="vi-grid vi-grid-cols-2 tools-grid">
+            <label *ngFor="let entry of toolCatalog" class="tool-toggle" [class.tool-toggle--on]="hasTool(entry.action)">
+              <input type="checkbox" [checked]="hasTool(entry.action)" (change)="toggleTool(entry.action)" />
+              <div class="tool-toggle__body">
+                <strong><i class="fas" [ngClass]="entry.icon"></i> {{ entry.label }}</strong>
+                <span>{{ entry.description }}</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="vi-grid vi-grid-cols-2 workflow-block">
+          <label class="switch-row">
+            <input type="checkbox" [(ngModel)]="draft.workflow.createContact" />
+            <span><strong>Auto-create CRM contact</strong><small>Save the caller in the contacts list.</small></span>
+          </label>
+          <label class="switch-row">
+            <input type="checkbox" [(ngModel)]="draft.workflow.createInboxInteraction" />
+            <span><strong>Log to unified inbox</strong><small>Create a thread your team can follow up on.</small></span>
+          </label>
+          <label class="switch-row">
+            <input type="checkbox" [(ngModel)]="draft.workflow.sendWhatsappFollowUp" />
+            <span><strong>WhatsApp follow-up</strong><small>Send a summary on WhatsApp after the call.</small></span>
+          </label>
+          <label class="switch-row">
+            <input type="checkbox" [(ngModel)]="draft.isActive" />
+            <span><strong>Active</strong><small>Pause to stop the agent from accepting calls.</small></span>
+          </label>
+        </div>
+
+        <div>
+          <label class="vi-label">Human handoff keywords</label>
+          <div class="kw-chips">
+            <span *ngFor="let kw of draft.workflow.humanHandoffKeywords" class="vi-badge">
+              {{ kw }}
+              <button type="button" (click)="removeHandoffKeyword(kw)" aria-label="Remove"><i class="fas fa-times"></i></button>
+            </span>
+            <div class="kw-input">
+              <input class="vi-input" type="text" [(ngModel)]="newHandoffKeyword" placeholder="add keyword" (keydown.enter)="addHandoffKeyword(); $event.preventDefault()" />
+              <button class="vi-btn vi-btn-ghost" type="button" (click)="addHandoffKeyword()">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="vi-label">Max call duration (seconds)</label>
+          <input class="vi-input" type="number" min="30" max="3600" [(ngModel)]="draft.workflow.maxCallDurationSeconds" />
+        </div>
+      </div>
+
+    </div>
+
+    <div class="vi-modal__footer">
+      <button class="vi-btn vi-btn-ghost" *ngIf="builderStep === 'edit' && !editing" (click)="builderStep = 'template'">
+        <i class="fas fa-arrow-left"></i> Back to templates
+      </button>
+      <button class="vi-btn vi-btn-ghost" (click)="closeBuilder()" [disabled]="saving">Cancel</button>
+      <button class="vi-btn vi-btn-primary" *ngIf="builderStep === 'edit'" (click)="save()" [disabled]="saving">
+        <span *ngIf="saving" class="vi-spinner"></span>
+        <i *ngIf="!saving" class="fas fa-save"></i>
+        <span>{{ editing ? 'Save changes' : 'Create agent' }}</span>
+      </button>
+    </div>
+  </div>
+</div>

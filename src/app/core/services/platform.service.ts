@@ -252,6 +252,9 @@ export class PlatformService {
 
   /**
    * Initiate WhatsApp Embedded Signup OAuth — returns authUrl for popup/redirect.
+   * Backend builds Facebook Login URL with `config_id` (META_WHATSAPP_CONFIG_ID), matching Meta’s
+   * onboarding setup for https://business.facebook.com/messaging/whatsapp/onboard/?app_id=…&config_id=…
+   * @see https://developers.facebook.com/docs/whatsapp/embedded-signup
    */
   initiateWhatsAppConnection(): Observable<{ success: boolean; data: { authUrl: string } }> {
     return this.apiService.get<{ success: boolean; data: { authUrl: string } }>('/platforms/whatsapp/connect');

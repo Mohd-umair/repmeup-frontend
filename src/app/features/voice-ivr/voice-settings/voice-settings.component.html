@@ -1,0 +1,244 @@
+<div class="voice-settings">
+
+  <section class="vi-card">
+    <div class="vi-card-header">
+      <div>
+        <h2><i class="fas fa-key"></i> Voice connection</h2>
+        <p>Connect telephony for your workspace. Credentials are organization-scoped.</p>
+      </div>
+      <div class="vi-card-header__badges">
+        <span class="vi-badge" [class.vi-badge-success]="hasVoiceConnection()" [class.vi-badge-warning]="!hasVoiceConnection()">
+          {{ hasVoiceConnection() ? 'Connected' : 'Not connected' }}
+        </span>
+        <span *ngIf="credentials && credentials.voiceAiEnabled === false" class="vi-badge vi-badge-warning" title="Set platform voice AI keys on the server">
+          Voice AI unavailable
+        </span>
+      </div>
+    </div>
+
+    <div *ngIf="credsLoading" class="vi-empty">
+      <i class="fas fa-spinner fa-spin"></i><span>Loading…</span>
+    </div>
+
+    <form *ngIf="!credsLoading" (ngSubmit)="saveCredentials()" class="creds-form">
+
+      <fieldset class="telephony-mode vi-fieldset">
+        <legend class="vi-legend">How do you want to connect?</legend>
+        <label class="vi-radio-row">
+          <input type="radio" name="telephonyMode" value="managed" [(ngModel)]="telephonyMode" />
+          <span>
+            <strong>RepMeUp telephony</strong>
+            <small class="hint block">Search and buy numbers here. We provision an isolated sub-account for your workspace (production requires master credentials on the server).</small>
+          </span>
+        </label>
+        <label class="vi-radio-row">
+          <input type="radio" name="telephonyMode" value="byow" [(ngModel)]="telephonyMode" />
+          <span>
+            <strong>Bring your own telephony account</strong>
+            <small class="hint block">Use your existing provider API credentials.</small>
+          </span>
+        </label>
+      </fieldset>
+
+      <div class="vi-grid vi-grid-cols-2" *ngIf="telephonyMode === 'byow'">
+        <div>
+          <label class="vi-label">Account ID</label>
+          <input class="vi-input" type="text" [(ngModel)]="twilioAccountSid" name="twilioAccountSid" placeholder="Account identifier" />
+        </div>
+        <div>
+          <label class="vi-label">Auth token</label>
+          <input class="vi-input" type="password" [(ngModel)]="twilioAuthToken" name="twilioAuthToken" [placeholder]="credentials?.twilioAuthToken || 'Secret'" autocomplete="new-password" />
+          <small class="hint">Leave masked value unchanged to keep the current secret.</small>
+        </div>
+      </div>
+
+      <div class="vi-grid vi-grid-cols-1">
+        <div class="full">
+          <label class="vi-label">Public base URL (optional)</label>
+          <input class="vi-input" type="url" [(ngModel)]="publicBaseUrl" name="publicBaseUrl" placeholder="https://api.example.com" />
+          <small class="hint" *ngIf="telephonyMode === 'managed'">Defaults to the server <code>PUBLIC_API_BASE_URL</code> when left empty.</small>
+          <small class="hint" *ngIf="telephonyMode === 'byow'">HTTPS origin where webhooks and media streams are served (must match your deployment).</small>
+        </div>
+      </div>
+
+      <p *ngIf="telephonyMode === 'managed'" class="vi-note vi-note--muted">
+        Conversational voice (speech recognition, synthesis, and dialog) runs on RepMeUp infrastructure — no third-party AI keys are stored in your workspace.
+      </p>
+
+      <div class="creds-form__actions">
+        <button type="button" class="vi-btn vi-btn-danger" *ngIf="hasVoiceConnection() || credentials" (click)="removeCredentials()">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+        <button type="submit" class="vi-btn vi-btn-primary" [disabled]="credsSaving">
+          <span *ngIf="credsSaving" class="vi-spinner"></span>
+          <i *ngIf="!credsSaving" class="fas fa-save"></i>
+          <span>Save</span>
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <section class="vi-card">
+    <div class="vi-card-header">
+      <div>
+        <h2><i class="fas fa-phone"></i> Phone numbers</h2>
+        <p>Buy numbers and route them to voice agents.</p>
+      </div>
+      <div class="vi-card-header__actions">
+        <button type="button" class="vi-btn vi-btn-ghost" (click)="toggleRegisterLink()" [disabled]="!hasVoiceConnection()">
+          <i class="fas fa-link"></i> Link existing
+        </button>
+        <button class="vi-btn vi-btn-primary" (click)="openSearch()" [disabled]="!hasVoiceConnection()">
+          <i class="fas fa-search-plus"></i> Search &amp; buy
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="registerLinkOpen && hasVoiceConnection()" class="register-existing vi-note">
+      <p class="register-existing__title"><strong>Number already in Twilio?</strong> Paste the Incoming Phone Number SID (<code>PN…</code>) from Twilio → Active numbers, pick an agent, then link.</p>
+      <div class="vi-grid vi-grid-cols-3 register-existing__grid">
+        <div>
+          <label class="vi-label">Twilio number SID</label>
+          <input class="vi-input" [(ngModel)]="registerTwilioSid" name="registerTwilioSid" placeholder="PNxxxxxxxx" />
+        </div>
+        <div>
+          <label class="vi-label">Voice agent</label>
+          <select class="vi-select" [(ngModel)]="registerAgentId" name="registerAgentId">
+            <option value="">— Select —</option>
+            <option *ngFor="let a of agents" [value]="a._id">{{ a.name }}</option>
+          </select>
+        </div>
+        <div class="register-existing__submit">
+          <button type="button" class="vi-btn vi-btn-primary" (click)="registerExistingTwilioNumber()" [disabled]="registerSubmitting">
+            <span *ngIf="registerSubmitting" class="vi-spinner"></span>
+            <span>Link number</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="numbersLoading" class="vi-empty"><i class="fas fa-spinner fa-spin"></i><span>Loading numbers…</span></div>
+
+    <div *ngIf="!numbersLoading && !numbers.length" class="vi-empty">
+      <i class="fas fa-phone-slash"></i>
+      <span>No numbers in this workspace yet. Use <strong>Link existing</strong> for a trial number already on Twilio, or <strong>Search &amp; buy</strong> after connecting telephony above.</span>
+    </div>
+
+    <table *ngIf="!numbersLoading && numbers.length" class="numbers-table">
+      <thead>
+        <tr>
+          <th>Number</th>
+          <th>Friendly name</th>
+          <th>Assigned agent</th>
+          <th>Status</th>
+          <th class="text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let n of numbers">
+          <td><strong>{{ n.number }}</strong></td>
+          <td>{{ n.friendlyName || '—' }}</td>
+          <td>
+            <select class="vi-select" [ngModel]="assignedAgentId(n)" (ngModelChange)="onAssignAgent(n, $event)">
+              <option value="">— Unassigned —</option>
+              <option *ngFor="let a of agents" [value]="a._id">{{ a.name }}</option>
+            </select>
+          </td>
+          <td>
+            <span class="vi-badge" [class.vi-badge-success]="n.isActive" [class.vi-badge-warning]="!n.isActive">
+              {{ n.isActive ? 'Active' : 'Paused' }}
+            </span>
+          </td>
+          <td class="text-right">
+            <button class="vi-icon-btn" (click)="toggleActive(n)" [attr.aria-label]="n.isActive ? 'Pause' : 'Activate'" [title]="n.isActive ? 'Pause' : 'Activate'">
+              <i class="fas" [class.fa-pause]="n.isActive" [class.fa-play]="!n.isActive"></i>
+            </button>
+            <button class="vi-icon-btn" (click)="release(n)" aria-label="Release"><i class="fas fa-trash"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<div *ngIf="searchOpen" class="vi-modal-backdrop" (click)="closeSearch()">
+  <div class="vi-modal" (click)="$event.stopPropagation()">
+    <div class="vi-modal__header">
+      <h3><i class="fas fa-search-plus"></i> Search available numbers</h3>
+      <button class="vi-icon-btn" (click)="closeSearch()" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="vi-modal__body">
+      <div class="vi-grid vi-grid-cols-4 search-grid">
+        <div>
+          <label class="vi-label">Country</label>
+          <select class="vi-select" [(ngModel)]="searchCountry">
+            <option value="US">United States</option>
+            <option value="GB">United Kingdom</option>
+            <option value="IN">India</option>
+            <option value="AE">UAE</option>
+            <option value="CA">Canada</option>
+            <option value="AU">Australia</option>
+            <option value="SG">Singapore</option>
+          </select>
+        </div>
+        <div>
+          <label class="vi-label">Area code</label>
+          <input class="vi-input" type="text" [(ngModel)]="searchAreaCode" placeholder="e.g. 415" />
+        </div>
+        <div>
+          <label class="vi-label">Contains</label>
+          <input class="vi-input" type="text" [(ngModel)]="searchContains" placeholder="optional digits" />
+        </div>
+        <div>
+          <label class="vi-label">Limit</label>
+          <input class="vi-input" type="number" min="1" max="30" [(ngModel)]="searchLimit" />
+        </div>
+      </div>
+
+      <div class="search-actions">
+        <button class="vi-btn vi-btn-primary" (click)="search()" [disabled]="searching">
+          <span *ngIf="searching" class="vi-spinner"></span>
+          <i *ngIf="!searching" class="fas fa-search"></i>
+          <span>Search</span>
+        </button>
+      </div>
+
+      <div *ngIf="!searchResults.length && !searching" class="vi-empty">
+        <i class="fas fa-magnifying-glass"></i>
+        <span>Run a search to see available numbers.</span>
+      </div>
+
+      <table *ngIf="searchResults.length" class="numbers-table">
+        <thead>
+          <tr>
+            <th>Number</th>
+            <th>Type</th>
+            <th>Locality</th>
+            <th>Country</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of searchResults">
+            <td><strong>{{ r.phoneNumber }}</strong></td>
+            <td>{{ numberTypeLabel(r.numberType) }}</td>
+            <td>{{ r.locality || '—' }}, {{ r.region || '—' }}</td>
+            <td>{{ r.isoCountry || '—' }}</td>
+            <td class="text-right">
+              <button class="vi-btn vi-btn-primary" (click)="buy(r)" [disabled]="purchasing === r.phoneNumber">
+                <span *ngIf="purchasing === r.phoneNumber" class="vi-spinner"></span>
+                <i *ngIf="purchasing !== r.phoneNumber" class="fas fa-cart-shopping"></i>
+                <span>Buy</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="vi-modal__footer">
+      <button class="vi-btn vi-btn-ghost" (click)="closeSearch()">Close</button>
+    </div>
+  </div>
+</div>

@@ -53,6 +53,11 @@ import { SupportComponent } from './features/support/support.component';
 import { CatalogComponent } from './features/catalog/catalog.component';
 import { ContactsContainerComponent } from './features/contacts/contacts-container/contacts-container.component';
 import { PlatformTroubleshootingComponent } from './features/settings/platform-troubleshooting/platform-troubleshooting.component';
+import { VoiceIvrComponent } from './features/voice-ivr/voice-ivr.component';
+import { VoiceDashboardComponent } from './features/voice-ivr/voice-dashboard/voice-dashboard.component';
+import { VoiceAgentsComponent } from './features/voice-ivr/voice-agents/voice-agents.component';
+import { VoiceCallsComponent } from './features/voice-ivr/voice-calls/voice-calls.component';
+import { VoiceSettingsComponent } from './features/voice-ivr/voice-settings/voice-settings.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -151,7 +156,20 @@ const routes: Routes = [
       { path: 'support', component: SupportComponent },
       { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'contacts', component: ContactsContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
-      { path: 'whatsapp-templates', component: WhatsAppTemplatesComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } }
+      { path: 'whatsapp-templates', component: WhatsAppTemplatesComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      {
+        path: 'voice-ivr',
+        component: VoiceIvrComponent,
+        canActivate: [PermissionGuard],
+        data: { permissions: ['settings.read'] },
+        children: [
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          { path: 'dashboard', component: VoiceDashboardComponent },
+          { path: 'agents',    component: VoiceAgentsComponent },
+          { path: 'calls',     component: VoiceCallsComponent },
+          { path: 'settings',  component: VoiceSettingsComponent }
+        ]
+      }
     ]
   },
 

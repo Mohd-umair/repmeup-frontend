@@ -1,0 +1,164 @@
+<div class="voice-calls">
+
+  <div class="voice-calls__top">
+    <div>
+      <h2><i class="fas fa-phone-volume"></i> Call logs</h2>
+      <p>Every call routed through your voice agents — with transcripts, summaries, sentiment, and recordings.</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="vi-card filters-card">
+    <div class="filters-grid">
+      <div>
+        <label class="vi-label">Agent</label>
+        <select class="vi-select" [(ngModel)]="filter.agentId">
+          <option value="">All agents</option>
+          <option *ngFor="let a of agents" [value]="a._id">{{ a.name }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="vi-label">Status</label>
+        <select class="vi-select" [(ngModel)]="filter.status">
+          <option value="">All statuses</option>
+          <option *ngFor="let s of statusOptions" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="vi-label">Direction</label>
+        <select class="vi-select" [(ngModel)]="filter.direction">
+          <option value="">Any direction</option>
+          <option value="inbound">Inbound</option>
+          <option value="outbound">Outbound</option>
+        </select>
+      </div>
+      <div>
+        <label class="vi-label">From date</label>
+        <input class="vi-input" type="date" [(ngModel)]="filter.from" />
+      </div>
+      <div>
+        <label class="vi-label">To date</label>
+        <input class="vi-input" type="date" [(ngModel)]="filter.to" />
+      </div>
+      <div class="filters-actions">
+        <button class="vi-btn vi-btn-primary" (click)="applyFilters()" [disabled]="loading">
+          <i class="fas fa-filter"></i> Apply
+        </button>
+        <button class="vi-btn vi-btn-ghost" (click)="resetFilters()" [disabled]="loading">
+          <i class="fas fa-times"></i> Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calls table -->
+  <div class="vi-card">
+    <div *ngIf="loading" class="vi-empty"><i class="fas fa-spinner fa-spin"></i><span>Loading calls…</span></div>
+
+    <div *ngIf="!loading && !calls.length" class="vi-empty">
+      <i class="fas fa-phone-slash"></i>
+      <span>No calls match the current filters.</span>
+    </div>
+
+    <table *ngIf="!loading && calls.length" class="calls-table">
+      <thead>
+        <tr>
+          <th>Caller</th>
+          <th>Agent</th>
+          <th>Direction</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Sentiment</th>
+          <th>Started</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let call of calls" (click)="open(call)" class="calls-table__row">
+          <td><strong>{{ call.callerNumber || '—' }}</strong></td>
+          <td>{{ agentName(call) }}</td>
+          <td class="capitalize">{{ call.direction }}</td>
+          <td>{{ formatDuration(call.durationSeconds) }}</td>
+          <td><span class="vi-badge" [ngClass]="statusBadgeClass(call.status)">{{ call.status }}</span></td>
+          <td>
+            <span *ngIf="call.sentiment" class="vi-badge" [ngClass]="sentimentBadgeClass(call.sentiment)">{{ call.sentiment }}</span>
+            <span *ngIf="!call.sentiment" class="vi-badge">—</span>
+          </td>
+          <td>{{ call.startedAt | date:'medium' }}</td>
+          <td><i class="fas fa-chevron-right"></i></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="calls.length" class="pager">
+      <span>{{ pageInfo }}</span>
+      <div>
+        <button class="vi-icon-btn" (click)="prev()" [disabled]="page <= 1"><i class="fas fa-chevron-left"></i></button>
+        <button class="vi-icon-btn" (click)="next()" [disabled]="page * limit >= total"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail side panel -->
+<div *ngIf="selected" class="detail-backdrop" (click)="close()">
+  <aside class="detail-panel" (click)="$event.stopPropagation()">
+    <header class="detail-panel__head">
+      <div>
+        <h3>{{ selected.callerNumber || 'Unknown caller' }}</h3>
+        <span class="capitalize">{{ selected.direction }} · {{ agentName(selected) }} · {{ formatDuration(selected.durationSeconds) }}</span>
+      </div>
+      <button class="vi-icon-btn" (click)="close()" aria-label="Close"><i class="fas fa-times"></i></button>
+    </header>
+
+    <div class="detail-panel__body" *ngIf="!detailLoading">
+
+      <div class="detail-row">
+        <span class="vi-badge" [ngClass]="statusBadgeClass(selected.status)">{{ selected.status }}</span>
+        <span *ngIf="selected.sentiment" class="vi-badge" [ngClass]="sentimentBadgeClass(selected.sentiment)">{{ selected.sentiment }}</span>
+        <span *ngIf="selected.intent" class="vi-badge vi-badge-info">{{ selected.intent }}</span>
+        <span *ngIf="selected.humanHandoffTriggered" class="vi-badge vi-badge-warning"><i class="fas fa-user-headset"></i> handoff</span>
+        <span *ngIf="selected.followUpSent" class="vi-badge vi-badge-success"><i class="fas fa-comment"></i> follow-up sent</span>
+      </div>
+
+      <section *ngIf="selected.summary" class="detail-block">
+        <h4>Summary</h4>
+        <p>{{ selected.summary }}</p>
+      </section>
+
+      <section *ngIf="selected.recordingUrl" class="detail-block">
+        <h4>Recording</h4>
+        <audio controls preload="none" [src]="selected.recordingUrl"></audio>
+      </section>
+
+      <section class="detail-block">
+        <h4>Transcript</h4>
+        <div *ngIf="!selected.transcript?.length" class="vi-empty">
+          <i class="fas fa-comment-slash"></i>
+          <span>No transcript captured for this call yet.</span>
+        </div>
+        <ul *ngIf="selected.transcript?.length" class="transcript">
+          <li *ngFor="let turn of selected.transcript" [class.transcript--user]="turn.role === 'user'" [class.transcript--assistant]="turn.role === 'assistant'">
+            <span class="transcript__role">{{ turn.role }}</span>
+            <span class="transcript__text">{{ turn.text }}</span>
+            <span class="transcript__time">{{ turn.timestamp | date:'shortTime' }}</span>
+          </li>
+        </ul>
+      </section>
+
+      <section *ngIf="selected.linkedContact" class="detail-block">
+        <h4>Linked contact</h4>
+        <div class="linked-row">
+          <i class="fas fa-user"></i>
+          <div>
+            <strong>{{ selected.linkedContact.primaryName }}</strong>
+            <span>{{ selected.linkedContact.primaryPhone }} · {{ selected.linkedContact.primaryEmail || '—' }}</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div *ngIf="detailLoading" class="vi-empty"><i class="fas fa-spinner fa-spin"></i><span>Loading call detail…</span></div>
+  </aside>
+</div>

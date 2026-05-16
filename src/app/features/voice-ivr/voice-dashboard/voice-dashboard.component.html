@@ -1,0 +1,162 @@
+<div class="voice-dashboard">
+
+  <div class="voice-dashboard__actions">
+    <button class="vi-btn vi-btn-ghost" (click)="refresh()" [disabled]="loading">
+      <i class="fas fa-sync" [class.fa-spin]="loading"></i> Refresh
+    </button>
+    <button class="vi-btn vi-btn-primary" (click)="openOutbound()">
+      <i class="fas fa-phone-volume"></i> Start Outbound Call
+    </button>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="vi-grid vi-grid-cols-4">
+    <div class="kpi-card">
+      <div class="kpi-card__icon"><i class="fas fa-phone"></i></div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__label">Calls today</span>
+        <span class="kpi-card__value">{{ summary?.today?.totalCalls || 0 }}</span>
+        <span class="kpi-card__hint">{{ summary?.today?.answeredCalls || 0 }} answered</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--green"><i class="fas fa-check-circle"></i></div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__label">Answer rate (7d)</span>
+        <span class="kpi-card__value">{{ summary?.last7Days?.answerRatePct || 0 }}%</span>
+        <span class="kpi-card__hint">{{ summary?.last7Days?.totalCalls || 0 }} total calls</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--blue"><i class="fas fa-stopwatch"></i></div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__label">Avg duration</span>
+        <span class="kpi-card__value">{{ formatDuration(summary?.last7Days?.avgDurationSeconds) }}</span>
+        <span class="kpi-card__hint">last 7 days</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card__icon kpi-card__icon--amber"><i class="fas fa-user-headset"></i></div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__label">Human handoffs</span>
+        <span class="kpi-card__value">{{ summary?.last7Days?.humanHandoffs || 0 }}</span>
+        <span class="kpi-card__hint">{{ summary?.last7Days?.followUpsSent || 0 }} WhatsApp follow-ups</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live active calls -->
+  <div class="vi-card">
+    <div class="vi-card-header">
+      <div>
+        <h2><i class="fas fa-broadcast-tower"></i> Live active calls</h2>
+        <p>Updated in real time when calls change.</p>
+      </div>
+      <span class="vi-badge vi-badge-info">{{ activeCalls.length || summary?.activeCalls || 0 }} active</span>
+    </div>
+
+    <div *ngIf="activeCalls.length === 0" class="vi-empty">
+      <i class="fas fa-headset"></i>
+      <span>No active calls right now. New calls will appear here instantly.</span>
+    </div>
+
+    <ul *ngIf="activeCalls.length" class="live-calls">
+      <li *ngFor="let c of activeCalls" class="live-calls__item">
+        <div class="live-calls__pulse"><span></span></div>
+        <div class="live-calls__meta">
+          <strong>{{ c.callerNumber || 'Unknown caller' }}</strong>
+          <span>{{ c.direction || 'inbound' }} · started {{ ((now() - c.startedAt) / 1000) | number:'1.0-0' }}s ago</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Recent calls -->
+  <div class="vi-card">
+    <div class="vi-card-header">
+      <div>
+        <h2><i class="fas fa-history"></i> Recent calls</h2>
+        <p>Latest 8 calls handled by your voice agents.</p>
+      </div>
+    </div>
+
+    <div *ngIf="!recentCalls.length" class="vi-empty">
+      <i class="fas fa-phone-slash"></i>
+      <span>No calls yet. Configure a phone number and a voice agent to see activity here.</span>
+    </div>
+
+    <table *ngIf="recentCalls.length" class="recent-calls-table">
+      <thead>
+        <tr>
+          <th>Caller</th>
+          <th>Agent</th>
+          <th>Direction</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Started</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let call of recentCalls">
+          <td><strong>{{ call.callerNumber || '—' }}</strong></td>
+          <td>{{ agentName(call) }}</td>
+          <td class="capitalize">{{ call.direction }}</td>
+          <td>{{ formatDuration(call.durationSeconds) }}</td>
+          <td>
+            <span class="vi-badge"
+                  [class.vi-badge-success]="call.status === 'completed'"
+                  [class.vi-badge-warning]="call.status === 'in-progress' || call.status === 'ringing'"
+                  [class.vi-badge-danger]="['failed','no-answer','busy','canceled'].includes(call.status)">
+              {{ call.status }}
+            </span>
+          </td>
+          <td>{{ call.startedAt | date:'medium' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Outbound call modal -->
+<div *ngIf="outboundOpen" class="vi-modal-backdrop" (click)="closeOutbound()">
+  <div class="vi-modal" (click)="$event.stopPropagation()">
+    <div class="vi-modal__header">
+      <h3><i class="fas fa-phone-volume"></i> Start Outbound Call</h3>
+      <button class="vi-icon-btn" (click)="closeOutbound()" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="vi-modal__body">
+      <div class="vi-grid vi-grid-cols-1">
+        <div>
+          <label class="vi-label">Destination phone number</label>
+          <input class="vi-input" type="tel" [(ngModel)]="outboundTo" placeholder="+14155552671" />
+          <small class="hint">Use E.164 format (with country code, e.g. +91 or +1).</small>
+        </div>
+
+        <div>
+          <label class="vi-label">From number</label>
+          <select class="vi-select" [(ngModel)]="outboundFromNumberId">
+            <option *ngFor="let n of phoneNumbers" [value]="n._id">{{ n.number }} · {{ n.friendlyName }}</option>
+          </select>
+          <small *ngIf="!phoneNumbers.length" class="hint warn">No active phone numbers. Purchase one in Settings.</small>
+        </div>
+
+        <div>
+          <label class="vi-label">Voice agent</label>
+          <select class="vi-select" [(ngModel)]="outboundAgentId">
+            <option *ngFor="let a of agents" [value]="a._id">{{ a.name }} · {{ a.industry | titlecase }}</option>
+          </select>
+          <small *ngIf="!agents.length" class="hint warn">No active agents. Create one in the Voice Agents tab.</small>
+        </div>
+      </div>
+    </div>
+    <div class="vi-modal__footer">
+      <button class="vi-btn vi-btn-ghost" (click)="closeOutbound()" [disabled]="outboundSubmitting">Cancel</button>
+      <button class="vi-btn vi-btn-primary" (click)="submitOutbound()" [disabled]="outboundSubmitting">
+        <span *ngIf="outboundSubmitting" class="vi-spinner"></span>
+        <i *ngIf="!outboundSubmitting" class="fas fa-phone"></i>
+        <span>Place call</span>
+      </button>
+    </div>
+  </div>
+</div>

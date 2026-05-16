@@ -1,0 +1,27 @@
+<div class="voice-ivr-shell">
+  <header class="voice-ivr-header">
+    <div class="voice-ivr-header__title">
+      <div class="voice-ivr-header__icon">
+        <i class="fas fa-phone-alt"></i>
+      </div>
+      <div>
+        <h1>AI Voice IVR</h1>
+        <p>AI-powered phone assistants for your business: voice agents, call logs, and multilingual conversations—all in one place.</p>
+      </div>
+    </div>
+  </header>
+
+  <nav class="voice-ivr-tabs" aria-label="Voice IVR sections">
+    <a *ngFor="let tab of tabs"
+       class="voice-ivr-tab"
+       [routerLink]="['/app/voice-ivr', tab.route]"
+       routerLinkActive="voice-ivr-tab--active">
+      <i [class]="tab.icon"></i>
+      <span>{{ tab.label }}</span>
+    </a>
+  </nav>
+
+  <section class="voice-ivr-body">
+    <router-outlet></router-outlet>
+  </section>
+</div>

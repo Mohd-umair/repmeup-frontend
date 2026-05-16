@@ -1,0 +1,238 @@
+/* Shared atoms for the Voice IVR module — light/dark aware via CSS vars */
+/* Brand tokens inherited from app-voice-ivr :host (--vi-accent, etc.) with fallbacks */
+
+.vi-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: var(--card-shadow);
+}
+
+.vi-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  p { color: var(--text-secondary); font-size: 0.85rem; }
+}
+
+.vi-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-primary);
+  background-color: var(--surface-elevated);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover { background-color: var(--surface-tertiary); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+.vi-btn-primary {
+  background: var(--vi-accent, #D8FF00);
+  color: var(--vi-accent-foreground, #0B0B0B);
+  border-color: transparent;
+  font-weight: 800;
+  box-shadow: 0 4px 14px var(--vi-accent-glow, rgba(216, 255, 0, 0.35));
+
+  &:hover:not(:disabled) {
+    background: var(--vi-accent-hover, #e4ff33);
+    box-shadow: 0 8px 24px var(--vi-accent-glow, rgba(216, 255, 0, 0.35));
+    transform: translateY(-1px);
+  }
+  &:active:not(:disabled) { transform: scale(0.98); }
+}
+
+.vi-btn-danger {
+  background-color: #ef4444;
+  color: #fff;
+  border-color: transparent;
+
+  &:hover { background-color: #dc2626; }
+}
+
+.vi-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-primary);
+}
+
+.vi-input,
+.vi-select,
+.vi-textarea {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    border-color: var(--vi-accent, #D8FF00);
+    box-shadow: 0 0 0 3px var(--vi-accent-soft, rgba(216, 255, 0, 0.14));
+  }
+}
+
+.vi-textarea {
+  min-height: 140px;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.vi-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.vi-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.vi-grid-cols-1 { grid-template-columns: 1fr; }
+.vi-grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.vi-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vi-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 900px) {
+  .vi-grid-cols-2,
+  .vi-grid-cols-3,
+  .vi-grid-cols-4 { grid-template-columns: 1fr; }
+}
+
+.vi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background-color: var(--surface-tertiary);
+  color: var(--text-secondary);
+}
+.vi-badge-success { background-color: rgba(16, 185, 129, 0.15); color: #10b981; }
+.vi-badge-info {
+  background-color: var(--vi-accent-soft, rgba(216, 255, 0, 0.14));
+  color: var(--vi-accent-foreground, #0B0B0B);
+}
+.vi-badge-warning { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.vi-badge-danger  { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+.vi-empty {
+  display: grid;
+  place-items: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  border: 1px dashed var(--border-primary);
+  border-radius: 14px;
+  text-align: center;
+
+  i {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-muted);
+  }
+}
+
+.vi-spinner {
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: vi-spin 0.7s linear infinite;
+}
+@keyframes vi-spin { to { transform: rotate(360deg); } }
+
+.vi-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.vi-modal {
+  background-color: var(--surface-primary);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 720px;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.vi-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-primary);
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+}
+
+.vi-modal__body {
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.vi-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+.vi-icon-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  background-color: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--vi-accent-soft, rgba(216, 255, 0, 0.14));
+    border-color: color-mix(in srgb, var(--vi-accent, #D8FF00) 45%, var(--border-primary));
+    color: var(--text-primary);
+  }
+}

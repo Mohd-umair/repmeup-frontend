@@ -1,0 +1,226 @@
+@use '../voice-ivr.shared' as *;
+
+.voice-agents {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+  }
+}
+
+.agents-grid {
+  align-items: stretch;
+}
+
+.agent-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--card-border);
+  background-color: var(--card-bg);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  position: relative;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+
+    strong { color: var(--text-primary); font-size: 0.95rem; display: block; }
+  }
+
+  &__icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--vi-accent, #D8FF00);
+    color: var(--vi-accent-foreground, #0B0B0B);
+    display: grid;
+    place-items: center;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px var(--vi-accent-glow, rgba(216, 255, 0, 0.3));
+  }
+
+  &__sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+  }
+
+  &__greeting {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-style: italic;
+    line-height: 1.45;
+    max-height: 4.5rem;
+    overflow: hidden;
+  }
+
+  &__tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  &__foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    margin-top: auto;
+  }
+}
+
+/* ── Builder modal ─────────────────────────────────────────────────────── */
+
+.builder-modal {
+  max-width: 920px;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.template-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 1rem;
+  background-color: var(--surface-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--vi-accent, #D8FF00);
+    transform: translateY(-2px);
+    background-color: var(--surface-elevated);
+  }
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--vi-accent, #D8FF00);
+    color: var(--vi-accent-foreground, #0B0B0B);
+    display: grid;
+    place-items: center;
+  }
+
+  strong { color: var(--text-primary); font-size: 0.9rem; }
+  span { color: var(--text-secondary); font-size: 0.78rem; }
+
+  &__tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.25rem;
+  }
+}
+
+.builder-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tools-grid { gap: 0.6rem; }
+
+.tool-toggle {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &--on {
+    border-color: var(--vi-accent, #D8FF00);
+    background-color: var(--vi-accent-soft, rgba(216, 255, 0, 0.14));
+  }
+
+  input { margin-top: 0.25rem; }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    strong { color: var(--text-primary); font-size: 0.85rem; }
+    span { color: var(--text-secondary); font-size: 0.75rem; }
+    i { margin-right: 0.35rem; color: var(--vi-accent, #D8FF00); }
+  }
+}
+
+.workflow-block {
+  gap: 0.75rem;
+}
+
+.switch-row {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.65rem 0.75rem;
+  background-color: var(--surface-tertiary);
+  border-radius: 10px;
+  cursor: pointer;
+
+  span { display: flex; flex-direction: column; gap: 0.15rem; }
+  strong { color: var(--text-primary); font-size: 0.85rem; }
+  small { color: var(--text-secondary); font-size: 0.72rem; }
+  input { margin-top: 0.25rem; }
+}
+
+.kw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+
+  .vi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      font-size: 0.7rem;
+    }
+  }
+}
+
+.kw-input {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex: 1;
+  min-width: 160px;
+
+  input { flex: 1; }
+}
