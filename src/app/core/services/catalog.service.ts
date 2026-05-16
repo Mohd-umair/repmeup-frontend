@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
-import { IProduct, ICommentToDmSettings, ICommentFollowInviteSettings, ISalesFlowSettings } from '../models/product.model';
+import { IProduct, ICommentToDmSettings, ICommentFollowInviteSettings, ISalesFlowSettings, IProductDmConfig, IInstagramMediaItem } from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
@@ -67,12 +67,24 @@ export class CatalogService {
     return this.api.put('/products/settings/sales-flow', data);
   }
 
+  getProductDmConfig(productId: string): Observable<IApiResponse<IProductDmConfig>> {
+    return this.api.get(`/products/${productId}/dm-config`);
+  }
+
+  updateProductDmConfig(productId: string, config: Partial<IProductDmConfig>): Observable<IApiResponse<IProductDmConfig>> {
+    return this.api.put(`/products/${productId}/dm-config`, config);
+  }
+
   backfillPostNumericIds(): Observable<IApiResponse<{ resolved: number; skipped: number; failed: number; details: { product: string; shortcode: string; numericId: string }[] }>> {
     return this.api.post('/products/backfill-post-ids', {});
   }
 
   resolvePostId(postId: string): Observable<IApiResponse<{ shortcode: string | null; numericId: string; alreadyNumeric?: boolean }>> {
     return this.api.get('/products/resolve-post', { postId });
+  }
+
+  getInstagramMedia(limit = 24): Observable<IApiResponse<IInstagramMediaItem[]>> {
+    return this.api.get('/products/instagram-media', { limit });
   }
 
   importProducts(file: File): Observable<IApiResponse<IImportSummary>> {

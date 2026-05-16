@@ -16,6 +16,28 @@ export interface IProduct {
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
+  /** Per-product DM configuration — overrides org-level salesFlowSettings when present */
+  dmConfig?: IProductDmConfig;
+}
+
+/** Per-product DM configuration. Every field is optional; omitted fields inherit
+ *  from the org-level salesFlowSettings (global defaults). */
+export interface IProductDmConfig {
+  ctaTitle?: string;
+  ctaSubtitle?: string;
+  ctaImageUrl?: string;
+  /** Overrides org ctaButtons entirely when provided (all-or-nothing) */
+  ctaButtons?: ISalesFlowCtaButton[];
+  /** Overrides org triggerKeywords for this product */
+  triggerKeywords?: string[];
+  /** Override the public-comment reply stub */
+  publicReplyTemplate?: string;
+  /** Override org hesitancyKeywords for WhatsApp-capture flow */
+  hesitancyKeywords?: string[];
+  /** Override WhatsApp-capture request message */
+  whatsappCaptureMessage?: string;
+  /** Override WhatsApp-capture confirmation message */
+  whatsappCaptureConfirmation?: string;
 }
 
 export interface ICommentToDmSettings {
@@ -74,6 +96,16 @@ export interface ISalesFlowSettings {
   hesitancyKeywords: string[];
   whatsappCaptureMessage: string;
   whatsappCaptureConfirmation: string;
+}
+
+export interface IInstagramMediaItem {
+  id: string;
+  shortcode: string | null;
+  mediaType: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM';
+  thumbnailUrl: string | null;
+  mediaUrl: string | null;
+  caption: string;
+  timestamp: string;
 }
 
 export interface IProductOrder {

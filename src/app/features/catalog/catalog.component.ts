@@ -1,14 +1,14 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { CatalogService, IImportSummary } from '../../core/services/catalog.service';
 import { MediaLibraryService } from '../../core/services/media-library.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
-import { IProduct, ICommentToDmSettings, ISalesFlowSettings, ISalesFlowCtaButton } from '../../core/models/product.model';
+import { IProduct, ICommentToDmSettings, ISalesFlowSettings, ISalesFlowCtaButton, IProductDmConfig, IInstagramMediaItem } from '../../core/models/product.model';
 import { environment } from '../../../environments/environment';
 
 type ImportSource = 'excel' | 'woocommerce' | 'shopify' | 'url';
@@ -48,6 +48,25 @@ export class CatalogComponent implements OnInit, OnDestroy {
   productImageUploadQueue: File[] = [];
   showProductImagesModal = false;
   uploadingProductImages = false;
+
+  // ── Wizard state ───────────────────────────
+  /** Current step: 1=Product Info, 2=Attach Posts, 3=DM Config */
+  wizardStep: 1 | 2 | 3 = 1;
+
+  // Step 2 — Instagram media picker
+  instagramMedia: IInstagramMediaItem[] = [];
+  loadingMedia = false;
+  mediaLoadError = '';
+  selectedMediaIds = new Set<string>();
+  linkingSelectedPosts = false;
+
+  // Step 3 — per-product DM config
+  dmConfig: IProductDmConfig | null = null;
+  dmConfigKeywordsInput = '';
+  dmConfigHesitancyInput = '';
+  loadingDmConfig = false;
+  savingDmConfig = false;
+  dmConfigError = '';
 
   // ── Post-link modal ────────────────────────
   showPostLinkModal = false;
@@ -144,6 +163,14 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.sizesInput = '';
     this.colorsInput = '';
     this.imagesInput = '';
+    this.wizardStep = 1;
+    this.dmConfig = null;
+    this.dmConfigKeywordsInput = '';
+    this.dmConfigHesitancyInput = '';
+    this.dmConfigError = '';
+    this.instagramMedia = [];
+    this.selectedMediaIds = new Set();
+    this.mediaLoadError = '';
     this.buildProductForm();
     this.showProductModal = true;
   }
@@ -154,6 +181,14 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.sizesInput = product.sizes.join(', ');
     this.colorsInput = product.colors.join(', ');
     this.imagesInput = product.images.join('\n');
+    this.wizardStep = 1;
+    this.dmConfig = null;
+    this.dmConfigKeywordsInput = '';
+    this.dmConfigHesitancyInput = '';
+    this.dmConfigError = '';
+    this.instagramMedia = [];
+    this.selectedMediaIds = new Set();
+    this.mediaLoadError = '';
     this.buildProductForm(product);
     this.showProductModal = true;
   }
@@ -163,6 +198,11 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.editingProduct = null;
     this.showProductImagesModal = false;
     this.productImageUploadQueue = [];
+    this.wizardStep = 1;
+    this.dmConfig = null;
+    this.dmConfigError = '';
+    this.instagramMedia = [];
+    this.selectedMediaIds = new Set();
   }
 
   /** Parsed image URLs from {@link imagesInput} (one per line). */
@@ -265,6 +305,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       images: this.imagesInput.split('\n').map(s => s.trim()).filter(Boolean)
     };
 
+    const isNew = !this.editingProduct;
     const request$ = this.editingProduct
       ? this.catalogService.updateProduct(this.editingProduct._id, payload)
       : this.catalogService.createProduct(payload);
@@ -272,7 +313,26 @@ export class CatalogComponent implements OnInit, OnDestroy {
     request$
       .pipe(takeUntil(this.destroy$), finalize(() => { this.savingProduct = false; this.cdr.markForCheck(); }))
       .subscribe({
-        next: () => { this.closeProductModal(); this.loadProducts(); },
+        next: r => {
+          if (r.data) this.editingProduct = r.data;
+          this.loadProducts();
+          if (isNew && r.data) {
+            // Advance to step 2 so the user can immediately link posts
+            this.wizardStep = 2;
+            this.linkingProduct = r.data;
+            this.postIdInput = '';
+            this.linkError = '';
+            this.resolvedNumericId = null;
+            this.resolveError = '';
+            // Load Instagram media grid for the picker
+            if (!this.instagramMedia.length && !this.loadingMedia) {
+              this.loadInstagramMedia();
+            }
+          } else {
+            this.closeProductModal();
+          }
+          this.cdr.markForCheck();
+        },
         error: err => { this.productError = err.error?.error || 'Failed to save product'; this.cdr.markForCheck(); }
       });
   }
@@ -619,9 +679,199 @@ export class CatalogComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ── Wizard navigation ────────────────────────────────────────────────────
+  goToWizardStep(step: 1 | 2 | 3): void {
+    if (step === 2) {
+      if (this.editingProduct && !this.linkingProduct) {
+        this.linkingProduct = this.editingProduct;
+        this.postIdInput = '';
+        this.linkError = '';
+        this.resolvedNumericId = null;
+        this.resolveError = '';
+      }
+      // Load posts grid if not already loaded
+      if (!this.instagramMedia.length && !this.loadingMedia) {
+        this.loadInstagramMedia();
+      }
+    }
+    if (step === 3 && this.editingProduct) {
+      this.loadProductDmConfig(this.editingProduct._id);
+    }
+    this.wizardStep = step;
+    this.cdr.markForCheck();
+  }
+
+  // ── Instagram media picker (step 2) ──────────────────────────────────────
+  loadInstagramMedia(): void {
+    this.loadingMedia = true;
+    this.mediaLoadError = '';
+    this.catalogService.getInstagramMedia(24)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingMedia = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.instagramMedia = r.data ?? [];
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          this.mediaLoadError = err.error?.error || 'Could not load Instagram posts. Make sure Instagram is connected.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  isPostLinked(mediaId: string): boolean {
+    if (!this.linkingProduct) return false;
+    return this.linkingProduct.instagramPostIds.some(pid => pid === mediaId);
+  }
+
+  toggleMediaSelection(mediaId: string): void {
+    if (this.selectedMediaIds.has(mediaId)) {
+      this.selectedMediaIds.delete(mediaId);
+    } else {
+      this.selectedMediaIds.add(mediaId);
+    }
+    this.cdr.markForCheck();
+  }
+
+  isMediaSelected(mediaId: string): boolean {
+    return this.selectedMediaIds.has(mediaId);
+  }
+
+  async linkSelectedPosts(): Promise<void> {
+    if (!this.linkingProduct || !this.selectedMediaIds.size || this.linkingSelectedPosts) return;
+    this.linkingSelectedPosts = true;
+    this.linkError = '';
+    this.cdr.markForCheck();
+
+    const productId = this.linkingProduct._id;
+    const ids = [...this.selectedMediaIds];
+
+    for (const id of ids) {
+      try {
+        const r = await firstValueFrom(this.catalogService.linkPost(productId, id));
+        if (r?.data) {
+          this.linkingProduct = r.data;
+          const idx = this.products.findIndex(p => p._id === r.data!._id);
+          if (idx !== -1) this.products[idx] = r.data!;
+        }
+      } catch (e: any) {
+        this.linkError = e?.error?.error || 'Failed to link one or more posts';
+      }
+    }
+
+    this.selectedMediaIds = new Set();
+    this.linkingSelectedPosts = false;
+    this.cdr.markForCheck();
+  }
+
+  trackByMediaId(_: number, m: IInstagramMediaItem): string { return m.id; }
+
+  // ── Per-product DM config ────────────────────────────────────────────────
+  loadProductDmConfig(productId: string): void {
+    this.loadingDmConfig = true;
+    this.dmConfigError = '';
+    this.catalogService.getProductDmConfig(productId)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingDmConfig = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          const saved = r.data ?? {};
+          const sf = this.salesFlowSettings;
+
+          // Pre-fill empty fields with global defaults so the user sees the
+          // inherited values and can edit or clear them as needed.
+          this.dmConfig = {
+            ctaTitle:    saved.ctaTitle    ?? (sf?.ctaTitle    || ''),
+            ctaSubtitle: saved.ctaSubtitle ?? (sf?.ctaSubtitle || ''),
+            ctaImageUrl: saved.ctaImageUrl ?? (sf?.ctaImageUrl || ''),
+            // Only pre-fill buttons from global if none saved per-product
+            ctaButtons: (saved.ctaButtons?.length
+              ? saved.ctaButtons
+              : (sf?.ctaButtons?.length ? sf.ctaButtons.map(b => ({ ...b })) : [])),
+            triggerKeywords:             saved.triggerKeywords             ?? [],
+            publicReplyTemplate:         saved.publicReplyTemplate         ?? '',
+            hesitancyKeywords:           saved.hesitancyKeywords           ?? [],
+            whatsappCaptureMessage:      saved.whatsappCaptureMessage      ?? (sf?.whatsappCaptureMessage      || ''),
+            whatsappCaptureConfirmation: saved.whatsappCaptureConfirmation ?? (sf?.whatsappCaptureConfirmation || ''),
+          };
+
+          this.dmConfigKeywordsInput  = (this.dmConfig.triggerKeywords  || []).join(', ');
+          this.dmConfigHesitancyInput = (this.dmConfig.hesitancyKeywords || []).join(', ');
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.dmConfigError = 'Could not load DM configuration.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  saveProductDmConfig(): void {
+    if (!this.editingProduct || !this.dmConfig) return;
+    this.savingDmConfig = true;
+    this.dmConfigError = '';
+
+    const cfg = this.dmConfig;
+    const payload: Partial<IProductDmConfig> = {
+      ctaTitle:    cfg.ctaTitle    || undefined,
+      ctaSubtitle: cfg.ctaSubtitle || undefined,
+      ctaImageUrl: cfg.ctaImageUrl || undefined,
+      ctaButtons: (cfg.ctaButtons || []).map((b: ISalesFlowCtaButton) => {
+        const type = b.type === 'web_url' ? 'web_url' : 'postback';
+        return type === 'web_url'
+          ? { label: b.label, type, url: b.url || '' }
+          : { label: b.label, type, payload: b.payload || '' };
+      }),
+      triggerKeywords:  this.dmConfigKeywordsInput.split(',').map(k => k.trim()).filter(Boolean),
+      hesitancyKeywords: this.dmConfigHesitancyInput.split(',').map(k => k.trim()).filter(Boolean),
+      whatsappCaptureMessage:      cfg.whatsappCaptureMessage      || undefined,
+      whatsappCaptureConfirmation: cfg.whatsappCaptureConfirmation || undefined
+    };
+
+    this.catalogService.updateProductDmConfig(this.editingProduct._id, payload)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.savingDmConfig = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.dmConfig = r.data ?? {};
+          if (!Array.isArray(this.dmConfig!.ctaButtons)) this.dmConfig!.ctaButtons = [];
+          this.dmConfigKeywordsInput  = (this.dmConfig!.triggerKeywords  || []).join(', ');
+          this.dmConfigHesitancyInput = (this.dmConfig!.hesitancyKeywords || []).join(', ');
+          this.notify.success('Saved', 'DM configuration updated for this product.');
+          this.closeProductModal();
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          this.dmConfigError = err.error?.error || 'Failed to save DM configuration.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  addDmButton(): void {
+    if (!this.dmConfig) return;
+    if (!Array.isArray(this.dmConfig.ctaButtons)) this.dmConfig.ctaButtons = [];
+    if (this.dmConfig.ctaButtons.length >= 3) return;
+    this.dmConfig.ctaButtons = [...this.dmConfig.ctaButtons, { label: '', type: 'postback', payload: '' }];
+    this.cdr.markForCheck();
+  }
+
+  removeDmButton(index: number): void {
+    if (!this.dmConfig?.ctaButtons) return;
+    this.dmConfig.ctaButtons = this.dmConfig.ctaButtons.filter((_, i) => i !== index);
+    this.cdr.markForCheck();
+  }
+
   // ── Computed helpers ────────────────────────
   get productsWithPostsLinked(): number {
     return this.products.filter(p => p.instagramPostIds.length > 0).length;
+  }
+
+  /** Button labels for the Automation tab phone preview (global Sales Flow). */
+  get ctaPreviewButtons(): ISalesFlowCtaButton[] {
+    const raw = this.salesFlowSettings?.ctaButtons ?? [];
+    return raw
+      .filter(b => String(b?.label || '').trim())
+      .slice(0, 3)
+      .map(b => ({ ...b, label: String(b.label).trim().slice(0, 20) }));
   }
 
   get effectivePrice(): number {
