@@ -50,6 +50,9 @@ export class InboxListComponent implements OnInit, OnDestroy {
   /** Debounces repeated scroll-bottom firing while the parent loads more rows */
   private loadMoreCooldownUntil = 0;
 
+  /** WhatsApp Business profile image in platform badge — hide on load error */
+  platformBadgeImgError: Record<string, boolean> = {};
+
   constructor(
     public themeService: ThemeService,
     private appearance: AppearanceService,
@@ -59,6 +62,11 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   onAvatarError(key: string): void {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
+  }
+
+  onPlatformBadgeImgError(platformId: string): void {
+    if (!platformId) return;
+    this.platformBadgeImgError = { ...this.platformBadgeImgError, [platformId]: true };
   }
 
   /** Returns up to 2 initials from the author's display name: "John Doe" → "JD", "John" → "JO". */

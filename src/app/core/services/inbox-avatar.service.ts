@@ -86,6 +86,18 @@ export class InboxAvatarService {
   }
 
   /**
+   * WhatsApp inbound media — same blob-proxy pattern as Facebook attachments (auth header).
+   */
+  getWhatsAppAttachmentUrl(interactionId: string, mid: string): Observable<string | null> {
+    if (!interactionId || !mid) return of(null);
+    const key = `wa_att_${interactionId}_${mid}`;
+    const cached = this.resolved.get(key);
+    if (cached !== undefined) return of(cached === FAILED ? null : cached);
+    const url = `${this.apiUrl}/inbox/whatsapp-media?interactionId=${encodeURIComponent(interactionId)}&mid=${encodeURIComponent(mid)}`;
+    return this.fetchViaProxy(key, url);
+  }
+
+  /**
    * Fetch a Facebook DM attachment image via the backend proxy (adds page token).
    */
   getAttachmentUrl(interactionId: string, mid: string): Observable<string | null> {

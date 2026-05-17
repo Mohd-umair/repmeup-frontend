@@ -124,6 +124,8 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   totalMessagesAnalysed = 0;
   /** Hide broken avatar images so initials show (same pattern as inbox list). */
   avatarFallback: Record<string, boolean> = {};
+  /** WhatsApp Business badge image errors (bucket cards + mini chat header). */
+  platformBadgeImgError: Record<string, boolean> = {};
 
   constructor(
     private inboxService: InboxService,
@@ -427,6 +429,18 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
 
     if (hasLibraryMedia) {
       const { publicUrl, mediaType } = this.pendingMediaAttachment!;
+      if (
+        this.activeChatInteraction.platform === Platform.WHATSAPP &&
+        ['image', 'video', 'file'].includes(mediaType) &&
+        !text
+      ) {
+        this.notify.error(
+          'Message required',
+          'WhatsApp requires a text message with images, videos, and files.'
+        );
+        this.replying = false;
+        return;
+      }
       const defaultCaption =
         mediaType === 'audio'
           ? '🎤 Voice message'
@@ -787,6 +801,12 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     const key = this.bucketAvatarKey(interaction);
     if (!key) return;
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
+  }
+
+  onPlatformBadgeImgError(interaction: IInteraction): void {
+    const key = this.bucketAvatarKey(interaction);
+    if (!key) return;
+    this.platformBadgeImgError = { ...this.platformBadgeImgError, [key]: true };
   }
 
   getInitials(name: string): string {

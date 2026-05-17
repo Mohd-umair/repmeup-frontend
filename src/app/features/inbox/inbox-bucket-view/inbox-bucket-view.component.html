@@ -126,9 +126,17 @@
                          class="absolute inset-0 w-full h-full object-cover rounded-lg z-[1]" />
                   </ng-container>
                 </div>
-                <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800"
-                     [style.backgroundColor]="getPlatformColor(interaction.platform)">
-                  <i [class]="getPlatformIcon(interaction.platform) + ' text-white text-[9px] leading-none'"></i>
+                <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800 overflow-hidden"
+                     [style.background]="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(interaction)] ? 'transparent' : null"
+                     [style.backgroundColor]="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(interaction)] ? null : getPlatformColor(interaction.platform)">
+                  <img *ngIf="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(interaction)]"
+                       [src]="interaction.metadata!.whatsappBusinessAvatarUrl"
+                       alt=""
+                       referrerpolicy="no-referrer"
+                       (error)="onPlatformBadgeImgError(interaction)"
+                       class="w-full h-full object-cover" />
+                  <i *ngIf="interaction.platform !== 'whatsapp' || !interaction.metadata?.whatsappBusinessAvatarUrl || platformBadgeImgError[bucketAvatarKey(interaction)]"
+                     [class]="getPlatformIcon(interaction.platform) + ' text-white text-[9px] leading-none'"></i>
                 </div>
               </div>
               <div class="flex-1 min-w-0">
@@ -259,8 +267,17 @@
                          class="absolute inset-0 w-full h-full object-cover rounded-lg z-[1]" />
                   </ng-container>
                 </div>
-                <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800" [style.backgroundColor]="getPlatformColor(interaction.platform)">
-                  <i [class]="getPlatformIcon(interaction.platform) + ' text-white text-[9px] leading-none'"></i>
+                <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800 overflow-hidden"
+                     [style.background]="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(interaction)] ? 'transparent' : null"
+                     [style.backgroundColor]="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(interaction)] ? null : getPlatformColor(interaction.platform)">
+                  <img *ngIf="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(interaction)]"
+                       [src]="interaction.metadata!.whatsappBusinessAvatarUrl"
+                       alt=""
+                       referrerpolicy="no-referrer"
+                       (error)="onPlatformBadgeImgError(interaction)"
+                       class="w-full h-full object-cover" />
+                  <i *ngIf="interaction.platform !== 'whatsapp' || !interaction.metadata?.whatsappBusinessAvatarUrl || platformBadgeImgError[bucketAvatarKey(interaction)]"
+                     [class]="getPlatformIcon(interaction.platform) + ' text-white text-[9px] leading-none'"></i>
                 </div>
               </div>
               <div class="flex-1 min-w-0">
@@ -322,9 +339,17 @@
                  class="absolute inset-0 w-full h-full object-cover rounded-lg z-[1]" />
           </ng-container>
         </div>
-        <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-md flex items-center justify-center shadow-sm border border-white dark:border-gray-800"
-             [style.backgroundColor]="getPlatformColor(activeChatInteraction.platform)">
-          <i [class]="getPlatformIcon(activeChatInteraction.platform) + ' text-white leading-none'" style="font-size:8px;"></i>
+        <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-md flex items-center justify-center shadow-sm border border-white dark:border-gray-800 overflow-hidden"
+             [style.background]="activeChatInteraction.platform === 'whatsapp' && activeChatInteraction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(activeChatInteraction)] ? 'transparent' : null"
+             [style.backgroundColor]="activeChatInteraction.platform === 'whatsapp' && activeChatInteraction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(activeChatInteraction)] ? null : getPlatformColor(activeChatInteraction.platform)">
+          <img *ngIf="activeChatInteraction.platform === 'whatsapp' && activeChatInteraction.metadata?.whatsappBusinessAvatarUrl && !platformBadgeImgError[bucketAvatarKey(activeChatInteraction)]"
+               [src]="activeChatInteraction.metadata!.whatsappBusinessAvatarUrl"
+               alt=""
+               referrerpolicy="no-referrer"
+               (error)="onPlatformBadgeImgError(activeChatInteraction)"
+               class="w-full h-full object-cover" />
+          <i *ngIf="activeChatInteraction.platform !== 'whatsapp' || !activeChatInteraction.metadata?.whatsappBusinessAvatarUrl || platformBadgeImgError[bucketAvatarKey(activeChatInteraction)]"
+             [class]="getPlatformIcon(activeChatInteraction.platform) + ' text-white leading-none'" style="font-size:8px;"></i>
         </div>
       </div>
       <!-- Name + meta -->

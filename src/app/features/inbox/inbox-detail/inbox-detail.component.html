@@ -30,6 +30,20 @@
                    referrerpolicy="no-referrer"
                    class="absolute inset-0 w-full h-full rounded-xl object-cover shadow-md border border-white dark:border-gray-700">
             </ng-container>
+            <div
+              class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-md flex items-center justify-center shadow-sm border-2 border-white dark:border-gray-800 overflow-hidden"
+              [style.background]="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl && !waPlatformBadgeError[interaction.platformId] ? 'transparent' : (getPlatformColors() ? getPlatformColors().primary : '#25D366')"
+              [title]="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl ? 'WhatsApp Business' : (interaction.platform || 'Platform')"
+            >
+              <img *ngIf="interaction.platform === 'whatsapp' && interaction.metadata?.whatsappBusinessAvatarUrl && !waPlatformBadgeError[interaction.platformId]"
+                   [src]="interaction.metadata!.whatsappBusinessAvatarUrl"
+                   alt=""
+                   referrerpolicy="no-referrer"
+                   (error)="onWaPlatformBadgeError(interaction.platformId)"
+                   class="w-full h-full object-cover" />
+              <i *ngIf="interaction.platform !== 'whatsapp' || !interaction.metadata?.whatsappBusinessAvatarUrl || waPlatformBadgeError[interaction.platformId]"
+                 [class]="getPlatformFaClass(interaction.platform) + ' text-white text-[9px] sm:text-[10px] leading-none'"></i>
+            </div>
           </div>
           
           <!-- User Info + ticket number (header row) -->
@@ -267,33 +281,37 @@
                          (error)="$event.target.style.display='none'">
                   </ng-container>
                 </div>
-                <!-- Incoming video attachment -->
-                <div *ngIf="item.data.attachmentType === 'video' && item.data.attachmentUrl" class="mb-1 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5 dark:bg-black/20 max-w-xs">
-                  <video [src]="item.data.attachmentUrl"
-                         controls
-                         preload="metadata"
-                         class="max-w-full max-h-56 w-full"
-                         (error)="$event.target.style.display='none'">
-                    Your browser does not support video playback.
-                  </video>
+                <!-- Incoming video attachment (direct URL or WhatsApp proxy via mid) -->
+                <div *ngIf="item.data.attachmentType === 'video' && (item.data.attachmentUrl || (item.data.mid && item.data._id && item.data.platform === 'whatsapp'))" class="mb-1 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-black/5 dark:bg-black/20 max-w-xs">
+                  <ng-container *ngIf="(getAttachmentUrl$(item.data._id, item.data.mid, item.data.platform, item.data.attachmentUrl) | async) as videoBlobUrl">
+                    <video *ngIf="videoBlobUrl"
+                           [src]="videoBlobUrl"
+                           controls
+                           preload="metadata"
+                           class="max-w-full max-h-56 w-full">
+                      Your browser does not support video playback.
+                    </video>
+                  </ng-container>
                 </div>
-                <!-- Incoming video with no URL — show a placeholder pill -->
-                <div *ngIf="item.data.attachmentType === 'video' && !item.data.attachmentUrl"
+                <!-- Incoming video with no way to load preview -->
+                <div *ngIf="item.data.attachmentType === 'video' && !item.data.attachmentUrl && !(item.data.mid && item.data._id && item.data.platform === 'whatsapp')"
                      class="mb-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-sm w-fit">
                   <i class="fas fa-video text-xs"></i>
                   <span>Video (preview unavailable)</span>
                 </div>
-                <!-- Incoming audio attachment -->
-                <div *ngIf="item.data.attachmentType === 'audio' && item.data.attachmentUrl" class="mb-1 inbox-audio-message inbox-audio-message--incoming">
-                  <div class="inbox-audio-bar">
-                    <div class="inbox-audio-bar__icon">
-                      <i class="fas fa-microphone-alt text-white text-sm"></i>
+                <!-- Incoming audio / voice note (direct URL or WhatsApp proxy) -->
+                <div *ngIf="item.data.attachmentType === 'audio' && (item.data.attachmentUrl || (item.data.mid && item.data._id && item.data.platform === 'whatsapp'))" class="mb-1 inbox-audio-message inbox-audio-message--incoming">
+                  <ng-container *ngIf="(getAttachmentUrl$(item.data._id, item.data.mid, item.data.platform, item.data.attachmentUrl) | async) as audioBlobUrl">
+                    <div *ngIf="audioBlobUrl" class="inbox-audio-bar">
+                      <div class="inbox-audio-bar__icon">
+                        <i class="fas fa-microphone-alt text-white text-sm"></i>
+                      </div>
+                      <div class="inbox-audio-bar__content">
+                        <span class="inbox-audio-bar__label">Voice message</span>
+                        <audio [src]="audioBlobUrl" controls class="inbox-audio-bar__player" preload="metadata"></audio>
+                      </div>
                     </div>
-                    <div class="inbox-audio-bar__content">
-                      <span class="inbox-audio-bar__label">Voice message</span>
-                      <audio [src]="item.data.attachmentUrl" controls class="inbox-audio-bar__player" preload="metadata"></audio>
-                    </div>
-                  </div>
+                  </ng-container>
                 </div>
                 <!-- Incoming PDF / file -->
                 <button *ngIf="item.data.attachmentType === 'file' && item.data.attachmentUrl"
@@ -330,11 +348,7 @@
                   </div>
                 </ng-container>
                 <ng-template #emailTextFallback>
-                  <p *ngIf="item.data.content
-                            && !(item.data.attachmentType === 'image' && isImagePlaceholder(item.data.content))
-                            && !(item.data.attachmentType === 'audio' && item.data.content === '[audio]')
-                            && !(item.data.attachmentType === 'video' && item.data.content === '[video]')
-                            && !(item.data.attachmentType === 'file' && item.data.content === '[file]')"
+                  <p *ngIf="item.data.content && !isIncomingAttachmentCaptionHidden(item.data.content, item.data.attachmentType)"
                      class="text-sm text-gray-500 dark:text-gray-400 leading-snug whitespace-pre-wrap">
                     <app-inbox-linkified-text [text]="item.data.content" />
                   </p>

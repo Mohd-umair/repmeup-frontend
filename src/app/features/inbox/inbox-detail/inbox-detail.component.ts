@@ -84,6 +84,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   suggestionError: string | null = null;
   /** Tracks avatar load errors so we can show initial fallback */
   avatarFallback: Record<string, boolean> = {};
+  /** WhatsApp Business corner badge image load errors */
+  waPlatformBadgeError: Record<string, boolean> = {};
   /** Used for star rating display (1–5) */
   readonly ratingStars = [1, 2, 3, 4, 5];
   /** Optimistic replies shown before server confirms */
@@ -344,6 +346,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.avatarFallback = { ...this.avatarFallback, [key]: true };
   }
 
+  onWaPlatformBadgeError(platformId: string): void {
+    if (!platformId) return;
+    this.waPlatformBadgeError = { ...this.waPlatformBadgeError, [platformId]: true };
+  }
+
   /** Observable avatar URL (fetched with auth for Facebook so img can display). */
   getAuthorAvatar$(author: IInteraction['author'], platform?: string, pageId?: string): Observable<SafeUrl | null> {
     return this.avatarService.getAvatarUrl(platform ?? '', author, pageId).pipe(
@@ -356,7 +363,18 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   isImagePlaceholder(content: string | undefined): boolean {
     if (!content || typeof content !== 'string') return false;
     const t = content.trim();
-    return t === '[image]' || t === '[attachment]';
+    return /^(\[image\]|\[attachment\]|\[Image\])$/i.test(t);
+  }
+
+  /** Hide caption line for WhatsApp/media placeholder bodies (voice note, etc.). */
+  isIncomingAttachmentCaptionHidden(content: string | undefined, attachmentType?: string): boolean {
+    if (!content || typeof content !== 'string') return false;
+    const t = content.trim();
+    if (attachmentType === 'image' && this.isImagePlaceholder(content)) return true;
+    if (attachmentType === 'video' && /^\[(video|Video)\]$/i.test(t)) return true;
+    if (attachmentType === 'audio' && (/^\[audio\]$/i.test(t) || /^\[Audio Message\]$/i.test(t))) return true;
+    if (attachmentType === 'file' && /^\[file\]$/i.test(t)) return true;
+    return false;
   }
 
   /**
@@ -422,6 +440,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   getAttachmentUrl$(interactionId: string, mid: string, platform: string, directUrl: string | undefined): Observable<SafeUrl | null> {
     if ((platform === 'facebook' || platform === 'instagram') && interactionId && mid) {
       return this.avatarService.getAttachmentUrl(interactionId, mid).pipe(
+        map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
+      );
+    }
+    if (platform === 'whatsapp' && interactionId && mid) {
+      return this.avatarService.getWhatsAppAttachmentUrl(interactionId, mid).pipe(
         map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
       );
     }
@@ -642,6 +665,20 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const hasAttachment = !!this.pendingAttachment;
     if (!content && !hasAttachment) return;
 
+    const pendingWaMediaType = this.pendingAttachment?.mediaType;
+    if (
+      this.interaction.platform === Platform.WHATSAPP &&
+      hasAttachment &&
+      this.whatsappOutgoingMediaRequiresCaption(pendingWaMediaType) &&
+      !content
+    ) {
+      this.sweetAlertService.toast(
+        'error',
+        'WhatsApp requires a message with images, videos, and files. Add text to your message, then send.'
+      );
+      return;
+    }
+
     // Capture attachment before clearing (used for API and optimistic display)
     const attachmentUrl = this.pendingAttachment?.publicUrl;
     const attachmentType = this.pendingAttachment?.mediaType;
@@ -739,6 +776,19 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const hasAttachment = !!this.pendingAttachment;
     if (!content && !hasAttachment) return;
 
+    if (
+      this.interaction?.platform === Platform.WHATSAPP &&
+      hasAttachment &&
+      this.whatsappOutgoingMediaRequiresCaption(this.pendingAttachment?.mediaType) &&
+      !content
+    ) {
+      this.sweetAlertService.toast(
+        'error',
+        'WhatsApp requires a message with images, videos, and files. Add text to your message, then send.'
+      );
+      return;
+    }
+
     this.submitReply();
   }
 
@@ -767,6 +817,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       return { imageMaxBytes: 25 * 1024 * 1024, videoMaxBytes: 25 * 1024 * 1024, audioMaxBytes: 25 * 1024 * 1024 };
     }
     return { imageMaxBytes: 25 * 1024 * 1024, videoMaxBytes: 25 * 1024 * 1024, audioMaxBytes: 25 * 1024 * 1024 };
+  }
+
+  /** WhatsApp Cloud API: image, video, and document sends must include a user-visible caption (body). */
+  private whatsappOutgoingMediaRequiresCaption(mediaType?: string | null): boolean {
+    return !!mediaType && ['image', 'video', 'file'].includes(mediaType);
   }
 
   onMediaSelect(media: Media): void {
@@ -1215,6 +1270,22 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       'google': '🔍'
     };
     return icons[platform.toLowerCase()] || '💬';
+  }
+
+  /** Font Awesome platform icon for header badge (matches inbox list). */
+  getPlatformFaClass(platform: string | undefined | null): string {
+    const p = (platform || '').toLowerCase().trim();
+    const icons: Record<string, string> = {
+      [Platform.INSTAGRAM]: 'fab fa-instagram',
+      [Platform.FACEBOOK]: 'fab fa-facebook-f',
+      [Platform.YOUTUBE]: 'fab fa-youtube',
+      [Platform.GOOGLE]: 'fab fa-google',
+      [Platform.LINKEDIN]: 'fab fa-linkedin-in',
+      [Platform.WHATSAPP]: 'fab fa-whatsapp',
+      [Platform.WEBSITE]: 'fas fa-globe',
+      [Platform.EMAIL]: 'fas fa-envelope'
+    };
+    return icons[p] || 'fas fa-share-alt';
   }
 
   /** Star rating for reviews (Google Business etc.); undefined if not a review or no rating */
@@ -2123,21 +2194,47 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
           return true;
         })
       : rawIncoming;
-    // Merge caption + media: when Meta sends caption and media (image/video) as two separate webhooks, show one bubble
-    const MEDIA_PLACEHOLDER_RE = /^\[(image|video|audio|file)\]$/i;
-    const isMediaPlaceholder = (t?: string) => !t || MEDIA_PLACEHOLDER_RE.test(t.trim());
+    // Merge caption + media: when Meta sends caption and media (image/video) as two separate webhooks
+    // (e.g. some Instagram / Messenger flows), show one bubble.
+    //
+    // WhatsApp Cloud API always includes image.caption / video.caption on the *same* message id, so we
+    // store a single incomingMessages row. Consecutive rows are always separate user messages — do not
+    // merge, or a text reply right after an image is wrongly shown as the image caption.
+    const MEDIA_PLACEHOLDER_RE =
+      /^\[(image|video|audio|file|Audio Message|Image|Video|Sticker)\]$/i;
+    const isMediaPlaceholder = (t?: string) => !t || MEDIA_PLACEHOLDER_RE.test(String(t).trim());
     const mergedIncoming: Array<{ mid?: string; text?: string; timestamp?: number; attachmentUrl?: string; attachmentType?: string }> = [];
+    const isWhatsApp = this.interaction?.platform === 'whatsapp';
     if (incoming && Array.isArray(incoming)) {
       for (let i = 0; i < incoming.length; i++) {
         const msg = incoming[i] as { mid?: string; text?: string; timestamp?: number; attachmentUrl?: string; attachmentType?: string };
         const next = incoming[i + 1] as { mid?: string; text?: string; timestamp?: number; attachmentUrl?: string; attachmentType?: string } | undefined;
-        const nextIsImageOnly = next?.attachmentUrl && next?.attachmentType === 'image' && this.isImagePlaceholder(next?.text);
-        const prevHasCaption = msg.text && msg.text.trim() && !msg.attachmentUrl;
-        const msgIsImageOnly = msg.attachmentUrl && msg.attachmentType === 'image' && this.isImagePlaceholder(msg.text);
-        const nextHasCaption = next?.text && next.text.trim() && !next.attachmentUrl;
-        // Same merging for video
-        const nextIsVideoOnly = next?.attachmentUrl && next?.attachmentType === 'video' && isMediaPlaceholder(next?.text);
-        const msgIsVideoOnly = msg.attachmentUrl && msg.attachmentType === 'video' && isMediaPlaceholder(msg.text);
+
+        if (isWhatsApp) {
+          mergedIncoming.push(msg);
+          continue;
+        }
+
+        const nextIsImageOnly =
+          next?.attachmentType === 'image' &&
+          this.isImagePlaceholder(next?.text) &&
+          (!!next?.attachmentUrl || !!next?.mid);
+        const prevHasCaption =
+          !!(msg.text && msg.text.trim()) && !msg.attachmentUrl && !msg.attachmentType;
+        const msgIsImageOnly =
+          msg.attachmentType === 'image' &&
+          this.isImagePlaceholder(msg.text) &&
+          (!!msg.attachmentUrl || !!msg.mid);
+        const nextHasCaption =
+          !!(next?.text && next.text.trim()) && !next?.attachmentUrl && !next?.attachmentType;
+        const nextIsVideoOnly =
+          next?.attachmentType === 'video' &&
+          isMediaPlaceholder(next?.text) &&
+          (!!next?.attachmentUrl || !!next?.mid);
+        const msgIsVideoOnly =
+          msg.attachmentType === 'video' &&
+          isMediaPlaceholder(msg.text) &&
+          (!!msg.attachmentUrl || !!msg.mid);
         if (nextIsImageOnly && prevHasCaption) {
           mergedIncoming.push({
             mid: next!.mid,

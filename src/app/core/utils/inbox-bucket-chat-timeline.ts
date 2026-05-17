@@ -1,4 +1,4 @@
-import { IInteraction, IReply } from '../models/interaction.model';
+import { IInteraction, IReply, Platform } from '../models/interaction.model';
 
 /** Match inbox-detail: image-only webhook placeholders */
 export function isImagePlaceholderText(content: string | undefined): boolean {
@@ -92,7 +92,9 @@ export function buildBucketChatTimeline(interaction: IInteraction | null): Bucke
   );
 
   if (incoming && incoming.length > 0) {
-    const mergedIncoming = mergeCaptionImagePairs(incoming);
+    // Same rule as inbox-detail: WhatsApp captions arrive on the same message; never merge pairs.
+    const mergedIncoming =
+      interaction.platform === Platform.WHATSAPP ? incoming : mergeCaptionImagePairs(incoming);
     mergedIncoming.forEach((msg) => {
       const ts = normalizeTimestampMs(msg.timestamp, fallbackAt);
       items.push({
