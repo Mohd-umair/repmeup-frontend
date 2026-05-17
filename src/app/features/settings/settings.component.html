@@ -991,7 +991,7 @@
               Enabled Platforms
             </h3>
             <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Select which platforms should have auto-reply enabled</p>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
               <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
                 <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('youtube')" (change)="togglePlatform('youtube')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
                 <div class="flex items-center gap-1.5 min-w-0">
@@ -1025,6 +1025,13 @@
                 <div class="flex items-center gap-1.5 min-w-0">
                   <i class="fab fa-linkedin text-blue-700 text-base flex-shrink-0"></i>
                   <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">LinkedIn</span>
+                </div>
+              </label>
+              <label class="flex items-center gap-2 p-2.5 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-600 hover:border-rep-lime cursor-pointer transition">
+                <input type="checkbox" [checked]="autoReplySettings.enabledPlatforms.includes('whatsapp')" (change)="togglePlatform('whatsapp')" class="w-4 h-4 text-rep-black border-gray-300 rounded focus:ring-rep-black/25 dark:text-rep-lime dark:focus:ring-rep-lime flex-shrink-0">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <i class="fab fa-whatsapp text-green-500 text-base flex-shrink-0"></i>
+                  <span class="font-semibold text-gray-800 dark:text-gray-100 text-xs truncate">WhatsApp</span>
                 </div>
               </label>
             </div>
