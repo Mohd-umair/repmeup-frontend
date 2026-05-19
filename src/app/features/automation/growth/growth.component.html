@@ -1,0 +1,251 @@
+<app-automation-page-shell
+  title="Growth Automation"
+  subtitle="Drive followers, sales, and leads through automated Instagram & WhatsApp flows">
+
+  <!-- ── Top Tabs (goal picker) ── -->
+  <div class="flex border-b overflow-x-auto" style="border-color: var(--card-border);">
+    <button *ngFor="let g of goals"
+            (click)="activeGoal = g.id"
+            class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+            [style.color]="activeGoal === g.id ? 'var(--text-primary)' : 'var(--text-muted)'"
+            [style.border-bottom]="activeGoal === g.id ? '2px solid #d8ff00' : '2px solid transparent'">
+      <i [class]="g.icon" class="text-xs"></i>
+      {{ g.label }}
+      <span class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            [style.background-color]="goalStatus(g.id) === 'active' ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
+            [style.color]="goalStatus(g.id) === 'active' ? '#16a34a' : 'var(--text-muted)'">
+        {{ goalStatus(g.id) === 'active' ? 'ON' : 'OFF' }}
+      </span>
+    </button>
+  </div>
+
+  <!-- ══════════════ COMMENT TO DM ══════════════ -->
+  <ng-container *ngIf="activeGoal === 'comment-to-dm'">
+    <div *ngIf="loadingCtd" class="space-y-3">
+      <div *ngFor="let i of [1,2,3]" class="rounded-xl border p-5 animate-pulse h-24"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </div>
+    <ng-container *ngIf="!loadingCtd && ctdSettings">
+      <!-- Enable toggle card -->
+      <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color: #d8ff00;">
+              <i class="fas fa-comment-dollar text-[#0b0b0b]"></i>
+            </span>
+            <div>
+              <p class="font-bold" style="color: var(--text-primary);">Comment-to-DM Sales</p>
+              <p class="text-xs" style="color: var(--text-muted);">Auto-reply to product comments and send a DM with buy link</p>
+            </div>
+          </div>
+          <app-automation-switch [(ngModel)]="ctdSettings.enabled" name="ctdEnabled"
+                                 ariaLabel="Enable comment-to-DM sales"></app-automation-switch>
+        </div>
+      </div>
+
+      <!-- Settings grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Trigger Keywords</p>
+          <p class="text-xs mb-2" style="color: var(--text-muted);">Comma-separated. DM fires if a comment matches any.</p>
+          <textarea [(ngModel)]="keywordsInput" rows="3"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                    placeholder="price, buy, order, interested …"></textarea>
+        </div>
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Public Comment Reply</p>
+          <p class="text-xs mb-2" style="color: var(--text-muted);">Visible reply. Supports <code class="px-1 rounded text-[10px]" style="background-color: var(--surface-primary);">&#123;&#123;username&#125;&#125;</code></p>
+          <textarea [(ngModel)]="ctdSettings.publicReplyTemplate" rows="3"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                    placeholder="Hi {{username}}! 👋 Details sent in DM."></textarea>
+        </div>
+      </div>
+
+      <!-- Max DMs / dedup -->
+      <div class="flex flex-wrap items-center gap-4 rounded-xl border p-4"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-semibold" style="color: var(--text-primary);">Max DMs/day</label>
+          <input type="number" [(ngModel)]="ctdSettings.maxDmsPerDay" min="1" max="1000"
+                 class="w-20 px-2 py-1.5 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <span class="text-sm font-semibold" style="color: var(--text-primary);">Skip duplicates</span>
+          <span class="relative inline-flex items-center">
+            <app-automation-switch [(ngModel)]="ctdSettings.deduplicateDms" name="ctdDedup"
+                                   ariaLabel="Skip duplicate DMs"></app-automation-switch>
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="ctdError" class="text-sm text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ ctdError }}</div>
+      <div class="flex items-center gap-3">
+        <button (click)="saveCtd()" [disabled]="savingCtd"
+                class="auto-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm">
+          <i class="fas" [ngClass]="savingCtd ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{ savingCtd ? 'Saving…' : 'Save Comment-to-DM' }}
+        </button>
+      </div>
+    </ng-container>
+    <p *ngIf="!loadingCtd && !ctdSettings" class="text-sm" style="color: var(--text-muted);">Settings not available. Please try again.</p>
+  </ng-container>
+
+  <!-- ══════════════ FOLLOW INVITE ══════════════ -->
+  <ng-container *ngIf="activeGoal === 'follow-invite'">
+    <div *ngIf="loadingFi" class="rounded-xl border p-5 animate-pulse h-24"
+         style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    <ng-container *ngIf="!loadingFi && fiSettings">
+      <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color: #d8ff00;">
+              <i class="fas fa-user-plus text-[#0b0b0b]"></i>
+            </span>
+            <div>
+              <p class="font-bold" style="color: var(--text-primary);">Comment-to-Follow</p>
+              <p class="text-xs" style="color: var(--text-muted);">Invite commenters to follow your page via a private DM</p>
+            </div>
+          </div>
+          <app-automation-switch [(ngModel)]="fiSettings.enabled" name="fiEnabled"
+                                 ariaLabel="Enable comment-to-follow"></app-automation-switch>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Follow Invite DM</p>
+          <p class="text-xs mb-2" style="color: var(--text-muted);">Sent via DM after a user comments. Supports <code class="px-1 rounded text-[10px]" style="background-color: var(--surface-primary);">&#123;&#123;username&#125;&#125;</code></p>
+          <textarea [(ngModel)]="fiSettings.dmTemplate" rows="3"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                    placeholder="Hi {{username}}! Follow us for exclusive deals 🎉"></textarea>
+        </div>
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Max DMs/day</p>
+          <input type="number" [(ngModel)]="fiSettings.maxDmsPerDay" min="1" max="1000"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+        </div>
+      </div>
+
+      <div *ngIf="fiError" class="text-sm text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ fiError }}</div>
+      <div class="flex items-center gap-3">
+        <button (click)="saveFi()" [disabled]="savingFi"
+                class="auto-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm">
+          <i class="fas" [ngClass]="savingFi ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{ savingFi ? 'Saving…' : 'Save Follow-Invite' }}
+        </button>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <!-- ══════════════ SALES FLOW ══════════════ -->
+  <ng-container *ngIf="activeGoal === 'sales-flow'">
+    <div *ngIf="loadingSf" class="rounded-xl border p-5 animate-pulse h-24"
+         style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    <ng-container *ngIf="!loadingSf && sfSettings">
+      <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color: #d8ff00;">
+              <i class="fas fa-shopping-cart text-[#0b0b0b]"></i>
+            </span>
+            <div>
+              <p class="font-bold" style="color: var(--text-primary);">Comment-to-Purchase Flow</p>
+              <p class="text-xs" style="color: var(--text-muted);">Guide hesitant buyers through a multi-step sales DM flow</p>
+            </div>
+          </div>
+          <app-automation-switch [(ngModel)]="sfSettings.enabled" name="sfEnabled"
+                                 ariaLabel="Enable comment-to-purchase flow"></app-automation-switch>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">CTA Card Title</p>
+          <input type="text" [(ngModel)]="sfSettings.ctaTitle" name="ctaTitle"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                 placeholder="Check out this product!">
+        </div>
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">CTA Card Subtitle</p>
+          <input type="text" [(ngModel)]="sfSettings.ctaSubtitle" name="ctaSubtitle"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                 placeholder="Tap a button below to continue…">
+        </div>
+      </div>
+
+      <!-- Hesitancy Keywords -->
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Hesitancy Keywords</p>
+        <p class="text-xs mb-2" style="color: var(--text-muted);">Comma-separated. Flow fires when these appear in a DM reply.</p>
+        <input type="text" [(ngModel)]="hesitancyInput" name="hesitancy"
+               class="w-full px-3 py-2 rounded-lg border text-sm"
+               style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+               placeholder="not sure, maybe, later, expensive …">
+      </div>
+
+      <!-- CTA Buttons -->
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-sm font-bold" style="color: var(--text-primary);">CTA Buttons (max 3)</p>
+          <button *ngIf="(sfSettings.ctaButtons?.length ?? 0) < 3" (click)="addCtaButton()"
+                  class="auto-btn-secondary text-xs px-3 py-1.5">
+            <i class="fas fa-plus mr-1"></i>Add Button
+          </button>
+        </div>
+        <div class="space-y-2">
+          <div *ngFor="let btn of sfSettings.ctaButtons; trackBy: trackByIndex; let i = index"
+               class="flex items-center gap-2 rounded-lg border p-2"
+               style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <input type="text" [(ngModel)]="btn.label" [name]="'btnLabel'+i"
+                   class="flex-1 px-2 py-1 rounded border text-sm"
+                   style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+                   placeholder="Button label">
+            <select [(ngModel)]="btn.type" [name]="'btnType'+i"
+                    class="px-2 py-1 rounded border text-xs"
+                    style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+              <option value="postback">Postback</option>
+              <option value="web_url">URL</option>
+            </select>
+            <input *ngIf="btn.type === 'web_url'" type="url" [(ngModel)]="btn.url" [name]="'btnUrl'+i"
+                   class="flex-1 px-2 py-1 rounded border text-sm"
+                   style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+                   placeholder="https://…">
+            <button (click)="removeCtaButton(i)" class="text-red-400 hover:text-red-600 px-1">
+              <i class="fas fa-times text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="sfError" class="text-sm text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ sfError }}</div>
+      <div class="flex items-center gap-3">
+        <button (click)="saveSf()" [disabled]="savingSf"
+                class="auto-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm">
+          <i class="fas" [ngClass]="savingSf ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{ savingSf ? 'Saving…' : 'Save Sales Flow' }}
+        </button>
+      </div>
+    </ng-container>
+  </ng-container>
+
+  <!-- ══════════════ STORY TO DM ══════════════ -->
+  <ng-container *ngIf="activeGoal === 'story-to-dm'">
+    <div class="rounded-xl border p-6 text-center" style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <span class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
+            style="background-color: rgba(249,115,22,0.1);">
+        <i class="fas fa-circle-play text-2xl text-orange-500"></i>
+      </span>
+      <p class="font-bold text-lg mb-1" style="color: var(--text-primary);">Story-to-DM</p>
+      <p class="text-sm" style="color: var(--text-muted);">Convert Instagram Story viewers into DM leads automatically.</p>
+      <p class="text-xs mt-3 font-semibold" style="color: var(--auto-accent-foreground);">Coming Soon</p>
+    </div>
+  </ng-container>
+
+</app-automation-page-shell>

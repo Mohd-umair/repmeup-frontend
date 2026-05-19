@@ -2,7 +2,17 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
-import { IProduct, ICommentToDmSettings, ICommentFollowInviteSettings, ISalesFlowSettings, IProductDmConfig, IInstagramMediaItem } from '../models/product.model';
+import {
+  IProduct,
+  ICommentToDmSettings,
+  ICommentFollowInviteSettings,
+  ISalesFlowSettings,
+  IProductDmConfig,
+  IInstagramMediaItem,
+  IWhatsAppCatalogSettings,
+  IWhatsAppSyncAllResult,
+  IWhatsAppCsvImportResult
+} from '../models/product.model';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
@@ -103,6 +113,39 @@ export class CatalogService {
 
   importFromUrl(url: string, authHeader?: string): Observable<IApiResponse<IImportSummary>> {
     return this.api.post('/products/import/url', { url, authHeader: authHeader || undefined });
+  }
+
+  // ── WhatsApp Commerce Catalog ──────────────────────────────────────────────
+
+  getWACatalogSettings(): Observable<IApiResponse<IWhatsAppCatalogSettings>> {
+    return this.api.get('/whatsapp-catalog/settings');
+  }
+
+  updateWACatalogSettings(data: { catalogId: string }): Observable<IApiResponse<{ catalogId: string; metaSynced: boolean }>> {
+    return this.api.put('/whatsapp-catalog/settings', data);
+  }
+
+  syncAllProducts(): Observable<IApiResponse<IWhatsAppSyncAllResult>> {
+    return this.api.post('/whatsapp-catalog/sync-all', {});
+  }
+
+  syncProduct(productId: string): Observable<IApiResponse<IProduct>> {
+    return this.api.post(`/whatsapp-catalog/products/${productId}/sync`, {});
+  }
+
+  importWACatalogCsv(file: File): Observable<IApiResponse<IWhatsAppCsvImportResult>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.postForm('/whatsapp-catalog/import/csv', formData);
+  }
+
+  sendWAProductMessage(
+    interactionId: string,
+    productId: string,
+    bodyText: string,
+    sendMode: 'product' | 'product_list' = 'product'
+  ): Observable<IApiResponse<{ messageId: string }>> {
+    return this.api.post('/whatsapp-catalog/send-product', { interactionId, productId, bodyText, sendMode });
   }
 }
 

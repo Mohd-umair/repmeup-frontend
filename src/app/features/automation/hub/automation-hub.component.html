@@ -1,0 +1,175 @@
+<app-automation-page-shell
+  title="Automation Hub"
+  subtitle="All your active automations and performance at a glance"
+  [hasRail]="true">
+
+  <!-- Error -->
+  <div *ngIf="error" class="rounded-lg border p-4 text-sm"
+       style="background-color: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: var(--text-primary);">
+    <i class="fas fa-exclamation-circle mr-2 text-red-500"></i>{{ error }}
+  </div>
+
+  <!-- ── KPI row ── -->
+  <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <ng-container *ngIf="!loading">
+      <div class="rounded-xl border p-4 space-y-2" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Automated</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ overview?.kpis?.conversationsAutomated?.value ?? 0 }}</p>
+        <span class="text-xs" [style.color]="(overview?.kpis?.conversationsAutomated?.change ?? 0) >= 0 ? '#16a34a' : '#dc2626'">
+          <i class="fas" [ngClass]="(overview?.kpis?.conversationsAutomated?.change ?? 0) >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+          {{ overview?.kpis?.conversationsAutomated?.change ?? 0 }}% vs last week
+        </span>
+      </div>
+      <div class="rounded-xl border p-4 space-y-2" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Revenue</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">${{ overview?.kpis?.revenueGenerated?.value ?? 0 }}</p>
+        <span class="text-xs" [style.color]="(overview?.kpis?.revenueGenerated?.change ?? 0) >= 0 ? '#16a34a' : '#dc2626'">
+          <i class="fas" [ngClass]="(overview?.kpis?.revenueGenerated?.change ?? 0) >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+          {{ overview?.kpis?.revenueGenerated?.change ?? 0 }}% vs last week
+        </span>
+      </div>
+      <div class="rounded-xl border p-4 space-y-2" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Leads</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ overview?.kpis?.leadsCaptured?.value ?? 0 }}</p>
+        <span class="text-xs" [style.color]="(overview?.kpis?.leadsCaptured?.change ?? 0) >= 0 ? '#16a34a' : '#dc2626'">
+          <i class="fas" [ngClass]="(overview?.kpis?.leadsCaptured?.change ?? 0) >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+          {{ overview?.kpis?.leadsCaptured?.change ?? 0 }}% vs last week
+        </span>
+      </div>
+      <div class="rounded-xl border p-4 space-y-2" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Escalations</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ overview?.kpis?.humanEscalations?.value ?? 0 }}</p>
+        <span class="text-xs" [style.color]="(overview?.kpis?.humanEscalations?.change ?? 0) <= 0 ? '#16a34a' : '#dc2626'">
+          <i class="fas" [ngClass]="(overview?.kpis?.humanEscalations?.change ?? 0) <= 0 ? 'fa-arrow-down' : 'fa-arrow-up'"></i>
+          {{ overview?.kpis?.humanEscalations?.change ?? 0 }}% vs last week
+        </span>
+      </div>
+      <div class="rounded-xl border p-4 space-y-2" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">AI Accuracy</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ overview?.kpis?.aiAccuracy?.value ?? 0 }}%</p>
+        <span class="text-xs" style="color: var(--text-muted);">last 7 days</span>
+      </div>
+    </ng-container>
+    <!-- Skeleton -->
+    <ng-container *ngIf="loading">
+      <div *ngFor="let i of [1,2,3,4,5]" class="rounded-xl border p-4 animate-pulse h-24"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </ng-container>
+  </div>
+
+  <!-- ── Module tiles ── -->
+  <div>
+    <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color: var(--text-muted);">Your Automations</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <a *ngFor="let mod of (overview?.modules ?? []); trackBy: trackByModule"
+         [routerLink]="mod.route"
+         class="rounded-xl border p-4 flex items-start gap-3 transition-all cursor-pointer no-underline"
+         style="background-color: var(--card-bg); border-color: var(--card-border); text-decoration: none;"
+         onmouseover="this.style.borderColor='#d8ff00'" onmouseout="this.style.borderColor='var(--card-border)'">
+        <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style="background-color: var(--surface-primary);">
+          <i [class]="mod.icon" style="color: var(--text-muted);"></i>
+        </span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <span class="text-sm font-bold truncate" style="color: var(--text-primary);">{{ mod.label }}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                  [style.background-color]="mod.active ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
+                  [style.color]="mod.active ? '#16a34a' : 'var(--text-muted)'">
+              {{ mod.active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          <p class="text-xs leading-tight" style="color: var(--text-secondary);">{{ mod.description }}</p>
+          <p class="text-xs font-semibold mt-2" style="color: var(--auto-accent-foreground);">Configure →</p>
+        </div>
+      </a>
+      <!-- Skeleton -->
+      <ng-container *ngIf="loading">
+        <div *ngFor="let i of [1,2,3,4,5,6]" class="rounded-xl border p-4 animate-pulse h-28"
+             style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ── Top platforms ── -->
+  <div *ngIf="!loading && (overview?.topByPlatform?.length ?? 0) > 0">
+    <p class="text-xs font-bold uppercase tracking-widest mb-3" style="color: var(--text-muted);">Top Platforms This Week</p>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div *ngFor="let p of overview!.topByPlatform"
+           class="rounded-xl border p-4 flex items-center gap-3"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style="background-color: var(--surface-primary);">
+          <i [class]="platformIcon(p._id)" [ngClass]="platformColor(p._id)"></i>
+        </span>
+        <div>
+          <p class="text-lg font-bold" style="color: var(--text-primary);">{{ p.count }}</p>
+          <p class="text-xs capitalize" style="color: var(--text-muted);">{{ p._id }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Rail ── -->
+  <ng-container slot="rail">
+    <!-- AI Health -->
+    <div class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+      <p class="text-sm font-bold mb-3 flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-brain" style="color: var(--auto-accent-foreground);"></i> AI Health
+      </p>
+      <div class="relative w-24 h-24 mx-auto mb-2">
+        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--card-border)" stroke-width="3"/>
+          <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--auto-accent-foreground)" stroke-width="3"
+            [attr.stroke-dasharray]="(overview?.kpis?.aiAccuracy?.value ?? 0) + ', 100'"
+            stroke-linecap="round"/>
+        </svg>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <span class="text-lg font-bold" style="color: var(--text-primary);">{{ overview?.kpis?.aiAccuracy?.value ?? 0 }}%</span>
+        </div>
+      </div>
+      <p class="text-xs text-center" style="color: var(--text-muted);">Accuracy — last 7 days</p>
+    </div>
+
+    <!-- Connected Channels -->
+    <div class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+      <p class="text-sm font-bold mb-3 flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-plug" style="color: var(--auto-accent-foreground);"></i> Connected Channels
+      </p>
+      <div class="space-y-2">
+        <div *ngFor="let ch of (overview?.channels ?? [])" class="flex items-center gap-2">
+          <i [class]="platformIcon(ch.platform)" [ngClass]="platformColor(ch.platform)" class="w-4 text-center"></i>
+          <span class="text-sm truncate flex-1" style="color: var(--text-primary);">{{ ch.name }}</span>
+          <span class="w-2 h-2 rounded-full" style="background-color: #16a34a;"></span>
+        </div>
+        <p *ngIf="!loading && (overview?.channels?.length ?? 0) === 0" class="text-xs" style="color: var(--text-muted);">No channels connected yet.</p>
+        <div *ngIf="loading" class="space-y-2">
+          <div *ngFor="let i of [1,2]" class="h-4 rounded animate-pulse" style="background-color: var(--card-border);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+      <p class="text-sm font-bold mb-3 flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-history" style="color: var(--auto-accent-foreground);"></i> Recent Activity
+      </p>
+      <div class="space-y-2.5">
+        <div *ngFor="let a of (overview?.recentActivity ?? []); trackBy: trackByActivity" class="flex items-start gap-2">
+          <i [class]="platformIcon(a.platform)" [ngClass]="platformColor(a.platform)" class="mt-0.5 w-3.5 text-center flex-shrink-0"></i>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs truncate" style="color: var(--text-primary);">
+              {{ a.wasAutoGenerated ? 'AI replied to' : 'Escalated' }} {{ a.authorName }}
+            </p>
+            <p class="text-[10px]" style="color: var(--text-muted);">{{ relativeTime(a.updatedAt) }}</p>
+          </div>
+        </div>
+        <p *ngIf="!loading && (overview?.recentActivity?.length ?? 0) === 0" class="text-xs" style="color: var(--text-muted);">No recent activity.</p>
+        <div *ngIf="loading" class="space-y-2">
+          <div *ngFor="let i of [1,2,3]" class="h-4 rounded animate-pulse" style="background-color: var(--card-border);"></div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+</app-automation-page-shell>

@@ -127,7 +127,7 @@ export class InboxSetupGuideComponent implements OnChanges {
         icon: '',
         useAiBrandIcon: true,
         done: !!ar?.enabled,
-        link: '/app/settings/auto-reply',
+        link: '/app/automation/ai-replies',
         linkLabel: 'Enable'
       },
       {
@@ -136,7 +136,7 @@ export class InboxSetupGuideComponent implements OnChanges {
         description: "A friendly reply for when the AI isn't confident, so no customer is left unanswered.",
         icon: 'fas fa-life-ring',
         done: !!(ar?.fallbackSettings?.enabled && ar?.fallbackSettings?.message),
-        link: '/app/settings/auto-reply',
+        link: '/app/automation/ai-replies',
         linkLabel: 'Configure'
       }
     ];

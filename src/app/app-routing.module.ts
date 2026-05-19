@@ -58,6 +58,13 @@ import { VoiceDashboardComponent } from './features/voice-ivr/voice-dashboard/vo
 import { VoiceAgentsComponent } from './features/voice-ivr/voice-agents/voice-agents.component';
 import { VoiceCallsComponent } from './features/voice-ivr/voice-calls/voice-calls.component';
 import { VoiceSettingsComponent } from './features/voice-ivr/voice-settings/voice-settings.component';
+import { AutomationHubComponent } from './features/automation/hub/automation-hub.component';
+import { AiRepliesComponent } from './features/automation/ai-replies/ai-replies.component';
+import { GrowthComponent } from './features/automation/growth/growth.component';
+import { WhatsAppFlowsComponent } from './features/automation/whatsapp-flows/whatsapp-flows.component';
+import { ReviewCollectionComponent } from './features/automation/reviews/review-collection.component';
+import { RetargetingComponent } from './features/automation/retargeting/retargeting.component';
+import { EscalationComponent } from './features/automation/escalation/escalation.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -139,7 +146,7 @@ const routes: Routes = [
       { path: 'settings/profile', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/organization', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['organization.read'] } },
       { path: 'settings/notifications', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
-      { path: 'settings/auto-reply', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'settings/auto-reply', redirectTo: '/app/automation/ai-replies', pathMatch: 'full' },
       { path: 'settings/brand-rules', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/compliance', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/accounts', component: SettingsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
@@ -168,6 +175,20 @@ const routes: Routes = [
           { path: 'agents',    component: VoiceAgentsComponent },
           { path: 'calls',     component: VoiceCallsComponent },
           { path: 'settings',  component: VoiceSettingsComponent }
+        ]
+      },
+      {
+        path: 'automation',
+        canActivate: [PermissionGuard],
+        data: { permissions: ['settings.read'] },
+        children: [
+          { path: '', component: AutomationHubComponent },
+          { path: 'ai-replies', component: AiRepliesComponent },
+          { path: 'growth', component: GrowthComponent },
+          { path: 'whatsapp-flows', component: WhatsAppFlowsComponent },
+          { path: 'reviews', component: ReviewCollectionComponent },
+          { path: 'retargeting', component: RetargetingComponent },
+          { path: 'escalation', component: EscalationComponent }
         ]
       }
     ]

@@ -37,7 +37,7 @@ interface MenuItem {
   sidebarParentActive?: boolean;
 }
 
-type SidebarSectionId = 'main' | 'management' | 'settings';
+type SidebarSectionId = 'main' | 'management' | 'settings' | 'automation';
 
 interface SidebarSection {
   id: SidebarSectionId;
@@ -195,6 +195,8 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
 
   routerLinkActiveOptionsForChild(route: string): { exact: boolean } {
     if (route === '/app/publish') return this.routerActiveExact;
+    /** Hub route must not prefix-match deeper siblings (e.g. /app/automation vs /app/automation/ai-replies). */
+    if (route === '/app/automation') return this.routerActiveExact;
     return this.routerActivePrefix;
   }
 
@@ -381,10 +383,11 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     main?: IMenuItem[];
     management?: IMenuItem[];
     settings?: IMenuItem[];
+    automation?: IMenuItem[];
   } | null): boolean {
     if (!grouped) return true;
     return (
-      !(grouped.main?.length || grouped.management?.length || grouped.settings?.length)
+      !(grouped.main?.length || grouped.management?.length || grouped.settings?.length || grouped.automation?.length)
     );
   }
 
@@ -408,6 +411,7 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
 
     const nextSections: SidebarSection[] = [
       { id: 'main', label: 'Main', items: mapGroup(grouped.main) },
+      { id: 'automation', label: 'Automation', items: mapGroup(grouped.automation) },
       { id: 'management', label: 'Management', items: mapGroup(grouped.management) },
       { id: 'settings', label: 'Settings', items: mapGroup(grouped.settings) }
     ];

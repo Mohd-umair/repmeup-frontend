@@ -2,6 +2,7 @@ export interface IProduct {
   _id: string;
   organization: string;
   name: string;
+  sku?: string;
   description?: string;
   price: number;
   currency: string;
@@ -18,6 +19,43 @@ export interface IProduct {
   updatedAt: string;
   /** Per-product DM configuration — overrides org-level salesFlowSettings when present */
   dmConfig?: IProductDmConfig;
+  /** WhatsApp Commerce Catalog sync state */
+  whatsapp?: IProductWhatsAppCatalog;
+}
+
+export type WhatsAppSyncStatus = 'synced' | 'pending' | 'failed' | 'not_synced';
+
+export interface IProductWhatsAppCatalog {
+  catalogItemId?: string;
+  syncStatus?: WhatsAppSyncStatus;
+  syncedAt?: string;
+  syncError?: string;
+}
+
+export interface IWhatsAppCatalogSettings {
+  connected: boolean;
+  catalogId?: string | null;
+  phoneNumberId?: string | null;
+  displayPhoneNumber?: string | null;
+  isCatalogVisible?: boolean;
+  isCartEnabled?: boolean;
+  syncedCount?: number;
+  failedCount?: number;
+  notSyncedCount?: number;
+}
+
+export interface IWhatsAppSyncAllResult {
+  synced: number;
+  failed: number;
+  total: number;
+}
+
+export interface IWhatsAppCsvImportResult {
+  created: number;
+  updated: number;
+  failed: Array<{ row: number; error: string }>;
+  totalRows: number;
+  sync?: { synced: number; failed: number } | null;
 }
 
 /** Per-product DM configuration. Every field is optional; omitted fields inherit

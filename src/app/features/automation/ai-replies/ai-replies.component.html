@@ -1,0 +1,293 @@
+<app-automation-page-shell
+  title="AI Auto Replies"
+  subtitle="Configure intelligent AI-powered replies across all your channels">
+
+  <div slot="actions" class="flex items-center gap-3">
+    <span *ngIf="!loading && activeSection !== 'knowledgeBase'"
+          class="text-[11px] font-bold px-2.5 py-1 rounded-full"
+          [style.background-color]="settings.enabled ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
+          [style.color]="settings.enabled ? '#16a34a' : 'var(--text-muted)'">
+      {{ settings.enabled ? 'Enabled' : 'Disabled' }}
+    </span>
+    <button *ngIf="activeSection !== 'knowledgeBase'" (click)="save()" [disabled]="saving || loading"
+            class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+      <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+      {{ saving ? 'Saving…' : 'Save Changes' }}
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="rounded-lg border p-4 text-sm"
+       style="background-color: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: #dc2626;">
+    <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
+  </div>
+
+  <!-- Skeleton -->
+  <div *ngIf="loading" class="space-y-4">
+    <div *ngFor="let i of [1,2,3]" class="rounded-xl border p-5 animate-pulse h-28"
+         style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- ── Master toggle ── -->
+    <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="w-10 h-10 rounded-xl flex items-center justify-center" style="background-color: #d8ff00;">
+            <i class="fas fa-power-off text-[#0b0b0b]"></i>
+          </span>
+          <div>
+            <p class="font-bold text-sm" style="color: var(--text-primary);">Enable AI Auto-Reply</p>
+            <p class="text-xs" style="color: var(--text-muted);">Turn on AI-powered automatic responses</p>
+          </div>
+        </div>
+        <app-automation-switch [(ngModel)]="settings.enabled" name="enabled"
+                               ariaLabel="Enable AI Auto-Reply"></app-automation-switch>
+      </div>
+    </div>
+
+    <!-- ── Tone & Reply type tabs ── -->
+    <div class="rounded-xl border" style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <!-- Top tabs -->
+      <div class="flex border-b overflow-x-auto" style="border-color: var(--card-border);">
+        <button (click)="activeSection = 'general'"
+                class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+                [style.color]="activeSection === 'general' ? 'var(--text-primary)' : 'var(--text-muted)'"
+                [style.border-bottom]="activeSection === 'general' ? '2px solid #d8ff00' : '2px solid transparent'">
+          <i class="fas fa-sliders-h mr-1.5"></i>General
+        </button>
+        <button (click)="activeSection = 'channels'"
+                class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+                [style.color]="activeSection === 'channels' ? 'var(--text-primary)' : 'var(--text-muted)'"
+                [style.border-bottom]="activeSection === 'channels' ? '2px solid #d8ff00' : '2px solid transparent'">
+          <i class="fas fa-network-wired mr-1.5"></i>Channels
+        </button>
+        <button (click)="activeSection = 'tone'"
+                class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+                [style.color]="activeSection === 'tone' ? 'var(--text-primary)' : 'var(--text-muted)'"
+                [style.border-bottom]="activeSection === 'tone' ? '2px solid #d8ff00' : '2px solid transparent'">
+          <i class="fas fa-palette mr-1.5"></i>Tone
+        </button>
+        <button (click)="activeSection = 'advanced'"
+                class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+                [style.color]="activeSection === 'advanced' ? 'var(--text-primary)' : 'var(--text-muted)'"
+                [style.border-bottom]="activeSection === 'advanced' ? '2px solid #d8ff00' : '2px solid transparent'">
+          <i class="fas fa-cog mr-1.5"></i>Advanced
+        </button>
+        <button *ngIf="canViewKnowledgeBase" type="button" (click)="activeSection = 'knowledgeBase'"
+                class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+                [style.color]="activeSection === 'knowledgeBase' ? 'var(--text-primary)' : 'var(--text-muted)'"
+                [style.border-bottom]="activeSection === 'knowledgeBase' ? '2px solid #d8ff00' : '2px solid transparent'">
+          <i class="fas fa-database mr-1.5"></i>Knowledge Base
+        </button>
+      </div>
+
+      <div *ngIf="activeSection !== 'knowledgeBase'" class="p-5 space-y-5">
+
+        <!-- GENERAL -->
+        <ng-container *ngIf="activeSection === 'general'">
+          <!-- Reply Types -->
+          <div>
+            <p class="text-sm font-bold mb-2" style="color: var(--text-primary);">Reply Types</p>
+            <p class="text-xs mb-3" style="color: var(--text-muted);">Choose which interaction types the AI should automatically respond to.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div *ngFor="let t of enabledTypeOptions"
+                   role="button"
+                   tabindex="0"
+                   (click)="setTypeEnabled(t.key, !isTypeEnabled(t.key))"
+                   (keydown.enter)="setTypeEnabled(t.key, !isTypeEnabled(t.key))"
+                   (keydown.space)="$event.preventDefault(); setTypeEnabled(t.key, !isTypeEnabled(t.key))"
+                   class="relative flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-all outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--auto-accent-foreground)]"
+                   [style.border-color]="isTypeEnabled(t.key) ? '#d8ff00' : 'var(--card-border)'"
+                   [style.background-color]="isTypeEnabled(t.key) ? 'rgba(216,255,0,0.06)' : 'var(--surface-primary)'">
+                <i [class]="t.icon + ' text-xs'" style="color: var(--text-muted);"></i>
+                <span class="text-xs font-semibold flex-1" style="color: var(--text-primary);">{{ t.label }}</span>
+                <span class="flex-shrink-0" (click)="$event.stopPropagation()">
+                  <app-automation-switch
+                    [ngModel]="isTypeEnabled(t.key)"
+                    (ngModelChange)="setTypeEnabled(t.key, $event)"
+                    [name]="'type-' + t.key"
+                    [ariaLabel]="'Reply type: ' + t.label">
+                  </app-automation-switch>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Confidence Threshold -->
+          <div>
+            <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">
+              Confidence Threshold — <span style="color: var(--auto-accent-foreground);">{{ confidencePct }}%</span>
+            </p>
+            <p class="text-xs mb-2" style="color: var(--text-muted);">Minimum AI confidence to auto-send. Lower = more automation; higher = safer replies.</p>
+            <input type="range" [(ngModel)]="confidencePct" min="0" max="100" step="5"
+                   class="auto-confidence-range">
+            <div class="flex justify-between text-[10px] mt-1" style="color: var(--text-muted);">
+              <span>0% — Full auto</span><span>100% — Safest</span>
+            </div>
+          </div>
+
+          <!-- Auto-send + Daily limit -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="flex items-center justify-between rounded-lg border p-3"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border);">
+              <div>
+                <p class="text-sm font-semibold" style="color: var(--text-primary);">Auto-Send Replies</p>
+                <p class="text-xs" style="color: var(--text-muted);">Send without manual approval</p>
+              </div>
+              <app-automation-switch [(ngModel)]="settings.autoSend" name="autoSend"
+                                     ariaLabel="Auto-send replies without approval"></app-automation-switch>
+            </div>
+            <div class="rounded-lg border p-3" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+              <p class="text-sm font-semibold mb-1" style="color: var(--text-primary);">Max Replies/Day</p>
+              <input type="number" [(ngModel)]="settings.maxRepliesPerDay" name="maxRepliesPerDay" min="1" max="1000"
+                     class="w-full px-3 py-1.5 rounded-lg border text-sm"
+                     style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- CHANNELS -->
+        <ng-container *ngIf="activeSection === 'channels'">
+          <p class="text-sm font-bold mb-2" style="color: var(--text-primary);">Active Platforms</p>
+          <p class="text-xs mb-4" style="color: var(--text-muted);">The AI will reply on the selected platforms only.</p>
+          <app-automation-channel-toggle
+            [channels]="allChannels"
+            [selected]="settings.enabledPlatforms || []"
+            (selectedChange)="settings.enabledPlatforms = $event">
+          </app-automation-channel-toggle>
+
+          <!-- Sentiment filter -->
+          <div class="mt-4">
+            <p class="text-sm font-bold mb-2" style="color: var(--text-primary);">Sentiment Filter</p>
+            <select [(ngModel)]="settings.sentimentFilter" name="sentimentFilter"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+              <option value="all">All Sentiments</option>
+              <option value="positive">Positive only</option>
+              <option value="neutral">Neutral only</option>
+              <option value="positive_neutral">Positive + Neutral</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mt-3">
+            <div class="flex items-center justify-between rounded-lg border p-3"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border);">
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">Reply to Negative</p>
+              <app-automation-switch [(ngModel)]="settings.replyToNegative" name="replyToNegative"
+                                     ariaLabel="Reply to negative sentiment"></app-automation-switch>
+            </div>
+            <div class="flex items-center justify-between rounded-lg border p-3"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border);">
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">Reply to Complaints</p>
+              <app-automation-switch [(ngModel)]="settings.replyToComplaints" name="replyToComplaints"
+                                     ariaLabel="Reply to complaints"></app-automation-switch>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- TONE -->
+        <ng-container *ngIf="activeSection === 'tone'">
+          <p class="text-sm font-bold mb-2" style="color: var(--text-primary);">AI Reply Tone</p>
+          <p class="text-xs mb-4" style="color: var(--text-muted);">Choose how the AI should sound when replying to your customers.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <button *ngFor="let t of toneOptions"
+                    type="button"
+                    (click)="settings.tone = t.key"
+                    class="rounded-xl border p-4 text-left transition-all"
+                    [style.border-color]="settings.tone === t.key ? '#d8ff00' : 'var(--card-border)'"
+                    [style.background-color]="settings.tone === t.key ? 'rgba(216,255,0,0.08)' : 'var(--surface-primary)'">
+              <div class="flex items-center gap-2 mb-2">
+                <i [class]="t.icon + ' text-sm'" [style.color]="settings.tone === t.key ? 'var(--auto-accent-foreground)' : 'var(--text-muted)'"></i>
+                <span class="font-bold text-sm" style="color: var(--text-primary);">{{ t.label }}</span>
+                <i *ngIf="settings.tone === t.key" class="fas fa-check-circle ml-auto text-sm" style="color: var(--auto-accent-foreground);"></i>
+              </div>
+              <p class="text-xs" style="color: var(--text-muted);">{{ t.desc }}</p>
+            </button>
+          </div>
+
+          <div *ngIf="settings.tone === 'custom'" class="mt-4 rounded-xl border p-4 space-y-2"
+               style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <label class="text-sm font-bold block" style="color: var(--text-primary);">Your tone instructions</label>
+            <p class="text-xs" style="color: var(--text-muted);">
+              Describe how AI auto-replies should sound — voice, formality, words to prefer or avoid. This text is sent to the model whenever automation replies for your organization.
+            </p>
+            <textarea [(ngModel)]="settings.toneCustomText" name="toneCustomText" rows="4"
+                      [attr.maxlength]="maxToneCustomLength"
+                      class="w-full px-3 py-2 rounded-lg border text-sm resize-y min-h-[5rem]"
+                      style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+                      placeholder="Example: Friendly expert tone; short sentences; no slang; mention our warranty once when relevant; never invent discounts…"></textarea>
+            <p class="text-[10px] text-right" style="color: var(--text-muted);">{{ toneCustomRemaining }} characters left</p>
+          </div>
+        </ng-container>
+
+        <!-- ADVANCED -->
+        <ng-container *ngIf="activeSection === 'advanced'">
+          <!-- Quiet Hours -->
+          <div class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <p class="text-sm font-bold" style="color: var(--text-primary);">Quiet Hours</p>
+                <p class="text-xs" style="color: var(--text-muted);">Pause replies during off-hours</p>
+              </div>
+              <app-automation-switch [(ngModel)]="settings.quietHours!.enabled" name="quietEnabled"
+                                     ariaLabel="Enable quiet hours"></app-automation-switch>
+            </div>
+            <div *ngIf="settings.quietHours?.enabled" class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-semibold block mb-1" style="color: var(--text-muted);">Start</label>
+                <input type="time" [(ngModel)]="settings.quietHours!.start" name="qhStart"
+                       class="w-full px-3 py-1.5 rounded-lg border text-sm"
+                       style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+              </div>
+              <div>
+                <label class="text-xs font-semibold block mb-1" style="color: var(--text-muted);">End</label>
+                <input type="time" [(ngModel)]="settings.quietHours!.end" name="qhEnd"
+                       class="w-full px-3 py-1.5 rounded-lg border text-sm"
+                       style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+              </div>
+            </div>
+          </div>
+
+          <!-- Fallback -->
+          <div class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <p class="text-sm font-bold" style="color: var(--text-primary);">Fallback Reply</p>
+                <p class="text-xs" style="color: var(--text-muted);">Send this message when AI confidence is too low</p>
+              </div>
+              <app-automation-switch [(ngModel)]="settings.fallbackSettings!.enabled" name="fbEnabled"
+                                     ariaLabel="Enable fallback reply"></app-automation-switch>
+            </div>
+            <textarea *ngIf="settings.fallbackSettings?.enabled"
+                      [(ngModel)]="settings.fallbackSettings!.message" name="fbMsg" rows="3"
+                      class="w-full px-3 py-2 rounded-lg border text-sm"
+                      style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+                      placeholder="Our agent will contact you within 24 hours."></textarea>
+          </div>
+
+        </ng-container>
+
+      </div>
+
+      <!-- Same KB UI as /app/knowledge-base (embedded) -->
+      <div *ngIf="activeSection === 'knowledgeBase'"
+           class="min-h-[28rem] max-h-[min(78vh,920px)] overflow-y-auto rounded-b-xl border-t"
+           style="border-color: var(--card-border);">
+        <app-knowledge-base class="block min-h-[28rem]"></app-knowledge-base>
+      </div>
+    </div>
+
+    <!-- ── Save bar ── -->
+    <div *ngIf="activeSection !== 'knowledgeBase'" class="flex items-center gap-3 pt-2">
+      <button (click)="save()" [disabled]="saving"
+              class="auto-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm">
+        <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+        {{ saving ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+
+  </ng-container>
+
+</app-automation-page-shell>

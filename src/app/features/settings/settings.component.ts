@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PlatformService } from '../../core/services/platform.service';
-import { OrganizationService, AutoReplySettings } from '../../core/services/organization.service';
+import { OrganizationService } from '../../core/services/organization.service';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
@@ -13,8 +13,6 @@ import { formatPlanPriceMonthly } from '../../core/utils/plan-price-format';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
 import { PermissionService } from '../../core/services/permission.service';
 import { UserService, IAvailableAgent } from '../../core/services/user.service';
-import { CatalogService } from '../../core/services/catalog.service';
-import { ICommentFollowInviteSettings } from '../../core/models/product.model';
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
@@ -24,7 +22,7 @@ import { WhatsAppConnectComponent } from './whatsapp-connect/whatsapp-connect.co
 import { EmailConnectComponent } from './email-connect/email-connect.component';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription, timer } from 'rxjs';
-import { take, finalize } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 
 /**
  * Settings Component - Single Responsibility Principle
@@ -32,7 +30,7 @@ import { take, finalize } from 'rxjs/operators';
  */
 
 // All available settings tabs
-type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'auto-reply' | 'brand-rules' | 'compliance' | 'accounts';
+type SettingsTab = 'platforms' | 'platforms-old' | 'profile' | 'organization' | 'security' | 'notifications' | 'brand-rules' | 'compliance' | 'accounts';
 
 interface Platform {
   id: string;
@@ -74,8 +72,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   activeTab: SettingsTab = 'platforms';
   loading = false;
-  savingSettings = false;
-  showTimingAdvanced = false;
   organizationId: string = '';
   
   // New: Connection usage and limits (SOLID: Single Responsibility)
@@ -137,54 +133,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     { id: 'profile', icon: 'fas fa-user', label: 'Profile', routeSegment: 'profile', requiredPermission: 'settings.read' },
     { id: 'organization', icon: 'fas fa-building', label: 'Organization', routeSegment: 'organization', requiredPermission: 'organization.read' },
     { id: 'notifications', icon: 'fas fa-bell', label: 'Notifications', routeSegment: 'notifications', requiredPermission: 'settings.read' },
-    {
-      id: 'auto-reply',
-      icon: '',
-      useAiBrandIcon: true,
-      label: 'Auto-Reply',
-      routeSegment: 'auto-reply',
-      requiredPermission: 'settings.read'
-    },
     { id: 'brand-rules', icon: 'fas fa-palette', label: 'Brand Rules', routeSegment: 'brand-rules', requiredPermission: 'settings.read' },
     { id: 'compliance', icon: 'fas fa-shield-alt', label: 'Compliance', routeSegment: 'compliance', requiredPermission: 'settings.read' },
     { id: 'accounts', icon: 'fas fa-credit-card', label: 'Plans & Billing', routeSegment: 'accounts', requiredPermission: 'billing.read' },
   ];
 
   private subscriptions: Subscription[] = [];
-
-  // Auto-reply settings
-  autoReplySettings: AutoReplySettings = {
-    enabled: false,
-    enabledPlatforms: ['youtube', 'instagram', 'facebook', 'google', 'linkedin', 'whatsapp'],
-    enabledTypes: ['comment', 'review', 'dm'],
-    sentimentFilter: 'all',
-    replyToNegative: false,
-    replyToComplaints: false,
-    minConfidence: 0.75,
-    autoSend: true,
-    requireApproval: false,
-    maxRepliesPerDay: 50,
-    repliesCountToday: 0,
-    // Scheduling settings
-    triggerMode: 'hybrid',
-    webhookImmediate: true,
-    webhookDelay: 5,
-    scheduleInterval: '24hours',
-    scheduleEnabled: true,
-    // Fallback settings
-    fallbackSettings: {
-      enabled: false,
-      message: 'Our Agent will contact you within 24 hours.',
-      assignToAgent: true,
-      notifyByEmail: true
-    }
-  };
-
-  /** Instagram: top-level comment → private DM with Follow CTA (runs after AI; separate from AI auto-reply text). */
-  followInviteSettings: ICommentFollowInviteSettings | null = null;
-  loadingFollowInviteSettings = false;
-  savingFollowInviteSettings = false;
-  followInviteSettingsLoadError = '';
 
   platforms: Platform[] = [
     {
@@ -267,8 +221,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private subscriptionService: SubscriptionService,
     private socialAccountsService: SocialAccountsService,
     private razorpayService: RazorpayService,
-    private userService: UserService,
-    private catalogService: CatalogService
+    private userService: UserService
   ) {
     // Initialize observables (reactive state management)
     this.usage$ = this.platformConnectionService.usage$;
@@ -285,8 +238,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
       this.authService.currentUser$.subscribe(user => {
         if (user && user.organization) {
           this.organizationId = typeof user.organization === 'string' ? user.organization : user.organization._id;
-          this.loadAutoReplySettings();
-          this.loadFollowInviteSettings();
           this.loadProfileData(user);
           this.loadOrganizationData();
         }
@@ -941,176 +892,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
     // Calculate available platforms: max limit minus current connections
     const usage = this.platformConnectionService.getCurrentUsage();
     return usage ? usage.remaining : 0;
-  }
-
-  /**
-   * Load auto-reply settings from organization
-   */
-  loadAutoReplySettings(): void {
-    if (!this.organizationId) {
-      return;
-    }
-
-    this.organizationService.getOrganization(this.organizationId).subscribe({
-      next: (response) => {
-        if (response.success && response.data && response.data.autoReplySettings) {
-          this.autoReplySettings = {
-            ...this.autoReplySettings,
-            ...response.data.autoReplySettings
-          };
-        }
-      },
-      error: (error) => {
-        console.error('Error loading auto-reply settings:', error);
-      }
-    });
-  }
-
-  /**
-   * Save auto-reply settings
-   */
-  saveAutoReplySettings(): void {
-    if (!this.organizationId) {
-      this.notificationService.error(
-        'Organization Not Found',
-        'Organization ID not found. Please refresh the page.'
-      );
-      return;
-    }
-
-    this.savingSettings = true;
-
-    // Debug: Log what we're sending
-    console.log('Saving auto-reply settings:', {
-      scheduleInterval: this.autoReplySettings.scheduleInterval,
-      webhookDelay: this.autoReplySettings.webhookDelay,
-      triggerMode: this.autoReplySettings.triggerMode,
-      fullSettings: this.autoReplySettings
-    });
-
-    this.organizationService.updateAutoReplySettings(this.organizationId, this.autoReplySettings).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.notificationService.success(
-            'Settings Saved',
-            'Auto-reply settings saved successfully!'
-          );
-          
-          // Update local settings with response
-          if (response.data && response.data.autoReplySettings) {
-            this.autoReplySettings = {
-              ...this.autoReplySettings,
-              ...response.data.autoReplySettings
-            };
-          }
-        }
-        this.savingSettings = false;
-      },
-      error: (error) => {
-        console.error('Error saving auto-reply settings:', error);
-        const errorMessage = error.error?.error || error.error?.message || 'Failed to save settings. Please try again.';
-        this.notificationService.error(
-          'Save Failed',
-          errorMessage
-        );
-        this.savingSettings = false;
-      }
-    });
-  }
-
-  /**
-   * Load Instagram comment → follow-invite DM settings (Catalog / products API).
-   */
-  loadFollowInviteSettings(): void {
-    if (!this.organizationId) {
-      return;
-    }
-    this.loadingFollowInviteSettings = true;
-    this.followInviteSettingsLoadError = '';
-    this.catalogService
-      .getCommentFollowInviteSettings()
-      .pipe(
-        take(1),
-        finalize(() => {
-          this.loadingFollowInviteSettings = false;
-        })
-      )
-      .subscribe({
-        next: (r) => {
-          this.followInviteSettings = r.data ?? null;
-        },
-        error: () => {
-          this.followInviteSettings = null;
-          this.followInviteSettingsLoadError =
-            'Could not load Instagram follow-invite settings. Try again or check your connection.';
-        }
-      });
-  }
-
-  saveFollowInviteSettings(): void {
-    if (!this.organizationId || !this.followInviteSettings) {
-      return;
-    }
-    this.savingFollowInviteSettings = true;
-    const s = this.followInviteSettings;
-    const payload: Partial<ICommentFollowInviteSettings> = {
-      enabled: s.enabled,
-      title: s.title,
-      subtitle: s.subtitle,
-      imageUrl: s.imageUrl,
-      buttonTitle: s.buttonTitle,
-      buttonUrl: s.buttonUrl,
-      publicReplyTemplate: s.publicReplyTemplate,
-      postPublicReply: s.postPublicReply,
-      deduplicateDms: s.deduplicateDms,
-      maxDmsPerDay: Number(s.maxDmsPerDay),
-      skipIfProductDmSent: s.skipIfProductDmSent,
-      filterNegativeSentiment: s.filterNegativeSentiment,
-      filterSalesIntent: s.filterSalesIntent
-    };
-
-    this.catalogService
-      .updateCommentFollowInviteSettings(payload)
-      .pipe(
-        take(1),
-        finalize(() => {
-          this.savingFollowInviteSettings = false;
-        })
-      )
-      .subscribe({
-        next: (r) => {
-          this.followInviteSettings = r.data ?? null;
-          this.notificationService.success('Saved', 'Instagram follow-invite settings updated.');
-        },
-        error: (err) => {
-          const msg = err.error?.error || err.error?.message || 'Failed to save follow-invite settings.';
-          this.notificationService.error('Save failed', msg);
-        }
-      });
-  }
-
-  /**
-   * Toggle platform in enabled platforms list
-   */
-  togglePlatform(platform: string): void {
-    const index = this.autoReplySettings.enabledPlatforms.indexOf(platform);
-    if (index > -1) {
-      this.autoReplySettings.enabledPlatforms.splice(index, 1);
-    } else {
-      this.autoReplySettings.enabledPlatforms.push(platform);
-    }
-  }
-
-  /**
-   * Toggle interaction type in enabled types list
-   */
-  toggleType(type: string): void {
-    const index = this.autoReplySettings.enabledTypes.indexOf(type);
-    if (index > -1) {
-      this.autoReplySettings.enabledTypes.splice(index, 1);
-    } else {
-      this.autoReplySettings.enabledTypes.push(type);
-    }
   }
 
   /**

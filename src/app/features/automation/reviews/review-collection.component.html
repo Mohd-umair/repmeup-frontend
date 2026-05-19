@@ -1,0 +1,252 @@
+<app-automation-page-shell
+  title="Review Collection"
+  subtitle="Automatically request reviews from happy customers via WhatsApp, SMS or email">
+
+  <div slot="actions" class="flex items-center gap-3">
+    <span class="text-[11px] font-bold px-2.5 py-1 rounded-full"
+          [style.background-color]="settings.enabled ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
+          [style.color]="settings.enabled ? '#16a34a' : 'var(--text-muted)'">
+      {{ settings.enabled ? 'Active' : 'Inactive' }}
+    </span>
+    <button (click)="save()" [disabled]="saving || loading"
+            class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+      <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+      {{ saving ? 'Saving…' : 'Save Settings' }}
+    </button>
+  </div>
+
+  <!-- KPI row -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <ng-container *ngIf="!statsLoading">
+      <div class="rounded-xl border p-4 space-y-1" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Requests Sent</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ stats?.requestsSent ?? 0 }}</p>
+      </div>
+      <div class="rounded-xl border p-4 space-y-1" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Reviews Received</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ stats?.reviewsReceived ?? 0 }}</p>
+      </div>
+      <div class="rounded-xl border p-4 space-y-1" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Avg Rating</p>
+        <p class="text-2xl font-bold" style="color: var(--auto-accent-foreground);">{{ stats?.avgRating ?? 0 }}</p>
+      </div>
+      <div class="rounded-xl border p-4 space-y-1" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Conversion</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ stats?.conversionRate ?? 0 }}%</p>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="statsLoading">
+      <div *ngFor="let i of [1,2,3,4]" class="rounded-xl border p-4 animate-pulse h-20"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </ng-container>
+  </div>
+
+  <!-- Top tabs -->
+  <div class="rounded-xl border" style="background-color: var(--card-bg); border-color: var(--card-border);">
+    <div class="flex border-b overflow-x-auto" style="border-color: var(--card-border);">
+      <button (click)="activeTab = 'setup'"
+              class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+              [style.color]="activeTab === 'setup' ? 'var(--text-primary)' : 'var(--text-muted)'"
+              [style.border-bottom]="activeTab === 'setup' ? '2px solid #d8ff00' : '2px solid transparent'">
+        <i class="fas fa-cog mr-1.5"></i>Setup
+      </button>
+      <button (click)="activeTab = 'platforms'"
+              class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+              [style.color]="activeTab === 'platforms' ? 'var(--text-primary)' : 'var(--text-muted)'"
+              [style.border-bottom]="activeTab === 'platforms' ? '2px solid #d8ff00' : '2px solid transparent'">
+        <i class="fas fa-store mr-1.5"></i>Platforms
+      </button>
+      <button (click)="activeTab = 'message'"
+              class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+              [style.color]="activeTab === 'message' ? 'var(--text-primary)' : 'var(--text-muted)'"
+              [style.border-bottom]="activeTab === 'message' ? '2px solid #d8ff00' : '2px solid transparent'">
+        <i class="fas fa-comment-alt mr-1.5"></i>Message
+      </button>
+      <button (click)="activeTab = 'filters'"
+              class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+              [style.color]="activeTab === 'filters' ? 'var(--text-primary)' : 'var(--text-muted)'"
+              [style.border-bottom]="activeTab === 'filters' ? '2px solid #d8ff00' : '2px solid transparent'">
+        <i class="fas fa-filter mr-1.5"></i>Smart Filters
+      </button>
+    </div>
+
+    <div class="p-5 space-y-5">
+
+      <!-- SETUP -->
+      <ng-container *ngIf="activeTab === 'setup'">
+        <!-- Master toggle -->
+        <div class="flex items-center justify-between rounded-lg border p-4"
+             style="background-color: var(--surface-primary); border-color: var(--card-border);">
+          <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: #d8ff00;">
+              <i class="fas fa-star text-[#0b0b0b] text-sm"></i>
+            </span>
+            <div>
+              <p class="font-bold text-sm" style="color: var(--text-primary);">Enable Review Collection</p>
+              <p class="text-xs" style="color: var(--text-muted);">Automatically request reviews from customers</p>
+            </div>
+          </div>
+          <app-automation-switch [(ngModel)]="settings.enabled" name="rcEnabled"
+                                 ariaLabel="Enable review collection"></app-automation-switch>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Trigger -->
+          <div>
+            <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Trigger</p>
+            <select [(ngModel)]="settings.trigger" name="trigger"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+              <option value="after_purchase">After Purchase</option>
+              <option value="after_delivery">After Delivery</option>
+              <option value="after_interaction">After Interaction</option>
+              <option value="manual">Manual Only</option>
+            </select>
+          </div>
+          <!-- Delay -->
+          <div>
+            <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Send After (days)</p>
+            <input type="number" [(ngModel)]="settings.delayDays" name="delayDays" min="0" max="30"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+          </div>
+        </div>
+
+        <!-- Channels -->
+        <div>
+          <p class="text-sm font-bold mb-2" style="color: var(--text-primary);">Send Via</p>
+          <div class="flex flex-wrap gap-2">
+            <button *ngFor="let ch of sendChannels"
+                    (click)="toggleChannel(ch.key)"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all"
+                    [style.border-color]="isChannelEnabled(ch.key) ? '#d8ff00' : 'var(--card-border)'"
+                    [style.background-color]="isChannelEnabled(ch.key) ? 'rgba(216,255,0,0.08)' : 'var(--surface-primary)'"
+                    [style.color]="isChannelEnabled(ch.key) ? 'var(--text-primary)' : 'var(--text-muted)'">
+              <i [class]="ch.icon"></i> {{ ch.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Reminders -->
+        <div class="flex items-center justify-between rounded-lg border p-3"
+             style="background-color: var(--surface-primary); border-color: var(--card-border);">
+          <div>
+            <p class="text-sm font-semibold" style="color: var(--text-primary);">Send Reminders</p>
+            <p class="text-xs" style="color: var(--text-muted);">Follow up if no review is submitted</p>
+          </div>
+          <app-automation-switch [(ngModel)]="settings.sendReminders" name="reminders"
+                                 ariaLabel="Send review reminders"></app-automation-switch>
+        </div>
+      </ng-container>
+
+      <!-- PLATFORMS -->
+      <ng-container *ngIf="activeTab === 'platforms'">
+        <p class="text-xs mb-3" style="color: var(--text-muted);">Enable the platforms where you want to collect reviews and add their review URLs.</p>
+        <div class="space-y-3">
+          <div *ngFor="let p of settings.platforms; let i = index"
+               class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <i [class]="getPlatformDef(p.key).icon + ' text-sm ' + getPlatformDef(p.key).color"></i>
+                <span class="text-sm font-bold" style="color: var(--text-primary);">{{ getPlatformDef(p.key).label }}</span>
+              </div>
+              <app-automation-switch [(ngModel)]="p.active" [name]="'pActive'+i"
+                                     [ariaLabel]="'Enable ' + getPlatformDef(p.key).label"></app-automation-switch>
+            </div>
+            <input *ngIf="p.active" type="url" [(ngModel)]="p.url" [name]="'pUrl'+i"
+                   class="w-full px-3 py-1.5 rounded-lg border text-sm"
+                   style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+                   placeholder="https://…/review">
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- MESSAGE -->
+      <ng-container *ngIf="activeTab === 'message'">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-sm font-bold" style="color: var(--text-primary);">Message Template</p>
+              <select [(ngModel)]="settings.language" name="lang"
+                      class="px-2 py-1 rounded border text-xs"
+                      style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+                <option value="en">English</option>
+                <option value="ar">Arabic</option>
+                <option value="ur">Urdu</option>
+                <option value="hi">Hindi</option>
+              </select>
+            </div>
+            <textarea [(ngModel)]="settings.message" name="message" rows="6"
+                      class="w-full px-3 py-2 rounded-lg border text-sm"
+                      style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                      placeholder="Hi {{customer_name}}! 😊 …"></textarea>
+            <p class="text-[10px] mt-1.5" style="color: var(--text-muted);">
+              Variables: <code class="px-1 rounded" style="background-color: var(--surface-primary);">&#123;&#123;customer_name&#125;&#125;</code>
+              <code class="px-1 rounded ml-1" style="background-color: var(--surface-primary);">&#123;&#123;review_link&#125;&#125;</code>
+            </p>
+          </div>
+          <!-- Preview -->
+          <div class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <p class="text-xs font-bold mb-2 uppercase tracking-wide" style="color: var(--text-muted);">Preview</p>
+            <div class="rounded-xl p-4" style="background-color: var(--card-bg);">
+              <p class="text-sm" style="color: var(--text-primary); white-space: pre-wrap;">{{ previewMessage }}</p>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- FILTERS -->
+      <ng-container *ngIf="activeTab === 'filters'">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between rounded-lg border p-3"
+               style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">Skip Low-Rating Customers</p>
+              <p class="text-xs" style="color: var(--text-muted);">Do not send to customers with negative feedback history</p>
+            </div>
+            <app-automation-switch [(ngModel)]="settings.ignoreNegativeRating" name="ignoreNeg"
+                                   ariaLabel="Skip low-rating customers"></app-automation-switch>
+          </div>
+          <div class="flex items-center justify-between rounded-lg border p-3"
+               style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">Skip Recent Reviewers</p>
+              <p class="text-xs" style="color: var(--text-muted);">Do not re-request if reviewed in the last 90 days</p>
+            </div>
+            <app-automation-switch [(ngModel)]="settings.excludeRecentReviewers" name="excludeRecent"
+                                   ariaLabel="Skip recent reviewers"></app-automation-switch>
+          </div>
+          <!-- Quiet hours -->
+          <div class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <p class="text-sm font-bold mb-3" style="color: var(--text-primary);">Quiet Hours</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-semibold block mb-1" style="color: var(--text-muted);">Start</label>
+                <input type="time" [(ngModel)]="settings.quietHoursStart" name="qhStart"
+                       class="w-full px-3 py-1.5 rounded-lg border text-sm"
+                       style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+              </div>
+              <div>
+                <label class="text-xs font-semibold block mb-1" style="color: var(--text-muted);">End</label>
+                <input type="time" [(ngModel)]="settings.quietHoursEnd" name="qhEnd"
+                       class="w-full px-3 py-1.5 rounded-lg border text-sm"
+                       style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
+  <!-- Save bar -->
+  <div class="flex items-center gap-3 pt-2">
+    <button (click)="save()" [disabled]="saving"
+            class="auto-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm">
+      <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+      {{ saving ? 'Saving…' : 'Save Settings' }}
+    </button>
+  </div>
+
+</app-automation-page-shell>

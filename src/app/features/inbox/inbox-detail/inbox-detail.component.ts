@@ -36,6 +36,9 @@ import {
   inboxReplyPdfDisplayName
 } from '../../../core/utils/inbox-attachment-display';
 import { InboxLinkifiedTextComponent } from '../../../shared/components/inbox-linkified-text/inbox-linkified-text.component';
+import { CatalogService } from '../../../core/services/catalog.service';
+import { IProduct } from '../../../core/models/product.model';
+import { NotificationService } from '../../../core/services/notification.service';
 
 /** An in-flight or failed reply injected optimistically into the timeline */
 interface IOptimisticReply {
@@ -163,6 +166,16 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
   /** Same picker as list inbox — single source: `INBOX_EMOJI_LIST` */
   readonly emojiList: readonly string[] = INBOX_EMOJI_LIST;
+
+  // ── WhatsApp Product Picker ────────────────────────────────────────────────
+  showProductPickerModal = false;
+  pickerProducts: IProduct[] = [];
+  loadingPickerProducts = false;
+  selectedPickerProduct: IProduct | null = null;
+  productPickerSearch = '';
+  productPickerBodyText = '';
+  sendingProduct = false;
+  productPickerError = '';
 
   // Subscriptions
   private subscriptions: Subscription[] = [];
@@ -301,7 +314,9 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     private sanitizer: DomSanitizer,
     private avatarService: InboxAvatarService,
     private mediaLibraryService: MediaLibraryService,
-    private whatsAppTemplateService: WhatsAppTemplateService
+    private whatsAppTemplateService: WhatsAppTemplateService,
+    private catalogService: CatalogService,
+    private notify: NotificationService
   ) {
     this.replyForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(1)]]
@@ -2383,4 +2398,78 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const sorted = timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
     return this.timelineSortOrder === 'asc' ? sorted : sorted.reverse();
   }
+
+  // ── WhatsApp Product Picker ────────────────────────────────────────────────
+
+  openProductPicker(): void {
+    this.showProductPickerModal = true;
+    this.selectedPickerProduct = null;
+    this.productPickerSearch = '';
+    this.productPickerBodyText = '';
+    this.productPickerError = '';
+    this.loadPickerProducts();
+    this.cdr.markForCheck();
+  }
+
+  closeProductPicker(): void {
+    this.showProductPickerModal = false;
+    this.selectedPickerProduct = null;
+    this.productPickerError = '';
+    this.cdr.markForCheck();
+  }
+
+  private loadPickerProducts(): void {
+    this.loadingPickerProducts = true;
+    this.cdr.markForCheck();
+    this.catalogService.getProducts({ search: this.productPickerSearch || undefined, isActive: true, limit: 50 })
+      .subscribe({
+        next: r => {
+          this.pickerProducts = r.data?.products ?? [];
+          this.loadingPickerProducts = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.loadingPickerProducts = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  onProductPickerSearch(): void {
+    this.loadPickerProducts();
+  }
+
+  selectPickerProduct(product: IProduct): void {
+    this.selectedPickerProduct = this.selectedPickerProduct?._id === product._id ? null : product;
+    this.productPickerError = '';
+    this.cdr.markForCheck();
+  }
+
+  sendProductFromPicker(): void {
+    if (!this.selectedPickerProduct || !this.interaction || this.sendingProduct) return;
+    this.sendingProduct = true;
+    this.productPickerError = '';
+    this.cdr.markForCheck();
+
+    this.catalogService.sendWAProductMessage(
+      this.interaction._id,
+      this.selectedPickerProduct._id,
+      this.productPickerBodyText.trim()
+    ).subscribe({
+      next: () => {
+        this.sendingProduct = false;
+        this.closeProductPicker();
+        this.notify.success('Sent', `Product "${this.selectedPickerProduct?.name}" sent via WhatsApp.`);
+        this.interactionUpdate.emit();
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.sendingProduct = false;
+        this.productPickerError = err.error?.error || 'Failed to send product message.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  trackByPickerProduct(_: number, p: IProduct): string { return p._id; }
 }

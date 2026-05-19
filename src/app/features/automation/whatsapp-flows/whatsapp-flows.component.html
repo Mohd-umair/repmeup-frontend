@@ -1,0 +1,221 @@
+<app-automation-page-shell
+  title="WhatsApp Flows"
+  subtitle="Build automated WhatsApp conversation journeys triggered by keywords, events or webhooks">
+
+  <div slot="actions">
+    <button (click)="openCreate()"
+            class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+      <i class="fas fa-plus"></i> New Flow
+    </button>
+  </div>
+
+  <!-- ── Top tabs ── -->
+  <div class="flex border-b overflow-x-auto" style="border-color: var(--card-border);">
+    <button *ngFor="let tab of tabs"
+            (click)="setTab(tab.id)"
+            class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+            [style.color]="activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-muted)'"
+            [style.border-bottom]="activeTab === tab.id ? '2px solid #d8ff00' : '2px solid transparent'">
+      {{ tab.label }}
+      <span *ngIf="tab.id === 'my-flows' && flows.length > 0"
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            style="background-color: var(--surface-primary); color: var(--text-muted);">
+        {{ flows.length }}
+      </span>
+    </button>
+  </div>
+
+  <!-- ══════ MY FLOWS ══════ -->
+  <ng-container *ngIf="activeTab === 'my-flows'">
+    <div *ngIf="loading" class="space-y-3">
+      <div *ngFor="let i of [1,2,3]" class="rounded-xl border p-5 animate-pulse h-20"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </div>
+
+    <div *ngIf="!loading && flows.length === 0"
+         class="rounded-xl border p-10 text-center"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <i class="fab fa-whatsapp text-4xl mb-3 text-green-500"></i>
+      <p class="font-bold mb-1" style="color: var(--text-primary);">No flows yet</p>
+      <p class="text-sm mb-4" style="color: var(--text-muted);">Create a flow or use a Blueprint to get started quickly.</p>
+      <div class="flex items-center justify-center gap-3">
+        <button (click)="openCreate()" class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+          <i class="fas fa-plus"></i> New Flow
+        </button>
+        <button (click)="setTab('blueprints')" class="auto-btn-secondary px-5 py-2 text-sm">
+          View Blueprints
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && flows.length > 0" class="space-y-3">
+      <div *ngFor="let flow of flows; trackBy: trackById"
+           class="rounded-xl border p-4 flex items-center gap-3"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-green-500"
+              style="background-color: rgba(34,197,94,0.1);">
+          <i class="fab fa-whatsapp"></i>
+        </span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-0.5">
+            <p class="font-bold text-sm truncate" style="color: var(--text-primary);">{{ flow.name }}</p>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  [style.background-color]="flow.status === 'active' ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
+                  [style.color]="flow.status === 'active' ? '#16a34a' : 'var(--text-muted)'">
+              {{ flow.status | titlecase }}
+            </span>
+          </div>
+          <p class="text-xs" style="color: var(--text-muted);">
+            <i class="fas fa-bolt mr-1"></i>{{ getTriggerLabel(flow.trigger?.type) }}
+            <ng-container *ngIf="flow.trigger?.value"> — <em>{{ flow.trigger!.value }}</em></ng-container>
+            <span class="ml-2"><i class="fas fa-list-ol mr-1"></i>{{ flow.steps?.length ?? 0 }} step(s)</span>
+          </p>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <!-- Active/Pause toggle -->
+          <app-automation-switch [ngModel]="flow.status === 'active'"
+                                 (ngModelChange)="onFlowActiveChange(flow, $event)"
+                                 [disabled]="toggling.has(flow._id!)"
+                                 [name]="'flow-' + flow._id"
+                                 [ariaLabel]="'Activate flow ' + flow.name"></app-automation-switch>
+          <button (click)="openEdit(flow)" class="auto-btn-secondary px-3 py-1.5 text-xs">
+            <i class="fas fa-pen"></i>
+          </button>
+          <button (click)="delete(flow._id!)" [disabled]="deleting.has(flow._id!)"
+                  class="px-3 py-1.5 text-xs rounded-lg border font-semibold"
+                  style="border-color: rgba(239,68,68,0.4); color: #dc2626; background-color: rgba(239,68,68,0.06);">
+            <i class="fas" [ngClass]="deleting.has(flow._id!) ? 'fa-spinner fa-spin' : 'fa-trash-alt'"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══════ BLUEPRINTS ══════ -->
+  <ng-container *ngIf="activeTab === 'blueprints'">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div *ngFor="let bp of blueprints"
+           class="rounded-xl border p-4 flex flex-col gap-2"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="flex items-start justify-between gap-2">
+          <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-green-500"
+                style="background-color: rgba(34,197,94,0.1);">
+            <i class="fab fa-whatsapp text-sm"></i>
+          </span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style="background-color: rgba(216,255,0,0.12); color: var(--text-primary);">
+            Blueprint
+          </span>
+        </div>
+        <p class="font-bold text-sm" style="color: var(--text-primary);">{{ bp.name }}</p>
+        <p class="text-xs flex-1" style="color: var(--text-muted);">{{ bp.description }}</p>
+        <p class="text-xs" style="color: var(--text-muted);">
+          <i class="fas fa-bolt mr-1"></i>{{ getTriggerLabel(bp.trigger?.type) }}
+        </p>
+        <button (click)="openCreate(bp)"
+                class="auto-btn-primary inline-flex items-center justify-center gap-2 px-4 py-2 text-xs w-full mt-1">
+          <i class="fas fa-copy"></i> Use Blueprint
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ── Flow Editor Modal ── -->
+  <div *ngIf="showEditor && editingFlow"
+       class="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+       style="background-color: rgba(0,0,0,0.6);">
+    <div class="w-full max-w-xl rounded-2xl border shadow-2xl"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between px-5 py-4 border-b"
+           style="border-color: var(--card-border);">
+        <h2 class="font-bold text-base" style="color: var(--text-primary);">
+          {{ editingFlow._id ? 'Edit Flow' : 'New WhatsApp Flow' }}
+        </h2>
+        <button (click)="closeEditor()" style="color: var(--text-muted);">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <!-- Name -->
+        <div>
+          <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Flow Name</label>
+          <input type="text" [(ngModel)]="editingFlow.name" name="waName"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                 placeholder="e.g. Appointment Booking">
+        </div>
+
+        <!-- Trigger -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Trigger Type</label>
+            <select [(ngModel)]="editingFlow.trigger!.type" name="waTriggerType"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+              <option value="keyword">Keyword match</option>
+              <option value="new_lead">New lead</option>
+              <option value="first_message">First message</option>
+              <option value="order">Order event</option>
+              <option value="manual">Manual</option>
+              <option value="webhook">Webhook</option>
+            </select>
+          </div>
+          <div *ngIf="editingFlow.trigger?.type === 'keyword' || editingFlow.trigger?.type === 'order'">
+            <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Value</label>
+            <input type="text" [(ngModel)]="editingFlow.trigger!.value" name="waTriggerValue"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                   placeholder="e.g. buy, delivered">
+          </div>
+        </div>
+
+        <!-- Steps -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-bold" style="color: var(--text-primary);">Steps</p>
+            <button (click)="addStep()" class="auto-btn-secondary text-xs px-3 py-1.5">
+              <i class="fas fa-plus mr-1"></i>Add Step
+            </button>
+          </div>
+          <div class="space-y-2">
+            <div *ngFor="let step of editingFlow.steps; trackBy: trackByIndex; let i = index"
+                 class="rounded-lg border p-3"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border);">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold" style="color: var(--text-muted);">Step {{ i + 1 }}</span>
+                <button (click)="removeStep(i)" *ngIf="editingFlow.steps.length > 1"
+                        class="text-xs" style="color: #dc2626;"><i class="fas fa-times"></i></button>
+              </div>
+              <textarea [(ngModel)]="step.messageText" [name]="'waStep'+i" rows="2"
+                        class="w-full px-3 py-2 rounded-lg border text-sm"
+                        style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+                        placeholder="Message text…"></textarea>
+              <div class="flex items-center gap-2 mt-1.5">
+                <label class="text-xs" style="color: var(--text-muted);">Delay (hours):</label>
+                <input type="number" [(ngModel)]="step.delaySec" [name]="'waDelay'+i" min="0"
+                       class="w-20 px-2 py-1 rounded border text-sm"
+                       style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-end gap-3 px-5 py-4 border-t"
+           style="border-color: var(--card-border);">
+        <button (click)="closeEditor()" class="auto-btn-secondary px-4 py-2 text-sm">Cancel</button>
+        <button (click)="save()" [disabled]="saving"
+                class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+          <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{ saving ? 'Saving…' : 'Save Flow' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</app-automation-page-shell>

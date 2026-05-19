@@ -15,10 +15,10 @@
   </div>
 
   <!-- Tabs -->
-  <div class="flex border-b" style="border-color: var(--card-border);">
+  <div class="flex border-b overflow-x-auto" style="border-color: var(--card-border);">
     <button
       (click)="activeTab = 'products'"
-      class="px-5 py-2.5 text-sm font-bold transition-colors"
+      class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
       [style.color]="activeTab === 'products' ? 'var(--accent)' : 'var(--text-muted)'"
       [style.border-bottom]="activeTab === 'products' ? '2px solid var(--accent)' : '2px solid transparent'">
       <i class="fas fa-box mr-2"></i>Products
@@ -28,14 +28,14 @@
       </span>
     </button>
     <button
-      (click)="activeTab = 'automation'"
-      class="px-5 py-2.5 text-sm font-bold transition-colors"
-      [style.color]="activeTab === 'automation' ? 'var(--accent)' : 'var(--text-muted)'"
-      [style.border-bottom]="activeTab === 'automation' ? '2px solid var(--accent)' : '2px solid transparent'">
-      <app-ai-chat-bubble-icon class="mr-2 inline-block align-middle" iconClass="w-4 h-4"></app-ai-chat-bubble-icon>Automation — Global Defaults
-      <span *ngIf="settings?.enabled"
+      (click)="activeTab = 'whatsapp'"
+      class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+      [style.color]="activeTab === 'whatsapp' ? 'var(--accent)' : 'var(--text-muted)'"
+      [style.border-bottom]="activeTab === 'whatsapp' ? '2px solid var(--accent)' : '2px solid transparent'">
+      <i class="fab fa-whatsapp mr-2"></i>WhatsApp Catalog
+      <span *ngIf="waCatalogSettings?.connected && waCatalogSettings?.catalogId"
             class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
-        Sales ON
+        Linked
       </span>
     </button>
   </div>
@@ -181,506 +181,320 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════ AUTOMATION TAB ══════════════════════════ -->
-  <div *ngIf="activeTab === 'automation'">
 
-    <div *ngIf="loadingSettings" class="flex justify-center py-16">
-      <div class="catalog-page-loader w-10 h-10 border-4 rounded-full animate-spin"></div>
+  <!-- ════════════════════ WHATSAPP CATALOG TAB ════════════════════ -->
+  <div *ngIf="activeTab === 'whatsapp'" class="space-y-6">
+
+    <!-- Connection status banner -->
+    <div *ngIf="!loadingWaSettings && waCatalogSettings && !waCatalogSettings.connected"
+         class="flex items-start gap-3 p-4 rounded-xl border bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800">
+      <i class="fas fa-triangle-exclamation text-yellow-500 mt-0.5"></i>
+      <p class="text-sm" style="color: var(--text-primary);">
+        No active WhatsApp connection found. Connect your WhatsApp Business account in
+        <strong>Settings → Platforms</strong> first, then return here.
+      </p>
     </div>
 
-    <div *ngIf="!loadingSettings && settings"
-         class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full">
+    <!-- ── Section 1: Catalog Settings ───────────────────────────────────── -->
+    <div class="rounded-xl border p-5 space-y-4"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <div class="flex items-center gap-2 mb-1">
+        <i class="fas fa-gear text-base" style="color: var(--accent);"></i>
+        <h2 class="text-base font-bold" style="color: var(--text-primary);">Catalog Settings</h2>
+      </div>
+      <p class="text-xs" style="color: var(--text-secondary);">
+        Enter your <strong>Meta Commerce Catalog ID</strong> (from Meta Business Manager → Commerce → Catalogs).
+        This links your WhatsApp Business number to the catalog so customers can browse and order products.
+      </p>
 
-      <!-- Main settings column (8/12) -->
-      <div class="col-span-12 lg:col-span-8 min-w-0 space-y-4">
-
-      <!-- ─── Row 1: Enable + checklist pills ──────────────────────────────── -->
-      <div class="rounded-xl border p-4 flex flex-wrap items-center justify-between gap-3"
-           style="background-color: var(--card-bg); border-color: var(--card-border);">
-        <div class="flex items-center gap-3">
-          <i class="fab fa-instagram text-pink-500 text-xl"></i>
-          <div>
-            <p class="text-sm font-bold" style="color: var(--text-primary);">Comment-to-DM Automation</p>
-            <div class="flex flex-wrap gap-2 mt-1">
-              <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full"
-                    [style.background-color]="settings.enabled ? 'rgba(34,197,94,0.12)' : 'rgba(156,163,175,0.15)'"
-                    [style.color]="settings.enabled ? '#16a34a' : 'var(--text-muted)'">
-                <i class="fas" [ngClass]="settings.enabled ? 'fa-check-circle' : 'fa-circle'"></i>
-                {{ settings.enabled ? 'Active' : 'Disabled' }}
-              </span>
-              <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full"
-                    [style.background-color]="totalProducts > 0 ? 'rgba(34,197,94,0.12)' : 'rgba(156,163,175,0.15)'"
-                    [style.color]="totalProducts > 0 ? '#16a34a' : 'var(--text-muted)'">
-                <i class="fas" [ngClass]="totalProducts > 0 ? 'fa-check-circle' : 'fa-circle'"></i>
-                {{ totalProducts }} product{{ totalProducts !== 1 ? 's' : '' }}
-              </span>
-              <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full"
-                    [style.background-color]="productsWithPostsLinked > 0 ? 'rgba(34,197,94,0.12)' : 'rgba(245,158,11,0.12)'"
-                    [style.color]="productsWithPostsLinked > 0 ? '#16a34a' : '#b45309'">
-                <i class="fas" [ngClass]="productsWithPostsLinked > 0 ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
-                {{ productsWithPostsLinked }} post{{ productsWithPostsLinked !== 1 ? 's' : '' }} linked
-              </span>
-            </div>
-          </div>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-          <input type="checkbox" [(ngModel)]="settings.enabled" class="sr-only peer" />
-          <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700
-                      peer-checked:bg-rep-lime transition-colors
-                      after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                      after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm
-                      peer-checked:after:translate-x-5 peer-checked:shadow-[0_0_14px_rgba(216,255,0,0.55)]"></div>
-        </label>
+      <div *ngIf="loadingWaSettings" class="flex items-center gap-2 py-4">
+        <div class="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--accent);"></div>
+        <span class="text-sm" style="color: var(--text-secondary);">Loading settings…</span>
       </div>
 
-      <!-- ─── Row 2: Keywords + Default product (2 cols) ──────────────────── -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
-          <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">Trigger Keywords</label>
-          <p class="text-xs mb-2" style="color: var(--text-muted);">Comma-separated. DM fires if a comment matches any.</p>
-          <textarea [(ngModel)]="keywordsInput" rows="3"
-                    class="w-full px-3 py-2 rounded-lg border text-sm"
-                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
-                    placeholder="price, buy, order, how much, interested …"></textarea>
-        </div>
-        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
-          <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">Default Product</label>
-          <p class="text-xs mb-2" style="color: var(--text-muted);">Fallback when a comment post has no linked product.</p>
-          <select [(ngModel)]="settings.defaultProductId"
-                  class="w-full px-3 py-2 rounded-lg border text-sm mb-3"
-                  style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
-            <option [ngValue]="null">— No default product —</option>
-            <option *ngFor="let p of products; trackBy: trackByProduct" [value]="p._id">
-              {{ p.name }} ({{ p.currency }} {{ p.price }})
-            </option>
-          </select>
-          <div class="flex items-center gap-3">
-            <input type="number" [(ngModel)]="settings.maxDmsPerDay" min="1" max="1000"
-                   class="w-24 px-2 py-1.5 rounded-lg border text-sm"
-                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-            <span class="text-xs" style="color: var(--text-muted);">max DMs/day</span>
-            <label class="flex items-center gap-1.5 cursor-pointer ml-auto">
-              <input type="checkbox" [(ngModel)]="settings.deduplicateDms" class="w-4 h-4 rounded" />
-              <span class="text-xs font-semibold" style="color: var(--text-primary);">Skip duplicates</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- ─── Row 3: Public reply + Confirmation (2 cols) ─────────────────── -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
-          <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">
-            Public Comment Reply
-            <span class="ml-1 text-xs font-normal text-green-600 dark:text-green-400">(never put payment links here)</span>
+      <div *ngIf="!loadingWaSettings" class="grid sm:grid-cols-2 gap-4 items-end">
+        <!-- Catalog ID input -->
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-secondary);">
+            Catalog ID <span class="text-red-500">*</span>
           </label>
-          <p class="text-xs mb-2" style="color: var(--text-muted);">Supports <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;username&#125;&#125;</code></p>
-          <textarea [(ngModel)]="settings.publicReplyTemplate" rows="3"
-                    class="w-full px-3 py-2 rounded-lg border text-sm"
-                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
-                    placeholder="Hi {{username}}! 👋 We've sent you the details in DM. 😊"></textarea>
+          <input
+            [(ngModel)]="waCatalogIdInput"
+            type="text"
+            placeholder="e.g. 1234567890123456"
+            class="w-full px-3 py-2 rounded-lg border text-sm"
+            style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
         </div>
-        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
-          <label class="block text-sm font-bold mb-1" style="color: var(--text-primary);">Payment Confirmation DM</label>
-          <p class="text-xs mb-2" style="color: var(--text-muted);">Sent after payment webhook confirms. Supports <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;username&#125;&#125;</code> <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">&#123;&#123;product_name&#125;&#125;</code></p>
-          <textarea [(ngModel)]="settings.confirmationTemplate" rows="3"
-                    class="w-full px-3 py-2 rounded-lg border text-sm"
-                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
+        <!-- Connected phone number (read-only) -->
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-secondary);">
+            Linked Phone Number
+          </label>
+          <div class="px-3 py-2 rounded-lg border text-sm"
+               style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-secondary);">
+            <i class="fab fa-whatsapp text-green-500 mr-1.5"></i>
+            {{ waCatalogSettings?.displayPhoneNumber || waCatalogSettings?.phoneNumberId || 'Not connected' }}
+          </div>
         </div>
       </div>
 
-      <!-- ─── Save comment-to-DM settings ─────────────────────────────────── -->
+      <!-- Status pills -->
+      <div *ngIf="!loadingWaSettings && waCatalogSettings?.connected" class="flex flex-wrap gap-2 pt-1">
+        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+              [ngClass]="waCatalogSettings?.isCatalogVisible
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'">
+          <i class="fas fa-eye text-[10px]"></i>
+          Catalog {{ waCatalogSettings?.isCatalogVisible ? 'Visible' : 'Hidden' }}
+        </span>
+        <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+              [ngClass]="waCatalogSettings?.isCartEnabled
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'">
+          <i class="fas fa-cart-shopping text-[10px]"></i>
+          Cart {{ waCatalogSettings?.isCartEnabled ? 'Enabled' : 'Disabled' }}
+        </span>
+      </div>
+
+      <!-- Error -->
+      <p *ngIf="waSettingsError" class="text-xs text-red-500 flex items-center gap-1">
+        <i class="fas fa-circle-exclamation"></i> {{ waSettingsError }}
+      </p>
+
+      <!-- Success -->
+      <p *ngIf="waSettingsSaved" class="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+        <i class="fas fa-circle-check"></i> Settings saved and catalog linked.
+      </p>
+
+      <!-- Save button -->
+      <div class="flex justify-end pt-1">
+        <button
+          (click)="saveWACatalogSettings()"
+          [disabled]="savingWaSettings || !waCatalogSettings?.connected"
+          class="catalog-btn-primary flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold disabled:opacity-50">
+          <span *ngIf="!savingWaSettings"><i class="fas fa-link mr-1.5"></i>Save & Link Catalog</span>
+          <span *ngIf="savingWaSettings"><i class="fas fa-spinner animate-spin mr-1.5"></i>Saving…</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Section 2: Sync Products ──────────────────────────────────────── -->
+    <div class="rounded-xl border p-5 space-y-4"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-rotate text-base" style="color: var(--accent);"></i>
+          <h2 class="text-base font-bold" style="color: var(--text-primary);">Sync Products</h2>
+        </div>
+        <!-- Sync stats -->
+        <div *ngIf="!loadingWaSettings && waCatalogSettings?.connected" class="flex gap-3 text-xs">
+          <span class="flex items-center gap-1 text-green-600 dark:text-green-400 font-semibold">
+            <i class="fas fa-circle-check text-[10px]"></i>{{ waCatalogSettings?.syncedCount ?? 0 }} synced
+          </span>
+          <span class="flex items-center gap-1 text-red-500 font-semibold" *ngIf="(waCatalogSettings?.failedCount ?? 0) > 0">
+            <i class="fas fa-circle-xmark text-[10px]"></i>{{ waCatalogSettings?.failedCount }} failed
+          </span>
+          <span class="flex items-center gap-1 font-semibold" style="color: var(--text-muted);">
+            <i class="fas fa-circle text-[10px]"></i>{{ waCatalogSettings?.notSyncedCount ?? 0 }} not synced
+          </span>
+        </div>
+      </div>
+
+      <!-- Sync All button -->
       <div class="flex items-center gap-3">
-        <button (click)="saveSettings()" [disabled]="savingSettings"
-                class="catalog-btn-primary px-6 py-2.5 rounded-lg font-bold text-sm disabled:opacity-60 disabled:shadow-none">
-          <i class="fas mr-1.5" [ngClass]="savingSettings ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-          {{ savingSettings ? 'Saving…' : 'Save Settings' }}
+        <button
+          (click)="syncAllProducts()"
+          [disabled]="syncingAll || !waCatalogSettings?.connected || !waCatalogSettings?.catalogId"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-colors disabled:opacity-50"
+          style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+          <i [class]="syncingAll ? 'fas fa-spinner animate-spin' : 'fas fa-rotate'"></i>
+          {{ syncingAll ? 'Syncing all…' : 'Sync All Products' }}
         </button>
-        <span *ngIf="settingsSaved" class="text-sm text-green-600 dark:text-green-400 font-semibold">
-          <i class="fas fa-check mr-1"></i>Saved!
-        </span>
-        <span *ngIf="settingsError" class="text-sm text-red-500">{{ settingsError }}</span>
-        <span class="text-xs ml-auto" style="color: var(--text-muted);">
-          <i class="fab fa-instagram text-pink-500 mr-1"></i>Follow-invite DM → <strong>Settings → Auto-Reply</strong>
-        </span>
+        <div *ngIf="waSyncResult" class="text-xs" style="color: var(--text-secondary);">
+          Last sync: {{ waSyncResult.synced }} synced, {{ waSyncResult.failed }} failed
+        </div>
       </div>
 
-      <!-- ─── Sales DM Flow — Global Defaults ──────────────────────────────── -->
-      <div class="rounded-lg border-2 border-orange-200 dark:border-orange-800/50
-                  bg-gradient-to-br from-orange-50/90 to-amber-50/90
-                  dark:from-orange-950/20 dark:to-amber-950/20 p-5 space-y-4">
+      <!-- Loading products -->
+      <div *ngIf="loadingProducts" class="flex items-center gap-2 py-4">
+        <div class="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--accent);"></div>
+        <span class="text-sm" style="color: var(--text-secondary);">Loading products…</span>
+      </div>
 
-        <!-- Header -->
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500
-                        flex items-center justify-center shrink-0 shadow-md">
-              <i class="fas fa-fire text-white"></i>
-            </div>
-            <div>
-              <h3 class="text-sm font-bold" style="color: var(--text-primary);">Sales DM Flow — Global Defaults</h3>
-              <p class="text-xs" style="color: var(--text-secondary);">
-                Applies to all products without their own DM Config (Step 3 in the product wizard).
-              </p>
-            </div>
-          </div>
-          <label *ngIf="salesFlowSettings" class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-            <input type="checkbox" [(ngModel)]="salesFlowSettings.enabled" name="sfEnabled" class="sr-only peer" />
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700
-                        peer-checked:bg-orange-500 transition-colors
-                        after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                        after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:shadow-sm
-                        peer-checked:after:translate-x-5"></div>
-          </label>
-        </div>
+      <!-- Product list with sync status -->
+      <div *ngIf="!loadingProducts && products.length === 0"
+           class="py-8 text-center text-sm" style="color: var(--text-secondary);">
+        <i class="fas fa-box-open text-2xl mb-2 block" style="color: var(--text-muted);"></i>
+        No products found. Add products in the <strong>Products</strong> tab first.
+      </div>
 
-        <div *ngIf="loadingSalesFlow" class="flex justify-center py-6">
-          <i class="fas fa-spinner fa-spin text-2xl text-orange-500"></i>
-        </div>
-        <div *ngIf="salesFlowLoadError" class="rounded-lg border border-amber-300 p-3 text-sm text-amber-800 dark:text-amber-200 flex gap-2">
-          <i class="fas fa-exclamation-triangle mt-0.5 shrink-0"></i><span>{{ salesFlowLoadError }}</span>
-        </div>
-
-        <ng-container *ngIf="!loadingSalesFlow && salesFlowSettings as sf">
-
-          <!-- 2-col: CTA copy + CTA Buttons -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-            <!-- CTA copy -->
-            <div class="rounded-xl bg-white/80 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-600 p-4 space-y-3">
-              <h4 class="text-xs font-bold uppercase tracking-wide" style="color: var(--text-muted);">CTA Card</h4>
-              <div class="space-y-2">
-                <input [(ngModel)]="sf.ctaTitle" name="sfCtaTitle" type="text" maxlength="80"
-                       placeholder="Card title (max 80 chars)"
-                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white" />
-                <input [(ngModel)]="sf.ctaSubtitle" name="sfCtaSubtitle" type="text" maxlength="80"
-                       placeholder="Subtitle"
-                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white" />
-                <input [(ngModel)]="sf.ctaImageUrl" name="sfCtaImg" type="url" placeholder="Image URL (https://…)"
-                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white" />
-              </div>
-              <!-- WhatsApp retargeting inline -->
-              <div class="pt-3 border-t border-gray-200 dark:border-gray-600 space-y-2">
-                <h4 class="text-xs font-bold uppercase tracking-wide" style="color: var(--text-muted);">
-                  <i class="fab fa-whatsapp mr-1 text-green-500"></i>WhatsApp Retargeting
-                </h4>
-                <input [(ngModel)]="hesitancyKeywordsInput" name="sfHesitancy" type="text"
-                       placeholder="Hesitancy keywords: maybe later, not now …"
-                       class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white" />
-                <textarea [(ngModel)]="sf.whatsappCaptureMessage" name="sfWaCapture" rows="2"
-                          placeholder="Capture message: No problem! Share your WhatsApp number… 😊"
-                          class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white resize-none"></textarea>
-                <textarea [(ngModel)]="sf.whatsappCaptureConfirmation" name="sfWaConfirm" rows="2"
-                          placeholder="Confirmation: Thank you! We'll contact you soon. 🙏"
-                          class="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white resize-none"></textarea>
-              </div>
-            </div>
-
-            <!-- CTA Buttons -->
-            <div class="rounded-xl bg-white/80 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-600 p-4 space-y-3">
-              <div class="flex items-center justify-between">
-                <h4 class="text-xs font-bold uppercase tracking-wide" style="color: var(--text-muted);">
-                  CTA Buttons <span class="font-normal normal-case ml-1">{{ sf.ctaButtons?.length ?? 0 }}/3</span>
-                </h4>
-                <button type="button" (click)="addCtaButton()"
-                        [disabled]="(sf.ctaButtons?.length ?? 0) >= 3"
-                        class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold
-                               bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300
-                               hover:bg-orange-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                  <i class="fas fa-plus text-[10px]"></i> Add
-                </button>
-              </div>
-
-              <p *ngIf="!sf.ctaButtons?.length"
-                 class="text-xs italic py-4 text-center rounded-lg border border-dashed border-gray-300 dark:border-gray-600"
-                 style="color: var(--text-muted);">No buttons yet — click Add.</p>
-
-              <div *ngFor="let btn of sf.ctaButtons; let i = index; trackBy: trackByIndex"
-                   class="rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/30 p-3 space-y-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 shrink-0">
-                    {{ i + 1 }}
-                  </span>
-                  <input [(ngModel)]="btn.label" [name]="'sfBtnLabel_' + i" type="text" maxlength="20"
-                         placeholder="Label (max 20)"
-                         class="flex-1 px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white"
-                         [class.border-red-400]="btn.label && btn.label.length > 20" />
-                  <select [(ngModel)]="btn.type" [name]="'sfBtnType_' + i"
-                          class="px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white">
-                    <option value="postback">Action</option>
-                    <option value="web_url">Link</option>
-                  </select>
-                  <button type="button" (click)="removeCtaButton(i)"
-                          class="text-red-400 hover:text-red-600 transition shrink-0" title="Remove">
-                    <i class="fas fa-times text-xs"></i>
-                  </button>
+      <div *ngIf="!loadingProducts && products.length > 0" class="rounded-lg border overflow-hidden"
+           style="border-color: var(--card-border);">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="background-color: var(--surface-primary); border-bottom: 1px solid var(--card-border);">
+              <th class="text-left px-4 py-2.5 font-semibold text-xs" style="color: var(--text-secondary);">Product</th>
+              <th class="text-left px-4 py-2.5 font-semibold text-xs" style="color: var(--text-secondary);">SKU</th>
+              <th class="text-left px-4 py-2.5 font-semibold text-xs" style="color: var(--text-secondary);">Price</th>
+              <th class="text-left px-4 py-2.5 font-semibold text-xs" style="color: var(--text-secondary);">WA Status</th>
+              <th class="px-4 py-2.5"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let product of products; trackBy: trackByProduct"
+                class="border-b transition-colors hover:bg-opacity-50"
+                style="border-color: var(--card-border);">
+              <!-- Name + image -->
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-md flex-shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-700">
+                    <img *ngIf="product.images?.length" [src]="product.images[0]" alt=""
+                         class="w-full h-full object-cover" (error)="$any($event.target).style.display='none'" />
+                    <div *ngIf="!product.images?.length"
+                         class="w-full h-full flex items-center justify-center">
+                      <i class="fas fa-image text-xs" style="color: var(--text-muted);"></i>
+                    </div>
+                  </div>
+                  <span class="font-medium truncate max-w-[160px]" style="color: var(--text-primary);">{{ product.name }}</span>
                 </div>
-                <div *ngIf="(btn.type || 'postback') === 'postback'">
-                  <select [(ngModel)]="btn.payload" [name]="'sfBtnPayload_' + i"
-                          class="w-full px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white"
-                          [class.border-red-400]="!btn.payload">
-                    <option value="">— select action —</option>
-                    <option value="details">Send product details</option>
-                    <option value="payment">Send payment link</option>
-                    <option value="hesitant">Ask for WhatsApp number</option>
-                  </select>
-                </div>
-                <div *ngIf="btn.type === 'web_url'">
-                  <input [(ngModel)]="btn.url" [name]="'sfBtnUrl_' + i" type="text" placeholder="https://…"
-                         class="w-full px-2 py-1.5 border border-gray-200 dark:border-gray-600 rounded-lg text-sm dark:bg-gray-800 dark:text-white"
-                         [class.border-red-400]="btn.url && !btn.url.startsWith('https://')" />
-                </div>
-              </div>
-
-              <p *ngIf="(sf.ctaButtons?.length ?? 0) >= 3"
-                 class="text-[11px] text-center py-1 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300">
-                <i class="fas fa-info-circle mr-1"></i>Max 3 buttons (Instagram limit)
-              </p>
-            </div>
-          </div>
-
-          <!-- Save button -->
-          <div class="flex items-center gap-3 pt-1">
-            <button type="button" (click)="saveSalesFlowSettings()" [disabled]="savingSalesFlow"
-                    class="px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-md
-                           bg-gradient-to-r from-orange-500 to-amber-500
-                           hover:opacity-95 disabled:opacity-50">
-              <i [class]="savingSalesFlow ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-rocket mr-2'"></i>
-              {{ savingSalesFlow ? 'Saving…' : 'Save Sales Flow' }}
-            </button>
-          </div>
-
-        </ng-container>
-      </div>
-      <!-- ─── end Sales DM Flow ─── -->
-
-      <!-- ─── Post ID backfill tool ─── -->
-      <div class="rounded-xl border border-yellow-200 dark:border-yellow-800/50 p-4 flex flex-wrap items-center justify-between gap-3"
-           style="background-color: var(--card-bg);">
-        <div class="flex items-center gap-3 min-w-0">
-          <i class="fas fa-sync-alt text-yellow-600 dark:text-yellow-400 text-lg shrink-0"></i>
-          <div class="min-w-0">
-            <p class="text-sm font-bold" style="color: var(--text-primary);">Fix post-ID mismatch</p>
-            <p class="text-xs" style="color: var(--text-secondary);">
-              Run once after reconnecting Instagram to backfill numeric post IDs.
-            </p>
-            <p *ngIf="backfillResult" class="text-xs mt-1 font-medium text-green-700 dark:text-green-400">
-              <i class="fas fa-check mr-1"></i>Fixed {{ backfillResult.resolved }} post(s) — {{ backfillResult.failed }} failed.
-            </p>
-            <p *ngIf="backfillError" class="text-xs mt-1 text-red-500">{{ backfillError }}</p>
-          </div>
-        </div>
-        <button type="button" (click)="backfillPostIds()" [disabled]="backfilling"
-                class="px-4 py-2 rounded-lg text-xs font-bold shrink-0
-                       bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300
-                       hover:bg-yellow-200 disabled:opacity-50 transition-colors">
-          <i [class]="backfilling ? 'fas fa-spinner fa-spin mr-1' : 'fas fa-sync-alt mr-1'"></i>
-          {{ backfilling ? 'Fixing…' : 'Fix now' }}
-        </button>
-      </div>
-
-      <!-- ─── Webhook info box ─── -->
-      <div class="rounded-xl border border-blue-200 dark:border-blue-800 p-5"
-           style="background-color: var(--card-bg);">
-        <h4 class="text-sm font-bold mb-2 flex items-center gap-2" style="color: var(--text-primary);">
-          <i class="fas fa-info-circle text-blue-500"></i>
-          Payment Confirmation Webhook
-        </h4>
-        <p class="text-xs mb-2" style="color: var(--text-secondary);">
-          To auto-send confirmation DMs after payment, register this URL in your payment provider:
-        </p>
-        <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
-          <code class="text-xs font-mono flex-1 break-all" style="color: var(--text-primary);">
-            POST /api/webhooks/product-payment
-          </code>
-        </div>
-        <p class="text-[11px] mt-2" style="color: var(--text-muted);">
-          Include <code>order_token</code> and <code>payment_ref</code> in the payload.
-          Set <code>PRODUCT_PAYMENT_SECRET</code> in your environment to enable HMAC signature verification.
-        </p>
-      </div>
-
-      </div>
-      <!-- /main settings column -->
-
-      <!-- Flow preview — col 4/12 -->
-      <aside class="catalog-automation-flow-aside col-span-12 lg:col-span-4 min-w-0 w-full lg:sticky lg:top-4 lg:self-start"
-             aria-label="Comment to DM flow preview">
-        <div class="catalog-automation-preview">
-          <!-- Decorative flow graphic (background) -->
-          <div class="catalog-automation-preview__bg" aria-hidden="true">
-            <svg class="catalog-automation-preview__svg" viewBox="0 0 320 420" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="catalogFlowStroke" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#ec4899" stop-opacity="0.5"/>
-                  <stop offset="50%" stop-color="#a855f7" stop-opacity="0.4"/>
-                  <stop offset="100%" stop-color="#2563eb" stop-opacity="0.45"/>
-                </linearGradient>
-                <linearGradient id="catalogFlowFill" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stop-color="#ec4899" stop-opacity="0.14"/>
-                  <stop offset="100%" stop-color="#2563eb" stop-opacity="0.08"/>
-                </linearGradient>
-                <filter id="catalogFlowBlur" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur in="SourceGraphic" stdDeviation="24"/>
-                </filter>
-              </defs>
-              <ellipse cx="200" cy="72" rx="100" ry="56" fill="url(#catalogFlowFill)" filter="url(#catalogFlowBlur)" opacity="0.9"/>
-              <path d="M48 118 Q96 78 160 88 T272 96" stroke="url(#catalogFlowStroke)" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.65"/>
-              <path d="M56 248 Q120 200 200 228 T288 248" stroke="url(#catalogFlowStroke)" stroke-width="1.25" stroke-linecap="round" fill="none" opacity="0.45"/>
-              <circle cx="52" cy="118" r="5" fill="#ec4899" opacity="0.55"/>
-              <circle cx="268" cy="96" r="4" fill="#2563eb" opacity="0.5"/>
-              <circle cx="200" cy="228" r="4" fill="#a855f7" opacity="0.45"/>
-            </svg>
-          </div>
-
-          <div class="catalog-automation-preview__layout">
-            <header class="catalog-automation-preview__intro">
-              <div class="catalog-automation-preview__eyebrow">
-                <span class="catalog-automation-preview__pulse"></span>
-                <span>Live preview</span>
-              </div>
-              <h3 class="catalog-automation-preview__title">From comment to conversion</h3>
-              <p class="catalog-automation-preview__lede">
-                This mock shows the journey shoppers take: public reply on the post, then your branded CTA card in DM.
-              </p>
-              <ol class="catalog-automation-preview__mini-steps">
-                <li><span class="catalog-automation-preview__step-icon" aria-hidden="true"><i class="fab fa-instagram"></i></span> Buyer comments</li>
-                <li><span class="catalog-automation-preview__step-icon" aria-hidden="true"><i class="fas fa-reply"></i></span> You reply (no payment links)</li>
-                <li><span class="catalog-automation-preview__step-icon" aria-hidden="true"><i class="fab fa-facebook-messenger"></i></span> CTA DM matches your Sales Flow</li>
-              </ol>
-            </header>
-
-            <div class="catalog-automation-preview__device">
-              <div class="catalog-flow-phone catalog-flow-phone--premium">
-              <div class="catalog-flow-phone__bezel-reflection" aria-hidden="true"></div>
-              <div class="catalog-flow-phone__antenna catalog-flow-phone__antenna--top" aria-hidden="true"></div>
-              <span class="catalog-flow-phone__hw catalog-flow-phone__hw--mute" aria-hidden="true"></span>
-              <span class="catalog-flow-phone__hw catalog-flow-phone__hw--up" aria-hidden="true"></span>
-              <span class="catalog-flow-phone__hw catalog-flow-phone__hw--down" aria-hidden="true"></span>
-              <span class="catalog-flow-phone__hw catalog-flow-phone__hw--power" aria-hidden="true"></span>
-              <div class="catalog-flow-phone__notch" aria-hidden="true">
-                <span class="catalog-flow-phone__notch-lens" aria-hidden="true"></span>
-              </div>
-              <div class="catalog-flow-phone__screen">
-            <!-- Step strip -->
-            <div class="catalog-flow-phone__steps">
-              <div class="catalog-flow-phone__step">
-                <span class="catalog-flow-phone__step-num">1</span>
-                <span class="catalog-flow-phone__step-txt">Comment</span>
-              </div>
-              <i class="fas fa-chevron-right catalog-flow-phone__chev"></i>
-              <div class="catalog-flow-phone__step">
-                <span class="catalog-flow-phone__step-num">2</span>
-                <span class="catalog-flow-phone__step-txt">Keywords</span>
-              </div>
-              <i class="fas fa-chevron-right catalog-flow-phone__chev"></i>
-              <div class="catalog-flow-phone__step catalog-flow-phone__step--active">
-                <span class="catalog-flow-phone__step-num">3</span>
-                <span class="catalog-flow-phone__step-txt">CTA DM</span>
-              </div>
-            </div>
-
-            <!-- Instagram feed post (authentic chrome) -->
-            <div class="catalog-flow-phone__post catalog-flow-phone__ig-post">
-              <div class="catalog-flow-phone__ig-head">
-                <span class="catalog-flow-phone__ig-story-ring" aria-hidden="true">
-                  <span class="catalog-flow-phone__ig-avatar-sm"></span>
+              </td>
+              <!-- SKU -->
+              <td class="px-4 py-3 text-xs" style="color: var(--text-secondary);">
+                {{ product.sku || '—' }}
+              </td>
+              <!-- Price -->
+              <td class="px-4 py-3 text-xs font-semibold" style="color: var(--text-primary);">
+                {{ product.currency }} {{ product.price | number:'1.0-2' }}
+              </td>
+              <!-- WA sync status badge -->
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold"
+                      [ngClass]="waSyncStatusClass(product.whatsapp?.syncStatus)">
+                  <i *ngIf="product.whatsapp?.syncStatus === 'synced'" class="fas fa-check text-[9px]"></i>
+                  <i *ngIf="product.whatsapp?.syncStatus === 'failed'" class="fas fa-xmark text-[9px]"></i>
+                  <i *ngIf="product.whatsapp?.syncStatus === 'pending'" class="fas fa-spinner animate-spin text-[9px]"></i>
+                  <i *ngIf="!product.whatsapp?.syncStatus || product.whatsapp?.syncStatus === 'not_synced'" class="fas fa-minus text-[9px]"></i>
+                  {{ waSyncStatusLabel(product.whatsapp?.syncStatus) }}
                 </span>
-                <div class="catalog-flow-phone__ig-head-main">
-                  <span class="catalog-flow-phone__ig-handle">your_shop</span>
-                  <span class="catalog-flow-phone__ig-location">Original audio</span>
-                </div>
-                <span class="catalog-flow-phone__ig-more" aria-hidden="true"><i class="fas fa-ellipsis-h" aria-hidden="true"></i></span>
-              </div>
-              <div class="catalog-flow-phone__post-media catalog-flow-phone__ig-media">
-                <ng-container *ngIf="salesFlowSettings?.ctaImageUrl?.trim() as postMediaSrc">
-                  <img
-                    class="catalog-flow-phone__ig-media-img"
-                    [src]="postMediaSrc"
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    (error)="$any($event.target).style.display = 'none'" />
-                </ng-container>
-                <div class="catalog-flow-phone__ig-media-dots" aria-hidden="true">
-                  <span></span><span></span><span></span>
-                </div>
-              </div>
-              <div class="catalog-flow-phone__ig-toolbar">
-                <span class="catalog-flow-phone__ig-tool"><i class="far fa-heart" aria-hidden="true"></i></span>
-                <span class="catalog-flow-phone__ig-tool"><i class="far fa-comment" aria-hidden="true"></i></span>
-                <span class="catalog-flow-phone__ig-tool"><i class="far fa-paper-plane" aria-hidden="true"></i></span>
-                <span class="catalog-flow-phone__ig-tool catalog-flow-phone__ig-tool--trailing"><i class="far fa-bookmark" aria-hidden="true"></i></span>
-              </div>
-              <div class="catalog-flow-phone__ig-likes"><strong>124 likes</strong></div>
-              <div class="catalog-flow-phone__ig-caption">
-                <strong>your_shop</strong> Summer drop — comment to order ✨
-              </div>
-              <div class="catalog-flow-phone__ig-viewall">View all 12 comments</div>
-              <div class="catalog-flow-phone__ig-comment-row">
-                <strong class="catalog-flow-phone__ig-cmt-user">customer</strong>
-                <span class="catalog-flow-phone__ig-cmt-text">How much? 🛍️</span>
-              </div>
-              <div class="catalog-flow-phone__ig-reply">
-                <strong>your_shop</strong>
-                <span>Check your DM ✉️</span>
-              </div>
-              <div class="catalog-flow-phone__ig-time">1 HOUR AGO</div>
-            </div>
-
-            <!-- Instagram Direct + generic template -->
-            <div class="catalog-flow-phone__ig-dm">
-              <div class="catalog-flow-phone__ig-dm-nav">
-                <i class="fas fa-chevron-left catalog-flow-phone__ig-dm-back" aria-hidden="true"></i>
-                <div class="catalog-flow-phone__ig-dm-peer">
-                  <span class="catalog-flow-phone__ig-dm-avatar" aria-hidden="true"></span>
-                  <div class="catalog-flow-phone__ig-dm-meta">
-                    <span class="catalog-flow-phone__ig-dm-name">your_shop</span>
-                    <span class="catalog-flow-phone__ig-dm-sub">Active now</span>
-                  </div>
-                </div>
-                <i class="fas fa-info-circle catalog-flow-phone__ig-dm-info" aria-hidden="true"></i>
-              </div>
-              <div class="catalog-flow-phone__ig-dm-body">
-                <div class="catalog-flow-phone__bubble catalog-flow-phone__bubble--biz catalog-flow-phone__ig-bubble">
-                  <div class="catalog-flow-phone__card catalog-flow-phone__ig-template-card">
-                    <div class="catalog-flow-phone__card-body">
-                      <p class="catalog-flow-phone__card-title">
-                        {{ salesFlowSettings?.ctaTitle || '🛍️ Your product' }}
-                      </p>
-                      <p class="catalog-flow-phone__card-sub">
-                        {{ salesFlowSettings?.ctaSubtitle || 'Tap a button below 👇' }}
-                      </p>
-                    </div>
-                    <div class="catalog-flow-phone__card-actions">
-                      <span class="catalog-flow-phone__btn" *ngFor="let pb of ctaPreviewButtons; trackBy: trackByIndex">
-                        {{ pb.label }}
-                      </span>
-                      <span class="catalog-flow-phone__btn catalog-flow-phone__btn--dim" *ngIf="!ctaPreviewButtons.length">
-                        Product Details
-                      </span>
-                      <span class="catalog-flow-phone__btn catalog-flow-phone__btn--dim" *ngIf="!ctaPreviewButtons.length">
-                        Pay Now
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="catalog-flow-phone__hint">
-              <i class="fas fa-lightbulb text-amber-500 mr-1"></i>
-              Matches your <strong>Sales DM Flow</strong> settings as you edit.
-            </div>
-              </div>
-            </div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
+              </td>
+              <!-- Sync button -->
+              <td class="px-4 py-3 text-right">
+                <button
+                  (click)="syncOneProduct(product)"
+                  [disabled]="waSyncingProductIds.has(product._id) || !waCatalogSettings?.catalogId"
+                  title="Sync to WhatsApp catalog"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-colors disabled:opacity-40 border"
+                  style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-secondary);">
+                  <i [class]="waSyncingProductIds.has(product._id) ? 'fas fa-spinner animate-spin text-xs' : 'fas fa-rotate text-xs'"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
+
+    <!-- ── Section 3: CSV / Bulk Import ──────────────────────────────────── -->
+    <div class="rounded-xl border p-5 space-y-4"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-file-csv text-base" style="color: var(--accent);"></i>
+        <h2 class="text-base font-bold" style="color: var(--text-primary);">Bulk Import via CSV</h2>
+      </div>
+      <p class="text-xs" style="color: var(--text-secondary);">
+        Upload a CSV or Excel file to create / update multiple products at once.
+        Products are automatically synced to your WhatsApp catalog if a Catalog ID is configured.
+      </p>
+
+      <!-- Column reference -->
+      <div class="rounded-lg border overflow-hidden text-xs"
+           style="border-color: var(--card-border); background-color: var(--surface-primary);">
+        <div class="px-3 py-2 font-semibold border-b" style="border-color: var(--card-border); color: var(--text-secondary);">
+          Expected columns (case-insensitive)
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 px-3 py-2">
+          <div><code class="font-semibold text-green-600 dark:text-green-400">name</code> <span style="color: var(--text-muted);">required</span></div>
+          <div><code style="color: var(--text-secondary);">description</code></div>
+          <div><code style="color: var(--text-secondary);">price</code></div>
+          <div><code style="color: var(--text-secondary);">currency</code></div>
+          <div><code style="color: var(--text-secondary);">image_url</code></div>
+          <div><code style="color: var(--text-secondary);">payment_url</code></div>
+          <div><code style="color: var(--text-secondary);">sku</code></div>
+          <div><code style="color: var(--text-secondary);">stock</code></div>
+        </div>
+      </div>
+
+      <!-- File upload zone -->
+      <app-file-upload-zone
+        accept=".csv,.xlsx,.xls"
+        [multiple]="false"
+        [maxFiles]="1"
+        [showFileList]="false"
+        dropzoneTitle="Drop CSV / Excel file here or click to browse"
+        dropzoneHint="Supported: .csv, .xlsx, .xls"
+        (filesChange)="onWACsvFilesChange($event)">
+      </app-file-upload-zone>
+
+      <!-- Selected file name -->
+      <div *ngIf="waCsvFile" class="flex items-center gap-2 text-sm" style="color: var(--text-secondary);">
+        <i class="fas fa-file-csv text-green-500"></i>
+        <span>{{ waCsvFile.name }}</span>
+        <button (click)="waCsvFile = null" class="ml-auto text-red-500 hover:text-red-600 text-xs">
+          <i class="fas fa-xmark"></i> Remove
+        </button>
+      </div>
+
+      <!-- Import error -->
+      <p *ngIf="waCsvImportError" class="text-xs text-red-500 flex items-center gap-1">
+        <i class="fas fa-circle-exclamation"></i> {{ waCsvImportError }}
+      </p>
+
+      <!-- Import result -->
+      <div *ngIf="waCsvImportResult"
+           class="rounded-lg border p-3 text-sm space-y-1"
+           style="background-color: var(--surface-primary); border-color: var(--card-border);">
+        <p class="font-semibold" style="color: var(--text-primary);">
+          <i class="fas fa-circle-check text-green-500 mr-1.5"></i>Import complete — {{ waCsvImportResult.totalRows }} rows processed
+        </p>
+        <div class="flex gap-4 text-xs" style="color: var(--text-secondary);">
+          <span><strong class="text-green-600 dark:text-green-400">{{ waCsvImportResult.created }}</strong> created</span>
+          <span><strong>{{ waCsvImportResult.updated }}</strong> updated</span>
+          <span *ngIf="waCsvImportResult.failed?.length" class="text-red-500">
+            <strong>{{ waCsvImportResult.failed.length }}</strong> rows failed
+          </span>
+        </div>
+        <div *ngIf="waCsvImportResult.sync">
+          <span class="text-xs" style="color: var(--text-secondary);">
+            Catalog sync: <strong class="text-green-600 dark:text-green-400">{{ waCsvImportResult.sync.synced }}</strong> synced,
+            <strong *ngIf="waCsvImportResult.sync.failed > 0" class="text-red-500">{{ waCsvImportResult.sync.failed }}</strong>
+            <strong *ngIf="waCsvImportResult.sync.failed === 0" class="text-green-600 dark:text-green-400">0</strong> failed
+          </span>
+        </div>
+        <div *ngIf="!waCatalogSettings?.catalogId" class="text-xs text-amber-600 dark:text-amber-400">
+          <i class="fas fa-triangle-exclamation mr-1"></i>
+          No Catalog ID configured — products were saved locally but not synced to WhatsApp.
+        </div>
+        <!-- Row-level failures -->
+        <ul *ngIf="waCsvImportResult.failed?.length" class="mt-2 space-y-0.5 max-h-24 overflow-y-auto text-xs text-red-500">
+          <li *ngFor="let f of waCsvImportResult.failed">Row {{ f.row }}: {{ f.error }}</li>
+        </ul>
+      </div>
+
+      <!-- Import button -->
+      <div class="flex justify-end">
+        <button
+          (click)="importWACatalogCsv()"
+          [disabled]="!waCsvFile || importingWaCsv"
+          class="catalog-btn-primary flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold disabled:opacity-50">
+          <i [class]="importingWaCsv ? 'fas fa-spinner animate-spin' : 'fas fa-upload'"></i>
+          {{ importingWaCsv ? 'Importing…' : 'Import & Sync' }}
+        </button>
+      </div>
+    </div>
+
   </div>
+  <!-- ════════════════════ END WHATSAPP CATALOG TAB ════════════════════ -->
+
 </div>
 
 <!-- ══════════════════════════ PRODUCT MODAL ══════════════════════════ -->

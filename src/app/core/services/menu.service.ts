@@ -17,7 +17,7 @@ export interface IMenuItem {
     enabled: boolean;
     source: 'notifications' | 'inbox' | 'custom' | 'none';
   };
-  group: 'main' | 'management' | 'settings';
+  group: 'main' | 'management' | 'settings' | 'automation';
   parentId?: string;
   /** Nested items when API returns a tree under `grouped` */
   children?: IMenuItem[];
@@ -34,6 +34,7 @@ export interface IMenuResponse {
     main: IMenuItem[];
     management: IMenuItem[];
     settings: IMenuItem[];
+    automation?: IMenuItem[];
   };
 }
 
@@ -51,7 +52,8 @@ export class MenuService {
   private groupedMenusSubject = new BehaviorSubject<any>({
     main: [],
     management: [],
-    settings: []
+    settings: [],
+    automation: []
   });
   public groupedMenus$ = this.groupedMenusSubject.asObservable();
 
@@ -74,7 +76,7 @@ export class MenuService {
             /** Use API tree — do not rebuild grouped from flat `menus` (would duplicate child rows). */
             let grouped = response.data.grouped;
             if (!grouped || typeof grouped !== 'object') {
-              grouped = { main: [], management: [], settings: [] };
+              grouped = { main: [], management: [], settings: [], automation: [] };
             }
 
             const normalized = this.normalizeAllMenuRoutes(menus, grouped);
@@ -94,7 +96,8 @@ export class MenuService {
             grouped = {
               main: filterGroupedTop(grouped.main),
               management: filterGroupedTop(grouped.management),
-              settings: filterGroupedTop(grouped.settings)
+              settings: filterGroupedTop(grouped.settings),
+              automation: filterGroupedTop(grouped.automation)
             };
 
             this.menusSubject.next(menus);
@@ -231,7 +234,8 @@ export class MenuService {
       grouped: {
         main: normList(grouped.main),
         management: normList(grouped.management),
-        settings: normList(grouped.settings)
+        settings: normList(grouped.settings),
+        automation: normList(grouped.automation)
       }
     };
   }

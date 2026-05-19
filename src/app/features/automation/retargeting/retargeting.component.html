@@ -1,0 +1,251 @@
+<app-automation-page-shell
+  title="Retargeting"
+  subtitle="Re-engage contacts with targeted multi-step WhatsApp and Instagram sequences">
+
+  <div slot="actions">
+    <button (click)="openCreate()"
+            class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+      <i class="fas fa-plus"></i> New Flow
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="space-y-3">
+    <div *ngFor="let i of [1,2,3]" class="rounded-xl border p-5 animate-pulse h-20"
+         style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!loading && flows.length === 0"
+       class="rounded-xl border p-10 text-center"
+       style="background-color: var(--card-bg); border-color: var(--card-border);">
+    <i class="fas fa-bullseye text-4xl mb-3" style="color: var(--text-muted);"></i>
+    <p class="font-bold mb-1" style="color: var(--text-primary);">No retargeting flows yet</p>
+    <p class="text-sm mb-4" style="color: var(--text-muted);">Create your first flow to start re-engaging contacts.</p>
+    <button (click)="openCreate()" class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+      <i class="fas fa-plus"></i> Create Flow
+    </button>
+  </div>
+
+  <!-- Flow list -->
+  <div *ngIf="!loading && flows.length > 0" class="space-y-3">
+    <div *ngFor="let flow of flows; trackBy: trackById"
+         class="rounded-xl border p-4 flex items-center gap-3"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <span class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+            style="background-color: var(--surface-primary);">
+        <i class="fas fa-bullseye text-sm" style="color: var(--text-muted);"></i>
+      </span>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-0.5">
+          <p class="font-bold text-sm truncate" style="color: var(--text-primary);">{{ flow.name }}</p>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                [style.background-color]="flow.status === 'active' ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
+                [style.color]="flow.status === 'active' ? '#16a34a' : 'var(--text-muted)'">
+            {{ flow.status | titlecase }}
+          </span>
+        </div>
+        <p class="text-xs" style="color: var(--text-muted);">
+          <i class="fas fa-users mr-1"></i>{{ getAudienceLabel(flow.audience?.type) }} ·
+          <i class="fas fa-list-ol ml-2 mr-1"></i>{{ flow.steps?.length ?? 0 }} step(s)
+        </p>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button (click)="openEdit(flow)" class="auto-btn-secondary px-3 py-1.5 text-xs">
+          <i class="fas fa-pen"></i>
+        </button>
+        <button (click)="delete(flow._id!)" [disabled]="deleting.has(flow._id!)"
+                class="px-3 py-1.5 text-xs rounded-lg border font-semibold transition-colors"
+                style="border-color: rgba(239,68,68,0.4); color: #dc2626; background-color: rgba(239,68,68,0.06);">
+          <i class="fas" [ngClass]="deleting.has(flow._id!) ? 'fa-spinner fa-spin' : 'fa-trash-alt'"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Flow Editor Modal ── -->
+  <div *ngIf="showEditor && editingFlow"
+       class="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+       style="background-color: rgba(0,0,0,0.6);">
+    <div class="w-full max-w-2xl rounded-2xl border shadow-2xl"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+
+      <!-- Modal header -->
+      <div class="flex items-center justify-between px-5 py-4 border-b"
+           style="border-color: var(--card-border);">
+        <h2 class="font-bold text-base" style="color: var(--text-primary);">
+          {{ editingFlow._id ? 'Edit Flow' : 'New Retargeting Flow' }}
+        </h2>
+        <button (click)="closeEditor()" class="text-lg" style="color: var(--text-muted);">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Modal tabs -->
+      <div class="flex border-b overflow-x-auto" style="border-color: var(--card-border);">
+        <button (click)="editorTab = 'audience'"
+                class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+                [style.color]="editorTab === 'audience' ? 'var(--text-primary)' : 'var(--text-muted)'"
+                [style.border-bottom]="editorTab === 'audience' ? '2px solid #d8ff00' : '2px solid transparent'">
+          <i class="fas fa-users mr-1.5"></i>Audience
+        </button>
+        <button (click)="editorTab = 'steps'"
+                class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+                [style.color]="editorTab === 'steps' ? 'var(--text-primary)' : 'var(--text-muted)'"
+                [style.border-bottom]="editorTab === 'steps' ? '2px solid #d8ff00' : '2px solid transparent'">
+          <i class="fas fa-list-ol mr-1.5"></i>Steps
+        </button>
+        <button (click)="editorTab = 'settings'"
+                class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+                [style.color]="editorTab === 'settings' ? 'var(--text-primary)' : 'var(--text-muted)'"
+                [style.border-bottom]="editorTab === 'settings' ? '2px solid #d8ff00' : '2px solid transparent'">
+          <i class="fas fa-cog mr-1.5"></i>Settings
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+
+        <!-- Flow name (always visible) -->
+        <div>
+          <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Flow Name</label>
+          <input type="text" [(ngModel)]="editingFlow.name" name="flowName"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                 placeholder="e.g. Abandoned Cart Recovery">
+        </div>
+
+        <!-- AUDIENCE tab -->
+        <ng-container *ngIf="editorTab === 'audience'">
+          <div>
+            <p class="text-sm font-bold mb-2" style="color: var(--text-primary);">Audience Type</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button *ngFor="let a of audienceTypes"
+                      (click)="setAudienceType(a.key)"
+                      class="rounded-lg border p-3 text-left transition-all"
+                      [style.border-color]="editingFlow.audience?.type === a.key ? '#d8ff00' : 'var(--card-border)'"
+                      [style.background-color]="editingFlow.audience?.type === a.key ? 'rgba(216,255,0,0.07)' : 'var(--surface-primary)'">
+                <div class="flex items-center gap-2 mb-1">
+                  <i [class]="a.icon + ' text-xs'" style="color: var(--text-muted);"></i>
+                  <span class="text-sm font-semibold" style="color: var(--text-primary);">{{ a.label }}</span>
+                  <i *ngIf="editingFlow.audience?.type === a.key" class="fas fa-check-circle ml-auto text-xs" style="color: var(--auto-accent-foreground);"></i>
+                </div>
+                <p class="text-xs" style="color: var(--text-muted);">{{ a.desc }}</p>
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Window (days)</label>
+              <input type="number" [(ngModel)]="editingFlow.audience.audienceWindowDays" min="1" max="365"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+            </div>
+            <div class="flex items-end">
+              <button (click)="previewAudience()" [disabled]="previewingAudience"
+                      class="auto-btn-secondary w-full px-4 py-2 text-sm">
+                <i class="fas mr-1.5" [ngClass]="previewingAudience ? 'fa-spinner fa-spin' : 'fa-eye'"></i>
+                Preview Size
+              </button>
+            </div>
+          </div>
+          <div *ngIf="audiencePreviewSize !== null" class="rounded-lg border p-3 text-center"
+               style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <p class="text-xs" style="color: var(--text-muted);">Estimated audience</p>
+            <p class="text-2xl font-bold" style="color: var(--auto-accent-foreground);">{{ audiencePreviewSize }}</p>
+          </div>
+        </ng-container>
+
+        <!-- STEPS tab -->
+        <ng-container *ngIf="editorTab === 'steps'">
+          <div class="space-y-3">
+            <div *ngFor="let step of editingFlow.steps; trackBy: trackByIndex; let i = index"
+                 class="rounded-xl border p-4"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border);">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold" style="color: var(--text-muted);">Step {{ i + 1 }}</span>
+                <button (click)="removeStep(i)" *ngIf="editingFlow.steps.length > 1"
+                        class="text-xs" style="color: #dc2626;">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <select [(ngModel)]="step.type" [name]="'stepType'+i"
+                      class="w-full px-3 py-1.5 rounded-lg border text-sm mb-2"
+                      style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+                <option value="message">Message</option>
+                <option value="template">Template</option>
+                <option value="delay">Wait</option>
+              </select>
+              <textarea *ngIf="step.type !== 'delay'" [(ngModel)]="step.content" [name]="'stepContent'+i" rows="2"
+                        class="w-full px-3 py-2 rounded-lg border text-sm"
+                        style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+                        placeholder="Message text …"></textarea>
+              <div class="flex items-center gap-2 mt-2">
+                <label class="text-xs" style="color: var(--text-muted);">Wait after (hours):</label>
+                <input type="number" [(ngModel)]="step.delaySec" [name]="'stepDelay'+i" min="0"
+                       class="w-20 px-2 py-1 rounded border text-sm"
+                       style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+              </div>
+            </div>
+          </div>
+          <button (click)="addStep()" class="auto-btn-secondary text-sm px-4 py-2 w-full">
+            <i class="fas fa-plus mr-1.5"></i>Add Step
+          </button>
+        </ng-container>
+
+        <!-- SETTINGS tab -->
+        <ng-container *ngIf="editorTab === 'settings'">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Frequency Cap</label>
+              <input type="number" [(ngModel)]="editingFlow.settings!.frequencyCap" min="1"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+            </div>
+            <div>
+              <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Cap Window (days)</label>
+              <input type="number" [(ngModel)]="editingFlow.settings!.frequencyCapWindowDays" min="1"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+            </div>
+            <div>
+              <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Quiet Start</label>
+              <input type="time" [(ngModel)]="editingFlow.settings!.quietHoursStart"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+            </div>
+            <div>
+              <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Quiet End</label>
+              <input type="time" [(ngModel)]="editingFlow.settings!.quietHoursEnd"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-bold block mb-1" style="color: var(--text-muted);">Status</label>
+            <select [(ngModel)]="editingFlow.status"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+              <option value="draft">Draft</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
+        </ng-container>
+
+      </div>
+
+      <!-- Modal footer -->
+      <div class="flex items-center justify-end gap-3 px-5 py-4 border-t"
+           style="border-color: var(--card-border);">
+        <button (click)="closeEditor()" class="auto-btn-secondary px-4 py-2 text-sm">Cancel</button>
+        <button (click)="save()" [disabled]="saving"
+                class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+          <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{ saving ? 'Saving…' : 'Save Flow' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</app-automation-page-shell>

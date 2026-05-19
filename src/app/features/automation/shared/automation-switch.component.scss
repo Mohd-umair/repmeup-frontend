@@ -1,0 +1,96 @@
+:host {
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.auto-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.auto-switch--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.auto-switch__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.auto-switch__input:disabled + .auto-switch__track {
+  opacity: 0.65;
+}
+
+.auto-switch__track {
+  position: relative;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: var(--surface-tertiary);
+  border: 1px solid var(--border-secondary);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.07);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.auto-switch__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.5rem - 6px);
+  height: calc(1.5rem - 6px);
+  border-radius: 50%;
+  background-color: #ffffff;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.18),
+    0 0 0 1px rgb(0 0 0 / 0.05);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auto-switch__input:checked + .auto-switch__track {
+  background-color: #d8ff00;
+  border-color: #b8cf00;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+
+.auto-switch__input:checked + .auto-switch__track::after {
+  transform: translateX(1.25rem);
+}
+
+.auto-switch__input:focus-visible + .auto-switch__track {
+  outline: 2px solid var(--auto-accent-foreground, #1d4ed8);
+  outline-offset: 3px;
+}
+
+/* Dark theme */
+:host-context(.dark) .auto-switch__track {
+  background-color: var(--surface-tertiary);
+  border-color: var(--card-border);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+:host-context(.dark) .auto-switch__track::after {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.45);
+}
+
+:host-context(.dark) .auto-switch__input:checked + .auto-switch__track {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    0 0 14px rgb(216 255 0 / 0.32);
+}

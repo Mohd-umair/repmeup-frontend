@@ -7,18 +7,26 @@ import { CatalogService, IImportSummary } from '../../core/services/catalog.serv
 import { MediaLibraryService } from '../../core/services/media-library.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
-import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
-import { IProduct, ICommentToDmSettings, ISalesFlowSettings, ISalesFlowCtaButton, IProductDmConfig, IInstagramMediaItem } from '../../core/models/product.model';
+import {
+  IProduct,
+  ISalesFlowSettings,
+  ISalesFlowCtaButton,
+  IProductDmConfig,
+  IInstagramMediaItem,
+  IWhatsAppCatalogSettings,
+  IWhatsAppCsvImportResult,
+  WhatsAppSyncStatus
+} from '../../core/models/product.model';
 import { environment } from '../../../environments/environment';
 
 type ImportSource = 'excel' | 'woocommerce' | 'shopify' | 'url';
 
-type ActiveTab = 'products' | 'automation';
+type ActiveTab = 'products' | 'whatsapp';
 
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadZoneComponent, AiChatBubbleIconComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadZoneComponent],
   templateUrl: './catalog.component.html',
   styleUrls: ['./catalog.component.scss'],
 })
@@ -101,25 +109,25 @@ export class CatalogComponent implements OnInit, OnDestroy {
   importApiUrl = '';
   importApiAuthHeader = '';
 
-  // ── Automation settings ────────────────────
-  settings: ICommentToDmSettings | null = null;
-  loadingSettings = false;
-  savingSettings = false;
-  settingsError = '';
-  settingsSaved = false;
-  keywordsInput = '';
-
-  // ── Sales flow settings ────────────────────
+  // ── Sales flow defaults (prefill product DM wizard; edit under Automation → Growth) ──
   salesFlowSettings: ISalesFlowSettings | null = null;
-  loadingSalesFlow = false;
-  savingSalesFlow = false;
-  salesFlowLoadError = '';
-  hesitancyKeywordsInput = '';
 
-  // ── Post ID backfill ───────────────────────
-  backfilling = false;
-  backfillResult: { resolved: number; failed: number } | null = null;
-  backfillError = '';
+  // ── WhatsApp Commerce Catalog ──────────────
+  waCatalogSettings: IWhatsAppCatalogSettings | null = null;
+  loadingWaSettings = false;
+  savingWaSettings = false;
+  waCatalogIdInput = '';
+  waSettingsError = '';
+  waSettingsSaved = false;
+
+  syncingAll = false;
+  waSyncResult: { synced: number; failed: number; total: number } | null = null;
+  waSyncingProductIds = new Set<string>();
+
+  waCsvFile: File | null = null;
+  importingWaCsv = false;
+  waCsvImportResult: IWhatsAppCsvImportResult | null = null;
+  waCsvImportError = '';
 
   constructor(
     private catalogService: CatalogService,
@@ -132,8 +140,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.buildProductForm();
     this.loadProducts();
-    this.loadSettings();
     this.loadSalesFlowSettings();
+    this.loadWACatalogSettings();
   }
 
   ngOnDestroy(): void {
@@ -531,152 +539,26 @@ export class CatalogComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ── Automation settings ────────────────────
-  loadSettings(): void {
-    this.loadingSettings = true;
-    this.catalogService.getCommentToDmSettings()
-      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingSettings = false; this.cdr.markForCheck(); }))
-      .subscribe({
-        next: r => {
-          this.settings = r.data ?? null;
-          if (this.settings) this.keywordsInput = this.settings.triggerKeywords.join(', ');
-          this.cdr.markForCheck();
-        }
-      });
-  }
-
-  saveSettings(): void {
-    if (!this.settings) return;
-    this.savingSettings = true;
-    this.settingsSaved = false;
-    this.settingsError = '';
-
-    const { dmTemplate: _legacyDmTemplate, ...rest } = this.settings;
-    const payload: Partial<ICommentToDmSettings> = {
-      ...rest,
-      triggerKeywords: this.keywordsInput.split(',').map(k => k.trim()).filter(Boolean)
-    };
-
-    this.catalogService.updateCommentToDmSettings(payload)
-      .pipe(takeUntil(this.destroy$), finalize(() => { this.savingSettings = false; this.cdr.markForCheck(); }))
-      .subscribe({
-        next: r => {
-          this.settings = r.data ?? null;
-          this.settingsSaved = true;
-          setTimeout(() => { this.settingsSaved = false; this.cdr.markForCheck(); }, 3000);
-          this.cdr.markForCheck();
-        },
-        error: err => { this.settingsError = err.error?.error || 'Failed to save settings'; this.cdr.markForCheck(); }
-      });
-  }
-
-  // ── Sales flow settings ──────────────────────
   loadSalesFlowSettings(): void {
-    this.loadingSalesFlow = true;
-    this.salesFlowLoadError = '';
     this.catalogService.getSalesFlowSettings()
-      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingSalesFlow = false; this.cdr.markForCheck(); }))
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: r => {
           this.salesFlowSettings = r.data ?? null;
-          if (this.salesFlowSettings) {
-            this.hesitancyKeywordsInput = (this.salesFlowSettings.hesitancyKeywords || []).join(', ');
-            // Ensure ctaButtons is always a mutable array
-            if (!Array.isArray(this.salesFlowSettings.ctaButtons)) {
-              this.salesFlowSettings.ctaButtons = [];
-            }
+          if (this.salesFlowSettings && !Array.isArray(this.salesFlowSettings.ctaButtons)) {
+            this.salesFlowSettings.ctaButtons = [];
           }
           this.cdr.markForCheck();
         },
         error: () => {
-          this.salesFlowLoadError = 'Could not load Sales Flow settings.';
+          this.salesFlowSettings = null;
           this.cdr.markForCheck();
         }
       });
-  }
-
-  addCtaButton(): void {
-    if (!this.salesFlowSettings) return;
-    if (!Array.isArray(this.salesFlowSettings.ctaButtons)) {
-      this.salesFlowSettings.ctaButtons = [];
-    }
-    if (this.salesFlowSettings.ctaButtons.length >= 3) return;
-    this.salesFlowSettings.ctaButtons = [
-      ...this.salesFlowSettings.ctaButtons,
-      { label: '', type: 'postback', payload: '' }
-    ];
-    this.cdr.markForCheck();
-  }
-
-  removeCtaButton(index: number): void {
-    if (!this.salesFlowSettings?.ctaButtons) return;
-    this.salesFlowSettings.ctaButtons = this.salesFlowSettings.ctaButtons.filter((_, i) => i !== index);
-    this.cdr.markForCheck();
   }
 
   trackByIndex(index: number): number {
     return index;
-  }
-
-  saveSalesFlowSettings(): void {
-    if (!this.salesFlowSettings) return;
-    this.savingSalesFlow = true;
-    const s = this.salesFlowSettings;
-    const payload: Partial<ISalesFlowSettings> = {
-      enabled: s.enabled,
-      ctaTitle: s.ctaTitle,
-      ctaSubtitle: s.ctaSubtitle,
-      ctaImageUrl: s.ctaImageUrl,
-      ctaButtons: (s.ctaButtons || []).map((b: ISalesFlowCtaButton) => {
-        const type = b.type === 'web_url' ? 'web_url' : 'postback';
-        return type === 'web_url'
-          ? { label: b.label, type, url: b.url || '' }
-          : { label: b.label, type, payload: b.payload || '' };
-      }),
-      hesitancyKeywords: this.hesitancyKeywordsInput.split(',').map(k => k.trim()).filter(Boolean),
-      whatsappCaptureMessage: s.whatsappCaptureMessage,
-      whatsappCaptureConfirmation: s.whatsappCaptureConfirmation
-    };
-    this.catalogService.updateSalesFlowSettings(payload)
-      .pipe(takeUntil(this.destroy$), finalize(() => { this.savingSalesFlow = false; this.cdr.markForCheck(); }))
-      .subscribe({
-        next: r => {
-          this.salesFlowSettings = r.data ?? null;
-          if (this.salesFlowSettings) {
-            this.hesitancyKeywordsInput = (this.salesFlowSettings.hesitancyKeywords || []).join(', ');
-            if (!Array.isArray(this.salesFlowSettings.ctaButtons)) {
-              this.salesFlowSettings.ctaButtons = [];
-            }
-          }
-          this.notify.success('Saved', 'Sales Flow settings updated.');
-          this.cdr.markForCheck();
-        },
-        error: err => {
-          const msg = err.error?.error || err.error?.message || 'Failed to save Sales Flow settings.';
-          this.notify.error('Save failed', msg);
-          this.cdr.markForCheck();
-        }
-      });
-  }
-
-  // ── Post ID backfill ──────────────────────────────────────────────────────
-  backfillPostIds(): void {
-    this.backfilling = true;
-    this.backfillResult = null;
-    this.backfillError = '';
-    this.catalogService.backfillPostNumericIds()
-      .pipe(takeUntil(this.destroy$), finalize(() => { this.backfilling = false; this.cdr.markForCheck(); }))
-      .subscribe({
-        next: r => {
-          this.backfillResult = r.data ?? null;
-          this.notify.success('Done', `Backfill complete — ${r.data?.resolved ?? 0} post(s) fixed.`);
-          this.cdr.markForCheck();
-        },
-        error: err => {
-          this.backfillError = err.error?.error || err.error?.message || 'Backfill failed. Make sure Instagram is connected.';
-          this.cdr.markForCheck();
-        }
-      });
   }
 
   // ── Wizard navigation ────────────────────────────────────────────────────
@@ -865,15 +747,6 @@ export class CatalogComponent implements OnInit, OnDestroy {
     return this.products.filter(p => p.instagramPostIds.length > 0).length;
   }
 
-  /** Button labels for the Automation tab phone preview (global Sales Flow). */
-  get ctaPreviewButtons(): ISalesFlowCtaButton[] {
-    const raw = this.salesFlowSettings?.ctaButtons ?? [];
-    return raw
-      .filter(b => String(b?.label || '').trim())
-      .slice(0, 3)
-      .map(b => ({ ...b, label: String(b.label).trim().slice(0, 20) }));
-  }
-
   get effectivePrice(): number {
     const raw = this.productForm?.value;
     if (!raw) return 0;
@@ -903,4 +776,144 @@ export class CatalogComponent implements OnInit, OnDestroy {
   trackByProduct(_: number, p: IProduct): string { return p._id; }
   trackByPostId(_: number, id: string): string { return id; }
   trackByImageUrl(_: number, url: string): string { return url; }
+
+  // ── WhatsApp Commerce Catalog ──────────────────────────────────────────────
+
+  loadWACatalogSettings(): void {
+    this.loadingWaSettings = true;
+    this.catalogService.getWACatalogSettings()
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingWaSettings = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.waCatalogSettings = r.data ?? null;
+          this.waCatalogIdInput = r.data?.catalogId || '';
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  saveWACatalogSettings(): void {
+    const catalogId = this.waCatalogIdInput.trim();
+    if (!catalogId) {
+      this.waSettingsError = 'Please enter a valid Catalog ID.';
+      return;
+    }
+    this.waSettingsError = '';
+    this.savingWaSettings = true;
+    this.catalogService.updateWACatalogSettings({ catalogId })
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.savingWaSettings = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.waSettingsSaved = true;
+          if (this.waCatalogSettings) {
+            this.waCatalogSettings.catalogId = r.data?.catalogId || catalogId;
+          }
+          this.notify.success('Saved', r.data?.metaSynced
+            ? 'Catalog linked to your WhatsApp number successfully.'
+            : 'Catalog ID saved. Meta link update failed — check your credentials.');
+          setTimeout(() => { this.waSettingsSaved = false; this.cdr.markForCheck(); }, 3000);
+          this.loadWACatalogSettings();
+        },
+        error: err => {
+          this.waSettingsError = err.error?.error || 'Failed to save catalog settings.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  syncAllProducts(): void {
+    if (this.syncingAll) return;
+    this.syncingAll = true;
+    this.waSyncResult = null;
+    this.catalogService.syncAllProducts()
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.syncingAll = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.waSyncResult = r.data ?? null;
+          this.notify.success('Sync complete', `${r.data?.synced ?? 0} products synced, ${r.data?.failed ?? 0} failed.`);
+          this.loadProducts();
+          this.loadWACatalogSettings();
+        },
+        error: err => {
+          this.notify.error('Sync failed', err.error?.error || 'Could not sync products to WhatsApp.');
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  syncOneProduct(product: IProduct): void {
+    if (this.waSyncingProductIds.has(product._id)) return;
+    this.waSyncingProductIds.add(product._id);
+    this.cdr.markForCheck();
+    this.catalogService.syncProduct(product._id)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.waSyncingProductIds.delete(product._id); this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          const idx = this.products.findIndex(p => p._id === product._id);
+          if (idx !== -1 && r.data) {
+            this.products = [
+              ...this.products.slice(0, idx),
+              r.data,
+              ...this.products.slice(idx + 1)
+            ];
+          }
+          this.notify.success('Synced', `"${product.name}" synced to WhatsApp catalog.`);
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          this.notify.error('Sync failed', err.error?.error || 'Could not sync product.');
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  onWACsvFilesChange(files: File[]): void {
+    this.waCsvFile = files && files.length > 0 ? files[0] : null;
+    this.waCsvImportResult = null;
+    this.waCsvImportError = '';
+    this.cdr.markForCheck();
+  }
+
+  importWACatalogCsv(): void {
+    if (!this.waCsvFile || this.importingWaCsv) return;
+    this.importingWaCsv = true;
+    this.waCsvImportError = '';
+    this.waCsvImportResult = null;
+    this.catalogService.importWACatalogCsv(this.waCsvFile)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.importingWaCsv = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.waCsvImportResult = r.data ?? null;
+          this.waCsvFile = null;
+          this.loadProducts();
+          this.loadWACatalogSettings();
+          this.notify.success('Import complete', `${(r.data?.created ?? 0) + (r.data?.updated ?? 0)} products imported.`);
+        },
+        error: err => {
+          this.waCsvImportError = err.error?.error || 'CSV import failed.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  waSyncStatusLabel(status?: WhatsAppSyncStatus): string {
+    switch (status) {
+      case 'synced':     return 'Synced';
+      case 'pending':    return 'Pending';
+      case 'failed':     return 'Failed';
+      default:           return 'Not Synced';
+    }
+  }
+
+  waSyncStatusClass(status?: WhatsAppSyncStatus): string {
+    switch (status) {
+      case 'synced':     return 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300';
+      case 'pending':    return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300';
+      case 'failed':     return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+      default:           return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+    }
+  }
 }

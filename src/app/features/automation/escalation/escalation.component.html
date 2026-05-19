@@ -1,0 +1,209 @@
+<app-automation-page-shell
+  title="Human Escalation"
+  subtitle="Define when AI hands off to a human agent and track escalation performance">
+
+  <div slot="actions">
+    <button (click)="saveSettings()" [disabled]="savingSettings || loadingSettings"
+            class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+      <i class="fas" [ngClass]="savingSettings ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+      {{ savingSettings ? 'Saving…' : 'Save Settings' }}
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="settingsError" class="rounded-lg border p-4 text-sm"
+       style="background-color: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); color: #dc2626;">
+    <i class="fas fa-exclamation-circle mr-2"></i>{{ settingsError }}
+  </div>
+
+  <!-- ── KPI row ── -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <ng-container *ngIf="!loadingStats">
+      <div class="rounded-xl border p-4 space-y-1" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Total Escalations</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ stats?.totalEscalations ?? 0 }}</p>
+      </div>
+      <div class="rounded-xl border p-4 space-y-1" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Resolved</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ stats?.resolved ?? 0 }}</p>
+      </div>
+      <div class="rounded-xl border p-4 space-y-1" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">Avg Resolution</p>
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ stats?.avgResolutionMinutes ?? 0 }}<span class="text-sm font-normal ml-1" style="color: var(--text-muted);">min</span></p>
+      </div>
+      <div class="rounded-xl border p-4 space-y-1" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-[11px] font-semibold uppercase tracking-wide" style="color: var(--text-muted);">SLA Met</p>
+        <p class="text-2xl font-bold" style="color: #16a34a;">{{ stats?.slaMet ?? 0 }}%</p>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="loadingStats">
+      <div *ngFor="let i of [1,2,3,4]" class="rounded-xl border p-4 animate-pulse h-20"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </ng-container>
+  </div>
+
+  <!-- ── Top tabs: settings sections ── -->
+  <div class="rounded-xl border" style="background-color: var(--card-bg); border-color: var(--card-border);">
+    <div class="flex border-b overflow-x-auto" style="border-color: var(--card-border);">
+      <button (click)="activeTab = 'triggers'"
+              class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+              [style.color]="activeTab === 'triggers' ? 'var(--text-primary)' : 'var(--text-muted)'"
+              [style.border-bottom]="activeTab === 'triggers' ? '2px solid #d8ff00' : '2px solid transparent'">
+        <i class="fas fa-bolt mr-1.5"></i>Triggers
+      </button>
+      <button (click)="activeTab = 'routing'"
+              class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+              [style.color]="activeTab === 'routing' ? 'var(--text-primary)' : 'var(--text-muted)'"
+              [style.border-bottom]="activeTab === 'routing' ? '2px solid #d8ff00' : '2px solid transparent'">
+        <i class="fas fa-route mr-1.5"></i>Routing
+      </button>
+      <button (click)="activeTab = 'notifications'"
+              class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+              [style.color]="activeTab === 'notifications' ? 'var(--text-primary)' : 'var(--text-muted)'"
+              [style.border-bottom]="activeTab === 'notifications' ? '2px solid #d8ff00' : '2px solid transparent'">
+        <i class="fas fa-bell mr-1.5"></i>Notifications
+      </button>
+      <button (click)="activeTab = 'analytics'"
+              class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+              [style.color]="activeTab === 'analytics' ? 'var(--text-primary)' : 'var(--text-muted)'"
+              [style.border-bottom]="activeTab === 'analytics' ? '2px solid #d8ff00' : '2px solid transparent'">
+        <i class="fas fa-chart-bar mr-1.5"></i>Analytics
+      </button>
+    </div>
+
+    <div class="p-5 space-y-5">
+
+      <!-- TRIGGERS -->
+      <ng-container *ngIf="activeTab === 'triggers'">
+        <p class="text-sm font-bold mb-3" style="color: var(--text-primary);">When should the AI hand off to a human?</p>
+        <div class="space-y-3">
+          <div *ngFor="let trig of triggerOptions" class="flex items-center justify-between rounded-lg border p-3"
+               style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">{{ trig.label }}</p>
+              <p class="text-xs" style="color: var(--text-muted);">{{ trig.desc }}</p>
+            </div>
+            <app-automation-switch class="flex-shrink-0 ml-4"
+                                   [ngModel]="isTriggerEnabled(trig.key)"
+                                   (ngModelChange)="setTrigger(trig.key, $event)"
+                                   [name]="'trigger-' + trig.key"
+                                   [ariaLabel]="trig.label"></app-automation-switch>
+          </div>
+        </div>
+        <!-- Handoff message -->
+        <div>
+          <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Handoff Message</p>
+          <p class="text-xs mb-2" style="color: var(--text-muted);">Message sent to the customer when the AI escalates to a human.</p>
+          <textarea [(ngModel)]="settings.handoffMessage" rows="3"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                    placeholder="I'm connecting you with a team member. Please hold on …"></textarea>
+        </div>
+      </ng-container>
+
+      <!-- ROUTING -->
+      <ng-container *ngIf="activeTab === 'routing'">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Routing Strategy</p>
+            <select [(ngModel)]="settings.routing!.strategy" name="routingStrategy"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+              <option value="round_robin">Round Robin</option>
+              <option value="least_busy">Least Busy</option>
+              <option value="fixed_team">Fixed Team</option>
+            </select>
+          </div>
+          <div>
+            <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">SLA Target (minutes)</p>
+            <input type="number" [(ngModel)]="settings.routing!.slaMinutes" min="1"
+                   class="w-full px-3 py-2 rounded-lg border text-sm"
+                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- NOTIFICATIONS -->
+      <ng-container *ngIf="activeTab === 'notifications'">
+        <div class="space-y-3">
+          <div class="flex items-center justify-between rounded-lg border p-3"
+               style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">Notify Agents on Escalation</p>
+              <p class="text-xs" style="color: var(--text-muted);">Send push + email alerts when a new escalation comes in</p>
+            </div>
+            <app-automation-switch class="flex-shrink-0 ml-4"
+                                   [(ngModel)]="settings.notifications!.notifyAgents"
+                                   name="notifyAgents"
+                                   ariaLabel="Notify agents on escalation"></app-automation-switch>
+          </div>
+          <div class="flex items-center justify-between rounded-lg border p-3"
+               style="background-color: var(--surface-primary); border-color: var(--card-border);">
+            <div>
+              <p class="text-sm font-semibold" style="color: var(--text-primary);">SLA Breach Alert</p>
+              <p class="text-xs" style="color: var(--text-muted);">Alert when a conversation exceeds the SLA target</p>
+            </div>
+            <app-automation-switch class="flex-shrink-0 ml-4"
+                                   [(ngModel)]="settings.notifications!.slaBreachAlert"
+                                   name="slaBreachAlert"
+                                   ariaLabel="SLA breach alerts"></app-automation-switch>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ANALYTICS -->
+      <ng-container *ngIf="activeTab === 'analytics'">
+        <div *ngIf="loadingBreakdown" class="rounded-xl border p-5 animate-pulse h-40"
+             style="background-color: var(--surface-primary); border-color: var(--card-border);"></div>
+        <ng-container *ngIf="!loadingBreakdown">
+          <!-- SLA donut -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-xl border p-5 flex flex-col items-center gap-3"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border);">
+              <p class="text-sm font-bold self-start" style="color: var(--text-primary);">SLA Performance</p>
+              <div class="relative w-28 h-28">
+                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--card-border)" stroke-width="3"/>
+                  <circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--auto-accent-foreground)" stroke-width="3"
+                          [attr.stroke-dasharray]="(stats?.slaMet ?? 0) + ', 100'"
+                          stroke-linecap="round"/>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                  <span class="text-xl font-bold" style="color: var(--text-primary);">{{ stats?.slaMet ?? 0 }}%</span>
+                </div>
+              </div>
+              <p class="text-xs" style="color: var(--text-muted);">SLA Met</p>
+            </div>
+            <!-- Top reasons -->
+            <div class="rounded-xl border p-4" style="background-color: var(--surface-primary); border-color: var(--card-border);">
+              <p class="text-sm font-bold mb-3" style="color: var(--text-primary);">Top Escalation Reasons</p>
+              <div class="space-y-2">
+                <div *ngFor="let r of (topReasons ?? []); let i = index" class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold w-4 text-right flex-shrink-0" style="color: var(--text-muted);">{{ i + 1 }}</span>
+                  <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background-color: var(--card-border);">
+                    <div class="h-full rounded-full" style="background-color: var(--auto-accent-foreground);"
+                         [style.width.%]="i === 0 ? 100 : (r.count / topReasons![0].count) * 100"></div>
+                  </div>
+                  <span class="text-xs truncate flex-1" style="color: var(--text-primary);">{{ r._id }}</span>
+                  <span class="text-xs font-bold" style="color: var(--text-muted);">{{ r.count }}</span>
+                </div>
+                <p *ngIf="(topReasons ?? []).length === 0" class="text-xs" style="color: var(--text-muted);">No escalation data yet.</p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+
+    </div>
+  </div>
+
+  <!-- Save bar -->
+  <div class="flex items-center gap-3 pt-2">
+    <button (click)="saveSettings()" [disabled]="savingSettings"
+            class="auto-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm">
+      <i class="fas" [ngClass]="savingSettings ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+      {{ savingSettings ? 'Saving…' : 'Save Settings' }}
+    </button>
+  </div>
+
+</app-automation-page-shell>

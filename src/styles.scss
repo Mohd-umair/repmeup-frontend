@@ -156,6 +156,9 @@ nav.overflow-x-auto {
   --scrollbar-track: #F3F4F6;
   --scrollbar-thumb: #D1D5DB;
   --scrollbar-thumb-hover: #9CA3AF;
+
+  /* Automation: neon lime is illegible on light cards — use for accents/text separately */
+  --auto-accent-foreground: #1d4ed8;
 }
 
 html.dark {
@@ -197,6 +200,8 @@ html.dark {
   --scrollbar-track: #1A1D27;
   --scrollbar-thumb: #374151;
   --scrollbar-thumb-hover: #4B5563;
+
+  --auto-accent-foreground: #d8ff00;
 }
 
 /* Custom global styles */
@@ -380,6 +385,55 @@ input[type="checkbox"].peer {
   position: absolute !important;
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+/* ── Automation Hub shared buttons ────────────────────────────────────────── */
+.auto-btn-primary {
+  background-color: #d8ff00;
+  color: #0b0b0b;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 16px rgba(216, 255, 0, 0.45), 0 0 32px rgba(216, 255, 0, 0.2);
+  transition: filter 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.97);
+    box-shadow: 0 0 22px rgba(216, 255, 0, 0.55), 0 0 40px rgba(216, 255, 0, 0.25);
+  }
+
+  &:active:not(:disabled) { filter: brightness(0.9); }
+
+  &:disabled { cursor: not-allowed; opacity: 0.5; box-shadow: none; }
+
+  &:focus-visible { outline: 2px solid #0b0b0b; outline-offset: 2px; }
+}
+
+.dark .auto-btn-primary,
+:host-context(.dark) .auto-btn-primary {
+  box-shadow: 0 0 12px rgba(216, 255, 0, 0.35), 0 0 28px rgba(216, 255, 0, 0.15);
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 0 18px rgba(216, 255, 0, 0.45), 0 0 36px rgba(216, 255, 0, 0.2);
+  }
+}
+
+.auto-btn-secondary {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--surface-tertiary);
+    border-color: var(--border-secondary);
+  }
+
+  &:disabled { cursor: not-allowed; opacity: 0.5; }
 }
 
 /* RepMeUp brand logo — fixed box + fill (stretches to 100px-wide frame) */

@@ -888,6 +888,14 @@
               <i *ngIf="waTemplatesLoading" class="fas fa-spinner fa-spin text-sm leading-none" aria-hidden="true"></i>
               <i *ngIf="!waTemplatesLoading" class="fab fa-whatsapp text-sm leading-none" aria-hidden="true"></i>
             </button>
+            <!-- Send Product button — WhatsApp only -->
+            <button type="button" *ngIf="interaction?.platform === 'whatsapp' && waReplyMode !== 'template'"
+              (click)="openProductPicker()"
+              class="inbox-reply-toolbar-plate__btn"
+              title="Send product from catalog"
+              aria-label="Send WhatsApp product">
+              <i class="fas fa-bag-shopping text-sm leading-none" aria-hidden="true"></i>
+            </button>
           </div>
 
           <!-- Emoji picker (pops above the bar) -->
@@ -961,3 +969,116 @@
   (close)="closeMediaSelector()"
   (select)="onMediaSelect($any($event))">
 </app-media-selector-modal>
+
+<!-- ── WhatsApp Product Picker Modal ─────────────────────────────────────── -->
+<div *ngIf="showProductPickerModal"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background: rgba(0,0,0,0.55);"
+     (click)="closeProductPicker()">
+  <div class="relative w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
+       style="background-color: var(--card-bg); border: 1px solid var(--card-border);"
+       (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 py-4 border-b" style="border-color: var(--card-border);">
+      <div class="flex items-center gap-2">
+        <i class="fab fa-whatsapp text-green-500 text-lg"></i>
+        <h3 class="font-bold text-base" style="color: var(--text-primary);">Send Product</h3>
+      </div>
+      <button (click)="closeProductPicker()" class="w-7 h-7 rounded-full flex items-center justify-center hover:opacity-70"
+              style="background-color: var(--surface-primary);">
+        <i class="fas fa-xmark text-sm" style="color: var(--text-secondary);"></i>
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="px-4 pt-3 pb-2">
+      <div class="relative">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color: var(--text-muted);"></i>
+        <input
+          [(ngModel)]="productPickerSearch"
+          (ngModelChange)="onProductPickerSearch()"
+          type="text"
+          placeholder="Search products…"
+          class="w-full pl-8 pr-3 py-2 rounded-lg border text-sm"
+          style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+      </div>
+    </div>
+
+    <!-- Product list -->
+    <div class="overflow-y-auto flex-1 px-4 pb-2 space-y-1">
+      <div *ngIf="loadingPickerProducts" class="py-8 flex justify-center">
+        <div class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--accent);"></div>
+      </div>
+      <div *ngIf="!loadingPickerProducts && pickerProducts.length === 0"
+           class="py-8 text-center text-sm" style="color: var(--text-secondary);">
+        <i class="fas fa-box-open text-xl mb-2 block" style="color: var(--text-muted);"></i>
+        No products found. Add products in the Catalog first.
+      </div>
+      <div *ngFor="let p of pickerProducts; trackBy: trackByPickerProduct"
+           (click)="selectPickerProduct(p)"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors"
+           [class.ring-2]="selectedPickerProduct?._id === p._id"
+           style="background-color: var(--surface-primary);"
+           [style.ring-color]="selectedPickerProduct?._id === p._id ? 'var(--accent)' : 'transparent'">
+        <!-- Thumbnail -->
+        <div class="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden bg-gray-200 dark:bg-gray-700">
+          <img *ngIf="p.images?.length" [src]="p.images[0]" alt="" class="w-full h-full object-cover"
+               (error)="$event.target.style.display='none'" />
+          <div *ngIf="!p.images?.length" class="w-full h-full flex items-center justify-center">
+            <i class="fas fa-image text-xs" style="color: var(--text-muted);"></i>
+          </div>
+        </div>
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium truncate" style="color: var(--text-primary);">{{ p.name }}</p>
+          <p class="text-xs" style="color: var(--text-secondary);">{{ p.currency }} {{ p.price | number:'1.0-2' }}</p>
+        </div>
+        <!-- WA sync badge -->
+        <span *ngIf="p.whatsapp?.syncStatus === 'synced'"
+              class="flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 font-semibold">
+          <i class="fas fa-check text-[8px] mr-0.5"></i>Synced
+        </span>
+        <span *ngIf="!p.whatsapp?.syncStatus || p.whatsapp?.syncStatus !== 'synced'"
+              class="flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 font-semibold">
+          Not Synced
+        </span>
+      </div>
+    </div>
+
+    <!-- Message body input -->
+    <div *ngIf="selectedPickerProduct" class="px-4 pt-2 pb-3 border-t" style="border-color: var(--card-border);">
+      <label class="block text-xs font-semibold mb-1" style="color: var(--text-secondary);">
+        Message body <span style="color: var(--text-muted);">(optional)</span>
+      </label>
+      <textarea
+        [(ngModel)]="productPickerBodyText"
+        rows="2"
+        placeholder="Hi! Check out this product from our catalog…"
+        class="w-full px-3 py-2 rounded-lg border text-sm resize-none"
+        style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+      </textarea>
+    </div>
+
+    <!-- Error -->
+    <p *ngIf="productPickerError" class="mx-4 mb-2 text-xs text-red-500 flex items-center gap-1">
+      <i class="fas fa-circle-exclamation"></i> {{ productPickerError }}
+    </p>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-end gap-2 px-4 py-3 border-t" style="border-color: var(--card-border);">
+      <button (click)="closeProductPicker()"
+              class="px-4 py-2 rounded-lg text-sm border font-medium"
+              style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-secondary);">
+        Cancel
+      </button>
+      <button (click)="sendProductFromPicker()"
+              [disabled]="!selectedPickerProduct || sendingProduct"
+              class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50"
+              style="background-color: var(--accent); color: #fff;">
+        <i [class]="sendingProduct ? 'fas fa-spinner animate-spin' : 'fab fa-whatsapp'"></i>
+        {{ sendingProduct ? 'Sending…' : 'Send Product' }}
+      </button>
+    </div>
+  </div>
+</div>

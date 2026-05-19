@@ -1,0 +1,77 @@
+:host {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/**
+ * Confidence slider: default lime accent-on-white reads as invisible on the track.
+ * Explicit track + thumb using theme tokens (blue thumb in light, lime in dark).
+ */
+.auto-confidence-range {
+  display: block;
+  width: 100%;
+  height: 1.25rem;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  accent-color: var(--auto-accent-foreground);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.auto-confidence-range:focus {
+  outline: none;
+}
+
+.auto-confidence-range:focus-visible {
+  outline: 2px solid var(--auto-accent-foreground);
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+
+/* Chromium / Safari */
+.auto-confidence-range::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--border-secondary);
+}
+
+.auto-confidence-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: calc((0.5rem - 1.125rem) / 2);
+  border-radius: 50%;
+  background: var(--auto-accent-foreground);
+  border: 2px solid var(--card-bg);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.22);
+}
+
+:host-context(.dark) .auto-confidence-range::-webkit-slider-runnable-track {
+  background: var(--card-border);
+}
+
+/* Firefox */
+.auto-confidence-range::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--border-secondary);
+}
+
+.auto-confidence-range::-moz-range-thumb {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: var(--auto-accent-foreground);
+  border: 2px solid var(--card-bg);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.22);
+}
+
+:host-context(.dark) .auto-confidence-range::-moz-range-track {
+  background: var(--card-border);
+}

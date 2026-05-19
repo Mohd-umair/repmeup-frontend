@@ -32,6 +32,12 @@ export interface AutoReplySettings {
   lastScheduledRun?: Date;
   // Fallback settings — when AI cannot respond
   fallbackSettings?: AutoReplyFallbackSettings;
+  // New Automation Hub fields
+  tone?: 'growth' | 'balanced' | 'safe' | 'custom';
+  /** When tone is custom — injected into AI auto-reply prompts (max 800 chars). */
+  toneCustomText?: string;
+  quietHours?: { enabled: boolean; start: string; end: string; timezone: string };
+  skipNegativeKeywords?: string[];
 }
 
 export interface InboxSettings {
