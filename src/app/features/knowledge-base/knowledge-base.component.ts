@@ -1,5 +1,5 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, HostListener, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { Component, ChangeDetectorRef, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
@@ -16,10 +16,9 @@ export interface KbTemplateField { key: string; value: string; }
 @Component({
   selector: 'app-knowledge-base',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, DecimalPipe, PaginationComponent, SimpleDonutChartComponent, AiChatBubbleIconComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaginationComponent, SimpleDonutChartComponent, AiChatBubbleIconComponent],
   templateUrl: './knowledge-base.component.html',
-  styleUrls: ['./knowledge-base.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./knowledge-base.component.scss']
 })
 export class KnowledgeBaseComponent implements OnInit, OnDestroy {
   // UI State
@@ -427,6 +426,11 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
   }
   get kbAvgTrainingWeight(): number {
     return this.kbAnalytics?.avgTrainingWeight ?? 0;
+  }
+  /** Replaces DecimalPipe in template (keeps standalone `imports` list simple for tooling). */
+  formatKbAvgDisplay(value: number): string {
+    if (value == null || Number.isNaN(value)) return '—';
+    return new Intl.NumberFormat(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
   }
   get kbHighWeightCount(): number {
     return this.kbAnalytics?.highWeightCount ?? 0;

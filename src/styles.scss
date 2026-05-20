@@ -124,6 +124,10 @@ nav.overflow-x-auto {
   --surface-tertiary: #F3F4F6;
   --surface-elevated: #FFFFFF;
 
+  /* Page / panel backgrounds (used by campaigns, catalog, automation shell, etc.) */
+  --bg-primary: var(--surface-secondary);
+  --bg-secondary: var(--surface-elevated);
+
   /* Sidebar & header chrome */
   --chrome-bg: #0B0B0B;
   --chrome-border: #1F2937;
@@ -167,6 +171,9 @@ html.dark {
   --surface-secondary: #1A1D27;
   --surface-tertiary: #252833;
   --surface-elevated: #1E2130;
+
+  --bg-primary: var(--surface-primary);
+  --bg-secondary: var(--surface-secondary);
 
   /* Sidebar & header chrome */
   --chrome-bg: #0B0B0B;

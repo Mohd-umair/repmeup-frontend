@@ -37,7 +37,7 @@ interface MenuItem {
   sidebarParentActive?: boolean;
 }
 
-type SidebarSectionId = 'main' | 'management' | 'settings' | 'automation';
+type SidebarSectionId = 'main' | 'management' | 'settings' | 'automation' | 'campaigns';
 
 interface SidebarSection {
   id: SidebarSectionId;
@@ -384,10 +384,11 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     management?: IMenuItem[];
     settings?: IMenuItem[];
     automation?: IMenuItem[];
+    campaigns?: IMenuItem[];
   } | null): boolean {
     if (!grouped) return true;
     return (
-      !(grouped.main?.length || grouped.management?.length || grouped.settings?.length || grouped.automation?.length)
+      !(grouped.main?.length || grouped.management?.length || grouped.settings?.length || grouped.automation?.length || grouped.campaigns?.length)
     );
   }
 
@@ -412,6 +413,7 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     const nextSections: SidebarSection[] = [
       { id: 'main', label: 'Main', items: mapGroup(grouped.main) },
       { id: 'automation', label: 'Automation', items: mapGroup(grouped.automation) },
+      { id: 'campaigns', label: 'Campaigns', items: mapGroup(grouped.campaigns) },
       { id: 'management', label: 'Management', items: mapGroup(grouped.management) },
       { id: 'settings', label: 'Settings', items: mapGroup(grouped.settings) }
     ];

@@ -1,0 +1,344 @@
+<div class="min-h-screen" style="background-color: var(--bg-primary);">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="sticky top-0 z-20 border-b px-6 py-4 flex flex-wrap items-center justify-between gap-4"
+       style="background-color: var(--bg-secondary); border-color: var(--card-border);">
+    <div>
+      <h1 class="text-xl font-bold flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-chart-bar text-indigo-400"></i>
+        Number Reports
+      </h1>
+      <p class="text-sm mt-0.5" style="color: var(--text-muted);">
+        Message, campaign and template analytics per WhatsApp number
+      </p>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Connection selector -->
+      <div class="relative">
+        <i class="fab fa-whatsapp absolute left-3 top-1/2 -translate-y-1/2 text-green-500 text-sm pointer-events-none"></i>
+        <select [(ngModel)]="selectedConnectionId" (change)="onConnectionChange()"
+                class="pl-8 pr-4 py-2 rounded-lg border text-sm appearance-none"
+                style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);">
+          <option *ngIf="connectionsLoading" value="">Loading numbers…</option>
+          <option *ngFor="let c of connections" [value]="c._id">{{ getConnectionDisplay(c) }}</option>
+          <option *ngIf="!connectionsLoading && connections.length === 0" value="">No WhatsApp numbers</option>
+        </select>
+      </div>
+
+      <!-- Date range -->
+      <select [(ngModel)]="days" (change)="onDaysChange()"
+              class="px-3 py-2 rounded-lg border text-sm"
+              style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);">
+        <option *ngFor="let opt of dayOptions" [value]="opt.value">{{ opt.label }}</option>
+      </select>
+
+      <!-- Refresh -->
+      <button (click)="loadReport()" [disabled]="loading"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-all"
+              style="border-color: var(--card-border); color: var(--text-muted); background-color: var(--card-bg);">
+        <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Body ─────────────────────────────────────────────────────────────── -->
+  <div class="px-6 py-6 space-y-6">
+
+    <!-- No connections -->
+    <div *ngIf="!connectionsLoading && connections.length === 0"
+         class="rounded-xl border p-14 text-center"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <i class="fab fa-whatsapp text-5xl text-green-500 mb-4 block"></i>
+      <p class="text-lg font-bold mb-2" style="color: var(--text-primary);">No WhatsApp numbers connected</p>
+      <p class="text-sm" style="color: var(--text-muted);">
+        Connect a WhatsApp number in Settings → Platforms to see analytics.
+      </p>
+    </div>
+
+    <!-- Loading skeleton -->
+    <ng-container *ngIf="loading">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div *ngFor="let i of [1,2,3,4,5]" class="rounded-xl border h-24 animate-pulse"
+             style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+      </div>
+      <div class="rounded-xl border h-48 animate-pulse"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </ng-container>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="rounded-xl border px-5 py-4 text-sm flex items-center gap-3"
+         style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-muted);">
+      <i class="fas fa-exclamation-circle text-red-400"></i>
+      {{ error }}
+      <button (click)="loadReport()" class="ml-auto text-indigo-400 hover:underline">Retry</button>
+    </div>
+
+    <ng-container *ngIf="report && !loading">
+
+      <!-- ── 1. Overview KPI Cards ─────────────────────────────────────── -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+
+        <!-- Total Messages -->
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-xs font-medium uppercase tracking-wide mb-2" style="color: var(--text-muted);">Total Messages</p>
+          <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ report.overview.totalMessages | number }}</p>
+          <div class="flex items-center gap-3 mt-2 text-xs" style="color: var(--text-muted);">
+            <span><i class="fas fa-arrow-down text-sky-400 mr-1"></i>{{ report.overview.inboundMessages | number }}</span>
+            <span><i class="fas fa-arrow-up text-violet-400 mr-1"></i>{{ report.overview.outboundMessages | number }}</span>
+          </div>
+        </div>
+
+        <!-- Campaigns -->
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-xs font-medium uppercase tracking-wide mb-2" style="color: var(--text-muted);">Campaigns</p>
+          <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ report.overview.totalCampaigns | number }}</p>
+          <p class="text-xs mt-2" style="color: var(--text-muted);">{{ report.overview.campaignRecipients | number }} recipients</p>
+        </div>
+
+        <!-- Delivery Rate -->
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-xs font-medium uppercase tracking-wide mb-2" style="color: var(--text-muted);">Delivery Rate</p>
+          <p class="text-2xl font-bold" [class]="deliveryRateColor(report.overview.deliveryRate)">
+            {{ report.overview.deliveryRate }}%
+          </p>
+          <p class="text-xs mt-2" style="color: var(--text-muted);">
+            {{ report.overview.campaignDelivered | number }} delivered · {{ report.overview.campaignFailed | number }} failed
+          </p>
+        </div>
+
+        <!-- Auto-replied -->
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-xs font-medium uppercase tracking-wide mb-2" style="color: var(--text-muted);">Auto-Replied</p>
+          <p class="text-2xl font-bold" style="color: var(--text-primary);">{{ report.overview.autoReplied | number }}</p>
+          <p class="text-xs mt-2" style="color: var(--text-muted);">AI-handled messages</p>
+        </div>
+
+        <!-- Resolved -->
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-xs font-medium uppercase tracking-wide mb-2" style="color: var(--text-muted);">Resolved</p>
+          <p class="text-2xl font-bold text-emerald-400">{{ report.overview.resolvedConversations | number }}</p>
+          <p class="text-xs mt-2" style="color: var(--text-muted);">conversations closed</p>
+        </div>
+
+      </div>
+
+      <!-- ── 2. Message Volume Chart (bar chart in pure CSS/HTML) ───────── -->
+      <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary);">
+          <i class="fas fa-chart-bar text-indigo-400 mr-2"></i>Message Volume ({{ report.period.days }} days)
+        </h2>
+        <div class="flex items-end gap-0.5 h-36 w-full overflow-hidden">
+          <ng-container *ngFor="let pt of report.volumeTimeSeries; let i = index">
+            <div class="flex flex-col items-center gap-0.5 flex-1 min-w-0 group relative h-full justify-end"
+                 [title]="pt.date + ': ' + pt.inbound + ' in · ' + pt.outbound + ' out'">
+              <!-- Stacked bar: outbound bottom, inbound top -->
+              <div class="w-full rounded-t-sm transition-all"
+                   [style.height.%]="barHeight(pt.outbound)"
+                   style="background-color: #7c3aed; min-height: 1px;"></div>
+              <div class="w-full transition-all"
+                   [style.height.%]="barHeight(pt.inbound)"
+                   style="background-color: #0ea5e9; min-height: 1px;"></div>
+            </div>
+          </ng-container>
+        </div>
+        <!-- X-axis labels -->
+        <div class="flex gap-0.5 mt-1 overflow-hidden">
+          <span *ngFor="let label of volumeLabels"
+                class="flex-1 min-w-0 text-center truncate"
+                style="font-size: 9px; color: var(--text-muted);">{{ label }}</span>
+        </div>
+        <!-- Legend -->
+        <div class="flex items-center gap-5 mt-3 text-xs" style="color: var(--text-muted);">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background:#0ea5e9;"></span>Inbound</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background:#7c3aed;"></span>Outbound</span>
+        </div>
+      </div>
+
+      <!-- ── 3. Middle row: Sentiment + Campaign Status + Conversation Funnel ── -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <!-- Sentiment Breakdown -->
+        <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary);">
+            <i class="fas fa-heart text-pink-400 mr-2"></i>Sentiment
+          </h2>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-xs mb-1" style="color: var(--text-muted);">
+                <span><i class="fas fa-smile text-emerald-400 mr-1"></i>Positive</span>
+                <span>{{ report.sentimentBreakdown.positive | number }} ({{ sentimentPct('positive') }}%)</span>
+              </div>
+              <div class="h-2 rounded-full" style="background: var(--card-border);">
+                <div class="h-2 rounded-full bg-emerald-400 transition-all"
+                     [style.width.%]="sentimentPct('positive')"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1" style="color: var(--text-muted);">
+                <span><i class="fas fa-meh text-gray-400 mr-1"></i>Neutral</span>
+                <span>{{ report.sentimentBreakdown.neutral | number }} ({{ sentimentPct('neutral') }}%)</span>
+              </div>
+              <div class="h-2 rounded-full" style="background: var(--card-border);">
+                <div class="h-2 rounded-full bg-gray-400 transition-all"
+                     [style.width.%]="sentimentPct('neutral')"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1" style="color: var(--text-muted);">
+                <span><i class="fas fa-frown text-red-400 mr-1"></i>Negative</span>
+                <span>{{ report.sentimentBreakdown.negative | number }} ({{ sentimentPct('negative') }}%)</span>
+              </div>
+              <div class="h-2 rounded-full" style="background: var(--card-border);">
+                <div class="h-2 rounded-full bg-red-400 transition-all"
+                     [style.width.%]="sentimentPct('negative')"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campaign Status Breakdown -->
+        <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary);">
+            <i class="fas fa-bullhorn text-violet-400 mr-2"></i>Campaign Statuses
+          </h2>
+          <div class="space-y-2">
+            <ng-container *ngFor="let st of campaignStatuses">
+              <div *ngIf="getCampaignCount(st.key) > 0" class="flex items-center gap-3 text-sm">
+                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" [class]="st.color"></span>
+                <span style="color: var(--text-muted);">{{ st.label }}</span>
+                <span class="ml-auto font-medium" style="color: var(--text-primary);">{{ getCampaignCount(st.key) }}</span>
+              </div>
+            </ng-container>
+            <p *ngIf="!report.overview.totalCampaigns" class="text-sm" style="color: var(--text-muted);">No campaigns in this period</p>
+          </div>
+        </div>
+
+        <!-- Conversation Funnel -->
+        <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <h2 class="text-sm font-semibold mb-4" style="color: var(--text-primary);">
+            <i class="fas fa-funnel-dollar text-sky-400 mr-2"></i>Conversation Funnel
+          </h2>
+          <div class="space-y-3">
+            <div *ngFor="let row of [
+              {label:'Total Inbound', val: report.conversationFunnel.total, color:'bg-sky-500'},
+              {label:'Auto-Replied',  val: report.conversationFunnel.autoReplied,  color:'bg-violet-500'},
+              {label:'Replied',       val: report.conversationFunnel.replied,       color:'bg-indigo-400'},
+              {label:'Resolved',      val: report.conversationFunnel.resolved,      color:'bg-emerald-400'},
+              {label:'Escalated',     val: report.conversationFunnel.escalated,     color:'bg-orange-400'},
+              {label:'Unreplied',     val: report.conversationFunnel.unreplied,     color:'bg-red-400'}
+            ]">
+              <div class="flex justify-between text-xs mb-1" style="color: var(--text-muted);">
+                <span>{{ row.label }}</span>
+                <span>{{ row.val | number }} ({{ funnelPct(row.val) }}%)</span>
+              </div>
+              <div class="h-1.5 rounded-full" style="background: var(--card-border);">
+                <div class="h-1.5 rounded-full transition-all" [class]="row.color"
+                     [style.width.%]="funnelPct(row.val)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── 4. Template Performance ─────────────────────────────────────── -->
+      <div class="rounded-xl border overflow-hidden" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="px-5 py-4 border-b" style="border-color: var(--card-border);">
+          <h2 class="text-sm font-semibold flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fas fa-file-alt text-amber-400"></i>Template Performance
+          </h2>
+        </div>
+        <div *ngIf="report.templatePerformance.length === 0"
+             class="px-5 py-8 text-sm text-center" style="color: var(--text-muted);">
+          No campaign data for this period.
+        </div>
+        <div *ngIf="report.templatePerformance.length > 0" class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b text-left" style="border-color: var(--card-border);">
+                <th class="px-5 py-3 font-medium" style="color: var(--text-muted);">Template</th>
+                <th class="px-4 py-3 font-medium text-right" style="color: var(--text-muted);">Campaigns</th>
+                <th class="px-4 py-3 font-medium text-right" style="color: var(--text-muted);">Recipients</th>
+                <th class="px-4 py-3 font-medium text-right" style="color: var(--text-muted);">Delivered</th>
+                <th class="px-4 py-3 font-medium text-right" style="color: var(--text-muted);">Failed</th>
+                <th class="px-4 py-3 font-medium text-right" style="color: var(--text-muted);">Rate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of report.templatePerformance"
+                  class="border-b last:border-0 hover:bg-white/5 transition-colors"
+                  style="border-color: var(--card-border);">
+                <td class="px-5 py-3">
+                  <p class="font-medium" style="color: var(--text-primary);">{{ t.name }}</p>
+                  <p class="text-xs mt-0.5" style="color: var(--text-muted);">{{ t.language }}</p>
+                </td>
+                <td class="px-4 py-3 text-right" style="color: var(--text-muted);">{{ t.campaigns }}</td>
+                <td class="px-4 py-3 text-right" style="color: var(--text-muted);">{{ t.totalRecipients | number }}</td>
+                <td class="px-4 py-3 text-right text-emerald-400">{{ t.delivered | number }}</td>
+                <td class="px-4 py-3 text-right text-red-400">{{ t.failed | number }}</td>
+                <td class="px-4 py-3 text-right font-semibold" [class]="deliveryRateColor(t.deliveryRate)">
+                  {{ t.deliveryRate }}%
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 5. Recent Campaigns ──────────────────────────────────────────── -->
+      <div class="rounded-xl border overflow-hidden" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="px-5 py-4 border-b" style="border-color: var(--card-border);">
+          <h2 class="text-sm font-semibold flex items-center gap-2" style="color: var(--text-primary);">
+            <i class="fab fa-whatsapp text-green-500"></i>Recent Campaigns
+          </h2>
+        </div>
+        <div *ngIf="report.recentCampaigns.length === 0"
+             class="px-5 py-8 text-sm text-center" style="color: var(--text-muted);">
+          No campaigns found for this number.
+        </div>
+        <div *ngIf="report.recentCampaigns.length > 0" class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b text-left" style="border-color: var(--card-border);">
+                <th class="px-5 py-3 font-medium" style="color: var(--text-muted);">Campaign</th>
+                <th class="px-4 py-3 font-medium" style="color: var(--text-muted);">Status</th>
+                <th class="px-4 py-3 font-medium text-right" style="color: var(--text-muted);">Recipients</th>
+                <th class="px-4 py-3 font-medium text-right" style="color: var(--text-muted);">Sent</th>
+                <th class="px-4 py-3 font-medium text-right" style="color: var(--text-muted);">Failed</th>
+                <th class="px-4 py-3 font-medium" style="color: var(--text-muted);">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of report.recentCampaigns"
+                  class="border-b last:border-0 hover:bg-white/5 transition-colors"
+                  style="border-color: var(--card-border);">
+                <td class="px-5 py-3">
+                  <p class="font-medium" style="color: var(--text-primary);">{{ c.name }}</p>
+                  <p *ngIf="c.templateSnapshot?.name" class="text-xs mt-0.5" style="color: var(--text-muted);">
+                    {{ c.templateSnapshot!.name }}
+                  </p>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                        [class]="campaignStatusBadge(c.status)">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right" style="color: var(--text-muted);">{{ c.stats.total | number }}</td>
+                <td class="px-4 py-3 text-right text-emerald-400">{{ c.stats.sent | number }}</td>
+                <td class="px-4 py-3 text-right text-red-400">{{ c.stats.failed | number }}</td>
+                <td class="px-4 py-3 text-xs" style="color: var(--text-muted);">
+                  {{ c.createdAt | date:'dd MMM yyyy' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </ng-container>
+  </div>
+</div>

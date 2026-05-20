@@ -1,0 +1,239 @@
+<div class="min-h-screen" style="background-color: var(--bg-primary);">
+
+  <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+  <div class="sticky top-0 z-20 border-b px-6 py-4 flex items-center justify-between gap-4"
+       style="background-color: var(--bg-secondary); border-color: var(--card-border);">
+    <div>
+      <h1 class="text-xl font-bold flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fab fa-whatsapp text-green-500 text-2xl"></i>
+        WhatsApp Campaigns
+      </h1>
+      <p class="text-sm mt-0.5" style="color: var(--text-muted);">
+        Send broadcast messages to your audience using approved templates
+      </p>
+    </div>
+    <button (click)="openCreate()"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            style="background-color: #25d366; color: #000;">
+      <i class="fas fa-plus"></i> New Campaign
+    </button>
+  </div>
+
+  <!-- ── Filters ──────────────────────────────────────────────────────────── -->
+  <div class="px-6 py-4 flex flex-wrap items-center gap-3 border-b"
+       style="border-color: var(--card-border);">
+    <select [(ngModel)]="filterStatus" (change)="onFilterChange()"
+            class="px-3 py-2 rounded-lg border text-sm"
+            style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);">
+      <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+    </select>
+    <span class="text-sm ml-auto" style="color: var(--text-muted);">
+      {{ total }} campaign{{ total !== 1 ? 's' : '' }}
+    </span>
+  </div>
+
+  <!-- ── Content ──────────────────────────────────────────────────────────── -->
+  <div class="px-6 py-6">
+
+    <!-- Loading skeletons -->
+    <div *ngIf="loading" class="space-y-3">
+      <div *ngFor="let i of [1,2,3,4]"
+           class="rounded-xl border h-20 animate-pulse"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && campaigns.length === 0"
+         class="rounded-xl border p-14 text-center"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <i class="fab fa-whatsapp text-5xl text-green-500 mb-4"></i>
+      <p class="text-lg font-bold mb-2" style="color: var(--text-primary);">No campaigns yet</p>
+      <p class="text-sm mb-6" style="color: var(--text-muted);">
+        Create your first campaign to start reaching your audience on WhatsApp.
+      </p>
+      <button (click)="openCreate()"
+              class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold"
+              style="background-color: #25d366; color: #000;">
+        <i class="fas fa-plus"></i> Create Campaign
+      </button>
+    </div>
+
+    <!-- Campaigns table -->
+    <div *ngIf="!loading && campaigns.length > 0"
+         class="rounded-xl border overflow-hidden"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b" style="border-color: var(--card-border);">
+              <th class="text-left px-5 py-3.5 font-semibold" style="color: var(--text-muted);">Campaign</th>
+              <th class="text-left px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Status</th>
+              <th class="text-left px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Template</th>
+              <th class="text-right px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Recipients</th>
+              <th class="text-right px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Delivered</th>
+              <th class="text-left px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Scheduled</th>
+              <th class="text-right px-4 py-3.5 font-semibold pr-5" style="color: var(--text-muted);">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of campaigns"
+                class="border-b last:border-0 transition-colors hover:bg-white/5"
+                style="border-color: var(--card-border);">
+
+              <!-- Name + phone -->
+              <td class="px-5 py-4">
+                <p class="font-semibold" style="color: var(--text-primary);">{{ c.name }}</p>
+                <p *ngIf="getPhoneDisplay(c)" class="text-xs mt-0.5" style="color: var(--text-muted);">
+                  <i class="fas fa-phone text-green-500 mr-1"></i>{{ getPhoneDisplay(c) }}
+                </p>
+              </td>
+
+              <!-- Status badge -->
+              <td class="px-4 py-4">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold capitalize"
+                      [ngClass]="statusBadgeClass(c.status)">
+                  <span *ngIf="c.status === 'running'" class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block"></span>
+                  {{ c.status }}
+                </span>
+              </td>
+
+              <!-- Template -->
+              <td class="px-4 py-4" style="color: var(--text-secondary);">
+                {{ getTemplateName(c) }}
+              </td>
+
+              <!-- Recipients -->
+              <td class="px-4 py-4 text-right" style="color: var(--text-primary);">
+                {{ c.stats.total | number }}
+              </td>
+
+              <!-- Delivered -->
+              <td class="px-4 py-4 text-right">
+                <div *ngIf="c.stats.total > 0">
+                  <span class="font-semibold" style="color: var(--text-primary);">{{ deliveryPct(c) }}%</span>
+                  <div class="mt-1 h-1.5 rounded-full overflow-hidden w-20 ml-auto"
+                       style="background-color: var(--surface-primary);">
+                    <div class="h-full rounded-full bg-green-500 transition-all"
+                         [style.width.%]="deliveryPct(c)"></div>
+                  </div>
+                  <p class="text-xs mt-0.5" style="color: var(--text-muted);">
+                    {{ c.stats.sent | number }} / {{ c.stats.total | number }}
+                  </p>
+                </div>
+                <span *ngIf="!c.stats.total" style="color: var(--text-muted);">—</span>
+              </td>
+
+              <!-- Scheduled at -->
+              <td class="px-4 py-4 text-sm" style="color: var(--text-muted);">
+                <span *ngIf="c.scheduledAt">{{ c.scheduledAt | date:'MMM d, y h:mm a' }}</span>
+                <span *ngIf="!c.scheduledAt">—</span>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-4 py-4 pr-5 text-right">
+                <div *ngIf="confirmDeleteId !== c._id" class="flex items-center justify-end gap-2">
+                  <!-- Edit (draft only) -->
+                  <button *ngIf="c.status === 'draft'"
+                          (click)="openEdit(c)"
+                          title="Edit campaign"
+                          class="p-2 rounded-lg transition-colors hover:bg-white/10"
+                          style="color: var(--text-muted);">
+                    <i class="fas fa-pen-to-square"></i>
+                  </button>
+
+                  <!-- Pause -->
+                  <button *ngIf="c.status === 'running'"
+                          (click)="pauseCampaign(c._id)"
+                          [disabled]="actionLoading.has(c._id)"
+                          title="Pause campaign"
+                          class="p-2 rounded-lg transition-colors hover:bg-yellow-500/10"
+                          style="color: var(--text-muted);">
+                    <i class="fas fa-pause" *ngIf="!actionLoading.has(c._id)"></i>
+                    <i class="fas fa-spinner fa-spin" *ngIf="actionLoading.has(c._id)"></i>
+                  </button>
+
+                  <!-- Resume -->
+                  <button *ngIf="c.status === 'paused'"
+                          (click)="resumeCampaign(c._id)"
+                          [disabled]="actionLoading.has(c._id)"
+                          title="Resume campaign"
+                          class="p-2 rounded-lg transition-colors hover:bg-green-500/10"
+                          style="color: var(--text-muted);">
+                    <i class="fas fa-play" *ngIf="!actionLoading.has(c._id)"></i>
+                    <i class="fas fa-spinner fa-spin" *ngIf="actionLoading.has(c._id)"></i>
+                  </button>
+
+                  <!-- Cancel (running/scheduled/paused) -->
+                  <button *ngIf="['running','scheduled','paused'].includes(c.status)"
+                          (click)="cancelCampaign(c._id)"
+                          [disabled]="actionLoading.has(c._id)"
+                          title="Cancel campaign"
+                          class="p-2 rounded-lg transition-colors hover:bg-red-500/10"
+                          style="color: var(--text-muted);">
+                    <i class="fas fa-ban" *ngIf="!actionLoading.has(c._id)"></i>
+                    <i class="fas fa-spinner fa-spin" *ngIf="actionLoading.has(c._id)"></i>
+                  </button>
+
+                  <!-- Delete (terminal / draft) -->
+                  <button *ngIf="['draft','completed','cancelled','failed'].includes(c.status)"
+                          (click)="confirmDelete(c._id)"
+                          title="Delete campaign"
+                          class="p-2 rounded-lg transition-colors hover:bg-red-500/10"
+                          style="color: var(--text-muted);">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+
+                <!-- Delete confirm inline -->
+                <div *ngIf="confirmDeleteId === c._id"
+                     class="flex items-center justify-end gap-2">
+                  <span class="text-xs" style="color: var(--text-muted);">Delete?</span>
+                  <button (click)="doDelete(c._id)"
+                          [disabled]="actionLoading.has(c._id)"
+                          class="px-3 py-1 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors">
+                    <i class="fas fa-spinner fa-spin" *ngIf="actionLoading.has(c._id)"></i>
+                    <span *ngIf="!actionLoading.has(c._id)">Yes</span>
+                  </button>
+                  <button (click)="cancelDelete()"
+                          class="px-3 py-1 rounded-lg text-xs font-semibold border transition-colors"
+                          style="border-color: var(--card-border); color: var(--text-muted);">
+                    No
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="total > pageSize"
+           class="flex items-center justify-between px-5 py-3 border-t"
+           style="border-color: var(--card-border);">
+        <span class="text-sm" style="color: var(--text-muted);">
+          Page {{ page }} of {{ totalPages() }}
+        </span>
+        <div class="flex gap-2">
+          <button (click)="prevPage()" [disabled]="page === 1"
+                  class="px-3 py-1.5 rounded-lg border text-sm transition-colors disabled:opacity-40"
+                  style="border-color: var(--card-border); color: var(--text-muted);">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button (click)="nextPage()" [disabled]="page >= totalPages()"
+                  class="px-3 py-1.5 rounded-lg border text-sm transition-colors disabled:opacity-40"
+                  style="border-color: var(--card-border); color: var(--text-muted);">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Campaign Editor Slide-Over ──────────────────────────────────────────── -->
+<app-campaign-editor
+  *ngIf="showEditor"
+  [campaign]="editingCampaign"
+  (closed)="onEditorClose()"
+  (saved)="onEditorSaved()">
+</app-campaign-editor>

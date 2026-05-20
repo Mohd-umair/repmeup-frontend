@@ -17,7 +17,7 @@ export interface IMenuItem {
     enabled: boolean;
     source: 'notifications' | 'inbox' | 'custom' | 'none';
   };
-  group: 'main' | 'management' | 'settings' | 'automation';
+  group: 'main' | 'management' | 'settings' | 'automation' | 'campaigns';
   parentId?: string;
   /** Nested items when API returns a tree under `grouped` */
   children?: IMenuItem[];
@@ -35,6 +35,7 @@ export interface IMenuResponse {
     management: IMenuItem[];
     settings: IMenuItem[];
     automation?: IMenuItem[];
+    campaigns?: IMenuItem[];
   };
 }
 
@@ -53,7 +54,8 @@ export class MenuService {
     main: [],
     management: [],
     settings: [],
-    automation: []
+    automation: [],
+    campaigns: []
   });
   public groupedMenus$ = this.groupedMenusSubject.asObservable();
 
@@ -76,7 +78,7 @@ export class MenuService {
             /** Use API tree — do not rebuild grouped from flat `menus` (would duplicate child rows). */
             let grouped = response.data.grouped;
             if (!grouped || typeof grouped !== 'object') {
-              grouped = { main: [], management: [], settings: [], automation: [] };
+              grouped = { main: [], management: [], settings: [], automation: [], campaigns: [] };
             }
 
             const normalized = this.normalizeAllMenuRoutes(menus, grouped);
@@ -97,7 +99,8 @@ export class MenuService {
               main: filterGroupedTop(grouped.main),
               management: filterGroupedTop(grouped.management),
               settings: filterGroupedTop(grouped.settings),
-              automation: filterGroupedTop(grouped.automation)
+              automation: filterGroupedTop(grouped.automation),
+              campaigns: filterGroupedTop(grouped.campaigns)
             };
 
             this.menusSubject.next(menus);
@@ -235,7 +238,8 @@ export class MenuService {
         main: normList(grouped.main),
         management: normList(grouped.management),
         settings: normList(grouped.settings),
-        automation: normList(grouped.automation)
+        automation: normList(grouped.automation),
+        campaigns: normList(grouped.campaigns)
       }
     };
   }

@@ -7,7 +7,6 @@ import {
   ElementRef,
   ViewChild,
   SimpleChanges,
-  ChangeDetectionStrategy,
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -29,7 +28,6 @@ export interface DonutSegment {
   selector: 'app-simple-donut-chart',
   standalone: true,
   imports: [CommonModule],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div>
       <!-- Chart canvas -->

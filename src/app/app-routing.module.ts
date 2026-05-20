@@ -65,6 +65,8 @@ import { WhatsAppFlowsComponent } from './features/automation/whatsapp-flows/wha
 import { ReviewCollectionComponent } from './features/automation/reviews/review-collection.component';
 import { RetargetingComponent } from './features/automation/retargeting/retargeting.component';
 import { EscalationComponent } from './features/automation/escalation/escalation.component';
+import { CampaignsComponent } from './features/campaigns/campaigns.component';
+import { ReportsComponent } from './features/reports/reports.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -164,6 +166,8 @@ const routes: Routes = [
       { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'contacts', component: ContactsContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
       { path: 'whatsapp-templates', component: WhatsAppTemplatesComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'campaigns', component: CampaignsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'reports', component: ReportsComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.read'] } },
       {
         path: 'voice-ivr',
         component: VoiceIvrComponent,
