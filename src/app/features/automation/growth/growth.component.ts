@@ -52,6 +52,8 @@ export class GrowthComponent implements OnInit, OnDestroy {
 
   // ── Follow Invite ──────────────────────────────────────────────────────────
   fiSettings: ICommentFollowInviteSettings | null = null;
+  /** Single textarea → split to API `title` / `subtitle` on save (was wrongly bound to non-existent `dmTemplate`). */
+  fiDmDraft = '';
   loadingFi = false;
   savingFi = false;
   fiError = '';
@@ -92,7 +94,12 @@ export class GrowthComponent implements OnInit, OnDestroy {
     this.loadingFi = true;
     this.catalogService.getCommentFollowInviteSettings()
       .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingFi = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: r => { this.fiSettings = r.data ?? null; } });
+      .subscribe({
+        next: r => {
+          this.fiSettings = r.data ?? null;
+          this.fiDmDraft = this.followInviteDraftFromApi(this.fiSettings);
+        }
+      });
   }
 
   loadSf(): void {
@@ -119,9 +126,63 @@ export class GrowthComponent implements OnInit, OnDestroy {
   saveFi(): void {
     if (!this.fiSettings) return;
     this.savingFi = true; this.fiError = '';
-    this.catalogService.updateCommentFollowInviteSettings(this.fiSettings)
+    const { title, subtitle } = this.parseFollowInviteDraft(this.fiDmDraft);
+    const payload: ICommentFollowInviteSettings = {
+      ...this.fiSettings,
+      title,
+      subtitle
+    };
+    this.catalogService.updateCommentFollowInviteSettings(payload)
       .pipe(takeUntil(this.destroy$), finalize(() => { this.savingFi = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: () => this.notify.success('Saved', 'Follow-Invite settings saved.'), error: err => { this.fiError = err?.error?.error || 'Save failed'; } });
+      .subscribe({
+        next: res => {
+          this.fiSettings = res.data ?? this.fiSettings;
+          this.fiDmDraft = this.followInviteDraftFromApi(this.fiSettings);
+          this.notify.success('Saved', 'Follow-Invite settings saved.');
+        },
+        error: err => { this.fiError = err?.error?.error || 'Save failed'; }
+      });
+  }
+
+  /** Build one textarea from stored title + subtitle (Instagram generic template). */
+  private followInviteDraftFromApi(s: ICommentFollowInviteSettings | null): string {
+    if (!s) return '';
+    const t = (s.title || '').trim();
+    const u = (s.subtitle || '').trim();
+    if (!t && !u) return '';
+    return u ? `${t}\n${u}` : t;
+  }
+
+  /**
+   * First non-empty line → title (max 80). Remaining lines joined → subtitle (max 80).
+   * Single long line → split at 80 / 80 for Meta limits.
+   */
+  private parseFollowInviteDraft(draft: string): { title: string; subtitle: string } {
+    const MAX = 80;
+    const fallbackTitle = 'Thanks for your comment!';
+    const fallbackSubtitle = 'Tap below to follow us for more updates.';
+    const text = (draft || '').trim();
+    if (!text) {
+      return { title: fallbackTitle, subtitle: fallbackSubtitle };
+    }
+    const lines = text.split(/\n/).map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length === 0) {
+      return { title: fallbackTitle, subtitle: fallbackSubtitle };
+    }
+    if (lines.length === 1) {
+      const one = lines[0];
+      if (one.length <= MAX) {
+        return { title: one.slice(0, MAX), subtitle: '' };
+      }
+      return {
+        title: one.slice(0, MAX),
+        subtitle: one.slice(MAX, MAX * 2).trim()
+      };
+    }
+    return {
+      title: lines[0].slice(0, MAX),
+      subtitle: lines.slice(1).join(' ').slice(0, MAX)
+    };
   }
 
   saveSf(): void {

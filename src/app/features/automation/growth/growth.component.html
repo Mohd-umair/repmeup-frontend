@@ -118,10 +118,13 @@
         <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
           <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Follow Invite DM</p>
           <p class="text-xs mb-2" style="color: var(--text-muted);">Sent via DM after a user comments. Supports <code class="px-1 rounded text-[10px]" style="background-color: var(--surface-primary);">&#123;&#123;username&#125;&#125;</code></p>
-          <textarea [(ngModel)]="fiSettings.dmTemplate" rows="3"
+          <textarea [(ngModel)]="fiDmDraft" name="fiDmDraft" rows="4"
                     class="w-full px-3 py-2 rounded-lg border text-sm"
                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
-                    placeholder="Hi {{username}}! Follow us for exclusive deals 🎉"></textarea>
+                    placeholder="Line 1: headline in the DM card (max 80 chars).&#10;Line 2: optional second line (max 80 chars).&#10;Example: Hi {{username}}! Follow us for deals 🎉"></textarea>
+          <p class="text-[10px] mt-1" style="color: var(--text-muted);">
+            Instagram uses two short lines (80 chars each). First line = title, following lines = subtitle. Variables: <code class="px-1 rounded" style="background-color: var(--surface-primary);">&#123;&#123;username&#125;&#125;</code>
+          </p>
         </div>
         <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
           <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Max DMs/day</p>
