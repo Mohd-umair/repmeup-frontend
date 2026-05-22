@@ -132,6 +132,15 @@
               <!-- Actions -->
               <td class="px-4 py-4 pr-5 text-right">
                 <div *ngIf="confirmDeleteId !== c._id" class="flex items-center justify-end gap-2">
+                  <!-- Recipient report -->
+                  <button *ngIf="c.stats?.total > 0"
+                          (click)="openRecipientsReport(c)"
+                          title="View recipient report"
+                          class="p-2 rounded-lg transition-colors hover:bg-indigo-500/10"
+                          style="color: var(--text-muted);">
+                    <i class="fas fa-address-book"></i>
+                  </button>
+
                   <!-- Edit (draft only) -->
                   <button *ngIf="c.status === 'draft'"
                           (click)="openEdit(c)"
@@ -237,3 +246,10 @@
   (closed)="onEditorClose()"
   (saved)="onEditorSaved()">
 </app-campaign-editor>
+
+<!-- ── Recipients Report Slide-Over ──────────────────────────────────────── -->
+<app-campaign-recipients-report
+  *ngIf="reportCampaign"
+  [campaign]="reportCampaign"
+  (closed)="closeRecipientsReport()">
+</app-campaign-recipients-report>

@@ -1,0 +1,258 @@
+<!-- Container — uses theme vars so it inherits light/dark colours -->
+<div *ngIf="slots" class="space-y-4">
+
+  <!-- ── Unsupported / blocked templates ──────────────────────────────── -->
+  <div *ngIf="slots.isUnsupported || slots.isAuth"
+       class="rounded-xl border p-4 flex gap-3"
+       style="border-color: #ef4444; background-color: rgba(239,68,68,0.05);">
+    <i class="fas fa-exclamation-triangle text-red-500 flex-shrink-0 mt-0.5"></i>
+    <div class="flex-1">
+      <p class="text-sm font-semibold" style="color: var(--text-primary);">
+        {{ slots.isAuth ? 'Authentication / OTP templates cannot be used for broadcasts.' : 'Template not supported' }}
+      </p>
+      <p *ngIf="slots.isUnsupported" class="text-xs mt-1" style="color: var(--text-muted);">
+        {{ slots.isUnsupported.reason }}
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Header section ───────────────────────────────────────────────── -->
+  <div *ngIf="slots.header.format && slots.header.format !== 'TEXT'"
+       class="rounded-xl border p-4 space-y-3"
+       style="border-color: var(--card-border); background-color: var(--card-bg);">
+    <p class="text-sm font-semibold flex items-center gap-2" style="color: var(--text-primary);">
+      <i class="fas fa-image" style="color: #d8ff00;"></i>
+      Header
+      <span class="text-xs font-normal" style="color: var(--text-muted);">
+        ({{ slots.header.format }})
+      </span>
+    </p>
+
+    <!-- IMAGE / VIDEO / DOCUMENT -->
+    <ng-container *ngIf="slots.header.requiresMedia">
+      <div *ngIf="!headerMedia">
+        <app-file-upload-zone
+          [files]="selectedMediaFiles"
+          [accept]="headerMediaAcceptAttr"
+          [galleryMediaType]="headerMediaGalleryType"
+          [maxFiles]="1"
+          [multiple]="false"
+          [openMediaGalleryOnClick]="false"
+          [dropzoneHint]="'Upload a ' + headerMediaLabel() + ' to use for every recipient in this campaign'"
+          (filesChange)="onMediaFilesChange($event)">
+        </app-file-upload-zone>
+
+        <div class="flex items-center justify-between mt-3">
+          <p class="text-xs" style="color: var(--text-muted);">
+            <i *ngIf="uploadingMedia" class="fas fa-spinner fa-spin mr-1.5"></i>
+            <span *ngIf="!uploadingMedia">Or pick from your media library</span>
+            <span *ngIf="uploadingMedia">Uploading…</span>
+          </p>
+          <button type="button"
+                  (click)="showUploadModal = true"
+                  class="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all hover:bg-white/5"
+                  style="border-color: var(--card-border); color: var(--text-primary);">
+            <i class="fas fa-photo-film mr-1.5"></i> Browse library
+          </button>
+        </div>
+      </div>
+
+      <!-- Selected media preview -->
+      <div *ngIf="headerMedia"
+           class="flex items-center gap-3 p-3 rounded-lg border"
+           style="border-color: var(--card-border); background-color: var(--input-bg);">
+        <ng-container [ngSwitch]="headerMedia.kind">
+          <img *ngSwitchCase="'IMAGE'"
+               [src]="headerMedia.url" alt="header preview"
+               class="w-14 h-14 rounded-md object-cover flex-shrink-0" />
+          <div *ngSwitchCase="'VIDEO'"
+               class="w-14 h-14 rounded-md flex items-center justify-center flex-shrink-0"
+               style="background-color: var(--surface-primary);">
+            <i class="fas fa-video text-xl" style="color: var(--text-muted);"></i>
+          </div>
+          <div *ngSwitchDefault
+               class="w-14 h-14 rounded-md flex items-center justify-center flex-shrink-0"
+               style="background-color: var(--surface-primary);">
+            <i class="fas fa-file-alt text-xl" style="color: var(--text-muted);"></i>
+          </div>
+        </ng-container>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate" style="color: var(--text-primary);">
+            {{ headerMedia.filename || headerMedia.kind }}
+          </p>
+          <p class="text-xs truncate" style="color: var(--text-muted);">
+            {{ headerMedia.url }}
+          </p>
+        </div>
+        <button type="button"
+                (click)="clearHeaderMedia()"
+                class="px-2 py-1 rounded-md transition-colors hover:bg-red-500/10"
+                style="color: var(--text-muted);">
+          <i class="fas fa-trash text-xs"></i>
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- LOCATION -->
+    <ng-container *ngIf="slots.header.format === 'LOCATION'">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">Latitude *</label>
+          <input type="number" step="any"
+                 [(ngModel)]="headerLocation.latitude"
+                 (ngModelChange)="onLocationChange()"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">Longitude *</label>
+          <input type="number" step="any"
+                 [(ngModel)]="headerLocation.longitude"
+                 (ngModelChange)="onLocationChange()"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">Name</label>
+        <input type="text"
+               [(ngModel)]="headerLocation.name"
+               (ngModelChange)="onLocationChange()"
+               placeholder="e.g. Acme HQ"
+               class="w-full px-3 py-2 rounded-lg border text-sm"
+               style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">Address</label>
+        <input type="text"
+               [(ngModel)]="headerLocation.address"
+               (ngModelChange)="onLocationChange()"
+               placeholder="Street, city, country"
+               class="w-full px-3 py-2 rounded-lg border text-sm"
+               style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- ── Header TEXT variables ────────────────────────────────────────── -->
+  <div *ngIf="slots.header.format === 'TEXT' && slots.header.textSlots.length > 0"
+       class="rounded-xl border p-4 space-y-3"
+       style="border-color: var(--card-border); background-color: var(--card-bg);">
+    <p class="text-sm font-semibold flex items-center gap-2" style="color: var(--text-primary);">
+      <i class="fas fa-heading" style="color: #d8ff00;"></i>
+      Header variables
+    </p>
+    <div *ngFor="let slot of slots.header.textSlots" class="space-y-1">
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-semibold" style="color: var(--text-muted);">{{ slot.label }}</label>
+        <button *ngIf="allowCsvToggle" type="button"
+                (click)="toggleFromCsv(slot)"
+                class="text-xs px-2 py-0.5 rounded-md font-semibold transition-colors"
+                [style.background-color]="isFromCsv(slot) ? '#d8ff00' : 'transparent'"
+                [style.color]="isFromCsv(slot) ? '#000' : 'var(--text-muted)'"
+                [style.border]="isFromCsv(slot) ? 'none' : '1px solid var(--card-border)'">
+          <i class="fas fa-file-csv mr-1"></i>
+          {{ isFromCsv(slot) ? 'From CSV' : 'Fixed value' }}
+        </button>
+      </div>
+      <input *ngIf="!isFromCsv(slot)"
+             type="text"
+             [ngModel]="defaultParams[slot.key] || ''"
+             (ngModelChange)="setDefault(slot, $event)"
+             [placeholder]="slot.exampleValue ? 'e.g. ' + slot.exampleValue : 'Value for ' + slot.label"
+             class="w-full px-3 py-2 rounded-lg border text-sm"
+             style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
+      <div *ngIf="isFromCsv(slot)"
+           class="text-xs px-3 py-2 rounded-lg border italic"
+           style="border-color: var(--card-border); color: var(--text-muted); background-color: var(--input-bg);">
+        Value will be taken from CSV — map a column in the Audience step.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Body variables ───────────────────────────────────────────────── -->
+  <div *ngIf="slots.body.slots.length > 0"
+       class="rounded-xl border p-4 space-y-3"
+       style="border-color: var(--card-border); background-color: var(--card-bg);">
+    <p class="text-sm font-semibold flex items-center gap-2" style="color: var(--text-primary);">
+      <i class="fas fa-edit" style="color: #d8ff00;"></i>
+      Body variables
+      <span class="text-xs font-normal" style="color: var(--text-muted);">
+        ({{ slots.body.format === 'NAMED' ? 'named' : 'positional' }})
+      </span>
+    </p>
+
+    <div *ngFor="let slot of slots.body.slots" class="space-y-1">
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-semibold" style="color: var(--text-muted);">{{ slot.label }}</label>
+        <button *ngIf="allowCsvToggle" type="button"
+                (click)="toggleFromCsv(slot)"
+                class="text-xs px-2 py-0.5 rounded-md font-semibold transition-colors"
+                [style.background-color]="isFromCsv(slot) ? '#d8ff00' : 'transparent'"
+                [style.color]="isFromCsv(slot) ? '#000' : 'var(--text-muted)'"
+                [style.border]="isFromCsv(slot) ? 'none' : '1px solid var(--card-border)'">
+          <i class="fas fa-file-csv mr-1"></i>
+          {{ isFromCsv(slot) ? 'From CSV' : 'Fixed value' }}
+        </button>
+      </div>
+      <input *ngIf="!isFromCsv(slot)"
+             type="text"
+             [ngModel]="defaultParams[slot.key] || ''"
+             (ngModelChange)="setDefault(slot, $event)"
+             [placeholder]="slot.exampleValue ? 'e.g. ' + slot.exampleValue : 'Value for ' + slot.label"
+             class="w-full px-3 py-2 rounded-lg border text-sm"
+             style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
+      <div *ngIf="isFromCsv(slot)"
+           class="text-xs px-3 py-2 rounded-lg border italic"
+           style="border-color: var(--card-border); color: var(--text-muted); background-color: var(--input-bg);">
+        Value will be taken from CSV — map a column in the Audience step.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── URL Button variables ─────────────────────────────────────────── -->
+  <div *ngIf="slots.buttons.length > 0"
+       class="rounded-xl border p-4 space-y-3"
+       style="border-color: var(--card-border); background-color: var(--card-bg);">
+    <p class="text-sm font-semibold flex items-center gap-2" style="color: var(--text-primary);">
+      <i class="fas fa-link" style="color: #d8ff00;"></i>
+      Dynamic buttons
+    </p>
+    <div *ngFor="let button of slots.buttons" class="space-y-1">
+      <p class="text-xs font-semibold" style="color: var(--text-muted);">
+        Button "{{ button.text || button.sub_type }}"
+        <span *ngIf="button.urlVars.length > 1" class="font-normal">— {{ button.urlVars.length }} variables</span>
+      </p>
+      <div *ngFor="let v of button.urlVars">
+        <input type="text"
+               [ngModel]="getUrlButtonValue(button.index)"
+               (ngModelChange)="setUrlButtonValue(button.index, $event)"
+               [placeholder]="v.exampleValue ? 'e.g. ' + v.exampleValue : v.label"
+               class="w-full px-3 py-2 rounded-lg border text-sm"
+               style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── No variables ─────────────────────────────────────────────────── -->
+  <div *ngIf="!hasAnyTextSlots() && !slots.header.requiresMedia && slots.header.format !== 'LOCATION'"
+       class="rounded-xl border p-3 flex items-center gap-2 text-xs"
+       style="border-color: var(--card-border); background-color: var(--card-bg); color: var(--text-muted);">
+    <i class="fas fa-check-circle text-green-500"></i>
+    This template has no dynamic fields — it's ready to send.
+  </div>
+</div>
+
+<!-- ── Media library full-screen modal ───────────────────────────────────── -->
+<div *ngIf="showUploadModal"
+     class="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+     (click)="showUploadModal = false">
+  <div (click)="$event.stopPropagation()"
+       class="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
+       style="background-color: var(--bg-secondary);">
+    <app-media-upload-modal
+      (close)="showUploadModal = false"
+      (uploadSuccess)="onMediaUploaded($event)">
+    </app-media-upload-modal>
+  </div>
+</div>

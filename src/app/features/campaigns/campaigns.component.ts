@@ -6,11 +6,12 @@ import { takeUntil, finalize } from 'rxjs/operators';
 import { CampaignService, ICampaign, CampaignStatus } from '../../core/services/campaign.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { CampaignEditorComponent } from './campaign-editor';
+import { CampaignRecipientsReportComponent } from './campaign-recipients-report/campaign-recipients-report.component';
 
 @Component({
   selector: 'app-campaigns',
   standalone: true,
-  imports: [CommonModule, FormsModule, CampaignEditorComponent],
+  imports: [CommonModule, FormsModule, CampaignEditorComponent, CampaignRecipientsReportComponent],
   templateUrl: './campaigns.component.html'
 })
 export class CampaignsComponent implements OnInit, OnDestroy {
@@ -31,6 +32,9 @@ export class CampaignsComponent implements OnInit, OnDestroy {
 
   // Delete confirm
   confirmDeleteId: string | null = null;
+
+  // Recipients report panel
+  reportCampaign: ICampaign | null = null;
 
   readonly statusOptions: { value: string; label: string }[] = [
     { value: '', label: 'All statuses' },
@@ -155,6 +159,18 @@ export class CampaignsComponent implements OnInit, OnDestroy {
         next: () => { this.notify.success('Campaign cancelled'); this.load(); },
         error: err => this.notify.error(err?.error?.error || 'Failed to cancel')
       });
+  }
+
+  openRecipientsReport(campaign: ICampaign): void {
+    if (!campaign.stats?.total) {
+      this.notify.warning('This campaign has no recipients yet');
+      return;
+    }
+    this.reportCampaign = campaign;
+  }
+
+  closeRecipientsReport(): void {
+    this.reportCampaign = null;
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────────

@@ -95,11 +95,11 @@
       </div>
     </ng-container>
 
-    <!-- ══ STEP 2: Template ══════════════════════════════════════════════ -->
+    <!-- ══ STEP 2: Template + Params ════════════════════════════════════ -->
     <ng-container *ngIf="step === 2">
       <p class="text-sm" style="color: var(--text-muted);">
-        Select an <strong style="color: var(--text-primary);">APPROVED</strong> WhatsApp template to send.
-        Only approved templates can be used for broadcasts.
+        Select an <strong style="color: var(--text-primary);">APPROVED</strong> WhatsApp template, then fill in
+        any media, location, or variable values it needs.
       </p>
 
       <div *ngIf="templatesLoading" class="space-y-3">
@@ -140,22 +140,24 @@
         </div>
       </div>
 
-      <!-- Variable fill-in if template has placeholders -->
-      <div *ngIf="selectedTemplate && variableFields.length > 0"
-           class="rounded-xl border p-4"
-           style="border-color: var(--card-border); background-color: var(--card-bg);">
-        <p class="text-sm font-semibold mb-3" style="color: var(--text-primary);">
-          <i class="fas fa-edit mr-1.5" style="color: #d8ff00;"></i>
-          Fill template variables
-        </p>
-        <div *ngFor="let v of variableFields" class="mb-3">
-          <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">{{ v.label }}</label>
-          <input [(ngModel)]="v.value"
-                 [placeholder]="'Value for ' + v.label"
-                 class="w-full px-3 py-2 rounded-lg border text-sm"
-                 style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
-        </div>
+      <!-- Loading slot descriptor -->
+      <div *ngIf="selectedTemplate && templateSlotsLoading"
+           class="rounded-xl border p-4 text-sm flex items-center gap-2"
+           style="border-color: var(--card-border); background-color: var(--card-bg); color: var(--text-muted);">
+        <i class="fas fa-spinner fa-spin"></i>
+        Loading template fields…
       </div>
+
+      <!-- Template parameter form (driven by backend slot descriptor) -->
+      <app-template-param-form *ngIf="selectedTemplate && templateSlots && !templateSlotsLoading"
+        [slots]="templateSlots"
+        [initialDefaultParams]="paramFormState.defaultParams"
+        [initialHeaderMedia]="paramFormState.headerMedia"
+        [initialHeaderLocation]="paramFormState.headerLocation"
+        [initialUrlButtonParams]="paramFormState.urlButtonParams || []"
+        [initialVarsFromCsv]="paramFormState.varsFromCsv"
+        (change)="onParamFormChange($event)">
+      </app-template-param-form>
     </ng-container>
 
     <!-- ══ STEP 3: Audience ══════════════════════════════════════════════ -->
@@ -191,24 +193,52 @@
           Enter one number per line. Optional: add a name after a comma (e.g. <code>919876543210,Jane</code>).
           Up to 50,000 at a time. Country code required, no + symbol.
         </p>
+        <div *ngIf="paramFormState.varsFromCsv.length > 0"
+             class="mt-3 rounded-lg border p-3 flex items-start gap-2 text-xs"
+             style="border-color: #f59e0b; background-color: rgba(245,158,11,0.07);">
+          <i class="fas fa-info-circle text-yellow-500 mt-0.5"></i>
+          <span style="color: var(--text-muted);">
+            Some template variables are marked "from CSV". Switch to <strong>Upload CSV</strong> to map them per-recipient,
+            or set fixed values for those variables in Step 2.
+          </span>
+        </div>
       </div>
 
       <!-- Upload tab -->
-      <div *ngIf="audienceTab === 'upload'">
-        <label class="block text-sm font-semibold mb-1.5" style="color: var(--text-primary);">Upload CSV File</label>
-        <div class="rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition-colors hover:border-green-500"
-             style="border-color: var(--card-border);"
-             (click)="fileInput.click()">
-          <i class="fas fa-file-upload text-3xl mb-3 text-green-500"></i>
-          <p class="font-semibold text-sm mb-1" style="color: var(--text-primary);">
-            {{ uploadedFileName || 'Click to select a CSV file' }}
-          </p>
-          <p class="text-xs" style="color: var(--text-muted);">First column: phone number. Optional second column: name.</p>
-          <input #fileInput type="file" accept=".csv,.txt" class="hidden" (change)="onFileSelected($event)" />
+      <div *ngIf="audienceTab === 'upload'" class="space-y-4">
+        <label class="block text-sm font-semibold mb-1.5" style="color: var(--text-primary);">CSV file</label>
+        <app-file-upload-zone
+          [files]="uploadedCsvFiles"
+          accept=".csv,.txt"
+          [galleryMediaType]="'file'"
+          [maxFiles]="1"
+          [multiple]="false"
+          [openMediaGalleryOnClick]="false"
+          [dropzoneHint]="'First column should contain phone numbers. Headers improve column-mapping accuracy.'"
+          (filesChange)="onUploadedCsvFilesChange($event)">
+        </app-file-upload-zone>
+
+        <div *ngIf="audiencePreviewLoading"
+             class="rounded-lg border p-3 text-sm flex items-center gap-2"
+             style="border-color: var(--card-border); background-color: var(--card-bg); color: var(--text-muted);">
+          <i class="fas fa-spinner fa-spin"></i> Reading CSV…
         </div>
-        <div *ngIf="rawPhoneText" class="mt-3 rounded-xl border p-3 text-xs font-mono max-h-32 overflow-y-auto"
+
+        <!-- CSV column mapping appears only when the template has CSV-bound vars -->
+        <app-csv-column-mapper *ngIf="shouldShowCsvMapper"
+          [preview]="csvPreview"
+          [slots]="templateSlots"
+          [varsFromCsv]="paramFormState.varsFromCsv"
+          [defaultParams]="paramFormState.defaultParams"
+          [initialMapping]="campaign?.variableMapping || null"
+          (mappingChange)="onMappingChange($event)">
+        </app-csv-column-mapper>
+
+        <!-- Simple preview (no mapping needed) -->
+        <div *ngIf="csvPreview && !shouldShowCsvMapper"
+             class="rounded-xl border p-3 text-xs font-mono max-h-40 overflow-y-auto"
              style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-muted);">
-          {{ rawPhoneText.slice(0, 500) }}{{ rawPhoneText.length > 500 ? '...' : '' }}
+          {{ rawPhoneText.slice(0, 800) }}{{ rawPhoneText.length > 800 ? '...' : '' }}
         </div>
       </div>
 
@@ -220,7 +250,7 @@
                 style="background-color: #d8ff00; color: #000;">
           <i class="fas fa-spinner fa-spin mr-1.5" *ngIf="audienceLoading"></i>
           <i class="fas fa-upload mr-1.5" *ngIf="!audienceLoading"></i>
-          {{ audienceLoading ? 'Processing…' : 'Upload Numbers' }}
+          {{ audienceLoading ? 'Processing…' : 'Add Recipients' }}
         </button>
         <button *ngIf="recipientCount > 0"
                 (click)="clearAudience()"
@@ -274,7 +304,6 @@
       <p class="text-sm" style="color: var(--text-muted);">Choose when to send the campaign.</p>
 
       <div class="space-y-3">
-        <!-- Send now option -->
         <button (click)="sendNow = true"
                 class="w-full flex items-center gap-4 px-5 py-4 rounded-xl border text-left transition-all"
                 [style.border-color]="sendNow ? '#25d366' : 'var(--card-border)'"
@@ -290,7 +319,6 @@
           <i *ngIf="sendNow" class="fas fa-check-circle text-green-500 ml-auto text-lg"></i>
         </button>
 
-        <!-- Schedule option -->
         <button (click)="sendNow = false"
                 class="w-full flex items-center gap-4 px-5 py-4 rounded-xl border text-left transition-all"
                 [style.border-color]="!sendNow ? '#d8ff00' : 'var(--card-border)'"
@@ -331,16 +359,83 @@
       <!-- Summary card -->
       <div class="rounded-xl border divide-y"
            style="border-color: var(--card-border); background-color: var(--card-bg);">
-        <div *ngFor="let item of [
-          { icon: 'fas fa-tag', label: 'Campaign Name', value: campaignName },
-          { icon: 'fas fa-file-alt', label: 'Template', value: selectedTemplate?.name || '—' },
-          { icon: 'fas fa-users', label: 'Recipients', value: (recipientCount | number) },
-          { icon: 'fas fa-clock', label: 'Send time', value: sendNow ? 'Immediately' : (scheduledDate + ' ' + scheduledTime) }
-        ]" class="flex items-center gap-4 px-4 py-3"
-            style="border-color: var(--card-border);">
-          <i [class]="item.icon" class="w-5 text-center flex-shrink-0" style="color: var(--text-muted);"></i>
-          <span class="text-sm flex-1" style="color: var(--text-muted);">{{ item.label }}</span>
-          <span class="text-sm font-semibold" style="color: var(--text-primary);">{{ item.value }}</span>
+        <div class="flex items-center gap-4 px-4 py-3"
+             style="border-color: var(--card-border);">
+          <i class="fas fa-tag w-5 text-center flex-shrink-0" style="color: var(--text-muted);"></i>
+          <span class="text-sm flex-1" style="color: var(--text-muted);">Campaign Name</span>
+          <span class="text-sm font-semibold" style="color: var(--text-primary);">{{ campaignName }}</span>
+        </div>
+        <div class="flex items-center gap-4 px-4 py-3"
+             style="border-color: var(--card-border);">
+          <i class="fas fa-file-alt w-5 text-center flex-shrink-0" style="color: var(--text-muted);"></i>
+          <span class="text-sm flex-1" style="color: var(--text-muted);">Template</span>
+          <span class="text-sm font-semibold" style="color: var(--text-primary);">{{ selectedTemplate?.name || '—' }}</span>
+        </div>
+        <div class="flex items-center gap-4 px-4 py-3"
+             style="border-color: var(--card-border);">
+          <i class="fas fa-users w-5 text-center flex-shrink-0" style="color: var(--text-muted);"></i>
+          <span class="text-sm flex-1" style="color: var(--text-muted);">Recipients</span>
+          <span class="text-sm font-semibold" style="color: var(--text-primary);">{{ recipientCount | number }}</span>
+        </div>
+        <div class="flex items-center gap-4 px-4 py-3"
+             style="border-color: var(--card-border);">
+          <i class="fas fa-clock w-5 text-center flex-shrink-0" style="color: var(--text-muted);"></i>
+          <span class="text-sm flex-1" style="color: var(--text-muted);">Send time</span>
+          <span class="text-sm font-semibold" style="color: var(--text-primary);">
+            {{ sendNow ? 'Immediately' : (scheduledDate + ' ' + scheduledTime) }}
+          </span>
+        </div>
+
+        <!-- Header media row -->
+        <div *ngIf="paramFormState.headerMedia?.url"
+             class="flex items-center gap-4 px-4 py-3"
+             style="border-color: var(--card-border);">
+          <i class="fas fa-image w-5 text-center flex-shrink-0" style="color: var(--text-muted);"></i>
+          <span class="text-sm flex-1" style="color: var(--text-muted);">Header media</span>
+          <span class="flex items-center gap-2 text-sm font-semibold" style="color: var(--text-primary);">
+            <img *ngIf="paramFormState.headerMedia?.kind === 'IMAGE'"
+                 [src]="paramFormState.headerMedia?.url"
+                 class="w-8 h-8 rounded object-cover" alt="" />
+            <span class="truncate max-w-[180px]">
+              {{ paramFormState.headerMedia?.filename || paramFormState.headerMedia?.kind }}
+            </span>
+          </span>
+        </div>
+
+        <!-- Header location row -->
+        <div *ngIf="templateSlots?.header?.format === 'LOCATION' && paramFormState.headerLocation"
+             class="flex items-center gap-4 px-4 py-3"
+             style="border-color: var(--card-border);">
+          <i class="fas fa-map-marker-alt w-5 text-center flex-shrink-0" style="color: var(--text-muted);"></i>
+          <span class="text-sm flex-1" style="color: var(--text-muted);">Location</span>
+          <span class="text-sm font-semibold text-right" style="color: var(--text-primary);">
+            {{ paramFormState.headerLocation?.name || (paramFormState.headerLocation?.latitude + ', ' + paramFormState.headerLocation?.longitude) }}
+          </span>
+        </div>
+
+        <!-- URL button params -->
+        <div *ngIf="(paramFormState.urlButtonParams?.length || 0) > 0"
+             class="flex items-start gap-4 px-4 py-3"
+             style="border-color: var(--card-border);">
+          <i class="fas fa-link w-5 text-center flex-shrink-0 mt-0.5" style="color: var(--text-muted);"></i>
+          <span class="text-sm flex-1" style="color: var(--text-muted);">Button values</span>
+          <span class="text-sm font-semibold text-right space-y-0.5"
+                style="color: var(--text-primary);">
+            <span *ngFor="let p of paramFormState.urlButtonParams" class="block">
+              Button #{{ p.index + 1 }}: {{ p.value || '(empty)' }}
+            </span>
+          </span>
+        </div>
+
+        <!-- Mapping summary -->
+        <div *ngIf="paramFormState.varsFromCsv.length > 0"
+             class="flex items-start gap-4 px-4 py-3"
+             style="border-color: var(--card-border);">
+          <i class="fas fa-file-csv w-5 text-center flex-shrink-0 mt-0.5" style="color: var(--text-muted);"></i>
+          <span class="text-sm flex-1" style="color: var(--text-muted);">CSV-driven variables</span>
+          <span class="text-sm font-semibold text-right" style="color: var(--text-primary);">
+            {{ paramFormState.varsFromCsv.length }} variable(s)
+          </span>
         </div>
       </div>
 
@@ -370,7 +465,7 @@
           <i class="fas fa-exclamation-circle mr-1"></i> {{ testError }}
         </p>
         <p class="text-xs mt-2" style="color: var(--text-muted);">
-          Sends the template to your own number so you can preview how it looks.
+          Sends the template to your own number using the Step 2 default values.
         </p>
       </div>
 
@@ -397,7 +492,6 @@
       {{ step === 1 ? 'Cancel' : 'Back' }}
     </button>
 
-    <!-- Step 1 → 2 -->
     <button *ngIf="step === 1"
             (click)="proceedStep1()"
             [disabled]="saving || !canProceedStep1()"
@@ -407,7 +501,6 @@
       Next: Template <i class="fas fa-chevron-right ml-1.5" *ngIf="!saving"></i>
     </button>
 
-    <!-- Step 2 → 3 -->
     <button *ngIf="step === 2"
             (click)="proceedStep2()"
             [disabled]="saving || !canProceedStep2()"
@@ -417,7 +510,6 @@
       Next: Audience <i class="fas fa-chevron-right ml-1.5" *ngIf="!saving"></i>
     </button>
 
-    <!-- Step 3 → 4 -->
     <button *ngIf="step === 3"
             type="button"
             (click)="goToStep(4)"
@@ -427,7 +519,6 @@
       Next: Schedule <i class="fas fa-chevron-right ml-1.5"></i>
     </button>
 
-    <!-- Step 4 → 5 -->
     <button *ngIf="step === 4"
             type="button"
             (click)="goToStep(5)"
@@ -436,7 +527,6 @@
       Review <i class="fas fa-chevron-right ml-1.5"></i>
     </button>
 
-    <!-- Step 5: Launch -->
     <button *ngIf="step === 5"
             (click)="launch()"
             [disabled]="launching"

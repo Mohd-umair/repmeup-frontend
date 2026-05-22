@@ -1,0 +1,235 @@
+<!-- Backdrop -->
+<div class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" (click)="close()"></div>
+
+<!-- Panel — full right-side slide-over, same page shell as campaigns list -->
+<div class="fixed inset-y-0 right-0 z-50 w-full max-w-4xl flex flex-col"
+     style="background-color: var(--bg-primary);"
+     (click)="$event.stopPropagation()">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="sticky top-0 z-20 border-b px-6 py-4 flex items-center justify-between gap-4"
+       style="background-color: var(--bg-secondary); border-color: var(--card-border);">
+    <div class="min-w-0">
+      <h1 class="text-xl font-bold flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-address-book text-indigo-400"></i>
+        Recipient Report
+      </h1>
+      <p *ngIf="campaign" class="text-sm mt-0.5 truncate" style="color: var(--text-muted);">
+        {{ campaign.name }}
+      </p>
+    </div>
+    <button type="button" (click)="close()"
+            class="p-2 rounded-lg transition-colors hover:bg-white/10"
+            style="color: var(--text-muted);"
+            aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ── Summary KPI strip ──────────────────────────────────────────────── -->
+  <div *ngIf="summary" class="px-6 py-3 border-b flex flex-wrap items-center gap-3"
+       style="border-color: var(--card-border);">
+    <div *ngFor="let chip of summaryChips"
+         class="flex items-center gap-1.5 text-xs font-medium"
+         style="color: var(--text-muted);">
+      <span [class]="chip.color + ' font-bold text-sm'">{{ summaryCount(chip.key) | number }}</span>
+      {{ chip.label }}
+      <span *ngIf="chip !== summaryChips[summaryChips.length - 1]"
+            class="ml-1.5 opacity-20">|</span>
+    </div>
+  </div>
+
+  <!-- ── Filters ────────────────────────────────────────────────────────── -->
+  <div class="px-6 py-4 flex flex-wrap items-center gap-3 border-b"
+       style="border-color: var(--card-border);">
+
+    <!-- Status filter tabs -->
+    <select [(ngModel)]="filterStatus" (change)="onFilterChange(filterStatus)"
+            class="px-3 py-2 rounded-lg border text-sm"
+            style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);">
+      <option *ngFor="let f of statusFilters" [value]="f.value">{{ f.label }}</option>
+    </select>
+
+    <!-- Phone search -->
+    <div class="relative">
+      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs pointer-events-none"
+         style="color: var(--text-muted);"></i>
+      <input type="text"
+             [(ngModel)]="searchPhone"
+             (keyup.enter)="onSearch()"
+             placeholder="Search phone…"
+             class="pl-8 pr-3 py-2 rounded-lg border text-sm w-44"
+             style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);" />
+    </div>
+    <button *ngIf="searchPhone" type="button" (click)="clearSearch()"
+            class="px-3 py-2 rounded-lg border text-sm transition-colors"
+            style="border-color: var(--card-border); color: var(--text-muted);">
+      Clear
+    </button>
+
+    <span class="text-sm ml-auto" style="color: var(--text-muted);">
+      {{ total | number }} recipient{{ total !== 1 ? 's' : '' }}
+    </span>
+  </div>
+
+  <!-- ── Content ────────────────────────────────────────────────────────── -->
+  <div class="px-6 py-6 flex-1 overflow-y-auto min-h-0">
+
+    <!-- Loading skeletons -->
+    <div *ngIf="loading" class="space-y-3">
+      <div *ngFor="let i of [1,2,3,4,5]"
+           class="rounded-xl border h-14 animate-pulse"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading"
+         class="rounded-xl border px-5 py-4 flex items-center gap-3 text-sm"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <i class="fas fa-exclamation-circle text-red-400"></i>
+      <span style="color: var(--text-muted);">{{ error }}</span>
+      <button type="button" (click)="load()"
+              class="ml-auto text-sm font-medium"
+              style="color: var(--text-secondary);">Retry</button>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && !error && recipients.length === 0"
+         class="rounded-xl border p-14 text-center"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <i class="fas fa-inbox text-5xl mb-4 block" style="color: var(--text-muted); opacity: 0.3;"></i>
+      <p class="text-lg font-bold mb-1" style="color: var(--text-primary);">No recipients match</p>
+      <p class="text-sm" style="color: var(--text-muted);">Try a different status filter or clear the search.</p>
+    </div>
+
+    <!-- Recipients table -->
+    <div *ngIf="!loading && !error && recipients.length > 0"
+         class="rounded-xl border overflow-hidden"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b" style="border-color: var(--card-border);">
+              <th class="text-left px-5 py-3.5 font-semibold" style="color: var(--text-muted);">Phone</th>
+              <th class="text-left px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Name</th>
+              <th class="text-left px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Delivery</th>
+              <th class="text-left px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Sent at</th>
+              <th class="text-left px-4 py-3.5 font-semibold" style="color: var(--text-muted);">Last update</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of recipients"
+                class="border-b last:border-0 transition-colors hover:bg-white/5"
+                style="border-color: var(--card-border);">
+
+              <!-- Phone -->
+              <td class="px-5 py-4">
+                <p class="font-semibold font-mono" style="color: var(--text-primary);">+{{ r.phone }}</p>
+              </td>
+
+              <!-- Name -->
+              <td class="px-4 py-4" style="color: var(--text-secondary);">
+                {{ r.recipientName || '—' }}
+              </td>
+
+              <!-- Delivery status badge + WhatsApp ticks -->
+              <td class="px-4 py-4">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                      [ngClass]="statusBadgeClass(r.reportStatus)">
+
+                  <!-- Pending -->
+                  <ng-container *ngIf="r.reportStatus === 'pending'">
+                    <i class="fas fa-clock"></i>Pending
+                  </ng-container>
+
+                  <!-- Sent — single tick -->
+                  <ng-container *ngIf="r.reportStatus === 'sent'">
+                    <i class="fas fa-check"></i>Sent
+                  </ng-container>
+
+                  <!-- Delivered — double tick -->
+                  <ng-container *ngIf="r.reportStatus === 'delivered'">
+                    <span class="inline-flex -space-x-1">
+                      <i class="fas fa-check text-[10px]"></i>
+                      <i class="fas fa-check text-[10px]"></i>
+                    </span>
+                    Delivered
+                  </ng-container>
+
+                  <!-- Read — double blue tick -->
+                  <ng-container *ngIf="r.reportStatus === 'read'">
+                    <span class="inline-flex -space-x-1">
+                      <i class="fas fa-check text-[10px]"></i>
+                      <i class="fas fa-check text-[10px]"></i>
+                    </span>
+                    Read
+                  </ng-container>
+
+                  <!-- Replied -->
+                  <ng-container *ngIf="r.reportStatus === 'replied'">
+                    <i class="fas fa-reply"></i>Replied
+                  </ng-container>
+
+                  <!-- Failed -->
+                  <ng-container *ngIf="r.reportStatus === 'failed'">
+                    <i class="fas fa-times-circle"></i>Failed
+                  </ng-container>
+
+                </span>
+
+                <!-- Error detail for failed -->
+                <p *ngIf="errorDetail(r)"
+                   class="text-xs mt-1 max-w-[200px] truncate"
+                   style="color: var(--text-muted);"
+                   [title]="errorDetail(r)">
+                  {{ errorDetail(r) }}
+                </p>
+              </td>
+
+              <!-- Sent at -->
+              <td class="px-4 py-4 text-sm" style="color: var(--text-muted);">
+                <span *ngIf="r.sentAt">{{ r.sentAt | date:'MMM d, y h:mm a' }}</span>
+                <span *ngIf="!r.sentAt">—</span>
+              </td>
+
+              <!-- Last update (reply or delivery status change) -->
+              <td class="px-4 py-4 text-sm" style="color: var(--text-muted);">
+                <span *ngIf="r.repliedAt">
+                  {{ r.repliedAt | date:'MMM d, y h:mm a' }}
+                  <span class="text-xs text-emerald-400 ml-1">(replied)</span>
+                </span>
+                <span *ngIf="!r.repliedAt && r.deliveryStatusAt">
+                  {{ r.deliveryStatusAt | date:'MMM d, y h:mm a' }}
+                </span>
+                <span *ngIf="!r.repliedAt && !r.deliveryStatusAt">—</span>
+              </td>
+
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="total > pageSize"
+           class="flex items-center justify-between px-5 py-3 border-t"
+           style="border-color: var(--card-border);">
+        <span class="text-sm" style="color: var(--text-muted);">
+          Page {{ page }} of {{ totalPages() }}
+        </span>
+        <div class="flex gap-2">
+          <button type="button" (click)="prevPage()" [disabled]="page === 1 || loading"
+                  class="px-3 py-1.5 rounded-lg border text-sm transition-colors disabled:opacity-40"
+                  style="border-color: var(--card-border); color: var(--text-muted);">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button type="button" (click)="nextPage()" [disabled]="page >= totalPages() || loading"
+                  class="px-3 py-1.5 rounded-lg border text-sm transition-colors disabled:opacity-40"
+                  style="border-color: var(--card-border); color: var(--text-muted);">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,138 @@
+<div *ngIf="preview" class="space-y-4">
+
+  <!-- ── Summary strip ───────────────────────────────────────────────── -->
+  <div class="rounded-xl border p-3 flex items-center gap-3 text-sm"
+       style="border-color: var(--card-border); background-color: var(--card-bg);">
+    <i class="fas fa-file-csv text-2xl" style="color: #d8ff00;"></i>
+    <div class="flex-1">
+      <p class="font-semibold" style="color: var(--text-primary);">
+        Detected {{ csvHeaders.length }} column(s), {{ preview.rowCount | number }} row(s)
+      </p>
+      <p class="text-xs" style="color: var(--text-muted);">
+        {{ preview.hasHeader ? 'Headers used from first row' : 'No headers — synthesized column names' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Required: phone & optional name ─────────────────────────────── -->
+  <div class="rounded-xl border p-4 space-y-3"
+       style="border-color: var(--card-border); background-color: var(--card-bg);">
+    <p class="text-sm font-semibold" style="color: var(--text-primary);">
+      <i class="fas fa-mobile-alt mr-1.5" style="color: #d8ff00;"></i>
+      Contact columns
+    </p>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">
+          Phone column <span class="text-red-500">*</span>
+        </label>
+        <select [ngModel]="phoneColumn"
+                (ngModelChange)="setPhoneColumn($event)"
+                class="w-full px-3 py-2 rounded-lg border text-sm"
+                style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);">
+          <option value="">— Select —</option>
+          <option *ngFor="let h of csvHeaders" [value]="h">{{ h }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">
+          Name column (optional)
+        </label>
+        <select [ngModel]="nameColumn"
+                (ngModelChange)="setNameColumn($event)"
+                class="w-full px-3 py-2 rounded-lg border text-sm"
+                style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);">
+          <option value="">— None —</option>
+          <option *ngFor="let h of csvHeaders" [value]="h">{{ h }}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Slot mapping (only for vars marked "from CSV") ──────────────── -->
+  <div *ngIf="csvSlots.length > 0"
+       class="rounded-xl border p-4 space-y-3"
+       style="border-color: var(--card-border); background-color: var(--card-bg);">
+    <p class="text-sm font-semibold flex items-center gap-2" style="color: var(--text-primary);">
+      <i class="fas fa-arrows-alt-h" style="color: #d8ff00;"></i>
+      Template variables → CSV columns
+    </p>
+    <p class="text-xs" style="color: var(--text-muted);">
+      Each template variable below will be filled from the chosen CSV column on a per-recipient basis.
+    </p>
+
+    <div *ngFor="let slot of csvSlots" class="grid grid-cols-[1fr_auto_2fr] gap-3 items-center">
+      <div class="text-sm" style="color: var(--text-primary);">
+        <strong>{{ slot.label }}</strong>
+        <span *ngIf="slot.name" class="block text-xs" style="color: var(--text-muted);">
+          {{ slot.name }}
+        </span>
+      </div>
+      <i class="fas fa-arrow-right" style="color: var(--text-muted);"></i>
+      <select [ngModel]="slotColumns[slot.key] || ''"
+              (ngModelChange)="setSlotColumn(slot.key, $event)"
+              class="w-full px-3 py-2 rounded-lg border text-sm"
+              style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);">
+        <option value="">— Select column —</option>
+        <option *ngFor="let h of csvHeaders" [value]="h">{{ h }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ── Live preview of first sample rows ───────────────────────────── -->
+  <div *ngIf="sampleRows.length > 0"
+       class="rounded-xl border overflow-hidden"
+       style="border-color: var(--card-border); background-color: var(--card-bg);">
+    <div class="px-4 py-2 border-b text-sm font-semibold flex items-center gap-2"
+         style="border-color: var(--card-border); color: var(--text-primary);">
+      <i class="fas fa-eye" style="color: var(--text-muted);"></i>
+      Sample preview ({{ sampleRows.length }} of {{ preview.rowCount | number }})
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-xs">
+        <thead style="background-color: var(--surface-primary);">
+          <tr>
+            <th class="px-3 py-2 text-left font-semibold" style="color: var(--text-muted);">#</th>
+            <th *ngFor="let h of csvHeaders"
+                class="px-3 py-2 text-left font-semibold whitespace-nowrap"
+                style="color: var(--text-muted);">
+              {{ h }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of sampleRows; let i = index"
+              class="border-t"
+              style="border-color: var(--card-border);">
+            <td class="px-3 py-2" style="color: var(--text-muted);">{{ i + 1 }}</td>
+            <td *ngFor="let h of csvHeaders; let ci = index"
+                class="px-3 py-2 whitespace-nowrap"
+                style="color: var(--text-primary);">
+              {{ row[ci] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Per-row substitution preview -->
+    <div *ngIf="allSlots.length > 0" class="px-4 py-3 border-t space-y-2"
+         style="border-color: var(--card-border); background-color: var(--input-bg);">
+      <p class="text-xs font-semibold" style="color: var(--text-muted);">After substitution:</p>
+      <div *ngFor="let row of sampleRows; let i = index"
+           class="text-xs" style="color: var(--text-primary);">
+        <span class="font-semibold mr-2">Row {{ i + 1 }}:</span>
+        <span>{{ previewRowSummary(row) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Validity hint ───────────────────────────────────────────────── -->
+  <div *ngIf="!isValid"
+       class="text-xs rounded-lg px-3 py-2 flex items-center gap-2"
+       style="background-color: rgba(239,68,68,0.1); color: #ef4444;">
+    <i class="fas fa-exclamation-triangle"></i>
+    <span>Select a phone column and a column for every template variable above.</span>
+  </div>
+</div>

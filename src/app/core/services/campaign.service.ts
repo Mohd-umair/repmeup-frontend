@@ -30,6 +30,33 @@ export interface ICampaignConnection {
   };
 }
 
+export type CampaignHeaderMediaKind = 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+
+export interface ICampaignHeaderMedia {
+  kind: CampaignHeaderMediaKind;
+  url: string;
+  filename?: string;
+  mediaLibraryId?: string;
+}
+
+export interface ICampaignHeaderLocation {
+  latitude: number;
+  longitude: number;
+  name?: string;
+  address?: string;
+}
+
+export interface ICampaignUrlButtonParam {
+  index: number;
+  value: string;
+}
+
+export interface ICampaignVariableMapping {
+  phoneColumn?: string;
+  nameColumn?: string;
+  slots?: Record<string, string>;
+}
+
 export interface ICampaign {
   _id: string;
   organization: string;
@@ -40,7 +67,13 @@ export interface ICampaign {
     name: string;
     languageCode: string;
     components: unknown[];
+    definition?: unknown;
+    parameterFormat?: 'POSITIONAL' | 'NAMED';
   };
+  headerMedia?: ICampaignHeaderMedia;
+  headerLocation?: ICampaignHeaderLocation;
+  urlButtonParams?: ICampaignUrlButtonParam[];
+  variableMapping?: ICampaignVariableMapping;
   status: CampaignStatus;
   scheduledAt?: string | null;
   startedAt?: string;
@@ -51,15 +84,59 @@ export interface ICampaign {
   updatedAt: string;
 }
 
+export type CampaignRecipientSendStatus = 'pending' | 'sent' | 'failed';
+
+export type CampaignRecipientDeliveryStatus =
+  | 'pending'
+  | 'sent'
+  | 'delivered'
+  | 'read'
+  | 'failed';
+
+/** Unified status for campaign recipient report UI */
+export type CampaignRecipientReportStatus =
+  | 'pending'
+  | 'sent'
+  | 'delivered'
+  | 'read'
+  | 'failed'
+  | 'replied';
+
 export interface ICampaignRecipient {
   _id: string;
   campaign: string;
   phone: string;
   recipientName?: string;
-  status: 'pending' | 'sent' | 'failed';
+  status: CampaignRecipientSendStatus;
+  deliveryStatus?: CampaignRecipientDeliveryStatus;
+  deliveryStatusAt?: string;
+  deliveryError?: string;
   messageId?: string;
   errorMessage?: string;
   sentAt?: string;
+  repliedAt?: string;
+  reportStatus?: CampaignRecipientReportStatus;
+  createdAt?: string;
+}
+
+export interface ICampaignRecipientSummary {
+  total: number;
+  pending: number;
+  failed: number;
+  sent: number;
+  delivered: number;
+  read: number;
+  replied: number;
+}
+
+export interface ICampaignRecipientsReportResponse {
+  success: boolean;
+  campaign?: { _id: string; name: string; stats: ICampaignStats };
+  summary?: ICampaignRecipientSummary;
+  recipients: ICampaignRecipient[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface ICampaignListResponse {
@@ -117,6 +194,76 @@ export interface ICampaignTestMessageResponse {
   error?: string;
 }
 
+// ── Template slot descriptor (mirrors backend whatsappTemplateSlots.js) ──────
+
+export type TemplateHeaderFormat = 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'LOCATION' | null;
+
+export interface ITemplateSlot {
+  key: string;
+  name?: string;
+  position?: number;
+  label: string;
+  exampleValue?: string;
+}
+
+export interface ITemplateButtonSlot {
+  index: number;
+  sub_type: 'url' | 'copy_code';
+  urlVars: ITemplateSlot[];
+  text?: string;
+}
+
+export interface ITemplateSlots {
+  header: {
+    format: TemplateHeaderFormat;
+    requiresMedia: boolean;
+    textSlots: ITemplateSlot[];
+  };
+  body: {
+    format: 'POSITIONAL' | 'NAMED';
+    slots: ITemplateSlot[];
+  };
+  buttons: ITemplateButtonSlot[];
+  isAuth: boolean;
+  isUnsupported: { reason: string } | null;
+}
+
+export interface ITemplateSlotsResponse {
+  success: boolean;
+  slots: ITemplateSlots | null;
+  hasTemplate: boolean;
+  template?: {
+    _id: string;
+    name: string;
+    language: string;
+    category: string;
+    parameter_format?: 'POSITIONAL' | 'NAMED';
+    components: unknown[];
+  };
+}
+
+export interface ICsvPreviewSuggestion {
+  phoneColumn: string | null;
+  nameColumn: string | null;
+  slots: Record<string, string | null>;
+}
+
+export interface ICsvPreviewResponse {
+  success: boolean;
+  hasHeader: boolean;
+  headers: string[];
+  rowCount: number;
+  sampleRows: string[][];
+  suggestedMapping: ICsvPreviewSuggestion;
+  slots: ITemplateSlots | null;
+}
+
+export interface ICsvUploadMapping {
+  phoneColumn: string;
+  nameColumn?: string;
+  slots?: Record<string, string>;
+}
+
 // ── Service ──────────────────────────────────────────────────────────────────
 
 @Injectable({ providedIn: 'root' })
@@ -147,6 +294,32 @@ export class CampaignService {
     return this.api.post<IAddRecipientsResponse>(`/campaigns/${id}/recipients`, { rawText });
   }
 
+  /** Inserts recipients with a CSV-column → template-slot mapping (per-recipient template params). */
+  addRecipientsWithMapping(
+    id: string,
+    rawText: string,
+    mapping: ICsvUploadMapping,
+    defaultParams?: Record<string, string>
+  ): Observable<IAddRecipientsResponse> {
+    return this.api.post<IAddRecipientsResponse>(
+      `/campaigns/${id}/recipients`,
+      { rawText, mapping, defaultParams }
+    );
+  }
+
+  /** Returns headers + sample rows + suggested mapping for a freshly uploaded CSV. */
+  previewRecipientCsv(id: string, rawText: string): Observable<ICsvPreviewResponse> {
+    return this.api.post<ICsvPreviewResponse>(
+      `/campaigns/${id}/recipients/csv/preview`,
+      { rawText }
+    );
+  }
+
+  /** Returns the slot descriptor for this campaign's currently-selected template. */
+  getTemplateSlots(id: string): Observable<ITemplateSlotsResponse> {
+    return this.api.get<ITemplateSlotsResponse>(`/campaigns/${id}/template-slots`);
+  }
+
   clearRecipients(id: string): Observable<ICampaignClearRecipientsResponse> {
     return this.api.delete<ICampaignClearRecipientsResponse>(`/campaigns/${id}/recipients`);
   }
@@ -155,8 +328,15 @@ export class CampaignService {
     return this.api.get<ICampaignRecipientsResponse>(`/campaigns/${id}/recipients`, params);
   }
 
-  launchCampaign(id: string, templateComponents: unknown[] = []): Observable<ICampaignSingleResponse> {
-    return this.api.post<ICampaignSingleResponse>(`/campaigns/${id}/launch`, { templateComponents });
+  getRecipientsReport(
+    id: string,
+    params?: { page?: number; limit?: number; reportStatus?: string; search?: string }
+  ): Observable<ICampaignRecipientsReportResponse> {
+    return this.api.get<ICampaignRecipientsReportResponse>(`/campaigns/${id}/recipients/report`, params);
+  }
+
+  launchCampaign(id: string): Observable<ICampaignSingleResponse> {
+    return this.api.post<ICampaignSingleResponse>(`/campaigns/${id}/launch`, {});
   }
 
   pauseCampaign(id: string): Observable<ICampaignSingleResponse> {
@@ -175,7 +355,11 @@ export class CampaignService {
     return this.api.get<ICampaignStatsResponse>(`/campaigns/${id}/stats`);
   }
 
-  sendTestMessage(id: string, testPhone: string, templateComponents: unknown[] = []): Observable<ICampaignTestMessageResponse> {
-    return this.api.post<ICampaignTestMessageResponse>(`/campaigns/${id}/test`, { testPhone, templateComponents });
+  sendTestMessage(
+    id: string,
+    testPhone: string,
+    testParams?: Record<string, string>
+  ): Observable<ICampaignTestMessageResponse> {
+    return this.api.post<ICampaignTestMessageResponse>(`/campaigns/${id}/test`, { testPhone, testParams });
   }
 }
