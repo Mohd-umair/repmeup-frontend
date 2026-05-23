@@ -363,12 +363,50 @@ export class TemplateCreateComponent implements OnInit, OnDestroy {
     return this.footerText.length;
   }
 
+  get headerCharCount(): number {
+    return this.headerText.length;
+  }
+
+  /** Meta allows at most one variable in a TEXT header. */
+  get headerVariableCount(): number {
+    if (this.parameterFormat === 'NAMED') {
+      return (this.headerText.match(/\{\{([a-z0-9_]+)\}\}/gi) || []).length;
+    }
+    return (this.headerText.match(/\{\{\d+\}\}/g) || []).length;
+  }
+
+  get canInsertHeaderVariable(): boolean {
+    return this.headerFormat === 'TEXT' && this.headerVariableCount < 1;
+  }
+
+  get headerVariableHint(): string {
+    if (this.parameterFormat === 'NAMED') {
+      return 'Named: {{customer_name}} — one variable max';
+    }
+    return 'Positional: {{1}} — one variable max';
+  }
+
   insertVariable(): void {
     if (this.parameterFormat === 'NAMED') {
       this.bodyText += '{{variable_name}}';
     } else {
       const count = (this.bodyText.match(/\{\{\d+\}\}/g) || []).length;
       this.bodyText += `{{${count + 1}}}`;
+    }
+  }
+
+  insertHeaderVariable(): void {
+    if (!this.canInsertHeaderVariable) {
+      this.notificationService.warning(
+        'Header variable limit',
+        'Text headers support only one variable.'
+      );
+      return;
+    }
+    if (this.parameterFormat === 'NAMED') {
+      this.headerText += '{{variable_name}}';
+    } else {
+      this.headerText += '{{1}}';
     }
   }
 
@@ -379,6 +417,20 @@ export class TemplateCreateComponent implements OnInit, OnDestroy {
       return '*123456* is your verification code.';
     }
     return this.bodyText || '(Body text not set)';
+  }
+
+  get previewHeader(): string {
+    if (!this.headerText) return 'Header text';
+    let text = this.headerText;
+    if (this.parameterFormat === 'NAMED') {
+      for (const p of this._extractNamedParams(this.headerText)) {
+        const re = new RegExp(`\\{\\{\\s*${p.param_name}\\s*\\}\\}`, 'gi');
+        text = text.replace(re, p.example);
+      }
+    } else {
+      text = text.replace(/\{\{\s*\d+\s*\}\}/g, 'Example');
+    }
+    return text;
   }
 
   get previewButtons(): TemplateButton[] {
@@ -395,7 +447,13 @@ export class TemplateCreateComponent implements OnInit, OnDestroy {
       if (this.headerFormat === 'TEXT') {
         comp.text = this.headerText;
         if (this.headerText.includes('{{')) {
-          comp.example = { header_text: ['Example header value'] };
+          if (this.parameterFormat === 'NAMED') {
+            comp.example = {
+              header_text_named_params: this._extractNamedParams(this.headerText)
+            };
+          } else {
+            comp.example = { header_text: ['Example'] };
+          }
         }
       } else if (this.headerMediaHandle) {
         comp.example = { header_handle: [this.headerMediaHandle] };
@@ -434,11 +492,16 @@ export class TemplateCreateComponent implements OnInit, OnDestroy {
   }
 
   private _extractNamedParams(text: string): { param_name: string; example: string }[] {
-    const matches = text.match(/\{\{([a-z0-9_]+)\}\}/g) || [];
-    return matches.map(m => ({
-      param_name: m.replace(/[{}]/g, ''),
-      example: 'example_value'
-    }));
+    const matches = text.match(/\{\{([a-z0-9_]+)\}\}/gi) || [];
+    const seen = new Set<string>();
+    const out: { param_name: string; example: string }[] = [];
+    for (const m of matches) {
+      const param_name = m.replace(/[{}]/g, '').toLowerCase();
+      if (seen.has(param_name)) continue;
+      seen.add(param_name);
+      out.push({ param_name, example: 'example_value' });
+    }
+    return out;
   }
 
   // ── Validation ────────────────────────────────────────────────────────────
@@ -458,6 +521,12 @@ export class TemplateCreateComponent implements OnInit, OnDestroy {
       case 'header':
         if (this.hasHeader && this.headerFormat === 'TEXT' && !this.headerText) {
           this.validationErrors.push('Header text is required when header type is Text.');
+        }
+        if (this.hasHeader && this.headerFormat === 'TEXT' && this.headerText.length > 60) {
+          this.validationErrors.push('Header text must be 60 characters or fewer.');
+        }
+        if (this.hasHeader && this.headerFormat === 'TEXT' && this.headerVariableCount > 1) {
+          this.validationErrors.push('Text headers support only one variable.');
         }
         if (this.hasHeader && this.isHeaderBinaryFormat() && !this.headerMediaHandle) {
           this.validationErrors.push('Upload example media (or paste a Meta handle) for this header type.');

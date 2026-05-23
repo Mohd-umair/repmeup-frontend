@@ -1303,9 +1303,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const nextPlanId = Object.keys(this.allPlans || {}).find(
-      key => this.allPlans && this.allPlans[key].tier === this.subscriptionLimits!.nextTier!.tier
-    );
+    const nextPlanId = this.subscriptionLimits.nextTier.planId
+      || Object.keys(this.allPlans || {}).find(
+        key => this.allPlans && this.allPlans[key].tier === this.subscriptionLimits!.nextTier!.tier
+      );
 
     if (!nextPlanId) {
       this.openPlansModal();

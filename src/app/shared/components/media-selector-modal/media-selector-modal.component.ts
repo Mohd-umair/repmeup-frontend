@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostBinding, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
@@ -19,6 +19,12 @@ import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 export class MediaSelectorModalComponent implements OnInit {
   @Input() allowMultiple = false; // Allow selecting multiple media for carousel
   @Input() mediaType: 'image' | 'video' | 'audio' | 'file' | 'all' = 'all'; // Filter by type
+  /** Raise when embedding inside other overlays (e.g. campaign editor slide-over). */
+  @Input() overlayZIndex = 50;
+  @HostBinding('style.z-index')
+  get hostZIndex(): number | string {
+    return this.overlayZIndex;
+  }
   @Output() close = new EventEmitter<void>();
   @Output() select = new EventEmitter<Media | Media[]>();
 
@@ -49,7 +55,7 @@ export class MediaSelectorModalComponent implements OnInit {
     
     const params: MediaLibraryParams = {
       page: this.currentPage,
-      limit: 12,
+      limit: 24,
       sortBy: this.sortBy
     };
 

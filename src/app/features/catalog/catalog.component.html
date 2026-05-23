@@ -38,6 +38,18 @@
         Linked
       </span>
     </button>
+    <button
+      (click)="activeTab = 'orders'; onOrdersTabActivated()"
+      class="px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
+      [style.color]="activeTab === 'orders' ? 'var(--accent)' : 'var(--text-muted)'"
+      [style.border-bottom]="activeTab === 'orders' ? '2px solid var(--accent)' : '2px solid transparent'">
+      <i class="fas fa-receipt mr-2"></i>Orders
+      <span *ngIf="orderTotal > 0"
+            class="ml-1.5 text-[11px] px-1.5 py-0.5 rounded-full font-semibold"
+            style="background-color: var(--surface-primary); color: var(--text-secondary);">
+        {{ orderTotal }}
+      </span>
+    </button>
   </div>
 
   <!-- ══════════════════════════ PRODUCTS TAB ══════════════════════════ -->
@@ -1447,5 +1459,170 @@
         Done
       </button>
     </div>
+  </div>
+
+  <!-- ════════════════════════ ORDERS TAB ════════════════════════ -->
+  <div *ngIf="activeTab === 'orders'" class="space-y-5">
+
+    <!-- Stats row -->
+    <div *ngIf="orderStats" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="rounded-xl border p-4 text-center"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-2xl font-bold" style="color: var(--accent);">{{ orderStats.totalOrders }}</p>
+        <p class="text-xs mt-0.5" style="color: var(--text-secondary);">Total Orders</p>
+      </div>
+      <div class="rounded-xl border p-4 text-center"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+          {{ orderStats.byStatus?.['paid'] || 0 }}
+        </p>
+        <p class="text-xs mt-0.5" style="color: var(--text-secondary);">Paid</p>
+      </div>
+      <div class="rounded-xl border p-4 text-center"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+          {{ orderStats.byStatus?.['payment_pending'] || 0 }}
+        </p>
+        <p class="text-xs mt-0.5" style="color: var(--text-secondary);">Pending Payment</p>
+      </div>
+      <div class="rounded-xl border p-4 text-center"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-2xl font-bold" style="color: var(--text-primary);">
+          {{ orderStats.totalRevenue | number:'1.0-0' }}
+        </p>
+        <p class="text-xs mt-0.5" style="color: var(--text-secondary);">Total Revenue</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex flex-wrap gap-3 items-center">
+      <select [(ngModel)]="orderStatusFilter" (change)="onOrderFilterChange()"
+              class="px-3 py-2 rounded-lg border text-sm"
+              style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+        <option *ngFor="let s of orderStatuses" [value]="s.value">{{ s.label }}</option>
+      </select>
+      <select [(ngModel)]="orderChannelFilter" (change)="onOrderFilterChange()"
+              class="px-3 py-2 rounded-lg border text-sm"
+              style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
+        <option value="">All Channels</option>
+        <option value="whatsapp">WhatsApp</option>
+        <option value="instagram">Instagram</option>
+        <option value="voice">Voice</option>
+        <option value="manual">Manual</option>
+      </select>
+      <input [(ngModel)]="orderSearch" (input)="onOrderFilterChange()"
+             type="text" placeholder="Search buyer, phone…"
+             class="px-3 py-2 rounded-lg border text-sm flex-1 min-w-[160px]"
+             style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
+      <button (click)="loadOrders()" class="catalog-btn-primary px-4 py-2 rounded-lg text-sm font-bold">
+        <i class="fas fa-rotate-right mr-1.5"></i>Refresh
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loadingOrders" class="flex items-center gap-3 py-8 justify-center">
+      <div class="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--accent);"></div>
+      <span class="text-sm" style="color: var(--text-secondary);">Loading orders…</span>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!loadingOrders && !orders.length"
+         class="rounded-xl border py-12 text-center"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <i class="fas fa-receipt text-3xl mb-3" style="color: var(--text-muted);"></i>
+      <p class="text-sm font-semibold" style="color: var(--text-primary);">No orders yet</p>
+      <p class="text-xs mt-1" style="color: var(--text-secondary);">
+        Orders will appear here when customers send WhatsApp cart orders or complete an IG sales flow.
+      </p>
+    </div>
+
+    <!-- Orders table -->
+    <div *ngIf="!loadingOrders && orders.length"
+         class="rounded-xl border overflow-hidden"
+         style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="background-color: var(--surface-primary); color: var(--text-secondary);" class="text-xs uppercase tracking-wide">
+              <th class="px-4 py-3 text-left">Channel</th>
+              <th class="px-4 py-3 text-left">Buyer</th>
+              <th class="px-4 py-3 text-left">Products</th>
+              <th class="px-4 py-3 text-left">Amount</th>
+              <th class="px-4 py-3 text-left">Status</th>
+              <th class="px-4 py-3 text-left">Date</th>
+              <th class="px-4 py-3 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y" style="border-color: var(--card-border);">
+            <tr *ngFor="let order of orders"
+                class="hover:bg-[var(--surface-primary)] transition-colors">
+              <!-- Channel -->
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center gap-1.5 text-xs font-semibold"
+                      [ngClass]="{
+                        'text-green-600 dark:text-green-400': order.channel === 'whatsapp',
+                        'text-pink-600 dark:text-pink-400': order.channel === 'instagram',
+                        'text-blue-600 dark:text-blue-400': order.channel === 'voice',
+                        'text-gray-600 dark:text-gray-400': order.channel === 'manual'
+                      }">
+                  <i [class]="getOrderChannelIcon(order.channel)"></i>
+                  {{ channelLabels[order.channel] || order.channel }}
+                </span>
+              </td>
+              <!-- Buyer -->
+              <td class="px-4 py-3">
+                <p class="font-semibold" style="color: var(--text-primary);">
+                  {{ order.buyerName || (order.contact && $any(order.contact).name) || '—' }}
+                </p>
+                <p class="text-xs" style="color: var(--text-secondary);">
+                  {{ order.buyerPhone || (order.contact && $any(order.contact).phone) || '' }}
+                </p>
+              </td>
+              <!-- Products -->
+              <td class="px-4 py-3">
+                <p *ngFor="let li of order.lineItems.slice(0, 2)"
+                   class="text-xs" style="color: var(--text-primary);">
+                  {{ li.name || ($any(li.product)?.name) || li.retailerId || '?' }}
+                  <span style="color: var(--text-muted);">× {{ li.qty }}</span>
+                </p>
+                <p *ngIf="order.lineItems.length > 2" class="text-xs" style="color: var(--text-muted);">
+                  +{{ order.lineItems.length - 2 }} more
+                </p>
+              </td>
+              <!-- Amount -->
+              <td class="px-4 py-3 font-semibold" style="color: var(--text-primary);">
+                {{ order.currency || 'AED' }} {{ order.totalAmount | number:'1.2-2' }}
+              </td>
+              <!-- Status badge -->
+              <td class="px-4 py-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+                      [ngClass]="orderStatusColors[order.status]">
+                  {{ orderStatusLabels[order.status] }}
+                </span>
+              </td>
+              <!-- Date -->
+              <td class="px-4 py-3 text-xs" style="color: var(--text-secondary);">
+                {{ order.createdAt | date:'dd MMM, hh:mm a' }}
+              </td>
+              <!-- Actions -->
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <ng-container *ngFor="let opt of getNextStatusOptions(order.status)">
+                    <button (click)="updateOrderStatus(order, opt.value)"
+                            [disabled]="updatingOrderId === order._id"
+                            class="px-2.5 py-1 rounded-lg text-xs font-bold border transition disabled:opacity-50"
+                            style="border-color: var(--card-border); color: var(--text-primary); background-color: var(--surface-primary);">
+                      <i *ngIf="updatingOrderId === order._id" class="fas fa-spinner fa-spin mr-1"></i>
+                      {{ opt.label }}
+                    </button>
+                  </ng-container>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>

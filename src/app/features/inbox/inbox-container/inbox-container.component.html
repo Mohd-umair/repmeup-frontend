@@ -834,7 +834,8 @@
           class="flex-1 min-h-0 overflow-hidden"
           [style.display]="rightPanelTab === 'suggestions' ? 'block' : 'none'"
           [interaction]="selectedInteraction"
-          (sendReply)="onAiSendReply($event)">
+          (sendReply)="onAiSendReply($event)"
+          (sendSuggestedProduct)="onAiSendSuggestedProduct($event)">
         </app-inbox-ai-assistant>
         <app-inbox-summary
           class="flex-1 min-h-0 overflow-hidden"

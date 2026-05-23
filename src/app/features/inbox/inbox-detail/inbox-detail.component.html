@@ -22,7 +22,7 @@
               {{ getAuthorInitials(getAuthorDisplayName(interaction)) }}
             </div>
             <!-- Real avatar: overlaid on top, hidden on error -->
-            <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
+            <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId, interaction.platformId) | async) as avatarUrl">
               <img *ngIf="!avatarFallback[interaction.platformId]"
                    [src]="avatarUrl"
                    (error)="onAvatarError(interaction.platformId)"
@@ -252,7 +252,7 @@
                       {{ getAuthorInitials(getAuthorDisplayName(item.data)) }}
                     </div>
                     <!-- Real avatar overlaid -->
-                    <ng-container *ngIf="(getAuthorAvatar$(item.data.author, item.data.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
+                    <ng-container *ngIf="(getAuthorAvatar$(item.data.author, item.data.platform, interaction.metadata?.facebookPageId, item.data.platformId || interaction.platformId) | async) as avatarUrl">
                       <img *ngIf="!avatarFallback[item.data.platformId + '_msg']"
                            [src]="avatarUrl"
                            (error)="onAvatarError(item.data.platformId + '_msg')"
@@ -410,7 +410,7 @@
                       {{ getAuthorInitials(item.data.author?.name || '?') }}
                     </div>
                     <!-- Real avatar overlaid -->
-                    <ng-container *ngIf="(getAuthorAvatar$(item.data.author, item.data.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
+                    <ng-container *ngIf="(getAuthorAvatar$(item.data.author, item.data.platform, interaction.metadata?.facebookPageId, item.data.platformId || interaction.platformId) | async) as avatarUrl">
                       <img *ngIf="!avatarFallback[item.data.platformId + '_platform']"
                            [src]="avatarUrl"
                            (error)="onAvatarError(item.data.platformId + '_platform')"

@@ -177,6 +177,10 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   sendingProduct = false;
   productPickerError = '';
 
+  /** Products suggested by AI based on the current conversation */
+  aiSuggestedProducts: IProduct[] = [];
+  sendingAiSuggestedProduct: string | null = null;
+
   // Subscriptions
   private subscriptions: Subscription[] = [];
   /** One-shot delays (focus/scroll/success banner) — no raw setTimeout */
@@ -367,8 +371,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /** Observable avatar URL (fetched with auth for Facebook so img can display). */
-  getAuthorAvatar$(author: IInteraction['author'], platform?: string, pageId?: string): Observable<SafeUrl | null> {
-    return this.avatarService.getAvatarUrl(platform ?? '', author, pageId).pipe(
+  getAuthorAvatar$(author: IInteraction['author'], platform?: string, pageId?: string, threadPlatformId?: string): Observable<SafeUrl | null> {
+    return this.avatarService.getAvatarUrl(platform ?? '', author, pageId, threadPlatformId).pipe(
       map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
     );
   }
@@ -2401,14 +2405,19 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
   // ── WhatsApp Product Picker ────────────────────────────────────────────────
 
-  openProductPicker(): void {
+  openProductPicker(preselect?: IProduct): void {
     this.showProductPickerModal = true;
-    this.selectedPickerProduct = null;
+    this.selectedPickerProduct = preselect || null;
     this.productPickerSearch = '';
     this.productPickerBodyText = '';
     this.productPickerError = '';
     this.loadPickerProducts();
     this.cdr.markForCheck();
+  }
+
+  /** Called by the AI assistant's "Send" chip for a suggested product */
+  openProductPickerWithSuggestion(product: IProduct): void {
+    this.openProductPicker(product);
   }
 
   closeProductPicker(): void {

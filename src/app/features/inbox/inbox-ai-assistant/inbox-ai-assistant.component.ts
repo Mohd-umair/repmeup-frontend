@@ -5,6 +5,7 @@ import { InboxService } from '../../../core/services/inbox.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { IInteraction } from '../../../core/models/interaction.model';
 import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
+import { IProduct } from '../../../core/models/product.model';
 
 export interface AiReplyCard {
   type: 'short' | 'detailed' | 'sales';
@@ -27,11 +28,16 @@ export interface AiReplyCard {
 export class InboxAiAssistantComponent implements OnChanges {
   @Input() interaction: IInteraction | null = null;
   @Output() sendReply = new EventEmitter<string>();
+  /** Emitted when agent clicks "Send product" chip — parent opens product picker pre-selected */
+  @Output() sendSuggestedProduct = new EventEmitter<IProduct>();
 
   loading = false;
   error: string | null = null;
   generated = false;
   improveAutoReplies = false;
+
+  /** AI-suggested products from the catalog (populated after generateSuggestions) */
+  suggestedProducts: IProduct[] = [];
 
   cards: AiReplyCard[] = [
     { type: 'short', label: 'Short Reply', icon: 'fas fa-bolt', content: '', enabled: true, editing: false, editContent: '', regenerating: false },
@@ -58,6 +64,7 @@ export class InboxAiAssistantComponent implements OnChanges {
     this.generated = false;
     this.loading = false;
     this.error = null;
+    this.suggestedProducts = [];
     this.cards.forEach(c => {
       c.content = '';
       c.editing = false;
@@ -80,6 +87,7 @@ export class InboxAiAssistantComponent implements OnChanges {
           this.cards[2].content = response.data.sales;
           this.usedKnowledgeBase = response.data.usedKnowledgeBase;
           this.knowledgeBaseCount = response.data.knowledgeBaseCount;
+          this.suggestedProducts = (response.data.suggestedProducts || []).slice(0, 3);
           this.generated = true;
         } else {
           this.error = (response as any).error || 'Failed to generate suggestions.';
@@ -154,6 +162,10 @@ export class InboxAiAssistantComponent implements OnChanges {
 
   toggleCard(card: AiReplyCard): void {
     card.enabled = !card.enabled;
+  }
+
+  onSendSuggestedProduct(product: IProduct): void {
+    this.sendSuggestedProduct.emit(product);
   }
 
   private buildShortFromDetailed(detailed: string): string {

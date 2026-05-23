@@ -1,0 +1,78 @@
+<div class="wa-preview" [class.wa-preview--compact]="compact">
+  <div class="wa-preview__heading">
+    <div>
+      <p class="wa-preview__title">
+        <i class="fab fa-whatsapp wa-preview__wa-icon" aria-hidden="true"></i>
+        {{ title }}
+      </p>
+      <p *ngIf="subtitle" class="wa-preview__subtitle">{{ subtitle }}</p>
+    </div>
+    <span *ngIf="usesCsvVars" class="wa-preview__csv-badge">
+      <i class="fas fa-file-csv" aria-hidden="true"></i>
+      CSV variables
+    </span>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="!hasPreview" class="wa-preview__empty">
+    <i class="fab fa-whatsapp" aria-hidden="true"></i>
+    <p>Select a template to see how your message will look.</p>
+  </div>
+
+  <!-- Message card (template layout only — no phone frame) -->
+  <div *ngIf="hasPreview && preview as p" class="wa-preview__card">
+    <div class="wa-preview__card-header">
+      <span class="wa-preview__card-icon" aria-hidden="true">
+        <i class="fab fa-whatsapp"></i>
+      </span>
+      <span class="wa-preview__card-meta" [title]="p.templateName + ' · ' + p.languageCode">
+        {{ p.templateName }} · {{ p.languageCode }}
+      </span>
+    </div>
+
+    <!-- Header: image -->
+    <div *ngIf="headerMediaUrl && headerMediaKind === 'IMAGE'" class="wa-preview__header-media">
+      <img [src]="headerMediaUrl" alt="" class="wa-preview__header-img" loading="lazy" />
+    </div>
+
+    <!-- Header: video -->
+    <div *ngIf="headerMediaUrl && headerMediaKind === 'VIDEO'" class="wa-preview__header-media wa-preview__header-media--video">
+      <video [src]="headerMediaUrl" class="wa-preview__header-video" muted playsinline controls></video>
+    </div>
+
+    <!-- Header: document -->
+    <div *ngIf="headerMediaUrl && headerMediaKind === 'DOCUMENT'" class="wa-preview__header-doc">
+      <i class="fas fa-file-alt" aria-hidden="true"></i>
+      <span>{{ headerMediaFilename || 'Document attachment' }}</span>
+    </div>
+
+    <!-- Header: location -->
+    <div *ngIf="locationPreview as loc" class="wa-preview__header-location">
+      <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+      <div>
+        <p class="wa-preview__location-name">{{ loc.name || 'Location' }}</p>
+        <p class="wa-preview__location-address">
+          {{ loc.address || (loc.latitude + ', ' + loc.longitude) }}
+        </p>
+      </div>
+    </div>
+
+    <div class="wa-preview__card-body">
+      <p *ngIf="p.headerText" class="wa-preview__header-text">{{ p.headerText }}</p>
+      <p class="wa-preview__body">{{ p.bodyText }}</p>
+      <p *ngIf="p.footerText" class="wa-preview__footer">{{ p.footerText }}</p>
+    </div>
+
+    <div *ngIf="p.buttons?.length" class="wa-preview__buttons">
+      <span *ngFor="let btn of p.buttons" class="wa-preview__btn">
+        <i class="fas" [ngClass]="buttonIcon(btn.type)" aria-hidden="true"></i>
+        {{ btn.text }}
+      </span>
+    </div>
+  </div>
+
+  <p *ngIf="usesCsvVars && hasPreview" class="wa-preview__hint">
+    <i class="fas fa-info-circle" aria-hidden="true"></i>
+    Placeholders in brackets will be replaced with each recipient's CSV values at send time.
+  </p>
+</div>

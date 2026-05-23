@@ -1,219 +1,219 @@
-<div class="msm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4" (click)="closeModal()">
-  <div class="msm-panel msm-animate-in w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl" (click)="$event.stopPropagation()">
+<div class="msm-panel msm-animate-in flex flex-col h-full w-full min-h-0 overflow-hidden">
 
-    <!-- Header -->
-    <div class="msm-divider flex justify-between items-center p-6 border-b">
-      <div>
-        <h2 class="msm-title text-2xl font-bold flex items-center gap-2">
-          <i class="fas fa-photo-video text-rep-lime"></i>
-          Select Media
-        </h2>
-        <p class="msm-subtitle text-sm mt-1">
-          {{ allowMultiple ? 'Select one or more media items' : 'Select one media item' }}
-          <span *ngIf="selectedMedia.length > 0" class="text-rep-lime font-medium ml-2">
-            ({{ selectedMedia.length }} selected)
-          </span>
-        </p>
-      </div>
-      <div class="flex items-center gap-3">
-        <button type="button"
-                class="msm-btn-primary px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2"
-                (click)="openUploadModal()">
-          <i class="fas fa-upload"></i>
-          Upload New
-        </button>
-        <button type="button"
-                class="msm-icon-btn w-10 h-10 rounded-lg transition flex items-center justify-center"
-                (click)="closeModal()"
-                aria-label="Close">
-          <i class="fas fa-xmark"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Filters & Sort -->
-    <div class="msm-divider p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-      <div class="msm-toolbar flex gap-2 rounded-xl p-2">
-        <button type="button"
-                class="msm-filter-btn px-4 py-2 rounded-lg font-medium transition"
-                [class.msm-filter-btn--active]="filterType === 'all'"
-                (click)="onFilterChange('all')">
-          All
-        </button>
-        <button type="button"
-                class="msm-filter-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2"
-                [class.msm-filter-btn--active]="filterType === 'image'"
-                (click)="onFilterChange('image')">
-          <i class="fas fa-image"></i>
-          Images
-        </button>
-        <button type="button"
-                class="msm-filter-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2"
-                [class.msm-filter-btn--active]="filterType === 'video'"
-                (click)="onFilterChange('video')">
-          <i class="fas fa-video"></i>
-          Videos
-        </button>
-        <button type="button"
-                class="msm-filter-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2"
-                [class.msm-filter-btn--active]="filterType === 'audio'"
-                (click)="onFilterChange('audio')">
-          <i class="fas fa-microphone"></i>
-          Audio
-        </button>
-        <button type="button"
-                *ngIf="mediaType === 'all' || mediaType === 'file'"
-                class="msm-filter-btn px-4 py-2 rounded-lg font-medium transition flex items-center gap-2"
-                [class.msm-filter-btn--active]="filterType === 'file'"
-                (click)="onFilterChange('file')">
-          <i class="fas fa-file-pdf"></i>
-          PDF
-        </button>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <div class="msm-sort-row flex items-center gap-2 rounded-xl px-4 py-2">
-          <label class="msm-sort-label text-sm font-medium">Sort:</label>
-          <select [(ngModel)]="sortBy" (change)="onSortChange(sortBy)" class="msm-select text-sm font-medium focus:outline-none cursor-pointer">
-            <option value="-createdAt">Newest First</option>
-            <option value="createdAt">Oldest First</option>
-            <option value="-usageCount">Most Used</option>
-          </select>
-        </div>
-        <button type="button"
-                class="msm-ghost-btn px-4 py-2 rounded-xl transition flex items-center gap-2"
-                (click)="loadMedia()"
-                [disabled]="loading"
-                title="Refresh">
-          <i class="fas" [class.fa-sync-alt]="!loading" [class.fa-spinner]="loading" [class.fa-spin]="loading"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Media Grid -->
-    <div class="p-6">
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" *ngIf="!loading && mediaItems.length > 0">
-        <div *ngFor="let media of mediaItems"
-             class="msm-card relative rounded-xl overflow-hidden transition group"
-             [class.msm-card--selected]="isSelected(media)"
-             (click)="toggleMedia(media)">
-
-          <!-- Selection Indicator -->
-          <div class="msm-select-indicator absolute top-2 left-2 w-8 h-8 rounded-lg flex items-center justify-center z-10 transition"
-               [class.msm-select-indicator--on]="isSelected(media)">
-            <i *ngIf="isSelected(media)" class="fas fa-check text-sm text-rep-black"></i>
-            <i *ngIf="!isSelected(media)" class="fas fa-circle text-[10px] msm-select-indicator-icon"></i>
-          </div>
-
-          <!-- Media Preview -->
-          <div class="msm-thumb-bg relative aspect-square overflow-hidden">
-            <img *ngIf="isImage(media)" [src]="media.publicUrl" [alt]="media.originalName" class="w-full h-full object-cover">
-            <video *ngIf="isVideo(media)" [src]="media.publicUrl" preload="metadata" class="w-full h-full object-cover"></video>
-            <div *ngIf="isAudio(media)" class="msm-thumb-audio w-full h-full flex items-center justify-center">
-              <i class="fas fa-music text-4xl msm-empty-icon"></i>
-            </div>
-            <div *ngIf="isFile(media)" class="msm-thumb-audio w-full h-full flex items-center justify-center">
-              <i class="fas fa-file-pdf text-4xl text-red-500"></i>
-            </div>
-
-            <!-- Type Badge -->
-            <div class="absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold"
-                 [ngClass]="{
-                   'bg-blue-500': isImage(media),
-                   'bg-purple-500': isVideo(media),
-                   'bg-amber-500': isAudio(media),
-                   'bg-red-600': isFile(media)
-                 }">
-              <i [class]="isImage(media) ? 'fas fa-image text-white' : (isVideo(media) ? 'fas fa-video text-white' : (isFile(media) ? 'fas fa-file-pdf text-white' : 'fas fa-music text-white'))"></i>
-            </div>
-
-            <!-- Usage Badge -->
-            <div class="absolute bottom-2 left-2 px-2 py-1 bg-green-500 rounded-md text-xs font-semibold text-white flex items-center gap-1" *ngIf="media.usageCount > 0">
-              {{ media.usageCount }}x
-            </div>
-
-            <button type="button"
-                    class="msm-delete-one absolute bottom-2 right-2 z-20 w-9 h-9 rounded-lg flex items-center justify-center transition
-                           disabled:opacity-40 disabled:cursor-not-allowed"
-                    [disabled]="media.usageCount > 0 || deletingId === media._id || deletingBulk"
-                    [title]="media.usageCount > 0 ? 'In use in posts — cannot delete' : 'Delete from library'"
-                    (click)="requestDeleteOne(media, $event)">
-              <i class="fas text-sm" [class.fa-spinner]="deletingId === media._id" [class.fa-spin]="deletingId === media._id"
-                [class.fa-trash-can]="deletingId !== media._id"></i>
-            </button>
-          </div>
-
-          <div class="p-3">
-            <div class="msm-card-name font-medium text-sm truncate" [title]="media.originalName">
-              {{ media.originalName }}
-            </div>
-            <div class="msm-card-meta text-xs mt-1">{{ formatSize(media.size) }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div class="py-12 text-center" *ngIf="!loading && mediaItems.length === 0">
-        <i class="fas fa-folder-open text-6xl msm-empty-icon mb-4"></i>
-        <h3 class="msm-title text-xl font-bold mb-2">No media found</h3>
-        <p class="msm-hint">Try adjusting your filters or upload new media</p>
-      </div>
-
-      <!-- Loading State -->
-      <div class="py-12 text-center" *ngIf="loading">
-        <i class="fas fa-spinner fa-spin text-5xl text-rep-lime mb-4"></i>
-        <p class="msm-hint">Loading media...</p>
-      </div>
-
-      <!-- Pagination -->
-      <div class="flex justify-center items-center gap-3 mt-6" *ngIf="totalPages > 1">
-        <button type="button"
-                class="msm-ghost-btn px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
-                [disabled]="currentPage === 1"
-                (click)="goToPage(currentPage - 1)">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-
-        <span class="msm-title font-medium">
-          Page {{ currentPage }} of {{ totalPages }}
+  <!-- Header -->
+  <div class="msm-divider flex flex-shrink-0 justify-between items-center gap-4 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b">
+    <div class="min-w-0">
+      <h2 class="msm-title text-xl sm:text-2xl font-bold flex items-center gap-2">
+        <i class="fas fa-photo-video text-rep-lime flex-shrink-0"></i>
+        <span class="truncate">Select Media</span>
+      </h2>
+      <p class="msm-subtitle text-sm mt-1">
+        {{ allowMultiple ? 'Select one or more media items' : 'Select one media item' }}
+        <span *ngIf="selectedMedia.length > 0" class="text-rep-lime font-medium ml-2">
+          ({{ selectedMedia.length }} selected)
         </span>
+      </p>
+    </div>
+    <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <button type="button"
+              class="msm-btn-primary px-3 sm:px-4 py-2 rounded-lg font-semibold transition flex items-center gap-2 text-sm sm:text-base"
+              (click)="openUploadModal()">
+        <i class="fas fa-upload"></i>
+        <span class="hidden sm:inline">Upload New</span>
+        <span class="sm:hidden">Upload</span>
+      </button>
+      <button type="button"
+              class="msm-icon-btn w-10 h-10 rounded-lg transition flex items-center justify-center"
+              (click)="closeModal()"
+              aria-label="Close">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+  </div>
 
-        <button type="button"
-                class="msm-ghost-btn px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
-                [disabled]="currentPage === totalPages"
-                (click)="goToPage(currentPage + 1)">
-          <i class="fas fa-chevron-right"></i>
-        </button>
+  <!-- Filters & Sort -->
+  <div class="msm-divider flex-shrink-0 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 border-b flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3">
+    <div class="msm-toolbar flex flex-wrap gap-2 rounded-xl p-2">
+      <button type="button"
+              class="msm-filter-btn px-3 sm:px-4 py-2 rounded-lg font-medium transition text-sm"
+              [class.msm-filter-btn--active]="filterType === 'all'"
+              (click)="onFilterChange('all')">
+        All
+      </button>
+      <button type="button"
+              class="msm-filter-btn px-3 sm:px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm"
+              [class.msm-filter-btn--active]="filterType === 'image'"
+              (click)="onFilterChange('image')">
+        <i class="fas fa-image"></i>
+        Images
+      </button>
+      <button type="button"
+              class="msm-filter-btn px-3 sm:px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm"
+              [class.msm-filter-btn--active]="filterType === 'video'"
+              (click)="onFilterChange('video')">
+        <i class="fas fa-video"></i>
+        Videos
+      </button>
+      <button type="button"
+              class="msm-filter-btn px-3 sm:px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm"
+              [class.msm-filter-btn--active]="filterType === 'audio'"
+              (click)="onFilterChange('audio')">
+        <i class="fas fa-microphone"></i>
+        Audio
+      </button>
+      <button type="button"
+              *ngIf="mediaType === 'all' || mediaType === 'file'"
+              class="msm-filter-btn px-3 sm:px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 text-sm"
+              [class.msm-filter-btn--active]="filterType === 'file'"
+              (click)="onFilterChange('file')">
+        <i class="fas fa-file-pdf"></i>
+        PDF
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="msm-sort-row flex items-center gap-2 rounded-xl px-3 sm:px-4 py-2">
+        <label class="msm-sort-label text-sm font-medium">Sort:</label>
+        <select [(ngModel)]="sortBy" (change)="onSortChange(sortBy)" class="msm-select text-sm font-medium focus:outline-none cursor-pointer">
+          <option value="-createdAt">Newest First</option>
+          <option value="createdAt">Oldest First</option>
+          <option value="-usageCount">Most Used</option>
+        </select>
+      </div>
+      <button type="button"
+              class="msm-ghost-btn px-4 py-2 rounded-xl transition flex items-center gap-2"
+              (click)="loadMedia()"
+              [disabled]="loading"
+              title="Refresh">
+        <i class="fas" [class.fa-sync-alt]="!loading" [class.fa-spinner]="loading" [class.fa-spin]="loading"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scrollable media grid -->
+  <div class="msm-body flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4"
+         *ngIf="!loading && mediaItems.length > 0">
+      <div *ngFor="let media of mediaItems"
+           class="msm-card relative rounded-xl overflow-hidden transition group"
+           [class.msm-card--selected]="isSelected(media)"
+           (click)="toggleMedia(media)">
+
+        <!-- Selection Indicator -->
+        <div class="msm-select-indicator absolute top-2 left-2 w-8 h-8 rounded-lg flex items-center justify-center z-10 transition"
+             [class.msm-select-indicator--on]="isSelected(media)">
+          <i *ngIf="isSelected(media)" class="fas fa-check text-sm text-rep-black"></i>
+          <i *ngIf="!isSelected(media)" class="fas fa-circle text-[10px] msm-select-indicator-icon"></i>
+        </div>
+
+        <!-- Media Preview -->
+        <div class="msm-thumb-bg relative aspect-square overflow-hidden">
+          <img *ngIf="isImage(media)" [src]="media.publicUrl" [alt]="media.originalName" class="w-full h-full object-cover">
+          <video *ngIf="isVideo(media)" [src]="media.publicUrl" preload="metadata" class="w-full h-full object-cover"></video>
+          <div *ngIf="isAudio(media)" class="msm-thumb-audio w-full h-full flex items-center justify-center">
+            <i class="fas fa-music text-4xl msm-empty-icon"></i>
+          </div>
+          <div *ngIf="isFile(media)" class="msm-thumb-audio w-full h-full flex items-center justify-center">
+            <i class="fas fa-file-pdf text-4xl text-red-500"></i>
+          </div>
+
+          <!-- Type Badge -->
+          <div class="absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold"
+               [ngClass]="{
+                 'bg-blue-500': isImage(media),
+                 'bg-purple-500': isVideo(media),
+                 'bg-amber-500': isAudio(media),
+                 'bg-red-600': isFile(media)
+               }">
+            <i [class]="isImage(media) ? 'fas fa-image text-white' : (isVideo(media) ? 'fas fa-video text-white' : (isFile(media) ? 'fas fa-file-pdf text-white' : 'fas fa-music text-white'))"></i>
+          </div>
+
+          <!-- Usage Badge -->
+          <div class="absolute bottom-2 left-2 px-2 py-1 bg-green-500 rounded-md text-xs font-semibold text-white flex items-center gap-1" *ngIf="media.usageCount > 0">
+            {{ media.usageCount }}x
+          </div>
+
+          <button type="button"
+                  class="msm-delete-one absolute bottom-2 right-2 z-20 w-9 h-9 rounded-lg flex items-center justify-center transition
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+                  [disabled]="media.usageCount > 0 || deletingId === media._id || deletingBulk"
+                  [title]="media.usageCount > 0 ? 'In use in posts — cannot delete' : 'Delete from library'"
+                  (click)="requestDeleteOne(media, $event)">
+            <i class="fas text-sm" [class.fa-spinner]="deletingId === media._id" [class.fa-spin]="deletingId === media._id"
+              [class.fa-trash-can]="deletingId !== media._id"></i>
+          </button>
+        </div>
+
+        <div class="p-3">
+          <div class="msm-card-name font-medium text-sm truncate" [title]="media.originalName">
+            {{ media.originalName }}
+          </div>
+          <div class="msm-card-meta text-xs mt-1">{{ formatSize(media.size) }}</div>
+        </div>
       </div>
     </div>
 
-    <!-- Footer -->
-    <div class="msm-footer msm-divider p-6 border-t flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-      <div class="msm-footer-muted text-sm">
-        {{ selectedMedia.length }} {{ allowMultiple ? 'item(s)' : 'item' }} selected
-      </div>
-      <div class="flex flex-wrap gap-3 justify-end">
-        <button type="button"
-                class="msm-btn-cancel px-6 py-2.5 rounded-lg font-semibold transition"
-                (click)="closeModal()"
-                [disabled]="deletingBulk || !!deletingId">
-          Cancel
-        </button>
-        <button type="button"
-                class="px-6 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 border border-red-500/60 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/15 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                (click)="deleteSelected()"
-                [disabled]="selectedMedia.length === 0 || deletingBulk || !!deletingId">
-          <i class="fas" [class.fa-spinner]="deletingBulk" [class.fa-spin]="deletingBulk" [class.fa-trash-can]="!deletingBulk"></i>
-          Delete selected<span *ngIf="selectedMedia.length > 0"> ({{ selectedMedia.length }})</span>
-        </button>
-        <button type="button"
-                class="msm-btn-primary px-6 py-2.5 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                (click)="confirmSelection()"
-                [disabled]="selectedMedia.length === 0 || deletingBulk || !!deletingId">
-          <i class="fas fa-check"></i>
-          Select {{ selectedMedia.length > 0 ? '(' + selectedMedia.length + ')' : '' }}
-        </button>
-      </div>
+    <!-- Empty State -->
+    <div class="py-16 sm:py-24 text-center" *ngIf="!loading && mediaItems.length === 0">
+      <i class="fas fa-folder-open text-6xl msm-empty-icon mb-4"></i>
+      <h3 class="msm-title text-xl font-bold mb-2">No media found</h3>
+      <p class="msm-hint">Try adjusting your filters or upload new media</p>
+    </div>
+
+    <!-- Loading State -->
+    <div class="py-16 sm:py-24 text-center" *ngIf="loading">
+      <i class="fas fa-spinner fa-spin text-5xl text-rep-lime mb-4"></i>
+      <p class="msm-hint">Loading media...</p>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex justify-center items-center gap-3 mt-6 pb-2" *ngIf="totalPages > 1">
+      <button type="button"
+              class="msm-ghost-btn px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+              [disabled]="currentPage === 1"
+              (click)="goToPage(currentPage - 1)">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <span class="msm-title font-medium">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+
+      <button type="button"
+              class="msm-ghost-btn px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition"
+              [disabled]="currentPage === totalPages"
+              (click)="goToPage(currentPage + 1)">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="msm-footer msm-divider flex-shrink-0 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+    <div class="msm-footer-muted text-sm">
+      {{ selectedMedia.length }} {{ allowMultiple ? 'item(s)' : 'item' }} selected
+    </div>
+    <div class="flex flex-wrap gap-3 justify-end">
+      <button type="button"
+              class="msm-btn-cancel px-5 sm:px-6 py-2.5 rounded-lg font-semibold transition"
+              (click)="closeModal()"
+              [disabled]="deletingBulk || !!deletingId">
+        Cancel
+      </button>
+      <button type="button"
+              class="px-5 sm:px-6 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 border border-red-500/60 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/15 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="deleteSelected()"
+              [disabled]="selectedMedia.length === 0 || deletingBulk || !!deletingId">
+        <i class="fas" [class.fa-spinner]="deletingBulk" [class.fa-spin]="deletingBulk" [class.fa-trash-can]="!deletingBulk"></i>
+        Delete selected<span *ngIf="selectedMedia.length > 0"> ({{ selectedMedia.length }})</span>
+      </button>
+      <button type="button"
+              class="msm-btn-primary px-5 sm:px-6 py-2.5 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              (click)="confirmSelection()"
+              [disabled]="selectedMedia.length === 0 || deletingBulk || !!deletingId">
+        <i class="fas fa-check"></i>
+        Select {{ selectedMedia.length > 0 ? '(' + selectedMedia.length + ')' : '' }}
+      </button>
     </div>
   </div>
 </div>

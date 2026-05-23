@@ -1567,35 +1567,22 @@
   </div>
 </div>
 
-<!-- ── Media Selector (Upload / Browse Library) ──────────────────────────── -->
-<!-- ── Logo Picker Modal ───────────────────────────────────────────────────── -->
-<div *ngIf="showLogoPickerModal"
-  class="fixed inset-0 z-[998] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-  (click)="closeLogoPicker()">
-  <div (click)="$event.stopPropagation()" class="w-full max-w-4xl max-h-[90vh] overflow-auto rounded-2xl shadow-2xl">
-    <app-media-selector-modal
-      [mediaType]="'image'"
-      [allowMultiple]="false"
-      (close)="closeLogoPicker()"
-      (select)="onLogoMediaSelected($event)">
-    </app-media-selector-modal>
-  </div>
-</div>
-<!-- /Logo Picker Modal -->
+<!-- ── Logo Picker ─────────────────────────────────────────────────────────── -->
+<app-media-selector-modal
+  *ngIf="showLogoPickerModal"
+  [mediaType]="'image'"
+  [allowMultiple]="false"
+  (close)="closeLogoPicker()"
+  (select)="onLogoMediaSelected($event)">
+</app-media-selector-modal>
 
-<div *ngIf="showImagePickerForVariant !== null"
-  class="fixed inset-0 z-[998] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-  (click)="closeImagePicker()">
-  <div (click)="$event.stopPropagation()" class="w-full max-w-4xl max-h-[90vh] overflow-auto rounded-2xl shadow-2xl">
-    <app-media-selector-modal
-      [mediaType]="'image'"
-      [allowMultiple]="false"
-      (close)="closeImagePicker()"
-      (select)="onMediaSelected($event)">
-    </app-media-selector-modal>
-  </div>
-</div>
-<!-- /Media Selector -->
+<app-media-selector-modal
+  *ngIf="showImagePickerForVariant !== null"
+  [mediaType]="'image'"
+  [allowMultiple]="false"
+  (close)="closeImagePicker()"
+  (select)="onMediaSelected($event)">
+</app-media-selector-modal>
 
 
 <!-- ═══ Post Editor Overlay ═══════════════════════════════════════════════ -->

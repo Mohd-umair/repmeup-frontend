@@ -97,7 +97,7 @@
             {{ getAuthorInitials(interaction) }}
           </div>
           <!-- Real avatar: overlaid on top, hidden on error -->
-          <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId) | async) as avatarUrl">
+          <ng-container *ngIf="(getAuthorAvatar$(interaction.author, interaction.platform, interaction.metadata?.facebookPageId, interaction.platformId) | async) as avatarUrl">
             <img *ngIf="!avatarFallback[interaction.platformId]"
                  [src]="avatarUrl"
                  (error)="onAvatarError(interaction.platformId)"

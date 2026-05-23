@@ -81,8 +81,8 @@ export class InboxListComponent implements OnInit, OnDestroy {
   }
 
   /** Observable avatar URL (fetched with auth for Facebook so img can display). */
-  getAuthorAvatar$(author: IInteraction['author'], platform?: string, pageId?: string): Observable<SafeUrl | null> {
-    return this.avatarService.getAvatarUrl(platform ?? '', author, pageId).pipe(
+  getAuthorAvatar$(author: IInteraction['author'], platform?: string, pageId?: string, threadPlatformId?: string): Observable<SafeUrl | null> {
+    return this.avatarService.getAvatarUrl(platform ?? '', author, pageId, threadPlatformId).pipe(
       map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
     );
   }

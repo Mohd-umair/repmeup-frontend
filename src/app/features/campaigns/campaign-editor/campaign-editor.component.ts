@@ -29,6 +29,13 @@ import {
   TemplateParamFormState
 } from '../shared/template-param-form/template-param-form.component';
 import { CsvColumnMapperComponent } from '../shared/csv-column-mapper/csv-column-mapper.component';
+import {
+  canProceedTemplateStep,
+  getMissingTemplateSlots
+} from '../shared/campaign-template-validation';
+import { WhatsappMessagePreviewComponent } from '../shared/whatsapp-message-preview/whatsapp-message-preview.component';
+import { CampaignPhonePreviewComponent } from '../shared/campaign-phone-preview/campaign-phone-preview.component';
+import { campaignCountryLabel, CAMPAIGN_COUNTRY_LABELS } from '../shared/campaign-country.constants';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -41,7 +48,9 @@ type Step = 1 | 2 | 3 | 4 | 5;
     RouterModule,
     FileUploadZoneComponent,
     TemplateParamFormComponent,
-    CsvColumnMapperComponent
+    CsvColumnMapperComponent,
+    WhatsappMessagePreviewComponent,
+    CampaignPhonePreviewComponent
   ],
   templateUrl: './campaign-editor.component.html'
 })
@@ -94,6 +103,12 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
   audienceLoading = false;
   audiencePreviewLoading = false;
   parseResult: { inserted: number; duplicates: number; skipped: number; total: number } | null = null;
+  defaultCountry = 'IN';
+  supportedRegions: string[] = [];
+  private phonePreviewDebounce: ReturnType<typeof setTimeout> | null = null;
+
+  countryLabel = campaignCountryLabel;
+  readonly fallbackRegions = Object.keys(CAMPAIGN_COUNTRY_LABELS);
 
   // ── Step 4: Schedule ───────────────────────────────────────────────────────
   sendNow = true;
@@ -145,12 +160,17 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
         this.scheduledDate = d.toISOString().slice(0, 10);
         this.scheduledTime = d.toISOString().slice(11, 16);
       }
+
+      if (this.campaign.audienceSettings?.defaultCountry) {
+        this.defaultCountry = this.campaign.audienceSettings.defaultCountry;
+      }
     }
 
     this.loadConnections();
   }
 
   ngOnDestroy(): void {
+    if (this.phonePreviewDebounce) clearTimeout(this.phonePreviewDebounce);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -241,6 +261,7 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
 
   onParamFormChange(state: TemplateParamFormState): void {
     this.paramFormState = state;
+    this.cdr.markForCheck();
   }
 
   getBodyText(template: WhatsAppTemplate): string {
@@ -253,6 +274,50 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
   }
 
   // ─── Audience ─────────────────────────────────────────────────────────────
+
+  private get audienceOptions() {
+    return { defaultCountry: this.defaultCountry };
+  }
+
+  loadAudienceDefaults(): void {
+    if (!this.createdCampaignId) return;
+    this.campaignService.getAudienceDefaults(this.createdCampaignId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: r => {
+          this.supportedRegions = r.supportedRegions || [];
+          if (r.defaultCountry) {
+            this.defaultCountry = r.defaultCountry;
+          } else if (r.suggestedDefaultCountry) {
+            this.defaultCountry = r.suggestedDefaultCountry;
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => { /* non-blocking */ }
+      });
+  }
+
+  onDefaultCountryChange(): void {
+    if (this.rawPhoneText.trim()) {
+      this.schedulePhonePreview();
+    }
+  }
+
+  onRawPhoneTextChange(): void {
+    this.schedulePhonePreview();
+  }
+
+  private schedulePhonePreview(): void {
+    if (this.phonePreviewDebounce) clearTimeout(this.phonePreviewDebounce);
+    this.phonePreviewDebounce = setTimeout(() => this.previewCsv(), 400);
+  }
+
+  get canSubmitAudience(): boolean {
+    if (!this.rawPhoneText.trim()) return false;
+    if (!this.csvPreview?.phoneStats) return true;
+    const s = this.csvPreview.phoneStats;
+    return (s.valid + s.prefixed) > 0;
+  }
 
   setAudienceTab(tab: 'paste' | 'upload'): void {
     this.audienceTab = tab;
@@ -284,13 +349,19 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
   previewCsv(): void {
     if (!this.rawPhoneText.trim() || !this.createdCampaignId) return;
     this.audiencePreviewLoading = true;
-    this.csvPreview = null;
     this.csvMapping = null;
-    this.campaignService.previewRecipientCsv(this.createdCampaignId, this.rawPhoneText)
+    this.campaignService.previewRecipientCsv(
+      this.createdCampaignId,
+      this.rawPhoneText,
+      this.audienceOptions
+    )
       .pipe(takeUntil(this.destroy$), finalize(() => (this.audiencePreviewLoading = false)))
       .subscribe({
         next: r => {
           this.csvPreview = r;
+          if (r.defaultCountry && !this.campaign?.audienceSettings?.defaultCountry) {
+            this.defaultCountry = r.defaultCountry;
+          }
         },
         error: err => this.notify.error(err?.error?.error || 'Failed to preview CSV')
       });
@@ -326,8 +397,12 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.canSubmitAudience) {
+      this.notify.warning('No valid phone numbers found. Check the preview and default country.');
+      return;
+    }
+
     if (this.audienceTab === 'upload' && this.shouldShowCsvMapper) {
-      // Mapping flow — requires a valid mapping
       if (!this.csvMapping || !this.csvMapping.phoneColumn) {
         this.notify.warning('Please choose a phone column');
         return;
@@ -346,7 +421,8 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
         this.createdCampaignId,
         this.rawPhoneText,
         this.csvMapping,
-        this.paramFormState.defaultParams
+        this.paramFormState.defaultParams,
+        this.audienceOptions
       )
         .pipe(takeUntil(this.destroy$), finalize(() => (this.audienceLoading = false)))
         .subscribe({
@@ -367,7 +443,11 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
     }
     this.audienceLoading = true;
     this.parseResult = null;
-    this.campaignService.addRecipients(this.createdCampaignId, this.rawPhoneText)
+    this.campaignService.addRecipients(
+      this.createdCampaignId,
+      this.rawPhoneText,
+      this.audienceOptions
+    )
       .pipe(takeUntil(this.destroy$), finalize(() => (this.audienceLoading = false)))
       .subscribe({
         next: r => {
@@ -410,7 +490,12 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
     this.testSent = false;
     this.testError = '';
     this.campaignService
-      .sendTestMessage(this.createdCampaignId, this.testPhone, this.paramFormState.defaultParams)
+      .sendTestMessage(
+        this.createdCampaignId,
+        this.testPhone,
+        this.paramFormState.defaultParams,
+        this.defaultCountry
+      )
       .pipe(takeUntil(this.destroy$), finalize(() => (this.testSending = false)))
       .subscribe({
         next: () => {
@@ -432,31 +517,7 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
 
   canProceedStep2(): boolean {
     if (!this.selectedTemplate) return false;
-    if (!this.templateSlots) return false;
-    if (this.templateSlots.isUnsupported) return false;
-    if (this.templateSlots.isAuth) return false;
-
-    // Header media must be uploaded for IMAGE/VIDEO/DOCUMENT templates
-    if (this.templateSlots.header.requiresMedia && !this.paramFormState.headerMedia?.url) {
-      return false;
-    }
-    if (this.templateSlots.header.format === 'LOCATION') {
-      const loc = this.paramFormState.headerLocation;
-      if (!loc || !Number.isFinite(loc.latitude) || !Number.isFinite(loc.longitude)) return false;
-    }
-
-    // For non-CSV slots, a default value must be supplied (CSV slots are validated in Step 3)
-    const allSlots = [
-      ...this.templateSlots.header.textSlots,
-      ...this.templateSlots.body.slots,
-      ...this.templateSlots.buttons.flatMap(b => b.urlVars)
-    ];
-    for (const slot of allSlots) {
-      if (this.paramFormState.varsFromCsv.includes(slot.key)) continue;
-      const v = (this.paramFormState.defaultParams[slot.key] || '').trim();
-      if (!v) return false;
-    }
-    return true;
+    return canProceedTemplateStep(this.templateSlots, this.paramFormState);
   }
 
   canProceedStep3(): boolean {
@@ -476,12 +537,17 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
   goToStep(target: Step): void {
     if (target < this.step) {
       this.step = target;
+      if (target === 3) this.loadAudienceDefaults();
       return;
     }
     if (target === 2 && this.step === 1) this.proceedStep1();
     else if (target === 3 && this.step === 2) this.proceedStep2();
     else if (target === 4 && this.step === 3) this.step = 4;
     else if (target === 5 && this.step === 4) this.step = 5;
+    else if (target === 3) {
+      this.step = 3;
+      this.loadAudienceDefaults();
+    }
   }
 
   proceedStep1(): void {
@@ -517,10 +583,18 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
         this.notify.warning('Authentication templates cannot be used for broadcasts.');
       } else if (this.templateSlots?.isUnsupported) {
         this.notify.warning(this.templateSlots.isUnsupported.reason);
-      } else if (this.templateSlots?.header.requiresMedia && !this.paramFormState.headerMedia?.url) {
+      } else if (this.templateSlots?.header.requiresMedia && !this.paramFormState.headerMedia?.url?.trim()) {
         this.notify.warning('Please upload the header media file first.');
       } else {
-        this.notify.warning('Please fill in all required template variables.');
+        const missing = this.templateSlots
+          ? getMissingTemplateSlots(this.templateSlots, this.paramFormState)
+          : [];
+        if (missing.length) {
+          const labels = missing.map(s => s.label).join(', ');
+          this.notify.warning(`Please fill in required template fields: ${labels}`);
+        } else {
+          this.notify.warning('Please fill in all required template variables.');
+        }
       }
       return;
     }
@@ -532,7 +606,10 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
     })
       .pipe(takeUntil(this.destroy$), finalize(() => (this.saving = false)))
       .subscribe({
-        next: () => { this.step = 3; },
+        next: () => {
+          this.step = 3;
+          this.loadAudienceDefaults();
+        },
         error: err => this.notify.error(err?.error?.error || 'Failed to save template settings')
       });
   }

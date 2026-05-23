@@ -44,9 +44,15 @@ export class RazorpayService {
   initiateUpgrade(options: RazorpayCheckoutOptions): Promise<RazorpayVerifyResult> {
     return new Promise(async (resolve, reject) => {
       try {
+        // Backend stores planId as lowercase slug (starter/pro/business). Never send display name casing.
+        const planId = String(options.planId || '').trim().toLowerCase();
+        if (!planId) {
+          return reject('Invalid plan selected.');
+        }
+
         // Step 1 — create subscription on backend
         const createRes: any = await firstValueFrom(
-          this.http.post(`${this.apiUrl}/create-subscription`, { planId: options.planId })
+          this.http.post(`${this.apiUrl}/create-subscription`, { planId })
         );
 
         if (!createRes?.success) {
@@ -83,7 +89,7 @@ export class RazorpayService {
                   razorpay_payment_id: response.razorpay_payment_id,
                   razorpay_subscription_id: response.razorpay_subscription_id,
                   razorpay_signature: response.razorpay_signature,
-                  planId: options.planId
+                  planId
                 })
               );
               resolve(verifyRes);

@@ -1,0 +1,244 @@
+.wa-preview {
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  background: var(--card-bg);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  &--compact {
+    padding: 0.85rem;
+
+    .wa-preview__subtitle {
+      display: none;
+    }
+
+    .wa-preview__header-img,
+    .wa-preview__header-video {
+      max-height: 120px;
+    }
+  }
+
+  &__heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  &__wa-icon {
+    color: #25d366;
+    font-size: 1rem;
+  }
+
+  &__subtitle {
+    margin: 0.2rem 0 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  &__csv-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+  }
+
+  &__empty {
+    border: 1px dashed var(--card-border);
+    border-radius: 0.85rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+
+    i {
+      font-size: 1.75rem;
+      color: #25d366;
+      opacity: 0.45;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.8rem;
+    }
+  }
+
+  &__card {
+    border-radius: 0.85rem;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    background: var(--input-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+
+  &__card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.65rem;
+    border-bottom: 1px solid var(--card-border);
+    background: var(--surface-primary);
+  }
+
+  &__card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 0.45rem;
+    background: rgba(37, 211, 102, 0.12);
+    color: #25d366;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  &__card-meta {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__header-media {
+    background: var(--surface-primary);
+
+    &--video {
+      background: #000;
+    }
+  }
+
+  &__header-img,
+  &__header-video {
+    display: block;
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+  }
+
+  &__header-doc,
+  &__header-location {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--card-border);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    background: var(--surface-primary);
+
+    i {
+      font-size: 1.15rem;
+      color: #25d366;
+      flex-shrink: 0;
+    }
+  }
+
+  &__location-name {
+    margin: 0;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+
+  &__location-address {
+    margin: 0.15rem 0 0;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  &__card-body {
+    padding: 0.65rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  &__header-text {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.35;
+    white-space: pre-wrap;
+  }
+
+  &__body {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--text-primary);
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+
+  &__footer {
+    margin: 0;
+    padding-top: 0.25rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+  }
+
+  &__buttons {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--card-border);
+  }
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #039be5;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--card-border);
+    background: var(--surface-primary);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    i {
+      font-size: 0.7rem;
+    }
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.35rem;
+    line-height: 1.4;
+
+    i {
+      color: #f59e0b;
+      margin-top: 0.1rem;
+    }
+  }
+}

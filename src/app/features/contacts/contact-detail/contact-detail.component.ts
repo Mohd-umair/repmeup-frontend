@@ -5,12 +5,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, Observable } from 'rxjs';
+import { takeUntil, map } from 'rxjs/operators';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ContactService } from '../../../core/services/contact.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 import { IContact } from '../../../core/models/contact.model';
-import { getContactAvatarUrl } from '../../../core/utils/contact-display.util';
 
 @Component({
   selector: 'app-contact-detail',
@@ -41,17 +42,21 @@ export class ContactDetailComponent implements OnChanges, OnDestroy {
   mergeEmail = '';
   showMergeDialog = false;
   merging = false;
+  contactAvatarError = false;
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private contactService: ContactService,
     private notify: NotificationService,
+    private avatarService: InboxAvatarService,
+    private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['contactId'] && this.contactId) {
+      this.contactAvatarError = false;
       this.loadContact();
     }
   }
@@ -218,8 +223,15 @@ export class ContactDetailComponent implements OnChanges, OnDestroy {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   }
 
-  contactAvatarUrl(): string | null {
-    return getContactAvatarUrl(this.contact);
+  contactAvatarUrl$(): Observable<SafeUrl | null> {
+    return this.avatarService.getContactAvatarUrl$(this.contact).pipe(
+      map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
+    );
+  }
+
+  onContactAvatarError(): void {
+    this.contactAvatarError = true;
+    this.cdr.markForCheck();
   }
 
   getSentimentBadge(sentiment: string | null | undefined): { label: string; cls: string } {

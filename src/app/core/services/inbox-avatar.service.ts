@@ -4,6 +4,18 @@ import { Observable, of } from 'rxjs';
 import { map, catchError, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { IAuthor } from '../models/interaction.model';
+import { IContact, IContactChannel } from '../models/contact.model';
+
+const AVATAR_CHANNEL_PRIORITY = ['instagram', 'facebook', 'whatsapp', 'linkedin', 'twitter', 'youtube', 'google'];
+
+function pickBestAvatarChannel(channels: IContactChannel[] | undefined | null): IContactChannel | null {
+  if (!channels?.length) return null;
+  for (const platform of AVATAR_CHANNEL_PRIORITY) {
+    const ch = channels.find(c => c.platform?.toLowerCase() === platform && c.platformUserId);
+    if (ch) return ch;
+  }
+  return channels.find(c => c.platformUserId) || null;
+}
 
 const MAX_CACHE = 300;
 /** Sentinel: key was tried and failed — never retry. */
@@ -43,46 +55,76 @@ export class InboxAvatarService {
   /**
    * Returns an observable that emits the avatar URL to bind to [src], or null (show initials).
    * @param pageId Optional; for Facebook, pass to use the correct page token when org has multiple pages.
+   * @param threadPlatformId Optional; `dm_<pageOrAccountId>_<userId>` — used to derive Facebook pageId when metadata is missing.
    */
-  getAvatarUrl(platform: string, author: IAuthor | undefined | null, pageId?: string): Observable<string | null> {
+  getAvatarUrl(
+    platform: string,
+    author: IAuthor | undefined | null,
+    pageId?: string,
+    threadPlatformId?: string
+  ): Observable<string | null> {
     if (!author) return of(null);
 
     const storedUrl = author.avatarUrl || author.profilePicture || null;
     const platformKey = (platform || '').toLowerCase();
+    let resolvedPageId = pageId;
+    if (!resolvedPageId && platformKey === 'facebook' && threadPlatformId?.startsWith('dm_')) {
+      const parts = threadPlatformId.split('_');
+      if (parts.length >= 3) resolvedPageId = parts[1];
+    }
 
     // --- Facebook path ---
+    // Always proxy: CDN URLs have time-limited signatures and expire. Proxy adds backend token + caches.
     if (platformKey === 'facebook') {
       if (!author.platformId) return of(null);
-      if (storedUrl && isFacebookCdnUrl(storedUrl)) {
-        const key = `cdn_${storedUrl}`;
-        const cached = this.resolved.get(key);
-        if (cached !== undefined) return of(cached === FAILED ? null : cached);
-        this.setCache(key, storedUrl);
-        return of(storedUrl);
-      }
-      const proxyKey = pageId ? `proxy_fb_${author.platformId}_${pageId}` : `proxy_fb_${author.platformId}`;
-      const proxyUrl = pageId
-        ? `${this.apiUrl}/inbox/avatar/facebook/${encodeURIComponent(author.platformId)}?pageId=${encodeURIComponent(pageId)}`
+      const proxyKey = resolvedPageId ? `proxy_fb_${author.platformId}_${resolvedPageId}` : `proxy_fb_${author.platformId}`;
+      const proxyUrl = resolvedPageId
+        ? `${this.apiUrl}/inbox/avatar/facebook/${encodeURIComponent(author.platformId)}?pageId=${encodeURIComponent(resolvedPageId)}`
         : `${this.apiUrl}/inbox/avatar/facebook/${encodeURIComponent(author.platformId)}`;
       return this.fetchViaProxy(proxyKey, proxyUrl);
     }
 
-    // --- Instagram path (same Graph picture semantics; browser cannot load graph URLs without token) ---
+    // --- Instagram path ---
+    // Always proxy: CDN URLs expire, and IGAA-token connections cannot serve customer pics at all.
+    // Proxy handles token resolution (EAA > IGAA) and re-fetches when stored CDN has expired.
     if (platformKey === 'instagram') {
       if (!author.platformId) return of(null);
-      if (storedUrl && isFacebookCdnUrl(storedUrl)) {
-        const key = `cdn_${storedUrl}`;
-        const cached = this.resolved.get(key);
-        if (cached !== undefined) return of(cached === FAILED ? null : cached);
-        this.setCache(key, storedUrl);
-        return of(storedUrl);
-      }
       const proxyKey = `proxy_ig_${author.platformId}`;
       const proxyUrl = `${this.apiUrl}/inbox/avatar/instagram/${encodeURIComponent(author.platformId)}`;
       return this.fetchViaProxy(proxyKey, proxyUrl);
     }
 
+    // WhatsApp: Meta does not expose customer profile pictures via API — show initials.
+    if (platformKey === 'whatsapp') {
+      return of(null);
+    }
+
+    if (storedUrl && isGraphPictureUrl(storedUrl) && author.platformId) {
+      return this.fetchViaProxy(
+        `proxy_generic_${platformKey}_${author.platformId}`,
+        `${this.apiUrl}/inbox/avatar/${encodeURIComponent(platformKey)}/${encodeURIComponent(author.platformId)}`
+      );
+    }
+
     return of(storedUrl);
+  }
+
+  /**
+   * Contact list/detail avatar — same proxy rules as inbox (Graph URLs need backend token).
+   */
+  getContactAvatarUrl$(contact: IContact | null | undefined, threadPlatformId?: string): Observable<string | null> {
+    if (!contact) return of(null);
+    const channel = pickBestAvatarChannel(contact.channels);
+    if (!channel?.platformUserId) return of(null);
+
+    const author: IAuthor = {
+      platformId: channel.platformUserId,
+      name: channel.name || contact.primaryName,
+      username: channel.username,
+      avatarUrl: channel.avatarUrl,
+      profilePicture: channel.avatarUrl
+    };
+    return this.getAvatarUrl(channel.platform, author, undefined, threadPlatformId);
   }
 
   /**
@@ -147,14 +189,7 @@ export class InboxAvatarService {
   }
 }
 
-/** True for Meta CDN domains that are publicly accessible without auth. */
-function isFacebookCdnUrl(url: string): boolean {
-  return (
-    url.includes('fbsbx.com') ||
-    url.includes('lookaside.fbsbx.com') ||
-    url.includes('platform-lookaside.fbsbx.com') ||
-    url.includes('scontent.') ||
-    url.includes('fbcdn.net') ||
-    url.includes('cdninstagram.com')
-  );
+/** Graph `/picture` redirect URLs require a Page token — never bind directly in `<img>`. */
+function isGraphPictureUrl(url: string): boolean {
+  return url.includes('graph.facebook.com') && url.includes('/picture');
 }

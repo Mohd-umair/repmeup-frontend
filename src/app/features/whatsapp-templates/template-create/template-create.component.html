@@ -140,9 +140,24 @@
 
       <div class="form-group" *ngIf="headerFormat === 'TEXT'">
         <label class="form-label">Header Text <span class="required">*</span></label>
-        <input type="text" class="form-input" [(ngModel)]="headerText"
-          placeholder="e.g. Your Order Update" maxlength="60">
-        <div class="form-hint">Max 60 chars. You may use <code>&#123;&#123;1&#125;&#125;</code> as one variable.</div>
+        <div class="textarea-wrapper">
+          <input type="text" class="form-input" [(ngModel)]="headerText"
+            placeholder="e.g. Hello {{1}}, your order is ready" maxlength="60">
+          <div class="textarea-footer">
+            <button type="button" class="btn-insert-var"
+              [disabled]="!canInsertHeaderVariable"
+              (click)="insertHeaderVariable()">
+              <i class="fas fa-plus-circle"></i> Insert Variable
+            </button>
+            <span class="char-count" [class.danger]="headerCharCount > 55">
+              {{ headerCharCount }} / 60
+            </span>
+          </div>
+        </div>
+        <div class="form-hint">
+          {{ headerVariableHint }}
+          <span *ngIf="headerVariableCount > 0"> · {{ headerVariableCount }} variable used</span>
+        </div>
       </div>
 
       <div class="form-group header-upload-block" *ngIf="isHeaderBinaryFormat()">
@@ -400,7 +415,7 @@
           <div class="wa-bubble">
             <!-- Header -->
             <ng-container *ngIf="hasHeader && category !== 'AUTHENTICATION'">
-              <div *ngIf="headerFormat === 'TEXT'" class="wa-header-text">{{ headerText || 'Header text' }}</div>
+              <div *ngIf="headerFormat === 'TEXT'" class="wa-header-text">{{ previewHeader }}</div>
               <div *ngIf="headerFormat === 'IMAGE'" class="wa-header-media wa-header-media--rich">
                 <img *ngIf="headerMediaPreviewUrl" [src]="headerMediaPreviewUrl" class="wa-header-img" alt="" />
                 <ng-container *ngIf="!headerMediaPreviewUrl">

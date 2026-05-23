@@ -156,12 +156,45 @@
         [initialHeaderLocation]="paramFormState.headerLocation"
         [initialUrlButtonParams]="paramFormState.urlButtonParams || []"
         [initialVarsFromCsv]="paramFormState.varsFromCsv"
-        (change)="onParamFormChange($event)">
+        (stateChange)="onParamFormChange($event)">
       </app-template-param-form>
+
+      <!-- Live message preview while configuring template -->
+      <app-whatsapp-message-preview
+        *ngIf="selectedTemplate && templateSlots && !templateSlotsLoading"
+        [template]="selectedTemplate"
+        [slots]="templateSlots"
+        [formState]="paramFormState"
+        [compact]="true"
+        title="Live preview"
+        subtitle="Updates as you upload media and fill variables.">
+      </app-whatsapp-message-preview>
     </ng-container>
 
     <!-- ══ STEP 3: Audience ══════════════════════════════════════════════ -->
     <ng-container *ngIf="step === 3">
+      <!-- Default country for local numbers -->
+      <div class="rounded-xl border p-4 space-y-2"
+           style="border-color: var(--card-border); background-color: var(--card-bg);">
+        <label class="block text-sm font-semibold" style="color: var(--text-primary);">
+          <i class="fas fa-globe mr-1.5" style="color: #d8ff00;"></i>
+          Default country
+        </label>
+        <select [(ngModel)]="defaultCountry"
+                (ngModelChange)="onDefaultCountryChange()"
+                class="w-full px-3 py-2.5 rounded-lg border text-sm"
+                style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);">
+          <option *ngFor="let code of (supportedRegions.length ? supportedRegions : fallbackRegions)"
+                  [value]="code">
+            {{ countryLabel(code) }}
+          </option>
+        </select>
+        <p class="text-xs" style="color: var(--text-muted);">
+          Numbers without a country code will use this default.
+          Numbers that already include one (e.g. <code>919876543210</code> or <code>+14155551234</code>) are kept unchanged.
+        </p>
+      </div>
+
       <!-- Tab switcher -->
       <div class="flex rounded-xl border overflow-hidden flex-shrink-0"
            style="border-color: var(--card-border);">
@@ -185,13 +218,14 @@
           Phone Numbers
         </label>
         <textarea [(ngModel)]="rawPhoneText"
+                  (ngModelChange)="onRawPhoneTextChange()"
                   rows="10"
-                  placeholder="One phone number per line (or CSV: phone,name)&#10;919876543210&#10;14155551234,John Doe&#10;..."
+                  placeholder="One phone number per line (or CSV: phone,name)&#10;9876543210&#10;919876543210&#10;14155551234,John Doe&#10;..."
                   class="w-full px-4 py-3 rounded-xl border text-sm font-mono resize-none"
                   style="background-color: var(--input-bg); border-color: var(--card-border); color: var(--text-primary);"></textarea>
         <p class="text-xs mt-1" style="color: var(--text-muted);">
-          Enter one number per line. Optional: add a name after a comma (e.g. <code>919876543210,Jane</code>).
-          Up to 50,000 at a time. Country code required, no + symbol.
+          Enter one number per line. Local numbers (without country code) use the default country above.
+          Optional: add a name after a comma (e.g. <code>9876543210,Jane</code>).
         </p>
         <div *ngIf="paramFormState.varsFromCsv.length > 0"
              class="mt-3 rounded-lg border p-3 flex items-start gap-2 text-xs"
@@ -242,10 +276,18 @@
         </div>
       </div>
 
+      <!-- Phone validation preview -->
+      <app-campaign-phone-preview
+        *ngIf="csvPreview?.phonePreview?.length"
+        [phonePreview]="csvPreview!.phonePreview!"
+        [phoneStats]="csvPreview!.phoneStats || null"
+        [rowCount]="csvPreview!.rowCount">
+      </app-campaign-phone-preview>
+
       <!-- Submit + result -->
       <div class="flex items-center gap-3">
         <button (click)="submitAudience()"
-                [disabled]="audienceLoading || !rawPhoneText.trim()"
+                [disabled]="audienceLoading || !canSubmitAudience"
                 class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
                 style="background-color: #d8ff00; color: #000;">
           <i class="fas fa-spinner fa-spin mr-1.5" *ngIf="audienceLoading"></i>
@@ -355,6 +397,15 @@
     <!-- ══ STEP 5: Review & Launch ════════════════════════════════════════ -->
     <ng-container *ngIf="step === 5">
       <p class="text-sm" style="color: var(--text-muted);">Review your campaign before launching.</p>
+
+      <!-- WhatsApp message preview -->
+      <app-whatsapp-message-preview
+        [template]="selectedTemplate"
+        [slots]="templateSlots"
+        [formState]="paramFormState"
+        title="How your message will look"
+        subtitle="Final preview using your template, media, and variable values before send.">
+      </app-whatsapp-message-preview>
 
       <!-- Summary card -->
       <div class="rounded-xl border divide-y"

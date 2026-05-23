@@ -45,13 +45,16 @@
 
     <!-- Profile row -->
     <div class="flex items-center gap-3">
-      <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-base bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
-        <img *ngIf="contactAvatarUrl"
-             [src]="contactAvatarUrl"
-             [alt]="contact.primaryName"
-             referrerpolicy="no-referrer"
-             class="w-full h-full object-cover" />
-        <span *ngIf="!contactAvatarUrl">{{ getInitials(contact.primaryName) }}</span>
+      <div class="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center font-bold text-base bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+        <span>{{ getInitials(contact.primaryName) }}</span>
+        <ng-container *ngIf="(contactAvatarUrl$() | async) as avatarUrl">
+          <img *ngIf="!contactAvatarError"
+               [src]="avatarUrl"
+               [alt]="contact.primaryName"
+               referrerpolicy="no-referrer"
+               (error)="onContactAvatarError()"
+               class="absolute inset-0 w-full h-full object-cover" />
+        </ng-container>
       </div>
       <div class="min-w-0 flex-1">
         <h3 class="text-sm font-bold text-gray-900 dark:text-rep-white truncate">{{ contact.primaryName }}</h3>

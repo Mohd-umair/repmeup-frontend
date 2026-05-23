@@ -1555,6 +1555,12 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     }
   }
 
+  onAiSendSuggestedProduct(product: any): void {
+    if (this.inboxDetail) {
+      this.inboxDetail.openProductPickerWithSuggestion(product);
+    }
+  }
+
   /**
    * After bulk operations that mutate interaction data (assign, label, archive…),
    * re-fetch the currently open detail panel so banners / metadata refresh instantly.

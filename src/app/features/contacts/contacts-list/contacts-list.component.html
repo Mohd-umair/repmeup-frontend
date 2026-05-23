@@ -90,13 +90,16 @@
             class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition cursor-pointer">
             <td class="px-4 sm:px-6 py-4 align-top">
               <div class="flex items-center gap-3 min-w-0">
-                <div class="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
-                  <img *ngIf="avatarUrl(contact)"
-                       [src]="avatarUrl(contact)!"
-                       [alt]="contact.primaryName"
-                       referrerpolicy="no-referrer"
-                       class="w-full h-full object-cover" />
-                  <span *ngIf="!avatarUrl(contact)">{{ getInitials(contact.primaryName) }}</span>
+                <div class="relative flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
+                  <span>{{ getInitials(contact.primaryName) }}</span>
+                  <ng-container *ngIf="(getContactAvatarUrl$(contact) | async) as avatarUrl">
+                    <img *ngIf="!avatarErrors[contact._id]"
+                         [src]="avatarUrl"
+                         [alt]="contact.primaryName"
+                         referrerpolicy="no-referrer"
+                         (error)="onContactAvatarError(contact._id)"
+                         class="absolute inset-0 w-full h-full object-cover" />
+                  </ng-container>
                 </div>
                 <span class="text-sm font-bold text-gray-900 dark:text-rep-white truncate max-w-[200px]">
                   {{ contact.primaryName }}

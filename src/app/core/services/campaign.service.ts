@@ -54,7 +54,35 @@ export interface ICampaignUrlButtonParam {
 export interface ICampaignVariableMapping {
   phoneColumn?: string;
   nameColumn?: string;
+  countryCodeColumn?: string;
   slots?: Record<string, string>;
+}
+
+export interface ICampaignAudienceSettings {
+  defaultCountry?: string;
+  countryCodeColumn?: string;
+}
+
+export interface IPhonePreviewRow {
+  row: number;
+  raw: string;
+  normalized: string | null;
+  status: 'valid' | 'prefixed' | 'invalid';
+  reason?: string;
+}
+
+export interface IPhonePreviewStats {
+  valid: number;
+  prefixed: number;
+  invalid: number;
+}
+
+export interface IAudienceDefaultsResponse {
+  success: boolean;
+  suggestedDefaultCountry?: string;
+  defaultCountry?: string;
+  countryCodeColumn?: string | null;
+  supportedRegions?: string[];
 }
 
 export interface ICampaign {
@@ -74,6 +102,7 @@ export interface ICampaign {
   headerLocation?: ICampaignHeaderLocation;
   urlButtonParams?: ICampaignUrlButtonParam[];
   variableMapping?: ICampaignVariableMapping;
+  audienceSettings?: ICampaignAudienceSettings;
   status: CampaignStatus;
   scheduledAt?: string | null;
   startedAt?: string;
@@ -245,6 +274,7 @@ export interface ITemplateSlotsResponse {
 export interface ICsvPreviewSuggestion {
   phoneColumn: string | null;
   nameColumn: string | null;
+  countryCodeColumn?: string | null;
   slots: Record<string, string | null>;
 }
 
@@ -256,12 +286,22 @@ export interface ICsvPreviewResponse {
   sampleRows: string[][];
   suggestedMapping: ICsvPreviewSuggestion;
   slots: ITemplateSlots | null;
+  phonePreview?: IPhonePreviewRow[];
+  phoneStats?: IPhonePreviewStats;
+  suggestedDefaultCountry?: string;
+  defaultCountry?: string;
 }
 
 export interface ICsvUploadMapping {
   phoneColumn: string;
   nameColumn?: string;
+  countryCodeColumn?: string;
   slots?: Record<string, string>;
+}
+
+export interface ICampaignAudienceOptions {
+  defaultCountry?: string;
+  countryCodeColumn?: string;
 }
 
 // ── Service ──────────────────────────────────────────────────────────────────
@@ -290,8 +330,15 @@ export class CampaignService {
     return this.api.delete<ICampaignDeleteResponse>(`/campaigns/${id}`);
   }
 
-  addRecipients(id: string, rawText: string): Observable<IAddRecipientsResponse> {
-    return this.api.post<IAddRecipientsResponse>(`/campaigns/${id}/recipients`, { rawText });
+  addRecipients(
+    id: string,
+    rawText: string,
+    options?: ICampaignAudienceOptions
+  ): Observable<IAddRecipientsResponse> {
+    return this.api.post<IAddRecipientsResponse>(`/campaigns/${id}/recipients`, {
+      rawText,
+      ...options
+    });
   }
 
   /** Inserts recipients with a CSV-column → template-slot mapping (per-recipient template params). */
@@ -299,20 +346,29 @@ export class CampaignService {
     id: string,
     rawText: string,
     mapping: ICsvUploadMapping,
-    defaultParams?: Record<string, string>
+    defaultParams?: Record<string, string>,
+    options?: ICampaignAudienceOptions
   ): Observable<IAddRecipientsResponse> {
     return this.api.post<IAddRecipientsResponse>(
       `/campaigns/${id}/recipients`,
-      { rawText, mapping, defaultParams }
+      { rawText, mapping, defaultParams, ...options }
     );
   }
 
-  /** Returns headers + sample rows + suggested mapping for a freshly uploaded CSV. */
-  previewRecipientCsv(id: string, rawText: string): Observable<ICsvPreviewResponse> {
+  /** Returns headers + sample rows + suggested mapping + phone validation preview. */
+  previewRecipientCsv(
+    id: string,
+    rawText: string,
+    options?: ICampaignAudienceOptions
+  ): Observable<ICsvPreviewResponse> {
     return this.api.post<ICsvPreviewResponse>(
       `/campaigns/${id}/recipients/csv/preview`,
-      { rawText }
+      { rawText, ...options }
     );
+  }
+
+  getAudienceDefaults(id: string): Observable<IAudienceDefaultsResponse> {
+    return this.api.get<IAudienceDefaultsResponse>(`/campaigns/${id}/audience-defaults`);
   }
 
   /** Returns the slot descriptor for this campaign's currently-selected template. */
@@ -358,8 +414,13 @@ export class CampaignService {
   sendTestMessage(
     id: string,
     testPhone: string,
-    testParams?: Record<string, string>
+    testParams?: Record<string, string>,
+    defaultCountry?: string
   ): Observable<ICampaignTestMessageResponse> {
-    return this.api.post<ICampaignTestMessageResponse>(`/campaigns/${id}/test`, { testPhone, testParams });
+    return this.api.post<ICampaignTestMessageResponse>(`/campaigns/${id}/test`, {
+      testPhone,
+      testParams,
+      defaultCountry
+    });
   }
 }

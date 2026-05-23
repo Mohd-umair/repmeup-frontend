@@ -788,7 +788,7 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   /** Avatar for bucket cards / chat header — proxied via API when Graph URL or FB/IG needs token. */
   getAuthorAvatar$(interaction: IInteraction): Observable<SafeUrl | null> {
     const pageId = (interaction.metadata as { facebookPageId?: string } | undefined)?.facebookPageId;
-    return this.avatarService.getAvatarUrl(interaction.platform, interaction.author, pageId).pipe(
+    return this.avatarService.getAvatarUrl(interaction.platform, interaction.author, pageId, interaction.platformId).pipe(
       map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
     );
   }

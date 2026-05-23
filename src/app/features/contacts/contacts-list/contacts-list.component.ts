@@ -3,11 +3,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { Subject, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil, map } from 'rxjs/operators';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ContactService } from '../../../core/services/contact.service';
+import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 import { IContact } from '../../../core/models/contact.model';
-import { getContactAvatarUrl } from '../../../core/utils/contact-display.util';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 const PLATFORMS = ['instagram', 'facebook', 'whatsapp', 'youtube', 'google', 'linkedin'];
@@ -36,11 +37,16 @@ export class ContactsListComponent implements OnInit, OnDestroy {
   pageSize = 20;
   readonly platforms = PLATFORMS;
 
+  /** Hide broken avatar img and show initials fallback */
+  avatarErrors: Record<string, boolean> = {};
+
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
   constructor(
     private contactService: ContactService,
+    private avatarService: InboxAvatarService,
+    private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -138,14 +144,21 @@ export class ContactsListComponent implements OnInit, OnDestroy {
     return colors[platform] || 'text-gray-500';
   }
 
+  /** Profile image via backend proxy when needed (Graph URLs are not browser-loadable). */
+  getContactAvatarUrl$(contact: IContact): Observable<SafeUrl | null> {
+    return this.avatarService.getContactAvatarUrl$(contact).pipe(
+      map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
+    );
+  }
+
+  onContactAvatarError(contactId: string): void {
+    this.avatarErrors = { ...this.avatarErrors, [contactId]: true };
+    this.cdr.markForCheck();
+  }
+
   getInitials(name: string): string {
     if (!name || name === 'Unknown') return '?';
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  }
-
-  /** Profile image from any channel that has an avatar (not only `channels[0]`). */
-  avatarUrl(contact: IContact): string | null {
-    return getContactAvatarUrl(contact);
   }
 
 }

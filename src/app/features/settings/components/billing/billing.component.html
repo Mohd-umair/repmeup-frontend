@@ -34,7 +34,7 @@
         <!-- Upgrade prompt if near limit -->
         <ng-container *ngIf="subscriptionLimits?.nextTier">
           <button
-            (click)="upgradePlan(subscriptionLimits!.nextTier!.name.toLowerCase(), subscriptionLimits!.nextTier!.name)"
+            (click)="upgradePlan(subscriptionLimits!.nextTier!.planId, subscriptionLimits!.nextTier!.name)"
             [disabled]="upgradingPlan !== null"
             class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-rep-lime text-rep-black font-bold rounded-xl text-sm hover:shadow-lg hover:shadow-rep-lime/30 transition-all disabled:opacity-60">
             <i class="fas fa-arrow-up text-xs"></i>

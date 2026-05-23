@@ -4,12 +4,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, Observable } from 'rxjs';
+import { takeUntil, map } from 'rxjs/operators';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ContactService } from '../../../core/services/contact.service';
+import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 import { IInteraction } from '../../../core/models/interaction.model';
 import { IContact } from '../../../core/models/contact.model';
-import { getContactAvatarUrl } from '../../../core/utils/contact-display.util';
 
 @Component({
   selector: 'app-inbox-contact-panel',
@@ -24,12 +25,15 @@ export class InboxContactPanelComponent implements OnChanges, OnDestroy {
   contact: IContact | null = null;
   loading = false;
   error: string | null = null;
+  contactAvatarError = false;
 
   private loadedContactId: string | null = null;
   private destroy$ = new Subject<void>();
 
   constructor(
     private contactService: ContactService,
+    private avatarService: InboxAvatarService,
+    private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -56,6 +60,7 @@ export class InboxContactPanelComponent implements OnChanges, OnDestroy {
     this.loading = true;
     this.error = null;
     this.contact = null;
+    this.contactAvatarError = false;
     this.loadedContactId = id;
 
     this.contactService.getContact(id).pipe(takeUntil(this.destroy$)).subscribe({
@@ -72,9 +77,16 @@ export class InboxContactPanelComponent implements OnChanges, OnDestroy {
     });
   }
 
-  /** First channel with a non-empty avatar URL (order of `channels` is not guaranteed). */
-  get contactAvatarUrl(): string | null {
-    return getContactAvatarUrl(this.contact);
+  /** Proxied avatar URL (Graph/CDN) for the linked contact. */
+  contactAvatarUrl$(): Observable<SafeUrl | null> {
+    return this.avatarService.getContactAvatarUrl$(this.contact).pipe(
+      map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
+    );
+  }
+
+  onContactAvatarError(): void {
+    this.contactAvatarError = true;
+    this.cdr.markForCheck();
   }
 
   getPlatformIcon(platform: string): string {

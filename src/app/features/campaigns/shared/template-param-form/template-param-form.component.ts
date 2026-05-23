@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
 import { FileUploadZoneComponent } from '../../../../shared/components/file-upload-zone/file-upload-zone.component';
-import { MediaUploadModalComponent } from '../../../../shared/components/media-upload-modal/media-upload-modal.component';
+import { MediaSelectorModalComponent } from '../../../../shared/components/media-selector-modal/media-selector-modal.component';
 
 import { MediaLibraryService } from '../../../../core/services/media-library.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -43,7 +43,7 @@ export interface TemplateParamFormState {
 @Component({
   selector: 'app-template-param-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, FileUploadZoneComponent, MediaUploadModalComponent],
+  imports: [CommonModule, FormsModule, FileUploadZoneComponent, MediaSelectorModalComponent],
   templateUrl: './template-param-form.component.html'
 })
 export class TemplateParamFormComponent implements OnChanges {
@@ -60,7 +60,7 @@ export class TemplateParamFormComponent implements OnChanges {
   /** Hide the "from CSV" toggle (when no CSV upload is available). */
   @Input() allowCsvToggle = true;
 
-  @Output() change = new EventEmitter<TemplateParamFormState>();
+  @Output() stateChange = new EventEmitter<TemplateParamFormState>();
 
   // ── Local state ──────────────────────────────────────────────────────────
   defaultParams: Record<string, string> = {};
@@ -69,8 +69,8 @@ export class TemplateParamFormComponent implements OnChanges {
   headerLocation: ICampaignHeaderLocation = { latitude: 0, longitude: 0 };
   urlButtonParams: ICampaignUrlButtonParam[] = [];
 
-  // Media upload UI
-  showUploadModal = false;
+  // Media library picker
+  showMediaLibrary = false;
   uploadingMedia = false;
   selectedMediaFiles: File[] = [];
 
@@ -96,6 +96,7 @@ export class TemplateParamFormComponent implements OnChanges {
     }
     if (changes['initialUrlButtonParams']) {
       this.urlButtonParams = (this.initialUrlButtonParams || []).map(p => ({ ...p }));
+      this.hydrateUrlButtonDefaults();
     }
     if (changes['slots']) {
       this.syncStateToSlots();
@@ -132,7 +133,22 @@ export class TemplateParamFormComponent implements OnChanges {
       if (validKeys.has(k)) nextCsv.add(k);
     }
     this.varsFromCsv = nextCsv;
+    this.hydrateUrlButtonDefaults();
     this.emit();
+  }
+
+  /** Mirror legacy urlButtonParams (by button index) into slot-keyed defaultParams. */
+  private hydrateUrlButtonDefaults(): void {
+    if (!this.slots) return;
+    for (const button of this.slots.buttons || []) {
+      const override = this.urlButtonParams.find(p => p.index === button.index);
+      if (!override?.value) continue;
+      for (const slot of button.urlVars || []) {
+        if (!this.defaultParams[slot.key]) {
+          this.defaultParams[slot.key] = override.value;
+        }
+      }
+    }
   }
 
   // ─── Field accessors ────────────────────────────────────────────────────
@@ -155,7 +171,9 @@ export class TemplateParamFormComponent implements OnChanges {
     return this.varsFromCsv.has(slot.key);
   }
 
-  setUrlButtonValue(buttonIndex: number, value: string): void {
+  setUrlButtonValue(slot: ITemplateSlot, buttonIndex: number, value: string): void {
+    this.defaultParams[slot.key] = value;
+
     const existing = this.urlButtonParams.find(p => p.index === buttonIndex);
     if (existing) {
       existing.value = value;
@@ -165,8 +183,12 @@ export class TemplateParamFormComponent implements OnChanges {
     this.emit();
   }
 
-  getUrlButtonValue(buttonIndex: number): string {
-    return this.urlButtonParams.find(p => p.index === buttonIndex)?.value || '';
+  getUrlButtonValue(slot: ITemplateSlot, buttonIndex: number): string {
+    return (
+      this.defaultParams[slot.key] ||
+      this.urlButtonParams.find(p => p.index === buttonIndex)?.value ||
+      ''
+    );
   }
 
   // ─── Header media ───────────────────────────────────────────────────────
@@ -223,8 +245,9 @@ export class TemplateParamFormComponent implements OnChanges {
     }
   }
 
-  onMediaUploaded(media: Media): void {
-    if (!this.slots?.header.format) return;
+  onMediaLibrarySelect(selected: Media | Media[]): void {
+    const media = Array.isArray(selected) ? selected[0] : selected;
+    if (!media || !this.slots?.header.format) return;
     const kind = this.slots.header.format as 'IMAGE' | 'VIDEO' | 'DOCUMENT';
     this.headerMedia = {
       kind,
@@ -232,8 +255,14 @@ export class TemplateParamFormComponent implements OnChanges {
       filename: media.originalName || media.filename,
       mediaLibraryId: media._id
     };
-    this.showUploadModal = false;
+    this.selectedMediaFiles = [];
+    this.showMediaLibrary = false;
     this.emit();
+    this.notify.success('Media selected', 'Header media set from your library.');
+  }
+
+  closeMediaLibrary(): void {
+    this.showMediaLibrary = false;
   }
 
   clearHeaderMedia(): void {
@@ -266,7 +295,7 @@ export class TemplateParamFormComponent implements OnChanges {
           : undefined,
       urlButtonParams: this.urlButtonParams.map(p => ({ ...p }))
     };
-    this.change.emit(state);
+    this.stateChange.emit(state);
   }
 
   // ─── Convenience for the template ──────────────────────────────────────

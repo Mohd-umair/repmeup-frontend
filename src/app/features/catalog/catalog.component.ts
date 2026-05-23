@@ -17,11 +17,20 @@ import {
   IWhatsAppCsvImportResult,
   WhatsAppSyncStatus
 } from '../../core/models/product.model';
+import {
+  ICommerceOrder,
+  ICommerceOrderStats,
+  CommerceOrderStatus,
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_COLORS,
+  CHANNEL_LABELS,
+  CommerceChannel
+} from '../../core/models/commerce-order.model';
 import { environment } from '../../../environments/environment';
 
 type ImportSource = 'excel' | 'woocommerce' | 'shopify' | 'url';
 
-type ActiveTab = 'products' | 'whatsapp';
+type ActiveTab = 'products' | 'whatsapp' | 'orders';
 
 @Component({
   selector: 'app-catalog',
@@ -112,6 +121,34 @@ export class CatalogComponent implements OnInit, OnDestroy {
   // ── Sales flow defaults (prefill product DM wizard; edit under Automation → Growth) ──
   salesFlowSettings: ISalesFlowSettings | null = null;
 
+  // ── Orders tab ─────────────────────────────
+  orders: ICommerceOrder[] = [];
+  loadingOrders = false;
+  orderStats: ICommerceOrderStats | null = null;
+  orderPage = 1;
+  orderTotal = 0;
+  orderLimit = 30;
+  orderStatusFilter: CommerceOrderStatus | '' = '';
+  orderChannelFilter: CommerceChannel | '' = '';
+  orderSearch = '';
+  updatingOrderId: string | null = null;
+
+  readonly orderStatusLabels = ORDER_STATUS_LABELS;
+  readonly orderStatusColors = ORDER_STATUS_COLORS;
+  readonly channelLabels = CHANNEL_LABELS;
+
+  readonly orderStatuses: Array<{ value: CommerceOrderStatus | ''; label: string }> = [
+    { value: '', label: 'All Statuses' },
+    { value: 'intent', label: 'Intent' },
+    { value: 'product_sent', label: 'Product Sent' },
+    { value: 'cart_started', label: 'Cart Started' },
+    { value: 'payment_pending', label: 'Payment Pending' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'shipped', label: 'Shipped' },
+    { value: 'delivered', label: 'Delivered' },
+    { value: 'cancelled', label: 'Cancelled' }
+  ];
+
   // ── WhatsApp Commerce Catalog ──────────────
   waCatalogSettings: IWhatsAppCatalogSettings | null = null;
   loadingWaSettings = false;
@@ -142,6 +179,95 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.loadProducts();
     this.loadSalesFlowSettings();
     this.loadWACatalogSettings();
+  }
+
+  // ── Orders tab ─────────────────────────────
+
+  onOrdersTabActivated(): void {
+    if (!this.orders.length && !this.loadingOrders) {
+      this.loadOrders();
+      this.loadOrderStats();
+    }
+  }
+
+  loadOrders(): void {
+    this.loadingOrders = true;
+    const params: Record<string, unknown> = {
+      page: this.orderPage,
+      limit: this.orderLimit
+    };
+    if (this.orderStatusFilter) params['status'] = this.orderStatusFilter;
+    if (this.orderChannelFilter) params['channel'] = this.orderChannelFilter;
+    if (this.orderSearch) params['search'] = this.orderSearch;
+
+    this.catalogService.getOrders(params as Parameters<typeof this.catalogService.getOrders>[0])
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingOrders = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.orders = r.data?.orders ?? [];
+          this.orderTotal = r.data?.total ?? 0;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  loadOrderStats(): void {
+    this.catalogService.getOrderStats()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: r => { this.orderStats = r.data ?? null; this.cdr.markForCheck(); }
+      });
+  }
+
+  onOrderFilterChange(): void {
+    this.orderPage = 1;
+    this.loadOrders();
+  }
+
+  updateOrderStatus(order: ICommerceOrder, status: CommerceOrderStatus): void {
+    if (this.updatingOrderId) return;
+    this.updatingOrderId = order._id;
+    this.catalogService.updateOrderStatus(order._id, status)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.updatingOrderId = null; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          const idx = this.orders.findIndex(o => o._id === order._id);
+          if (idx !== -1 && r.data) {
+            this.orders = [...this.orders.slice(0, idx), r.data, ...this.orders.slice(idx + 1)];
+          }
+          this.notify.success('Updated', `Order marked as ${status.replace('_', ' ')}.`);
+          this.loadOrderStats();
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          this.notify.error('Update failed', err.error?.error || 'Could not update order status.');
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  getOrderChannelIcon(channel: string): string {
+    const icons: Record<string, string> = {
+      instagram: 'fab fa-instagram',
+      whatsapp: 'fab fa-whatsapp',
+      voice: 'fas fa-phone',
+      manual: 'fas fa-pen'
+    };
+    return icons[channel] || 'fas fa-shopping-bag';
+  }
+
+  getNextStatusOptions(current: CommerceOrderStatus): Array<{ value: CommerceOrderStatus; label: string }> {
+    const transitions: Record<CommerceOrderStatus, CommerceOrderStatus[]> = {
+      intent: ['product_sent', 'cancelled'],
+      product_sent: ['cart_started', 'payment_pending', 'cancelled'],
+      cart_started: ['payment_pending', 'cancelled'],
+      payment_pending: ['paid', 'cancelled'],
+      paid: ['shipped', 'cancelled'],
+      shipped: ['delivered', 'cancelled'],
+      delivered: [],
+      cancelled: []
+    };
+    return (transitions[current] || []).map(s => ({ value: s, label: this.orderStatusLabels[s] }));
   }
 
   ngOnDestroy(): void {

@@ -41,6 +41,7 @@ export interface ISubscriptionLimits {
   canConnectMore: boolean;
   remaining: number;
   nextTier?: {
+    planId: string;
     name: string;
     tier: number;
     maxAccounts: number;

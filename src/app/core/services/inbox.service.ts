@@ -182,7 +182,7 @@ export class InboxService {
     return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/suggest-reply`, {});
   }
 
-  aiAssist(id: string): Observable<IApiResponse<{ short: string; detailed: string; sales: string; usedKnowledgeBase: boolean; knowledgeBaseCount: number }>> {
+  aiAssist(id: string): Observable<IApiResponse<{ short: string; detailed: string; sales: string; usedKnowledgeBase: boolean; knowledgeBaseCount: number; suggestedProducts?: any[] }>> {
     return this.apiService.post<IApiResponse<any>>(`/inbox/${id}/ai-assist`, {});
   }
 

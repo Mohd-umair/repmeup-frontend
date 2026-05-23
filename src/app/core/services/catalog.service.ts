@@ -13,6 +13,7 @@ import {
   IWhatsAppSyncAllResult,
   IWhatsAppCsvImportResult
 } from '../models/product.model';
+import { ICommerceOrder, ICommerceOrderStats, CommerceOrderStatus } from '../models/commerce-order.model';
 
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
@@ -146,6 +147,36 @@ export class CatalogService {
     sendMode: 'product' | 'product_list' = 'product'
   ): Observable<IApiResponse<{ messageId: string }>> {
     return this.api.post('/whatsapp-catalog/send-product', { interactionId, productId, bodyText, sendMode });
+  }
+
+  // ── Commerce Orders ────────────────────────────────────────────────────────
+
+  getOrders(params?: {
+    page?: number;
+    limit?: number;
+    status?: CommerceOrderStatus;
+    channel?: string;
+    search?: string;
+    from?: string;
+    to?: string;
+  }): Observable<IApiResponse<{ orders: ICommerceOrder[]; total: number; page: number; limit: number }>> {
+    return this.api.get('/commerce-orders', params);
+  }
+
+  getOrderStats(params?: { from?: string; to?: string }): Observable<IApiResponse<ICommerceOrderStats>> {
+    return this.api.get('/commerce-orders/stats', params);
+  }
+
+  getOrder(id: string): Observable<IApiResponse<ICommerceOrder>> {
+    return this.api.get(`/commerce-orders/${id}`);
+  }
+
+  updateOrderStatus(id: string, status: CommerceOrderStatus, notes?: string): Observable<IApiResponse<ICommerceOrder>> {
+    return this.api.patch(`/commerce-orders/${id}/status`, { status, notes });
+  }
+
+  cancelOrder(id: string): Observable<IApiResponse<ICommerceOrder>> {
+    return this.api.delete(`/commerce-orders/${id}`);
   }
 }
 
