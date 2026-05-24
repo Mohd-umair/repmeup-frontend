@@ -10,6 +10,7 @@ import {
   IProductDmConfig,
   IInstagramMediaItem,
   IWhatsAppCatalogSettings,
+  IWhatsAppCatalogSettingsUpdateResult,
   IWhatsAppSyncAllResult,
   IWhatsAppCsvImportResult
 } from '../models/product.model';
@@ -122,7 +123,7 @@ export class CatalogService {
     return this.api.get('/whatsapp-catalog/settings');
   }
 
-  updateWACatalogSettings(data: { catalogId: string }): Observable<IApiResponse<{ catalogId: string; metaSynced: boolean }>> {
+  updateWACatalogSettings(data: { catalogId: string }): Observable<IApiResponse<IWhatsAppCatalogSettingsUpdateResult>> {
     return this.api.put('/whatsapp-catalog/settings', data);
   }
 

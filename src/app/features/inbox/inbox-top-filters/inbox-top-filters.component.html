@@ -1,30 +1,97 @@
-<div class="bg-white dark:bg-gray-900/90 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-800">
-  <!-- Header (clickable to collapse/expand) -->
-  <div
-    (click)="toggleExpanded()"
-    class="flex items-center justify-between cursor-pointer select-none group"
-  >
-    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 group-hover:text-gray-700 dark:group-hover:text-gray-200">
-      <i class="fas fa-sliders-h text-gray-400"></i>
-      <span>Quick Filters</span>
-    </h3>
-    <div class="flex items-center gap-2">
+<div class="bg-white dark:bg-gray-900/90 rounded-xl shadow-sm p-3 sm:p-4 border border-gray-200 dark:border-gray-800">
+  <!-- Toolbar: layout, title, sync actions -->
+  <div class="flex flex-wrap items-center gap-2 justify-between">
+    <div class="flex items-center gap-2 min-w-0 flex-wrap">
+      <div
+        class="inline-flex rounded-lg border border-gray-200 dark:border-gray-600 p-0.5 bg-gray-100 dark:bg-gray-800 shrink-0"
+        role="group"
+        aria-label="Inbox layout"
+        (click)="$event.stopPropagation()">
+        <button
+          type="button"
+          (click)="setLayout('list', $event)"
+          class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5"
+          [ngClass]="viewMode !== 'buckets'
+            ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
+            : 'text-gray-500 dark:text-gray-400'"
+          [attr.aria-pressed]="viewMode !== 'buckets'"
+          title="Classic inbox list">
+          <i class="fas fa-list-ul"></i>
+          <span class="hidden sm:inline">List</span>
+        </button>
+        <button
+          type="button"
+          (click)="setLayout('buckets', $event)"
+          class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5"
+          [ngClass]="viewMode === 'buckets'
+            ? 'bg-rep-lime text-rep-black shadow-sm'
+            : 'text-gray-500 dark:text-gray-400'"
+          [attr.aria-pressed]="viewMode === 'buckets'"
+          title="Intent bucket board">
+          <i class="fas fa-columns"></i>
+          <span class="hidden sm:inline">Buckets</span>
+        </button>
+      </div>
+
+      <div
+        (click)="toggleExpanded()"
+        class="flex items-center gap-2 cursor-pointer select-none group min-w-0">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 group-hover:text-gray-700 dark:group-hover:text-gray-200">
+          <i class="fas fa-sliders-h text-gray-400"></i>
+          <span>Quick Filters</span>
+        </h3>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5 shrink-0 flex-wrap ml-auto" (click)="$event.stopPropagation()">
+      <button
+        (click)="onAutoSyncClick($event)"
+        type="button"
+        class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 flex items-center gap-1.5"
+        [style.background]="autoSyncEnabled ? 'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))' : 'rgba(75, 85, 99, 0.2)'"
+        [class.text-white]="autoSyncEnabled"
+        [class.text-gray-600]="!autoSyncEnabled"
+        [class.dark:text-gray-300]="!autoSyncEnabled"
+        [class.hover:bg-gray-100]="!autoSyncEnabled"
+        [class.dark:hover:bg-gray-800]="!autoSyncEnabled"
+        [attr.aria-pressed]="autoSyncEnabled"
+        [title]="autoSyncEnabled ? 'Auto-sync ON – syncing every 5 min' : 'Auto-sync OFF – click to enable'">
+        <i class="fas" [class.fa-toggle-on]="autoSyncEnabled" [class.fa-toggle-off]="!autoSyncEnabled"></i>
+        <span class="hidden md:inline">{{ autoSyncEnabled ? 'Auto-sync ON' : 'Auto-sync OFF' }}</span>
+      </button>
+
+      <button
+        (click)="onSyncClick($event)"
+        type="button"
+        [disabled]="syncDisabled"
+        class="px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 text-white flex items-center gap-1.5"
+        [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
+        [title]="syncButtonTitle">
+        <i class="fas text-xs" [class.fa-sync-alt]="!syncing" [class.fa-spinner]="syncing" [class.fa-spin]="syncing"></i>
+        <span class="hidden md:inline">{{ syncButtonLabel }}</span>
+      </button>
+
       <button
         *ngIf="hasActiveFilters()"
         (click)="clearFilters(); $event.stopPropagation()"
         (touchstart)="clearFilters(); $event.stopPropagation()"
         type="button"
-        class="touch-manipulation flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg transition-colors text-xs font-medium"
-        title="Clear all filters"
-      >
+        class="touch-manipulation flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg transition-colors text-xs font-medium"
+        title="Clear all filters">
         <i class="fas fa-xmark text-xs"></i>
         Clear
       </button>
-      <i class="fas transition-transform duration-200 text-gray-400 text-sm"
-         [class.fa-chevron-down]="expanded"
-         [class.fa-chevron-right]="!expanded"
-         [class.rotate-0]="expanded"
-         title="{{ expanded ? 'Collapse' : 'Expand' }}"></i>
+
+      <button
+        type="button"
+        (click)="toggleExpanded()"
+        class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        [attr.aria-expanded]="expanded"
+        [title]="expanded ? 'Collapse filters' : 'Expand filters'">
+        <i class="fas transition-transform duration-200 text-sm"
+           [class.fa-chevron-down]="expanded"
+           [class.fa-chevron-right]="!expanded"></i>
+      </button>
     </div>
   </div>
 

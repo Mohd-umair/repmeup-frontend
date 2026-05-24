@@ -290,6 +290,47 @@
   }
 }
 
+// Auth forms stay light-themed; override global html.dark input vars (light text on white focus bg).
+input.input-field:not([type='checkbox']):not([type='radio']),
+input.input-field--plain:not([type='checkbox']):not([type='radio']),
+input.otp-input:not([type='checkbox']):not([type='radio']) {
+  background-color: #F9FAFB;
+  color: #111827;
+  border-color: #E5E7EB;
+  -webkit-text-fill-color: #111827;
+
+  &::placeholder {
+    color: #9CA3AF;
+    -webkit-text-fill-color: #9CA3AF;
+  }
+
+  &:focus {
+    background-color: #ffffff;
+    color: #111827;
+    -webkit-text-fill-color: #111827;
+  }
+
+  &.error {
+    background-color: #FEF9F9;
+    color: #111827;
+    -webkit-text-fill-color: #111827;
+  }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px #F9FAFB inset;
+    box-shadow: 0 0 0 1000px #F9FAFB inset;
+    -webkit-text-fill-color: #111827;
+    caret-color: #111827;
+  }
+
+  &:focus:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+    box-shadow: 0 0 0 1000px #ffffff inset;
+  }
+}
+
 .input-field--plain {
   padding-left: 16px;
 }

@@ -155,6 +155,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   savingWaSettings = false;
   waCatalogIdInput = '';
   waSettingsError = '';
+  waSettingsErrorHint = '';
   waSettingsSaved = false;
 
   syncingAll = false;
@@ -450,6 +451,22 @@ export class CatalogComponent implements OnInit, OnDestroy {
         next: r => {
           if (r.data) this.editingProduct = r.data;
           this.loadProducts();
+
+          const productName = r.data?.name || 'Product';
+          if (isNew) {
+            this.notify.success('Product created', `"${productName}" saved successfully.`);
+          } else {
+            this.notify.success('Product updated', `"${productName}" saved successfully.`);
+          }
+
+          if (r.whatsappSync?.attempted && !r.whatsappSync.synced) {
+            this.notify.warning(
+              'Not added to WhatsApp catalog',
+              r.whatsappSync.error ||
+              'Product was saved locally but Meta catalog sync failed. Check catalog permissions and try Sync again.'
+            );
+          }
+
           if (isNew && r.data) {
             // Advance to step 2 so the user can immediately link posts
             this.wizardStep = 2;
@@ -912,7 +929,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
       .subscribe({
         next: r => {
           this.waCatalogSettings = r.data ?? null;
-          this.waCatalogIdInput = r.data?.catalogId || '';
+          const canonical = r.data?.metaCatalogId || r.data?.catalogId || '';
+          this.waCatalogIdInput = canonical;
           this.cdr.markForCheck();
         },
         error: () => {
@@ -928,15 +946,24 @@ export class CatalogComponent implements OnInit, OnDestroy {
       return;
     }
     this.waSettingsError = '';
+    this.waSettingsErrorHint = '';
     this.savingWaSettings = true;
     this.catalogService.updateWACatalogSettings({ catalogId })
       .pipe(takeUntil(this.destroy$), finalize(() => { this.savingWaSettings = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: r => {
           this.waSettingsSaved = true;
-          if (this.waCatalogSettings) {
-            this.waCatalogSettings.catalogId = r.data?.catalogId || catalogId;
+          if (this.waCatalogSettings && r.data) {
+            this.waCatalogSettings.catalogId = r.data.catalogId || catalogId;
+            this.waCatalogSettings.metaCatalogId = r.data.metaCatalogId ?? r.data.catalogId;
+            this.waCatalogSettings.catalogLinkStatus = r.data.catalogLinkStatus ?? 'saved';
+            this.waCatalogSettings.catalogLinkVerified = r.data.catalogLinkVerified ?? false;
+            this.waCatalogSettings.isCatalogVisible = r.data.isCatalogVisible ?? false;
+            this.waCatalogSettings.isCartEnabled = r.data.isCartEnabled ?? false;
           }
+          this.waCatalogIdInput = r.data?.catalogId || catalogId;
+          this.waSettingsError = '';
+          this.waSettingsErrorHint = '';
           this.notify.success('Saved', r.data?.metaSynced
             ? 'Catalog linked to your WhatsApp number successfully.'
             : 'Catalog ID saved. Meta link update failed — check your credentials.');
@@ -945,6 +972,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
         },
         error: err => {
           this.waSettingsError = err.error?.error || 'Failed to save catalog settings.';
+          this.waSettingsErrorHint = err.error?.hint || '';
           this.cdr.markForCheck();
         }
       });
@@ -1041,5 +1069,28 @@ export class CatalogComponent implements OnInit, OnDestroy {
       case 'failed':     return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
       default:           return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
     }
+  }
+
+  /** True when the catalog ID is saved and Meta has not rejected it. */
+  isWaCatalogVerifiedLinked(): boolean {
+    const s = this.waCatalogSettings;
+    return Boolean(s?.catalogLinkVerified) ||
+           s?.catalogLinkStatus === 'linked' ||
+           s?.catalogLinkStatus === 'saved';
+  }
+
+  /** User edited the input but has not saved yet. */
+  isWaCatalogInputDirty(): boolean {
+    const input = this.waCatalogIdInput.trim();
+    const canonical = String(this.waCatalogSettings?.metaCatalogId || this.waCatalogSettings?.catalogId || '').trim();
+    return Boolean(input && canonical && input !== canonical);
+  }
+
+  waCatalogCanonicalId(): string {
+    return String(this.waCatalogSettings?.metaCatalogId || this.waCatalogSettings?.catalogId || '').trim();
+  }
+
+  canSyncWaProducts(): boolean {
+    return this.isWaCatalogVerifiedLinked() && !this.isWaCatalogInputDirty();
   }
 }

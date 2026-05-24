@@ -519,6 +519,7 @@
 
       <!-- ── Emoji picker panel ── -->
       <div *ngIf="showEmojiPicker"
+           @emojiPanelPopover
            class="emoji-panel absolute bottom-full left-0 right-0 z-30 mx-3 mb-1 w-auto max-w-[min(100%,18rem)] max-h-64 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-xl p-2"
            (click)="$event.stopPropagation()">
         <div class="grid grid-cols-8 gap-0.5">

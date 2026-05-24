@@ -39,6 +39,9 @@ export class InboxTopFiltersComponent implements OnChanges {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
   /** Emitted when list preset (All / Priority / …) changes from the Extra filter control */
   @Output() viewModeChange = new EventEmitter<InboxViewMode>();
+  @Output() layoutChange = new EventEmitter<'list' | 'buckets'>();
+  @Output() autoSyncToggle = new EventEmitter<void>();
+  @Output() syncClick = new EventEmitter<void>();
   @Input() initialFilters: IInboxFilters = {};
   /** Synced from parent `platformFilters.platform` — not stored in `initialFilters` */
   @Input() initialPlatform: IInboxFilters['platform'];
@@ -46,6 +49,11 @@ export class InboxTopFiltersComponent implements OnChanges {
   @Input() intentBuckets: IIntentBucket[] = [];
   /** Current inbox layout view (list vs buckets + preset). Used for Extra filter display. */
   @Input() viewMode: InboxViewMode = 'all';
+  @Input() autoSyncEnabled = true;
+  @Input() syncing = false;
+  @Input() syncDisabled = false;
+  @Input() syncButtonTitle = 'Sync all platforms';
+  @Input() syncButtonLabel = 'Sync All';
 
   filters: IInboxFilters = {};
   dateFromModel = '';
@@ -136,6 +144,21 @@ export class InboxTopFiltersComponent implements OnChanges {
 
   toggleExpanded(): void {
     this.expanded = !this.expanded;
+  }
+
+  setLayout(layout: 'list' | 'buckets', ev?: Event): void {
+    ev?.stopPropagation();
+    this.layoutChange.emit(layout);
+  }
+
+  onAutoSyncClick(ev: Event): void {
+    ev.stopPropagation();
+    this.autoSyncToggle.emit();
+  }
+
+  onSyncClick(ev: Event): void {
+    ev.stopPropagation();
+    this.syncClick.emit();
   }
 
   ngOnChanges(changes: SimpleChanges): void {

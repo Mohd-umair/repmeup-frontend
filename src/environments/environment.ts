@@ -2,20 +2,20 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
-// export const environment = {
-//   production: false,
-//   apiUrl: 'http://localhost:3000/api',
-//   socketUrl: 'http://localhost:3000',
-//   razorpayKeyId: 'rzp_test_SZ0KJqXKnB15Ft'
-// };
-
 export const environment = {
   production: false,
-  apiUrl: 'https://repmeup.in/api',
-  socketUrl: 'https://repmeup.in', 
-  razorpayKeyId: 'rzp_live_SsWNWE01FvBE1J'
-
+  apiUrl: 'http://localhost:3000/api',
+  socketUrl: 'http://localhost:3000',
+  razorpayKeyId: 'rzp_test_SZ0KJqXKnB15Ft'
 };
+
+// export const environment = {
+//   production: false,
+//   apiUrl: 'https://repmeup.in/api',
+//   socketUrl: 'https://repmeup.in', 
+//   razorpayKeyId: 'rzp_live_SsWNWE01FvBE1J'
+
+// };
 
 /*
  * For easier debugging in development mode, you can import the following file

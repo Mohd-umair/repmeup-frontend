@@ -10,160 +10,7 @@
     (dismissed)="onSetupGuideDismissed()">
   </app-inbox-setup-guide>
 
-  <!-- View Mode + Platform Filter (compact) -->
-  <div class="mb-2 flex-shrink-0 flex flex-wrap items-center gap-2 p-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
-    <div class="flex flex-wrap gap-1.5 items-center flex-1">
-      <!-- List vs intent buckets -->
-      <div
-        class="inline-flex rounded-lg border border-gray-200 dark:border-gray-600 p-0.5 bg-gray-100 dark:bg-gray-800 shrink-0"
-        role="group"
-        aria-label="Inbox layout">
-        <button
-          type="button"
-          (click)="setInboxLayout('list')"
-          class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5"
-          [ngClass]="viewMode !== 'buckets'
-            ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
-            : 'text-gray-500 dark:text-gray-400'"
-          [attr.aria-pressed]="viewMode !== 'buckets'"
-          title="Classic inbox list">
-          <i class="fas fa-list-ul"></i>
-          <span class="hidden sm:inline">List</span>
-        </button>
-        <button
-          type="button"
-          (click)="setInboxLayout('buckets')"
-          class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5"
-          [ngClass]="viewMode === 'buckets'
-            ? 'bg-rep-lime text-rep-black shadow-sm'
-            : 'text-gray-500 dark:text-gray-400'"
-          [attr.aria-pressed]="viewMode === 'buckets'"
-          title="Intent bucket board">
-          <i class="fas fa-columns"></i>
-          <span class="hidden sm:inline">Buckets</span>
-        </button>
-      </div>
-
-    </div>
-
-    <div class="ml-auto flex items-center gap-1.5">
-      <button
-        (click)="toggleAutoSync()"
-        type="button"
-        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 flex items-center gap-1.5"
-        [style.background]="autoSyncEnabled ? 'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))' : 'rgba(75, 85, 99, 0.2)'"
-        [class.text-white]="autoSyncEnabled"
-        [class.text-gray-600]="!autoSyncEnabled"
-        [class.dark:text-gray-300]="!autoSyncEnabled"
-        [class.hover:bg-gray-100]="!autoSyncEnabled"
-        [class.dark:hover:bg-gray-800]="!autoSyncEnabled"
-        [attr.aria-pressed]="autoSyncEnabled"
-        title="{{ autoSyncEnabled ? 'Auto-sync ON – syncing every 5 min' : 'Auto-sync OFF – click to enable' }}">
-        <i class="fas" [class.fa-toggle-on]="autoSyncEnabled" [class.fa-toggle-off]="!autoSyncEnabled"></i>
-        <span class="hidden md:inline">{{ autoSyncEnabled ? 'Auto-sync ON' : 'Auto-sync OFF' }}</span>
-      </button>
-
-      <button
-        (click)="onSyncClick()"
-        type="button"
-        [disabled]="syncing || loading"
-        class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 text-white flex items-center gap-1.5"
-        [style.background]="'linear-gradient(135deg, var(--platform-gradient-from, #4B5563), var(--platform-gradient-to, #6B7280))'"
-        [title]="getSyncButtonTitle()">
-        <i class="fas text-xs" [class.fa-sync-alt]="!syncing" [class.fa-spinner]="syncing" [class.fa-spin]="syncing"></i>
-        <span class="hidden md:inline">{{ getSyncButtonLabel() }}</span>
-      </button>
-
-      <div class="relative">
-        <button
-          (click)="showMoreOptions = !showMoreOptions; $event.stopPropagation()"
-          type="button"
-          class="w-8 h-8 rounded-lg text-xs transition-all bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center"
-          title="More options">
-          <i class="fas fa-ellipsis-v"></i>
-        </button>
-        <div *ngIf="showMoreOptions"
-             (click)="showMoreOptions = false"
-             class="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-50">
-          <button
-            (click)="showStats = !showStats"
-            type="button"
-            class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/80 flex items-center gap-2 text-gray-700 dark:text-gray-200">
-            <i class="fas fa-chart-bar w-4"></i>
-            {{ showStats ? 'Hide Stats' : 'Show Stats' }}
-          </button>
-          <button
-            (click)="showShortcutsOverlay = true"
-            type="button"
-            class="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700/80 flex items-center gap-2 text-gray-700 dark:text-gray-200">
-            <i class="fas fa-keyboard w-4"></i>
-            Keyboard Shortcuts
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Collapsible Stats Cards -->
-  <div *ngIf="showStats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-2 flex-shrink-0 animate-slideDown">
-    <div class="bg-white dark:bg-gray-900/95 rounded-lg p-3 sm:p-4 border border-gray-200/80 dark:border-gray-700 transition-all duration-300 hover:shadow-md">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 truncate inbox-stat-label">Total</p>
-          <p class="text-xl sm:text-2xl font-bold transition-colors duration-300 inbox-stat-value"
-             [style.color]="'var(--platform-primary, #1F2937)'">{{ totalConversations }}</p>
-        </div>
-        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-             [style.background]="'var(--platform-primary, #4B5563)' + '15'">
-          <i class="fas fa-inbox text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white dark:bg-gray-900/95 rounded-lg p-3 sm:p-4 border border-gray-200/80 dark:border-gray-700 transition-all duration-300 hover:shadow-md">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 truncate inbox-stat-label">Unread</p>
-          <p class="text-xl sm:text-2xl font-bold transition-colors duration-300 inbox-stat-value"
-             [style.color]="'var(--platform-primary, #1F2937)'">{{ getUnreadCount() }}</p>
-        </div>
-        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-             [style.background]="'var(--platform-primary, #4B5563)' + '15'">
-          <i class="fas fa-envelope text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white dark:bg-gray-900/95 rounded-lg p-3 sm:p-4 border border-gray-200/80 dark:border-gray-700 transition-all duration-300 hover:shadow-md">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 truncate inbox-stat-label">Today</p>
-          <p class="text-xl sm:text-2xl font-bold transition-colors duration-300 inbox-stat-value"
-             [style.color]="'var(--platform-primary, #1F2937)'">{{ getTodayCount() }}</p>
-        </div>
-        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-             [style.background]="'var(--platform-primary, #4B5563)' + '15'">
-          <i class="fas fa-calendar-day text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white dark:bg-gray-900/95 rounded-lg p-3 sm:p-4 border border-gray-200/80 dark:border-gray-700 transition-all duration-300 hover:shadow-md">
-      <div class="flex items-center justify-between">
-        <div class="flex-1 min-w-0">
-          <p class="text-xs font-medium text-gray-500 dark:text-gray-400 truncate inbox-stat-label">Response</p>
-          <p class="text-xl sm:text-2xl font-bold transition-colors duration-300 inbox-stat-value"
-             [style.color]="'var(--platform-primary, #1F2937)'">{{ inboxStats?.responseRate ?? 0 }}%</p>
-        </div>
-        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-300 flex-shrink-0"
-             [style.background]="'var(--platform-primary, #4B5563)' + '15'">
-          <i class="fas fa-chart-line text-sm sm:text-base" [style.color]="'var(--platform-primary, #4B5563)'"></i>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Top Filters Bar - Type, Sentiment, Status, Labels -->
+  <!-- Top Filters Bar - Type, Sentiment, Status, Labels, layout & sync -->
   <div class="mb-2 flex-shrink-0">
     <app-inbox-top-filters 
       [initialFilters]="topFilters"
@@ -171,8 +18,16 @@
       [intentBuckets]="conversationIntentBuckets"
       [viewMode]="viewMode"
       [labels]="orgLabels"
+      [autoSyncEnabled]="autoSyncEnabled"
+      [syncing]="syncing"
+      [syncDisabled]="syncing || loading"
+      [syncButtonTitle]="getSyncButtonTitle()"
+      [syncButtonLabel]="getSyncButtonLabel()"
       (filtersChange)="onTopFilterChange($event)"
-      (viewModeChange)="onQuickExtraViewFilter($event)">
+      (viewModeChange)="onQuickExtraViewFilter($event)"
+      (layoutChange)="setInboxLayout($event)"
+      (autoSyncToggle)="toggleAutoSync()"
+      (syncClick)="onSyncClick()">
     </app-inbox-top-filters>
   </div>
 
@@ -200,132 +55,6 @@
 
   <!-- Bucket search + sort bar (only in buckets view) -->
   <div *ngIf="viewMode === 'buckets'" class="mb-2 flex-shrink-0 flex flex-col gap-2 px-3 py-2 bg-white dark:bg-gray-900/95 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-
-    <!-- Quick filters row (same chips as list view) -->
-    <div class="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/90 px-2.5 py-2 shadow-sm">
-      <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
-        <span class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 flex-shrink-0">
-          <i class="fas fa-filter text-xs"></i>
-        </span>
-        Filter conversations
-      </p>
-      <div class="flex items-center gap-1.5 flex-wrap">
-      <!-- All -->
-      <button
-        type="button"
-        (click)="clearAllConversationFilters()"
-        class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border"
-        [ngClass]="isAllConversationFilterActive()
-          ? 'bg-gray-900 text-white ring-1 ring-gray-900 dark:ring-gray-100 border-transparent'
-          : 'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'">
-        All
-      </button>
-      <!-- Unread -->
-      <button
-        type="button"
-        (click)="toggleUnreadFilter()"
-        class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border"
-        [ngClass]="isUnreadFilterActive()
-          ? 'bg-amber-600 text-white ring-1 ring-amber-500 border-transparent'
-          : 'bg-white dark:bg-gray-900 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800/60 hover:bg-amber-50 dark:hover:bg-amber-950/40'">
-        Unread
-      </button>
-      <!-- Intent dropdown -->
-      <div class="relative">
-        <button
-          type="button"
-          (click)="toggleConversationIntentDropdown()"
-          class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border inline-flex items-center gap-1.5"
-          [ngClass]="(showConversationIntentDropdown || conversationIntentFilterActive())
-            ? 'bg-emerald-600 text-white border-emerald-500 ring-1 ring-emerald-400/40'
-            : 'bg-white dark:bg-gray-900 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'"
-        >
-          <span>Intent</span>
-          <i class="fas fa-chevron-down text-[10px] opacity-90"></i>
-        </button>
-        <div
-          *ngIf="showConversationIntentDropdown"
-          class="absolute left-0 top-full mt-1 min-w-[188px] max-h-[240px] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-40 py-1"
-        >
-          <button type="button" (click)="toggleConversationIntentFilter()"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center gap-2">
-            <i class="fas fa-layer-group text-[11px] text-gray-500"></i>
-            All intents
-          </button>
-          <button type="button" (click)="toggleConversationIntentFilter('none')"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
-            <span class="inline-flex items-center gap-2">
-              <i class="fas fa-inbox text-[11px] text-gray-500 dark:text-gray-400 w-3 flex-shrink-0"></i>
-              Unassigned
-            </span>
-            <i *ngIf="isConversationIntentBucketActive('none')" class="fas fa-check text-emerald-600 dark:text-emerald-400 text-[10px] flex-shrink-0"></i>
-          </button>
-          <button *ngFor="let bucket of conversationIntentBuckets" type="button"
-            (click)="toggleConversationIntentFilter(bucket._id)"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
-            <span class="inline-flex items-center gap-2 min-w-0">
-              <i *ngIf="bucket.icon" [class]="bucket.icon + ' text-[11px] w-3 flex-shrink-0'" [style.color]="bucket.color"></i>
-              <span class="truncate">{{ bucket.name }}</span>
-            </span>
-            <i *ngIf="isConversationIntentBucketActive(bucket._id)" class="fas fa-check text-emerald-600 dark:text-emerald-400 text-[10px] flex-shrink-0"></i>
-          </button>
-        </div>
-      </div>
-      <!-- Platform dropdown -->
-      <div class="relative">
-        <button
-          type="button"
-          (click)="toggleConversationPlatformDropdown()"
-          class="px-3 py-2 rounded-md text-xs font-semibold transition-all shadow-sm border inline-flex items-center gap-1.5"
-          [ngClass]="(showConversationPlatformDropdown || conversationPlatformFilterCount() > 0)
-            ? 'bg-violet-600 text-white border-violet-500 ring-1 ring-violet-400/40'
-            : 'bg-white dark:bg-gray-900 text-violet-800 dark:text-violet-200 border-violet-200 dark:border-violet-800/60 hover:bg-violet-50 dark:hover:bg-violet-950/40'">
-          <span>Platform</span>
-          <i class="fas fa-chevron-down text-[10px] opacity-90"></i>
-        </button>
-        <div *ngIf="showConversationPlatformDropdown"
-          class="absolute left-0 top-full mt-1 min-w-[160px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-40 py-1">
-          <button type="button" (click)="toggleConversationPlatformFilter()"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center gap-2">
-            <i class="fas fa-layer-group text-[11px] text-gray-500 dark:text-gray-400"></i>
-            All platforms
-          </button>
-          <button *ngFor="let platform of conversationPlatformOptions" type="button"
-            (click)="toggleConversationPlatformFilter(platform)"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
-            <span class="inline-flex items-center gap-2 min-w-0">
-              <i [class]="getPlatformIconClass(platform) + ' text-[11px] text-gray-500 dark:text-gray-400 w-3 flex-shrink-0'"></i>
-              {{ formatPlatformLabel(platform) }}
-            </span>
-            <i *ngIf="isConversationPlatformActive(platform)" class="fas fa-check text-violet-600 dark:text-violet-400 text-[10px] flex-shrink-0"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Active filter badges -->
-      <ng-container *ngIf="!isAllConversationFilterActive()">
-        <span class="ml-1 w-px h-4 bg-gray-200 dark:bg-gray-600 flex-shrink-0"></span>
-        <span *ngIf="isUnreadFilterActive()"
-          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-medium">
-          Unread
-          <button type="button" (click)="toggleUnreadFilter()" class="hover:text-amber-900 leading-none">×</button>
-        </span>
-        <span *ngIf="conversationIntentFilterActive()"
-          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-medium max-w-[100px]">
-          <span class="truncate">{{ getActiveIntentBucketLabel() }}</span>
-          <button type="button" (click)="toggleConversationIntentFilter()" class="hover:text-emerald-900 leading-none flex-shrink-0">×</button>
-        </span>
-        <span *ngIf="conversationPlatformFilterCount() > 0"
-          class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-100 text-violet-800 text-[10px] font-medium">
-          {{ conversationPlatformFilterCount() === 1 ? formatPlatformLabel(platformFilters.platform + '') : conversationPlatformFilterCount() + ' platforms' }}
-          <button type="button" (click)="toggleConversationPlatformFilter()" class="hover:text-violet-900 leading-none">×</button>
-        </span>
-      </ng-container>
-      </div>
-    </div>
-
-    <!-- Divider between filters and search/sort -->
-    <div class="w-full h-px bg-gray-100 dark:bg-gray-700"></div>
 
     <!-- Search + Sort -->
     <div class="flex items-center gap-2">
@@ -849,47 +578,6 @@
           [interaction]="selectedInteraction">
         </app-inbox-contact-panel>
       </div>
-    </div>
-  </div>
-
-  <!-- Keyboard Shortcuts Overlay -->
-  <div *ngIf="showShortcutsOverlay" 
-       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-       (click)="showShortcutsOverlay = false">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700"
-         (click)="$event.stopPropagation()">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          <i class="fas fa-keyboard text-rep-lime"></i>
-          Keyboard Shortcuts
-        </h3>
-        <button (click)="showShortcutsOverlay = false" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
-          <i class="fas fa-xmark text-xl"></i>
-        </button>
-      </div>
-      <div class="space-y-3 text-sm">
-        <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-          <span class="text-gray-700 dark:text-gray-300">Next conversation</span>
-          <kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded font-mono text-gray-800 dark:text-gray-200">J</kbd>
-        </div>
-        <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-          <span class="text-gray-700 dark:text-gray-300">Previous conversation</span>
-          <kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded font-mono text-gray-800 dark:text-gray-200">K</kbd>
-        </div>
-        <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-          <span class="text-gray-700 dark:text-gray-300">Focus reply box</span>
-          <kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded font-mono text-gray-800 dark:text-gray-200">R</kbd>
-        </div>
-        <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-          <span class="text-gray-700 dark:text-gray-300">Resolve conversation</span>
-          <kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded font-mono text-gray-800 dark:text-gray-200">E</kbd>
-        </div>
-        <div class="flex justify-between items-center py-2">
-          <span class="text-gray-700 dark:text-gray-300">Show this help</span>
-          <kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded font-mono text-gray-800 dark:text-gray-200">?</kbd>
-        </div>
-      </div>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">Press Escape to close</p>
     </div>
   </div>
 </div>

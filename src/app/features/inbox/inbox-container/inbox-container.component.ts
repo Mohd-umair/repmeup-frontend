@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -78,15 +78,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   analyzingSentiment = false;
   lastSyncTime: Date | null = null;
   autoSyncEnabled = true;
-  showStats = false; // Stats are hidden by default for cleaner UI
   showFilters = true; // Filters are shown by default, but can be collapsed
-  inboxStats: { 
-    responseRate?: number;
-    priorityCount?: number;
-    overdueCount?: number;
-  } | null = null;
-  showShortcutsOverlay = false;
-  showMoreOptions = false;      // Header more options dropdown
   showBulkMoreActions = false;  // Bulk assign dropdown
   showBulkLabelActions = false; // Bulk label dropdown
   assignDropdownPos: { top: number; left: number } | null = null;
@@ -118,16 +110,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     private intentBucketService: IntentBucketService,
     private socketService: SocketService,
     private route: ActivatedRoute,
-    private router: Router,
-    private elRef: ElementRef<HTMLElement>
+    private router: Router
   ) {}
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(ev: MouseEvent): void {
-    if (!this.showMoreOptions) return;
-    if (this.elRef.nativeElement.contains(ev.target as Node)) return;
-    this.showMoreOptions = false;
-  }
 
   ngOnInit(): void {
     // Don't select any conversation by default
@@ -182,7 +166,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
     this.updateMergedBucketFilters();
     this.loadInteractions(true);
-    this.loadInboxStats();
 
     // Connect socket and join organisation room for real-time DM/comment updates
     this.socketService.connect();
@@ -1001,7 +984,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         }
       }
     });
-    this.loadInboxStats();
   }
 
   /**
@@ -1106,18 +1088,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       const dateA = new Date(a.platformCreatedAt).getTime();
       const dateB = new Date(b.platformCreatedAt).getTime();
       return dateB - dateA;
-    });
-  }
-
-  loadInboxStats(): void {
-    const plats = inboxFilterToArray(this.platformFilters.platform as any);
-    const filters = plats.length > 0 ? { platform: plats.length === 1 ? plats[0] : plats } : undefined;
-    this.inboxService.getStats(filters).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.inboxStats = response.data;
-        }
-      }
     });
   }
 
@@ -1583,32 +1553,14 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     });
   }
 
-  getUnreadCount(): number {
-    return this.interactions.filter(i => i.status === 'unread').length;
-  }
-
-  getTodayCount(): number {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return this.interactions.filter(i => {
-      const interactionDate = new Date(i.platformCreatedAt);
-      interactionDate.setHours(0, 0, 0, 0);
-      return interactionDate.getTime() === today.getTime();
-    }).length;
-  }
-
   /**
-   * Keyboard shortcuts: J/K navigate, R focus reply, E resolve, ? show help
+   * Keyboard shortcuts: J/K navigate, R focus reply, E resolve
    */
   @HostListener('document:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
     // Ignore when typing in inputs, textareas, or contenteditable
     const target = event.target as HTMLElement;
     if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) {
-      if (event.key !== 'Escape') return;
-      if (this.showShortcutsOverlay) {
-        this.showShortcutsOverlay = false;
-      }
       return;
     }
 
@@ -1641,13 +1593,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
           }
         }
         break;
-      case '?':
-        event.preventDefault();
-        this.showShortcutsOverlay = !this.showShortcutsOverlay;
-        break;
       case 'Escape':
-        this.showShortcutsOverlay = false;
-        this.showMoreOptions = false;
         this.showBulkMoreActions = false;
         this.showBulkLabelActions = false;
         this.assignDropdownPos = null;

@@ -788,13 +788,54 @@
           </select>
           <div *ngFor="let slot of waTemplateSlots" class="flex flex-col gap-0.5">
             <label class="text-[10px] font-medium text-gray-600 dark:text-gray-400">{{ slot.label }}</label>
-            <input
-              type="text"
-              name="waSlot_{{slot.storageKey}}"
-              [(ngModel)]="waTemplateParamValues[slot.storageKey]"
-              class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100"
-              [placeholder]="slot.paramKind === 'image' ? 'https://your-cdn.example.com/image.jpg' : ''"
-              [ngModelOptions]="{standalone: true}">
+
+            <!-- Image header: URL input + media library picker -->
+            <ng-container *ngIf="slot.paramKind === 'image'; else waTextSlotInput">
+              <div class="flex gap-2">
+                <input
+                  type="url"
+                  name="waSlot_{{slot.storageKey}}"
+                  [(ngModel)]="waTemplateParamValues[slot.storageKey]"
+                  class="flex-1 min-w-0 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100"
+                  placeholder="https://your-cdn.example.com/image.jpg"
+                  [ngModelOptions]="{standalone: true}">
+                <button type="button"
+                        (click)="openWaTemplateImagePicker(slot)"
+                        class="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200 transition hover:border-rep-lime/50 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        title="Pick image from media library"
+                        aria-label="Pick image from media library">
+                  <i class="fas fa-photo-film"></i>
+                  <span class="hidden sm:inline">Browse</span>
+                </button>
+              </div>
+              <div *ngIf="waTemplateParamValues[slot.storageKey]"
+                   class="mt-1.5 flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 p-2">
+                <img [src]="waTemplateParamValues[slot.storageKey]"
+                     alt="Template header preview"
+                     class="h-10 w-10 rounded-md object-cover flex-shrink-0"
+                     (error)="$any($event.target).style.display='none'" />
+                <p class="flex-1 min-w-0 text-[10px] truncate text-gray-500 dark:text-gray-400">
+                  {{ waTemplateParamValues[slot.storageKey] }}
+                </p>
+                <button type="button"
+                        (click)="waTemplateParamValues[slot.storageKey] = ''"
+                        class="shrink-0 rounded-md p-1 text-gray-400 transition hover:bg-red-500/10 hover:text-red-500"
+                        title="Clear image"
+                        aria-label="Clear image">
+                  <i class="fas fa-xmark text-xs"></i>
+                </button>
+              </div>
+            </ng-container>
+
+            <ng-template #waTextSlotInput>
+              <input
+                type="text"
+                name="waSlot_{{slot.storageKey}}"
+                [(ngModel)]="waTemplateParamValues[slot.storageKey]"
+                class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100"
+                [placeholder]="''"
+                [ngModelOptions]="{standalone: true}">
+            </ng-template>
           </div>
           <p *ngIf="waSelectedTemplate && !waTemplateSlots.length" class="text-[10px] text-gray-500 dark:text-gray-400">
             This template has no variables — you can send it as-is.
@@ -841,65 +882,83 @@
         <div class="relative flex items-end gap-2 sm:gap-2.5 inbox-emoji-picker-container"
              *ngIf="interaction?.platform !== 'whatsapp' || waReplyMode === 'text'">
 
-          <!-- Left plate: emoji, AI, attach, WhatsApp modes -->
-          <div class="inbox-reply-toolbar-plate shrink-0 self-end pb-0.5" role="toolbar" aria-label="Reply tools">
+          <!-- Left plate: emoji, AI, attach, WhatsApp modes — collapsed by default -->
+          <div class="inbox-reply-toolbar-wrap shrink-0 self-end pb-0.5">
             <button type="button"
-              class="inbox-reply-toolbar-plate__btn inbox-emoji-trigger-btn"
-              [class.is-active]="showEmojiPicker"
-              (click)="toggleEmojiPicker()"
-              title="Emoji">
-              <i class="far fa-smile text-sm leading-none"></i>
-            </button>
-            <button type="button" (click)="generateAISuggestion()" [disabled]="generatingSuggestion || !interaction"
-              class="inbox-reply-toolbar-plate__btn disabled:opacity-40"
-              title="AI suggestion"
-              aria-label="AI suggestion">
-              <i *ngIf="generatingSuggestion" class="fas fa-spinner fa-spin text-sm leading-none"></i>
-              <app-ai-chat-bubble-icon *ngIf="!generatingSuggestion" iconClass="w-7 h-7 shrink-0" />
-            </button>
-            <button type="button" (click)="openMediaSelector()" [disabled]="!interaction || isRecording || (interaction?.platform === 'whatsapp' && waReplyMode === 'template')"
-              class="inbox-reply-toolbar-plate__btn disabled:opacity-40"
-              title="Attach"
-              aria-label="Attach file">
-              <i class="fas fa-paperclip text-sm leading-none"></i>
+              class="inbox-reply-toolbar-plate inbox-reply-toolbar-plate--toggle"
+              (click)="toggleReplyToolbar()"
+              [attr.aria-expanded]="replyToolbarExpanded"
+              [title]="replyToolbarExpanded ? 'Hide tools' : 'Show reply tools'"
+              [attr.aria-label]="replyToolbarExpanded ? 'Hide reply tools' : 'Show reply tools'">
+              <i class="fas text-sm leading-none"
+                 [class.fa-plus]="!replyToolbarExpanded"
+                 [class.fa-minus]="replyToolbarExpanded"
+                 aria-hidden="true"></i>
             </button>
 
-            <span *ngIf="interaction?.platform === 'whatsapp'"
-                  class="inbox-reply-toolbar-plate__divider"
-                  role="presentation"
-                  aria-hidden="true"></span>
+            <div *ngIf="replyToolbarExpanded"
+                 @replyToolbarPopover
+                 class="inbox-reply-toolbar-plate"
+                 role="toolbar"
+                 aria-label="Reply tools">
+              <button type="button"
+                class="inbox-reply-toolbar-plate__btn inbox-emoji-trigger-btn"
+                [class.is-active]="showEmojiPicker"
+                (click)="toggleEmojiPicker()"
+                title="Emoji">
+                <i class="far fa-smile text-sm leading-none"></i>
+              </button>
+              <button type="button" (click)="generateAISuggestion()" [disabled]="generatingSuggestion || !interaction"
+                class="inbox-reply-toolbar-plate__btn disabled:opacity-40"
+                title="AI suggestion"
+                aria-label="AI suggestion">
+                <i *ngIf="generatingSuggestion" class="fas fa-spinner fa-spin text-sm leading-none"></i>
+                <app-ai-chat-bubble-icon *ngIf="!generatingSuggestion" iconClass="w-7 h-7 shrink-0" />
+              </button>
+              <button type="button" (click)="openMediaSelector()" [disabled]="!interaction || isRecording || (interaction?.platform === 'whatsapp' && waReplyMode === 'template')"
+                class="inbox-reply-toolbar-plate__btn disabled:opacity-40"
+                title="Attach"
+                aria-label="Attach file">
+                <i class="fas fa-paperclip text-sm leading-none"></i>
+              </button>
 
-            <button type="button" *ngIf="interaction?.platform === 'whatsapp'"
-              (click)="setWaReplyMode('text')"
-              [attr.aria-pressed]="waReplyMode === 'text'"
-              class="inbox-reply-toolbar-plate__btn"
-              [class.is-mode-active]="waReplyMode === 'text'"
-              title="Free message"
-              aria-label="Free message">
-              <i class="far fa-comment-dots text-sm leading-none" aria-hidden="true"></i>
-            </button>
-            <button type="button" *ngIf="interaction?.platform === 'whatsapp'"
-              (click)="setWaReplyMode('template')"
-              [attr.aria-pressed]="waReplyMode === 'template'"
-              class="inbox-reply-toolbar-plate__btn inbox-reply-toolbar-plate__btn--accent"
-              [class.is-mode-active]="waReplyMode === 'template'"
-              title="Approved WhatsApp template"
-              aria-label="Approved WhatsApp template">
-              <i *ngIf="waTemplatesLoading" class="fas fa-spinner fa-spin text-sm leading-none" aria-hidden="true"></i>
-              <i *ngIf="!waTemplatesLoading" class="fab fa-whatsapp text-sm leading-none" aria-hidden="true"></i>
-            </button>
-            <!-- Send Product button — WhatsApp only -->
-            <button type="button" *ngIf="interaction?.platform === 'whatsapp' && waReplyMode !== 'template'"
-              (click)="openProductPicker()"
-              class="inbox-reply-toolbar-plate__btn"
-              title="Send product from catalog"
-              aria-label="Send WhatsApp product">
-              <i class="fas fa-bag-shopping text-sm leading-none" aria-hidden="true"></i>
-            </button>
+              <span *ngIf="interaction?.platform === 'whatsapp'"
+                    class="inbox-reply-toolbar-plate__divider"
+                    role="presentation"
+                    aria-hidden="true"></span>
+
+              <button type="button" *ngIf="interaction?.platform === 'whatsapp'"
+                (click)="setWaReplyMode('text')"
+                [attr.aria-pressed]="waReplyMode === 'text'"
+                class="inbox-reply-toolbar-plate__btn"
+                [class.is-mode-active]="waReplyMode === 'text'"
+                title="Free message"
+                aria-label="Free message">
+                <i class="far fa-comment-dots text-sm leading-none" aria-hidden="true"></i>
+              </button>
+              <button type="button" *ngIf="interaction?.platform === 'whatsapp'"
+                (click)="setWaReplyMode('template')"
+                [attr.aria-pressed]="waReplyMode === 'template'"
+                class="inbox-reply-toolbar-plate__btn inbox-reply-toolbar-plate__btn--accent"
+                [class.is-mode-active]="waReplyMode === 'template'"
+                title="Approved WhatsApp template"
+                aria-label="Approved WhatsApp template">
+                <i *ngIf="waTemplatesLoading" class="fas fa-spinner fa-spin text-sm leading-none" aria-hidden="true"></i>
+                <i *ngIf="!waTemplatesLoading" class="fab fa-whatsapp text-sm leading-none" aria-hidden="true"></i>
+              </button>
+              <button type="button" *ngIf="interaction?.platform === 'whatsapp' && waReplyMode !== 'template'"
+                (click)="openProductPicker()"
+                class="inbox-reply-toolbar-plate__btn"
+                title="Send product from catalog"
+                aria-label="Send WhatsApp product">
+                <i class="fas fa-bag-shopping text-sm leading-none" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Emoji picker (pops above the bar) -->
           <div *ngIf="showEmojiPicker"
+               @emojiPanelPopover
                class="absolute bottom-full left-0 mb-2 w-72 max-h-64 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl p-2 z-50 grid grid-cols-8 gap-0.5">
             <button type="button"
               *ngFor="let em of emojiList"
@@ -961,21 +1020,23 @@
   </div>
 </div>
 
-<!-- Media selector modal: send image or video with reply -->
+<!-- Media selector modal: reply attachment or WhatsApp template header image -->
 <app-media-selector-modal
   *ngIf="showMediaModal"
   [allowMultiple]="false"
-  mediaType="all"
+  [mediaType]="mediaSelectorContext === 'waTemplateImage' ? 'image' : 'all'"
   (close)="closeMediaSelector()"
   (select)="onMediaSelect($any($event))">
 </app-media-selector-modal>
 
 <!-- ── WhatsApp Product Picker Modal ─────────────────────────────────────── -->
 <div *ngIf="showProductPickerModal"
+     @inboxModalBackdrop
      class="fixed inset-0 z-50 flex items-center justify-center p-4"
      style="background: rgba(0,0,0,0.55);"
      (click)="closeProductPicker()">
-  <div class="relative w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
+  <div @inboxModalPanel
+       class="relative w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
        style="background-color: var(--card-bg); border: 1px solid var(--card-border);"
        (click)="$event.stopPropagation()">
 
@@ -1008,7 +1069,7 @@
     <!-- Product list -->
     <div class="overflow-y-auto flex-1 px-4 pb-2 space-y-1">
       <div *ngIf="loadingPickerProducts" class="py-8 flex justify-center">
-        <div class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--accent);"></div>
+        <div class="w-6 h-6 border-2 border-rep-lime border-t-transparent rounded-full animate-spin"></div>
       </div>
       <div *ngIf="!loadingPickerProducts && pickerProducts.length === 0"
            class="py-8 text-center text-sm" style="color: var(--text-secondary);">
@@ -1019,8 +1080,8 @@
            (click)="selectPickerProduct(p)"
            class="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors"
            [class.ring-2]="selectedPickerProduct?._id === p._id"
-           style="background-color: var(--surface-primary);"
-           [style.ring-color]="selectedPickerProduct?._id === p._id ? 'var(--accent)' : 'transparent'">
+           [class.ring-rep-lime]="selectedPickerProduct?._id === p._id"
+           style="background-color: var(--surface-primary);">
         <!-- Thumbnail -->
         <div class="w-10 h-10 rounded-lg flex-shrink-0 overflow-hidden bg-gray-200 dark:bg-gray-700">
           <img *ngIf="p.images?.length" [src]="p.images[0]" alt="" class="w-full h-full object-cover"
@@ -1074,8 +1135,7 @@
       </button>
       <button (click)="sendProductFromPicker()"
               [disabled]="!selectedPickerProduct || sendingProduct"
-              class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50"
-              style="background-color: var(--accent); color: #fff;">
+              class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition disabled:opacity-50 bg-rep-lime text-rep-black hover:bg-rep-lime/85 dark:bg-rep-lime dark:text-rep-black">
         <i [class]="sendingProduct ? 'fas fa-spinner animate-spin' : 'fab fa-whatsapp'"></i>
         {{ sendingProduct ? 'Sending…' : 'Send Product' }}
       </button>

@@ -33,9 +33,13 @@
       [style.color]="activeTab === 'whatsapp' ? 'var(--accent)' : 'var(--text-muted)'"
       [style.border-bottom]="activeTab === 'whatsapp' ? '2px solid var(--accent)' : '2px solid transparent'">
       <i class="fab fa-whatsapp mr-2"></i>WhatsApp Catalog
-      <span *ngIf="waCatalogSettings?.connected && waCatalogSettings?.catalogId"
+      <span *ngIf="isWaCatalogVerifiedLinked()"
             class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
         Linked
+      </span>
+      <span *ngIf="waCatalogSettings?.connected && !isWaCatalogVerifiedLinked() && waCatalogSettings?.catalogId"
+            class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+        Not verified
       </span>
     </button>
     <button
@@ -250,8 +254,8 @@
         </div>
       </div>
 
-      <!-- Status pills -->
-      <div *ngIf="!loadingWaSettings && waCatalogSettings?.connected" class="flex flex-wrap gap-2 pt-1">
+      <!-- Status pills — only when Meta verified the saved catalog ID -->
+      <div *ngIf="!loadingWaSettings && isWaCatalogVerifiedLinked()" class="flex flex-wrap gap-2 pt-1">
         <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
               [ngClass]="waCatalogSettings?.isCatalogVisible
                 ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
@@ -268,10 +272,44 @@
         </span>
       </div>
 
+      <!-- Mismatch / unverified warnings -->
+      <div *ngIf="!loadingWaSettings && waCatalogSettings?.catalogLinkStatus === 'mismatch'"
+           class="flex items-start gap-2 p-3 rounded-lg border text-xs bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
+        <i class="fas fa-triangle-exclamation mt-0.5"></i>
+        <p>
+          Saved Catalog ID does not match what Meta linked
+          (<strong>{{ waCatalogSettings?.metaCatalogId }}</strong>).
+          Re-enter the correct ID from Commerce Manager and click Save & Link Catalog.
+        </p>
+      </div>
+      <div *ngIf="!loadingWaSettings && isWaCatalogInputDirty()"
+           class="flex items-start gap-2 p-3 rounded-lg border text-xs bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-200">
+        <i class="fas fa-pen mt-0.5"></i>
+        <p>
+          Catalog ID changed in the field but not saved yet. Click <strong>Save & Link Catalog</strong>
+          to verify, or revert to <strong>{{ waCatalogCanonicalId() }}</strong>.
+        </p>
+      </div>
+      <div *ngIf="!loadingWaSettings && waCatalogSettings?.connected && waCatalogSettings?.catalogId && !isWaCatalogVerifiedLinked() && !isWaCatalogInputDirty() && waCatalogSettings?.catalogLinkStatus !== 'mismatch'"
+           class="flex items-start gap-2 p-3 rounded-lg border text-xs bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200">
+        <i class="fas fa-circle-xmark mt-0.5"></i>
+        <p>
+          Catalog ID not recognised. Enter the correct ID from
+          <strong>Commerce Manager → Catalog → Settings</strong> and save again.
+        </p>
+      </div>
+
       <!-- Error -->
-      <p *ngIf="waSettingsError" class="text-xs text-red-500 flex items-center gap-1">
-        <i class="fas fa-circle-exclamation"></i> {{ waSettingsError }}
-      </p>
+      <div *ngIf="waSettingsError"
+           class="flex flex-col gap-1 p-3 rounded-lg border text-xs bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200">
+        <p class="flex items-start gap-2 font-medium">
+          <i class="fas fa-circle-exclamation mt-0.5 shrink-0"></i>
+          {{ waSettingsError }}
+        </p>
+        <p *ngIf="waSettingsErrorHint" class="pl-5 text-red-700 dark:text-red-300">
+          {{ waSettingsErrorHint }}
+        </p>
+      </div>
 
       <!-- Success -->
       <p *ngIf="waSettingsSaved" class="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
@@ -316,7 +354,7 @@
       <div class="flex items-center gap-3">
         <button
           (click)="syncAllProducts()"
-          [disabled]="syncingAll || !waCatalogSettings?.connected || !waCatalogSettings?.catalogId"
+          [disabled]="syncingAll || !canSyncWaProducts()"
           class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-colors disabled:opacity-50"
           style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
           <i [class]="syncingAll ? 'fas fa-spinner animate-spin' : 'fas fa-rotate'"></i>
@@ -381,7 +419,8 @@
               <!-- WA sync status badge -->
               <td class="px-4 py-3">
                 <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold"
-                      [ngClass]="waSyncStatusClass(product.whatsapp?.syncStatus)">
+                      [ngClass]="waSyncStatusClass(product.whatsapp?.syncStatus)"
+                      [title]="product.whatsapp?.syncStatus === 'failed' && product.whatsapp?.syncError ? product.whatsapp.syncError : ''">
                   <i *ngIf="product.whatsapp?.syncStatus === 'synced'" class="fas fa-check text-[9px]"></i>
                   <i *ngIf="product.whatsapp?.syncStatus === 'failed'" class="fas fa-xmark text-[9px]"></i>
                   <i *ngIf="product.whatsapp?.syncStatus === 'pending'" class="fas fa-spinner animate-spin text-[9px]"></i>
@@ -393,7 +432,7 @@
               <td class="px-4 py-3 text-right">
                 <button
                   (click)="syncOneProduct(product)"
-                  [disabled]="waSyncingProductIds.has(product._id) || !waCatalogSettings?.catalogId"
+                  [disabled]="waSyncingProductIds.has(product._id) || !canSyncWaProducts()"
                   title="Sync to WhatsApp catalog"
                   class="w-7 h-7 rounded-lg flex items-center justify-center text-sm transition-colors disabled:opacity-40 border"
                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-secondary);">
@@ -482,7 +521,7 @@
             <strong *ngIf="waCsvImportResult.sync.failed === 0" class="text-green-600 dark:text-green-400">0</strong> failed
           </span>
         </div>
-        <div *ngIf="!waCatalogSettings?.catalogId" class="text-xs text-amber-600 dark:text-amber-400">
+        <div *ngIf="!isWaCatalogVerifiedLinked()" class="text-xs text-amber-600 dark:text-amber-400">
           <i class="fas fa-triangle-exclamation mr-1"></i>
           No Catalog ID configured — products were saved locally but not synced to WhatsApp.
         </div>

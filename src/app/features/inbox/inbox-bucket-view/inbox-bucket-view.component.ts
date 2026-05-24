@@ -22,6 +22,7 @@ import {
   inboxReplyPdfDisplayName
 } from '../../../core/utils/inbox-attachment-display';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
+import { INBOX_BUCKET_ANIMATIONS } from '../inbox.animations';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
 import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { SentimentDonutChartComponent } from '../../../shared/components/charts/sentiment-donut-chart.component';
@@ -53,7 +54,8 @@ interface SentimentStats {
   standalone: true,
   imports: [CommonModule, FormsModule, DragDropModule, AiChatBubbleIconComponent, SentimentDonutChartComponent, MediaSelectorModalComponent, InboxLinkifiedTextComponent],
   templateUrl: './inbox-bucket-view.component.html',
-  styleUrls: ['./inbox-bucket-view.component.scss']
+  styleUrls: ['./inbox-bucket-view.component.scss'],
+  animations: INBOX_BUCKET_ANIMATIONS,
 })
 export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   /**

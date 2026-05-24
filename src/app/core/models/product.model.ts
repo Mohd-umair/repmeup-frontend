@@ -32,9 +32,28 @@ export interface IProductWhatsAppCatalog {
   syncError?: string;
 }
 
+/** Returned on product create/update when WhatsApp auto-sync runs. */
+export interface IProductWhatsAppSyncResult {
+  attempted: boolean;
+  synced: boolean;
+  error?: string;
+  skippedReason?: 'no_whatsapp_connection' | 'no_catalog_id';
+}
+
+export type WhatsAppCatalogLinkStatus =
+  | 'linked'
+  | 'saved'
+  | 'mismatch'
+  | 'not_linked'
+  | 'meta_only';
+
 export interface IWhatsAppCatalogSettings {
   connected: boolean;
   catalogId?: string | null;
+  /** Catalog ID Meta reports on whatsapp_commerce_settings (source of truth) */
+  metaCatalogId?: string | null;
+  catalogLinkStatus?: WhatsAppCatalogLinkStatus;
+  catalogLinkVerified?: boolean;
   phoneNumberId?: string | null;
   displayPhoneNumber?: string | null;
   isCatalogVisible?: boolean;
@@ -42,6 +61,16 @@ export interface IWhatsAppCatalogSettings {
   syncedCount?: number;
   failedCount?: number;
   notSyncedCount?: number;
+}
+
+export interface IWhatsAppCatalogSettingsUpdateResult {
+  catalogId: string;
+  metaCatalogId?: string;
+  catalogLinkStatus?: WhatsAppCatalogLinkStatus;
+  catalogLinkVerified?: boolean;
+  isCatalogVisible?: boolean;
+  isCartEnabled?: boolean;
+  metaSynced: boolean;
 }
 
 export interface IWhatsAppSyncAllResult {

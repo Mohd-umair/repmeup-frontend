@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef, NgZone, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
+import { INBOX_DETAIL_ANIMATIONS } from '../inbox.animations';
 import { DomSanitizer, SafeUrl, SafeHtml } from '@angular/platform-browser';
 import { IInteraction, InteractionStatus, IAssignmentHistory } from '../../../core/models/interaction.model';
 import { InboxService, INBOX_THREAD_MESSAGE_PAGE_SIZE } from '../../../core/services/inbox.service';
@@ -72,7 +73,8 @@ interface IOptimisticReply {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, MediaSelectorModalComponent, AiChatBubbleIconComponent, InboxLinkifiedTextComponent],
   templateUrl: './inbox-detail.component.html',
-  styleUrls: ['./inbox-detail.component.scss']
+  styleUrls: ['./inbox-detail.component.scss'],
+  animations: INBOX_DETAIL_ANIMATIONS,
 })
 export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   @Input() interaction: IInteraction | null = null;
@@ -140,9 +142,14 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
   /** Emoji picker visibility */
   showEmojiPicker = false;
+  /** Left reply toolbar (emoji, AI, attach, catalog) — collapsed by default */
+  replyToolbarExpanded = false;
 
   /** Media selector modal for sending image/video in reply */
   showMediaModal = false;
+  /** Distinguishes reply attachment vs WhatsApp template header image picker. */
+  mediaSelectorContext: 'reply' | 'waTemplateImage' | null = null;
+  waTemplateImageSlotKey: string | null = null;
 
   /** Pending attachment (image/video/audio) to send with next reply; user can add caption then click Send */
   pendingAttachment: { publicUrl: string; mediaType: 'image' | 'video' | 'audio' | 'file'; media?: Media } | null = null;
@@ -226,6 +233,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
           this.resetReplyTextareaHeight();
           this.pendingAttachment = null;
           this.stopRecordingStream();
+          this.replyToolbarExpanded = false;
+          this.showEmojiPicker = false;
           this.optimisticReplies = [];
           this.visibleTimelineCount = this.timelinePageSize;
           this.hasOlderMessages = false;
@@ -330,6 +339,15 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   /** Toggle emoji picker panel */
   toggleEmojiPicker(): void {
     this.showEmojiPicker = !this.showEmojiPicker;
+    this.cdr.markForCheck();
+  }
+
+  /** Expand/collapse the left reply tools plate (emoji, AI, attach, catalog). */
+  toggleReplyToolbar(expanded?: boolean): void {
+    this.replyToolbarExpanded = expanded ?? !this.replyToolbarExpanded;
+    if (!this.replyToolbarExpanded) {
+      this.showEmojiPicker = false;
+    }
     this.cdr.markForCheck();
   }
 
@@ -562,11 +580,14 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       }
       this.pendingAttachment = null;
       this.replyForm.patchValue({ content: '' }, { emitEvent: false });
+    } else {
+      this.closeMediaSelector();
     }
     this.cdr.markForCheck();
   }
 
   onWaTemplatePick(nameOrEvent: string | Event): void {
+    this.closeMediaSelector();
     const name =
       typeof nameOrEvent === 'string'
         ? nameOrEvent
@@ -816,11 +837,21 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       this.sweetAlertService.toast('info', 'Switch to “Free message” to attach media.');
       return;
     }
+    this.mediaSelectorContext = 'reply';
+    this.waTemplateImageSlotKey = null;
+    this.showMediaModal = true;
+  }
+
+  openWaTemplateImagePicker(slot: WaParamSlot): void {
+    this.mediaSelectorContext = 'waTemplateImage';
+    this.waTemplateImageSlotKey = slot.storageKey;
     this.showMediaModal = true;
   }
 
   closeMediaSelector(): void {
     this.showMediaModal = false;
+    this.mediaSelectorContext = null;
+    this.waTemplateImageSlotKey = null;
   }
 
   /**
@@ -844,6 +875,17 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   onMediaSelect(media: Media): void {
+    if (this.mediaSelectorContext === 'waTemplateImage' && this.waTemplateImageSlotKey) {
+      if (media.mediaType !== 'image') {
+        this.sweetAlertService.toast('warning', 'Choose an image for the template header.');
+        return;
+      }
+      this.waTemplateParamValues[this.waTemplateImageSlotKey] = media.publicUrl;
+      this.closeMediaSelector();
+      this.cdr.markForCheck();
+      return;
+    }
+
     if (!this.interaction) return;
     const limits = this.getPlatformMediaLimits();
     const size = media.size ?? 0;
@@ -868,7 +910,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       mediaType: media.mediaType as 'image' | 'video' | 'audio' | 'file',
       media
     };
-    this.showMediaModal = false;
+    this.closeMediaSelector();
     this.cdr.markForCheck();
   }
 
