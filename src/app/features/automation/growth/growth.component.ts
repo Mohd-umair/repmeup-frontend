@@ -53,6 +53,7 @@ export class GrowthComponent implements OnInit, OnDestroy {
   ctdSettings: ICommentToDmSettings | null = null;
   loadingCtd = false;
   savingCtd = false;
+  savingCtdDedup = false;
   ctdError = '';
   keywordsInput = '';
 
@@ -148,7 +149,45 @@ export class GrowthComponent implements OnInit, OnDestroy {
     const payload = { ...this.ctdSettings, triggerKeywords: this.keywordsInput.split(',').map(k => k.trim()).filter(Boolean) };
     this.catalogService.updateCommentToDmSettings(payload)
       .pipe(takeUntil(this.destroy$), finalize(() => { this.savingCtd = false; this.cdr.markForCheck(); }))
-      .subscribe({ next: () => this.notify.success('Saved', 'Comment-to-DM settings saved.'), error: err => { this.ctdError = err?.error?.error || 'Save failed'; } });
+      .subscribe({
+        next: res => {
+          this.ctdSettings = res.data ?? this.ctdSettings;
+          if (this.ctdSettings) {
+            this.keywordsInput = this.ctdSettings.triggerKeywords?.join(', ') || '';
+          }
+          this.notify.success('Saved', 'Comment-to-DM settings saved.');
+        },
+        error: err => { this.ctdError = err?.error?.error || 'Save failed'; }
+      });
+  }
+
+  onCtdDedupChange(value: boolean): void {
+    if (!this.ctdSettings) return;
+    const previous = this.ctdSettings.deduplicateDms;
+    this.ctdSettings.deduplicateDms = value;
+    this.savingCtdDedup = true;
+    this.ctdError = '';
+    this.cdr.markForCheck();
+
+    this.catalogService.updateCommentToDmSettings({ deduplicateDms: value })
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.savingCtdDedup = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: res => {
+          if (res.data) {
+            this.ctdSettings = { ...this.ctdSettings!, deduplicateDms: res.data.deduplicateDms };
+          }
+        },
+        error: err => {
+          this.ctdSettings!.deduplicateDms = previous;
+          this.ctdError = err?.error?.error || 'Could not save skip-duplicates setting';
+        }
+      });
   }
 
   saveFi(): void {

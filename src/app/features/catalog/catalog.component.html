@@ -623,7 +623,7 @@
 
     <!-- Wizard step indicator (step 1 active) -->
     <div class="flex items-center px-5 py-3 gap-0 border-b shrink-0" style="border-color: var(--card-border); background-color: var(--surface-primary);">
-      <button type="button" (click)="wizardStep = 1"
+      <button type="button" (click)="goToWizardStep(1)"
               class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition"
               style="color: var(--accent); background: rgba(var(--accent-rgb,99,102,241),0.1);">
         <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -800,9 +800,14 @@
 
     <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: var(--card-border);">
-      <h2 class="font-bold text-lg" style="color: var(--text-primary);">
-        {{ editingProduct?.name || 'New Product' }}
-      </h2>
+      <div>
+        <h2 class="font-bold text-lg" style="color: var(--text-primary);">
+          {{ editingProduct?.name || 'New Product' }}
+        </h2>
+        <p *ngIf="linkingProduct?.name" class="text-xs mt-0.5" style="color: var(--text-muted);">
+          Linking posts to: <strong style="color: var(--text-primary);">{{ linkingProduct!.name }}</strong>
+        </p>
+      </div>
       <button (click)="closeProductModal()" class="text-xl" style="color: var(--text-muted);" aria-label="Close">
         <i class="fas fa-times"></i>
       </button>
@@ -810,7 +815,7 @@
 
     <!-- Step indicator -->
     <div class="flex items-center px-5 py-3 gap-0 border-b shrink-0" style="border-color: var(--card-border); background-color: var(--surface-primary);">
-      <button type="button" (click)="wizardStep = 1"
+      <button type="button" (click)="goToWizardStep(1)"
               class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition"
               style="color: var(--text-muted);">
         <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -818,7 +823,7 @@
         Product Info
       </button>
       <i class="fas fa-chevron-right text-[9px] mx-1" style="color: var(--text-muted);"></i>
-      <button type="button" (click)="wizardStep = 2"
+      <button type="button" (click)="goToWizardStep(2)"
               class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition"
               style="color: var(--accent); background: rgba(var(--accent-rgb,99,102,241),0.1);">
         <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -946,11 +951,11 @@
         <div *ngIf="!loadingMedia && !mediaLoadError && filteredInstagramMedia.length"
              class="grid grid-cols-3 sm:grid-cols-4 gap-2">
           <div *ngFor="let media of filteredInstagramMedia; trackBy: trackByMediaId"
-               (click)="!isMediaLinked(media) ? toggleMediaSelection(media.id) : null"
+               (click)="!isMediaLinkedForTarget(media) ? toggleMediaSelection(media.id) : null"
                class="relative rounded-lg overflow-hidden border-2 transition-all cursor-pointer aspect-square group"
-               [style.border-color]="isMediaLinked(media)
+               [style.border-color]="isMediaLinkedForTarget(media)
                  ? 'var(--accent)' : isMediaSelected(media.id) ? '#22c55e' : 'transparent'"
-               [style.opacity]="isMediaLinked(media) ? '0.65' : '1'">
+               [style.opacity]="isMediaLinkedForTarget(media) ? '0.65' : '1'">
 
             <!-- Thumbnail -->
             <img *ngIf="media.thumbnailUrl"
@@ -1000,7 +1005,7 @@
             </div>
 
             <!-- Selected overlay -->
-            <div *ngIf="isMediaSelected(media.id) && !isPostLinked(media.id)"
+            <div *ngIf="isMediaSelected(media.id) && !isMediaLinkedForTarget(media)"
                  class="absolute inset-0 flex items-center justify-center"
                  style="background-color: rgba(34,197,94,0.3);">
               <i class="fas fa-check-circle text-2xl text-green-500"></i>
@@ -1109,7 +1114,7 @@
 
     <!-- Step 2 footer -->
     <div class="flex justify-between gap-3 px-5 py-4 border-t shrink-0" style="border-color: var(--card-border);">
-      <button (click)="wizardStep = 1"
+      <button (click)="goToWizardStep(1)"
               class="px-4 py-2 rounded-lg text-sm font-bold transition"
               style="background-color: var(--surface-primary); color: var(--text-primary);">
         <i class="fas fa-arrow-left mr-1.5"></i>Back
@@ -1147,7 +1152,7 @@
     <!-- Step indicator -->
     <div class="flex items-center px-6 py-2.5 gap-0 border-b shrink-0"
          style="border-color: var(--card-border); background-color: var(--surface-primary);">
-      <button type="button" (click)="wizardStep = 1"
+      <button type="button" (click)="goToWizardStep(1)"
               class="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-bold transition"
               style="color: var(--text-muted);">
         <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -1155,7 +1160,7 @@
         Product Info
       </button>
       <i class="fas fa-chevron-right text-[9px] mx-1" style="color: var(--text-muted);"></i>
-      <button type="button" (click)="wizardStep = 2"
+      <button type="button" (click)="goToWizardStep(2)"
               class="flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-bold transition"
               style="color: var(--text-muted);">
         <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -1319,7 +1324,7 @@
 
     <!-- Step 3 footer -->
     <div class="flex justify-between gap-3 px-6 py-4 border-t shrink-0" style="border-color: var(--card-border);">
-      <button (click)="wizardStep = 2"
+      <button (click)="goToWizardStep(2)"
               class="px-4 py-2 rounded-lg text-sm font-bold transition"
               style="background-color: var(--surface-primary); color: var(--text-primary);">
         <i class="fas fa-arrow-left mr-1.5"></i>Back

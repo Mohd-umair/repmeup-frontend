@@ -208,19 +208,41 @@
         *ngIf="showUserMenu"
         class="absolute right-0 mt-2 w-56 bg-rep-black rounded-lg shadow-lg border border-gray-800 py-1 z-50"
       >
-        <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white">
+        <a
+          routerLink="/app/dashboard"
+          (click)="showUserMenu = false"
+          class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white cursor-pointer"
+        >
+          <div class="flex items-center space-x-2">
+            <span>📊</span>
+            <span>Dashboard</span>
+          </div>
+        </a>
+        <a
+          routerLink="/app/settings/profile"
+          (click)="showUserMenu = false"
+          class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white cursor-pointer"
+        >
           <div class="flex items-center space-x-2">
             <span>👤</span>
             <span>Profile</span>
           </div>
         </a>
-        <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white">
+        <a
+          routerLink="/app/settings/platforms"
+          (click)="showUserMenu = false"
+          class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white cursor-pointer"
+        >
           <div class="flex items-center space-x-2">
             <span>⚙️</span>
             <span>Settings</span>
           </div>
         </a>
-        <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white">
+        <a
+          routerLink="/app/settings/organization"
+          (click)="showUserMenu = false"
+          class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white cursor-pointer"
+        >
           <div class="flex items-center space-x-2">
             <span>🏢</span>
             <span>Organization</span>

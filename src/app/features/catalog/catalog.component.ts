@@ -315,8 +315,32 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   onSearch(): void { this.loadProducts(); }
 
+  /** Keep wizard attach target in sync with the product the user opened. */
+  private setLinkTarget(product: IProduct): void {
+    this.linkingProduct = product;
+    this.editingProduct = product;
+  }
+
+  /** After link/unlink API — sync wizard state and in-memory catalog list. */
+  private applyProductLinkUpdate(updated: IProduct): void {
+    this.linkingProduct = updated;
+    if (this.editingProduct?._id === updated._id) {
+      this.editingProduct = updated;
+    }
+    const idx = this.products.findIndex(p => p._id === updated._id);
+    if (idx !== -1) {
+      this.products[idx] = updated;
+    }
+  }
+
+  /** Refresh product cards from server after link/unlink. */
+  private refreshProductsAfterLink(): void {
+    this.loadProducts();
+  }
+
   openCreateModal(): void {
     this.editingProduct = null;
+    this.linkingProduct = null;
     this.productError = '';
     this.sizesInput = '';
     this.colorsInput = '';
@@ -335,6 +359,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   openEditModal(product: IProduct): void {
     this.editingProduct = product;
+    this.linkingProduct = null;
     this.productError = '';
     this.sizesInput = product.sizes.join(', ');
     this.colorsInput = product.colors.join(', ');
@@ -352,7 +377,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   }
 
   openAttachPosts(product: IProduct): void {
-    this.editingProduct = product;
+    this.setLinkTarget(product);
     this.productError = '';
     this.sizesInput = product.sizes.join(', ');
     this.colorsInput = product.colors.join(', ');
@@ -372,6 +397,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   closeProductModal(): void {
     this.showProductModal = false;
     this.editingProduct = null;
+    this.linkingProduct = null;
     this.showProductImagesModal = false;
     this.productImageUploadQueue = [];
     this.wizardStep = 1;
@@ -510,16 +536,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
           if (isNew && r.data) {
             // Advance to step 2 so the user can immediately link posts
-            this.wizardStep = 2;
-            this.linkingProduct = r.data;
-            this.postIdInput = '';
-            this.linkError = '';
-            this.resolvedNumericId = null;
-            this.resolveError = '';
-            // Load Instagram media grid for the picker
-            if (!this.instagramMedia.length && !this.loadingMedia) {
-              this.loadInstagramMedia();
-            }
+            this.goToWizardStep(2);
           } else {
             this.closeProductModal();
           }
@@ -644,7 +661,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   // ── Post links ─────────────────────────────
   openPostLinkModal(product: IProduct): void {
-    this.linkingProduct = product;
+    this.setLinkTarget(product);
     this.postIdInput = '';
     this.linkError = '';
     this.resolvedNumericId = null;
@@ -698,11 +715,12 @@ export class CatalogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$), finalize(() => { this.linkingPost = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: r => {
-          this.linkingProduct = r.data ?? null;
+          if (r.data) {
+            this.applyProductLinkUpdate(r.data);
+            this.refreshProductsAfterLink();
+          }
           this.postIdInput = '';
           this.resolvedNumericId = null;
-          const idx = this.products.findIndex(p => p._id === r.data?._id);
-          if (idx !== -1 && r.data) this.products[idx] = r.data;
           this.cdr.markForCheck();
         },
         error: err => { this.linkError = err.error?.error || 'Failed to link post'; this.cdr.markForCheck(); }
@@ -715,9 +733,10 @@ export class CatalogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: r => {
-          this.linkingProduct = r.data ?? null;
-          const idx = this.products.findIndex(p => p._id === r.data?._id);
-          if (idx !== -1 && r.data) this.products[idx] = r.data;
+          if (r.data) {
+            this.applyProductLinkUpdate(r.data);
+            this.refreshProductsAfterLink();
+          }
           this.cdr.markForCheck();
         }
       });
@@ -748,14 +767,13 @@ export class CatalogComponent implements OnInit, OnDestroy {
   // ── Wizard navigation ────────────────────────────────────────────────────
   goToWizardStep(step: 1 | 2 | 3): void {
     if (step === 2) {
-      if (this.editingProduct && !this.linkingProduct) {
+      if (this.editingProduct) {
         this.linkingProduct = this.editingProduct;
         this.postIdInput = '';
         this.linkError = '';
         this.resolvedNumericId = null;
         this.resolveError = '';
       }
-      // Load posts grid if not already loaded
       if (!this.instagramMedia.length && !this.loadingMedia) {
         this.loadInstagramMedia();
       }
@@ -786,12 +804,27 @@ export class CatalogComponent implements OnInit, OnDestroy {
   }
 
   isPostLinked(mediaId: string): boolean {
-    if (!this.linkingProduct) return false;
-    return this.linkingProduct.instagramPostIds.some(pid => pid === mediaId);
+    if (!mediaId) return false;
+    return this.products.some(p =>
+      (p.instagramPostIds || []).some(pid => pid === mediaId)
+    );
   }
 
   isStoryLinked(mediaId: string): boolean {
-    if (!this.linkingProduct) return false;
+    if (!mediaId) return false;
+    return this.products.some(p =>
+      (p.instagramStoryIds || []).some(sid => sid === mediaId)
+    );
+  }
+
+  /** True when the current attach target already has this post/story linked. */
+  isPostLinkedForTarget(mediaId: string): boolean {
+    if (!this.linkingProduct || !mediaId) return false;
+    return this.linkingProduct.instagramPostIds.some(pid => pid === mediaId);
+  }
+
+  isStoryLinkedForTarget(mediaId: string): boolean {
+    if (!this.linkingProduct || !mediaId) return false;
     return (this.linkingProduct.instagramStoryIds || []).some(sid => sid === mediaId);
   }
 
@@ -800,6 +833,14 @@ export class CatalogComponent implements OnInit, OnDestroy {
       return this.isStoryLinked(media.id) || this.isStoryLinked(media.shortcode || '');
     }
     return this.isPostLinked(media.id) || this.isPostLinked(media.shortcode || '');
+  }
+
+  /** Whether the current attach target already has this media linked. */
+  isMediaLinkedForTarget(media: IInstagramMediaItem): boolean {
+    if (media.mediaType === 'STORIES') {
+      return this.isStoryLinkedForTarget(media.id) || this.isStoryLinkedForTarget(media.shortcode || '');
+    }
+    return this.isPostLinkedForTarget(media.id) || this.isPostLinkedForTarget(media.shortcode || '');
   }
 
   get filteredInstagramMedia(): IInstagramMediaItem[] {
@@ -836,6 +877,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
     const productId = this.linkingProduct._id;
     const ids = [...this.selectedMediaIds];
+    let linkedAny = false;
 
     for (const id of ids) {
       try {
@@ -853,13 +895,16 @@ export class CatalogComponent implements OnInit, OnDestroy {
           }));
         }
         if (r?.data) {
-          this.linkingProduct = r.data;
-          const idx = this.products.findIndex(p => p._id === r.data!._id);
-          if (idx !== -1) this.products[idx] = r.data!;
+          this.applyProductLinkUpdate(r.data);
+          linkedAny = true;
         }
       } catch (e: any) {
         this.linkError = e?.error?.error || 'Failed to link one or more items';
       }
+    }
+
+    if (linkedAny) {
+      this.refreshProductsAfterLink();
     }
 
     this.selectedMediaIds = new Set();
@@ -922,9 +967,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
         sortOrder: this.carouselLinkSlideIndex + 1
       }));
       if (r?.data) {
-        this.linkingProduct = r.data;
-        const idx = this.products.findIndex(p => p._id === r.data!._id);
-        if (idx !== -1) this.products[idx] = r.data!;
+        this.applyProductLinkUpdate(r.data);
+        this.refreshProductsAfterLink();
       }
       this.closeCarouselPreview();
     } catch (e: any) {
