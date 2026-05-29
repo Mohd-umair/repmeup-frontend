@@ -2,6 +2,41 @@
  * Labels and download helpers for file/PDF attachments in inbox threads.
  */
 
+const ATTACHMENT_FILENAME_RE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|csv|zip|txt|rtf)$/i;
+
+export function looksLikeAttachmentFilename(text: string | undefined | null): boolean {
+  if (!text || typeof text !== 'string') return false;
+  const t = text.trim();
+  return ATTACHMENT_FILENAME_RE.test(t) || /^\[(document|file)\]$/i.test(t);
+}
+
+/** Infer file attachment when WhatsApp stored filename as text + mediaId (no attachmentUrl). */
+export function inferIncomingAttachmentType(msg: {
+  attachmentType?: string;
+  type?: string;
+  mediaId?: string;
+  text?: string;
+}): string | undefined {
+  const raw = msg.attachmentType;
+  if (raw === 'file' || raw === 'document') return 'file';
+  if (msg.mediaId && msg.type === 'document') return 'file';
+  if (looksLikeAttachmentFilename(msg.text)) return 'file';
+  return raw;
+}
+
+export function incomingFileDisplayName(msg: {
+  attachmentDisplayName?: string;
+  text?: string;
+  content?: string;
+  attachmentUrl?: string;
+}): string {
+  const named = msg.attachmentDisplayName?.trim();
+  if (named) return named;
+  const text = String(msg.text ?? msg.content ?? '').trim();
+  if (looksLikeAttachmentFilename(text)) return text;
+  return inboxAttachmentFilenameFromUrl(msg.attachmentUrl);
+}
+
 export function inboxAttachmentFilenameFromUrl(url: string | undefined | null, fallback = 'document.pdf'): string {
   if (!url || typeof url !== 'string') return fallback;
   try {
@@ -19,8 +54,11 @@ export function inboxReplyPdfDisplayName(reply: {
   attachmentUrl?: string;
   attachmentType?: string | undefined;
   attachmentDisplayName?: string;
+  content?: string;
 }): string {
-  if (reply.attachmentType !== 'file' || !reply.attachmentUrl) return '';
+  if (reply.attachmentType !== 'file' && !looksLikeAttachmentFilename(reply.content)) return '';
+  const fromMsg = incomingFileDisplayName(reply);
+  if (fromMsg && fromMsg !== 'document.pdf') return fromMsg;
   const n = reply.attachmentDisplayName?.trim();
   if (n) return n;
   return inboxAttachmentFilenameFromUrl(reply.attachmentUrl);

@@ -2,19 +2,29 @@
   title="AI Auto Replies"
   subtitle="Configure intelligent AI-powered replies across all your channels">
 
-  <div slot="actions" class="flex items-center gap-3">
-    <span *ngIf="!loading && activeSection !== 'knowledgeBase'"
-          class="text-[11px] font-bold px-2.5 py-1 rounded-full"
-          [style.background-color]="settings.enabled ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
-          [style.color]="settings.enabled ? '#16a34a' : 'var(--text-muted)'">
-      {{ settings.enabled ? 'Enabled' : 'Disabled' }}
-    </span>
-    <button *ngIf="activeSection !== 'knowledgeBase'" (click)="save()" [disabled]="saving || loading"
-            class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
-      <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-      {{ saving ? 'Saving…' : 'Save Changes' }}
-    </button>
-  </div>
+  @if (planAllowed()) {
+    <div slot="actions" class="flex items-center gap-3">
+      <span *ngIf="!loading && activeSection !== 'knowledgeBase'"
+            class="text-[11px] font-bold px-2.5 py-1 rounded-full"
+            [style.background-color]="settings.enabled ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
+            [style.color]="settings.enabled ? '#16a34a' : 'var(--text-muted)'">
+        {{ settings.enabled ? 'Enabled' : 'Disabled' }}
+      </span>
+      <button *ngIf="activeSection !== 'knowledgeBase'" (click)="save()" [disabled]="saving || loading"
+              class="auto-btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+        <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+        {{ saving ? 'Saving…' : 'Save Changes' }}
+      </button>
+    </div>
+  }
+
+  @if (!planAllowed()) {
+    <app-upgrade-prompt
+      title="AI auto-replies are not on your plan"
+      message="Upgrade to enable automated AI responses across your channels."
+      [featureKey]="FEATURE_KEY.AUTO_REPLY_ENABLED"
+    />
+  } @else {
 
   <!-- Error -->
   <div *ngIf="error" class="rounded-lg border p-4 text-sm"
@@ -289,5 +299,7 @@
     </div>
 
   </ng-container>
+
+  }
 
 </app-automation-page-shell>

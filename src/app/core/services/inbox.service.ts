@@ -7,7 +7,7 @@ import { IInteraction, IInboxFilters, IInboxStats } from '../models/interaction.
 import { WhatsAppTemplatePreviewDisplay } from '../utils/whatsapp-template-preview.helpers';
 
 /** DM thread page size — must match backend DEFAULT_INCOMING_MSG_LIMIT (GET /inbox/:id). */
-export const INBOX_THREAD_MESSAGE_PAGE_SIZE = 10;
+export const INBOX_THREAD_MESSAGE_PAGE_SIZE = 20;
 
 /**
  * Inbox Service - Single Responsibility Principle
@@ -104,8 +104,15 @@ export class InboxService {
       .pipe(
         tap(response => {
           if (response.success && response.data && !(params as any)?.msgBefore) {
-            // Only update the global selected subject on initial load, not on load-more
-            this.selectedInteractionSubject.next(response.data);
+            const data = response.data as IInteraction & {
+              metadata?: { messagePagination?: unknown };
+            };
+            const pagination = (response as { pagination?: unknown }).pagination;
+            if (pagination) {
+              data.metadata = data.metadata || {};
+              (data.metadata as { messagePagination?: unknown }).messagePagination = pagination;
+            }
+            this.selectedInteractionSubject.next(data);
           }
         })
       );

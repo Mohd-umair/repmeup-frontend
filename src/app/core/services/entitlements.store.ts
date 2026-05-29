@@ -65,7 +65,20 @@ export const FEATURE_KEY = {
 
   AUTO_REPLY_ENABLED: 'automation.autoReply.enabled',
   ANALYTICS_ADVANCED: 'analytics.advanced',
-  AGENTS_ENABLED: 'agents.enabled'
+  AGENTS_ENABLED: 'agents.enabled',
+  VOICE_IVR_ENABLED: 'voice.ivr.enabled',
+
+  COMMERCE_PRODUCTS_MAX: 'commerce.products.max',
+  COMMERCE_WA_CATALOG_ENABLED: 'commerce.whatsappCatalog.enabled',
+  COMMERCE_AI_ASSIST_ENABLED: 'commerce.aiAssist.enabled',
+  COMMERCE_AUTONOMOUS_AGENT: 'commerce.autonomousAgent.enabled',
+
+  CAMPAIGNS_ENABLED: 'campaigns.enabled',
+  CAMPAIGNS_RECIPIENTS_MONTHLY: 'campaigns.recipients.monthly',
+  WHATSAPP_TEMPLATES_MAX: 'whatsapp.templates.max',
+  WHATSAPP_BROADCAST_ENABLED: 'whatsapp.broadcast.enabled',
+  AUTOMATION_FLOWS_MAX: 'automation.flows.max',
+  CONTACTS_MAX: 'contacts.max'
 } as const;
 
 export type FeatureKey = (typeof FEATURE_KEY)[keyof typeof FEATURE_KEY];
@@ -163,10 +176,13 @@ export class EntitlementsStore {
       .subscribe(() => this.load());
   }
 
-  /** Boolean check — fail open when a key is missing (snapshot still loading). */
+  /** Boolean check — fail closed while loading; limit keys fail open until snapshot exists. */
   can(featureKey: FeatureKey): boolean {
     const snap = this._snapshot();
-    if (!snap) return true;
+    if (!snap) {
+      if (this._loading()) return false;
+      return true;
+    }
     const entry = snap.keys?.[featureKey];
     if (!entry) return true;
     if (entry.kind === 'boolean') return !!entry.enabled;

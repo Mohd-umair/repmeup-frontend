@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subscription, interval, Subject } from 'rxjs';
@@ -6,6 +6,8 @@ import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
 import {
   IAnalyticsDashboard,
   IAnalyticsFilters,
@@ -36,12 +38,17 @@ import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubbl
     TimeSeriesChartComponent, SentimentDonutChartComponent,
     PlatformBarChartComponent, ResponseTimeHistogramComponent,
     AgentPerformanceChartComponent,
-    AiChatBubbleIconComponent
+    AiChatBubbleIconComponent,
+    UpgradePromptComponent
   ],
   templateUrl: './analytics.component.html',
   styleUrls: ['./analytics.component.scss']
 })
 export class AnalyticsComponent implements OnInit, OnDestroy {
+  readonly ent = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
+  readonly planAllowed = computed(() => this.ent.can(FEATURE_KEY.ANALYTICS_ADVANCED));
+
   // Data
   dashboard: IAnalyticsDashboard | null = null;
   agentAnalytics: IAgentAnalytics | null = null;

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { WhatsAppTemplateService } from '../../core/services/whatsapp-template.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
 import { WhatsAppTemplate, TemplateCategory, TemplateStatus } from '../../core/models/whatsapp-template.model';
 import { PlatformService, PlatformConnection } from '../../core/services/platform.service';
 import { TemplateCreateComponent } from './template-create/template-create.component';
@@ -14,11 +16,15 @@ import { SweetAlertService } from '../../core/services/sweet-alert.service';
 @Component({
   selector: 'app-whatsapp-templates',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TemplateCreateComponent],
+  imports: [CommonModule, RouterModule, FormsModule, TemplateCreateComponent, UpgradePromptComponent],
   templateUrl: './whatsapp-templates.component.html',
   styleUrls: ['./whatsapp-templates.component.scss']
 })
 export class WhatsAppTemplatesComponent implements OnInit, OnDestroy {
+  readonly ent = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
+  readonly planAllowed = computed(() => this.ent.can(FEATURE_KEY.WHATSAPP_TEMPLATES_MAX));
+
   templates: WhatsAppTemplate[] = [];
   filteredTemplates: WhatsAppTemplate[] = [];
   connections: PlatformConnection[] = [];

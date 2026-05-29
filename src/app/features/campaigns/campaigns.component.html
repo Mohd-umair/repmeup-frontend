@@ -1,5 +1,15 @@
 <div class="min-h-screen" style="background-color: var(--bg-primary);">
 
+  @if (!planAllowed()) {
+    <div class="p-6">
+      <app-upgrade-prompt
+        title="WhatsApp campaigns are not on your plan"
+        message="Upgrade to send template broadcast campaigns to your audience."
+        [featureKey]="FEATURE_KEY.CAMPAIGNS_ENABLED"
+      />
+    </div>
+  } @else {
+
   <!-- ── Page Header ──────────────────────────────────────────────────────── -->
   <div class="sticky top-0 z-20 border-b px-6 py-4 flex items-center justify-between gap-4"
        style="background-color: var(--bg-secondary); border-color: var(--card-border);">
@@ -11,6 +21,11 @@
       <p class="text-sm mt-0.5" style="color: var(--text-muted);">
         Send broadcast messages to your audience using approved templates
       </p>
+      <app-usage-meter
+        class="mt-2 block max-w-xs"
+        [featureKey]="FEATURE_KEY.CAMPAIGNS_RECIPIENTS_MONTHLY"
+        label="Campaign recipients this month"
+      />
     </div>
     <button (click)="openCreate()"
             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
@@ -237,6 +252,9 @@
       </div>
     </div>
   </div>
+
+  }
+
 </div>
 
 <!-- ── Campaign Editor Slide-Over ──────────────────────────────────────────── -->

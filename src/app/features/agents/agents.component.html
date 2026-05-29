@@ -1,5 +1,14 @@
 <div class="min-h-screen w-full p-4 sm:p-6 bg-gray-50 text-gray-900 dark:bg-rep-black dark:text-rep-white">
   <div class="space-y-6 w-full max-w-[1600px] mx-auto">
+
+    <app-upgrade-prompt
+      *ngIf="!planAllowed()"
+      title="Team management is not on your plan"
+      message="Upgrade to invite agents and manage team permissions."
+      [featureKey]="FEATURE_KEY.AGENTS_ENABLED">
+    </app-upgrade-prompt>
+
+    <ng-container *ngIf="planAllowed()">
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
@@ -230,8 +239,6 @@
         ></app-pagination>
       </div>
     </div>
-
-  </div>
 
   <!-- Add Agent Modal -->
   <div *ngIf="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -651,5 +658,7 @@
         </button>
       </div>
     </div>
+  </div>
+    </ng-container>
   </div>
 </div>

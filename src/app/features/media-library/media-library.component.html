@@ -7,6 +7,7 @@
         Media Library
       </h1>
       <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Upload once, use everywhere</p>
+      <p *ngIf="storageQuotaLabel() as storageLabel" class="text-xs text-amber-300/90 mt-1">{{ storageLabel }}</p>
     </div>
     <button 
       class="px-4 py-3 sm:py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition flex items-center justify-center gap-2"

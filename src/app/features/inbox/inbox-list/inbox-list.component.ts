@@ -11,6 +11,7 @@ import { IInteraction, IReply, Platform } from '../../../core/models/interaction
 import { ThemeService } from '../../../core/services/theme.service';
 import { AppearanceService } from '../../../core/services/appearance.service';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
+import { looksLikeAttachmentFilename } from '../../../core/utils/inbox-attachment-display';
 
 /**
  * Inbox List Component - Single Responsibility Principle
@@ -492,6 +493,8 @@ export class InboxListComponent implements OnInit, OnDestroy {
     if (/^\[audio\]$/i.test(t)) return '🎤 Voice message';
     if (/^\[file\]$/i.test(t)) return '📎 File';
     if (/^\[attachment\]$/i.test(t)) return '📎 File';
+    if (/\.pdf$/i.test(t)) return '📄 PDF';
+    if (looksLikeAttachmentFilename(t)) return '📎 File';
     if (/^\[shared instagram reel\]$/i.test(t)) return '🎬 Shared reel';
     if (/^\[shared instagram story\]$/i.test(t)) return '📖 Shared story';
     if (/^\[shared instagram post\]$/i.test(t)) return '🔗 Shared post';

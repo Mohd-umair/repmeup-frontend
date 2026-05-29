@@ -1,4 +1,13 @@
 <div class="min-h-screen bg-rep-black p-6 w-full">
+
+  @if (!planAllowed()) {
+    <app-upgrade-prompt
+      title="Advanced analytics is not on your plan"
+      message="Upgrade to access sentiment insights, agent performance, and exportable reports."
+      [featureKey]="FEATURE_KEY.ANALYTICS_ADVANCED"
+    />
+  } @else {
+
   <!-- Header -->
   <div class="mb-6">
     <div class="flex items-center justify-between mb-4">
@@ -943,4 +952,7 @@
       <i class="fas fa-sync-alt mr-2"></i> Retry
     </button>
   </div>
+
+  }
+
 </div>

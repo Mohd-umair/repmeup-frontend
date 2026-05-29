@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService, IUser, ICreateUserDto, IUpdateUserDto } from '../../core/services/user.service';
 import { IntentBucketService, IIntentBucket } from '../../core/services/intent-bucket.service';
 import { IPagination } from '../../core/models/api-response.model';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
 
 @Component({
   selector: 'app-agents',
@@ -11,6 +12,9 @@ import { IPagination } from '../../core/models/api-response.model';
   styleUrls: ['./agents.component.scss']
 })
 export class AgentsComponent implements OnInit {
+  readonly ent = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
+  readonly planAllowed = computed(() => this.ent.can(FEATURE_KEY.AGENTS_ENABLED));
   agents: IUser[] = [];
   loading = false;
   error: string | null = null;

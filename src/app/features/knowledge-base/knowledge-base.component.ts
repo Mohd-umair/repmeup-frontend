@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, HostListener, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,17 +10,23 @@ import { SimpleDonutChartComponent, DonutSegment } from '../../shared/components
 import { NotificationService } from '../../core/services/notification.service';
 import { SweetAlertService } from '../../core/services/sweet-alert.service';
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import { UsageMeterComponent } from '../../shared/components/usage-meter/usage-meter.component';
 
 export interface KbTemplateField { key: string; value: string; }
 
 @Component({
   selector: 'app-knowledge-base',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaginationComponent, SimpleDonutChartComponent, AiChatBubbleIconComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaginationComponent, SimpleDonutChartComponent, AiChatBubbleIconComponent, UsageMeterComponent],
   templateUrl: './knowledge-base.component.html',
   styleUrls: ['./knowledge-base.component.scss']
 })
 export class KnowledgeBaseComponent implements OnInit, OnDestroy {
+  readonly ent = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
+  readonly kbAtCap = computed(() => this.ent.isExhausted(FEATURE_KEY.KB_ENTRIES_MAX));
+
   // UI State
   activeTab: 'list' | 'manual' | 'pdf' | 'url' = 'list';
   showUsageBanner = false;
@@ -474,6 +480,10 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
 
   /** Navigate to the dedicated create page */
   navigateToCreate(): void {
+    if (this.kbAtCap()) {
+      this.notificationService.warning('Limit reached', 'Upgrade your plan to add more knowledge base entries.');
+      return;
+    }
     this.showAddMenu = false;
     this.router.navigate(['/app/knowledge-base/create']);
   }

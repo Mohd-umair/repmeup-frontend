@@ -1,5 +1,15 @@
 <div class="min-h-screen" style="background-color: var(--bg-primary);">
 
+  @if (!planAllowed()) {
+    <div class="p-6">
+      <app-upgrade-prompt
+        title="Advanced reports are not on your plan"
+        message="Upgrade to view WhatsApp number reports, campaign stats, and template performance."
+        [featureKey]="FEATURE_KEY.ANALYTICS_ADVANCED"
+      />
+    </div>
+  } @else {
+
   <!-- ── Header ──────────────────────────────────────────────────────────── -->
   <div class="sticky top-0 z-20 border-b px-6 py-4 flex flex-wrap items-center justify-between gap-4"
        style="background-color: var(--bg-secondary); border-color: var(--card-border);">
@@ -341,4 +351,7 @@
 
     </ng-container>
   </div>
+
+  }
+
 </div>

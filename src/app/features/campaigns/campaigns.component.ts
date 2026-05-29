@@ -1,21 +1,27 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { CampaignService, ICampaign, CampaignStatus } from '../../core/services/campaign.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
 import { CampaignEditorComponent } from './campaign-editor';
 import { CampaignRecipientsReportComponent } from './campaign-recipients-report/campaign-recipients-report.component';
+import { UsageMeterComponent } from '../../shared/components/usage-meter/usage-meter.component';
 
 @Component({
   selector: 'app-campaigns',
   standalone: true,
-  imports: [CommonModule, FormsModule, CampaignEditorComponent, CampaignRecipientsReportComponent],
+  imports: [CommonModule, FormsModule, CampaignEditorComponent, CampaignRecipientsReportComponent, UpgradePromptComponent, UsageMeterComponent],
   templateUrl: './campaigns.component.html'
 })
 export class CampaignsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  readonly ent = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
+  readonly planAllowed = computed(() => this.ent.can(FEATURE_KEY.CAMPAIGNS_ENABLED));
 
   campaigns: ICampaign[] = [];
   loading = true;

@@ -79,6 +79,7 @@ export interface IPlanTier {
   name: string;
   tier: number;
   price: number | string;
+  description?: string | null;
   limits: {
     maxAccounts: number;
     maxUsers: number;
@@ -86,7 +87,20 @@ export interface IPlanTier {
     maxAutoRepliesPerMonth: number;
     maxAICreditsPerMonth: number;
   };
-  features: string[];
+  /** Processed limit rows from admin entitlements (preferred). */
+  highlights?: Array<{
+    key: string;
+    label: string;
+    value: string;
+    raw?: number;
+  }>;
+  /** Enabled module bullets from admin entitlements (preferred). */
+  features?: Array<{ key: string; label: string }>;
+  /** @deprecated Use `features` — legacy string codes from Plan.features[] */
+  legacyFeatures?: string[];
+  badge?: string | null;
+  badgeColor?: string | null;
+  billingCycle?: string;
 }
 
 @Injectable({

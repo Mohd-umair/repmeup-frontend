@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -11,6 +11,8 @@ import { AutomationChannelToggleComponent, ALL_CHANNELS } from '../shared/automa
 import { AutomationSwitchComponent } from '../shared/automation-switch.component';
 import { KnowledgeBaseComponent } from '../../knowledge-base/knowledge-base.component';
 import { PermissionService } from '../../../core/services/permission.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../../core/services/entitlements.store';
+import { UpgradePromptComponent } from '../../../shared/components/upgrade-prompt/upgrade-prompt.component';
 
 type AiToneKey = NonNullable<AutoReplySettings['tone']>;
 
@@ -23,13 +25,17 @@ type AiToneKey = NonNullable<AutoReplySettings['tone']>;
     AutomationPageShellComponent,
     AutomationChannelToggleComponent,
     AutomationSwitchComponent,
-    KnowledgeBaseComponent
+    KnowledgeBaseComponent,
+    UpgradePromptComponent
   ],
   templateUrl: './ai-replies.component.html',
   styleUrls: ['./ai-replies.component.scss']
 })
 export class AiRepliesComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  readonly ent = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
+  readonly planAllowed = computed(() => this.ent.can(FEATURE_KEY.AUTO_REPLY_ENABLED));
   private orgId = '';
 
   loading = true;

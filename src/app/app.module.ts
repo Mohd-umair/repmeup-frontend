@@ -54,6 +54,7 @@ import { SocialPreviewComponent } from './features/publish/social-preview/social
 import { AiCreditsComponent } from './features/ai-credits/ai-credits.component';
 import { NotificationsComponent } from './features/notifications/notifications.component';
 import { MediaLibraryComponent } from './features/media-library/media-library.component';
+import { UpgradePromptComponent } from './shared/components/upgrade-prompt/upgrade-prompt.component';
 
 /**
  * App Module - Following SOLID principles
@@ -102,7 +103,8 @@ import { MediaLibraryComponent } from './features/media-library/media-library.co
     MediaLibraryComponent,
     SocialPreviewComponent,
     PaginationComponent,
-    PublicSiteShellComponent
+    PublicSiteShellComponent,
+    UpgradePromptComponent
   ],
   providers: [
     {

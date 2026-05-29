@@ -75,6 +75,15 @@ export class PublishComponent implements OnInit {
   protected readonly entitlements = inject(EntitlementsStore);
   protected readonly FEATURE_KEY = FEATURE_KEY;
 
+  /** Monthly post cap label when plan limits publishing volume. */
+  get postsMonthlyQuotaLabel(): string | null {
+    if (!this.entitlements.isCapped(FEATURE_KEY.POSTS_PER_MONTH)) return null;
+    const used = this.entitlements.used(FEATURE_KEY.POSTS_PER_MONTH);
+    const limit = this.entitlements.limit(FEATURE_KEY.POSTS_PER_MONTH);
+    if (limit == null) return null;
+    return `${used} / ${limit} posts used this month`;
+  }
+
   // Platforms
   platforms: Platform[] = [];
   selectedPlatforms: Platform[] = [];

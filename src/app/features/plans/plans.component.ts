@@ -1,22 +1,27 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
+import { SubscriptionService, IPlanTier } from '../../core/services/subscription.service';
 import { formatPlanPriceMonthly } from '../../core/utils/plan-price-format';
+import {
+  IPlanCardData,
+  resolvePlanFeatures,
+  resolvePlanHighlights,
+  sortPlanKeys
+} from '../../core/utils/plan-presentation.util';
 import { NotificationService } from '../../core/services/notification.service';
-
-import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
+import { PlanHighlightsListComponent } from '../../shared/components/plan-highlights-list/plan-highlights-list.component';
 
 @Component({
   selector: 'app-plans',
   standalone: true,
-  imports: [CommonModule, RouterModule, AiChatBubbleIconComponent],
+  imports: [CommonModule, RouterModule, PlanHighlightsListComponent],
   templateUrl: './plans.component.html',
   styleUrls: ['./plans.component.scss']
 })
 export class PlansComponent implements OnInit {
-  allPlans: any = null;
-  subscriptionLimits: ISubscriptionLimits | null = null;
+  allPlans: Record<string, IPlanTier> | null = null;
+  subscriptionLimits: import('../../core/services/subscription.service').ISubscriptionLimits | null = null;
   loadingPlans = false;
   loadingSubscription = false;
   upgradingPlan = false;
@@ -32,9 +37,6 @@ export class PlansComponent implements OnInit {
     this.loadSubscriptionLimits();
   }
 
-  /**
-   * Load all available plans
-   */
   loadPlans(): void {
     this.loadingPlans = true;
     this.subscriptionService.getPlans().subscribe({
@@ -44,8 +46,7 @@ export class PlansComponent implements OnInit {
         }
         this.loadingPlans = false;
       },
-      error: (error) => {
-        console.error('Error loading plans:', error);
+      error: () => {
         this.notificationService.error(
           'Failed to Load Plans',
           'Could not load subscription plans. Please try again.'
@@ -55,9 +56,6 @@ export class PlansComponent implements OnInit {
     });
   }
 
-  /**
-   * Load current subscription limits
-   */
   loadSubscriptionLimits(): void {
     this.loadingSubscription = true;
     this.subscriptionService.getLimits().subscribe({
@@ -67,57 +65,41 @@ export class PlansComponent implements OnInit {
         }
         this.loadingSubscription = false;
       },
-      error: (error) => {
-        console.error('Error loading subscription:', error);
+      error: () => {
         this.loadingSubscription = false;
       }
     });
   }
 
-  /**
-   * Get plan keys as array
-   */
   getPlanKeys(): string[] {
-    if (!this.allPlans) return [];
-    return Object.keys(this.allPlans);
+    return sortPlanKeys(this.allPlans as Record<string, IPlanCardData> | null);
   }
 
-  /**
-   * Format price display
-   */
+  getPlan(planId: string): IPlanTier {
+    return this.allPlans![planId];
+  }
+
+  planHighlights(planId: string) {
+    return resolvePlanHighlights(this.getPlan(planId) as IPlanCardData);
+  }
+
+  planFeatures(planId: string) {
+    return resolvePlanFeatures(this.getPlan(planId) as IPlanCardData);
+  }
+
   formatPrice(price: number | string): string {
     return formatPlanPriceMonthly(price);
   }
 
-  /**
-   * Format feature name
-   */
-  formatFeatureName(feature: string): string {
-    return feature
-      .replace(/_/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-  }
-
-  /**
-   * Check if plan is current
-   */
   isCurrentPlan(planId: string): boolean {
     return this.subscriptionLimits?.planId === planId;
   }
 
-  /**
-   * Check if can upgrade to plan
-   */
   canUpgradeToPlan(planTier: number): boolean {
     if (!this.subscriptionLimits) return false;
     return planTier > this.subscriptionLimits.tier;
   }
 
-  /**
-   * Upgrade to specific plan
-   */
   upgradeToPlan(planId: string, planName: string): void {
     if (!confirm(`Upgrade to ${planName} plan?\n\nThis will immediately update your account limits and billing.`)) {
       return;
@@ -131,27 +113,18 @@ export class PlansComponent implements OnInit {
             'Plan Upgraded Successfully!',
             `You're now on the ${planName} plan. Your new limits are active immediately.`
           );
-          
-          // Refresh subscription limits
           this.loadSubscriptionLimits();
         }
         this.upgradingPlan = false;
       },
       error: (error) => {
-        console.error('Error upgrading plan:', error);
         const errorMessage = error.error?.error || error.error?.message || 'Failed to upgrade plan';
-        this.notificationService.error(
-          'Upgrade Failed',
-          errorMessage
-        );
+        this.notificationService.error('Upgrade Failed', errorMessage);
         this.upgradingPlan = false;
       }
     });
   }
 
-  /**
-   * Contact sales for custom plan
-   */
   contactSales(): void {
     this.notificationService.info(
       'Contact Sales',
@@ -159,28 +132,19 @@ export class PlansComponent implements OnInit {
     );
   }
 
-  /**
-   * Navigate back to settings
-   */
   goToSettings(): void {
-    this.router.navigate(['/app/settings']);
+    this.router.navigate(['/app/settings/accounts']);
   }
 
-  /**
-   * Get plan recommendation badge
-   */
-  getPlanBadge(planId: string): string | null {
-    if (planId === 'pro') return 'MOST POPULAR';
-    if (planId === 'business') return 'BEST VALUE';
+  getPlanBadge(plan: IPlanTier): string | null {
+    if (plan.badge) return plan.badge.toUpperCase();
+    if (plan.tier === 2) return 'MOST POPULAR';
     return null;
   }
 
-  /**
-   * Get plan badge color
-   */
-  getPlanBadgeColor(planId: string): string {
-    if (planId === 'pro') return 'bg-blue-600';
-    if (planId === 'business') return 'bg-purple-600';
-    return 'bg-gray-600';
+  getPlanBadgeColor(plan: IPlanTier): string {
+    if (plan.badgeColor === 'purple') return 'bg-purple-600';
+    if (plan.badgeColor === 'blue') return 'bg-blue-600';
+    return 'bg-blue-600';
   }
 }

@@ -1,10 +1,11 @@
-import { Component, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { EntitlementsStore } from '../../../core/services/entitlements.store';
+import { MenuService } from '../../../core/services/menu.service';
 import { NotificationComponent } from '../notification/notification.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
@@ -35,6 +36,7 @@ export class MainLayoutComponent {
   private readonly router = inject(Router);
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly entitlements = inject(EntitlementsStore);
+  private readonly menuService = inject(MenuService);
 
   /** Used for app-wide subscription cancellation notice */
   readonly limits$ = this.subscriptionService.limits$;
@@ -53,6 +55,12 @@ export class MainLayoutComponent {
     // subscribe to socket invalidation so plan changes propagate instantly.
     this.entitlements.load();
     this.entitlements.wireSocketInvalidation();
+
+    effect(() => {
+      const planId = this.entitlements.planSummary()?.planId;
+      if (!planId) return;
+      this.menuService.loadMenus().subscribe();
+    });
 
     this.router.events
       .pipe(

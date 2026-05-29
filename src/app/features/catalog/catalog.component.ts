@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject, firstValueFrom } from 'rxjs';
@@ -7,6 +7,8 @@ import { CatalogService, IImportSummary } from '../../core/services/catalog.serv
 import { MediaLibraryService } from '../../core/services/media-library.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
 import {
   IProduct,
   ISalesFlowSettings,
@@ -35,12 +37,15 @@ type ActiveTab = 'products' | 'whatsapp' | 'orders';
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadZoneComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadZoneComponent, UpgradePromptComponent],
   templateUrl: './catalog.component.html',
   styleUrls: ['./catalog.component.scss'],
 })
 export class CatalogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  readonly ent = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
+  readonly planAllowed = computed(() => this.ent.can(FEATURE_KEY.COMMERCE_WA_CATALOG_ENABLED));
 
   activeTab: ActiveTab = 'products';
 
@@ -255,6 +260,15 @@ export class CatalogComponent implements OnInit, OnDestroy {
       manual: 'fas fa-pen'
     };
     return icons[channel] || 'fas fa-shopping-bag';
+  }
+
+  getOrderChannelClass(channel: string): Record<string, boolean> {
+    return {
+      'text-green-600 dark:text-green-400': channel === 'whatsapp',
+      'text-pink-600 dark:text-pink-400': channel === 'instagram',
+      'text-blue-600 dark:text-blue-400': channel === 'voice',
+      'text-gray-600 dark:text-gray-400': channel === 'manual'
+    };
   }
 
   getNextStatusOptions(current: CommerceOrderStatus): Array<{ value: CommerceOrderStatus; label: string }> {

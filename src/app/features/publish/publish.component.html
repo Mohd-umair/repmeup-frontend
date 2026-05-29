@@ -9,6 +9,7 @@
           Content Publisher
         </h1>
         <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Create, schedule, and manage your social media content</p>
+        <p *ngIf="postsMonthlyQuotaLabel as quota" class="text-xs text-amber-300/90 mt-1">{{ quota }}</p>
       </div>
       <a
         routerLink="/app/content-studio"

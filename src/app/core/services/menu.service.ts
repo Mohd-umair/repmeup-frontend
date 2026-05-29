@@ -3,6 +3,8 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
+import { resolvePlanFeatureForRoute } from '../constants/plan-route-features';
+import { EntitlementsStore, FeatureKey } from './entitlements.store';
 
 export interface IMenuItem {
   _id: string;
@@ -62,7 +64,10 @@ export class MenuService {
   private loadingSubject = new BehaviorSubject<boolean>(false);
   public loading$ = this.loadingSubject.asObservable();
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private entitlementsStore: EntitlementsStore
+  ) {}
 
   /**
    * Load menus for current user
@@ -101,6 +106,15 @@ export class MenuService {
               settings: filterGroupedTop(grouped.settings),
               automation: filterGroupedTop(grouped.automation),
               campaigns: filterGroupedTop(grouped.campaigns)
+            };
+
+            menus = this.filterMenusByPlan(menus);
+            grouped = {
+              main: this.filterMenusByPlan(grouped.main),
+              management: this.filterMenusByPlan(grouped.management),
+              settings: this.filterMenusByPlan(grouped.settings),
+              automation: this.filterMenusByPlan(grouped.automation),
+              campaigns: this.filterMenusByPlan(grouped.campaigns)
             };
 
             this.menusSubject.next(menus);
@@ -220,10 +234,33 @@ export class MenuService {
 
   private normalizeMenuItemDeep(item: IMenuItem): IMenuItem {
     const route = this.normalizeMenuRouteForApp(item.route);
+    const requiresFeature =
+      item.requiresFeature || resolvePlanFeatureForRoute(route) || undefined;
     const children = item.children?.length
       ? item.children.map((c) => this.normalizeMenuItemDeep(c))
       : undefined;
-    return { ...item, route, ...(children ? { children } : {}) };
+    return { ...item, route, requiresFeature, ...(children ? { children } : {}) };
+  }
+
+  /** Hide menu entries for plan-gated modules when entitlements are loaded. */
+  private filterMenusByPlan(items: IMenuItem[] | undefined): IMenuItem[] {
+    if (!this.entitlementsStore.isReady()) return items || [];
+    return (items || [])
+      .map((item) => {
+        const children = item.children?.length
+          ? this.filterMenusByPlan(item.children)
+          : undefined;
+        const featureKey = (item.requiresFeature ||
+          resolvePlanFeatureForRoute(item.route)) as FeatureKey | undefined;
+        if (featureKey && !this.entitlementsStore.can(featureKey)) {
+          if (children?.length) {
+            return { ...item, children };
+          }
+          return null;
+        }
+        return children ? { ...item, children } : item;
+      })
+      .filter((item): item is IMenuItem => item != null);
   }
 
   private normalizeAllMenuRoutes(

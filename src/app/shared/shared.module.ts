@@ -8,6 +8,8 @@ import { MetaPageSelectorComponent } from './components/meta-page-selector/meta-
 import { MediaUploadGuideComponent } from './components/media-upload-guide/media-upload-guide.component';
 import { MediaUploadModalComponent } from './components/media-upload-modal/media-upload-modal.component';
 import { MediaSelectorModalComponent } from './components/media-selector-modal/media-selector-modal.component';
+import { PlanGateDirective } from './directives/plan-gate.directive';
+import { UsageMeterComponent } from './components/usage-meter/usage-meter.component';
 
 @NgModule({
   declarations: [],
@@ -20,7 +22,9 @@ import { MediaSelectorModalComponent } from './components/media-selector-modal/m
     MetaPageSelectorComponent,
     MediaUploadGuideComponent,
     MediaUploadModalComponent,
-    MediaSelectorModalComponent
+    MediaSelectorModalComponent,
+    PlanGateDirective,
+    UsageMeterComponent
   ],
   exports: [
     CommonModule,
@@ -31,7 +35,9 @@ import { MediaSelectorModalComponent } from './components/media-selector-modal/m
     MetaPageSelectorComponent,
     MediaUploadGuideComponent,
     MediaUploadModalComponent,
-    MediaSelectorModalComponent
+    MediaSelectorModalComponent,
+    PlanGateDirective,
+    UsageMeterComponent
   ]
 })
 export class SharedModule { }

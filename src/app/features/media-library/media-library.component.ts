@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MediaLibraryService } from '../../core/services/media-library.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
 import { Media, MediaLibraryParams } from '../../core/models/media.model';
 import { MediaUploadModalComponent } from '../../shared/components/media-upload-modal/media-upload-modal.component';
 
@@ -13,6 +14,13 @@ import { MediaUploadModalComponent } from '../../shared/components/media-upload-
   templateUrl: './media-library.component.html'
 })
 export class MediaLibraryComponent implements OnInit {
+  readonly ent = inject(EntitlementsStore);
+  readonly storageQuotaLabel = computed(() => {
+    if (!this.ent.isCapped(FEATURE_KEY.STORAGE_GB)) return null;
+    const limit = this.ent.limit(FEATURE_KEY.STORAGE_GB);
+    return `Plan storage limit: ${limit} GB`;
+  });
+
   // Media items
   mediaItems: Media[] = [];
   selectedMedia: Media | null = null;

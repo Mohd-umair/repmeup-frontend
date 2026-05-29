@@ -243,16 +243,16 @@
         <!-- Badge -->
         <div class="flex items-start justify-between mb-4">
           <div>
-            <span *ngIf="getPlanBadge(planKey)"
+            <span *ngIf="getPlanBadge(getPlan(planKey))"
               class="inline-block text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full mb-2"
-              [ngClass]="planKey === 'pro' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'">
-              {{ getPlanBadge(planKey) }}
+              [ngClass]="getPlanBadgeClass(getPlan(planKey))">
+              {{ getPlanBadge(getPlan(planKey)) }}
             </span>
             <span *ngIf="isCurrentPlan(planKey)"
               class="inline-block text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full mb-2 bg-rep-lime text-rep-black">
               Current Plan
             </span>
-            <h4 class="text-lg font-black text-gray-900 dark:text-white capitalize">{{ planKey }}</h4>
+            <h4 class="text-lg font-black text-gray-900 dark:text-white">{{ getPlan(planKey).name }}</h4>
           </div>
 
           <div class="text-right shrink-0">
@@ -264,47 +264,16 @@
           </div>
         </div>
 
-        <!-- Limits -->
-        <ul class="space-y-2.5 mb-6 flex-1">
-          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <i class="fas fa-plug text-xs w-4 text-center"
-              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
-            <span>{{ formatLimit(getPlan(planKey).limits.maxAccounts) }} accounts</span>
-          </li>
-          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <i class="fas fa-users text-xs w-4 text-center"
-              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
-            <span>{{ formatLimit(getPlan(planKey).limits.maxUsers) }} team members</span>
-          </li>
-          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <i class="fas fa-calendar-alt text-xs w-4 text-center"
-              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
-            <span>{{ formatLimit(getPlan(planKey).limits.maxPostsPerMonth) }} posts/mo</span>
-          </li>
-          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <span class="inline-flex w-4 shrink-0 items-center justify-center"
-              [ngClass]="isCurrentPlan(planKey) ? 'opacity-90' : 'opacity-70'">
-              <app-ai-chat-bubble-icon iconClass="w-3.5 h-3.5"></app-ai-chat-bubble-icon>
-            </span>
-            <span>{{ formatLimit(getPlan(planKey).limits.maxAutoRepliesPerMonth) }} AI replies/mo</span>
-          </li>
-          <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <i class="fas fa-bolt text-xs w-4 text-center"
-              [ngClass]="isCurrentPlan(planKey) ? 'text-lime-600 dark:text-rep-lime' : 'text-gray-400'"></i>
-            <span>{{ formatLimit(getPlan(planKey).limits.maxAICreditsPerMonth) }} AI credits/mo</span>
-          </li>
-        </ul>
-
-        <!-- Features chips -->
-        <div class="flex flex-wrap gap-1.5 mb-5">
-          <span *ngFor="let feature of getPlan(planKey).features.slice(0, 4)"
-            class="text-[10px] font-medium px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full">
-            {{ formatFeature(feature) }}
-          </span>
-          <span *ngIf="getPlan(planKey).features.length > 4"
-            class="text-[10px] font-medium px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-full">
-            +{{ getPlan(planKey).features.length - 4 }} more
-          </span>
+        <!-- Limits & features (from admin entitlements) -->
+        <div class="mb-5 flex-1">
+          <app-plan-highlights-list
+            [highlights]="planHighlights(planKey)"
+            [features]="planFeatures(planKey)"
+            [compact]="true"
+            [maxHighlights]="5"
+            [maxFeatures]="4"
+            [showFeaturesHeading]="false"
+          />
         </div>
 
         <!-- CTA button -->

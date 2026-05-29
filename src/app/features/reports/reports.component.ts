@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -13,15 +13,21 @@ import {
 } from '../../core/services/number-report.service';
 import { PlatformService, PlatformConnection } from '../../core/services/platform.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
 
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UpgradePromptComponent],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
 export class ReportsComponent implements OnInit, OnDestroy {
+  readonly ent = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
+  readonly planAllowed = computed(() => this.ent.can(FEATURE_KEY.ANALYTICS_ADVANCED));
+
   private destroy$ = new Subject<void>();
 
   connections: PlatformConnection[] = [];

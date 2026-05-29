@@ -2,6 +2,8 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { PermissionGuard } from './core/guards/permission.guard';
+import { PlanFeatureGuard } from './core/guards/plan-feature.guard';
+import { FEATURE_KEY } from './core/services/entitlements.store';
 
 // Auth Components
 import { LoginComponent } from './features/auth/login/login.component';
@@ -137,8 +139,8 @@ const routes: Routes = [
       {
         path: 'analytics',
         component: AnalyticsComponent,
-        canActivate: [PermissionGuard],
-        data: { permissions: ['analytics.read'] }
+        canActivate: [PermissionGuard, PlanFeatureGuard],
+        data: { permissions: ['analytics.read'], planFeature: FEATURE_KEY.ANALYTICS_ADVANCED }
       },
       { path: 'knowledge-base', component: KnowledgeBaseComponent, canActivate: [PermissionGuard], data: { permissions: ['knowledge_base.read'] } },
       { path: 'knowledge-base/create', component: KnowledgeBaseCreateComponent, canActivate: [PermissionGuard], data: { permissions: ['knowledge_base.read'] } },
@@ -158,21 +160,21 @@ const routes: Routes = [
         canActivate: [PermissionGuard],
         data: { permissions: ['inbox.read', 'settings.read'] }
       },
-      { path: 'agents', component: AgentsComponent, canActivate: [PermissionGuard], data: { permissions: ['users.read'] } },
+      { path: 'agents', component: AgentsComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['users.read'], planFeature: FEATURE_KEY.AGENTS_ENABLED } },
       { path: 'plans', component: PlansComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.manage'] } },
       { path: 'ai-credits', component: AiCreditsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
       { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'support', component: SupportComponent },
-      { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.COMMERCE_WA_CATALOG_ENABLED } },
       { path: 'contacts', component: ContactsContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
-      { path: 'whatsapp-templates', component: WhatsAppTemplatesComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
-      { path: 'campaigns', component: CampaignsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
-      { path: 'reports', component: ReportsComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.read'] } },
+      { path: 'whatsapp-templates', component: WhatsAppTemplatesComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.WHATSAPP_TEMPLATES_MAX } },
+      { path: 'campaigns', component: CampaignsComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.CAMPAIGNS_ENABLED } },
+      { path: 'reports', component: ReportsComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['analytics.read'], planFeature: FEATURE_KEY.ANALYTICS_ADVANCED } },
       {
         path: 'voice-ivr',
         component: VoiceIvrComponent,
-        canActivate: [PermissionGuard],
-        data: { permissions: ['settings.read'] },
+        canActivate: [PermissionGuard, PlanFeatureGuard],
+        data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.VOICE_IVR_ENABLED },
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: VoiceDashboardComponent },
@@ -183,8 +185,8 @@ const routes: Routes = [
       },
       {
         path: 'automation',
-        canActivate: [PermissionGuard],
-        data: { permissions: ['settings.read'] },
+        canActivate: [PermissionGuard, PlanFeatureGuard],
+        data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.AUTO_REPLY_ENABLED },
         children: [
           { path: '', component: AutomationHubComponent },
           { path: 'ai-replies', component: AiRepliesComponent },

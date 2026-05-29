@@ -42,10 +42,10 @@
            class="bg-white rounded-2xl shadow-lg overflow-hidden transition-all hover:shadow-xl relative">
         
         <!-- Recommendation Badge -->
-        <div *ngIf="getPlanBadge(planKey)" 
-             [class]="getPlanBadgeColor(planKey)"
+        <div *ngIf="getPlanBadge(allPlans[planKey])" 
+             [class]="getPlanBadgeColor(allPlans[planKey])"
              class="absolute top-4 right-4 px-3 py-1 text-white rounded-full text-xs font-bold z-10">
-          {{ getPlanBadge(planKey) }}
+          {{ getPlanBadge(allPlans[planKey]) }}
         </div>
 
         <!-- Current Plan Badge -->
@@ -74,76 +74,17 @@
           </p>
         </div>
 
-        <!-- Plan Limits -->
+        <!-- Plan Limits & features (from admin entitlements) -->
         <div class="p-8 border-b border-gray-200">
           <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
             What's Included
           </h4>
-          <div class="space-y-3">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-plug text-blue-600"></i>
-              </div>
-              <div>
-                <p class="font-bold text-rep-black">
-                  {{ allPlans[planKey].limits.maxAccounts === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAccounts }}
-                </p>
-                <p class="text-sm text-gray-600">Social Accounts</p>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-users text-green-600"></i>
-              </div>
-              <div>
-                <p class="font-bold text-rep-black">
-                  {{ allPlans[planKey].limits.maxUsers === -1 ? 'Unlimited' : allPlans[planKey].limits.maxUsers }}
-                </p>
-                <p class="text-sm text-gray-600">Team Members</p>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-paper-plane text-purple-600"></i>
-              </div>
-              <div>
-                <p class="font-bold text-rep-black">
-                  {{ allPlans[planKey].limits.maxPostsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxPostsPerMonth }}
-                </p>
-                <p class="text-sm text-gray-600">Posts per Month</p>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <app-ai-chat-bubble-icon iconClass="w-6 h-6"></app-ai-chat-bubble-icon>
-              </div>
-              <div>
-                <p class="font-bold text-rep-black">
-                  {{ allPlans[planKey].limits.maxAutoRepliesPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAutoRepliesPerMonth }}
-                </p>
-                <p class="text-sm text-gray-600">Auto-Replies per Month</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Features List -->
-        <div class="p-8">
-          <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-            Features
-          </h4>
-          <div class="space-y-3 max-h-64 overflow-y-auto">
-            <div *ngFor="let feature of allPlans[planKey].features" 
-                 class="flex items-start gap-2">
-              <i class="fas fa-check text-green-500 mt-1 flex-shrink-0"></i>
-              <span class="text-gray-700 text-sm">
-                {{ formatFeatureName(feature) }}
-              </span>
-            </div>
-          </div>
+          <app-plan-highlights-list
+            [highlights]="planHighlights(planKey)"
+            [features]="planFeatures(planKey)"
+            [maxHighlights]="6"
+            [maxFeatures]="12"
+          />
         </div>
 
         <!-- Action Button -->

@@ -319,7 +319,7 @@
             
             <button 
               (click)="connectAvailableAccount(account)"
-              [disabled]="!subscriptionLimits?.canConnectMore"
+              [disabled]="!canConnectMoreAccounts()"
               class="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               <i class="fas fa-circle-check mr-2"></i>
               Connect Now
@@ -327,7 +327,7 @@
           </div>
         </div>
 
-        <div *ngIf="!subscriptionLimits?.canConnectMore" class="mt-4 p-3 bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg">
+        <div *ngIf="!canConnectMoreAccounts()" class="mt-4 p-3 bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700 rounded-lg">
           <p class="text-sm text-amber-800 dark:text-amber-200">
             <i class="fas fa-info-circle mr-2"></i>
             You've reached your plan limit. Upgrade to connect these accounts.

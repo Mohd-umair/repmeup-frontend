@@ -33,8 +33,11 @@ import {
 } from '../../../core/utils/whatsapp-template-preview.helpers';
 import {
   downloadInboxAttachmentFile,
+  incomingFileDisplayName,
+  inferIncomingAttachmentType,
   inboxAttachmentFilenameFromUrl,
-  inboxReplyPdfDisplayName
+  inboxReplyPdfDisplayName,
+  looksLikeAttachmentFilename
 } from '../../../core/utils/inbox-attachment-display';
 import { InboxLinkifiedTextComponent } from '../../../shared/components/inbox-linkified-text/inbox-linkified-text.component';
 import { CatalogService } from '../../../core/services/catalog.service';
@@ -199,9 +202,14 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   /** Called by the container (or inline) after getInteraction resolves; captures pagination metadata. */
-  applyPaginationMeta(pagination?: { hasOlderMessages: boolean; oldestMessageTimestamp: number | null }): void {
+  applyPaginationMeta(pagination?: {
+    hasOlderMessages: boolean;
+    oldestMessageTimestamp: number | null;
+    totalMessages?: number;
+    returnedMessages?: number;
+  }): void {
     if (!pagination) return;
-    this.hasOlderMessages = pagination.hasOlderMessages;
+    this.hasOlderMessages = !!pagination.hasOlderMessages;
     if (pagination.oldestMessageTimestamp != null) {
       this.oldestMessageTimestamp = pagination.oldestMessageTimestamp as number;
     } else {
@@ -209,13 +217,35 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     }
   }
 
+  /** Read pagination embedded on interaction.metadata by GET /inbox/:id. */
+  private applyPaginationFromInteraction(interaction: IInteraction | null): void {
+    const pag = (interaction as { metadata?: { messagePagination?: {
+      hasOlderMessages: boolean;
+      oldestMessageTimestamp: number | null;
+    } } })?.metadata?.messagePagination;
+    if (pag) {
+      this.applyPaginationMeta(pag);
+    }
+  }
+
   /** msgBefore must match BSON `timestamp` units; `allIncomingMessages` is chronological (oldest at [0]). */
   private syncOldestMessageCursorFromLoadedIncoming(): void {
+    if (!this.allIncomingMessages.length) return;
+    this.sortIncomingMessagesChronologically();
     const row = this.allIncomingMessages[0];
     const ts = row?.timestamp;
     if (ts != null && typeof ts === 'number' && !Number.isNaN(ts)) {
       this.oldestMessageTimestamp = ts;
     }
+  }
+
+  private sortIncomingMessagesChronologically(): void {
+    if (this.allIncomingMessages.length < 2) return;
+    this.allIncomingMessages.sort((a, b) => {
+      const ta = normalizeTimestampMs(a?.timestamp, new Date(0)).getTime();
+      const tb = normalizeTimestampMs(b?.timestamp, new Date(0)).getTime();
+      return ta - tb;
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -270,6 +300,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       // Initialise allIncomingMessages on the very first change or same-conversation refresh
       if (changes['interaction'].firstChange || !isSameConversation) {
         this.allIncomingMessages = [...((next as any)?.metadata?.incomingMessages || [])];
+        this.sortIncomingMessagesChronologically();
         this.syncOldestMessageCursorFromLoadedIncoming();
       } else {
         // Same conversation refreshed — keep accumulated older messages, only merge latest page
@@ -279,8 +310,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         const newMsgs = latestPage.filter((m: any) => !m.mid || !existingMids.has(m.mid));
         if (newMsgs.length) {
           this.allIncomingMessages = [...this.allIncomingMessages, ...newMsgs];
+          this.sortIncomingMessagesChronologically();
         }
       }
+
+      this.applyPaginationFromInteraction(next);
 
       // Mark notifications as read when the conversation is viewed.
       // NOTE: marking the interaction itself as 'read' is handled exclusively
@@ -403,15 +437,38 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     return /^(\[image\]|\[attachment\]|\[Image\])$/i.test(t);
   }
 
-  /** Hide caption line for WhatsApp/media placeholder bodies (voice note, etc.). */
+  /** Hide caption line for WhatsApp/media placeholder bodies (voice note, PDF filename, etc.). */
   isIncomingAttachmentCaptionHidden(content: string | undefined, attachmentType?: string): boolean {
     if (!content || typeof content !== 'string') return false;
     const t = content.trim();
     if (attachmentType === 'image' && this.isImagePlaceholder(content)) return true;
     if (attachmentType === 'video' && /^\[(video|Video)\]$/i.test(t)) return true;
     if (attachmentType === 'audio' && (/^\[audio\]$/i.test(t) || /^\[Audio Message\]$/i.test(t))) return true;
-    if (attachmentType === 'file' && /^\[file\]$/i.test(t)) return true;
+    if (attachmentType === 'file' && (/^\[file\]$/i.test(t) || looksLikeAttachmentFilename(t))) return true;
+    if (!attachmentType && looksLikeAttachmentFilename(t)) return true;
     return false;
+  }
+
+  /** Incoming PDF/document — direct URL or WhatsApp media proxy via mid. */
+  isIncomingFileAttachment(data: {
+    attachmentType?: string;
+    attachmentUrl?: string;
+    platform?: string;
+    _id?: string;
+    mid?: string;
+    mediaId?: string;
+    type?: string;
+    content?: string;
+  }): boolean {
+    const type = inferIncomingAttachmentType({
+      attachmentType: data.attachmentType,
+      type: data.type,
+      mediaId: data.mediaId,
+      text: data.content
+    });
+    if (type !== 'file') return false;
+    if (data.attachmentUrl) return true;
+    return data.platform === 'whatsapp' && !!data._id && !!data.mid;
   }
 
   /**
@@ -463,15 +520,42 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
   downloadInboxPdfReply(
     url: string | undefined,
-    reply: { attachmentUrl?: string; attachmentType?: string; attachmentDisplayName?: string }
+    reply: { attachmentUrl?: string; attachmentType?: string; attachmentDisplayName?: string; content?: string }
   ): void {
     if (!url) return;
     const name = inboxReplyPdfDisplayName({ ...reply, attachmentUrl: url });
     void downloadInboxAttachmentFile(url, name);
   }
 
-  incomingFileAttachmentLabel(data: { attachmentUrl?: string }): string {
-    return inboxAttachmentFilenameFromUrl(data.attachmentUrl);
+  downloadIncomingFileAttachment(data: {
+    _id?: string;
+    mid?: string;
+    platform?: string;
+    attachmentUrl?: string;
+    attachmentType?: string;
+    attachmentDisplayName?: string;
+    content?: string;
+  }): void {
+    const filename = incomingFileDisplayName(data);
+    if (data.platform === 'whatsapp' && data._id && data.mid) {
+      this.avatarService.getWhatsAppAttachmentUrl(data._id, data.mid).subscribe((blobUrl) => {
+        if (blobUrl) {
+          void downloadInboxAttachmentFile(blobUrl, filename);
+        } else {
+          this.notify.error('Download failed', 'Could not load this file from WhatsApp.');
+        }
+      });
+      return;
+    }
+    this.downloadInboxPdfReply(data.attachmentUrl, data);
+  }
+
+  incomingFileAttachmentLabel(data: {
+    attachmentUrl?: string;
+    attachmentDisplayName?: string;
+    content?: string;
+  }): string {
+    return incomingFileDisplayName(data);
   }
 
   getAttachmentUrl$(interactionId: string, mid: string, platform: string, directUrl: string | undefined): Observable<SafeUrl | null> {
@@ -1039,6 +1123,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  /** True when Meta (or send API) reported the outbound reply as undelivered. */
+  isReplyFailed(reply: { status?: string; deliveryStatus?: string } | null | undefined): boolean {
+    return reply?.status === 'failed' || reply?.deliveryStatus === 'failed';
+  }
+
   /** Retry a failed optimistic reply */
   retryOptimisticReply(optimistic: IOptimisticReply): void {
     if (!this.interaction) return;
@@ -1089,27 +1178,31 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     });
   }
 
-  /** Tracks scroll position to show/hide the FAB */
+  /** Tracks scroll position to show/hide the FAB and load older messages near the top */
   onThreadScroll(event: Event): void {
     const el = event.target as HTMLDivElement;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     this.isScrolledToBottom = distanceFromBottom < 80;
 
-    if (el.scrollTop >= 80) return;
+    const nearTop = el.scrollTop <= 150;
+    if (!nearTop) return;
 
     this.syncOldestMessageCursorFromLoadedIncoming();
 
-    // Prefer loading older *incoming DMs* from the API first. Previously we expanded the local
-    // timeline (messages + replies + assignments) first; threads with few DMs but many replies or
-    // history events exhausted many scroll-ups before hitting the API, which looked like
-    // "pagination never triggers".
-    if (this.hasOlderMessages && !this.loadingOlderFromServer && this.oldestMessageTimestamp != null) {
+    const localFullyExpanded = this.visibleTimelineCount >= this.conversationTimeline.length;
+
+    // Fetch older inbound DMs from the API when the server says more exist.
+    if (
+      this.hasOlderMessages &&
+      !this.loadingOlderFromServer &&
+      this.oldestMessageTimestamp != null
+    ) {
       this.loadOlderMessagesFromServer(el);
       return;
     }
 
-    // Expand the visible window through locally cached timeline rows (same thread data).
-    if (this.visibleTimelineCount < this.conversationTimeline.length) {
+    // Expand the visible window through locally cached timeline rows (replies, notes, etc.).
+    if (!localFullyExpanded) {
       this.loadingOlderMessages = true;
       const previousHeight = el.scrollHeight;
       this.visibleTimelineCount = Math.min(
@@ -1120,7 +1213,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       this.ngZone.runOutsideAngular(() => {
         requestAnimationFrame(() => {
           const newHeight = el.scrollHeight;
-          el.scrollTop += (newHeight - previousHeight);
+          el.scrollTop += newHeight - previousHeight;
           this.loadingOlderMessages = false;
           this.cdr.markForCheck();
         });
@@ -1152,24 +1245,26 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
             if (newOlder.length) {
               const previousHeight = scrollEl?.scrollHeight ?? 0;
               this.allIncomingMessages = [...newOlder, ...this.allIncomingMessages];
+              this.sortIncomingMessagesChronologically();
               // Extend visible count so the newly prepended items show up
               this.visibleTimelineCount += newOlder.length;
               this.updateTimeline();
               if (scrollEl) {
                 this.ngZone.runOutsideAngular(() => {
                   requestAnimationFrame(() => {
-                    scrollEl.scrollTop += (scrollEl.scrollHeight - previousHeight);
+                    scrollEl.scrollTop += scrollEl.scrollHeight - previousHeight;
                     this.cdr.markForCheck();
                   });
                 });
               }
             }
+          } else {
+            this.hasOlderMessages = false;
           }
           // Update pagination state for next scroll-up
-          const pagination = response.pagination;
-          this.hasOlderMessages = pagination?.hasOlderMessages ?? false;
-          if (pagination?.oldestMessageTimestamp != null) {
-            this.oldestMessageTimestamp = pagination.oldestMessageTimestamp as number;
+          const pagination = response.pagination ?? response.data?.metadata?.messagePagination;
+          if (pagination) {
+            this.applyPaginationMeta(pagination);
           } else {
             this.syncOldestMessageCursorFromLoadedIncoming();
           }
@@ -2250,8 +2345,10 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     const seen = new Set<string>();
     const incoming = Array.isArray(rawIncoming)
       ? rawIncoming.filter((m: any) => {
-          if (!m.mid || seen.has(m.mid)) return false;
-          seen.add(m.mid);
+          if (m.mid) {
+            if (seen.has(m.mid)) return false;
+            seen.add(m.mid);
+          }
           return true;
         })
       : rawIncoming;
@@ -2338,7 +2435,17 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       }
     }
     if (mergedIncoming.length > 0) {
-      mergedIncoming.forEach((msg: { mid?: string; text?: string; timestamp?: number; attachmentUrl?: string; attachmentType?: string }) => {
+      mergedIncoming.forEach((msg: {
+        mid?: string;
+        text?: string;
+        timestamp?: number;
+        attachmentUrl?: string;
+        attachmentType?: string;
+        attachmentDisplayName?: string;
+        mediaId?: string;
+        type?: string;
+      }) => {
+        const attachmentType = inferIncomingAttachmentType(msg);
         const ts = normalizeTimestampMs(msg.timestamp, new Date(this.interaction!.platformCreatedAt));
         timeline.push({
           type: 'message',
@@ -2348,7 +2455,12 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
             platformCreatedAt: ts,
             mid: msg.mid,
             attachmentUrl: msg.attachmentUrl,
-            attachmentType: msg.attachmentType
+            attachmentType,
+            attachmentDisplayName:
+              msg.attachmentDisplayName ||
+              (attachmentType === 'file' ? incomingFileDisplayName({ text: msg.text }) : undefined),
+            mediaId: msg.mediaId,
+            type: msg.type
           },
           timestamp: ts
         });

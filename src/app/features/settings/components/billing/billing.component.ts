@@ -12,7 +12,14 @@ import {
 import { NotificationService } from '../../../../core/services/notification.service';
 import { RazorpayService } from '../../../../core/services/razorpay.service';
 import { formatPlanPriceMonthly } from '../../../../core/utils/plan-price-format';
+import {
+  IPlanCardData,
+  resolvePlanFeatures,
+  resolvePlanHighlights,
+  sortPlanKeys
+} from '../../../../core/utils/plan-presentation.util';
 import { AiChatBubbleIconComponent } from '../../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
+import { PlanHighlightsListComponent } from '../../../../shared/components/plan-highlights-list/plan-highlights-list.component';
 
 interface UsageMetric {
   label: string;
@@ -24,27 +31,14 @@ interface UsageMetric {
   color: string;
 }
 
-interface PlanCard {
-  id: string;
-  name: string;
-  price: number | string;
-  tier: number;
-  badge?: string;
-  badgeColor?: string;
-  limits: {
-    maxAccounts: number;
-    maxUsers: number;
-    maxPostsPerMonth: number;
-    maxAutoRepliesPerMonth: number;
-    maxAICreditsPerMonth: number;
-  };
-  features: string[];
+interface PlanCard extends IPlanTier {
+  id?: string;
 }
 
 @Component({
   selector: 'app-billing',
   standalone: true,
-  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent],
+  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent, PlanHighlightsListComponent],
   templateUrl: './billing.component.html',
   styleUrls: ['./billing.component.scss']
 })
@@ -168,14 +162,19 @@ export class BillingComponent implements OnInit, OnDestroy {
   // ─── Computed / Helpers ─────────────────────────────────────────────────────
 
   getPlanKeys(): string[] {
-    if (!this.allPlans) return [];
-    return Object.keys(this.allPlans).sort((a, b) =>
-      (this.allPlans![a].tier ?? 0) - (this.allPlans![b].tier ?? 0)
-    );
+    return sortPlanKeys(this.allPlans as Record<string, IPlanCardData> | null);
   }
 
   getPlan(key: string): PlanCard {
     return this.allPlans![key];
+  }
+
+  planHighlights(planId: string) {
+    return resolvePlanHighlights(this.getPlan(planId) as IPlanCardData);
+  }
+
+  planFeatures(planId: string) {
+    return resolvePlanFeatures(this.getPlan(planId) as IPlanCardData);
   }
 
   isCurrentPlan(planId: string): boolean {
@@ -263,14 +262,19 @@ export class BillingComponent implements OnInit, OnDestroy {
     return `${max.toLocaleString()} accounts`;
   }
 
-  formatFeature(feature: string): string {
-    return feature.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  getPlanBadge(plan: PlanCard): string | null {
+    if (plan.badge) return plan.badge;
+    return null;
   }
 
-  getPlanBadge(planId: string): string {
-    if (planId === 'pro') return 'Most Popular';
-    if (planId === 'business') return 'Best Value';
-    return '';
+  getPlanBadgeClass(plan: PlanCard): string {
+    if (plan.badgeColor === 'purple') {
+      return 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300';
+    }
+    if (plan.badgeColor === 'blue') {
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300';
+    }
+    return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300';
   }
 
   // ─── Actions ────────────────────────────────────────────────────────────────

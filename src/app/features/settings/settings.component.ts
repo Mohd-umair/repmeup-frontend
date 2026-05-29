@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,6 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { PlatformConnectionService, PlatformConnectionUsage } from '../../core/services/platform-connection.service';
 import { SubscriptionService, ISubscriptionLimits } from '../../core/services/subscription.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
 import { RazorpayService } from '../../core/services/razorpay.service';
 import { formatPlanPriceMonthly } from '../../core/utils/plan-price-format';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
@@ -67,6 +68,8 @@ interface SettingsNavTab {
   styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent implements OnInit, OnDestroy {
+  private readonly entitlements = inject(EntitlementsStore);
+  readonly FEATURE_KEY = FEATURE_KEY;
   /** Toggle on to show Email inbox (Gmail / Outlook / IMAP) in Settings and related UI. */
   emailIntegrationEnabled = false;
 
@@ -655,14 +658,30 @@ export class SettingsComponent implements OnInit, OnDestroy {
    * Update connection limit status (Open/Closed: Easy to extend)
    */
   private updateConnectionLimitStatus(usage: PlatformConnectionUsage): void {
-    const remaining = usage.remaining;
+    const entLimit = this.entitlements.limit(FEATURE_KEY.ACCOUNTS_MAX);
+    const max =
+      typeof entLimit === 'number' && entLimit !== -1 ? entLimit : usage.max;
+    const current = usage.current;
+    const remaining = max === -1 ? Number.MAX_SAFE_INTEGER : Math.max(0, max - current);
     this.canAddConnection = remaining > 0;
-    
+
     if (!this.canAddConnection) {
-      this.connectionLimitMessage = `Plan limit reached (${usage.current}/${usage.max}). Upgrade to add more.`;
+      const maxLabel = max === -1 ? 'unlimited' : String(max);
+      this.connectionLimitMessage = `Plan limit reached (${current}/${maxLabel}). Upgrade to add more.`;
     } else {
-      this.connectionLimitMessage = `You can add ${remaining} more account${remaining !== 1 ? 's' : ''}`;
+      const showRemaining = max === -1 ? usage.remaining : remaining;
+      this.connectionLimitMessage = `You can add ${showRemaining} more account${showRemaining !== 1 ? 's' : ''}`;
     }
+  }
+
+  /** Unified account cap check — prefers entitlements, falls back to subscription API. */
+  canConnectMoreAccounts(): boolean {
+    if (this.entitlements.isReady()) {
+      if (this.entitlements.isExhausted(FEATURE_KEY.ACCOUNTS_MAX)) return false;
+      if (!this.entitlements.can(FEATURE_KEY.ACCOUNTS_MAX)) return false;
+      return true;
+    }
+    return !!this.subscriptionLimits?.canConnectMore;
   }
 
   setActiveTab(tab: SettingsTab): void {
@@ -1160,10 +1179,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
    * Connect an available account
    */
   connectAvailableAccount(account: ISocialAccount): void {
-    if (!this.subscriptionLimits || !this.subscriptionLimits.canConnectMore) {
+    if (!this.canConnectMoreAccounts()) {
+      const maxAccounts =
+        this.entitlements.limit(FEATURE_KEY.ACCOUNTS_MAX) ??
+        this.subscriptionLimits?.limits.maxAccounts;
       this.notificationService.warning(
         'Plan Limit Reached',
-        `Your ${this.subscriptionLimits?.plan} plan allows ${this.subscriptionLimits?.limits.maxAccounts} accounts. Please upgrade to connect more.`
+        `Your ${this.subscriptionLimits?.plan ?? 'current'} plan allows ${maxAccounts === -1 ? 'unlimited' : maxAccounts} accounts. Please upgrade to connect more.`
       );
       return;
     }

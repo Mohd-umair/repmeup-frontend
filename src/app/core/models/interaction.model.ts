@@ -147,6 +147,9 @@ export interface IReply {
   /** AI-detected message type (small_talk, closing, business, unclear). */
   messageType?: string | null;
   status?: 'sent' | 'failed' | 'deleted' | 'received' | 'pending';
+  /** WhatsApp Cloud API delivery lifecycle (from Meta status webhooks) */
+  deliveryStatus?: 'sent' | 'delivered' | 'read' | 'failed';
+  deliveryStatusAt?: Date;
   /** Attachment sent with this reply (image/video/file) */
   attachmentUrl?: string;
   attachmentType?: 'image' | 'video' | 'file' | 'audio';

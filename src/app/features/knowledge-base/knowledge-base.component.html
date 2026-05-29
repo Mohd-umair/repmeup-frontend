@@ -17,10 +17,17 @@
         <span class="px-3 sm:px-4 py-1.5 sm:py-2 bg-rep-white rounded-lg sm:rounded-xl shadow-sm border border-gray-800 text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
           <i class="fas fa-database mr-1 sm:mr-2"></i>{{ totalItems }} Entries
         </span>
+        <app-usage-meter
+          class="hidden sm:block min-w-[10rem]"
+          [featureKey]="FEATURE_KEY.KB_ENTRIES_MAX"
+          label="KB entries"
+        />
         <!-- ── Add New — navigates to /app/knowledge-base/create ── -->
         <button
           type="button"
           (click)="navigateToCreate()"
+          [disabled]="kbAtCap()"
+          [title]="kbAtCap() ? 'Knowledge base entry limit reached — upgrade your plan' : ''"
           class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-rep-lime text-gray-900 rounded-lg sm:rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-rep-lime/40 transition-all duration-200 whitespace-nowrap"
         >
           <i class="fas fa-plus text-xs"></i>
