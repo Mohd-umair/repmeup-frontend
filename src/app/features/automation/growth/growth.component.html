@@ -2,21 +2,83 @@
   title="Growth Automation"
   subtitle="Drive followers, sales, and leads through automated Instagram & WhatsApp flows">
 
-  <!-- ── Top Tabs (goal picker) ── -->
-  <div class="flex border-b overflow-x-auto" style="border-color: var(--card-border);">
-    <button *ngFor="let g of goals"
-            (click)="activeGoal = g.id"
-            class="flex items-center gap-2 px-5 py-2.5 text-sm font-bold transition-colors whitespace-nowrap"
-            [style.color]="activeGoal === g.id ? 'var(--text-primary)' : 'var(--text-muted)'"
-            [style.border-bottom]="activeGoal === g.id ? '2px solid #d8ff00' : '2px solid transparent'">
-      <i [class]="g.icon" class="text-xs"></i>
-      {{ g.label }}
-      <span class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-            [style.background-color]="goalStatus(g.id) === 'active' ? 'rgba(34,197,94,0.12)' : 'var(--surface-primary)'"
-            [style.color]="goalStatus(g.id) === 'active' ? '#16a34a' : 'var(--text-muted)'">
-        {{ goalStatus(g.id) === 'active' ? 'ON' : 'OFF' }}
-      </span>
+  <!-- ══════════════ OVERVIEW (default) ══════════════ -->
+  <ng-container *ngIf="activeGoal === null">
+    <p class="text-sm mb-4" style="color: var(--text-muted);">
+      Turn automations on or off at a glance. Use <strong style="color: var(--text-secondary);">Edit</strong> to configure keywords, messages, and limits.
+    </p>
+
+    <div *ngIf="isOverviewLoading" class="flex flex-col gap-3">
+      <div *ngFor="let i of [1,2,3,4]"
+           class="rounded-xl border px-5 py-4 animate-pulse h-[4.5rem]"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
+    </div>
+
+    <div *ngIf="!isOverviewLoading" class="flex flex-col gap-3">
+      <div *ngFor="let g of goals; trackBy: trackByGoalId"
+           class="growth-overview-card rounded-xl border px-4 py-3 sm:px-5 sm:py-4 flex flex-row items-center gap-3 sm:gap-4"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+
+        <span class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+              [style.background-color]="g.iconBg">
+          <i [class]="g.icon + ' ' + g.iconClass"></i>
+        </span>
+
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-sm leading-tight truncate" style="color: var(--text-primary);">{{ g.label }}</p>
+          <p class="text-xs mt-0.5 leading-snug line-clamp-2 sm:line-clamp-1" style="color: var(--text-muted);">{{ g.desc }}</p>
+        </div>
+
+        <div class="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold uppercase tracking-wide hidden sm:inline"
+                  [style.color]="goalStatus(g.id) === 'active' ? '#16a34a' : 'var(--text-muted)'">
+              {{ goalStatus(g.id) === 'active' ? 'On' : 'Off' }}
+            </span>
+            <ng-container *ngIf="isGoalSettingsReady(g.id); else toggleSkeleton">
+              <app-automation-switch
+                [ngModel]="isGoalEnabled(g.id)"
+                (ngModelChange)="onOverviewToggle(g.id, $event)"
+                [name]="'overview-' + g.id"
+                [ariaLabel]="'Toggle ' + g.label"
+                [disabled]="togglingGoal === g.id"></app-automation-switch>
+              <i *ngIf="togglingGoal === g.id" class="fas fa-spinner fa-spin text-xs" style="color: var(--text-muted);"></i>
+            </ng-container>
+            <ng-template #toggleSkeleton>
+              <span class="inline-block w-10 h-5 rounded-full animate-pulse"
+                    style="background-color: var(--surface-primary);"></span>
+            </ng-template>
+          </div>
+
+          <button type="button"
+                  (click)="openGoal(g.id)"
+                  [disabled]="!isGoalSettingsReady(g.id)"
+                  class="growth-edit-btn inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-xs font-bold transition disabled:opacity-50">
+            <i class="fas fa-pen-to-square text-[11px]"></i>
+            <span class="hidden sm:inline">Edit</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══════════════ DETAIL HEADER (when editing) ══════════════ -->
+  <div *ngIf="activeGoal !== null"
+       class="flex items-center gap-3 mb-4 pb-3 border-b"
+       style="border-color: var(--card-border);">
+    <button type="button"
+            (click)="backToOverview()"
+            class="growth-back-btn inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition">
+      <i class="fas fa-arrow-left text-xs"></i>
+      All automations
     </button>
+    <div class="flex items-center gap-2 min-w-0" *ngIf="activeGoalMeta() as meta">
+      <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            [style.background-color]="meta.iconBg">
+        <i [class]="meta.icon + ' ' + meta.iconClass + ' text-sm'"></i>
+      </span>
+      <span class="font-bold text-sm truncate" style="color: var(--text-primary);">{{ meta.label }}</span>
+    </div>
   </div>
 
   <!-- ══════════════ COMMENT TO DM ══════════════ -->
@@ -36,6 +98,10 @@
             <div>
               <p class="font-bold" style="color: var(--text-primary);">Comment-to-DM Sales</p>
               <p class="text-xs" style="color: var(--text-muted);">Auto-reply to product comments and send a DM with buy link</p>
+              <p class="text-xs mt-1" style="color: var(--text-muted);">
+                Carousel posts with multiple prices: link each product to the same post in Catalog.
+                RepMeUp sends a product-picker DM so commenters choose the correct item.
+              </p>
             </div>
           </div>
           <app-automation-switch [(ngModel)]="ctdSettings.enabled" name="ctdEnabled"
@@ -240,15 +306,100 @@
 
   <!-- ══════════════ STORY TO DM ══════════════ -->
   <ng-container *ngIf="activeGoal === 'story-to-dm'">
-    <div class="rounded-xl border p-6 text-center" style="background-color: var(--card-bg); border-color: var(--card-border);">
-      <span class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
-            style="background-color: rgba(249,115,22,0.1);">
-        <i class="fas fa-circle-play text-2xl text-orange-500"></i>
-      </span>
-      <p class="font-bold text-lg mb-1" style="color: var(--text-primary);">Story-to-DM</p>
-      <p class="text-sm" style="color: var(--text-muted);">Convert Instagram Story viewers into DM leads automatically.</p>
-      <p class="text-xs mt-3 font-semibold" style="color: var(--auto-accent-foreground);">Coming Soon</p>
+    <div *ngIf="loadingStd" class="space-y-3">
+      <div *ngFor="let i of [1,2,3]" class="rounded-xl border p-5 animate-pulse h-24"
+           style="background-color: var(--card-bg); border-color: var(--card-border);"></div>
     </div>
+    <ng-container *ngIf="!loadingStd && stdSettings">
+      <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color: rgba(249,115,22,0.15);">
+              <i class="fas fa-circle-play text-orange-500"></i>
+            </span>
+            <div>
+              <p class="font-bold" style="color: var(--text-primary);">Story-to-DM</p>
+              <p class="text-xs" style="color: var(--text-muted);">Auto-send product DMs when someone replies to or &#64;mentions your story</p>
+              <p class="text-xs mt-1 leading-relaxed" style="color: var(--text-muted);">
+                Instagram API does not expose passive story viewers — automation runs on <strong>story replies</strong> and <strong>story &#64;mentions</strong> only.
+                Link stories to catalog products under Catalog → Attach Post → Stories.
+              </p>
+            </div>
+          </div>
+          <app-automation-switch [(ngModel)]="stdSettings.enabled" name="stdEnabled"
+                                 ariaLabel="Enable story-to-DM"></app-automation-switch>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-xl border p-4 flex items-center justify-between gap-3"
+             style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <div>
+            <p class="text-sm font-bold" style="color: var(--text-primary);">Story replies</p>
+            <p class="text-xs" style="color: var(--text-muted);">When someone replies to your story</p>
+          </div>
+          <app-automation-switch [(ngModel)]="stdSettings.triggerOnReply" name="stdReply"
+                                 ariaLabel="Trigger on story reply"></app-automation-switch>
+        </div>
+        <div class="rounded-xl border p-4 flex items-center justify-between gap-3"
+             style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <div>
+            <p class="text-sm font-bold" style="color: var(--text-primary);">Story &#64;mentions</p>
+            <p class="text-xs" style="color: var(--text-muted);">When someone &#64;mentions you in their story</p>
+          </div>
+          <app-automation-switch [(ngModel)]="stdSettings.triggerOnMention" name="stdMention"
+                                 ariaLabel="Trigger on story mention"></app-automation-switch>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-sm font-bold mb-1" style="color: var(--text-primary);">Reply keywords (optional)</p>
+          <p class="text-xs mb-2" style="color: var(--text-muted);">For story replies only. Leave empty to trigger on every reply.</p>
+          <textarea [(ngModel)]="stdKeywordsInput" rows="3"
+                    class="w-full px-3 py-2 rounded-lg border text-sm"
+                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"
+                    placeholder="price, buy, interested …"></textarea>
+        </div>
+        <div class="rounded-xl border p-4 space-y-3" style="background-color: var(--card-bg); border-color: var(--card-border);">
+          <p class="text-sm font-bold" style="color: var(--text-primary);">Optional welcome card</p>
+          <input [(ngModel)]="stdSettings.welcomeTitle" type="text" maxlength="80" placeholder="Welcome title (max 80)"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+          <input [(ngModel)]="stdSettings.welcomeSubtitle" type="text" maxlength="80" placeholder="Welcome subtitle"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+          <input [(ngModel)]="stdSettings.welcomeImageUrl" type="url" placeholder="https:// image URL (optional)"
+                 class="w-full px-3 py-2 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-4 rounded-xl border p-4"
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-semibold" style="color: var(--text-primary);">Max DMs/day</label>
+          <input type="number" [(ngModel)]="stdSettings.maxDmsPerDay" min="1" max="1000"
+                 class="w-20 px-2 py-1.5 rounded-lg border text-sm"
+                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <span class="text-sm font-semibold" style="color: var(--text-primary);">Skip duplicates</span>
+          <app-automation-switch [(ngModel)]="stdSettings.deduplicateDms" name="stdDedup"
+                                 ariaLabel="Skip duplicate story DMs"></app-automation-switch>
+        </div>
+      </div>
+
+      <div *ngIf="stdError" class="text-sm text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>{{ stdError }}</div>
+      <div class="flex items-center gap-3">
+        <button (click)="saveStd()" [disabled]="savingStd"
+                class="auto-btn-primary inline-flex items-center gap-2 px-6 py-2.5 text-sm">
+          <i class="fas" [ngClass]="savingStd ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{ savingStd ? 'Saving…' : 'Save Story-to-DM' }}
+        </button>
+      </div>
+    </ng-container>
+    <p *ngIf="!loadingStd && !stdSettings" class="text-sm" style="color: var(--text-muted);">Settings not available. Please try again.</p>
   </ng-container>
 
 </app-automation-page-shell>

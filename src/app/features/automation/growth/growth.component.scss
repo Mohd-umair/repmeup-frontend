@@ -4,3 +4,34 @@
   min-height: 0;
   overflow: hidden;
 }
+
+.growth-overview-card {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(216, 255, 0, 0.35);
+  }
+}
+
+.growth-edit-btn {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+
+  &:hover:not(:disabled) {
+    background-color: #d8ff00;
+    color: #0b0b0b;
+    border-color: #d8ff00;
+  }
+}
+
+.growth-back-btn {
+  background-color: var(--surface-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: rgba(216, 255, 0, 0.45);
+  }
+}

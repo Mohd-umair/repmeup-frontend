@@ -1,0 +1,145 @@
+<div class="wa-template-picker" [class.wa-template-picker--compact]="compact">
+
+  <p class="wa-template-hint" *ngIf="activeTab === 'approved' && showApprovedTab">
+    Templates loaded from your WhatsApp Business Account via Meta Graph API. Only <strong>APPROVED</strong> templates can be sent outside the 24-hour session window.
+  </p>
+  <p class="wa-template-hint" *ngIf="activeTab === 'starters' && showStartersTab">
+    Ready-made blueprints you can submit to Meta for review. They are <strong>not</strong> pre-approved — Meta still reviews each submission on your WABA.
+  </p>
+
+  <!-- Toolbar — same pattern as My templates page -->
+  <div class="toolbar">
+    <div class="toolbar__field" *ngIf="showConnectionSelector && connections.length">
+      <span class="toolbar__label"><i class="fab fa-whatsapp me-1" style="color:#25D366"></i>Connection</span>
+      <select [ngModel]="connectionId" (ngModelChange)="onConnectionSelect($event)">
+        <option *ngFor="let c of connections" [value]="c._id">
+          {{ c.platformData?.displayPhoneNumber || c.platformUsername || c._id }}
+        </option>
+      </select>
+    </div>
+
+    <div class="toolbar__field">
+      <span class="toolbar__label">Category</span>
+      <select [(ngModel)]="filterCategory" (ngModelChange)="onCategoryChange()">
+        <option *ngFor="let c of categories" [ngValue]="c.value">{{ c.label }}</option>
+      </select>
+    </div>
+
+    <div class="toolbar__field toolbar__field--grow">
+      <span class="toolbar__label">Search</span>
+      <input
+        type="text"
+        placeholder="Search templates…"
+        [(ngModel)]="searchQuery"
+        (input)="onSearchChange()"
+        aria-label="Search templates" />
+    </div>
+
+    <button
+      type="button"
+      class="btn-icon-refresh"
+      *ngIf="activeTab === 'approved' && showApprovedTab"
+      (click)="loadApproved()"
+      [disabled]="loadingApproved || !connectionId"
+      title="Refresh from Meta">
+      <i class="fas fa-sync-alt" [class.fa-spin]="loadingApproved" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <!-- Approved templates -->
+  <ng-container *ngIf="activeTab === 'approved' && showApprovedTab">
+    <div *ngIf="dataSource === 'db_fallback'" class="alert-warning-themed">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Meta API is temporarily unavailable. Showing cached data.
+    </div>
+
+    <div *ngIf="!connectionId" class="empty-state">
+      <i class="fab fa-whatsapp empty-state__icon"></i>
+      <h3 class="empty-state__title">No Connection Selected</h3>
+      <p class="empty-state__text">Connect WhatsApp in Settings → Platforms, then select a connection above.</p>
+    </div>
+
+    <div *ngIf="connectionId && loadingApproved" class="skeleton-grid">
+      <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
+    </div>
+
+    <div *ngIf="connectionId && approvedError && !loadingApproved" class="alert-danger-themed">
+      <i class="fas fa-exclamation-circle me-2"></i>{{ approvedError }}
+    </div>
+
+    <div *ngIf="connectionId && !loadingApproved && !filteredApproved.length && !approvedError" class="empty-state">
+      <i class="fas fa-inbox empty-state__icon"></i>
+      <h3 class="empty-state__title">No Approved Templates</h3>
+      <p class="empty-state__text">Create one from the Starter library or use <strong>New Template</strong>.</p>
+    </div>
+
+    <div class="template-grid wa-template-picker__grid" *ngIf="!loadingApproved && filteredApproved.length">
+      <button
+        type="button"
+        class="template-card template-card--clickable animate-fade-in-up"
+        *ngFor="let t of filteredApproved; trackBy: trackApproved; let i = index"
+        [style.animation-delay]="(i * 0.05) + 's'"
+        [class.template-card--selected]="isSelectedApproved(t)"
+        (click)="pickApproved(t)">
+        <div class="template-card__header">
+          <div class="template-card__meta">
+            <span class="template-cat" [ngClass]="categoryClass(t.category)">
+              <i class="fas" [ngClass]="categoryIcon(t.category)"></i>
+              {{ t.category | titlecase }}
+            </span>
+            <span class="template-card__lang">{{ t.language }}</span>
+          </div>
+          <span class="status-badge status-badge--approved">
+            <i class="fas fa-check-circle"></i>
+            Approved
+          </span>
+        </div>
+        <h3 class="template-card__name">{{ t.name }}</h3>
+        <p class="template-card__preview">{{ bodyText(t) || '— no body text —' }}</p>
+        <div class="template-card__footer">
+          <span class="template-card__id" *ngIf="t.id || t.metaTemplateId">ID: {{ t.id || t.metaTemplateId }}</span>
+          <span class="template-card__action"><i class="fas fa-arrow-right"></i> Use template</span>
+        </div>
+      </button>
+    </div>
+  </ng-container>
+
+  <!-- Starter library -->
+  <ng-container *ngIf="activeTab === 'starters' && showStartersTab">
+    <div *ngIf="!filteredStarters.length" class="empty-state">
+      <i class="fas fa-layer-group empty-state__icon"></i>
+      <h3 class="empty-state__title">No Starters Found</h3>
+      <p class="empty-state__text">Try a different search or category filter.</p>
+    </div>
+
+    <div class="template-grid wa-template-picker__grid" *ngIf="filteredStarters.length">
+      <button
+        type="button"
+        class="template-card template-card--clickable animate-fade-in-up"
+        *ngFor="let s of filteredStarters; trackBy: trackStarter; let i = index"
+        [style.animation-delay]="(i * 0.05) + 's'"
+        (click)="pickStarter(s)">
+        <div class="template-card__header">
+          <div class="template-card__meta">
+            <span class="template-cat" [ngClass]="categoryClass(s.category)">
+              <i class="fas" [ngClass]="categoryIcon(s.category)"></i>
+              {{ s.category | titlecase }}
+            </span>
+            <span class="template-card__lang">{{ s.language }}</span>
+          </div>
+          <span class="status-badge status-badge--starter">
+            <i class="fas fa-layer-group"></i>
+            Starter
+          </span>
+        </div>
+        <h3 class="template-card__name">{{ s.title }}</h3>
+        <p class="template-card__desc">{{ s.description }}</p>
+        <p class="template-card__preview">{{ starterPreview(s) || '— no body text —' }}</p>
+        <div class="template-card__footer">
+          <span class="template-card__id">{{ s.suggestedName }}</span>
+          <span class="template-card__action"><i class="fas fa-arrow-right"></i> Use starter</span>
+        </div>
+      </button>
+    </div>
+  </ng-container>
+</div>

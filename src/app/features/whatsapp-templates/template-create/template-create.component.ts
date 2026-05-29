@@ -16,6 +16,7 @@ import {
   TEMPLATE_LANGUAGES,
   CreateTemplatePayload
 } from '../../../core/models/whatsapp-template.model';
+import { WhatsAppTemplateStarter } from '../../../core/data/whatsapp-template-starters';
 
 /** Wizard steps */
 type Step = 'basics' | 'header' | 'body' | 'footer' | 'buttons' | 'preview';
@@ -29,6 +30,10 @@ type Step = 'basics' | 'header' | 'body' | 'footer' | 'buttons' | 'preview';
 })
 export class TemplateCreateComponent implements OnInit, OnDestroy {
   @Input() connectionId = '';
+  /** When set, pre-fills the wizard from a starter library blueprint. */
+  @Input() set starterPreset(value: WhatsAppTemplateStarter | null) {
+    if (value) this.applyStarter(value);
+  }
   @Output() created = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
 
@@ -139,6 +144,52 @@ export class TemplateCreateComponent implements OnInit, OnDestroy {
     if (this.category === 'AUTHENTICATION') {
       this._applyAuthDefaults();
     }
+  }
+
+  /** Apply a starter-library blueprint into the create wizard. */
+  applyStarter(starter: WhatsAppTemplateStarter): void {
+    this.name = starter.suggestedName;
+    this.category = starter.category;
+    this.language = starter.language;
+    this.parameterFormat = starter.parameter_format;
+
+    const header = starter.components.find(c => c.type === 'HEADER');
+    const body = starter.components.find(c => c.type === 'BODY');
+    const footer = starter.components.find(c => c.type === 'FOOTER');
+    const buttons = starter.components.find(c => c.type === 'BUTTONS');
+
+    this.resetHeaderMediaFields();
+    if (header && starter.category !== 'AUTHENTICATION') {
+      this.hasHeader = true;
+      this.headerFormat = (header.format || 'TEXT') as HeaderFormat;
+      this.headerText = header.text || '';
+    } else {
+      this.hasHeader = false;
+      this.headerText = '';
+    }
+
+    if (starter.category === 'AUTHENTICATION') {
+      this._applyAuthDefaults();
+    } else {
+      this.bodyText = body?.text || '';
+      this.addSecurityRec = !!body?.add_security_recommendation;
+      this.codeExpiry = body?.code_expiration_minutes ?? null;
+
+      this.hasFooter = !!footer?.text;
+      this.footerText = footer?.text || '';
+
+      if (buttons?.buttons?.length) {
+        this.hasButtons = true;
+        this.buttons = buttons.buttons.map(b => ({ ...b }));
+      } else {
+        this.hasButtons = false;
+        this.buttons = [];
+      }
+    }
+
+    this.currentStep = 'preview';
+    this.validationErrors = [];
+    this.submitError = '';
   }
 
   ngOnDestroy(): void {

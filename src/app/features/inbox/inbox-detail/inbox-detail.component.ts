@@ -37,9 +37,12 @@ import {
   inferIncomingAttachmentType,
   inboxAttachmentFilenameFromUrl,
   inboxReplyPdfDisplayName,
-  looksLikeAttachmentFilename
+  isUnsupportedWhatsAppIncoming,
+  looksLikeAttachmentFilename,
+  unsupportedWhatsAppDisplayText
 } from '../../../core/utils/inbox-attachment-display';
 import { InboxLinkifiedTextComponent } from '../../../shared/components/inbox-linkified-text/inbox-linkified-text.component';
+import { WhatsAppTemplatePickerComponent } from '../../../shared/components/whatsapp-template-picker/whatsapp-template-picker.component';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { IProduct } from '../../../core/models/product.model';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -74,7 +77,7 @@ interface IOptimisticReply {
 @Component({
   selector: 'app-inbox-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MediaSelectorModalComponent, AiChatBubbleIconComponent, InboxLinkifiedTextComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MediaSelectorModalComponent, AiChatBubbleIconComponent, InboxLinkifiedTextComponent, WhatsAppTemplatePickerComponent],
   templateUrl: './inbox-detail.component.html',
   styleUrls: ['./inbox-detail.component.scss'],
   animations: INBOX_DETAIL_ANIMATIONS,
@@ -164,6 +167,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   waSelectedTemplate: WhatsAppTemplate | null = null;
   waTemplateSlots: WaParamSlot[] = [];
   waTemplateParamValues: Record<string, string> = {};
+  showWaTemplatePicker = false;
 
   /** In-chat voice recording */
   isRecording = false;
@@ -190,6 +194,10 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   /** Products suggested by AI based on the current conversation */
   aiSuggestedProducts: IProduct[] = [];
   sendingAiSuggestedProduct: string | null = null;
+
+  /** Instagram comment — products linked to the parent post (carousel multi-product). */
+  igLinkedPostProducts: IProduct[] = [];
+  igLinkedProductsLoading = false;
 
   // Subscriptions
   private subscriptions: Subscription[] = [];
@@ -328,6 +336,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       if (changes['interaction'].firstChange || !isSameConversation) {
         this.resetWaTemplateState();
         this.loadWhatsAppTemplatesForInbox();
+        this.loadIgLinkedPostProducts();
       }
 
       this.updateTimeline();
@@ -469,6 +478,30 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     if (type !== 'file') return false;
     if (data.attachmentUrl) return true;
     return data.platform === 'whatsapp' && !!data._id && !!data.mid;
+  }
+
+  isUnsupportedIncomingMessage(data: {
+    type?: string;
+    content?: string;
+    isUnsupported?: boolean;
+  }): boolean {
+    return isUnsupportedWhatsAppIncoming({
+      type: data.type,
+      content: data.content,
+      isUnsupported: data.isUnsupported
+    });
+  }
+
+  unsupportedIncomingMessageText(data: {
+    type?: string;
+    content?: string;
+    isUnsupported?: boolean;
+  }): string {
+    return unsupportedWhatsAppDisplayText({
+      type: data.type,
+      content: data.content,
+      isUnsupported: data.isUnsupported
+    });
   }
 
   /**
@@ -654,6 +687,27 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.waSelectedTemplate = null;
     this.waTemplateSlots = [];
     this.waTemplateParamValues = {};
+    this.showWaTemplatePicker = false;
+  }
+
+  get waConnectionId(): string {
+    const conn = this.interaction?.platformConnection as { _id?: string } | undefined;
+    return conn?._id ? String(conn._id) : '';
+  }
+
+  openWaTemplatePicker(): void {
+    this.showWaTemplatePicker = true;
+    this.cdr.markForCheck();
+  }
+
+  closeWaTemplatePicker(): void {
+    this.showWaTemplatePicker = false;
+    this.cdr.markForCheck();
+  }
+
+  onWaTemplatePickedFromPicker(t: WhatsAppTemplate): void {
+    this.onWaTemplatePick(t.name);
+    this.closeWaTemplatePicker();
   }
 
   setWaReplyMode(mode: 'text' | 'template'): void {
@@ -1512,6 +1566,66 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     };
     const platform = (this.interaction?.platform || '').toLowerCase();
     return map[platform] || 'fas fa-link';
+  }
+
+  getIgLinkedProductCount(): number {
+    const meta = this.interaction?.metadata as { linkedProductCount?: number } | undefined;
+    if (meta?.linkedProductCount != null && meta.linkedProductCount > 0) {
+      return meta.linkedProductCount;
+    }
+    return this.igLinkedPostProducts.length;
+  }
+
+  getIgLinkedProductNames(): string {
+    const meta = this.interaction?.metadata as { linkedProductNames?: string[] } | undefined;
+    if (meta?.linkedProductNames?.length) {
+      return meta.linkedProductNames.join(', ');
+    }
+    return this.igLinkedPostProducts.map(p => p.name).join(', ');
+  }
+
+  isStoryEngagementInteraction(): boolean {
+    const meta = this.interaction?.metadata as { isStoryEngagement?: boolean } | undefined;
+    return this.interaction?.platform === Platform.INSTAGRAM
+      && this.interaction?.type === 'dm'
+      && !!meta?.isStoryEngagement;
+  }
+
+  getStoryTriggerLabel(): string {
+    const meta = this.interaction?.metadata as { storyTriggerType?: string } | undefined;
+    if (meta?.storyTriggerType === 'story_mention') return 'Story @mention';
+    if (meta?.storyTriggerType === 'story_reply') return 'Story reply';
+    return 'Story engagement';
+  }
+
+  private loadIgLinkedPostProducts(): void {
+    this.igLinkedPostProducts = [];
+    if (!this.interaction || this.interaction.platform !== Platform.INSTAGRAM) {
+      return;
+    }
+    const isComment = this.interaction.type === 'comment';
+    const isStoryDm = this.isStoryEngagementInteraction();
+    if (!isComment && !isStoryDm) {
+      return;
+    }
+    const postId = (this.interaction.metadata as { postId?: string; storyMediaId?: string } | undefined)?.postId
+      || (this.interaction.metadata as { storyMediaId?: string } | undefined)?.storyMediaId;
+    if (!postId) return;
+
+    this.igLinkedProductsLoading = true;
+    const sub = this.catalogService.getProductsByPost(String(postId)).subscribe({
+      next: (res) => {
+        this.igLinkedPostProducts = res.data || [];
+        this.igLinkedProductsLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.igLinkedPostProducts = [];
+        this.igLinkedProductsLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
   getSentimentIcon(sentiment?: string): string {
@@ -2444,6 +2558,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         attachmentDisplayName?: string;
         mediaId?: string;
         type?: string;
+        isUnsupported?: boolean;
       }) => {
         const attachmentType = inferIncomingAttachmentType(msg);
         const ts = normalizeTimestampMs(msg.timestamp, new Date(this.interaction!.platformCreatedAt));
@@ -2460,7 +2575,8 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
               msg.attachmentDisplayName ||
               (attachmentType === 'file' ? incomingFileDisplayName({ text: msg.text }) : undefined),
             mediaId: msg.mediaId,
-            type: msg.type
+            type: msg.type,
+            isUnsupported: msg.isUnsupported
           },
           timestamp: ts
         });

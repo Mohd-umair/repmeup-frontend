@@ -29,7 +29,33 @@
     </button>
   </div>
 
-  <!-- ── Alerts ────────────────────────────────────────────────────────────  -->
+  <!-- ── Page tabs ───────────────────────────────────────────────────────── -->
+  <div class="page-tabs animate-fade-in-up" style="animation-delay:.04s" role="tablist">
+    <button
+      type="button"
+      role="tab"
+      class="page-tab"
+      [class.is-active]="pageView === 'my_templates'"
+      [attr.aria-selected]="pageView === 'my_templates'"
+      (click)="setPageView('my_templates')">
+      <i class="fas fa-check-circle" aria-hidden="true"></i>
+      My templates (Meta)
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="page-tab"
+      [class.is-active]="pageView === 'library'"
+      [attr.aria-selected]="pageView === 'library'"
+      (click)="setPageView('library')">
+      <i class="fas fa-layer-group" aria-hidden="true"></i>
+      Starter library
+    </button>
+  </div>
+
+  <!-- ── My templates (Meta) ──────────────────────────────────────────────── -->
+  <ng-container *ngIf="pageView === 'my_templates'">
+
   <div *ngIf="dataSource === 'db_fallback'" class="alert-warning-themed">
     <i class="fas fa-exclamation-triangle me-2"></i>
     Meta API is temporarily unavailable. Showing cached data.
@@ -153,6 +179,25 @@
     </div>
   </div>
 
+  </ng-container>
+
+  <!-- ── Starter library ─────────────────────────────────────────────────── -->
+  <section *ngIf="pageView === 'library'" class="library-section animate-fade-in-up">
+    <div *ngIf="connections.length === 0" class="alert-warning-themed">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      Connect WhatsApp in <strong>Settings → Platforms</strong> before submitting a starter template.
+    </div>
+
+    <app-whatsapp-template-picker
+      mode="starters"
+      [showConnectionSelector]="connections.length > 0"
+      [connections]="connections"
+      [connectionId]="selectedConnectionId"
+      (connectionChange)="selectedConnectionId = $event; onConnectionChange()"
+      (starterSelected)="onStarterPicked($event)">
+    </app-whatsapp-template-picker>
+  </section>
+
   }
 
 </div>
@@ -165,6 +210,7 @@
     </button>
     <app-template-create
       [connectionId]="selectedConnectionId"
+      [starterPreset]="createStarterPreset"
       (created)="onTemplateCreated()"
       (cancelled)="closeCreateModal()">
     </app-template-create>

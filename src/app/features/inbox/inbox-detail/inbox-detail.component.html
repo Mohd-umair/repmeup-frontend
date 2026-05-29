@@ -216,6 +216,42 @@
           </a>
         </div>
       </ng-container>
+
+      <!-- Instagram multi-product post context -->
+      <div *ngIf="interaction.platform === 'instagram' && interaction.type === 'comment' && getIgLinkedProductCount() > 1"
+           class="mt-2 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-950/30">
+        <p class="text-xs font-semibold text-amber-900 dark:text-amber-200">
+          <i class="fas fa-layer-group mr-1.5" aria-hidden="true"></i>
+          Post has {{ getIgLinkedProductCount() }} linked products
+        </p>
+        <p class="text-[11px] mt-1 text-amber-800/90 dark:text-amber-300/90 leading-snug">
+          Comment-to-DM sends a product-picker so the customer chooses the correct item.
+          <span *ngIf="getIgLinkedProductNames()"> Linked: {{ getIgLinkedProductNames() }}.</span>
+        </p>
+        <p *ngIf="igLinkedProductsLoading" class="text-[10px] mt-1 text-amber-700 dark:text-amber-400">
+          <i class="fas fa-spinner fa-spin mr-1"></i> Loading catalog…
+        </p>
+      </div>
+
+      <!-- Instagram story engagement context -->
+      <div *ngIf="isStoryEngagementInteraction()"
+           class="mt-2 px-3 py-2 rounded-lg border border-orange-200 dark:border-orange-700/50 bg-orange-50 dark:bg-orange-950/30">
+        <p class="text-xs font-semibold text-orange-900 dark:text-orange-200">
+          <i class="fas fa-circle-play mr-1.5" aria-hidden="true"></i>
+          {{ getStoryTriggerLabel() }}
+        </p>
+        <p class="text-[11px] mt-1 text-orange-800/90 dark:text-orange-300/90 leading-snug">
+          Story-to-DM can auto-send product details when this story is linked in Catalog.
+          <span *ngIf="getIgLinkedProductCount() > 0">
+            {{ getIgLinkedProductCount() }} linked product{{ getIgLinkedProductCount() !== 1 ? 's' : '' }}:
+            {{ getIgLinkedProductNames() }}.
+          </span>
+          <span *ngIf="getIgLinkedProductCount() === 0 && !igLinkedProductsLoading"> No catalog products linked to this story yet.</span>
+        </p>
+        <p *ngIf="igLinkedProductsLoading" class="text-[10px] mt-1 text-orange-700 dark:text-orange-400">
+          <i class="fas fa-spinner fa-spin mr-1"></i> Loading catalog…
+        </p>
+      </div>
     </div>
 
     <!-- Conversation Thread with Reply Form at End (overflow-anchor: none prevents scroll jump when audio/media loads) -->
@@ -269,6 +305,15 @@
                     <i *ngFor="let star of ratingStars" class="fas fa-star" [class.text-amber-500]="star <= getReviewRating()!" [class.text-gray-200]="star > getReviewRating()!"></i>
                   </span>
                   <span class="text-[10px] text-gray-600 font-medium">{{ getReviewRating() }}/5</span>
+                </div>
+                <!-- WhatsApp message Meta could not deliver via Cloud API -->
+                <div *ngIf="isUnsupportedIncomingMessage(item.data)"
+                     class="mb-1 flex gap-2.5 px-3 py-2.5 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30 max-w-md"
+                     role="note">
+                  <i class="fas fa-circle-info text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" aria-hidden="true"></i>
+                  <p class="text-xs text-amber-900 dark:text-amber-100 leading-relaxed">
+                    {{ unsupportedIncomingMessageText(item.data) }}
+                  </p>
                 </div>
                 <!-- Facebook/Instagram DM image attachment -->
                 <div *ngIf="item.data.attachmentType === 'image' && (item.data.attachmentUrl || (item.data.mid && item.data._id))" class="mb-1 min-h-[120px]">
@@ -348,7 +393,7 @@
                   </div>
                 </ng-container>
                 <ng-template #emailTextFallback>
-                  <p *ngIf="item.data.content && !isIncomingAttachmentCaptionHidden(item.data.content, item.data.attachmentType)"
+                  <p *ngIf="item.data.content && !isUnsupportedIncomingMessage(item.data) && !isIncomingAttachmentCaptionHidden(item.data.content, item.data.attachmentType)"
                      class="text-sm text-gray-500 dark:text-gray-400 leading-snug whitespace-pre-wrap">
                     <app-inbox-linkified-text [text]="item.data.content" />
                   </p>
@@ -779,13 +824,17 @@
             </span>
           </div>
           <label class="block text-[11px] font-semibold text-gray-700 dark:text-gray-200">Approved template</label>
-          <select
-            class="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
-            [value]="waSelectedTemplate?.name || ''"
-            (change)="onWaTemplatePick($event)">
-            <option value="">Select template…</option>
-            <option *ngFor="let tmpl of waApprovedTemplates" [value]="tmpl.name">{{ tmpl.name }} · {{ tmpl.language }}</option>
-          </select>
+          <button
+            type="button"
+            (click)="openWaTemplatePicker()"
+            class="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-left text-gray-900 dark:text-gray-100 transition hover:border-rep-lime/50"
+            [disabled]="waTemplatesLoading || !waConnectionId">
+            <span *ngIf="waSelectedTemplate" class="min-w-0 truncate">
+              {{ waSelectedTemplate.name }} · {{ waSelectedTemplate.language }}
+            </span>
+            <span *ngIf="!waSelectedTemplate" class="text-gray-500 dark:text-gray-400">Select template…</span>
+            <i class="fas fa-chevron-down shrink-0 text-xs text-gray-400" aria-hidden="true"></i>
+          </button>
           <div *ngFor="let slot of waTemplateSlots" class="flex flex-col gap-0.5">
             <label class="text-[10px] font-medium text-gray-600 dark:text-gray-400">{{ slot.label }}</label>
 
@@ -1028,6 +1077,41 @@
   (close)="closeMediaSelector()"
   (select)="onMediaSelect($any($event))">
 </app-media-selector-modal>
+
+<!-- WhatsApp approved template picker -->
+<div *ngIf="showWaTemplatePicker"
+     @inboxModalBackdrop
+     class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background: rgba(0,0,0,0.55);"
+     (click)="closeWaTemplatePicker()">
+  <div @inboxModalPanel
+       class="relative w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+       style="background-color: var(--card-bg); border: 1px solid var(--card-border);"
+       (click)="$event.stopPropagation()">
+    <div class="flex items-center justify-between px-5 py-4 border-b shrink-0" style="border-color: var(--card-border);">
+      <div class="flex items-center gap-2">
+        <i class="fab fa-whatsapp text-lg" style="color:#25D366" aria-hidden="true"></i>
+        <h3 class="text-base font-bold" style="color: var(--text-primary);">Choose approved template</h3>
+      </div>
+      <button type="button"
+              (click)="closeWaTemplatePicker()"
+              class="rounded-lg p-2 transition hover:bg-gray-500/10"
+              style="color: var(--text-muted);"
+              aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="overflow-y-auto p-5">
+      <app-whatsapp-template-picker
+        mode="approved"
+        [compact]="true"
+        [connectionId]="waConnectionId"
+        [selectedTemplateName]="waSelectedTemplate?.name || ''"
+        (templateSelected)="onWaTemplatePickedFromPicker($event)">
+      </app-whatsapp-template-picker>
+    </div>
+  </div>
+</div>
 
 <!-- ── WhatsApp Product Picker Modal ─────────────────────────────────────── -->
 <div *ngIf="showProductPickerModal"

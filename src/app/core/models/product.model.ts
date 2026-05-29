@@ -13,6 +13,10 @@ export interface IProduct {
   colors: string[];
   stock?: number | null;
   instagramPostIds: string[];
+  /** Instagram story media IDs for Story-to-DM automation */
+  instagramStoryIds?: string[];
+  /** Per-post carousel slide / sort metadata (multi-product posts). */
+  instagramPostLinks?: IInstagramPostLink[];
   isActive: boolean;
   createdBy?: string;
   createdAt: string;
@@ -165,10 +169,40 @@ export interface ISalesFlowSettings {
   whatsappCaptureConfirmation: string;
 }
 
+/** Instagram: story reply / @mention → automated product DM */
+export interface IStoryToDmSettings {
+  enabled: boolean;
+  triggerOnReply: boolean;
+  triggerOnMention: boolean;
+  triggerKeywords: string[];
+  defaultProductId?: string | null;
+  deduplicateDms: boolean;
+  maxDmsPerDay: number;
+  welcomeTitle: string;
+  welcomeSubtitle: string;
+  welcomeImageUrl: string;
+  dmsSentToday?: number;
+  dmsSentResetDate?: string;
+}
+
+export interface IInstagramPostLink {
+  postId: string;
+  slideIndex?: number | null;
+  sortOrder?: number | null;
+}
+
+export interface IInstagramCarouselSlide {
+  id: string;
+  slideIndex: number;
+  mediaType: string;
+  thumbnailUrl: string | null;
+  mediaUrl: string | null;
+}
+
 export interface IInstagramMediaItem {
   id: string;
   shortcode: string | null;
-  mediaType: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM';
+  mediaType: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM' | 'STORIES';
   thumbnailUrl: string | null;
   mediaUrl: string | null;
   caption: string;

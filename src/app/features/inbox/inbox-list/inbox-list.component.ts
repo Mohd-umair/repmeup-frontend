@@ -11,7 +11,7 @@ import { IInteraction, IReply, Platform } from '../../../core/models/interaction
 import { ThemeService } from '../../../core/services/theme.service';
 import { AppearanceService } from '../../../core/services/appearance.service';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
-import { looksLikeAttachmentFilename } from '../../../core/utils/inbox-attachment-display';
+import { looksLikeAttachmentFilename, isUnsupportedWhatsAppIncoming } from '../../../core/utils/inbox-attachment-display';
 
 /**
  * Inbox List Component - Single Responsibility Principle
@@ -470,7 +470,10 @@ export class InboxListComponent implements OnInit, OnDestroy {
   }
 
   /** Map raw attachment placeholder text to a human-readable label. */
-  private _friendlyAttachmentText(msg: { text?: string; attachmentType?: string; attachmentUrl?: string }): string {
+  private _friendlyAttachmentText(msg: { text?: string; attachmentType?: string; attachmentUrl?: string; type?: string; isUnsupported?: boolean }): string {
+    if (isUnsupportedWhatsAppIncoming(msg)) {
+      return 'Message not available (WhatsApp API limit)';
+    }
     const LABELS: Record<string, string> = {
       video: '🎥 Video',
       image: '📷 Photo',

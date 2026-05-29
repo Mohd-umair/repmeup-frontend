@@ -1,0 +1,36 @@
+@use '../../styles/whatsapp-template-shared';
+
+.wa-template-picker {
+  display: flex;
+  flex-direction: column;
+}
+
+.wa-template-picker__grid {
+  margin-bottom: 0;
+}
+
+// Inbox modal — scrollable grid, no hover lift
+.wa-template-picker--compact {
+  .toolbar {
+    margin-bottom: 1rem;
+  }
+
+  .wa-template-picker__grid {
+    max-height: min(42vh, 420px);
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  .template-card:hover {
+    transform: none;
+    box-shadow: var(--card-shadow);
+  }
+
+  .template-card::before {
+    display: none;
+  }
+
+  .empty-state {
+    padding: 2.5rem 1.5rem;
+  }
+}

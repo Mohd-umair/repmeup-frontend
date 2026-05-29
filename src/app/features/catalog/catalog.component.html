@@ -173,19 +173,21 @@
             </span>
           </div>
 
-          <div class="flex items-center justify-between pt-1 mt-auto">
-            <div class="flex items-center gap-1.5 text-xs" style="color: var(--text-muted);">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 mt-auto text-xs" style="color: var(--text-muted);">
+            <span class="inline-flex items-center gap-1.5">
               <i class="fab fa-instagram"></i>
               <span [class.text-green-600]="product.instagramPostIds.length > 0"
                     [class.dark:text-green-400]="product.instagramPostIds.length > 0">
-                {{ product.instagramPostIds.length }} post{{ product.instagramPostIds.length !== 1 ? 's' : '' }} linked
+                {{ product.instagramPostIds.length }} post{{ product.instagramPostIds.length !== 1 ? 's' : '' }}
               </span>
-            </div>
-            <button (click)="openPostLinkModal(product)"
-                    class="text-xs font-semibold px-2.5 py-1 rounded-lg transition"
-                    style="background-color: var(--surface-primary); color: var(--text-primary);">
-              <i class="fas fa-link mr-1"></i> Manage Posts
-            </button>
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <i class="fas fa-circle-play"></i>
+              <span [class.text-green-600]="(product.instagramStoryIds?.length || 0) > 0"
+                    [class.dark:text-green-400]="(product.instagramStoryIds?.length || 0) > 0">
+                {{ product.instagramStoryIds?.length || 0 }} stor{{ (product.instagramStoryIds?.length || 0) !== 1 ? 'ies' : 'y' }}
+              </span>
+            </span>
           </div>
         </div>
 
@@ -196,12 +198,60 @@
                   style="color: var(--text-secondary);">
             <i class="fas fa-pen"></i> Edit
           </button>
-          <div class="w-px" style="background-color: var(--card-border);"></div>
+          <div class="w-px shrink-0" style="background-color: var(--card-border);"></div>
+          <button (click)="openAttachPosts(product)"
+                  class="flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition hover:opacity-80"
+                  style="color: var(--accent);">
+            <i class="fas fa-link"></i> Attach Post
+          </button>
+          <div class="w-px shrink-0" style="background-color: var(--card-border);"></div>
           <button (click)="deleteProduct(product)"
                   class="flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition text-red-500 hover:opacity-80 rounded-br-xl">
             <i class="fas fa-trash"></i> Delete
           </button>
         </div>
+      </div>
+
+      <!-- Carousel slides preview panel -->
+      <div *ngIf="carouselPreviewMedia"
+           class="rounded-xl border p-4 space-y-3"
+           style="border-color: var(--card-border); background-color: var(--card-bg);">
+        <div class="flex items-center justify-between gap-2">
+          <h4 class="text-sm font-bold" style="color: var(--text-primary);">
+            <i class="fas fa-layer-group mr-1.5 text-pink-500"></i>
+            Carousel slides (setup reference)
+          </h4>
+          <button type="button" (click)="closeCarouselPreview()" class="text-xs font-semibold" style="color: var(--text-muted);">
+            Close
+          </button>
+        </div>
+        <p class="text-xs" style="color: var(--text-muted);">
+          Instagram comments only include the parent post ID — pick the slide this product matches, then link the post.
+        </p>
+        <div *ngIf="loadingCarouselSlides" class="text-xs py-4 text-center" style="color: var(--text-muted);">
+          <i class="fas fa-spinner fa-spin mr-1"></i> Loading slides…
+        </div>
+        <p *ngIf="carouselSlidesError" class="text-xs text-red-500">{{ carouselSlidesError }}</p>
+        <div *ngIf="!loadingCarouselSlides && carouselSlides.length"
+             class="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          <button type="button"
+                  *ngFor="let slide of carouselSlides"
+                  (click)="selectCarouselSlideForLink(slide.slideIndex)"
+                  class="relative aspect-square rounded-lg overflow-hidden border-2 transition"
+                  [style.border-color]="carouselLinkSlideIndex === slide.slideIndex ? '#22c55e' : 'var(--card-border)'">
+            <img *ngIf="slide.thumbnailUrl" [src]="slide.thumbnailUrl" alt="" class="w-full h-full object-cover" />
+            <span class="absolute bottom-0 inset-x-0 text-[10px] font-bold text-white text-center py-0.5"
+                  style="background: rgba(0,0,0,0.55);">Slide {{ slide.slideIndex + 1 }}</span>
+          </button>
+        </div>
+        <button *ngIf="carouselLinkSlideIndex != null"
+                type="button"
+                (click)="linkCarouselPostWithSlide()"
+                [disabled]="linkingSelectedPosts"
+                class="catalog-btn-primary px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-60">
+          <i class="fas mr-1" [ngClass]="linkingSelectedPosts ? 'fa-spinner fa-spin' : 'fa-link'"></i>
+          Link post (slide {{ carouselLinkSlideIndex + 1 }})
+        </button>
       </div>
     </div>
   </div>
@@ -788,6 +838,23 @@
     <!-- Step 2 body -->
     <div class="overflow-auto p-5 space-y-4 flex-1">
 
+      <!-- ── Carousel multi-product hint ─────────────────────────────── -->
+      <div class="rounded-lg border p-3 text-xs leading-relaxed"
+           style="border-color: var(--card-border); background-color: var(--surface-primary); color: var(--text-secondary);">
+        <i class="fas fa-layer-group mr-1.5" style="color: var(--accent);"></i>
+        <strong style="color: var(--text-primary);">Carousel posts with multiple prices:</strong>
+        link each catalog product to the <em>same</em> Instagram post. When someone comments, RepMeUp sends a
+        product-picker DM so they choose the correct item.
+      </div>
+
+      <div class="rounded-lg border p-3 text-xs leading-relaxed"
+           style="border-color: var(--card-border); background-color: var(--surface-primary); color: var(--text-secondary);">
+        <i class="fas fa-circle-play mr-1.5 text-orange-500"></i>
+        <strong style="color: var(--text-primary);">Story-to-DM:</strong>
+        use the <em>Stories</em> tab below to link active stories. When someone replies or &#64;mentions your story,
+        RepMeUp sends an automated product DM (enable in Growth → Story-to-DM).
+      </div>
+
       <!-- ── Linked posts strip ─────────────────────────────────────── -->
       <div *ngIf="linkingProduct?.instagramPostIds?.length"
            class="rounded-lg border p-3" style="border-color: var(--card-border);">
@@ -818,11 +885,29 @@
 
       <!-- ── Instagram media grid ───────────────────────────────────── -->
       <div class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold flex items-center gap-2" style="color: var(--text-primary);">
-            <i class="fab fa-instagram text-pink-500"></i>
-            Pick from your Instagram posts
-          </h3>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-bold flex items-center gap-2" style="color: var(--text-primary);">
+              <i class="fab fa-instagram text-pink-500"></i>
+              Pick from Instagram
+            </h3>
+            <div class="flex rounded-lg border overflow-hidden text-xs font-bold"
+                 style="border-color: var(--card-border);">
+              <button type="button" (click)="setMediaFilter('posts')"
+                      class="px-3 py-1 transition"
+                      [style.background-color]="mediaFilter === 'posts' ? 'var(--accent)' : 'var(--surface-primary)'"
+                      [style.color]="mediaFilter === 'posts' ? '#fff' : 'var(--text-secondary)'">
+                Posts
+              </button>
+              <button type="button" (click)="setMediaFilter('stories')"
+                      class="px-3 py-1 transition border-l"
+                      [style.border-color]="'var(--card-border)'"
+                      [style.background-color]="mediaFilter === 'stories' ? 'var(--accent)' : 'var(--surface-primary)'"
+                      [style.color]="mediaFilter === 'stories' ? '#fff' : 'var(--text-secondary)'">
+                Stories
+              </button>
+            </div>
+          </div>
           <div class="flex items-center gap-2">
             <span *ngIf="selectedMediaIds.size > 0"
                   class="text-xs font-semibold px-2 py-0.5 rounded-full"
@@ -834,7 +919,7 @@
                     [disabled]="linkingSelectedPosts"
                     class="catalog-btn-primary px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-60">
               <i class="fas mr-1" [ngClass]="linkingSelectedPosts ? 'fa-spinner fa-spin' : 'fa-link'"></i>
-              Link {{ selectedMediaIds.size }} post{{ selectedMediaIds.size !== 1 ? 's' : '' }}
+              Link {{ selectedMediaIds.size }} {{ mediaFilter === 'stories' ? 'stor' + (selectedMediaIds.size !== 1 ? 'ies' : 'y') : 'post' + (selectedMediaIds.size !== 1 ? 's' : '') }}
             </button>
           </div>
         </div>
@@ -858,14 +943,14 @@
         </div>
 
         <!-- Media grid -->
-        <div *ngIf="!loadingMedia && !mediaLoadError && instagramMedia.length"
+        <div *ngIf="!loadingMedia && !mediaLoadError && filteredInstagramMedia.length"
              class="grid grid-cols-3 sm:grid-cols-4 gap-2">
-          <div *ngFor="let media of instagramMedia; trackBy: trackByMediaId"
-               (click)="!isPostLinked(media.id) && !isPostLinked(media.shortcode || '') ? toggleMediaSelection(media.id) : null"
+          <div *ngFor="let media of filteredInstagramMedia; trackBy: trackByMediaId"
+               (click)="!isMediaLinked(media) ? toggleMediaSelection(media.id) : null"
                class="relative rounded-lg overflow-hidden border-2 transition-all cursor-pointer aspect-square group"
-               [style.border-color]="isPostLinked(media.id) || isPostLinked(media.shortcode || '')
+               [style.border-color]="isMediaLinked(media)
                  ? 'var(--accent)' : isMediaSelected(media.id) ? '#22c55e' : 'transparent'"
-               [style.opacity]="isPostLinked(media.id) || isPostLinked(media.shortcode || '') ? '0.65' : '1'">
+               [style.opacity]="isMediaLinked(media) ? '0.65' : '1'">
 
             <!-- Thumbnail -->
             <img *ngIf="media.thumbnailUrl"
@@ -885,15 +970,30 @@
               <i class="fas fa-play"></i>
             </div>
 
-            <!-- Carousel badge -->
+            <!-- Carousel badge + preview -->
+            <button *ngIf="media.mediaType === 'CAROUSEL_ALBUM'"
+                 type="button"
+                 (click)="openCarouselPreview(media, $event)"
+                 class="absolute top-1 right-1 px-1.5 py-0.5 rounded text-white text-[9px] font-bold z-10"
+                 style="background-color: rgba(0,0,0,0.65);"
+                 title="View carousel slides">
+              Slides
+            </button>
             <div *ngIf="media.mediaType === 'CAROUSEL_ALBUM'"
                  class="absolute top-1 left-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px]"
                  style="background-color: rgba(0,0,0,0.6);">
               <i class="fas fa-layer-group"></i>
             </div>
 
+            <!-- Story badge -->
+            <div *ngIf="media.mediaType === 'STORIES'"
+                 class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-white text-[9px] font-bold"
+                 style="background-color: rgba(249,115,22,0.85);">
+              Story
+            </div>
+
             <!-- Already linked overlay -->
-            <div *ngIf="isPostLinked(media.id) || isPostLinked(media.shortcode || '')"
+            <div *ngIf="isMediaLinked(media)"
                  class="absolute inset-0 flex items-center justify-center"
                  style="background-color: rgba(var(--accent-rgb,99,102,241),0.25);">
               <i class="fas fa-check-circle text-2xl" style="color: var(--accent);"></i>
@@ -917,11 +1017,56 @@
         </div>
 
         <!-- Empty state -->
-        <div *ngIf="!loadingMedia && !mediaLoadError && !instagramMedia.length"
+        <div *ngIf="!loadingMedia && !mediaLoadError && !filteredInstagramMedia.length"
              class="text-center py-8" style="color: var(--text-muted);">
           <i class="fab fa-instagram text-3xl mb-2 block text-pink-400"></i>
-          <p class="text-sm">No posts found on this Instagram account.</p>
+          <p class="text-sm" *ngIf="instagramMedia.length">
+            No {{ mediaFilter === 'stories' ? 'stories' : 'posts' }} in the recent media feed. Try switching tabs or publish a new story.
+          </p>
+          <p class="text-sm" *ngIf="!instagramMedia.length">No media found on this Instagram account.</p>
         </div>
+      </div>
+
+      <!-- Carousel slides preview panel -->
+      <div *ngIf="carouselPreviewMedia"
+           class="rounded-xl border p-4 space-y-3"
+           style="border-color: var(--card-border); background-color: var(--card-bg);">
+        <div class="flex items-center justify-between gap-2">
+          <h4 class="text-sm font-bold" style="color: var(--text-primary);">
+            <i class="fas fa-layer-group mr-1.5 text-pink-500"></i>
+            Carousel slides (setup reference)
+          </h4>
+          <button type="button" (click)="closeCarouselPreview()" class="text-xs font-semibold" style="color: var(--text-muted);">
+            Close
+          </button>
+        </div>
+        <p class="text-xs" style="color: var(--text-muted);">
+          Instagram comments only include the parent post ID — pick the slide this product matches, then link the post.
+        </p>
+        <div *ngIf="loadingCarouselSlides" class="text-xs py-4 text-center" style="color: var(--text-muted);">
+          <i class="fas fa-spinner fa-spin mr-1"></i> Loading slides…
+        </div>
+        <p *ngIf="carouselSlidesError" class="text-xs text-red-500">{{ carouselSlidesError }}</p>
+        <div *ngIf="!loadingCarouselSlides && carouselSlides.length"
+             class="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          <button type="button"
+                  *ngFor="let slide of carouselSlides"
+                  (click)="selectCarouselSlideForLink(slide.slideIndex)"
+                  class="relative aspect-square rounded-lg overflow-hidden border-2 transition"
+                  [style.border-color]="carouselLinkSlideIndex === slide.slideIndex ? '#22c55e' : 'var(--card-border)'">
+            <img *ngIf="slide.thumbnailUrl" [src]="slide.thumbnailUrl" alt="" class="w-full h-full object-cover" />
+            <span class="absolute bottom-0 inset-x-0 text-[10px] font-bold text-white text-center py-0.5"
+                  style="background: rgba(0,0,0,0.55);">Slide {{ slide.slideIndex + 1 }}</span>
+          </button>
+        </div>
+        <button *ngIf="carouselLinkSlideIndex != null"
+                type="button"
+                (click)="linkCarouselPostWithSlide()"
+                [disabled]="linkingSelectedPosts"
+                class="catalog-btn-primary px-4 py-2 rounded-lg text-xs font-bold disabled:opacity-60">
+          <i class="fas mr-1" [ngClass]="linkingSelectedPosts ? 'fa-spinner fa-spin' : 'fa-link'"></i>
+          Link post (slide {{ carouselLinkSlideIndex + 1 }})
+        </button>
       </div>
 
       <!-- ── Manual entry fallback ───────────────────────────────────── -->

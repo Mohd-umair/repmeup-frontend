@@ -15,6 +15,7 @@ import {
   ISalesFlowCtaButton,
   IProductDmConfig,
   IInstagramMediaItem,
+  IInstagramCarouselSlide,
   IWhatsAppCatalogSettings,
   IWhatsAppCsvImportResult,
   WhatsAppSyncStatus
@@ -77,10 +78,18 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   // Step 2 — Instagram media picker
   instagramMedia: IInstagramMediaItem[] = [];
+  /** Posts vs Stories filter in Attach Posts wizard step 2 */
+  mediaFilter: 'posts' | 'stories' = 'posts';
   loadingMedia = false;
   mediaLoadError = '';
   selectedMediaIds = new Set<string>();
   linkingSelectedPosts = false;
+  carouselPreviewMedia: IInstagramMediaItem | null = null;
+  carouselSlides: IInstagramCarouselSlide[] = [];
+  loadingCarouselSlides = false;
+  carouselSlidesError = '';
+  /** slideIndex → selected for linking with sort order */
+  carouselLinkSlideIndex: number | null = null;
 
   // Step 3 — per-product DM config
   dmConfig: IProductDmConfig | null = null;
@@ -340,6 +349,24 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.mediaLoadError = '';
     this.buildProductForm(product);
     this.showProductModal = true;
+  }
+
+  openAttachPosts(product: IProduct): void {
+    this.editingProduct = product;
+    this.productError = '';
+    this.sizesInput = product.sizes.join(', ');
+    this.colorsInput = product.colors.join(', ');
+    this.imagesInput = product.images.join('\n');
+    this.dmConfig = null;
+    this.dmConfigKeywordsInput = '';
+    this.dmConfigHesitancyInput = '';
+    this.dmConfigError = '';
+    this.instagramMedia = [];
+    this.selectedMediaIds = new Set();
+    this.mediaLoadError = '';
+    this.buildProductForm(product);
+    this.showProductModal = true;
+    this.goToWizardStep(2);
   }
 
   closeProductModal(): void {
@@ -763,6 +790,31 @@ export class CatalogComponent implements OnInit, OnDestroy {
     return this.linkingProduct.instagramPostIds.some(pid => pid === mediaId);
   }
 
+  isStoryLinked(mediaId: string): boolean {
+    if (!this.linkingProduct) return false;
+    return (this.linkingProduct.instagramStoryIds || []).some(sid => sid === mediaId);
+  }
+
+  isMediaLinked(media: IInstagramMediaItem): boolean {
+    if (media.mediaType === 'STORIES') {
+      return this.isStoryLinked(media.id) || this.isStoryLinked(media.shortcode || '');
+    }
+    return this.isPostLinked(media.id) || this.isPostLinked(media.shortcode || '');
+  }
+
+  get filteredInstagramMedia(): IInstagramMediaItem[] {
+    if (this.mediaFilter === 'stories') {
+      return this.instagramMedia.filter(m => m.mediaType === 'STORIES');
+    }
+    return this.instagramMedia.filter(m => m.mediaType !== 'STORIES');
+  }
+
+  setMediaFilter(filter: 'posts' | 'stories'): void {
+    this.mediaFilter = filter;
+    this.selectedMediaIds = new Set();
+    this.cdr.markForCheck();
+  }
+
   toggleMediaSelection(mediaId: string): void {
     if (this.selectedMediaIds.has(mediaId)) {
       this.selectedMediaIds.delete(mediaId);
@@ -787,18 +839,97 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
     for (const id of ids) {
       try {
-        const r = await firstValueFrom(this.catalogService.linkPost(productId, id));
+        const media = this.instagramMedia.find(m => m.id === id);
+        const isStory = media?.mediaType === 'STORIES';
+        let r;
+        if (isStory) {
+          r = await firstValueFrom(this.catalogService.linkStory(productId, id));
+        } else {
+          const slideIndex = media?.mediaType === 'CAROUSEL_ALBUM' ? this.carouselLinkSlideIndex ?? undefined : undefined;
+          const sortOrder = slideIndex != null ? slideIndex + 1 : undefined;
+          r = await firstValueFrom(this.catalogService.linkPost(productId, id, {
+            slideIndex,
+            sortOrder
+          }));
+        }
         if (r?.data) {
           this.linkingProduct = r.data;
           const idx = this.products.findIndex(p => p._id === r.data!._id);
           if (idx !== -1) this.products[idx] = r.data!;
         }
       } catch (e: any) {
-        this.linkError = e?.error?.error || 'Failed to link one or more posts';
+        this.linkError = e?.error?.error || 'Failed to link one or more items';
       }
     }
 
     this.selectedMediaIds = new Set();
+    this.carouselLinkSlideIndex = null;
+    this.linkingSelectedPosts = false;
+    this.cdr.markForCheck();
+  }
+
+  openCarouselPreview(media: IInstagramMediaItem, event?: Event): void {
+    event?.stopPropagation();
+    this.carouselPreviewMedia = media;
+    this.carouselSlides = [];
+    this.carouselSlidesError = '';
+    this.carouselLinkSlideIndex = null;
+    this.loadingCarouselSlides = true;
+    this.cdr.markForCheck();
+
+    this.catalogService.getInstagramMediaChildren(media.id)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingCarouselSlides = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.carouselSlides = r.data?.slides ?? [];
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          this.carouselSlidesError = err.error?.error || 'Could not load carousel slides.';
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  closeCarouselPreview(): void {
+    this.carouselPreviewMedia = null;
+    this.carouselSlides = [];
+    this.carouselLinkSlideIndex = null;
+    this.cdr.markForCheck();
+  }
+
+  selectCarouselSlideForLink(slideIndex: number): void {
+    this.carouselLinkSlideIndex = slideIndex;
+    if (this.carouselPreviewMedia && !this.selectedMediaIds.has(this.carouselPreviewMedia.id)) {
+      this.selectedMediaIds.add(this.carouselPreviewMedia.id);
+    }
+    this.cdr.markForCheck();
+  }
+
+  async linkCarouselPostWithSlide(): Promise<void> {
+    if (!this.linkingProduct || !this.carouselPreviewMedia) return;
+    if (this.carouselLinkSlideIndex == null) {
+      this.linkError = 'Select a carousel slide first.';
+      this.cdr.markForCheck();
+      return;
+    }
+    this.linkingSelectedPosts = true;
+    this.linkError = '';
+    const mediaId = this.carouselPreviewMedia.id;
+    try {
+      const r = await firstValueFrom(this.catalogService.linkPost(this.linkingProduct._id, mediaId, {
+        slideIndex: this.carouselLinkSlideIndex,
+        sortOrder: this.carouselLinkSlideIndex + 1
+      }));
+      if (r?.data) {
+        this.linkingProduct = r.data;
+        const idx = this.products.findIndex(p => p._id === r.data!._id);
+        if (idx !== -1) this.products[idx] = r.data!;
+      }
+      this.closeCarouselPreview();
+    } catch (e: any) {
+      this.linkError = e?.error?.error || 'Failed to link carousel post';
+    }
     this.linkingSelectedPosts = false;
     this.cdr.markForCheck();
   }

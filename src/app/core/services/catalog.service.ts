@@ -7,8 +7,10 @@ import {
   ICommentToDmSettings,
   ICommentFollowInviteSettings,
   ISalesFlowSettings,
+  IStoryToDmSettings,
   IProductDmConfig,
   IInstagramMediaItem,
+  IInstagramCarouselSlide,
   IWhatsAppCatalogSettings,
   IWhatsAppCatalogSettingsUpdateResult,
   IWhatsAppSyncAllResult,
@@ -40,8 +42,20 @@ export class CatalogService {
     return this.api.delete(`/products/${id}`);
   }
 
-  linkPost(productId: string, postId: string): Observable<IApiResponse<IProduct>> {
-    return this.api.post(`/products/${productId}/posts`, { postId });
+  linkPost(
+    productId: string,
+    postId: string,
+    options?: { slideIndex?: number; sortOrder?: number }
+  ): Observable<IApiResponse<IProduct>> {
+    return this.api.post(`/products/${productId}/posts`, { postId, ...options });
+  }
+
+  linkStory(productId: string, storyId: string): Observable<IApiResponse<IProduct>> {
+    return this.api.post(`/products/${productId}/stories`, { storyId });
+  }
+
+  unlinkStory(productId: string, storyId: string): Observable<IApiResponse<IProduct>> {
+    return this.api.post(`/products/${productId}/stories/unlink`, { storyId });
   }
 
   unlinkPost(productId: string, postId: string): Observable<IApiResponse<IProduct>> {
@@ -79,6 +93,14 @@ export class CatalogService {
     return this.api.put('/products/settings/sales-flow', data);
   }
 
+  getStoryToDmSettings(): Observable<IApiResponse<IStoryToDmSettings>> {
+    return this.api.get('/products/settings/story-to-dm');
+  }
+
+  updateStoryToDmSettings(data: Partial<IStoryToDmSettings>): Observable<IApiResponse<IStoryToDmSettings>> {
+    return this.api.put('/products/settings/story-to-dm', data);
+  }
+
   getProductDmConfig(productId: string): Observable<IApiResponse<IProductDmConfig>> {
     return this.api.get(`/products/${productId}/dm-config`);
   }
@@ -97,6 +119,14 @@ export class CatalogService {
 
   getInstagramMedia(limit = 24): Observable<IApiResponse<IInstagramMediaItem[]>> {
     return this.api.get('/products/instagram-media', { limit });
+  }
+
+  getInstagramMediaChildren(mediaId: string): Observable<IApiResponse<{
+    parentId: string;
+    mediaType: string | null;
+    slides: IInstagramCarouselSlide[];
+  }>> {
+    return this.api.get(`/products/instagram-media/${mediaId}/children`);
   }
 
   importProducts(file: File): Observable<IApiResponse<IImportSummary>> {

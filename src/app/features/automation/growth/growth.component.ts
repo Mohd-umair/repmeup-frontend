@@ -1,15 +1,17 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { IApiResponse } from '../../../core/models/api-response.model';
 import {
   ICommentToDmSettings,
   ISalesFlowSettings,
   ISalesFlowCtaButton,
-  ICommentFollowInviteSettings
+  ICommentFollowInviteSettings,
+  IStoryToDmSettings
 } from '../../../core/models/product.model';
 import { AutomationPageShellComponent } from '../shared/automation-page-shell.component';
 import { AutomationSwitchComponent } from '../shared/automation-switch.component';
@@ -21,6 +23,7 @@ interface IGrowthGoal {
   label: string;
   icon: string;
   iconClass: string;
+  iconBg: string;
   desc: string;
 }
 
@@ -34,14 +37,17 @@ interface IGrowthGoal {
 export class GrowthComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  activeGoal: GoalId = 'comment-to-dm';
+  activeGoal: GoalId | null = null;
 
   goals: IGrowthGoal[] = [
-    { id: 'comment-to-dm',  label: 'Convert Comments to DM',   icon: 'fas fa-comment-dollar', iconClass: 'text-blue-500',    desc: 'Auto-reply to product comments and send a DM with buy link.' },
-    { id: 'follow-invite',  label: 'Comment to Follow',         icon: 'fas fa-user-plus',      iconClass: 'text-purple-500',  desc: 'Invite commenters to follow your page via a private DM.' },
-    { id: 'sales-flow',     label: 'Comment to Purchase',       icon: 'fas fa-shopping-cart',  iconClass: 'text-emerald-500', desc: 'Guide hesitant buyers through a multi-step sales DM flow.' },
-    { id: 'story-to-dm',    label: 'Story to DM',               icon: 'fas fa-circle-play',    iconClass: 'text-orange-500',  desc: 'Capture story viewers and convert them to DM leads.' },
+    { id: 'comment-to-dm',  label: 'Convert Comments to DM', icon: 'fas fa-comment-dollar', iconClass: 'text-blue-500',    iconBg: 'rgba(59,130,246,0.12)',  desc: 'Auto-reply to product comments and send a DM with buy link.' },
+    { id: 'follow-invite',  label: 'Comment to Follow',       icon: 'fas fa-user-plus',      iconClass: 'text-purple-500',  iconBg: 'rgba(168,85,247,0.12)',  desc: 'Invite commenters to follow your page via a private DM.' },
+    { id: 'sales-flow',     label: 'Comment to Purchase',     icon: 'fas fa-shopping-cart',  iconClass: 'text-emerald-500', iconBg: 'rgba(16,185,129,0.12)',  desc: 'Guide hesitant buyers through a multi-step sales DM flow.' },
+    { id: 'story-to-dm',    label: 'Story to DM',             icon: 'fas fa-circle-play',    iconClass: 'text-orange-500',  iconBg: 'rgba(249,115,22,0.12)',  desc: 'Auto-send product DMs when someone replies to or mentions your story.' },
   ];
+
+  /** Quick-save in progress for overview card toggle */
+  togglingGoal: GoalId | null = null;
 
   // ── Comment-to-DM ──────────────────────────────────────────────────────────
   ctdSettings: ICommentToDmSettings | null = null;
@@ -65,6 +71,13 @@ export class GrowthComponent implements OnInit, OnDestroy {
   sfError = '';
   hesitancyInput = '';
 
+  // ── Story-to-DM ───────────────────────────────────────────────────────────
+  stdSettings: IStoryToDmSettings | null = null;
+  loadingStd = false;
+  savingStd = false;
+  stdError = '';
+  stdKeywordsInput = '';
+
   constructor(
     private catalogService: CatalogService,
     private notify: NotificationService,
@@ -75,6 +88,7 @@ export class GrowthComponent implements OnInit, OnDestroy {
     this.loadCtd();
     this.loadFi();
     this.loadSf();
+    this.loadStd();
   }
 
   ngOnDestroy(): void {
@@ -111,6 +125,20 @@ export class GrowthComponent implements OnInit, OnDestroy {
         if (this.sfSettings) this.hesitancyInput = (this.sfSettings.hesitancyKeywords || []).join(', ');
         if (this.sfSettings && !Array.isArray(this.sfSettings.ctaButtons)) this.sfSettings.ctaButtons = [];
       }});
+  }
+
+  loadStd(): void {
+    this.loadingStd = true;
+    this.catalogService.getStoryToDmSettings()
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingStd = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.stdSettings = r.data ?? null;
+          if (this.stdSettings) {
+            this.stdKeywordsInput = (this.stdSettings.triggerKeywords || []).join(', ');
+          }
+        }
+      });
   }
 
   // ── Savers ────────────────────────────────────────────────────────────────
@@ -203,6 +231,25 @@ export class GrowthComponent implements OnInit, OnDestroy {
       .subscribe({ next: () => this.notify.success('Saved', 'Sales Flow settings saved.'), error: err => { this.sfError = err?.error?.error || 'Save failed'; } });
   }
 
+  saveStd(): void {
+    if (!this.stdSettings) return;
+    this.savingStd = true;
+    this.stdError = '';
+    const payload: Partial<IStoryToDmSettings> = {
+      ...this.stdSettings,
+      triggerKeywords: this.stdKeywordsInput.split(',').map(k => k.trim()).filter(Boolean)
+    };
+    this.catalogService.updateStoryToDmSettings(payload)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.savingStd = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: r => {
+          this.stdSettings = r.data ?? this.stdSettings;
+          this.notify.success('Saved', 'Story-to-DM settings saved.');
+        },
+        error: err => { this.stdError = err?.error?.error || 'Save failed'; }
+      });
+  }
+
   addCtaButton(): void {
     if (!this.sfSettings) return;
     if (!Array.isArray(this.sfSettings.ctaButtons)) this.sfSettings.ctaButtons = [];
@@ -221,7 +268,110 @@ export class GrowthComponent implements OnInit, OnDestroy {
     if (id === 'comment-to-dm') return this.ctdSettings?.enabled ? 'active' : 'inactive';
     if (id === 'follow-invite') return this.fiSettings?.enabled ? 'active' : 'inactive';
     if (id === 'sales-flow') return this.sfSettings?.enabled ? 'active' : 'inactive';
+    if (id === 'story-to-dm') return this.stdSettings?.enabled ? 'active' : 'inactive';
     return 'inactive';
+  }
+
+  get isOverviewLoading(): boolean {
+    return this.loadingCtd || this.loadingFi || this.loadingSf || this.loadingStd;
+  }
+
+  isGoalSettingsReady(id: GoalId): boolean {
+    switch (id) {
+      case 'comment-to-dm': return !this.loadingCtd && !!this.ctdSettings;
+      case 'follow-invite': return !this.loadingFi && !!this.fiSettings;
+      case 'sales-flow': return !this.loadingSf && !!this.sfSettings;
+      case 'story-to-dm': return !this.loadingStd && !!this.stdSettings;
+    }
+  }
+
+  isGoalEnabled(id: GoalId): boolean {
+    switch (id) {
+      case 'comment-to-dm': return !!this.ctdSettings?.enabled;
+      case 'follow-invite': return !!this.fiSettings?.enabled;
+      case 'sales-flow': return !!this.sfSettings?.enabled;
+      case 'story-to-dm': return !!this.stdSettings?.enabled;
+    }
+  }
+
+  openGoal(id: GoalId): void {
+    this.activeGoal = id;
+    this.cdr.markForCheck();
+  }
+
+  backToOverview(): void {
+    this.activeGoal = null;
+    this.cdr.markForCheck();
+  }
+
+  activeGoalMeta(): IGrowthGoal | undefined {
+    return this.activeGoal ? this.goals.find(g => g.id === this.activeGoal) : undefined;
+  }
+
+  onOverviewToggle(id: GoalId, enabled: boolean): void {
+    const previous = this.isGoalEnabled(id);
+    this.setGoalEnabled(id, enabled);
+    this.togglingGoal = id;
+    this.cdr.markForCheck();
+
+    this.saveGoalEnabled(id, enabled)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.togglingGoal = null;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: () => {
+          this.notify.success(
+            enabled ? 'Enabled' : 'Disabled',
+            `${this.goals.find(g => g.id === id)?.label ?? 'Automation'} is now ${enabled ? 'on' : 'off'}.`
+          );
+        },
+        error: (err: { error?: { error?: string } }) => {
+          this.setGoalEnabled(id, previous);
+          this.notify.error('Save failed', err?.error?.error || 'Could not update automation.');
+        }
+      });
+  }
+
+  private setGoalEnabled(id: GoalId, enabled: boolean): void {
+    switch (id) {
+      case 'comment-to-dm':
+        if (this.ctdSettings) this.ctdSettings.enabled = enabled;
+        break;
+      case 'follow-invite':
+        if (this.fiSettings) this.fiSettings.enabled = enabled;
+        break;
+      case 'sales-flow':
+        if (this.sfSettings) this.sfSettings.enabled = enabled;
+        break;
+      case 'story-to-dm':
+        if (this.stdSettings) this.stdSettings.enabled = enabled;
+        break;
+    }
+  }
+
+  private saveGoalEnabled(id: GoalId, enabled: boolean): Observable<IApiResponse<unknown>> {
+    switch (id) {
+      case 'comment-to-dm':
+        return this.catalogService.updateCommentToDmSettings({ enabled });
+      case 'follow-invite':
+        return this.catalogService.updateCommentFollowInviteSettings({ enabled });
+      case 'sales-flow':
+        return this.catalogService.updateSalesFlowSettings({ enabled });
+      case 'story-to-dm':
+        return this.catalogService.updateStoryToDmSettings({ enabled });
+      default: {
+        const _exhaustive: never = id;
+        throw new Error(`Unknown growth goal: ${_exhaustive}`);
+      }
+    }
+  }
+
+  trackByGoalId(_: number, g: IGrowthGoal): GoalId {
+    return g.id;
   }
 
   trackByIndex(i: number): number { return i; }

@@ -4,6 +4,30 @@
 
 const ATTACHMENT_FILENAME_RE = /\.(pdf|doc|docx|xls|xlsx|ppt|pptx|csv|zip|txt|rtf)$/i;
 
+/** Meta WhatsApp Cloud API could not deliver message content (type: unsupported). */
+export function isUnsupportedWhatsAppIncoming(msg: {
+  type?: string;
+  text?: string;
+  content?: string;
+  isUnsupported?: boolean;
+}): boolean {
+  if (msg.isUnsupported || msg.type === 'unsupported') return true;
+  const t = String(msg.text ?? msg.content ?? '').trim();
+  return /^\[Unsupported message type:\s*[\w.-]+\]$/i.test(t);
+}
+
+/** User-facing copy for unsupported / legacy placeholder inbound WhatsApp messages. */
+export function unsupportedWhatsAppDisplayText(msg: {
+  type?: string;
+  text?: string;
+  content?: string;
+  isUnsupported?: boolean;
+}): string {
+  const t = String(msg.text ?? msg.content ?? '').trim();
+  if (t && !/^\[Unsupported message type:/i.test(t)) return t;
+  return 'This message could not be displayed. WhatsApp did not send the content to the Business API (common for polls, GIFs, or deleted messages). Ask the customer to resend as text, photo, or document.';
+}
+
 export function looksLikeAttachmentFilename(text: string | undefined | null): boolean {
   if (!text || typeof text !== 'string') return false;
   const t = text.trim();

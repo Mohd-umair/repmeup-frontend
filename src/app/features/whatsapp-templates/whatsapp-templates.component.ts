@@ -12,11 +12,15 @@ import { WhatsAppTemplate, TemplateCategory, TemplateStatus } from '../../core/m
 import { PlatformService, PlatformConnection } from '../../core/services/platform.service';
 import { TemplateCreateComponent } from './template-create/template-create.component';
 import { SweetAlertService } from '../../core/services/sweet-alert.service';
+import { WhatsAppTemplatePickerComponent } from '../../shared/components/whatsapp-template-picker/whatsapp-template-picker.component';
+import { WhatsAppTemplateStarter } from '../../core/data/whatsapp-template-starters';
+
+type PageView = 'my_templates' | 'library';
 
 @Component({
   selector: 'app-whatsapp-templates',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TemplateCreateComponent, UpgradePromptComponent],
+  imports: [CommonModule, RouterModule, FormsModule, TemplateCreateComponent, UpgradePromptComponent, WhatsAppTemplatePickerComponent],
   templateUrl: './whatsapp-templates.component.html',
   styleUrls: ['./whatsapp-templates.component.scss']
 })
@@ -38,6 +42,8 @@ export class WhatsAppTemplatesComponent implements OnInit, OnDestroy {
   dataSource: 'meta' | 'db_fallback' = 'meta';
 
   showCreateModal = false;
+  pageView: PageView = 'my_templates';
+  createStarterPreset: WhatsAppTemplateStarter | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -149,16 +155,28 @@ export class WhatsAppTemplatesComponent implements OnInit, OnDestroy {
 
   // ── Actions ─────────────────────────────────────────────────────────────────
 
-  openCreateModal(): void {
+  openCreateModal(starter?: WhatsAppTemplateStarter): void {
+    this.createStarterPreset = starter ?? null;
     this.showCreateModal = true;
   }
 
   closeCreateModal(): void {
     this.showCreateModal = false;
+    this.createStarterPreset = null;
+  }
+
+  setPageView(view: PageView): void {
+    this.pageView = view;
+  }
+
+  onStarterPicked(starter: WhatsAppTemplateStarter): void {
+    this.openCreateModal(starter);
   }
 
   onTemplateCreated(): void {
     this.showCreateModal = false;
+    this.createStarterPreset = null;
+    this.pageView = 'my_templates';
     this.notificationService.success('Template Created', 'Your template has been submitted to Meta for review.');
     this.loadTemplates();
   }
