@@ -1576,6 +1576,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     return this.igLinkedPostProducts.length;
   }
 
+  isCommentToDmActive(): boolean {
+    const meta = this.interaction?.metadata as { commentToDmActive?: boolean } | undefined;
+    return this.interaction?.type === 'comment' && meta?.commentToDmActive === true;
+  }
+
   getIgLinkedProductNames(): string {
     const meta = this.interaction?.metadata as { linkedProductNames?: string[] } | undefined;
     if (meta?.linkedProductNames?.length) {

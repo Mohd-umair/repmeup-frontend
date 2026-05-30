@@ -233,6 +233,15 @@
         </p>
       </div>
 
+      <!-- Comment-to-DM unified thread hint -->
+      <div *ngIf="isCommentToDmActive()"
+           class="mt-2 px-3 py-2 rounded-lg border border-sky-200 dark:border-sky-700/50 bg-sky-50 dark:bg-sky-950/30">
+        <p class="text-[11px] text-sky-900/90 dark:text-sky-200/90 leading-snug">
+          <i class="fas fa-comment-dots mr-1.5" aria-hidden="true"></i>
+          Customer replies in Instagram DM are included in this thread.
+        </p>
+      </div>
+
       <!-- Instagram story engagement context -->
       <div *ngIf="isStoryEngagementInteraction()"
            class="mt-2 px-3 py-2 rounded-lg border border-orange-200 dark:border-orange-700/50 bg-orange-50 dark:bg-orange-950/30">

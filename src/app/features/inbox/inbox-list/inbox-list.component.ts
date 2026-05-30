@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { IInteraction, IReply, Platform } from '../../../core/models/interaction.model';
+import { IInteraction, IReply, Platform, InteractionType } from '../../../core/models/interaction.model';
 import { ThemeService } from '../../../core/services/theme.service';
 import { AppearanceService } from '../../../core/services/appearance.service';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
@@ -227,7 +227,13 @@ export class InboxListComponent implements OnInit, OnDestroy {
     return icons[p] || 'fas fa-share-alt';
   }
 
-  getTypeLabel(type: string): string {
+  getTypeLabel(type: string, interaction?: IInteraction): string {
+    if (
+      interaction?.type === InteractionType.COMMENT &&
+      (interaction.metadata as { commentToDmActive?: boolean })?.commentToDmActive
+    ) {
+      return 'Comment · DM';
+    }
     return type.charAt(0).toUpperCase() + type.slice(1);
   }
 

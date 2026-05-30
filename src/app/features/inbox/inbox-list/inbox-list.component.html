@@ -182,7 +182,7 @@
             <div class="flex items-center flex-wrap gap-1.5 min-w-0">
               <span class="text-xs flex items-center gap-1"
                     [style.color]="getPlatformColors(interaction.platform).primary">
-                <span class="font-medium">{{ getTypeLabel(interaction.type) }}</span>
+                <span class="font-medium">{{ getTypeLabel(interaction.type, interaction) }}</span>
               </span>
               <span *ngIf="interaction.type === 'review' && getReviewRating(interaction)"
                     class="text-xs flex items-center gap-1 text-amber-600">

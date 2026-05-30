@@ -31,7 +31,7 @@ export interface IInteraction {
   tags?: string[];
   /** Star rating (1–5) for review-type interactions (e.g. Google Business) */
   rating?: number;
-  metadata?: any;
+  metadata?: IInteractionMetadata;
   replies?: IReply[];
   responseCount?: number;
   internalNotes?: INote[];
@@ -55,6 +55,27 @@ export interface IInteraction {
   chatNumber?: number;
   /** Formatted ticket reference e.g. #REP-101 */
   chatRef?: string;
+}
+
+export interface IInteractionMetadata {
+  /** Comment-to-DM: linked shadow DM interaction id */
+  linkedDmInteractionId?: string;
+  linkedDmPlatformId?: string;
+  /** True when CTD flow linked this comment to a DM thread */
+  commentToDmActive?: boolean;
+  /** On DM shadow rows: source comment interaction */
+  sourceCommentInteractionId?: string;
+  incomingMessages?: IIncomingMessage[];
+  [key: string]: unknown;
+}
+
+export interface IIncomingMessage {
+  mid?: string;
+  text?: string;
+  timestamp?: number | string;
+  /** Set when message was merged from linked DM thread at read time */
+  mergedFromDm?: boolean;
+  [key: string]: unknown;
 }
 
 export enum Platform {
