@@ -190,7 +190,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   formatResponseTime(minutes: number | undefined): string {
-    if (minutes == null || minutes <= 0) return 'N/A';
+    if (minutes == null || Number.isNaN(minutes) || minutes <= 0) return 'N/A';
+    if (minutes < 1) {
+      const secs = Math.round(minutes * 60);
+      return secs < 1 ? '<1s' : `${secs}s`;
+    }
     if (minutes < 60) return `${Math.round(minutes)}m`;
     const h = Math.floor(minutes / 60);
     const m = Math.round(minutes % 60);
