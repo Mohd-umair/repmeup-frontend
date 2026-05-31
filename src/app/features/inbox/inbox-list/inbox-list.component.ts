@@ -12,6 +12,7 @@ import { ThemeService } from '../../../core/services/theme.service';
 import { AppearanceService } from '../../../core/services/appearance.service';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 import { looksLikeAttachmentFilename, isUnsupportedWhatsAppIncoming } from '../../../core/utils/inbox-attachment-display';
+import { WhatsAppDeliveryTicksComponent } from '../../../shared/components/whatsapp-delivery-ticks/whatsapp-delivery-ticks.component';
 
 /**
  * Inbox List Component - Single Responsibility Principle
@@ -20,7 +21,7 @@ import { looksLikeAttachmentFilename, isUnsupportedWhatsAppIncoming } from '../.
 @Component({
   selector: 'app-inbox-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, WhatsAppDeliveryTicksComponent],
   templateUrl: './inbox-list.component.html',
   styleUrls: ['./inbox-list.component.scss']
 })
@@ -428,6 +429,13 @@ export class InboxListComponent implements OnInit, OnDestroy {
       );
     }
     return this._previewTextForReply(lastReply!) || interaction.content || '';
+  }
+
+  /** Last outgoing reply when it is the newest message in the thread (for delivery ticks). */
+  getLastOutgoingReply(interaction: IInteraction): IReply | null {
+    if (!this.isLastMessageOutgoing(interaction)) return null;
+    const { lastReply } = this._resolveLastMessage(interaction);
+    return lastReply;
   }
 
   /** True when the last message in the conversation is an outgoing reply (sent by us / AI). */

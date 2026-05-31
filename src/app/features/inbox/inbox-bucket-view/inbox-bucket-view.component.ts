@@ -30,6 +30,7 @@ import { Observable, Subscription, timer, interval } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { InboxLinkifiedTextComponent } from '../../../shared/components/inbox-linkified-text/inbox-linkified-text.component';
+import { WhatsAppDeliveryTicksComponent } from '../../../shared/components/whatsapp-delivery-ticks/whatsapp-delivery-ticks.component';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 
 interface BucketColumn {
@@ -52,7 +53,7 @@ interface SentimentStats {
 @Component({
   selector: 'app-inbox-bucket-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, AiChatBubbleIconComponent, SentimentDonutChartComponent, MediaSelectorModalComponent, InboxLinkifiedTextComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, AiChatBubbleIconComponent, SentimentDonutChartComponent, MediaSelectorModalComponent, InboxLinkifiedTextComponent, WhatsAppDeliveryTicksComponent],
   templateUrl: './inbox-bucket-view.component.html',
   styleUrls: ['./inbox-bucket-view.component.scss'],
   animations: INBOX_BUCKET_ANIMATIONS,

@@ -70,6 +70,9 @@ import { RetargetingComponent } from './features/automation/retargeting/retarget
 import { EscalationComponent } from './features/automation/escalation/escalation.component';
 import { CampaignsComponent } from './features/campaigns/campaigns.component';
 import { ReportsComponent } from './features/reports/reports.component';
+import { InboxOrderManagementComponent } from './features/inbox-ops/order-management/inbox-order-management.component';
+import { InboxComplaintManagementComponent } from './features/inbox-ops/complaint-management/inbox-complaint-management.component';
+import { InboxReviewManagementComponent } from './features/inbox-ops/review-management/inbox-review-management.component';
 
 /**
  * App Routing Module - Following SOLID principles
@@ -126,6 +129,9 @@ const routes: Routes = [
         data: { permissions: ['inbox.read'], inboxLayout: 'buckets' }
       },
       { path: 'inbox', component: InboxContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'], inboxLayout: 'list' } },
+      { path: 'inbox/order-management', component: InboxOrderManagementComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
+      { path: 'inbox/compliant-management', component: InboxComplaintManagementComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
+      { path: 'inbox/review-managment', component: InboxReviewManagementComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
       { path: 'publish', component: PublishComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
       { path: 'publish/calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'publish/published', component: PublishPublishedRedirectComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },

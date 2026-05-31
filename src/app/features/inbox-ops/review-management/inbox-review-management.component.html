@@ -1,0 +1,117 @@
+<div class="flex-1 overflow-auto p-4 sm:p-6" style="background-color: var(--bg-primary);">
+  <div class="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-bold flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-star text-amber-500"></i>
+        Review Management
+      </h1>
+      <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Manage inbound reviews and publish replies.</p>
+    </div>
+    <a routerLink="/app/automation/reviews" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold">
+      <i class="fas fa-paper-plane"></i> Send Review Requests
+    </a>
+  </div>
+
+  <app-ops-stats-row [cards]="statCards" />
+
+  <app-ops-filter-bar
+    [tabs]="tabs"
+    [activeTab]="activeTab"
+    [search]="search"
+    [channel]="platform"
+    [channelOptions]="platformOptions"
+    (tabChange)="onTabChange($event)"
+    (searchChange)="onSearchChange($event)"
+    (channelChange)="onPlatformChange($event)"
+  />
+
+  <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border); background-color: var(--surface-primary);">
+    <div class="px-4 py-3 border-b" style="border-color: var(--card-border);">
+      <span class="font-bold text-sm" style="color: var(--text-primary);">Review Log</span>
+      <span class="text-xs ml-2" style="color: var(--text-muted);">{{ total }} records</span>
+    </div>
+
+    @if (loading) {
+      <div class="p-10 text-center text-sm" style="color: var(--text-muted);"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</div>
+    } @else if (!rows.length) {
+      <div class="p-10 text-center text-sm" style="color: var(--text-muted);">No reviews found.</div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b text-left text-xs uppercase tracking-wide" style="border-color: var(--card-border); color: var(--text-muted);">
+              <th class="px-4 py-3">ID</th>
+              <th class="px-4 py-3">Customer</th>
+              <th class="px-4 py-3">Platform</th>
+              <th class="px-4 py-3">Rating</th>
+              <th class="px-4 py-3">Snippet</th>
+              <th class="px-4 py-3">Request Sent</th>
+              <th class="px-4 py-3">Reply Status</th>
+              <th class="px-4 py-3">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows; track row.id) {
+              <tr class="border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50" style="border-color: var(--card-border);" (click)="openRow(row)">
+                <td class="px-4 py-3"><span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800">{{ row.displayRef }}</span></td>
+                <td class="px-4 py-3"><app-ops-customer-cell [name]="row.customerName" [handle]="row.customerHandle" /></td>
+                <td class="px-4 py-3">{{ row.platformLabel }}</td>
+                <td class="px-4 py-3 text-amber-500">{{ stars(row.rating) }}</td>
+                <td class="px-4 py-3 max-w-[200px] truncate" style="color: var(--text-secondary);">{{ row.snippet }}</td>
+                <td class="px-4 py-3 text-xs">{{ row.requestSentLabel }}</td>
+                <td class="px-4 py-3"><app-ops-status-badge [label]="row.replyStatusLabel" [tone]="row.replyStatusTone" /></td>
+                <td class="px-4 py-3 text-xs" style="color: var(--text-muted);">{{ row.createdAtLabel }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (total > pageSize) {
+        <div class="px-4 py-3 border-t" style="border-color: var(--card-border);">
+          <app-pagination [currentPage]="page" [totalItems]="total" [pageSize]="pageSize" (pageChange)="onPageChange($event)" />
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<app-ops-detail-drawer
+  [open]="drawerOpen"
+  [title]="detail ? 'Review ' + detail.displayRef : ''"
+  [subtitle]="detail ? detail.platformLabel + ' · ' + detail.createdAtLabel : ''"
+  (close)="closeDrawer()"
+>
+  @if (detail) {
+    <div class="space-y-5">
+      <app-ops-customer-cell [name]="detail.customer.name" [handle]="detail.customer.handle" />
+      <div class="p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/20">
+        <p class="text-amber-500 text-lg mb-2">{{ stars(detail.rating) }}</p>
+        <p class="text-sm leading-relaxed" style="color: var(--text-primary);">"{{ detail.reviewBody }}"</p>
+      </div>
+      <section>
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold uppercase" style="color: var(--text-muted);">Reply</h3>
+          @if (detail.actions.canSuggestReply) {
+            <button type="button" class="text-xs font-bold text-rep-lime" [disabled]="actionLoading" (click)="suggestReply()">Generate AI Draft</button>
+          }
+        </div>
+        <textarea
+          [(ngModel)]="replyDraft"
+          rows="5"
+          class="w-full text-sm rounded-lg border px-3 py-2"
+          style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);"
+          placeholder="Write or edit your reply…"
+        ></textarea>
+      </section>
+    </div>
+  }
+  @if (detail) {
+    <div drawerFooter class="flex flex-wrap gap-2 justify-end w-full">
+      @if (detail.actions.canPublishReply && detail.replyStatus !== 'published') {
+        <button type="button" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold disabled:opacity-50" [disabled]="actionLoading || !replyDraft.trim()" (click)="publishReply()">
+          Approve &amp; Publish
+        </button>
+      }
+    </div>
+  }
+</app-ops-detail-drawer>

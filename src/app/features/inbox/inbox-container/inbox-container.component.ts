@@ -65,6 +65,11 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   orgIdForGuide: string | null = null;
   setupGuideDismissed = false;
 
+  /** Deep-link from ops pages: /app/inbox?selected=<interactionId> */
+  private pendingDeepLinkId: string | null = null;
+  private deepLinkHandled = false;
+  private deepLinkFetchAttempted = false;
+
   interactions: IInteraction[] = [];
   selectedInteraction: IInteraction | null = null;
   filters: IInboxFilters = {};
@@ -143,6 +148,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     }
     if (params['type']) {
       this.topFilters = { ...this.topFilters, type: params['type'] as any };
+    }
+    if (params['selected']) {
+      this.pendingDeepLinkId = String(params['selected']);
     }
 
     this.applyLayoutFromRoute();
@@ -255,6 +263,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.inboxService.interactions$.subscribe(interactions => {
         this.interactions = this.applyViewModeSort(interactions);
+        this.tryOpenDeepLinkedInteraction();
       })
     );
 
@@ -1027,6 +1036,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
           this.loading = false;
           this.loadingMoreConversations = false;
+          this.tryOpenDeepLinkedInteraction();
         },
         error: () => {
           this.loading = false;
@@ -1486,6 +1496,40 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
 
   onBucketInteractionSelect(interaction: IInteraction): void {
     this.onInteractionSelect(interaction);
+  }
+
+  /** Open conversation from ops pages: /app/inbox?selected=<id> */
+  private tryOpenDeepLinkedInteraction(): void {
+    if (!this.pendingDeepLinkId || this.deepLinkHandled) return;
+
+    const id = this.pendingDeepLinkId;
+    const found = this.interactions.find(i => i._id === id);
+    if (found) {
+      this.deepLinkHandled = true;
+      this.pendingDeepLinkId = null;
+      this.onInteractionSelect(found);
+      return;
+    }
+
+    if (this.loading || this.deepLinkFetchAttempted) return;
+    this.deepLinkFetchAttempted = true;
+
+    this.inboxService.getInteraction(id, { markRead: true }).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          this.deepLinkHandled = true;
+          this.pendingDeepLinkId = null;
+          const data = response.data;
+          this.inboxService.setSelectedInteraction(data);
+          if (response.pagination) {
+            setTimeout(() => this.inboxDetail?.applyPaginationMeta(response.pagination));
+          }
+        }
+      },
+      error: () => {
+        this.deepLinkFetchAttempted = false;
+      }
+    });
   }
 
   onInteractionSelect(interaction: IInteraction): void {

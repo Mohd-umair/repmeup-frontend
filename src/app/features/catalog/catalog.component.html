@@ -187,7 +187,7 @@
                     [class.dark:text-green-400]="(product.instagramStoryIds?.length || 0) > 0">
                 {{ product.instagramStoryIds?.length || 0 }} stor{{ (product.instagramStoryIds?.length || 0) !== 1 ? 'ies' : 'y' }}
               </span>
-            </span>
+              </span>
           </div>
         </div>
 
@@ -272,11 +272,11 @@
 
     <!-- ── Section 1: Catalog Settings ───────────────────────────────────── -->
     <div class="rounded-xl border p-5 space-y-4"
-         style="background-color: var(--card-bg); border-color: var(--card-border);">
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
       <div class="flex items-center gap-2 mb-1">
         <i class="fas fa-gear text-base" style="color: var(--accent);"></i>
         <h2 class="text-base font-bold" style="color: var(--text-primary);">Catalog Settings</h2>
-      </div>
+            </div>
       <p class="text-xs" style="color: var(--text-secondary);">
         Enter your <strong>Meta Commerce Catalog ID</strong> (from Meta Business Manager → Commerce → Catalogs).
         This links your WhatsApp Business number to the catalog so customers can browse and order products.
@@ -285,11 +285,11 @@
       <div *ngIf="loadingWaSettings" class="flex items-center gap-2 py-4">
         <div class="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--accent);"></div>
         <span class="text-sm" style="color: var(--text-secondary);">Loading settings…</span>
-      </div>
+            </div>
 
       <div *ngIf="!loadingWaSettings" class="grid sm:grid-cols-2 gap-4 items-end">
         <!-- Catalog ID input -->
-        <div>
+            <div>
           <label class="block text-xs font-semibold mb-1" style="color: var(--text-secondary);">
             Catalog ID <span class="text-red-500">*</span>
           </label>
@@ -299,9 +299,9 @@
             placeholder="e.g. 1234567890123456"
             class="w-full px-3 py-2 rounded-lg border text-sm"
             style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);" />
-        </div>
+            </div>
         <!-- Connected phone number (read-only) -->
-        <div>
+            <div>
           <label class="block text-xs font-semibold mb-1" style="color: var(--text-secondary);">
             Linked Phone Number
           </label>
@@ -309,7 +309,7 @@
                style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-secondary);">
             <i class="fab fa-whatsapp text-green-500 mr-1.5"></i>
             {{ waCatalogSettings?.displayPhoneNumber || waCatalogSettings?.phoneNumberId || 'Not connected' }}
-          </div>
+            </div>
         </div>
       </div>
 
@@ -385,11 +385,11 @@
           <span *ngIf="savingWaSettings"><i class="fas fa-spinner animate-spin mr-1.5"></i>Saving…</span>
         </button>
       </div>
-    </div>
+      </div>
 
     <!-- ── Section 2: Sync Products ──────────────────────────────────────── -->
     <div class="rounded-xl border p-5 space-y-4"
-         style="background-color: var(--card-bg); border-color: var(--card-border);">
+           style="background-color: var(--card-bg); border-color: var(--card-border);">
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2">
           <i class="fas fa-rotate text-base" style="color: var(--accent);"></i>
@@ -485,7 +485,7 @@
                   <i *ngIf="product.whatsapp?.syncStatus === 'pending'" class="fas fa-spinner animate-spin text-[9px]"></i>
                   <i *ngIf="!product.whatsapp?.syncStatus || product.whatsapp?.syncStatus === 'not_synced'" class="fas fa-minus text-[9px]"></i>
                   {{ waSyncStatusLabel(product.whatsapp?.syncStatus) }}
-                </span>
+        </span>
               </td>
               <!-- Sync button -->
               <td class="px-4 py-3 text-right">
@@ -502,7 +502,7 @@
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
 
     <!-- ── Section 3: CSV / Bulk Import ──────────────────────────────────── -->
     <div class="rounded-xl border p-5 space-y-4"
@@ -599,10 +599,10 @@
           <i [class]="importingWaCsv ? 'fas fa-spinner animate-spin' : 'fas fa-upload'"></i>
           {{ importingWaCsv ? 'Importing…' : 'Import & Sync' }}
         </button>
-      </div>
     </div>
-
   </div>
+
+</div>
   <!-- ════════════════════ END WHATSAPP CATALOG TAB ════════════════════ -->
 
 <!-- ══════════════════════════ PRODUCT MODAL ══════════════════════════ -->

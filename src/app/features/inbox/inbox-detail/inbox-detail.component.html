@@ -540,9 +540,16 @@
                       </span>
                     </ng-container>
                   </p>
-                  <p class="text-[10px] ml-1" [class.text-gray-600]="!isReplyFailed(item.data)" [class.text-red-500]="isReplyFailed(item.data)">
-                    {{ formatDate(item.data.sentAt) }}
-                  </p>
+                  <div class="flex items-center gap-1 ml-1 shrink-0">
+                    <p class="text-[10px]" [class.text-gray-600]="!isReplyFailed(item.data)" [class.text-red-500]="isReplyFailed(item.data)">
+                      {{ formatDate(item.data.sentAt) }}
+                    </p>
+                    <app-whatsapp-delivery-ticks
+                      *ngIf="interaction?.platform === 'whatsapp' && !isReplyFailed(item.data)"
+                      [reply]="item.data"
+                      size="sm"
+                    />
+                  </div>
                 </div>
 
                 <!-- WhatsApp template — layout similar to customer's received bubble -->
@@ -699,10 +706,16 @@
                   </div>
                 </div>
 
-                <!-- Pending / sent label (hide once Meta reports delivery failure) -->
-                <div *ngIf="(item.data.status === 'pending' || item.data.status === 'sent') && !isReplyFailed(item.data)" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-600 dark:text-gray-400">
+                <!-- Non-WhatsApp pending / sent label -->
+                <div *ngIf="interaction?.platform !== 'whatsapp' && (item.data.status === 'pending' || item.data.status === 'sent') && !isReplyFailed(item.data)" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-600 dark:text-gray-400">
                   <i [class]="item.data.status === 'sent' ? 'fas fa-check' : 'fas fa-clock'"></i>
                   <span>{{ item.data.status === 'sent' ? 'Sent' : 'Sending…' }}</span>
+                </div>
+
+                <!-- WhatsApp optimistic send in progress -->
+                <div *ngIf="interaction?.platform === 'whatsapp' && item.data.status === 'pending' && !isReplyFailed(item.data)" class="mt-1.5 flex items-center justify-end gap-1 text-[10px] text-gray-600 dark:text-gray-400">
+                  <app-whatsapp-delivery-ticks [reply]="item.data" size="sm" />
+                  <span>Sending…</span>
                 </div>
 
                 <!-- Failed label + retry -->

@@ -43,6 +43,7 @@ import {
 } from '../../../core/utils/inbox-attachment-display';
 import { InboxLinkifiedTextComponent } from '../../../shared/components/inbox-linkified-text/inbox-linkified-text.component';
 import { WhatsAppTemplatePickerComponent } from '../../../shared/components/whatsapp-template-picker/whatsapp-template-picker.component';
+import { WhatsAppDeliveryTicksComponent } from '../../../shared/components/whatsapp-delivery-ticks/whatsapp-delivery-ticks.component';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { IProduct } from '../../../core/models/product.model';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -77,7 +78,7 @@ interface IOptimisticReply {
 @Component({
   selector: 'app-inbox-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MediaSelectorModalComponent, AiChatBubbleIconComponent, InboxLinkifiedTextComponent, WhatsAppTemplatePickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MediaSelectorModalComponent, AiChatBubbleIconComponent, InboxLinkifiedTextComponent, WhatsAppTemplatePickerComponent, WhatsAppDeliveryTicksComponent],
   templateUrl: './inbox-detail.component.html',
   styleUrls: ['./inbox-detail.component.scss'],
   animations: INBOX_DETAIL_ANIMATIONS,

@@ -1,0 +1,152 @@
+<div class="flex-1 overflow-auto p-4 sm:p-6" style="background-color: var(--bg-primary);">
+  <div class="mb-5">
+    <h1 class="text-2xl font-bold flex items-center gap-2" style="color: var(--text-primary);">
+      <i class="fas fa-exclamation-triangle text-red-500"></i>
+      Complaint Management
+    </h1>
+    <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Track, acknowledge, and resolve customer complaints.</p>
+  </div>
+
+  <app-ops-stats-row [cards]="statCards" />
+
+  <app-ops-filter-bar
+    [tabs]="tabs"
+    [activeTab]="activeTab"
+    [search]="search"
+    [channel]="channel"
+    [channelOptions]="channelOptions"
+    (tabChange)="onTabChange($event)"
+    (searchChange)="onSearchChange($event)"
+    (channelChange)="onChannelChange($event)"
+  />
+
+  <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border); background-color: var(--surface-primary);">
+    <div class="px-4 py-3 border-b" style="border-color: var(--card-border);">
+      <span class="font-bold text-sm" style="color: var(--text-primary);">Complaint Log</span>
+      <span class="text-xs ml-2" style="color: var(--text-muted);">{{ total }} records</span>
+    </div>
+
+    @if (loading) {
+      <div class="p-10 text-center text-sm" style="color: var(--text-muted);"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</div>
+    } @else if (!rows.length) {
+      <div class="p-10 text-center text-sm" style="color: var(--text-muted);">No complaints found.</div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b text-left text-xs uppercase tracking-wide" style="border-color: var(--card-border); color: var(--text-muted);">
+              <th class="px-4 py-3">ID</th>
+              <th class="px-4 py-3">Customer</th>
+              <th class="px-4 py-3">Channel</th>
+              <th class="px-4 py-3">Issue</th>
+              <th class="px-4 py-3">Priority</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Acknowledged</th>
+              <th class="px-4 py-3">Assigned</th>
+              <th class="px-4 py-3">Date</th>
+              <th class="px-4 py-3 w-12"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows; track row.id) {
+              <tr class="border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50" style="border-color: var(--card-border);" (click)="openRow(row)">
+                <td class="px-4 py-3"><span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800">{{ row.displayRef }}</span></td>
+                <td class="px-4 py-3"><app-ops-customer-cell [name]="row.customerName" [handle]="row.customerHandle" /></td>
+                <td class="px-4 py-3">{{ row.channelLabel }}</td>
+                <td class="px-4 py-3 max-w-[200px] truncate">{{ row.issueSummary }}</td>
+                <td class="px-4 py-3 uppercase text-xs" [ngClass]="priorityClass(row.priority)">{{ row.priority }}</td>
+                <td class="px-4 py-3"><app-ops-status-badge [label]="row.statusLabel" [tone]="row.status === 'open' ? 'danger' : 'info'" /></td>
+                <td class="px-4 py-3 text-xs" [class.text-red-600]="row.acknowledgedTone === 'danger'" [class.text-emerald-600]="row.acknowledgedTone === 'success'">{{ row.acknowledgedLabel }}</td>
+                <td class="px-4 py-3 text-xs" style="color: var(--text-secondary);">{{ row.assignedToName }}</td>
+                <td class="px-4 py-3 text-xs" style="color: var(--text-muted);">{{ row.createdAtLabel }}</td>
+                <td class="px-4 py-3">
+                  <button type="button" class="p-1.5 rounded-lg bg-rep-lime/20" title="View chat" (click)="$event.stopPropagation(); router.navigate(['/app/inbox'], { queryParams: { selected: row.interactionId } })">
+                    <i class="fas fa-comment-dots text-sm"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (total > pageSize) {
+        <div class="px-4 py-3 border-t" style="border-color: var(--card-border);">
+          <app-pagination [currentPage]="page" [totalItems]="total" [pageSize]="pageSize" (pageChange)="onPageChange($event)" />
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<app-ops-detail-drawer
+  [open]="drawerOpen"
+  [title]="detail ? 'Complaint ' + detail.displayRef : ''"
+  [subtitle]="detail ? detail.channelLabel + ' · ' + detail.createdAtLabel : ''"
+  (close)="closeDrawer()"
+>
+  @if (detail) {
+    @if (detail.priorityBanner) {
+      <div class="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-sm text-red-700 dark:text-red-300 font-semibold">
+        {{ detail.priorityBanner }}
+      </div>
+    }
+    <div class="space-y-5">
+      <app-ops-customer-cell [name]="detail.customer.name" [handle]="detail.customer.handle" />
+      <dl class="space-y-2 text-sm">
+        <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Issue</dt><dd class="text-right max-w-[60%]">{{ detail.issueSummary }}</dd></div>
+        <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Status</dt><dd><app-ops-status-badge [label]="detail.statusLabel" tone="warning" /></dd></div>
+        @if (detail.linkedOrderRef) {
+          <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Linked order</dt><dd>{{ detail.linkedOrderRef }}</dd></div>
+        }
+      </dl>
+      @if (detail.timeline?.length) {
+        <section>
+          <h3 class="text-xs font-bold uppercase mb-2" style="color: var(--text-muted);">Resolution Timeline</h3>
+          <ul class="space-y-2">
+            @for (ev of detail.timeline; track ev.atLabel + ev.event) {
+              <li class="text-sm"><p class="font-medium">{{ ev.event }}</p><p class="text-xs" style="color: var(--text-muted);">{{ ev.atLabel }}</p></li>
+            }
+          </ul>
+        </section>
+      }
+      @if (detail.chatSnippet?.length) {
+        <section>
+          <h3 class="text-xs font-bold uppercase mb-2" style="color: var(--text-muted);">Chat Snippet</h3>
+          <div class="space-y-2 rounded-xl p-3 border" style="border-color: var(--card-border);">
+            @for (msg of detail.chatSnippet; track msg.text) {
+              <p class="text-xs rounded-lg px-2 py-1.5" [ngClass]="msg.from === 'team' ? 'bg-rep-lime/20 ml-4' : ''">{{ msg.text }}</p>
+            }
+          </div>
+        </section>
+      }
+      @if (detail.actions.canResolve) {
+        <textarea [(ngModel)]="resolveNote" rows="2" placeholder="Resolution note (optional)" class="w-full text-sm rounded-lg border px-3 py-2" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);"></textarea>
+      }
+      @if (detail.actions.canAssign && agents.length) {
+        <select [(ngModel)]="selectedAssignee" class="w-full text-sm rounded-lg border px-3 py-2" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);">
+          <option value="">Assign to agent…</option>
+          @for (a of agents; track a._id) {
+            <option [value]="a._id">{{ a.firstName }} {{ a.lastName }}</option>
+          }
+        </select>
+      }
+    </div>
+  }
+  @if (detail) {
+    <div drawerFooter class="flex flex-wrap gap-2 justify-end w-full">
+      <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" (click)="viewChat()">View Full Chat</button>
+      @if (detail.actions.canAcknowledge) {
+        <button type="button" class="px-3 py-2 rounded-lg border text-sm font-bold" [disabled]="actionLoading" (click)="acknowledge()">Acknowledge</button>
+      }
+      @if (detail.actions.canAssign && selectedAssignee) {
+        <button type="button" class="px-3 py-2 rounded-lg border text-sm font-bold" [disabled]="actionLoading" (click)="assign()">Assign</button>
+      }
+      @if (detail.actions.canResolve) {
+        <button type="button" class="px-3 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold" [disabled]="actionLoading" (click)="resolve()">Mark Resolved</button>
+      }
+      @if (detail.actions.canClose) {
+        <button type="button" class="px-3 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold" [disabled]="actionLoading" (click)="closeComplaint()">Close Complaint</button>
+      }
+    </div>
+  }
+</app-ops-detail-drawer>
