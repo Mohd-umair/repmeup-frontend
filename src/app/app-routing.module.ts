@@ -9,6 +9,7 @@ import { FEATURE_KEY } from './core/services/entitlements.store';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { GoogleCallbackComponent } from './features/auth/google-callback/google-callback.component';
+import { ImpersonateCallbackComponent } from './features/auth/impersonate-callback/impersonate-callback.component';
 import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './features/auth/reset-password/reset-password.component';
 import { VerifyEmailComponent } from './features/auth/verify-email/verify-email.component';
@@ -102,6 +103,7 @@ const routes: Routes = [
       { path: 'login', component: LoginComponent },
       { path: 'register', component: RegisterComponent },
       { path: 'google-callback', component: GoogleCallbackComponent },
+      { path: 'impersonate-callback', component: ImpersonateCallbackComponent },
       { path: 'forgot-password', component: ForgotPasswordComponent },
       { path: 'reset-password', component: ResetPasswordComponent },
       { path: 'verify-email', component: VerifyEmailComponent },
@@ -117,7 +119,13 @@ const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: DashboardComponent, canActivate: [PermissionGuard], data: { permissions: ['analytics.read'] } },
-      { path: 'inbox', component: InboxContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
+      {
+        path: 'inbox/buckets',
+        component: InboxContainerComponent,
+        canActivate: [PermissionGuard],
+        data: { permissions: ['inbox.read'], inboxLayout: 'buckets' }
+      },
+      { path: 'inbox', component: InboxContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'], inboxLayout: 'list' } },
       { path: 'publish', component: PublishComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
       { path: 'publish/calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'publish/published', component: PublishPublishedRedirectComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },

@@ -129,6 +129,7 @@
             [routerLink]="item.route"
             (click)="onMenuItemClick(); closeFlyout()"
             routerLinkActive="bg-rep-lime/10 text-rep-lime border-rep-lime"
+            [routerLinkActiveOptions]="routerLinkActiveOptionsForTopLevel(item.route)"
             class="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-rep-white transition cursor-pointer border-l-4 border-transparent"
             [ngClass]="{ 'lg:justify-center': collapsed, 'lg:px-2': collapsed }"
             [attr.title]="collapsed ? item.label : null"

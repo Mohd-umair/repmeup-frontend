@@ -2,35 +2,16 @@
   <!-- Toolbar: layout, title, sync actions -->
   <div class="flex flex-wrap items-center gap-2 justify-between">
     <div class="flex items-center gap-2 min-w-0 flex-wrap">
-      <div
-        class="inline-flex rounded-lg border border-gray-200 dark:border-gray-600 p-0.5 bg-gray-100 dark:bg-gray-800 shrink-0"
-        role="group"
-        aria-label="Inbox layout"
-        (click)="$event.stopPropagation()">
-        <button
-          type="button"
-          (click)="setLayout('list', $event)"
-          class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5"
-          [ngClass]="viewMode !== 'buckets'
-            ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white'
-            : 'text-gray-500 dark:text-gray-400'"
-          [attr.aria-pressed]="viewMode !== 'buckets'"
-          title="Classic inbox list">
-          <i class="fas fa-list-ul"></i>
-          <span class="hidden sm:inline">List</span>
-        </button>
-        <button
-          type="button"
-          (click)="setLayout('buckets', $event)"
-          class="px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold transition-all inline-flex items-center gap-1.5"
-          [ngClass]="viewMode === 'buckets'
-            ? 'bg-rep-lime text-rep-black shadow-sm'
-            : 'text-gray-500 dark:text-gray-400'"
-          [attr.aria-pressed]="viewMode === 'buckets'"
-          title="Intent bucket board">
-          <i class="fas fa-columns"></i>
-          <span class="hidden sm:inline">Buckets</span>
-        </button>
+      <div class="flex items-center gap-2 min-w-0 shrink-0">
+        <h2 class="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <i
+            class="text-gray-500 dark:text-gray-400"
+            [class.fa-inbox]="layoutMode === 'list'"
+            [class.fa-columns]="layoutMode === 'buckets'"
+            [class.fas]="true"
+            aria-hidden="true"></i>
+          <span>{{ layoutMode === 'buckets' ? 'Bucket Board' : 'Inbox' }}</span>
+        </h2>
       </div>
 
       <div
@@ -161,7 +142,7 @@
           (ngModelChange)="onViewModeDropdownSelect($event)"
           (click)="$event.stopPropagation()"
         >
-          <option *ngIf="viewMode === 'buckets'" value="" disabled>Bucket board</option>
+          <option *ngIf="layoutMode === 'buckets'" value="" disabled>Bucket board</option>
           <option value="all">All</option>
           <option value="priority">Priority</option>
           <option value="assigned">Mine</option>

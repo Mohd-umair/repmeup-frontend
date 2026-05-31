@@ -39,7 +39,6 @@ export class InboxTopFiltersComponent implements OnChanges {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
   /** Emitted when list preset (All / Priority / …) changes from the Extra filter control */
   @Output() viewModeChange = new EventEmitter<InboxViewMode>();
-  @Output() layoutChange = new EventEmitter<'list' | 'buckets'>();
   @Output() autoSyncToggle = new EventEmitter<void>();
   @Output() syncClick = new EventEmitter<void>();
   @Input() initialFilters: IInboxFilters = {};
@@ -49,6 +48,8 @@ export class InboxTopFiltersComponent implements OnChanges {
   @Input() intentBuckets: IIntentBucket[] = [];
   /** Current inbox layout view (list vs buckets + preset). Used for Extra filter display. */
   @Input() viewMode: InboxViewMode = 'all';
+  /** Page layout from route — list inbox or dedicated bucket board */
+  @Input() layoutMode: 'list' | 'buckets' = 'list';
   @Input() autoSyncEnabled = true;
   @Input() syncing = false;
   @Input() syncDisabled = false;
@@ -128,7 +129,7 @@ export class InboxTopFiltersComponent implements OnChanges {
 
   /** Value bound to Extra filter &lt;select&gt; (empty when bucket board is active) */
   get listViewModeForDropdown(): string {
-    if (this.viewMode === 'buckets') return '';
+    if (this.layoutMode === 'buckets') return '';
     return this.viewMode;
   }
 
@@ -144,11 +145,6 @@ export class InboxTopFiltersComponent implements OnChanges {
 
   toggleExpanded(): void {
     this.expanded = !this.expanded;
-  }
-
-  setLayout(layout: 'list' | 'buckets', ev?: Event): void {
-    ev?.stopPropagation();
-    this.layoutChange.emit(layout);
   }
 
   onAutoSyncClick(ev: Event): void {

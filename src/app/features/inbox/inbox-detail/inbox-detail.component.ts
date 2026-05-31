@@ -1501,7 +1501,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   /** Star rating for reviews (Google Business etc.); undefined if not a review or no rating */
   getReviewRating(): number | undefined {
     if (!this.interaction) return undefined;
-    const r = (this.interaction as any).rating ?? this.interaction.metadata?.starRating;
+    const r = this.interaction.rating ?? this.interaction.metadata?.starRating;
     if (r == null || typeof r !== 'number') return undefined;
     return Math.min(5, Math.max(1, Math.round(r)));
   }

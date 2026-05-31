@@ -14,6 +14,7 @@ import { SharedModule } from './shared/shared.module';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { GoogleCallbackComponent } from './features/auth/google-callback/google-callback.component';
+import { ImpersonateCallbackComponent } from './features/auth/impersonate-callback/impersonate-callback.component';
 
 // Feature Components
 import { DashboardComponent } from './features/dashboard/dashboard.component';
@@ -64,6 +65,7 @@ import { UpgradePromptComponent } from './shared/components/upgrade-prompt/upgra
   declarations: [
     AppComponent,
     GoogleCallbackComponent,
+    ImpersonateCallbackComponent,
     AgentsComponent,
     PrivacyPolicyComponent,
     TermsConditionsComponent,

@@ -65,6 +65,8 @@ export interface IInteractionMetadata {
   commentToDmActive?: boolean;
   /** On DM shadow rows: source comment interaction */
   sourceCommentInteractionId?: string;
+  /** Google Business review star rating when stored in metadata */
+  starRating?: number;
   incomingMessages?: IIncomingMessage[];
   [key: string]: unknown;
 }

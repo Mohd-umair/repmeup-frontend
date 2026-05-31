@@ -239,7 +239,7 @@ export class InboxListComponent implements OnInit, OnDestroy {
 
   /** Star rating for reviews (Google Business etc.); undefined if not a review or no rating */
   getReviewRating(interaction: IInteraction): number | undefined {
-    const r = (interaction as any).rating ?? interaction.metadata?.starRating;
+    const r = interaction.rating ?? interaction.metadata?.starRating;
     if (r == null || typeof r !== 'number') return undefined;
     return Math.min(5, Math.max(1, Math.round(r)));
   }

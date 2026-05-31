@@ -197,7 +197,13 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     if (route === '/app/publish') return this.routerActiveExact;
     /** Hub route must not prefix-match deeper siblings (e.g. /app/automation vs /app/automation/ai-replies). */
     if (route === '/app/automation') return this.routerActiveExact;
+    if (route === '/app/inbox') return this.routerActiveExact;
     return this.routerActivePrefix;
+  }
+
+  /** Top-level sidebar links that must not prefix-match child routes. */
+  routerLinkActiveOptionsForTopLevel(route: string): { exact: boolean } {
+    return this.routerLinkActiveOptionsForChild(route);
   }
 
   /**

@@ -71,6 +71,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   platformFilters: IInboxFilters = {};
   topFilters: IInboxFilters = {};
   viewMode: InboxViewMode = 'all';
+  /** Driven by route: list inbox vs dedicated bucket board page */
+  layoutMode: 'list' | 'buckets' = 'list';
   /** Restored when switching from intent buckets back to list view */
   lastListViewMode: InboxViewMode = 'all';
   loading = false;
@@ -142,7 +144,16 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     if (params['type']) {
       this.topFilters = { ...this.topFilters, type: params['type'] as any };
     }
-    if (this.viewMode !== 'buckets') {
+
+    this.applyLayoutFromRoute();
+
+    this.subscriptions.push(
+      this.router.events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd)).subscribe(() => {
+        this.applyLayoutFromRoute();
+      })
+    );
+
+    if (this.layoutMode !== 'buckets' && this.viewMode !== 'buckets') {
       this.lastListViewMode = this.viewMode;
     }
 
@@ -165,7 +176,9 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     });
 
     this.updateMergedBucketFilters();
-    this.loadInteractions(true);
+    if (this.layoutMode !== 'buckets') {
+      this.loadInteractions(true);
+    }
 
     // Connect socket and join organisation room for real-time DM/comment updates
     this.socketService.connect();
@@ -212,6 +225,12 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
       this.socketService.onInteractionUpdate().subscribe((data: any) => {
         const updated: IInteraction = data?.interaction;
         if (!updated) return;
+
+        // Linked CTD thread: refetch merged timeline (DM inbound/postbacks merged at read time)
+        if (data?.linkedDmInbound && this.selectedInteraction?._id === updated._id) {
+          this.onInteractionUpdate();
+          return;
+        }
 
         // Always update the service so the list row reflects new status immediately
         this.inboxService.prependOrUpdateInteraction(updated);
@@ -1053,19 +1072,24 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Segmented control: list inbox vs intent bucket board */
-  setInboxLayout(layout: 'list' | 'buckets'): void {
-    if (layout === 'buckets') {
-      if (this.viewMode !== 'buckets') {
-        this.viewMode = 'buckets';
-      }
-    } else if (this.viewMode === 'buckets') {
+  /** Sync list vs bucket layout from route data (`inboxLayout`). */
+  private applyLayoutFromRoute(): void {
+    const layout = this.route.snapshot.data['inboxLayout'] as 'list' | 'buckets' | undefined;
+    this.layoutMode = layout === 'buckets' ? 'buckets' : 'list';
+
+    if (this.layoutMode === 'buckets') {
+      this.viewMode = 'buckets';
+      this.updateMergedBucketFilters();
+      return;
+    }
+
+    if (this.viewMode === 'buckets') {
       this.bucketSearchTerm = '';
       this.bucketSortBy = 'newest';
       this.viewMode = this.lastListViewMode;
+      this.updateMergedBucketFilters();
       this.loadInteractions(true);
     }
-    this.updateMergedBucketFilters();
   }
 
   /**
@@ -1125,13 +1149,13 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
    */
   onQuickExtraViewFilter(mode: InboxViewMode): void {
     if (mode === 'buckets') return;
-    if (this.viewMode === 'buckets') {
-      this.bucketSearchTerm = '';
-      this.bucketSortBy = 'newest';
-      this.lastListViewMode = mode;
-      this.viewMode = mode;
-      this.updateMergedBucketFilters();
-      this.loadInteractions(true);
+    if (this.layoutMode === 'buckets') {
+      this.router.navigate(['/app/inbox'], { queryParamsHandling: 'preserve' }).then(() => {
+        this.lastListViewMode = mode;
+        this.viewMode = mode;
+        this.updateMergedBucketFilters();
+        this.loadInteractions(true);
+      });
       return;
     }
     this.setViewMode(mode);

@@ -17,6 +17,7 @@
       [initialPlatform]="platformFilters.platform"
       [intentBuckets]="conversationIntentBuckets"
       [viewMode]="viewMode"
+      [layoutMode]="layoutMode"
       [labels]="orgLabels"
       [autoSyncEnabled]="autoSyncEnabled"
       [syncing]="syncing"
@@ -25,7 +26,6 @@
       [syncButtonLabel]="getSyncButtonLabel()"
       (filtersChange)="onTopFilterChange($event)"
       (viewModeChange)="onQuickExtraViewFilter($event)"
-      (layoutChange)="setInboxLayout($event)"
       (autoSyncToggle)="toggleAutoSync()"
       (syncClick)="onSyncClick()">
     </app-inbox-top-filters>
