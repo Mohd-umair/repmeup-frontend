@@ -89,7 +89,7 @@ export const WHATSAPP_TEMPLATE_STARTERS: WhatsAppTemplateStarter[] = [
       {
         type: 'BODY',
         text: 'Hi {{1}}, we received your payment of {{2}} for invoice {{3}}. Thank you!',
-        example: { body_text: [['Alex', '$49.00', 'INV-9001']] }
+        example: { body_text: [['Alex', '₹4,099', 'INV-9001']] }
       }
     ]
   },

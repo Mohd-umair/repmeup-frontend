@@ -17,6 +17,7 @@ import { OpsStatusBadgeComponent } from '../shared/ops-status-badge.component';
 import { OpsCustomerCellComponent } from '../shared/ops-customer-cell.component';
 import { OpsDetailDrawerComponent } from '../shared/ops-detail-drawer.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { formatInrCompact } from '../../../core/utils/currency-format';
 
 @Component({
   selector: 'app-inbox-order-management',
@@ -195,8 +196,7 @@ export class InboxOrderManagementComponent implements OnInit, OnDestroy {
   }
 
   formatRevenue(n: number): string {
-    if (!n) return '0';
-    return new Intl.NumberFormat('en-AE', { maximumFractionDigits: 0 }).format(n);
+    return formatInrCompact(n);
   }
 
   trackRow = (row: IOpsOrderRow) => row.id;

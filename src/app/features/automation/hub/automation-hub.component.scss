@@ -4,3 +4,43 @@
   min-height: 0;
   overflow: hidden;
 }
+
+.hub-overview-card {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(216, 255, 0, 0.35);
+  }
+}
+
+.hub-edit-btn {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+  text-decoration: none;
+
+  &:hover:not([aria-disabled='true']) {
+    background-color: #d8ff00;
+    color: #0b0b0b;
+    border-color: #d8ff00;
+  }
+}
+
+.hub-kpi-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.hub-kpi-chip {
+  flex: 1 1 calc(50% - 0.375rem);
+  min-width: 9rem;
+
+  @media (min-width: 640px) {
+    flex: 1 1 calc(33.333% - 0.5rem);
+  }
+
+  @media (min-width: 1024px) {
+    flex: 1 1 calc(20% - 0.6rem);
+  }
+}

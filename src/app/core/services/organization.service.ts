@@ -26,7 +26,10 @@ export interface AutoReplySettings {
   // Scheduling settings
   triggerMode?: 'webhook' | 'scheduled' | 'manual' | 'hybrid';
   webhookImmediate?: boolean;
+  /** Fixed delay (minutes) when replyDelayMode is 'fixed' */
   webhookDelay?: number;
+  /** fixed = exact minutes; human = ASAP after AI with brief natural pause */
+  replyDelayMode?: 'fixed' | 'human';
   scheduleInterval?: '15min' | '30min' | '1hour' | '6hours' | '12hours' | '24hours';
   scheduleEnabled?: boolean;
   lastScheduledRun?: Date;

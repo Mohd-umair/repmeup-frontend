@@ -5,10 +5,81 @@
   overflow: hidden;
 }
 
-/**
- * Confidence slider: default lime accent-on-white reads as invisible on the track.
- * Explicit track + thumb using theme tokens (blue thumb in light, lime in dark).
- */
+.ai-accent-text {
+  color: var(--auto-accent-foreground);
+}
+
+.ai-accent-icon-bg {
+  background-color: var(--auto-accent-icon-bg);
+}
+
+.ai-overview-card {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--auto-accent-hover-border);
+  }
+}
+
+.ai-edit-btn {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+
+  &:hover:not(:disabled) {
+    background-color: var(--auto-accent-icon-bg);
+    color: #0b0b0b;
+    border-color: var(--auto-accent-icon-bg);
+  }
+}
+
+.ai-back-btn {
+  background-color: var(--surface-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--auto-accent-hover-border);
+  }
+}
+
+.ai-row-card {
+  border-color: var(--card-border);
+  background-color: var(--card-bg);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--auto-accent-hover-border);
+  }
+
+  &--selected {
+    border-color: var(--auto-accent-border);
+    background-color: var(--auto-accent-bg-subtle);
+  }
+}
+
+.ai-row-card__icon {
+  background-color: var(--surface-primary);
+
+  &--selected {
+    background-color: var(--auto-accent-bg-muted);
+  }
+}
+
+.ai-row-card__icon-i {
+  color: var(--text-muted);
+
+  &--selected {
+    color: var(--auto-accent-foreground);
+  }
+}
+
+.ai-row-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--card-bg), 0 0 0 4px var(--auto-accent-foreground);
+}
+
 .auto-confidence-range {
   display: block;
   width: 100%;
@@ -33,11 +104,10 @@
   border-radius: 0.25rem;
 }
 
-/* Chromium / Safari */
 .auto-confidence-range::-webkit-slider-runnable-track {
   height: 0.5rem;
   border-radius: 9999px;
-  background: var(--border-secondary);
+  background: var(--card-border);
 }
 
 .auto-confidence-range::-webkit-slider-thumb {
@@ -52,15 +122,10 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.22);
 }
 
-:host-context(.dark) .auto-confidence-range::-webkit-slider-runnable-track {
-  background: var(--card-border);
-}
-
-/* Firefox */
 .auto-confidence-range::-moz-range-track {
   height: 0.5rem;
   border-radius: 9999px;
-  background: var(--border-secondary);
+  background: var(--card-border);
 }
 
 .auto-confidence-range::-moz-range-thumb {
@@ -70,8 +135,4 @@
   background: var(--auto-accent-foreground);
   border: 2px solid var(--card-bg);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.22);
-}
-
-:host-context(.dark) .auto-confidence-range::-moz-range-track {
-  background: var(--card-border);
 }

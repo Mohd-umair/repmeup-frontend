@@ -30,6 +30,8 @@ import {
   CommerceChannel
 } from '../../core/models/commerce-order.model';
 import { environment } from '../../../environments/environment';
+import { DEFAULT_CURRENCY } from '../../core/utils/currency-format';
+import { AppCurrencyPipe } from '../../shared/pipes/app-currency.pipe';
 
 type ImportSource = 'excel' | 'woocommerce' | 'shopify' | 'url';
 
@@ -38,7 +40,7 @@ type ActiveTab = 'products' | 'whatsapp' | 'orders';
 @Component({
   selector: 'app-catalog',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadZoneComponent, UpgradePromptComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadZoneComponent, UpgradePromptComponent, AppCurrencyPipe],
   templateUrl: './catalog.component.html',
   styleUrls: ['./catalog.component.scss'],
 })
@@ -484,7 +486,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       name: [product?.name ?? '', Validators.required],
       description: [product?.description ?? ''],
       price: [product?.price ?? '', [Validators.required, Validators.min(0)]],
-      currency: [product?.currency ?? 'AED', Validators.required],
+      currency: [product?.currency ?? DEFAULT_CURRENCY, Validators.required],
       discountPercent: [product?.discountPercent ?? 0, [Validators.min(0), Validators.max(100)]],
       paymentUrl: [product?.paymentUrl ?? ''],
       stock: [product?.stock ?? '']
@@ -593,7 +595,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   downloadImportTemplate(): void {
     const headers = ['SKU', 'Name', 'Description', 'Price', 'Currency', 'Discount', 'Stock', 'Sizes', 'Colors', 'Images', 'Payment URL'];
-    const csvContent = headers.join(',') + '\n' + 'PROD-001,Blue T-Shirt,A nice blue shirt,50,AED,0,100,"S,M,L","Blue",https://example.com/img.jpg,https://pay.link/123';
+    const csvContent = headers.join(',') + '\n' + 'PROD-001,Blue T-Shirt,A nice blue shirt,50,INR,0,100,"S,M,L","Blue",https://example.com/img.jpg,https://pay.link/123';
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);

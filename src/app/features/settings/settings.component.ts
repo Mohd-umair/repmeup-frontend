@@ -14,6 +14,7 @@ import { formatPlanPriceMonthly } from '../../core/utils/plan-price-format';
 import { SocialAccountsService, ISocialAccount } from '../../core/services/social-accounts.service';
 import { PermissionService } from '../../core/services/permission.service';
 import { UserService, IAvailableAgent } from '../../core/services/user.service';
+import { IUser } from '../../core/models/user.model';
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
@@ -107,6 +108,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
     email: ''
   };
   savingProfile = false;
+
+  notificationPrefs = {
+    emailDigest: true,
+    negativeSentimentAlerts: true,
+    weeklyReports: false,
+    notifications: true
+  };
+  savingNotifications = false;
 
   // Organization settings
   organizationData = {
@@ -242,6 +251,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         if (user && user.organization) {
           this.organizationId = typeof user.organization === 'string' ? user.organization : user.organization._id;
           this.loadProfileData(user);
+          this.loadNotificationPreferences(user);
           this.loadOrganizationData();
         }
       })
@@ -1456,6 +1466,44 @@ export class SettingsComponent implements OnInit, OnDestroy {
       lastName: user.lastName || '',
       email: user.email || ''
     };
+  }
+
+  private loadNotificationPreferences(user: any): void {
+    const p = user?.preferences || {};
+    this.notificationPrefs = {
+      emailDigest: p.emailDigest !== false,
+      negativeSentimentAlerts: p.negativeSentimentAlerts !== false,
+      weeklyReports: !!p.weeklyReports,
+      notifications: p.notifications !== false
+    };
+  }
+
+  saveNotificationPreferences(): void {
+    this.savingNotifications = true;
+
+    this.authService.updateProfile({
+      preferences: {
+        emailDigest: this.notificationPrefs.emailDigest,
+        negativeSentimentAlerts: this.notificationPrefs.negativeSentimentAlerts,
+        weeklyReports: this.notificationPrefs.weeklyReports,
+        notifications: this.notificationPrefs.notifications
+      }
+    } as Partial<IUser>).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.notificationService.success(
+            'Preferences Saved',
+            'Your notification preferences have been updated.'
+          );
+        }
+        this.savingNotifications = false;
+      },
+      error: (error) => {
+        const errorMessage = error.error?.error || error.error?.message || 'Failed to save notification preferences';
+        this.notificationService.error('Save Failed', errorMessage);
+        this.savingNotifications = false;
+      }
+    });
   }
 
   /**

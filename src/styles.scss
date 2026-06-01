@@ -161,8 +161,13 @@ nav.overflow-x-auto {
   --scrollbar-thumb: #D1D5DB;
   --scrollbar-thumb-hover: #9CA3AF;
 
-  /* Automation: neon lime is illegible on light cards — use for accents/text separately */
+  /* Automation: neon lime is illegible on light cards — blue accents for text/borders */
   --auto-accent-foreground: #1d4ed8;
+  --auto-accent-border: #1d4ed8;
+  --auto-accent-bg-subtle: rgba(29, 78, 216, 0.08);
+  --auto-accent-bg-muted: rgba(29, 78, 216, 0.14);
+  --auto-accent-hover-border: rgba(29, 78, 216, 0.45);
+  --auto-accent-icon-bg: #d8ff00;
 }
 
 html.dark {
@@ -209,6 +214,11 @@ html.dark {
   --scrollbar-thumb-hover: #4B5563;
 
   --auto-accent-foreground: #d8ff00;
+  --auto-accent-border: #d8ff00;
+  --auto-accent-bg-subtle: rgba(216, 255, 0, 0.06);
+  --auto-accent-bg-muted: rgba(216, 255, 0, 0.15);
+  --auto-accent-hover-border: rgba(216, 255, 0, 0.35);
+  --auto-accent-icon-bg: #d8ff00;
 }
 
 /* Custom global styles */

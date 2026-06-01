@@ -32,6 +32,8 @@ export enum UserRole {
 export interface IUserPreferences {
   notifications: boolean;
   emailDigest: boolean;
+  negativeSentimentAlerts?: boolean;
+  weeklyReports?: boolean;
   emailFrequency: 'instant' | 'daily' | 'weekly';
   theme: 'light' | 'dark';
   language: string;

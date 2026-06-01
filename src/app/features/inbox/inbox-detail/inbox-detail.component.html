@@ -1199,7 +1199,7 @@
         <!-- Info -->
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium truncate" style="color: var(--text-primary);">{{ p.name }}</p>
-          <p class="text-xs" style="color: var(--text-secondary);">{{ p.currency }} {{ p.price | number:'1.0-2' }}</p>
+          <p class="text-xs" style="color: var(--text-secondary);">{{ p.price | appCurrency:p.currency }}</p>
         </div>
         <!-- WA sync badge -->
         <span *ngIf="p.whatsapp?.syncStatus === 'synced'"

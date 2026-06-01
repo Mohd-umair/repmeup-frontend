@@ -5,6 +5,7 @@ import { InboxService } from '../../../core/services/inbox.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { IInteraction } from '../../../core/models/interaction.model';
 import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
+import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 import { IProduct } from '../../../core/models/product.model';
 
 export interface AiReplyCard {
@@ -21,7 +22,7 @@ export interface AiReplyCard {
 @Component({
   selector: 'app-inbox-ai-assistant',
   standalone: true,
-  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent],
+  imports: [CommonModule, FormsModule, AiChatBubbleIconComponent, AppCurrencyPipe],
   templateUrl: './inbox-ai-assistant.component.html',
   styleUrls: ['./inbox-ai-assistant.component.scss']
 })
