@@ -419,8 +419,12 @@
           <i [class]="syncingAll ? 'fas fa-spinner animate-spin' : 'fas fa-rotate'"></i>
           {{ syncingAll ? 'Syncing all…' : 'Sync All Products' }}
         </button>
-        <div *ngIf="waSyncResult" class="text-xs" style="color: var(--text-secondary);">
-          Last sync: {{ waSyncResult.synced }} synced, {{ waSyncResult.failed }} failed
+        <div *ngIf="waSyncResult" class="text-xs space-y-1" style="color: var(--text-secondary);">
+          <div>Last sync: {{ waSyncResult.synced }} synced, {{ waSyncResult.failed }} failed</div>
+          <div *ngIf="waSyncResult.errors?.length" class="text-red-600 dark:text-red-400">
+            <span class="font-semibold">Sample error:</span>
+            {{ waSyncResult.errors[0].productName || 'Product' }} — {{ waSyncResult.errors[0].error }}
+          </div>
         </div>
       </div>
 
@@ -476,16 +480,21 @@
                 {{ product.price | appCurrency:product.currency }}
               </td>
               <!-- WA sync status badge -->
-              <td class="px-4 py-3">
-                <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold"
-                      [ngClass]="waSyncStatusClass(product.whatsapp?.syncStatus)"
-                      [title]="product.whatsapp?.syncStatus === 'failed' && product.whatsapp?.syncError ? product.whatsapp.syncError : ''">
-                  <i *ngIf="product.whatsapp?.syncStatus === 'synced'" class="fas fa-check text-[9px]"></i>
-                  <i *ngIf="product.whatsapp?.syncStatus === 'failed'" class="fas fa-xmark text-[9px]"></i>
-                  <i *ngIf="product.whatsapp?.syncStatus === 'pending'" class="fas fa-spinner animate-spin text-[9px]"></i>
-                  <i *ngIf="!product.whatsapp?.syncStatus || product.whatsapp?.syncStatus === 'not_synced'" class="fas fa-minus text-[9px]"></i>
-                  {{ waSyncStatusLabel(product.whatsapp?.syncStatus) }}
-        </span>
+              <td class="px-4 py-3 align-top">
+                <div class="flex flex-col gap-1 max-w-[240px]">
+                  <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold w-fit"
+                        [ngClass]="waSyncStatusClass(product.whatsapp?.syncStatus)">
+                    <i *ngIf="product.whatsapp?.syncStatus === 'synced'" class="fas fa-check text-[9px]"></i>
+                    <i *ngIf="product.whatsapp?.syncStatus === 'failed'" class="fas fa-xmark text-[9px]"></i>
+                    <i *ngIf="product.whatsapp?.syncStatus === 'pending'" class="fas fa-spinner animate-spin text-[9px]"></i>
+                    <i *ngIf="!product.whatsapp?.syncStatus || product.whatsapp?.syncStatus === 'not_synced'" class="fas fa-minus text-[9px]"></i>
+                    {{ waSyncStatusLabel(product.whatsapp?.syncStatus) }}
+                  </span>
+                  <p *ngIf="product.whatsapp?.syncStatus === 'failed' && waSyncErrorText(product)"
+                     class="text-[10px] leading-snug text-red-600 dark:text-red-400 break-words">
+                    {{ waSyncErrorText(product) }}
+                  </p>
+                </div>
               </td>
               <!-- Sync button -->
               <td class="px-4 py-3 text-right">

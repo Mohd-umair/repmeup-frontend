@@ -81,6 +81,8 @@ export interface IWhatsAppSyncAllResult {
   synced: number;
   failed: number;
   total: number;
+  /** First few per-product errors from bulk sync (when failed > 0). */
+  errors?: Array<{ productId: string; productName?: string; error: string }>;
 }
 
 export interface IWhatsAppCsvImportResult {

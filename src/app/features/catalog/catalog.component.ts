@@ -528,12 +528,21 @@ export class CatalogComponent implements OnInit, OnDestroy {
             this.notify.success('Product updated', `"${productName}" saved successfully.`);
           }
 
-          if (r.whatsappSync?.attempted && !r.whatsappSync.synced) {
+          const sync = r.whatsappSync;
+          const syncError =
+            sync?.error?.trim() ||
+            r.data?.whatsapp?.syncError?.trim() ||
+            '';
+
+          if (sync?.attempted && !sync?.synced) {
+            this.notifyWaSyncFailure(productName, syncError);
+          } else if (sync?.skippedReason) {
             this.notify.warning(
-              'Not added to WhatsApp catalog',
-              r.whatsappSync.error ||
-              'Product was saved locally but Meta catalog sync failed. Check catalog permissions and try Sync again.'
+              'WhatsApp catalog sync skipped',
+              this.waSyncSkippedMessage(sync.skippedReason)
             );
+          } else if (r.data?.whatsapp?.syncStatus === 'failed') {
+            this.notifyWaSyncFailure(productName, syncError);
           }
 
           if (isNew && r.data) {
@@ -1178,7 +1187,20 @@ export class CatalogComponent implements OnInit, OnDestroy {
       .subscribe({
         next: r => {
           this.waSyncResult = r.data ?? null;
-          this.notify.success('Sync complete', `${r.data?.synced ?? 0} products synced, ${r.data?.failed ?? 0} failed.`);
+          const failed = r.data?.failed ?? 0;
+          const synced = r.data?.synced ?? 0;
+          if (failed > 0) {
+            const sample = r.data?.errors?.[0];
+            const detail = sample
+              ? `${sample.productName || 'Product'}: ${sample.error}`
+              : 'Open the product list below for error details on each row.';
+            this.notify.warning(
+              'Sync completed with errors',
+              `${synced} synced, ${failed} failed. ${detail}`
+            );
+          } else {
+            this.notify.success('Sync complete', `${synced} products synced to WhatsApp catalog.`);
+          }
           this.loadProducts();
           this.loadWACatalogSettings();
         },
@@ -1197,19 +1219,27 @@ export class CatalogComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$), finalize(() => { this.waSyncingProductIds.delete(product._id); this.cdr.markForCheck(); }))
       .subscribe({
         next: r => {
-          const idx = this.products.findIndex(p => p._id === product._id);
-          if (idx !== -1 && r.data) {
-            this.products = [
-              ...this.products.slice(0, idx),
-              r.data,
-              ...this.products.slice(idx + 1)
-            ];
+          if (r.data) {
+            this.patchProductInList(r.data);
           }
-          this.notify.success('Synced', `"${product.name}" synced to WhatsApp catalog.`);
+          const name = r.data?.name || product.name;
+          if (r.data?.whatsapp?.syncStatus === 'failed') {
+            this.notifyWaSyncFailure(name, r.data.whatsapp.syncError);
+          } else {
+            this.notify.success('Synced', `"${name}" synced to WhatsApp catalog.`);
+          }
           this.cdr.markForCheck();
         },
         error: err => {
-          this.notify.error('Sync failed', err.error?.error || 'Could not sync product.');
+          const updated = err.error?.data as IProduct | undefined;
+          if (updated) {
+            this.patchProductInList(updated);
+          }
+          const msg =
+            err.error?.error?.trim() ||
+            updated?.whatsapp?.syncError?.trim() ||
+            'Could not sync product to WhatsApp catalog.';
+          this.notify.error('WhatsApp catalog sync failed', msg);
           this.cdr.markForCheck();
         }
       });
@@ -1251,6 +1281,41 @@ export class CatalogComponent implements OnInit, OnDestroy {
       case 'failed':     return 'Failed';
       default:           return 'Not Synced';
     }
+  }
+
+  /** Human-readable Meta / catalog sync error for a product row. */
+  waSyncErrorText(product: IProduct): string {
+    return product.whatsapp?.syncError?.trim() || '';
+  }
+
+  private waSyncSkippedMessage(reason?: string): string {
+    switch (reason) {
+      case 'no_whatsapp_connection':
+        return 'Connect WhatsApp in Settings → Platforms before syncing products.';
+      case 'no_catalog_id':
+        return 'Save your Meta Commerce Catalog ID on the WhatsApp Catalog tab first.';
+      default:
+        return 'WhatsApp catalog sync was skipped.';
+    }
+  }
+
+  private patchProductInList(updated?: IProduct | null): void {
+    if (!updated?._id) return;
+    const idx = this.products.findIndex(p => p._id === updated._id);
+    if (idx === -1) return;
+    this.products = [
+      ...this.products.slice(0, idx),
+      updated,
+      ...this.products.slice(idx + 1)
+    ];
+  }
+
+  private notifyWaSyncFailure(productName: string, error?: string): void {
+    this.notify.warning(
+      'WhatsApp catalog sync failed',
+      error?.trim() ||
+        `"${productName}" was saved locally but could not be synced to Meta. Check catalog permissions and try Sync again.`
+    );
   }
 
   waSyncStatusClass(status?: WhatsAppSyncStatus): string {
