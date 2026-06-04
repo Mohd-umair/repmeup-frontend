@@ -52,6 +52,13 @@ export class FileUploadZoneComponent {
   @Input() galleryMediaType: 'image' | 'video' | 'audio' | 'file' | 'all' = 'all';
   /** Strip audio when confirming gallery selection (e.g. ticket attachments). */
   @Input() excludeGalleryAudio = false;
+  /**
+   * When true, gallery picks emit {@link librarySelect} with existing media
+   * instead of downloading and re-emitting as File[] via filesChange.
+   */
+  @Input() reuseLibraryUrls = false;
+
+  @Output() librarySelect = new EventEmitter<Media | Media[]>();
 
   /**
    * z-index for the media-library fullscreen overlay — raise when embedding
@@ -171,6 +178,12 @@ export class FileUploadZoneComponent {
     if (items.length > room) {
       items = items.slice(0, room);
       this.notify.warning('Limit reached', `Only ${room} more file(s) were added.`);
+    }
+
+    if (this.reuseLibraryUrls) {
+      this.closeGallery();
+      this.librarySelect.emit(this.multiple ? items : items[0]);
+      return;
     }
 
     this.galleryBusy = true;

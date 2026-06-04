@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, timer } from 'rxjs';
 import { take, takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../core/services/api.service';
@@ -31,6 +31,7 @@ export class ContactComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
+    private router: Router,
     private apiService: ApiService
   ) {
     this.contactForm = this.fb.group({
@@ -47,12 +48,8 @@ export class ContactComponent implements OnInit, OnDestroy {
     this.route.queryParamMap.pipe(take(1), takeUntil(this.destroy$)).subscribe((qp) => {
       const intent = qp.get('intent');
       if (intent === 'book-demo') {
-        this.intentFromQuery = 'book-demo';
-        this.contactForm.patchValue({
-          subject: 'demo',
-          message:
-            'I would like to book a product demo. Please share your availability and next steps.'
-        });
+        this.router.navigate(['/book-demo'], { replaceUrl: true });
+        return;
       }
     });
   }

@@ -5,6 +5,7 @@ import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { CatalogService, IImportSummary } from '../../core/services/catalog.service';
 import { MediaLibraryService } from '../../core/services/media-library.service';
+import { Media } from '../../core/models/media.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
 import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
@@ -304,7 +305,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   // ── Products ──────────────────────────────
   loadProducts(): void {
     this.loadingProducts = true;
-    this.catalogService.getProducts({ search: this.searchQuery || undefined })
+    this.catalogService.getProducts({ search: this.searchQuery || undefined, isActive: true })
       .pipe(takeUntil(this.destroy$), finalize(() => { this.loadingProducts = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: r => {
@@ -439,6 +440,36 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  /** Append a library or upload URL without duplicating entries. */
+  private appendProductImageUrl(publicUrl: string): void {
+    const raw = publicUrl.trim();
+    if (!raw) return;
+    const key = this.displayImageUrl(raw);
+    const lines = this.productImageUrls;
+    if (lines.some(u => this.displayImageUrl(u) === key)) return;
+    lines.push(raw);
+    this.imagesInput = lines.join('\n');
+    this.cdr.markForCheck();
+  }
+
+  /** Pick existing media from the library — reuse URL, do not re-upload. */
+  onProductLibraryImagesSelect(selected: Media | Media[]): void {
+    const items = Array.isArray(selected) ? selected : [selected];
+    let added = 0;
+    for (const m of items) {
+      if (!m.publicUrl) continue;
+      const before = this.productImageUrls.length;
+      this.appendProductImageUrl(m.publicUrl);
+      if (this.productImageUrls.length > before) added++;
+    }
+    if (added) {
+      this.notify.success(
+        added === 1 ? 'Image added' : 'Images added',
+        added === 1 ? 'Selected from your media library' : `${added} images selected from your library`
+      );
+    }
+  }
+
   onProductImageFilesChange(files: File[]): void {
     if (!files.length || this.uploadingProductImages) return;
     const toUpload = [...files];
@@ -461,10 +492,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
         .subscribe({
           next: res => {
             if (res.success && res.data?.publicUrl) {
-              const url = this.displayImageUrl(res.data.publicUrl);
-              const lines = this.productImageUrls;
-              lines.push(url);
-              this.imagesInput = lines.join('\n');
+              this.appendProductImageUrl(res.data.publicUrl);
               this.notify.success('Image added', res.data.originalName || 'Saved to your library');
             }
             runNext();
@@ -561,7 +589,16 @@ export class CatalogComponent implements OnInit, OnDestroy {
     if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
     this.catalogService.deleteProduct(product._id)
       .pipe(takeUntil(this.destroy$))
-      .subscribe({ next: () => this.loadProducts() });
+      .subscribe({
+        next: () => {
+          this.notify.success('Product deleted', `"${product.name}" was removed from your catalog.`);
+          this.loadProducts();
+        },
+        error: err => {
+          this.notify.error('Delete failed', err.error?.error || 'Could not delete this product.');
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   // ── Import modal ───────────────────────────

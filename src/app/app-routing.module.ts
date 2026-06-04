@@ -37,6 +37,7 @@ import { PlansComponent } from './features/plans/plans.component';
 import { PrivacyPolicyComponent } from './features/legal/privacy-policy/privacy-policy.component';
 import { TermsConditionsComponent } from './features/legal/terms-conditions/terms-conditions.component';
 import { ContactComponent } from './features/contact/contact.component';
+import { BookDemoComponent } from './features/book-demo/book-demo.component';
 import { AboutComponent } from './features/about/about.component';
 import { FaqComponent } from './features/faq/faq.component';
 import { DataDeletionStatusComponent } from './features/data-deletion-status/data-deletion-status.component';
@@ -89,6 +90,8 @@ const routes: Routes = [
       { path: 'privacy-policy', component: PrivacyPolicyComponent },
       { path: 'terms-conditions', component: TermsConditionsComponent },
       { path: 'contact', component: ContactComponent },
+      { path: 'book-demo', component: BookDemoComponent },
+      { path: 'demo', redirectTo: 'book-demo', pathMatch: 'full' },
       { path: 'about', component: AboutComponent },
       { path: 'faq', component: FaqComponent },
       { path: 'data-deletion-status', component: DataDeletionStatusComponent },

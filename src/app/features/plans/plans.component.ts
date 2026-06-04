@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { SubscriptionService, IPlanTier } from '../../core/services/subscription.service';
+import { RazorpayService } from '../../core/services/razorpay.service';
 import { formatPlanPriceMonthly } from '../../core/utils/plan-price-format';
 import {
   IPlanCardData,
@@ -19,22 +22,31 @@ import { PlanHighlightsListComponent } from '../../shared/components/plan-highli
   templateUrl: './plans.component.html',
   styleUrls: ['./plans.component.scss']
 })
-export class PlansComponent implements OnInit {
+export class PlansComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   allPlans: Record<string, IPlanTier> | null = null;
   subscriptionLimits: import('../../core/services/subscription.service').ISubscriptionLimits | null = null;
   loadingPlans = false;
   loadingSubscription = false;
-  upgradingPlan = false;
+  /** Plan id currently being upgraded, or null. */
+  upgradingPlan: string | null = null;
 
   constructor(
     private subscriptionService: SubscriptionService,
     private notificationService: NotificationService,
+    private razorpayService: RazorpayService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadPlans();
     this.loadSubscriptionLimits();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadPlans(): void {
@@ -101,28 +113,62 @@ export class PlansComponent implements OnInit {
   }
 
   upgradeToPlan(planId: string, planName: string): void {
-    if (!confirm(`Upgrade to ${planName} plan?\n\nThis will immediately update your account limits and billing.`)) {
+    const plan = this.allPlans?.[planId];
+    if (!plan) return;
+
+    // Free plan — no payment, direct upgrade
+    if (plan.price === 0 || plan.price === 'free') {
+      if (!confirm(`Switch to ${planName} plan?\n\nThis will immediately update your account limits.`)) {
+        return;
+      }
+
+      this.upgradingPlan = planId;
+      this.subscriptionService.upgradePlan(planId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.notificationService.success(
+                'Plan Updated!',
+                `You are now on the ${planName} plan. Your new limits are active immediately.`
+              );
+              this.loadSubscriptionLimits();
+            }
+            this.upgradingPlan = null;
+          },
+          error: (error) => {
+            const errorMessage = error.error?.error || error.error?.message || 'Failed to upgrade plan';
+            this.notificationService.error('Upgrade Failed', errorMessage);
+            this.upgradingPlan = null;
+          }
+        });
       return;
     }
 
-    this.upgradingPlan = true;
-    this.subscriptionService.upgradePlan(planId).subscribe({
-      next: (response) => {
-        if (response.success) {
+    // Paid plan — Razorpay checkout
+    this.upgradingPlan = planId;
+    const priceLabel = formatPlanPriceMonthly(plan.price);
+
+    this.razorpayService.initiateUpgrade({ planId, planName, priceLabel })
+      .then((res) => {
+        if (res.success) {
           this.notificationService.success(
-            'Plan Upgraded Successfully!',
-            `You're now on the ${planName} plan. Your new limits are active immediately.`
+            'Payment Successful',
+            `Welcome to the ${planName} plan! Your new limits are active immediately.`
           );
           this.loadSubscriptionLimits();
         }
-        this.upgradingPlan = false;
-      },
-      error: (error) => {
-        const errorMessage = error.error?.error || error.error?.message || 'Failed to upgrade plan';
-        this.notificationService.error('Upgrade Failed', errorMessage);
-        this.upgradingPlan = false;
-      }
-    });
+        this.upgradingPlan = null;
+      })
+      .catch((errMsg: string) => {
+        if (errMsg !== 'Payment cancelled.') {
+          this.notificationService.error(
+            'Payment Failed',
+            errMsg || 'Could not complete payment. Please try again.'
+          );
+        }
+        this.upgradingPlan = null;
+      });
   }
 
   contactSales(): void {

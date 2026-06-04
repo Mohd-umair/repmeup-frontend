@@ -1373,12 +1373,14 @@
     </div>
     <div class="catalog-image-modal-body p-5 overflow-y-auto space-y-3 flex-1 min-h-0">
       <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
-        Choose from your media library or drag images here. Each file is uploaded to the library and added to this product.
+        Choose from your media library or drag new images here. Library picks reuse existing files; new uploads are saved to your library first.
       </p>
       <div class="catalog-image-modal__drop-wrap">
         <app-file-upload-zone
           [files]="productImageUploadQueue"
           (filesChange)="onProductImageFilesChange($event)"
+          (librarySelect)="onProductLibraryImagesSelect($event)"
+          [reuseLibraryUrls]="true"
           [maxFiles]="12"
           [multiple]="true"
           [maxFileSizeBytes]="20 * 1024 * 1024"

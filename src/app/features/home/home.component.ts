@@ -490,7 +490,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /** Floating CTA — contact page with demo intent (query can prefill form later). */
   bookDemo(): void {
-    this.router.navigate(['/contact'], { queryParams: { intent: 'book-demo' } });
+    this.router.navigate(['/book-demo']);
   }
 
   scrollToSection(sectionId: string): void {

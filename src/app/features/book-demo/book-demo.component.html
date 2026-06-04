@@ -1,0 +1,214 @@
+<div class="book-demo relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100">
+  <div class="absolute top-0 right-0 w-[520px] h-[520px] bg-rep-lime/15 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-[380px] h-[380px] bg-rep-lime/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 pb-16 lg:pb-24">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+
+      <!-- Value proposition -->
+      <div class="lg:col-span-5 lg:sticky lg:top-28">
+        <span class="inline-block px-4 py-1.5 bg-rep-lime/20 border border-rep-lime/40 rounded-full text-rep-black text-sm font-semibold mb-6">
+          Book a demo
+        </span>
+        <h1 class="text-4xl sm:text-5xl font-bold text-rep-black mb-5 tracking-tight leading-tight">
+          See how every conversation becomes
+          <span class="text-rep-lime"> pipeline</span>
+        </h1>
+        <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+          A live walkthrough of RepMeUp — unified inbox, WhatsApp automation, reputation tools, and AI replies built for your team.
+        </p>
+
+        <ul class="space-y-4 mb-10">
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 w-8 h-8 rounded-lg bg-rep-lime/30 flex items-center justify-center shrink-0">
+              <i class="fas fa-inbox text-rep-black text-sm"></i>
+            </span>
+            <div>
+              <p class="font-semibold text-rep-black">Unified inbox on every channel</p>
+              <p class="text-sm text-gray-500">WhatsApp, Instagram, Facebook &amp; more in one place.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 w-8 h-8 rounded-lg bg-rep-lime/30 flex items-center justify-center shrink-0">
+              <i class="fas fa-robot text-rep-black text-sm"></i>
+            </span>
+            <div>
+              <p class="font-semibold text-rep-black">AI agents that qualify leads</p>
+              <p class="text-sm text-gray-500">Automate replies, comment-to-DM, and catalog sales.</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="mt-0.5 w-8 h-8 rounded-lg bg-rep-lime/30 flex items-center justify-center shrink-0">
+              <i class="fas fa-chart-line text-rep-black text-sm"></i>
+            </span>
+            <div>
+              <p class="font-semibold text-rep-black">A demo built around your use case</p>
+              <p class="text-sm text-gray-500">Not a generic slideshow — we show your workflow.</p>
+            </div>
+          </li>
+        </ul>
+
+        <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-3">Trusted by growing businesses</p>
+        <div class="flex flex-wrap gap-3">
+          <span class="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-xs shadow-sm">WhatsApp Commerce</span>
+          <span class="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-xs shadow-sm">Social Inbox</span>
+          <span class="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-xs shadow-sm">AI Reputation</span>
+        </div>
+      </div>
+
+      <!-- Booking panel -->
+      <div class="lg:col-span-7">
+        <div class="rounded-3xl bg-white border border-gray-200 p-6 sm:p-8 lg:p-10 shadow-xl shadow-gray-200/60">
+
+          <div *ngIf="success" class="mb-8 p-5 rounded-2xl bg-rep-lime/15 border border-rep-lime/40 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-rep-lime/40 flex items-center justify-center shrink-0">
+              <i class="fas fa-check text-rep-black text-xl"></i>
+            </div>
+            <div>
+              <p class="font-semibold text-rep-black">Demo request received!</p>
+              <p class="text-sm text-gray-600 mt-1">
+                We will confirm your slot at {{ confirmedDateLabel }} · {{ confirmedTime }} ({{ timezone }}) by email shortly.
+              </p>
+            </div>
+          </div>
+
+          <div *ngIf="submitError" class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+            <i class="fas fa-exclamation-circle mr-2"></i>{{ submitError }}
+          </div>
+
+          <!-- Step 1: Date -->
+          <section class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-bold text-rep-black flex items-center gap-2">
+                <span class="w-7 h-7 rounded-full bg-rep-lime text-rep-black text-xs font-bold flex items-center justify-center">1</span>
+                Pick a date
+              </h2>
+              <div class="flex items-center gap-2">
+                <button type="button" (click)="prevMonth()" [disabled]="!canGoPrevMonth()"
+                        class="demo-cal-nav" aria-label="Previous month">
+                  <i class="fas fa-chevron-left text-xs"></i>
+                </button>
+                <span class="text-sm font-semibold text-gray-700 min-w-[140px] text-center">{{ calendarTitle }}</span>
+                <button type="button" (click)="nextMonth()" class="demo-cal-nav" aria-label="Next month">
+                  <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="demo-calendar rounded-2xl border border-gray-200 p-4 bg-gray-50">
+              <div class="grid grid-cols-7 gap-1 mb-2">
+                <div *ngFor="let i of [0,1,2,3,4,5,6]" class="text-center text-xs font-semibold text-gray-500 py-1">
+                  {{ weekdayLabel(i) }}
+                </div>
+              </div>
+              <div class="grid grid-cols-7 gap-1">
+                <button
+                  *ngFor="let cell of calendarCells"
+                  type="button"
+                  (click)="selectDate(cell.date)"
+                  [disabled]="isDateDisabled(cell.date, cell.inMonth)"
+                  [class.demo-day-selected]="isSameDay(cell.date, selectedDate)"
+                  [class.demo-day-outside]="!cell.inMonth"
+                  [class.demo-day-weekend]="cell.inMonth && (cell.date.getDay() === 0 || cell.date.getDay() === 6)"
+                  class="demo-day"
+                >
+                  {{ cell.date.getDate() }}
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-3">Weekdays only · up to 60 days ahead · {{ timezone }}</p>
+            </div>
+          </section>
+
+          <!-- Step 2: Time -->
+          <section class="mb-8" *ngIf="selectedDate">
+            <h2 class="text-lg font-bold text-rep-black flex items-center gap-2 mb-4">
+              <span class="w-7 h-7 rounded-full bg-rep-lime text-rep-black text-xs font-bold flex items-center justify-center">2</span>
+              Pick a time
+              <span class="text-sm font-normal text-gray-500 ml-1">— {{ formatSelectedDate() }}</span>
+            </h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <button
+                *ngFor="let slot of timeSlots"
+                type="button"
+                (click)="selectTime(slot)"
+                [class.demo-slot-selected]="selectedTime === slot"
+                class="demo-slot"
+              >
+                {{ slot }}
+              </button>
+            </div>
+          </section>
+
+          <!-- Step 3: Details -->
+          <section *ngIf="selectedDate && selectedTime">
+            <h2 class="text-lg font-bold text-rep-black flex items-center gap-2 mb-5">
+              <span class="w-7 h-7 rounded-full bg-rep-lime text-rep-black text-xs font-bold flex items-center justify-center">3</span>
+              Your details
+            </h2>
+
+            <form [formGroup]="demoForm" (ngSubmit)="onSubmit()" class="space-y-5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label for="demo-name" class="demo-label">Full name <span class="text-rep-black">*</span></label>
+                  <input id="demo-name" type="text" formControlName="name" class="demo-input"
+                         [class.demo-input-error]="submitted && f['name'].invalid" placeholder="Jane Doe" />
+                  <p *ngIf="submitted && f['name'].invalid" class="demo-error">{{ getFieldError('name') }}</p>
+                </div>
+                <div>
+                  <label for="demo-email" class="demo-label">Work email <span class="text-rep-black">*</span></label>
+                  <input id="demo-email" type="email" formControlName="email" class="demo-input"
+                         [class.demo-input-error]="submitted && f['email'].invalid" placeholder="jane&#64;company.com" />
+                  <p *ngIf="submitted && f['email'].invalid" class="demo-error">{{ getFieldError('email') }}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label for="demo-phone" class="demo-label">Phone <span class="text-rep-black">*</span></label>
+                  <input id="demo-phone" type="tel" formControlName="phone" class="demo-input"
+                         [class.demo-input-error]="submitted && f['phone'].invalid" placeholder="+91 98765 43210" />
+                  <p *ngIf="submitted && f['phone'].invalid" class="demo-error">{{ getFieldError('phone') }}</p>
+                </div>
+                <div>
+                  <label for="demo-company" class="demo-label">Company <span class="text-rep-black">*</span></label>
+                  <input id="demo-company" type="text" formControlName="company" class="demo-input"
+                         [class.demo-input-error]="submitted && f['company'].invalid" placeholder="Your company" />
+                  <p *ngIf="submitted && f['company'].invalid" class="demo-error">{{ getFieldError('company') }}</p>
+                </div>
+              </div>
+
+              <div>
+                <label for="demo-team" class="demo-label">Team size</label>
+                <select id="demo-team" formControlName="teamSize" class="demo-input">
+                  <option value="">Select team size (optional)</option>
+                  <option *ngFor="let size of teamSizeOptions" [value]="size">{{ size }} people</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="demo-notes" class="demo-label">Anything we should know?</label>
+                <textarea id="demo-notes" formControlName="notes" rows="3" class="demo-input min-h-[96px]"
+                          placeholder="Channels you use, goals for the demo, etc."></textarea>
+              </div>
+
+              <button type="submit" [disabled]="loading" [class]="loading ? 'demo-btn-disabled' : 'demo-btn'">
+                <span *ngIf="!loading" class="flex items-center justify-center gap-2">
+                  <i class="fas fa-calendar-check"></i>
+                  Confirm demo — {{ selectedTime }}
+                </span>
+                <span *ngIf="loading" class="flex items-center justify-center gap-2">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  Scheduling…
+                </span>
+              </button>
+
+              <p class="text-xs text-gray-500 text-center">
+                By submitting, you agree we may contact you about RepMeUp. We respond within one business day.
+              </p>
+            </form>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,188 @@
+.book-demo {
+  scroll-behavior: smooth;
+  color: #0b0b0b;
+
+  /* Always light inputs on this page — overrides global html.dark --input-* tokens */
+  --input-bg: #ffffff;
+  --input-text: #0b0b0b;
+  --input-border: #e5e7eb;
+  --input-placeholder: #9ca3af;
+}
+
+.demo-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.demo-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #0b0b0b;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #d8ff00;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(216, 255, 0, 0.25);
+  }
+
+  option {
+    background: #ffffff;
+    color: #0b0b0b;
+  }
+}
+
+/* Beat global input:not(...) rules when dark mode is active */
+.book-demo input.demo-input,
+.book-demo textarea.demo-input,
+.book-demo select.demo-input {
+  background-color: #ffffff;
+  color: #0b0b0b;
+  border-color: #e5e7eb;
+}
+
+.book-demo input.demo-input::placeholder,
+.book-demo textarea.demo-input::placeholder {
+  color: #9ca3af;
+}
+
+.demo-input-error {
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15) !important;
+}
+
+.demo-error {
+  margin-top: 0.375rem;
+  font-size: 0.8125rem;
+  color: #dc2626;
+}
+
+.demo-btn {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  color: #0b0b0b;
+  background: #d8ff00;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 14px rgba(216, 255, 0, 0.35);
+
+  &:hover:not(:disabled) {
+    background: #c9f000;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(216, 255, 0, 0.4);
+  }
+}
+
+.demo-btn-disabled {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border: none;
+  box-shadow: none;
+}
+
+.demo-cal-nav {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: #d8ff00;
+    background: #f9ffe6;
+    color: #0b0b0b;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.demo-day {
+  aspect-ratio: 1;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled):not(.demo-day-selected) {
+    border-color: #d8ff00;
+    background: #f9ffe6;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: transparent;
+  }
+}
+
+.demo-day-outside {
+  opacity: 0.2;
+}
+
+.demo-day-weekend {
+  opacity: 0.3;
+  background: #f3f4f6;
+}
+
+.demo-day-selected {
+  background: #d8ff00 !important;
+  color: #0b0b0b !important;
+  font-weight: 700;
+  border-color: #c9f000 !important;
+  opacity: 1 !important;
+}
+
+.demo-slot {
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  transition: all 0.15s;
+
+  &:hover:not(.demo-slot-selected) {
+    border-color: #d8ff00;
+    background: #f9ffe6;
+    color: #0b0b0b;
+  }
+}
+
+.demo-slot-selected {
+  background: #f9ffe6;
+  border-color: #d8ff00;
+  color: #0b0b0b;
+  box-shadow: 0 0 0 2px rgba(216, 255, 0, 0.3);
+}
