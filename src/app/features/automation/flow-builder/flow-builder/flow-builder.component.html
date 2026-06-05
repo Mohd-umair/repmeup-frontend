@@ -1,0 +1,386 @@
+<div class="fb-editor" *ngIf="!loading && flow">
+  <header class="fb-toolbar">
+    <div class="fb-toolbar__left">
+      <button type="button" class="fb-toolbar__btn" (click)="backToList()" title="Back to flows">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div>
+        <input class="fb-toolbar__title" [(ngModel)]="flow.name" (ngModelChange)="queueSave()" />
+        <p class="fb-toolbar__meta">
+          {{ flow.status || 'draft' }} · v{{ flow.version || 1 }}
+          <span *ngIf="saving" class="fb-toolbar__saving">Saving…</span>
+        </p>
+      </div>
+    </div>
+    <div class="fb-toolbar__channels">
+      <button *ngFor="let ch of channelOptions" type="button"
+              class="fb-channel-chip"
+              [class.fb-channel-chip--active]="flow.channels.includes(ch)"
+              (click)="toggleChannel(ch)">
+        {{ ch }}
+      </button>
+    </div>
+    <div class="fb-toolbar__actions">
+      <button type="button" class="fb-btn-icon" (click)="openPanel('settings'); ensureSettings()" title="Flow settings">
+        <i class="fas fa-sliders-h"></i>
+      </button>
+      <button type="button" class="fb-btn-ghost" (click)="runTest()">
+        <i class="fas fa-flask"></i> Test
+      </button>
+      <button type="button" class="fb-btn-ghost fb-btn-ghost--check" (click)="validate()">
+        <i class="fas fa-check-double"></i> Validate
+      </button>
+      <button type="button" class="fb-btn-secondary" (click)="saveNow()" [disabled]="saving">
+        <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+        {{ saving ? 'Saving…' : 'Save' }}
+      </button>
+      <button type="button" class="fb-btn-primary" (click)="publish()" [disabled]="publishing">
+        <i class="fas" [ngClass]="publishing ? 'fa-spinner fa-spin' : 'fa-rocket'"></i>
+        {{ publishing ? 'Publishing…' : 'Publish' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="fb-layout">
+    <!-- Palette -->
+    <aside class="fb-palette">
+      <div class="fb-palette__searchwrap">
+        <i class="fas fa-search"></i>
+        <input class="fb-palette__search" [(ngModel)]="catalogFilter" placeholder="Search nodes…" />
+      </div>
+      <p class="fb-palette__tip"><i class="fas fa-hand-pointer"></i> Drag a block onto the canvas</p>
+      <div *ngFor="let cat of categoryOrder" class="fb-palette__group" [class]="'fb-cat-' + cat">
+        <button *ngIf="catalogByCategory(cat).length"
+                type="button"
+                class="fb-palette__group-hdr"
+                (click)="toggleCat(cat)"
+                [attr.aria-expanded]="!isCatCollapsed(cat)">
+          <span class="fb-cat-dot"></span>
+          <span class="fb-palette__group-label">{{ categoryLabels[cat] }}</span>
+          <span class="fb-palette__group-count">{{ catalogByCategory(cat).length }}</span>
+          <i class="fas fa-chevron-down fb-palette__chevron"
+             [class.fb-palette__chevron--collapsed]="isCatCollapsed(cat)"
+             aria-hidden="true"></i>
+        </button>
+        <div class="fb-palette__items" [class.fb-palette__items--collapsed]="isCatCollapsed(cat)">
+          <div *ngFor="let item of catalogByCategory(cat)" class="fb-palette__item"
+               [title]="item.description"
+               draggable="true"
+               (dragstart)="onPaletteDragStart(item, $event)"
+               (dragend)="onPaletteDragEnd()"
+               (click)="addNodeFromCatalog(item)">
+            <span class="fb-chip"><i [class]="item.icon"></i></span>
+            <span class="fb-palette__label">{{ item.label }}</span>
+            <i class="fas fa-grip-vertical fb-palette__grip"></i>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Canvas -->
+    <section class="fb-canvas-wrap" [class.fb-canvas-wrap--drop]="dragOverCanvas"
+             (pointerdown)="onCanvasPointerDown($event)"
+             (dragover)="onCanvasDragOver($event)"
+             (dragleave)="onCanvasDragLeave($event)"
+             (drop)="onCanvasDrop($event)">
+      <div class="fb-canvas"
+           [style.transform]="'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px) scale(' + zoom + ')'">
+        <svg class="fb-edges">
+          <defs>
+            <marker id="fb-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L8,3 L0,6 Z" class="fb-arrow-head" />
+            </marker>
+          </defs>
+          <g *ngFor="let edge of flow.edges">
+            <path [attr.d]="edgePath(edge)" class="fb-edge" [class.fb-edge--selected]="selectedEdgeId === edge.id"
+                  marker-end="url(#fb-arrow)" />
+            <path [attr.d]="edgePath(edge)" class="fb-edge-hit" (pointerdown)="selectEdge(edge.id, $event)" />
+            <g *ngIf="edge.label && edgeLabelPoint(edge) as p">
+              <rect [attr.x]="p.x - 22" [attr.y]="p.y - 11" width="44" height="20" rx="6" class="fb-edge-label-bg"
+                    (pointerdown)="selectEdge(edge.id, $event)" />
+              <text [attr.x]="p.x" [attr.y]="p.y + 3" class="fb-edge-label-text" text-anchor="middle">{{ edge.label }}</text>
+            </g>
+          </g>
+        </svg>
+
+        <div *ngFor="let node of flow.nodes"
+             class="fb-node"
+             [class]="'fb-cat-' + nodeCategoryOf(node.type)"
+             [class.fb-node--selected]="selectedNodeId === node.id"
+             [class.fb-node--trigger]="nodeCategory(node.type) === 'trigger'"
+             [class.fb-node--error]="nodeHasError(node.id)"
+             [class.fb-node--disabled]="isNodeDisabled(node)"
+             [class.fb-node--connecting]="connectingFrom === node.id"
+             [style.left.px]="node.position.x"
+             [style.top.px]="node.position.y"
+             (click)="selectNode(node.id)"
+             (pointerdown)="onNodePointerDown(node, $event)">
+          <div class="fb-node__bar"></div>
+          <div class="fb-node__body">
+            <span class="fb-chip fb-node__chip"><i [class]="nodeIcon(node.type)"></i></span>
+            <div class="fb-node__text">
+              <span class="fb-node__title">{{ node.label || node.type }}</span>
+              <span class="fb-node__type">{{ categoryLabels[nodeCategoryOf(node.type)] }}</span>
+            </div>
+            <i *ngIf="isNodeDisabled(node)" class="fas fa-pause-circle fb-node__badge" title="Disabled"></i>
+          </div>
+          <button type="button" class="fb-node__connect" (click)="startConnect(node.id, $event)" title="Drag a connection">
+            <i class="fas fa-plus"></i>
+          </button>
+          <button *ngIf="connectingFrom && connectingFrom !== node.id" type="button" class="fb-node__target" (click)="completeConnect(node.id, $event)">
+            <i class="fas fa-crosshairs"></i> Connect here
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas controls -->
+      <div class="fb-canvas-controls">
+        <button type="button" (click)="zoomOut()" title="Zoom out"><i class="fas fa-minus"></i></button>
+        <span class="fb-zoom-label">{{ zoomPercent }}%</span>
+        <button type="button" (click)="zoomIn()" title="Zoom in"><i class="fas fa-plus"></i></button>
+        <button type="button" (click)="fitView()" title="Fit to view"><i class="fas fa-expand"></i></button>
+        <button type="button" (click)="zoomReset()" title="Reset view"><i class="fas fa-compress-arrows-alt"></i></button>
+      </div>
+
+      <p *ngIf="connectingFrom" class="fb-connect-hint">Click a target node to connect, or press Esc / the link icon to cancel.</p>
+    </section>
+
+    <!-- Right rail: panels or inspector -->
+    <aside class="fb-inspector">
+      <!-- Validation panel -->
+      <ng-container *ngIf="showValidation">
+        <div class="fb-panel-head">
+          <h3><i class="fas fa-clipboard-check mr-1"></i> Validation</h3>
+          <button type="button" class="fb-panel-close" (click)="closePanels()"><i class="fas fa-times"></i></button>
+        </div>
+        <p *ngIf="validating" class="fb-inspector__empty"><i class="fas fa-spinner fa-spin"></i> Checking…</p>
+        <p *ngIf="!validating && !validationErrors.length" class="fb-validation-ok">
+          <i class="fas fa-check-circle"></i> No issues found. Ready to publish.
+        </p>
+        <ul *ngIf="!validating && validationErrors.length" class="fb-issue-list">
+          <li *ngFor="let err of validationErrors" class="fb-issue"
+              [class.fb-issue--clickable]="err.nodeId"
+              (click)="err.nodeId && focusNode(err.nodeId)">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>{{ err.message }}</span>
+          </li>
+        </ul>
+      </ng-container>
+
+      <!-- Test panel -->
+      <ng-container *ngIf="showTest">
+        <div class="fb-panel-head">
+          <h3><i class="fas fa-vial mr-1"></i> Dry run</h3>
+          <button type="button" class="fb-panel-close" (click)="closePanels()"><i class="fas fa-times"></i></button>
+        </div>
+        <p *ngIf="testing" class="fb-inspector__empty"><i class="fas fa-spinner fa-spin"></i> Running…</p>
+        <ng-container *ngIf="!testing && testResult">
+          <p class="fb-field__hint">Start node: <strong>{{ testResult.startNodeId || '—' }}</strong></p>
+          <p *ngIf="validationErrors.length" class="fb-issue fb-issue--warn">
+            <i class="fas fa-exclamation-triangle"></i> {{ validationErrors.length }} validation issue(s) — see Validate.
+          </p>
+          <ol class="fb-step-list">
+            <li *ngFor="let step of testResult.stepPreview" (click)="focusNode(step.nodeId)">
+              <span class="fb-step-type">{{ step.type }}</span>
+              <span>{{ step.label }}</span>
+            </li>
+          </ol>
+        </ng-container>
+      </ng-container>
+
+      <!-- Settings panel -->
+      <ng-container *ngIf="showSettings && flow.settings">
+        <div class="fb-panel-head">
+          <h3><i class="fas fa-sliders-h mr-1"></i> Flow settings</h3>
+          <button type="button" class="fb-panel-close" (click)="closePanels()"><i class="fas fa-times"></i></button>
+        </div>
+        <label class="fb-field">
+          <span>Quiet hours start</span>
+          <input type="time" [(ngModel)]="flow.settings.quietHoursStart" (ngModelChange)="queueSave()" />
+        </label>
+        <label class="fb-field">
+          <span>Quiet hours end</span>
+          <input type="time" [(ngModel)]="flow.settings.quietHoursEnd" (ngModelChange)="queueSave()" />
+        </label>
+        <label class="fb-field">
+          <span>Frequency cap (messages)</span>
+          <input type="number" min="0" [(ngModel)]="flow.settings.frequencyCap" (ngModelChange)="queueSave()" />
+          <p class="fb-field__hint">0 = no cap. Max messages per contact in the window below.</p>
+        </label>
+        <label class="fb-field">
+          <span>Cap window (days)</span>
+          <input type="number" min="1" [(ngModel)]="flow.settings.frequencyCapWindowDays" (ngModelChange)="queueSave()" />
+        </label>
+        <label class="fb-field">
+          <span>Timezone</span>
+          <input [(ngModel)]="flow.settings.timezone" (ngModelChange)="queueSave()" placeholder="Asia/Kolkata" />
+        </label>
+      </ng-container>
+
+      <!-- Edge inspector -->
+      <ng-container *ngIf="!showValidation && !showTest && !showSettings && selectedEdge as edge">
+        <h3>Connection</h3>
+        <p class="fb-inspector__type">{{ edge.source }} → {{ edge.target }}</p>
+        <label class="fb-field">
+          <span>Branch label</span>
+          <input [ngModel]="edge.label" (ngModelChange)="setEdgeLabel(edge, $event)"
+                 placeholder="e.g. yes, no, reply, no_reply" />
+        </label>
+        <div *ngIf="edgeIsBranching(edge)" class="fb-branch-presets">
+          <button *ngFor="let preset of edgeBranchPresets" type="button"
+                  class="fb-branch-chip" [class.fb-branch-chip--active]="edge.label === preset"
+                  (click)="setEdgeLabel(edge, preset)">{{ preset }}</button>
+        </div>
+        <p class="fb-field__hint" *ngIf="edgeIsBranching(edge)">
+          This connection leaves a branching node — label it so the right path is taken at runtime.
+        </p>
+        <button type="button" class="fb-delete-btn" (click)="deleteSelectedEdge()">
+          <i class="fas fa-trash mr-1"></i> Remove connection
+        </button>
+      </ng-container>
+
+      <!-- Node inspector -->
+      <ng-container *ngIf="!showValidation && !showTest && !showSettings && !selectedEdge">
+        <ng-container *ngIf="selectedNode as node; else noSelection">
+          <div class="fb-panel-head">
+            <h3>Node settings</h3>
+            <div class="fb-node-actions">
+              <button type="button" class="fb-icon-btn" (click)="toggleNodeDisabled(node)"
+                      [title]="isNodeDisabled(node) ? 'Enable node' : 'Disable node'">
+                <i class="fas" [class.fa-pause]="!isNodeDisabled(node)" [class.fa-play]="isNodeDisabled(node)"></i>
+              </button>
+              <button type="button" class="fb-icon-btn" (click)="duplicateSelectedNode()" title="Duplicate node">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+          <label class="fb-field">
+            <span>Label</span>
+            <input [(ngModel)]="node.label" (ngModelChange)="onNodeFieldChange()" />
+          </label>
+          <p class="fb-inspector__type">{{ node.type }}</p>
+
+          <div *ngFor="let key of configKeys(node)" class="fb-field">
+            <span>{{ getConfigFieldLabel(node, key) }}</span>
+
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'string[]'">
+              <textarea rows="3"
+                        [ngModel]="getStringArrayDisplay(node, key)"
+                        (ngModelChange)="setStringArrayDisplay(node, key, $event)"
+                        placeholder="One keyword per line or comma-separated"></textarea>
+            </ng-container>
+
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'select'">
+              <select [ngModel]="node.config[key]"
+                      (ngModelChange)="setConfigValue(node, key, $event)">
+                <option *ngFor="let opt of getConfigFieldOptions(node, key)" [ngValue]="opt">{{ opt }}</option>
+              </select>
+            </ng-container>
+
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'number'">
+              <input type="number"
+                     [ngModel]="node.config[key]"
+                     (ngModelChange)="setConfigValue(node, key, +$event)" />
+            </ng-container>
+
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'textarea'">
+              <textarea rows="4"
+                        [(ngModel)]="node.config[key]"
+                        (ngModelChange)="onNodeFieldChange()"></textarea>
+            </ng-container>
+
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'json'">
+              <textarea rows="4"
+                        [ngModel]="getJsonDisplay(node, key)"
+                        (ngModelChange)="setJsonDisplay(node, key, $event)"
+                        placeholder='{"key": "value"}'></textarea>
+            </ng-container>
+
+            <!-- Node picker -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'node'">
+              <select [ngModel]="node.config[key]" (ngModelChange)="setConfigValue(node, key, $event)">
+                <option value="">Select a node…</option>
+                <option *ngFor="let opt of nodePickerOptions(node.id)" [ngValue]="opt.id">{{ opt.label }}</option>
+              </select>
+            </ng-container>
+
+            <!-- Bucket picker -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'bucket'">
+              <select [ngModel]="node.config[key]" (ngModelChange)="setConfigValue(node, key, $event)">
+                <option value="">Select a bucket…</option>
+                <option *ngFor="let b of bucketOptions()" [ngValue]="b._id">{{ b.name }}</option>
+              </select>
+              <p *ngIf="!bucketOptions().length" class="fb-field__hint">No intent buckets yet — create them under Intent Buckets.</p>
+            </ng-container>
+
+            <!-- Product picker -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'product'">
+              <select [ngModel]="node.config[key]" (ngModelChange)="setConfigValue(node, key, $event)">
+                <option value="">Select a product…</option>
+                <option *ngFor="let p of productOptions()" [ngValue]="p._id">{{ p.name }}</option>
+              </select>
+              <p *ngIf="!productOptions().length" class="fb-field__hint">No products yet — add them under Catalog.</p>
+            </ng-container>
+
+            <!-- WhatsApp template picker -->
+            <ng-container *ngIf="showWaTemplatePicker(node, key)">
+              <div *ngIf="showWaConnectionSelector" class="fb-field fb-field--nested">
+                <span>WhatsApp account</span>
+                <select [ngModel]="waConnectionId" (ngModelChange)="onWaConnectionChange($event)">
+                  <option *ngFor="let conn of waConnections" [ngValue]="conn._id">
+                    {{ conn.platformData?.displayPhoneNumber || conn.platformUsername || conn._id }}
+                  </option>
+                </select>
+              </div>
+              <select [ngModel]="node.config[key]"
+                      (ngModelChange)="onTemplateSelect(node, $event)"
+                      [disabled]="waTemplatesLoading">
+                <option value="">{{ waTemplatesLoading ? 'Loading templates…' : 'Select a template' }}</option>
+                <option *ngFor="let t of waTemplates" [ngValue]="templateOptionValue(t)">
+                  {{ templateOptionLabel(t) }}
+                </option>
+              </select>
+              <p *ngIf="waTemplatesError" class="fb-field__hint fb-field__hint--error">{{ waTemplatesError }}</p>
+              <p *ngIf="!waTemplatesLoading && waTemplates.length" class="fb-field__hint">
+                {{ waTemplates.length }} template(s) available
+              </p>
+            </ng-container>
+
+            <!-- Plain string fallback -->
+            <ng-container *ngIf="getConfigFieldType(node, key) !== 'string[]'
+              && getConfigFieldType(node, key) !== 'select'
+              && getConfigFieldType(node, key) !== 'number'
+              && getConfigFieldType(node, key) !== 'textarea'
+              && getConfigFieldType(node, key) !== 'json'
+              && getConfigFieldType(node, key) !== 'node'
+              && getConfigFieldType(node, key) !== 'bucket'
+              && getConfigFieldType(node, key) !== 'product'
+              && getConfigFieldType(node, key) !== 'template'">
+              <input [(ngModel)]="node.config[key]"
+                     (ngModelChange)="onNodeFieldChange()" />
+            </ng-container>
+
+            <p *ngIf="getConfigFieldHint(node, key)" class="fb-field__hint">
+              {{ getConfigFieldHint(node, key) }}
+            </p>
+          </div>
+
+          <button type="button" class="fb-delete-btn" (click)="deleteSelectedNode()">
+            <i class="fas fa-trash mr-1"></i> Remove node
+          </button>
+          <div *ngIf="previewMessage" class="fb-preview-rail">
+            <h4>Preview</h4>
+            <div class="fb-preview-rail__bubble">{{ previewMessage }}</div>
+          </div>
+        </ng-container>
+        <ng-template #noSelection>
+          <p class="fb-inspector__empty">Select a node or connection to edit it, or add nodes from the palette.</p>
+        </ng-template>
+      </ng-container>
+    </aside>
+  </div>
+</div>
+
+<div *ngIf="loading" class="fb-loading">
+  <i class="fas fa-spinner fa-spin"></i> Loading flow builder…
+</div>

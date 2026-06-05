@@ -1,0 +1,162 @@
+<div class="flows-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header animate-fade-in-up">
+    <div class="page-header__left">
+      <div class="page-icon">
+        <i class="fas fa-project-diagram"></i>
+      </div>
+      <div>
+        <div class="page-breadcrumb">
+          <a routerLink="/app/automation">Automation Hub</a>
+          <i class="fas fa-chevron-right"></i>
+          <span>Flow Builder</span>
+        </div>
+        <h1 class="page-title">Flow Builder</h1>
+        <p class="page-subtitle">Design cross-channel automations for WhatsApp, Instagram, and Facebook.</p>
+      </div>
+    </div>
+    <div class="page-header__actions">
+      <button type="button" class="btn-secondary" routerLink="/app/automation">
+        <i class="fas fa-arrow-left"></i> Hub
+      </button>
+      <button type="button" class="btn-secondary" [disabled]="importing" (click)="importFromGrowth()">
+        <i class="fas fa-file-import"></i>
+        {{ importing ? 'Importing…' : 'Import from Growth' }}
+      </button>
+      <button type="button" class="btn-primary" (click)="createBlank()">
+        <i class="fas fa-plus"></i> New Flow
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Tabs ────────────────────────────────────────────────────────────── -->
+  <div class="page-tabs animate-fade-in-up" style="animation-delay:.04s" role="tablist">
+    <button type="button" role="tab" class="page-tab"
+      [class.is-active]="activeTab === 'my-flows'"
+      [attr.aria-selected]="activeTab === 'my-flows'"
+      (click)="setTab('my-flows')">
+      <i class="fas fa-project-diagram" aria-hidden="true"></i>
+      My Flows
+    </button>
+    <button type="button" role="tab" class="page-tab"
+      [class.is-active]="activeTab === 'blueprints'"
+      [attr.aria-selected]="activeTab === 'blueprints'"
+      (click)="setTab('blueprints')">
+      <i class="fas fa-layer-group" aria-hidden="true"></i>
+      Blueprints
+    </button>
+  </div>
+
+  <!-- ── Loading skeleton ──────────────────────────────────────────────── -->
+  <div *ngIf="loading" class="flow-grid">
+    <div class="skeleton-card" *ngFor="let i of skeletons"></div>
+  </div>
+
+  <!-- ── My Flows ───────────────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading && activeTab === 'my-flows'">
+
+    <div *ngIf="!flows.length" class="empty-state animate-fade-in-up">
+      <i class="fas fa-project-diagram empty-state__icon"></i>
+      <h3 class="empty-state__title">No Flows Yet</h3>
+      <p class="empty-state__text">
+        Start from a blueprint or create a blank flow to automate your customer journey.
+      </p>
+      <button type="button" class="btn-primary mt-3" (click)="createBlank()">
+        <i class="fas fa-plus"></i> Create Flow
+      </button>
+    </div>
+
+    <div *ngIf="flows.length" class="flow-grid">
+      <article class="flow-card animate-fade-in-up"
+        *ngFor="let flow of flows; let i = index"
+        [style.animation-delay]="(i * 0.05) + 's'">
+
+        <div class="flow-card__header">
+          <div class="flow-card__channels">
+            <span *ngFor="let ch of flow.channels" class="flow-cat" [ngClass]="channelClass(ch)">
+              <i [ngClass]="channelIcon(ch)" aria-hidden="true"></i>
+              {{ ch | titlecase }}
+            </span>
+          </div>
+          <span class="status-badge" [ngClass]="statusClass(flow.status)">
+            <i class="fas" [ngClass]="statusIcon(flow.status)" aria-hidden="true"></i>
+            {{ (flow.status || 'draft') | titlecase }}
+          </span>
+        </div>
+
+        <h3 class="flow-card__name">{{ flow.name }}</h3>
+        <p class="flow-card__desc">{{ flow.description || 'No description' }}</p>
+
+        <div class="flow-card__chips">
+          <span class="flow-card__chip">
+            <i class="fas fa-sitemap" aria-hidden="true"></i>
+            {{ flow.nodes?.length || 0 }} nodes
+          </span>
+          <span class="flow-card__chip">
+            <i class="fas fa-random" aria-hidden="true"></i>
+            {{ flow.edges?.length || 0 }} edges
+          </span>
+        </div>
+
+        <div class="flow-card__footer">
+          <div class="flow-card__footer-left">
+            <button type="button" class="btn-icon-action" (click)="editFlow(flow)" title="Edit flow">
+              <i class="fas fa-pen-to-square" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn-icon-action"
+              [disabled]="toggling.has(flow._id!)"
+              (click)="toggleStatus(flow)"
+              [title]="flow.status === 'active' ? 'Pause flow' : 'Publish flow'">
+              <i class="fas" [ngClass]="flow.status === 'active' ? 'fa-pause' : 'fa-play'" aria-hidden="true"></i>
+            </button>
+          </div>
+          <button type="button" class="btn-icon-danger"
+            [disabled]="deleting.has(flow._id!)"
+            (click)="$event.stopPropagation(); deleteFlow(flow)"
+            title="Delete flow">
+            <i class="fas fa-trash-alt" aria-hidden="true"></i>
+          </button>
+        </div>
+      </article>
+    </div>
+
+  </ng-container>
+
+  <!-- ── Blueprints ─────────────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading && activeTab === 'blueprints'">
+
+    <div *ngIf="!blueprints.length" class="empty-state animate-fade-in-up">
+      <i class="fas fa-layer-group empty-state__icon"></i>
+      <h3 class="empty-state__title">No Blueprints Available</h3>
+      <p class="empty-state__text">Pre-built flow templates will appear here to help you get started quickly.</p>
+    </div>
+
+    <div *ngIf="blueprints.length" class="flow-grid">
+      <article class="flow-card flow-card--blueprint animate-fade-in-up"
+        *ngFor="let bp of blueprints; let i = index"
+        [style.animation-delay]="(i * 0.05) + 's'">
+
+        <div class="flow-card__header">
+          <div class="flow-card__channels">
+            <span *ngFor="let ch of bp.channels" class="flow-cat" [ngClass]="channelClass(ch)">
+              <i [ngClass]="channelIcon(ch)" aria-hidden="true"></i>
+              {{ ch | titlecase }}
+            </span>
+          </div>
+          <span class="blueprint-badge">Blueprint</span>
+        </div>
+
+        <h3 class="flow-card__name">{{ bp.name }}</h3>
+        <p class="flow-card__desc">{{ bp.description }}</p>
+
+        <button type="button" class="btn-primary btn-primary--full" (click)="useBlueprint(bp)">
+          <i class="fas fa-magic" aria-hidden="true"></i>
+          Use Blueprint
+        </button>
+      </article>
+    </div>
+
+  </ng-container>
+
+</div>

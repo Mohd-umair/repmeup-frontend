@@ -20,6 +20,7 @@ const PLATFORM_ICONS: Record<string, { icon: string; color: string }> = {
 const MODULE_STYLES: Record<string, { iconBg: string; iconClass: string }> = {
   'ai-replies':      { iconBg: 'rgba(59,130,246,0.12)',  iconClass: 'text-blue-500' },
   'growth':          { iconBg: '#d8ff00',               iconClass: 'text-[#0b0b0b]' },
+  'flow-builder':    { iconBg: 'rgba(16,185,129,0.12)', iconClass: 'text-emerald-500' },
   'whatsapp-flows':  { iconBg: 'rgba(16,185,129,0.12)', iconClass: 'text-emerald-500' },
   'reviews':         { iconBg: 'rgba(245,158,11,0.12)', iconClass: 'text-amber-500' },
   'retargeting':     { iconBg: 'rgba(168,85,247,0.12)', iconClass: 'text-purple-500' },

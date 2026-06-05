@@ -65,7 +65,6 @@ import { VoiceSettingsComponent } from './features/voice-ivr/voice-settings/voic
 import { AutomationHubComponent } from './features/automation/hub/automation-hub.component';
 import { AiRepliesComponent } from './features/automation/ai-replies/ai-replies.component';
 import { GrowthComponent } from './features/automation/growth/growth.component';
-import { WhatsAppFlowsComponent } from './features/automation/whatsapp-flows/whatsapp-flows.component';
 import { ReviewCollectionComponent } from './features/automation/reviews/review-collection.component';
 import { RetargetingComponent } from './features/automation/retargeting/retargeting.component';
 import { EscalationComponent } from './features/automation/escalation/escalation.component';
@@ -208,7 +207,17 @@ const routes: Routes = [
           { path: '', component: AutomationHubComponent },
           { path: 'ai-replies', component: AiRepliesComponent },
           { path: 'growth', component: GrowthComponent },
-          { path: 'whatsapp-flows', component: WhatsAppFlowsComponent },
+          {
+            path: 'flows',
+            loadComponent: () =>
+              import('./features/automation/flow-builder/flow-list/flow-list.component').then((m) => m.FlowListComponent)
+          },
+          {
+            path: 'flows/:id/edit',
+            loadComponent: () =>
+              import('./features/automation/flow-builder/flow-builder/flow-builder.component').then((m) => m.FlowBuilderComponent)
+          },
+          { path: 'whatsapp-flows', redirectTo: 'flows', pathMatch: 'full' },
           { path: 'reviews', component: ReviewCollectionComponent },
           { path: 'retargeting', component: RetargetingComponent },
           { path: 'escalation', component: EscalationComponent }

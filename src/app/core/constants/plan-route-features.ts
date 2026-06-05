@@ -11,6 +11,7 @@ export const ROUTE_PLAN_FEATURES: Record<string, FeatureKey> = {
   '/app/automation': FEATURE_KEY.AUTO_REPLY_ENABLED,
   '/app/automation/ai-replies': FEATURE_KEY.AUTO_REPLY_ENABLED,
   '/app/automation/growth': FEATURE_KEY.AUTO_REPLY_ENABLED,
+  '/app/automation/flows': FEATURE_KEY.AUTO_REPLY_ENABLED,
   '/app/automation/whatsapp-flows': FEATURE_KEY.AUTO_REPLY_ENABLED,
   '/app/voice-ivr': FEATURE_KEY.VOICE_IVR_ENABLED
 };

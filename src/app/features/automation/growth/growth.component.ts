@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { CatalogService } from '../../../core/services/catalog.service';
@@ -30,7 +31,7 @@ interface IGrowthGoal {
 @Component({
   selector: 'app-growth',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutomationPageShellComponent, AutomationSwitchComponent],
+  imports: [CommonModule, FormsModule, RouterModule, AutomationPageShellComponent, AutomationSwitchComponent],
   templateUrl: './growth.component.html',
   styleUrls: ['./growth.component.scss']
 })
