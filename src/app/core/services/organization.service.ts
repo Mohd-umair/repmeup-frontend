@@ -53,6 +53,15 @@ export interface EscalationSettings {
   availableAgents?: string[];
 }
 
+export type AutomationMode = 'workflow_only' | 'ai_only' | 'hybrid';
+export type AutomationChannel = 'whatsapp' | 'instagram' | 'facebook';
+
+export interface AutomationModeByChannel {
+  whatsapp?: AutomationMode;
+  instagram?: AutomationMode;
+  facebook?: AutomationMode;
+}
+
 export interface IOrganization {
   _id: string;
   name: string;
@@ -68,6 +77,7 @@ export interface IOrganization {
   autoReplySettings?: AutoReplySettings;
   inboxSettings?: InboxSettings;
   escalationSettings?: EscalationSettings;
+  automationModeByChannel?: AutomationModeByChannel;
   owner: string;
   isActive: boolean;
   createdAt: Date;
@@ -117,6 +127,13 @@ export class OrganizationService {
    */
   updateInboxSettings(id: string, settings: Partial<InboxSettings>): Observable<IApiResponse<IOrganization>> {
     return this.updateOrganization(id, { inboxSettings: settings as any });
+  }
+
+  /**
+   * Update the per-channel automation mode (Workflow / AI / Hybrid).
+   */
+  updateAutomationModeByChannel(id: string, modes: AutomationModeByChannel): Observable<IApiResponse<IOrganization>> {
+    return this.updateOrganization(id, { automationModeByChannel: modes });
   }
 
   /**

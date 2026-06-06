@@ -26,6 +26,59 @@
     </div>
   </div>
 
+  <!-- ── Automation Mode (per channel) ───────────────────────────────────── -->
+  <div class="automation-mode-card animate-fade-in-up" style="animation-delay:.03s">
+    <button type="button" class="amc-head" (click)="toggleModePanel()" [attr.aria-expanded]="showModePanel">
+      <div class="amc-head__icon"><i class="fas fa-sliders" aria-hidden="true"></i></div>
+      <div class="amc-head__text">
+        <h3 class="amc-head__title">Automation Mode</h3>
+        <p class="amc-head__sub">Choose how each channel replies — Workflow, AI, or both.</p>
+      </div>
+
+      <!-- Compact current-state summary chips (always visible) -->
+      <div class="amc-summary" *ngIf="!modeLoading">
+        <span *ngFor="let ch of channels" class="amc-summary__chip" [title]="ch.label + ': ' + modeLabel(modeFor(ch.key))">
+          <i [ngClass]="ch.icon" aria-hidden="true"></i>
+          <span class="amc-summary__mode" [ngClass]="'amc-mode--' + modeFor(ch.key)">{{ modeLabel(modeFor(ch.key)) }}</span>
+        </span>
+      </div>
+      <i class="fas fa-chevron-down amc-head__chevron" [class.is-open]="showModePanel" aria-hidden="true"></i>
+    </button>
+
+    <div class="amc-body" *ngIf="showModePanel">
+      <p *ngIf="modeLoading" class="amc-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</p>
+
+      <div *ngIf="!modeLoading" class="amc-channels">
+        <div class="amc-channel" *ngFor="let ch of channels">
+          <div class="amc-channel__name">
+            <i [ngClass]="ch.icon" [class]="'amc-channel__icon amc-channel__icon--' + ch.key" aria-hidden="true"></i>
+            <span>{{ ch.label }}</span>
+            <i *ngIf="modeSaving === ch.key" class="fas fa-spinner fa-spin amc-channel__saving" aria-hidden="true"></i>
+          </div>
+
+          <div class="amc-options" role="radiogroup" [attr.aria-label]="ch.label + ' automation mode'">
+            <button type="button" class="amc-option"
+              *ngFor="let opt of modeOptions"
+              role="radio"
+              [class.is-selected]="modeFor(ch.key) === opt.value"
+              [attr.aria-checked]="modeFor(ch.key) === opt.value"
+              [disabled]="modeSaving"
+              (click)="setChannelMode(ch.key, opt.value)">
+              <i [ngClass]="opt.icon" class="amc-option__icon" aria-hidden="true"></i>
+              <span class="amc-option__label">{{ opt.label }}</span>
+              <span class="amc-option__desc">{{ opt.description }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="amc-foot">
+        <i class="fas fa-circle-info" aria-hidden="true"></i>
+        In <strong>Hybrid</strong>, a workflow that takes over a conversation pauses the AI fallback until it ends.
+      </p>
+    </div>
+  </div>
+
   <!-- ── Tabs ────────────────────────────────────────────────────────────── -->
   <div class="page-tabs animate-fade-in-up" style="animation-delay:.04s" role="tablist">
     <button type="button" role="tab" class="page-tab"

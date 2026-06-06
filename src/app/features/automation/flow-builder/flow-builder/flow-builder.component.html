@@ -538,6 +538,40 @@
               </p>
             </ng-container>
 
+            <!-- Media URL picker (send_media node) -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'media_url'">
+
+              <!-- Thumbnail preview when an image/sticker URL is set -->
+              <div *ngIf="isPreviewableImage(node, key)" class="fb-media-preview">
+                <img [src]="node.config[key]" alt="media preview" class="fb-media-preview__img" />
+                <button type="button" class="fb-media-preview__clear" (click)="clearMediaUrl(node, key)" title="Remove">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <!-- Non-image file badge when URL is set but not previewable -->
+              <div *ngIf="node.config[key] && !isPreviewableImage(node, key)" class="fb-media-file-badge">
+                <i class="fas fa-file"></i>
+                <span class="fb-media-file-badge__name">{{ node.config[key] }}</span>
+                <button type="button" class="fb-media-preview__clear" (click)="clearMediaUrl(node, key)" title="Remove">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <!-- Picker + manual URL input row -->
+              <div class="fb-media-actions">
+                <button type="button" class="fb-media-pick-btn" (click)="openMediaPicker(node, key)">
+                  <i class="fas fa-photo-film"></i>
+                  {{ node.config[key] ? 'Change media' : 'Pick from library' }}
+                </button>
+              </div>
+
+              <input type="url" class="fb-media-url-input"
+                     [ngModel]="node.config[key]"
+                     (ngModelChange)="setConfigValue(node, key, $event)"
+                     placeholder="or paste a public https:// URL" />
+            </ng-container>
+
             <!-- Plain string fallback -->
             <ng-container *ngIf="isPlainStringField(node, key)">
               <input [(ngModel)]="node.config[key]"
@@ -568,3 +602,13 @@
 <div *ngIf="loading" class="fb-loading">
   <i class="fas fa-spinner fa-spin"></i> Loading flow builder…
 </div>
+
+<!-- ── Media picker modal (opened from send_media node inspector) ──────────── -->
+<app-media-selector-modal
+  *ngIf="showMediaPicker"
+  [allowMultiple]="false"
+  [mediaType]="mediaLibraryFilter(selectedNode!)"
+  [overlayZIndex]="60"
+  (close)="closeMediaPicker()"
+  (select)="onMediaSelected($event)"
+></app-media-selector-modal>

@@ -6,8 +6,28 @@ import { takeUntil, finalize } from 'rxjs/operators';
 import { FlowBuilderService } from '../../../../core/services/flow-builder.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { SweetAlertService } from '../../../../core/services/sweet-alert.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import {
+  OrganizationService,
+  AutomationMode,
+  AutomationChannel,
+  AutomationModeByChannel
+} from '../../../../core/services/organization.service';
 import { IAutomationFlow } from '../../../../core/models/flow-builder.model';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+
+interface IChannelMeta {
+  key: AutomationChannel;
+  label: string;
+  icon: string;
+}
+
+interface IModeOption {
+  value: AutomationMode;
+  label: string;
+  description: string;
+  icon: string;
+}
 
 @Component({
   selector: 'app-flow-list',
@@ -32,16 +52,47 @@ export class FlowListComponent implements OnInit, OnDestroy {
   total = 0;
   pageSize = 12;
 
+  // ── Automation mode (per channel) ──────────────────────────────────────────
+  private orgId = '';
+  modeLoading = true;
+  modeSaving: AutomationChannel | null = null;
+  showModePanel = false;
+  automationModeByChannel: AutomationModeByChannel = {
+    whatsapp: 'hybrid', instagram: 'hybrid', facebook: 'hybrid'
+  };
+
+  readonly channels: IChannelMeta[] = [
+    { key: 'whatsapp',  label: 'WhatsApp',  icon: 'fab fa-whatsapp' },
+    { key: 'instagram', label: 'Instagram', icon: 'fab fa-instagram' },
+    { key: 'facebook',  label: 'Facebook',  icon: 'fab fa-facebook-f' }
+  ];
+
+  readonly modeOptions: IModeOption[] = [
+    { value: 'workflow_only', label: 'Workflow Only', description: 'Only your flows reply. AI never runs.', icon: 'fas fa-diagram-project' },
+    { value: 'ai_only',       label: 'AI Only',       description: 'Flows are skipped. AI Auto-Reply handles every message.', icon: 'fas fa-robot' },
+    { value: 'hybrid',        label: 'Hybrid',        description: 'Flows run first; AI fills the gap when no flow matches. (Recommended)', icon: 'fas fa-layer-group' }
+  ];
+
   constructor(
     private flowService: FlowBuilderService,
     private notify: NotificationService,
     private swal: SweetAlertService,
+    private auth: AuthService,
+    private orgService: OrganizationService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadFlows();
     this.loadBlueprints();
+    this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
+      if (user?.organization) {
+        this.orgId = typeof user.organization === 'string'
+          ? user.organization
+          : (user.organization as any)._id;
+        this.loadAutomationMode();
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -71,6 +122,64 @@ export class FlowListComponent implements OnInit, OnDestroy {
     this.flowService.listFlows({ blueprints: 'true' })
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (r) => { this.blueprints = r.data ?? []; } });
+  }
+
+  // ── Automation mode ─────────────────────────────────────────────────────────
+
+  loadAutomationMode(): void {
+    this.modeLoading = true;
+    this.orgService.getOrganization(this.orgId)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.modeLoading = false; }))
+      .subscribe({
+        next: (r) => {
+          const modes = r.data?.automationModeByChannel;
+          if (modes) {
+            this.automationModeByChannel = {
+              whatsapp:  modes.whatsapp  ?? 'hybrid',
+              instagram: modes.instagram ?? 'hybrid',
+              facebook:  modes.facebook  ?? 'hybrid'
+            };
+          }
+        },
+        error: () => { /* keep defaults; non-blocking */ }
+      });
+  }
+
+  toggleModePanel(): void {
+    this.showModePanel = !this.showModePanel;
+  }
+
+  modeFor(channel: AutomationChannel): AutomationMode {
+    return this.automationModeByChannel[channel] ?? 'hybrid';
+  }
+
+  /** Persist a single channel's mode (optimistic UI, reverts on error). */
+  setChannelMode(channel: AutomationChannel, mode: AutomationMode): void {
+    if (this.modeFor(channel) === mode || this.modeSaving) return;
+    const previous = this.modeFor(channel);
+    this.automationModeByChannel = { ...this.automationModeByChannel, [channel]: mode };
+    this.modeSaving = channel;
+
+    this.orgService.updateAutomationModeByChannel(this.orgId, { [channel]: mode })
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.modeSaving = null; }))
+      .subscribe({
+        next: (r) => {
+          const saved = r.data?.automationModeByChannel?.[channel];
+          if (saved) {
+            this.automationModeByChannel = { ...this.automationModeByChannel, [channel]: saved };
+          }
+          const label = this.channels.find(c => c.key === channel)?.label || channel;
+          this.notify.success('Updated', `${label} automation set to ${this.modeLabel(mode)}.`);
+        },
+        error: (err) => {
+          this.automationModeByChannel = { ...this.automationModeByChannel, [channel]: previous };
+          this.notify.error('Update failed', err?.error?.error || 'Could not update automation mode.');
+        }
+      });
+  }
+
+  modeLabel(mode: AutomationMode): string {
+    return this.modeOptions.find(o => o.value === mode)?.label || mode;
   }
 
   onPageChange(page: number): void {

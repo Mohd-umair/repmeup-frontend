@@ -18,6 +18,8 @@ import { PlatformConnectionService, PlatformConnection } from '../../../../core/
 import { IntentBucketService } from '../../../../core/services/intent-bucket.service';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { WhatsAppTemplate } from '../../../../core/models/whatsapp-template.model';
+import { MediaSelectorModalComponent } from '../../../../shared/components/media-selector-modal/media-selector-modal.component';
+import { Media } from '../../../../core/models/media.model';
 import {
   IAutomationFlow,
   IFlowEdge,
@@ -50,7 +52,7 @@ const CATEGORY_LABELS: Record<NodeCategory, string> = {
 @Component({
   selector: 'app-flow-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, MediaSelectorModalComponent],
   templateUrl: './flow-builder.component.html',
   styleUrls: ['./flow-builder.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -598,6 +600,66 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     this.onNodeFieldChange();
   }
 
+  // ── Media picker ──────────────────────────────────────────────────────────
+
+  showMediaPicker = false;
+  /** Node + key that triggered the media picker, so we know where to write the URL back. */
+  private mediaPickerTarget: { node: IFlowNode; key: string } | null = null;
+
+  /** Map from WA media type to the filter the media library understands. */
+  private static readonly WA_TO_LIB_TYPE: Record<string, 'image' | 'video' | 'audio' | 'file' | 'all'> = {
+    image: 'image',
+    video: 'video',
+    audio: 'audio',
+    document: 'file',
+    sticker: 'image'
+  };
+
+  /** Opens the media selector for the node's current mediaType filter. */
+  openMediaPicker(node: IFlowNode, key: string): void {
+    this.mediaPickerTarget = { node, key };
+    this.showMediaPicker = true;
+    this.cdr.markForCheck();
+  }
+
+  closeMediaPicker(): void {
+    this.showMediaPicker = false;
+    this.mediaPickerTarget = null;
+    this.cdr.markForCheck();
+  }
+
+  onMediaSelected(media: Media): void {
+    if (!this.mediaPickerTarget) return;
+    const { node, key } = this.mediaPickerTarget;
+    if (!node.config) node.config = {};
+    node.config[key] = media.publicUrl;
+    // Auto-fill filename for documents
+    if (node.config['mediaType'] === 'document' && !node.config['filename']) {
+      node.config['filename'] = media.originalName || media.filename || '';
+    }
+    this.onNodeFieldChange();
+    this.closeMediaPicker();
+  }
+
+  /** Returns the media library type filter for the currently selected WA media type. */
+  mediaLibraryFilter(node: IFlowNode): 'image' | 'video' | 'audio' | 'file' | 'all' {
+    const waType = String(node.config?.['mediaType'] || 'image');
+    return FlowBuilderComponent.WA_TO_LIB_TYPE[waType] ?? 'all';
+  }
+
+  /** True when the mediaUrl field has a value that looks like an image we can preview. */
+  isPreviewableImage(node: IFlowNode, key: string): boolean {
+    const url = String(node.config?.[key] || '');
+    const type = String(node.config?.['mediaType'] || '');
+    return !!url && (type === 'image' || type === 'sticker');
+  }
+
+  clearMediaUrl(node: IFlowNode, key: string): void {
+    if (!node.config) return;
+    node.config[key] = '';
+    this.onNodeFieldChange();
+  }
+
   showWaTemplatePicker(node: IFlowNode, key: string): boolean {
     return node.type === 'action.send_template' && key === 'templateId';
   }
@@ -605,7 +667,8 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   /** Field types that render with their own dedicated editor (not the plain text input). */
   private static readonly NON_STRING_FIELD_TYPES = new Set([
     'string[]', 'select', 'number', 'textarea', 'json', 'node', 'bucket',
-    'product', 'template', 'reply_buttons', 'list_sections', 'product_sections'
+    'product', 'template', 'reply_buttons', 'list_sections', 'product_sections',
+    'media_url'
   ]);
 
   /** True when the field should fall back to a plain text input. */
