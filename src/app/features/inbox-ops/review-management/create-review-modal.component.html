@@ -1,0 +1,159 @@
+<!-- Backdrop -->
+<div class="crm-backdrop" (click)="close.emit()" aria-hidden="true"></div>
+
+<!-- Modal -->
+<div class="crm-modal" role="dialog" aria-modal="true" aria-labelledby="crm-title">
+
+  <!-- Header -->
+  <div class="crm-header">
+    <div class="crm-header__left">
+      <div class="crm-header__icon">
+        <i class="fas fa-star"></i>
+      </div>
+      <div>
+        <h2 class="crm-header__title" id="crm-title">Log a Review</h2>
+        <p class="crm-header__sub">Manually record a customer review</p>
+      </div>
+    </div>
+    <button type="button" class="crm-close-btn" (click)="close.emit()" aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="crm-body">
+
+    <!-- Platform -->
+    <div class="crm-field-group">
+      <label class="crm-label">Platform <span class="crm-required">*</span></label>
+      <div class="crm-platform-row">
+        <button
+          *ngFor="let p of platforms"
+          type="button"
+          class="crm-platform-btn"
+          [class.crm-platform-btn--active]="platform === p.value"
+          (click)="platform = p.value"
+        >
+          <i [ngClass]="p.icon"></i>
+          {{ p.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Star Rating -->
+    <div class="crm-field-group">
+      <label class="crm-label">Rating <span class="crm-optional">(optional)</span></label>
+      <div class="crm-stars">
+        <button
+          *ngFor="let s of stars"
+          type="button"
+          class="crm-star-btn"
+          [class.crm-star-btn--active]="rating !== null && s <= rating"
+          (click)="setRating(s)"
+          [attr.aria-label]="s + ' stars'"
+        >
+          <i class="fas fa-star"></i>
+        </button>
+        <span class="crm-star-label" *ngIf="rating">
+          {{ rating === 1 ? 'Terrible' : rating === 2 ? 'Poor' : rating === 3 ? 'Average' : rating === 4 ? 'Good' : 'Excellent' }}
+        </span>
+        <button *ngIf="rating" type="button" class="crm-star-clear" (click)="rating = null; sentiment = ''">
+          <i class="fas fa-times-circle"></i> Clear
+        </button>
+      </div>
+    </div>
+
+    <!-- Review Body -->
+    <div class="crm-field-group">
+      <label class="crm-label" for="crm-review-body">
+        Review Content <span class="crm-required">*</span>
+      </label>
+      <div class="crm-textarea-wrap">
+        <textarea
+          id="crm-review-body"
+          class="crm-input crm-textarea"
+          placeholder="Enter the customer's review text…"
+          rows="5"
+          maxlength="2000"
+          [(ngModel)]="reviewBody"
+        ></textarea>
+        <span class="crm-char-count" [class.crm-char-count--warn]="charCount > 1800">
+          {{ charCount }} / 2000
+        </span>
+      </div>
+    </div>
+
+    <!-- Sentiment -->
+    <div class="crm-field-group">
+      <label class="crm-label">Sentiment <span class="crm-optional">(auto-derived from rating if blank)</span></label>
+      <div class="crm-sentiment-row">
+        <button
+          *ngFor="let s of sentimentOptions"
+          type="button"
+          class="crm-sentiment-btn"
+          [ngClass]="sentiment === s.value ? s.cls : ''"
+          [class.crm-sentiment-btn--active]="sentiment === s.value"
+          (click)="sentiment = sentiment === s.value ? '' : s.value"
+        >
+          <i [ngClass]="s.icon"></i>
+          {{ s.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Customer Details -->
+    <div class="crm-section-title">Customer Details <span class="crm-optional">(optional)</span></div>
+
+    <div class="crm-grid-2">
+      <div class="crm-field-group">
+        <label class="crm-label" for="crm-customer-name">Full Name</label>
+        <input
+          id="crm-customer-name"
+          type="text"
+          class="crm-input"
+          placeholder="e.g. Priya Mehta"
+          [(ngModel)]="customerName"
+        />
+      </div>
+      <div class="crm-field-group">
+        <label class="crm-label" for="crm-customer-handle">Handle / Username</label>
+        <div class="crm-input-icon-wrap">
+          <span class="crm-input-prefix">&#64;</span>
+          <input
+            id="crm-customer-handle"
+            type="text"
+            class="crm-input crm-input--prefix"
+            placeholder="username"
+            [(ngModel)]="customerHandle"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Validation hint -->
+    <p *ngIf="reviewBody.trim().length > 0 && reviewBody.trim().length < 5" class="crm-hint-error">
+      <i class="fas fa-exclamation-circle"></i>
+      Review content must be at least 5 characters.
+    </p>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="crm-footer">
+    <div class="crm-footer__actions">
+      <button type="button" class="crm-btn-secondary" (click)="close.emit()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="crm-btn-primary"
+        [disabled]="!isValid || submitting"
+        (click)="submit()"
+      >
+        <i class="fas" [ngClass]="submitting ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+        {{ submitting ? 'Saving…' : 'Log Review' }}
+      </button>
+    </div>
+  </div>
+
+</div>

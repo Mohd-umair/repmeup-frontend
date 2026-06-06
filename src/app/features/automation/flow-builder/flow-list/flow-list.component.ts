@@ -5,12 +5,14 @@ import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { FlowBuilderService } from '../../../../core/services/flow-builder.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { SweetAlertService } from '../../../../core/services/sweet-alert.service';
 import { IAutomationFlow } from '../../../../core/models/flow-builder.model';
+import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-flow-list',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, PaginationComponent],
   templateUrl: './flow-list.component.html',
   styleUrls: ['./flow-list.component.scss']
 })
@@ -23,13 +25,17 @@ export class FlowListComponent implements OnInit, OnDestroy {
   loading = true;
   deleting = new Set<string>();
   toggling = new Set<string>();
-  importing = false;
 
-  readonly skeletons = [1, 2, 3, 4, 5, 6];
+  // Pagination (my-flows tab)
+  currentPage = 1;
+  totalPages = 1;
+  total = 0;
+  pageSize = 12;
 
   constructor(
     private flowService: FlowBuilderService,
     private notify: NotificationService,
+    private swal: SweetAlertService,
     private router: Router
   ) {}
 
@@ -49,10 +55,14 @@ export class FlowListComponent implements OnInit, OnDestroy {
 
   loadFlows(): void {
     this.loading = true;
-    this.flowService.listFlows()
+    this.flowService.listFlows({ page: this.currentPage, limit: this.pageSize })
       .pipe(takeUntil(this.destroy$), finalize(() => { this.loading = false; }))
       .subscribe({
-        next: (r) => { this.flows = r.data ?? []; },
+        next: (r) => {
+          this.flows = r.data ?? [];
+          this.total = r.total ?? 0;
+          this.totalPages = r.pages ?? Math.max(1, Math.ceil(this.total / this.pageSize));
+        },
         error: () => this.notify.error('Load failed', 'Could not load automation flows.')
       });
   }
@@ -63,21 +73,16 @@ export class FlowListComponent implements OnInit, OnDestroy {
       .subscribe({ next: (r) => { this.blueprints = r.data ?? []; } });
   }
 
-  importFromGrowth(): void {
-    this.importing = true;
-    this.flowService.importFromGrowth()
-      .pipe(takeUntil(this.destroy$), finalize(() => { this.importing = false; }))
-      .subscribe({
-        next: (r) => {
-          const count = r.data?.length ?? 0;
-          this.notify.success('Imported', `${count} draft flow(s) created from Growth settings.`);
-          this.loadFlows();
-          if (count === 1 && r.data?.[0]?._id) {
-            this.router.navigate(['/app/automation/flows', r.data[0]._id, 'edit']);
-          }
-        },
-        error: (err) => this.notify.error('Import failed', err.error?.error || 'Could not import Growth settings.')
-      });
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+    this.loadFlows();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+    this.loadFlows();
   }
 
   createBlank(): void {
@@ -111,26 +116,46 @@ export class FlowListComponent implements OnInit, OnDestroy {
 
   toggleStatus(flow: IAutomationFlow): void {
     if (!flow._id) return;
-    this.toggling.add(flow._id);
-    const req$ = flow.status === 'active'
-      ? this.flowService.pauseFlow(flow._id)
-      : this.flowService.publishFlow(flow._id);
-    req$.pipe(takeUntil(this.destroy$), finalize(() => this.toggling.delete(flow._id!)))
-      .subscribe({
-        next: () => { this.notify.success('Updated', 'Flow status updated.'); this.loadFlows(); },
-        error: (err) => this.notify.error('Update failed', err.error?.error || 'Could not update flow.')
-      });
+    const isPausing = flow.status === 'active';
+    this.swal.confirm(
+      isPausing ? `Pause "${flow.name}"?` : `Publish "${flow.name}"?`,
+      isPausing
+        ? 'The flow will stop processing new triggers until resumed.'
+        : 'The flow will go live and start processing triggers.',
+      isPausing ? 'Yes, pause it' : 'Yes, publish it'
+    ).then((result) => {
+      if (!result.isConfirmed || !flow._id) return;
+      this.toggling.add(flow._id);
+      const req$ = isPausing
+        ? this.flowService.pauseFlow(flow._id)
+        : this.flowService.publishFlow(flow._id);
+      req$.pipe(takeUntil(this.destroy$), finalize(() => this.toggling.delete(flow._id!)))
+        .subscribe({
+          next: () => { this.notify.success('Updated', 'Flow status updated.'); this.loadFlows(); },
+          error: (err) => this.notify.error('Update failed', err.error?.error || 'Could not update flow.')
+        });
+    });
   }
 
   deleteFlow(flow: IAutomationFlow): void {
-    if (!flow._id || !confirm(`Delete "${flow.name}"?`)) return;
-    this.deleting.add(flow._id);
-    this.flowService.deleteFlow(flow._id)
-      .pipe(takeUntil(this.destroy$), finalize(() => this.deleting.delete(flow._id!)))
-      .subscribe({
-        next: () => { this.notify.success('Deleted', 'Flow removed.'); this.loadFlows(); },
-        error: (err) => this.notify.error('Delete failed', err.error?.error || 'Could not delete flow.')
-      });
+    if (!flow._id) return;
+    this.swal.confirmDelete(
+      `Delete "${flow.name}"?`,
+      'This flow will be permanently removed and cannot be recovered.'
+    ).then((result) => {
+      if (!result.isConfirmed || !flow._id) return;
+      this.deleting.add(flow._id);
+      this.flowService.deleteFlow(flow._id)
+        .pipe(takeUntil(this.destroy$), finalize(() => this.deleting.delete(flow._id!)))
+        .subscribe({
+          next: () => {
+            this.notify.success('Deleted', 'Flow removed.');
+            if (this.flows.length === 1 && this.currentPage > 1) this.currentPage--;
+            this.loadFlows();
+          },
+          error: (err) => this.notify.error('Delete failed', err.error?.error || 'Could not delete flow.')
+        });
+    });
   }
 
   channelClass(ch: string): string {

@@ -18,6 +18,7 @@ import { OpsStatusBadgeComponent } from '../shared/ops-status-badge.component';
 import { OpsCustomerCellComponent } from '../shared/ops-customer-cell.component';
 import { OpsDetailDrawerComponent } from '../shared/ops-detail-drawer.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { CreateReviewModalComponent } from './create-review-modal.component';
 
 @Component({
   selector: 'app-inbox-review-management',
@@ -31,7 +32,8 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
     OpsStatusBadgeComponent,
     OpsCustomerCellComponent,
     OpsDetailDrawerComponent,
-    PaginationComponent
+    PaginationComponent,
+    CreateReviewModalComponent
   ],
   templateUrl: './inbox-review-management.component.html'
 })
@@ -54,6 +56,7 @@ export class InboxReviewManagementComponent implements OnInit, OnDestroy {
   drawerOpen = false;
   detail: IOpsReviewDetail | null = null;
   replyDraft = '';
+  createModalOpen = false;
 
   readonly tabs = [
     { value: 'all', label: 'All Reviews' },
@@ -180,6 +183,11 @@ export class InboxReviewManagementComponent implements OnInit, OnDestroy {
         },
         error: () => this.notify.error('Failed to generate draft')
       });
+  }
+
+  onReviewCreated(): void {
+    this.loadList();
+    this.loadStats();
   }
 
   publishReply(): void {

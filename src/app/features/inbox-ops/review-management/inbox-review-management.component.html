@@ -7,9 +7,19 @@
       </h1>
       <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Manage inbound reviews and publish replies.</p>
     </div>
-    <a routerLink="/app/automation/reviews" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold">
-      <i class="fas fa-paper-plane"></i> Send Review Requests
-    </a>
+    <div class="flex items-center gap-2 flex-wrap">
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold"
+        style="background: rgba(245,158,11,0.12); color: #d97706; border: 1px solid rgba(245,158,11,0.3); cursor: pointer;"
+        (click)="createModalOpen = true"
+      >
+        <i class="fas fa-plus"></i> Log Review
+      </button>
+      <a routerLink="/app/automation/reviews" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold">
+        <i class="fas fa-paper-plane"></i> Send Review Requests
+      </a>
+    </div>
   </div>
 
   <app-ops-stats-row [cards]="statCards" />
@@ -74,6 +84,13 @@
     }
   </div>
 </div>
+
+@if (createModalOpen) {
+  <app-create-review-modal
+    (close)="createModalOpen = false"
+    (created)="onReviewCreated()"
+  />
+}
 
 <app-ops-detail-drawer
   [open]="drawerOpen"

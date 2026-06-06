@@ -15,7 +15,7 @@ export class FlowBuilderService {
 
   constructor(private api: ApiService) {}
 
-  listFlows(params?: { blueprints?: 'true' | 'false' | 'all' }): Observable<IApiResponse<IAutomationFlow[]>> {
+  listFlows(params?: { blueprints?: 'true' | 'false' | 'all'; page?: number; limit?: number }): Observable<IApiResponse<IAutomationFlow[]> & { total?: number; page?: number; limit?: number; pages?: number }> {
     return this.api.get(this.base, params);
   }
 
@@ -53,10 +53,6 @@ export class FlowBuilderService {
 
   testFlow(id: string): Observable<IApiResponse<{ validation: IFlowValidationResult; startNodeId: string; stepPreview: unknown[] }>> {
     return this.api.post(`${this.base}/${id}/test`, {});
-  }
-
-  importFromGrowth(): Observable<IApiResponse<IAutomationFlow[]>> {
-    return this.api.post(`${this.base}/import/growth`, {});
   }
 
   getNodeCatalog(channels?: FlowChannel[]): Observable<IApiResponse<IFlowNodeCatalogItem[]>> {

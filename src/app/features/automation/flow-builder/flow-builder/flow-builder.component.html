@@ -263,11 +263,23 @@
           <div *ngFor="let key of configKeys(node)" class="fb-field">
             <span>{{ getConfigFieldLabel(node, key) }}</span>
 
+            <!-- string[] → tag/pill editor -->
             <ng-container *ngIf="getConfigFieldType(node, key) === 'string[]'">
-              <textarea rows="3"
-                        [ngModel]="getStringArrayDisplay(node, key)"
-                        (ngModelChange)="setStringArrayDisplay(node, key, $event)"
-                        placeholder="One keyword per line or comma-separated"></textarea>
+              <div class="fb-tags">
+                <div class="fb-tag" *ngFor="let item of getStringArray(node, key); let i = index">
+                  <span>{{ item }}</span>
+                  <button type="button" class="fb-tag__remove" (click)="removeStringArrayItem(node, key, i)" title="Remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="fb-tag-add">
+                <input #tagInput type="text" class="fb-tag-input" placeholder="Add keyword…"
+                       (keydown)="addStringArrayOnEnter(node, key, tagInput, $event)" />
+                <button type="button" class="fb-btn-add-sm" (click)="addStringArrayItem(node, key, tagInput)">
+                  <i class="fas fa-plus"></i> Add
+                </button>
+              </div>
             </ng-container>
 
             <ng-container *ngIf="getConfigFieldType(node, key) === 'select'">
@@ -289,11 +301,191 @@
                         (ngModelChange)="onNodeFieldChange()"></textarea>
             </ng-container>
 
-            <ng-container *ngIf="getConfigFieldType(node, key) === 'json'">
-              <textarea rows="4"
-                        [ngModel]="getJsonDisplay(node, key)"
-                        (ngModelChange)="setJsonDisplay(node, key, $event)"
-                        placeholder='{"key": "value"}'></textarea>
+            <!-- json → buttons array editor -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'json' && isButtonsArray(node, key)">
+              <div class="fb-btn-list">
+                <div *ngFor="let btn of getButtons(node, key); let bi = index" class="fb-btn-row">
+                  <div class="fb-btn-row__head">
+                    <span class="fb-btn-row__index">{{ bi + 1 }}</span>
+                    <button type="button" class="fb-btn-row__remove" (click)="removeButton(node, key, bi)" title="Remove button">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                  <div class="fb-btn-row__fields">
+                    <label class="fb-field-sm">
+                      <span>Label</span>
+                      <input type="text" [ngModel]="btn.label"
+                             (ngModelChange)="setButtonField(node, key, bi, 'label', $event)"
+                             placeholder="Button label" />
+                    </label>
+                    <label class="fb-field-sm">
+                      <span>Type</span>
+                      <select [ngModel]="btn.type" (ngModelChange)="setButtonField(node, key, bi, 'type', $event)">
+                        <option value="postback">Postback (Quick Reply)</option>
+                        <option value="web_url">Link (URL)</option>
+                      </select>
+                    </label>
+                    <label *ngIf="btn.type === 'postback'" class="fb-field-sm">
+                      <span>Payload</span>
+                      <input type="text" [ngModel]="btn.payload"
+                             (ngModelChange)="setButtonField(node, key, bi, 'payload', $event)"
+                             placeholder="e.g. CONFIRM_ORDER" />
+                    </label>
+                    <label *ngIf="btn.type === 'web_url'" class="fb-field-sm">
+                      <span>URL</span>
+                      <input type="url" [ngModel]="btn.url"
+                             (ngModelChange)="setButtonField(node, key, bi, 'url', $event)"
+                             placeholder="https://example.com" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="fb-btn-actions">
+                <button type="button" class="fb-btn-add-sm" (click)="insertPostbackButton(node, key)">
+                  <i class="fas fa-reply"></i> Add Postback
+                </button>
+                <button type="button" class="fb-btn-add-sm fb-btn-add-sm--link" (click)="insertLinkButton(node, key)">
+                  <i class="fas fa-link"></i> Insert Link
+                </button>
+              </div>
+            </ng-container>
+
+            <!-- json → key-value object editor -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'json' && isKvObject(node, key)">
+              <div class="fb-kv-list">
+                <div *ngFor="let pair of getKvPairs(node, key)" class="fb-kv-row">
+                  <input type="text" class="fb-kv-key" [ngModel]="pair.k" placeholder="Key"
+                         (ngModelChange)="setKvPair(node, key, pair.k, $event, pair.v)" />
+                  <span class="fb-kv-sep">=</span>
+                  <input type="text" class="fb-kv-val" [ngModel]="pair.v" placeholder="Value"
+                         (ngModelChange)="setKvPair(node, key, pair.k, pair.k, $event)" />
+                  <button type="button" class="fb-kv-remove" (click)="removeKvPair(node, key, pair.k)" title="Remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="fb-btn-add-sm" (click)="addKvPair(node, key)">
+                <i class="fas fa-plus"></i> Add Row
+              </button>
+            </ng-container>
+
+            <!-- WhatsApp reply buttons (max 3) -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'reply_buttons'">
+              <div class="fb-btn-list">
+                <div *ngFor="let btn of getReplyButtons(node, key); let bi = index" class="fb-btn-row">
+                  <div class="fb-btn-row__head">
+                    <span class="fb-btn-row__index">{{ bi + 1 }}</span>
+                    <button type="button" class="fb-btn-row__remove" (click)="removeReplyButton(node, key, bi)" title="Remove button">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                  <div class="fb-btn-row__fields">
+                    <label class="fb-field-sm">
+                      <span>Button text</span>
+                      <input type="text" maxlength="20" [ngModel]="btn.title"
+                             (ngModelChange)="setReplyButtonField(node, key, bi, 'title', $event)"
+                             placeholder="e.g. Yes" />
+                    </label>
+                    <label class="fb-field-sm">
+                      <span>Reply id</span>
+                      <input type="text" [ngModel]="btn.id"
+                             (ngModelChange)="setReplyButtonField(node, key, bi, 'id', $event)"
+                             placeholder="e.g. yes" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="fb-btn-add-sm" (click)="addReplyButton(node, key)" [disabled]="replyButtonsFull(node, key)">
+                <i class="fas fa-plus"></i> Add Button
+              </button>
+              <p class="fb-field__hint" *ngIf="replyButtonsFull(node, key)">Maximum of 3 buttons reached.</p>
+            </ng-container>
+
+            <!-- WhatsApp list sections (max 10 rows total) -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'list_sections'">
+              <div class="fb-section-list">
+                <div *ngFor="let section of getListSections(node, key); let si = index" class="fb-section">
+                  <div class="fb-section__head">
+                    <input type="text" class="fb-section__title" maxlength="24" [ngModel]="section.title"
+                           (ngModelChange)="setListSectionTitle(node, key, si, $event)" placeholder="Section title" />
+                    <button type="button" class="fb-kv-remove" (click)="removeListSection(node, key, si)" title="Remove section">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div class="fb-row-list">
+                    <div *ngFor="let row of section.rows; let ri = index" class="fb-btn-row">
+                      <div class="fb-btn-row__head">
+                        <span class="fb-btn-row__index">{{ ri + 1 }}</span>
+                        <button type="button" class="fb-btn-row__remove" (click)="removeListRow(node, key, si, ri)" title="Remove row">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </div>
+                      <div class="fb-btn-row__fields">
+                        <label class="fb-field-sm">
+                          <span>Title</span>
+                          <input type="text" maxlength="24" [ngModel]="row.title"
+                                 (ngModelChange)="setListRowField(node, key, si, ri, 'title', $event)" placeholder="Row title" />
+                        </label>
+                        <label class="fb-field-sm">
+                          <span>Description</span>
+                          <input type="text" maxlength="72" [ngModel]="row.description"
+                                 (ngModelChange)="setListRowField(node, key, si, ri, 'description', $event)" placeholder="Optional" />
+                        </label>
+                        <label class="fb-field-sm">
+                          <span>Reply id</span>
+                          <input type="text" [ngModel]="row.id"
+                                 (ngModelChange)="setListRowField(node, key, si, ri, 'id', $event)" placeholder="e.g. option_1" />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <button type="button" class="fb-btn-add-sm" (click)="addListRow(node, key, si)" [disabled]="listRowsFull(node, key)">
+                    <i class="fas fa-plus"></i> Add Row
+                  </button>
+                </div>
+              </div>
+              <div class="fb-btn-actions">
+                <button type="button" class="fb-btn-add-sm" (click)="addListSection(node, key)">
+                  <i class="fas fa-layer-group"></i> Add Section
+                </button>
+                <span class="fb-count-pill">{{ listRowCount(node, key) }}/10 rows</span>
+              </div>
+            </ng-container>
+
+            <!-- WhatsApp multi-product sections (max 30 products total) -->
+            <ng-container *ngIf="getConfigFieldType(node, key) === 'product_sections'">
+              <p *ngIf="!productOptions().length" class="fb-field__hint">No products yet — add them under Catalog.</p>
+              <div class="fb-section-list">
+                <div *ngFor="let section of getProductSections(node, key); let si = index" class="fb-section">
+                  <div class="fb-section__head">
+                    <input type="text" class="fb-section__title" maxlength="24" [ngModel]="section.title"
+                           (ngModelChange)="setProductSectionTitle(node, key, si, $event)" placeholder="Section title" />
+                    <button type="button" class="fb-kv-remove" (click)="removeProductSection(node, key, si)" title="Remove section">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div class="fb-tags" *ngIf="section.productIds?.length">
+                    <div class="fb-tag" *ngFor="let pid of section.productIds; let pi = index">
+                      <span>{{ productName(pid) }}</span>
+                      <button type="button" class="fb-tag__remove" (click)="removeProductFromSection(node, key, si, pi)" title="Remove">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <select class="fb-product-add" #prodSel
+                          [disabled]="productSectionsFull(node, key)"
+                          (change)="addProductToSection(node, key, si, prodSel.value); prodSel.value=''">
+                    <option value="">+ Add product…</option>
+                    <option *ngFor="let p of productOptions()" [value]="p._id">{{ p.name }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="fb-btn-actions">
+                <button type="button" class="fb-btn-add-sm" (click)="addProductSection(node, key)">
+                  <i class="fas fa-layer-group"></i> Add Section
+                </button>
+                <span class="fb-count-pill">{{ productCount(node, key) }}/30 products</span>
+              </div>
             </ng-container>
 
             <!-- Node picker -->
@@ -347,15 +539,7 @@
             </ng-container>
 
             <!-- Plain string fallback -->
-            <ng-container *ngIf="getConfigFieldType(node, key) !== 'string[]'
-              && getConfigFieldType(node, key) !== 'select'
-              && getConfigFieldType(node, key) !== 'number'
-              && getConfigFieldType(node, key) !== 'textarea'
-              && getConfigFieldType(node, key) !== 'json'
-              && getConfigFieldType(node, key) !== 'node'
-              && getConfigFieldType(node, key) !== 'bucket'
-              && getConfigFieldType(node, key) !== 'product'
-              && getConfigFieldType(node, key) !== 'template'">
+            <ng-container *ngIf="isPlainStringField(node, key)">
               <input [(ngModel)]="node.config[key]"
                      (ngModelChange)="onNodeFieldChange()" />
             </ng-container>

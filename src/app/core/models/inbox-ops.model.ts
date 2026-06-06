@@ -130,6 +130,29 @@ export interface IOpsReviewDetail extends IOpsReviewRow {
   };
 }
 
+export interface ICreateReviewPayload {
+  platform: 'google' | 'facebook' | 'instagram' | 'website';
+  customerName?: string;
+  customerHandle?: string;
+  rating?: number | null;
+  reviewBody: string;
+  sentiment?: 'positive' | 'negative' | 'neutral';
+}
+
+export interface ICreateOrderLineItem {
+  productId: string;
+  qty: number;
+}
+
+export interface ICreateOrderPayload {
+  channel: 'whatsapp' | 'instagram' | 'voice' | 'manual';
+  lineItems: ICreateOrderLineItem[];
+  buyerName?: string;
+  buyerPhone?: string;
+  shippingAddress?: string;
+  notes?: string;
+}
+
 export interface IOpsTableColumn {
   key: string;
   label: string;

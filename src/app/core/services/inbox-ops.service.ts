@@ -4,6 +4,8 @@ import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
 import {
+  ICreateOrderPayload,
+  ICreateReviewPayload,
   IOpsComplaintDetail,
   IOpsComplaintRow,
   IOpsComplaintStats,
@@ -34,6 +36,12 @@ export class InboxOpsService {
 
   getOrderDetail(id: string): Observable<IOpsOrderDetail> {
     return this.api.get<IApiResponse<IOpsOrderDetail>>(`/inbox/ops/orders/${id}`).pipe(map((r) => r.data!));
+  }
+
+  createOrder(payload: ICreateOrderPayload): Observable<IOpsOrderDetail> {
+    return this.api
+      .post<IApiResponse<IOpsOrderDetail>>('/inbox/ops/orders', payload)
+      .pipe(map((r) => r.data!));
   }
 
   updateOrderStatus(id: string, status: string, notes?: string): Observable<IOpsOrderDetail> {
@@ -81,6 +89,12 @@ export class InboxOpsService {
   closeComplaint(id: string): Observable<IOpsComplaintDetail> {
     return this.api
       .post<IApiResponse<IOpsComplaintDetail>>(`/inbox/ops/complaints/${id}/close`, {})
+      .pipe(map((r) => r.data!));
+  }
+
+  createReview(payload: ICreateReviewPayload): Observable<IOpsReviewDetail> {
+    return this.api
+      .post<IApiResponse<IOpsReviewDetail>>('/inbox/ops/reviews', payload)
       .pipe(map((r) => r.data!));
   }
 

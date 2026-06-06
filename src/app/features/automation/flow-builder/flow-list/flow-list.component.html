@@ -20,10 +20,6 @@
       <button type="button" class="btn-secondary" routerLink="/app/automation">
         <i class="fas fa-arrow-left"></i> Hub
       </button>
-      <button type="button" class="btn-secondary" [disabled]="importing" (click)="importFromGrowth()">
-        <i class="fas fa-file-import"></i>
-        {{ importing ? 'Importing…' : 'Import from Growth' }}
-      </button>
       <button type="button" class="btn-primary" (click)="createBlank()">
         <i class="fas fa-plus"></i> New Flow
       </button>
@@ -38,6 +34,7 @@
       (click)="setTab('my-flows')">
       <i class="fas fa-project-diagram" aria-hidden="true"></i>
       My Flows
+      <span *ngIf="total > 0" class="tab-count">{{ total }}</span>
     </button>
     <button type="button" role="tab" class="page-tab"
       [class.is-active]="activeTab === 'blueprints'"
@@ -48,15 +45,16 @@
     </button>
   </div>
 
-  <!-- ── Loading skeleton ──────────────────────────────────────────────── -->
-  <div *ngIf="loading" class="flow-grid">
-    <div class="skeleton-card" *ngFor="let i of skeletons"></div>
-  </div>
-
   <!-- ── My Flows ───────────────────────────────────────────────────────── -->
-  <ng-container *ngIf="!loading && activeTab === 'my-flows'">
+  <ng-container *ngIf="activeTab === 'my-flows'">
 
-    <div *ngIf="!flows.length" class="empty-state animate-fade-in-up">
+    <!-- Loading skeletons -->
+    <div *ngIf="loading" class="flows-table-wrap">
+      <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="!loading && flows.length === 0" class="empty-state animate-fade-in-up">
       <i class="fas fa-project-diagram empty-state__icon"></i>
       <h3 class="empty-state__title">No Flows Yet</h3>
       <p class="empty-state__text">
@@ -67,64 +65,110 @@
       </button>
     </div>
 
-    <div *ngIf="flows.length" class="flow-grid">
-      <article class="flow-card animate-fade-in-up"
-        *ngFor="let flow of flows; let i = index"
-        [style.animation-delay]="(i * 0.05) + 's'">
+    <!-- List table -->
+    <div *ngIf="!loading && flows.length > 0" class="flows-table-wrap animate-fade-in-up">
+      <div class="flows-table-scroll">
+        <table class="flows-table">
+          <thead>
+            <tr>
+              <th>Flow</th>
+              <th>Channels</th>
+              <th>Status</th>
+              <th class="col-nodes">Nodes</th>
+              <th class="col-edges">Edges</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let flow of flows" class="flow-row animate-fade-in-up">
 
-        <div class="flow-card__header">
-          <div class="flow-card__channels">
-            <span *ngFor="let ch of flow.channels" class="flow-cat" [ngClass]="channelClass(ch)">
-              <i [ngClass]="channelIcon(ch)" aria-hidden="true"></i>
-              {{ ch | titlecase }}
-            </span>
-          </div>
-          <span class="status-badge" [ngClass]="statusClass(flow.status)">
-            <i class="fas" [ngClass]="statusIcon(flow.status)" aria-hidden="true"></i>
-            {{ (flow.status || 'draft') | titlecase }}
-          </span>
-        </div>
+              <!-- Name + description -->
+              <td class="col-name">
+                <p class="flow-row__name">{{ flow.name }}</p>
+                <p *ngIf="flow.description" class="flow-row__desc">{{ flow.description }}</p>
+              </td>
 
-        <h3 class="flow-card__name">{{ flow.name }}</h3>
-        <p class="flow-card__desc">{{ flow.description || 'No description' }}</p>
+              <!-- Channels -->
+              <td class="col-channels">
+                <div class="flow-row__channels">
+                  <span *ngFor="let ch of flow.channels" class="flow-cat" [ngClass]="channelClass(ch)">
+                    <i [ngClass]="channelIcon(ch)" aria-hidden="true"></i>
+                    {{ ch | titlecase }}
+                  </span>
+                </div>
+              </td>
 
-        <div class="flow-card__chips">
-          <span class="flow-card__chip">
-            <i class="fas fa-sitemap" aria-hidden="true"></i>
-            {{ flow.nodes?.length || 0 }} nodes
-          </span>
-          <span class="flow-card__chip">
-            <i class="fas fa-random" aria-hidden="true"></i>
-            {{ flow.edges?.length || 0 }} edges
-          </span>
-        </div>
+              <!-- Status -->
+              <td class="col-status">
+                <span class="status-badge" [ngClass]="statusClass(flow.status)">
+                  <i class="fas" [ngClass]="statusIcon(flow.status)" aria-hidden="true"></i>
+                  {{ (flow.status || 'draft') | titlecase }}
+                </span>
+              </td>
 
-        <div class="flow-card__footer">
-          <div class="flow-card__footer-left">
-            <button type="button" class="btn-icon-action" (click)="editFlow(flow)" title="Edit flow">
-              <i class="fas fa-pen-to-square" aria-hidden="true"></i>
-            </button>
-            <button type="button" class="btn-icon-action"
-              [disabled]="toggling.has(flow._id!)"
-              (click)="toggleStatus(flow)"
-              [title]="flow.status === 'active' ? 'Pause flow' : 'Publish flow'">
-              <i class="fas" [ngClass]="flow.status === 'active' ? 'fa-pause' : 'fa-play'" aria-hidden="true"></i>
-            </button>
-          </div>
-          <button type="button" class="btn-icon-danger"
-            [disabled]="deleting.has(flow._id!)"
-            (click)="$event.stopPropagation(); deleteFlow(flow)"
-            title="Delete flow">
-            <i class="fas fa-trash-alt" aria-hidden="true"></i>
-          </button>
-        </div>
-      </article>
+              <!-- Nodes -->
+              <td class="col-nodes">
+                <span class="flow-chip">
+                  <i class="fas fa-sitemap" aria-hidden="true"></i>
+                  {{ flow.nodes?.length || 0 }}
+                </span>
+              </td>
+
+              <!-- Edges -->
+              <td class="col-edges">
+                <span class="flow-chip">
+                  <i class="fas fa-random" aria-hidden="true"></i>
+                  {{ flow.edges?.length || 0 }}
+                </span>
+              </td>
+
+              <!-- Actions -->
+              <td class="col-actions">
+                <div class="flow-row__actions">
+                  <button type="button" class="btn-icon-action" (click)="editFlow(flow)" title="Edit flow">
+                    <i class="fas fa-pen-to-square" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="btn-icon-action"
+                    [disabled]="toggling.has(flow._id!)"
+                    (click)="toggleStatus(flow)"
+                    [title]="flow.status === 'active' ? 'Pause flow' : 'Publish flow'">
+                    <i class="fas"
+                       [ngClass]="toggling.has(flow._id!) ? 'fa-spinner fa-spin' : (flow.status === 'active' ? 'fa-pause' : 'fa-play')"
+                       aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="btn-icon-danger"
+                    [disabled]="deleting.has(flow._id!)"
+                    (click)="$event.stopPropagation(); deleteFlow(flow)"
+                    title="Delete flow">
+                    <i class="fas"
+                       [ngClass]="deleting.has(flow._id!) ? 'fa-spinner fa-spin' : 'fa-trash-alt'"
+                       aria-hidden="true"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination — shared app-pagination (same as contacts page) -->
+      <div *ngIf="total > 0" class="flows-pagination-wrap">
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalPages]="totalPages"
+          [totalItems]="total"
+          [pageSize]="pageSize"
+          [loading]="loading"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
+        ></app-pagination>
+      </div>
     </div>
 
   </ng-container>
 
   <!-- ── Blueprints ─────────────────────────────────────────────────────── -->
-  <ng-container *ngIf="!loading && activeTab === 'blueprints'">
+  <ng-container *ngIf="activeTab === 'blueprints'">
 
     <div *ngIf="!blueprints.length" class="empty-state animate-fade-in-up">
       <i class="fas fa-layer-group empty-state__icon"></i>
@@ -132,29 +176,66 @@
       <p class="empty-state__text">Pre-built flow templates will appear here to help you get started quickly.</p>
     </div>
 
-    <div *ngIf="blueprints.length" class="flow-grid">
-      <article class="flow-card flow-card--blueprint animate-fade-in-up"
-        *ngFor="let bp of blueprints; let i = index"
-        [style.animation-delay]="(i * 0.05) + 's'">
+    <div *ngIf="blueprints.length" class="flows-table-wrap animate-fade-in-up">
+      <div class="flows-table-scroll">
+        <table class="flows-table">
+          <thead>
+            <tr>
+              <th>Blueprint</th>
+              <th>Channels</th>
+              <th class="col-nodes">Nodes</th>
+              <th class="col-edges">Edges</th>
+              <th class="col-actions">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bp of blueprints" class="flow-row animate-fade-in-up">
 
-        <div class="flow-card__header">
-          <div class="flow-card__channels">
-            <span *ngFor="let ch of bp.channels" class="flow-cat" [ngClass]="channelClass(ch)">
-              <i [ngClass]="channelIcon(ch)" aria-hidden="true"></i>
-              {{ ch | titlecase }}
-            </span>
-          </div>
-          <span class="blueprint-badge">Blueprint</span>
-        </div>
+              <!-- Name + description -->
+              <td class="col-name">
+                <div class="flow-row__name-wrap">
+                  <p class="flow-row__name">{{ bp.name }}</p>
+                  <p *ngIf="bp.description" class="flow-row__desc">{{ bp.description }}</p>
+                </div>
+              </td>
 
-        <h3 class="flow-card__name">{{ bp.name }}</h3>
-        <p class="flow-card__desc">{{ bp.description }}</p>
+              <!-- Channels -->
+              <td class="col-channels">
+                <div class="flow-row__channels">
+                  <span *ngFor="let ch of bp.channels" class="flow-cat" [ngClass]="channelClass(ch)">
+                    <i [ngClass]="channelIcon(ch)" aria-hidden="true"></i>
+                    {{ ch | titlecase }}
+                  </span>
+                </div>
+              </td>
 
-        <button type="button" class="btn-primary btn-primary--full" (click)="useBlueprint(bp)">
-          <i class="fas fa-magic" aria-hidden="true"></i>
-          Use Blueprint
-        </button>
-      </article>
+              <!-- Nodes -->
+              <td class="col-nodes">
+                <span class="flow-chip">
+                  <i class="fas fa-sitemap" aria-hidden="true"></i>
+                  {{ bp.nodes?.length || 0 }}
+                </span>
+              </td>
+
+              <!-- Edges -->
+              <td class="col-edges">
+                <span class="flow-chip">
+                  <i class="fas fa-random" aria-hidden="true"></i>
+                  {{ bp.edges?.length || 0 }}
+                </span>
+              </td>
+
+              <!-- Action -->
+              <td class="col-actions">
+                <button type="button" class="btn-primary btn-blueprint" (click)="useBlueprint(bp)">
+                  <i class="fas fa-magic" aria-hidden="true"></i>
+                  Use Blueprint
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </ng-container>

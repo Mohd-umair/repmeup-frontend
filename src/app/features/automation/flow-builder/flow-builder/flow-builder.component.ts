@@ -373,11 +373,44 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  /** Click-to-add: drops a node at a cascading offset (drag-and-drop is preferred). */
+  /** Click-to-add: drops a node at the first non-overlapping grid position. */
   addNodeFromCatalog(item?: IFlowNodeCatalogItem): void {
     if (!this.flow || !item) return;
-    const n = this.flow.nodes.length;
-    this.createNodeAt(item, 120 + n * 40, 120 + n * 30);
+    const pos = this.findFreePosition();
+    this.createNodeAt(item, pos.x, pos.y);
+  }
+
+  /**
+   * Find the first grid-aligned canvas position that does not overlap any
+   * existing node. Nodes are treated as 240×100 px bounding boxes with 20px
+   * gutters on each side so we scan on a 260×120 grid.
+   */
+  private findFreePosition(): { x: number; y: number } {
+    const NODE_W = 240, NODE_H = 100, GAP_X = 20, GAP_Y = 20;
+    const STEP_X = NODE_W + GAP_X, STEP_Y = NODE_H + GAP_Y;
+    const COLS = 4;
+
+    const occupied = (this.flow?.nodes || []).map((n) => n.position);
+
+    const overlaps = (cx: number, cy: number): boolean =>
+      occupied.some(
+        (p) =>
+          cx < p.x + NODE_W + GAP_X &&
+          cx + NODE_W + GAP_X > p.x &&
+          cy < p.y + NODE_H + GAP_Y &&
+          cy + NODE_H + GAP_Y > p.y
+      );
+
+    const START_X = 80, START_Y = 80;
+    for (let row = 0; row < 50; row++) {
+      for (let col = 0; col < COLS; col++) {
+        const x = START_X + col * STEP_X;
+        const y = START_Y + row * STEP_Y;
+        if (!overlaps(x, y)) return { x, y };
+      }
+    }
+    // Absolute fallback — should never be reached in practice
+    return { x: START_X, y: START_Y + occupied.length * STEP_Y };
   }
 
   /** Shared node factory used by both click-to-add and drag-and-drop. */
@@ -567,6 +600,18 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   showWaTemplatePicker(node: IFlowNode, key: string): boolean {
     return node.type === 'action.send_template' && key === 'templateId';
+  }
+
+  /** Field types that render with their own dedicated editor (not the plain text input). */
+  private static readonly NON_STRING_FIELD_TYPES = new Set([
+    'string[]', 'select', 'number', 'textarea', 'json', 'node', 'bucket',
+    'product', 'template', 'reply_buttons', 'list_sections', 'product_sections'
+  ]);
+
+  /** True when the field should fall back to a plain text input. */
+  isPlainStringField(node: IFlowNode, key: string): boolean {
+    if (this.showWaTemplatePicker(node, key)) return false;
+    return !FlowBuilderComponent.NON_STRING_FIELD_TYPES.has(this.getConfigFieldType(node, key));
   }
 
   get showWaConnectionSelector(): boolean {
@@ -793,7 +838,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
       id,
       type: src.type,
       label: src.label ? `${src.label} (copy)` : src.label,
-      position: { x: src.position.x + 40, y: src.position.y + 40 },
+      position: this.findFreePosition(),
       config: JSON.parse(JSON.stringify(src.config || {})),
       supportedChannels: src.supportedChannels
     };
@@ -885,6 +930,288 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     if (!node.config) node.config = {};
     node.config[key] = parseJsonField(value);
     this.onNodeFieldChange();
+  }
+
+  // ── Visual field editors ───────────────────────────────────────────────────
+
+  /** Return string[] config value, always as an array. */
+  getStringArray(node: IFlowNode, key: string): string[] {
+    const v = node.config?.[key];
+    return Array.isArray(v) ? v : [];
+  }
+
+  addStringArrayItem(node: IFlowNode, key: string, input: HTMLInputElement): void {
+    const val = input.value.trim();
+    if (!val) return;
+    if (!node.config) node.config = {};
+    const arr = this.getStringArray(node, key);
+    if (!arr.includes(val)) {
+      node.config[key] = [...arr, val];
+      this.onNodeFieldChange();
+    }
+    input.value = '';
+  }
+
+  addStringArrayOnEnter(node: IFlowNode, key: string, input: HTMLInputElement, event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.addStringArrayItem(node, key, input);
+    }
+  }
+
+  removeStringArrayItem(node: IFlowNode, key: string, index: number): void {
+    if (!node.config) return;
+    const arr = this.getStringArray(node, key);
+    node.config[key] = arr.filter((_, i) => i !== index);
+    this.onNodeFieldChange();
+  }
+
+  /** Detect if a json field holds a buttons array (array of objects with label). */
+  isButtonsArray(node: IFlowNode, key: string): boolean {
+    if (key !== 'buttons') return false;
+    const v = node.config?.[key];
+    return Array.isArray(v) || v == null;
+  }
+
+  /** Detect if a json field holds a key-value object (not a buttons array). */
+  isKvObject(node: IFlowNode, key: string): boolean {
+    if (key === 'buttons') return false;
+    const v = node.config?.[key];
+    if (v == null || v === '') return true;
+    return typeof v === 'object' && !Array.isArray(v);
+  }
+
+  // ── Buttons array helpers ─────────────────────────────────────────────────
+
+  getButtons(node: IFlowNode, key: string): Array<{ label: string; type: string; payload?: string; url?: string }> {
+    const v = node.config?.[key];
+    if (!Array.isArray(v)) return [];
+    return v as Array<{ label: string; type: string; payload?: string; url?: string }>;
+  }
+
+  addButton(node: IFlowNode, key: string): void {
+    if (!node.config) node.config = {};
+    const btns = [...this.getButtons(node, key), { label: 'Button', type: 'postback', payload: '' }];
+    node.config[key] = btns;
+    this.onNodeFieldChange();
+  }
+
+  removeButton(node: IFlowNode, key: string, index: number): void {
+    if (!node.config) return;
+    node.config[key] = this.getButtons(node, key).filter((_, i) => i !== index);
+    this.onNodeFieldChange();
+  }
+
+  setButtonField(node: IFlowNode, key: string, index: number, field: string, value: string): void {
+    if (!node.config) node.config = {};
+    const btns = this.getButtons(node, key).map((b, i) => i === index ? { ...b, [field]: value } : b);
+    // When switching to web_url, ensure url key exists; when switching to postback, ensure payload exists
+    if (field === 'type') {
+      btns[index] = value === 'web_url'
+        ? { label: btns[index].label, type: 'web_url', url: btns[index].url || '' }
+        : { label: btns[index].label, type: 'postback', payload: btns[index].payload || '' };
+    }
+    node.config[key] = btns;
+    this.onNodeFieldChange();
+  }
+
+  insertLinkButton(node: IFlowNode, key: string): void {
+    if (!node.config) node.config = {};
+    const btns = [...this.getButtons(node, key), { label: 'Visit Link', type: 'web_url', url: 'https://' }];
+    node.config[key] = btns;
+    this.onNodeFieldChange();
+  }
+
+  insertPostbackButton(node: IFlowNode, key: string): void {
+    if (!node.config) node.config = {};
+    const btns = [...this.getButtons(node, key), { label: 'Quick Reply', type: 'postback', payload: '' }];
+    node.config[key] = btns;
+    this.onNodeFieldChange();
+  }
+
+  // ── Key-value object helpers ───────────────────────────────────────────────
+
+  getKvPairs(node: IFlowNode, key: string): Array<{ k: string; v: string }> {
+    const obj = node.config?.[key];
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return [];
+    return Object.entries(obj as Record<string, unknown>).map(([k, v]) => ({
+      k,
+      v: typeof v === 'string' ? v : JSON.stringify(v)
+    }));
+  }
+
+  addKvPair(node: IFlowNode, key: string): void {
+    if (!node.config) node.config = {};
+    const obj = { ...(node.config[key] as Record<string, string> || {}), '': '' };
+    node.config[key] = obj;
+    this.onNodeFieldChange();
+  }
+
+  removeKvPair(node: IFlowNode, key: string, pairKey: string): void {
+    if (!node.config) return;
+    const obj = { ...(node.config[key] as Record<string, string> || {}) };
+    delete obj[pairKey];
+    node.config[key] = obj;
+    this.onNodeFieldChange();
+  }
+
+  setKvPair(node: IFlowNode, key: string, oldKey: string, newKey: string, newVal: string): void {
+    if (!node.config) node.config = {};
+    const obj = { ...(node.config[key] as Record<string, string> || {}) };
+    if (oldKey !== newKey) delete obj[oldKey];
+    obj[newKey] = newVal;
+    node.config[key] = obj;
+    this.onNodeFieldChange();
+  }
+
+  // ── WhatsApp reply buttons editor (max 3) ─────────────────────────────────
+
+  getReplyButtons(node: IFlowNode, key: string): Array<{ id: string; title: string }> {
+    const v = node.config?.[key];
+    return Array.isArray(v) ? (v as Array<{ id: string; title: string }>) : [];
+  }
+
+  addReplyButton(node: IFlowNode, key: string): void {
+    if (!node.config) node.config = {};
+    const list = this.getReplyButtons(node, key);
+    if (list.length >= 3) return;
+    const n = list.length + 1;
+    node.config[key] = [...list, { id: `button_${n}`, title: `Button ${n}` }];
+    this.onNodeFieldChange();
+  }
+
+  removeReplyButton(node: IFlowNode, key: string, index: number): void {
+    if (!node.config) return;
+    node.config[key] = this.getReplyButtons(node, key).filter((_, i) => i !== index);
+    this.onNodeFieldChange();
+  }
+
+  setReplyButtonField(node: IFlowNode, key: string, index: number, field: 'id' | 'title', value: string): void {
+    if (!node.config) node.config = {};
+    node.config[key] = this.getReplyButtons(node, key).map((b, i) => i === index ? { ...b, [field]: value } : b);
+    this.onNodeFieldChange();
+  }
+
+  replyButtonsFull(node: IFlowNode, key: string): boolean {
+    return this.getReplyButtons(node, key).length >= 3;
+  }
+
+  // ── WhatsApp list sections editor (max 10 rows total) ─────────────────────
+
+  getListSections(node: IFlowNode, key: string): Array<{ title: string; rows: Array<{ id: string; title: string; description?: string }> }> {
+    const v = node.config?.[key];
+    return Array.isArray(v) ? (v as Array<{ title: string; rows: Array<{ id: string; title: string; description?: string }> }>) : [];
+  }
+
+  listRowCount(node: IFlowNode, key: string): number {
+    return this.getListSections(node, key).reduce((sum, s) => sum + (s.rows?.length || 0), 0);
+  }
+
+  private commitListSections(node: IFlowNode, key: string, sections: Array<{ title: string; rows: Array<{ id: string; title: string; description?: string }> }>): void {
+    if (!node.config) node.config = {};
+    node.config[key] = sections;
+    this.onNodeFieldChange();
+  }
+
+  addListSection(node: IFlowNode, key: string): void {
+    const sections = this.getListSections(node, key);
+    if (sections.length >= 10) return;
+    this.commitListSections(node, key, [...sections, { title: 'Section', rows: [] }]);
+  }
+
+  removeListSection(node: IFlowNode, key: string, si: number): void {
+    this.commitListSections(node, key, this.getListSections(node, key).filter((_, i) => i !== si));
+  }
+
+  setListSectionTitle(node: IFlowNode, key: string, si: number, value: string): void {
+    const sections = this.getListSections(node, key).map((s, i) => i === si ? { ...s, title: value } : s);
+    this.commitListSections(node, key, sections);
+  }
+
+  addListRow(node: IFlowNode, key: string, si: number): void {
+    if (this.listRowCount(node, key) >= 10) return;
+    const sections = this.getListSections(node, key).map((s, i) => {
+      if (i !== si) return s;
+      const n = (s.rows?.length || 0) + 1;
+      return { ...s, rows: [...(s.rows || []), { id: `row_${si + 1}_${n}`, title: `Option ${n}`, description: '' }] };
+    });
+    this.commitListSections(node, key, sections);
+  }
+
+  removeListRow(node: IFlowNode, key: string, si: number, ri: number): void {
+    const sections = this.getListSections(node, key).map((s, i) =>
+      i === si ? { ...s, rows: (s.rows || []).filter((_, j) => j !== ri) } : s
+    );
+    this.commitListSections(node, key, sections);
+  }
+
+  setListRowField(node: IFlowNode, key: string, si: number, ri: number, field: 'id' | 'title' | 'description', value: string): void {
+    const sections = this.getListSections(node, key).map((s, i) => {
+      if (i !== si) return s;
+      return { ...s, rows: (s.rows || []).map((r, j) => j === ri ? { ...r, [field]: value } : r) };
+    });
+    this.commitListSections(node, key, sections);
+  }
+
+  listRowsFull(node: IFlowNode, key: string): boolean {
+    return this.listRowCount(node, key) >= 10;
+  }
+
+  // ── WhatsApp multi-product sections editor (max 30 products total) ────────
+
+  getProductSections(node: IFlowNode, key: string): Array<{ title: string; productIds: string[] }> {
+    const v = node.config?.[key];
+    return Array.isArray(v) ? (v as Array<{ title: string; productIds: string[] }>) : [];
+  }
+
+  productCount(node: IFlowNode, key: string): number {
+    return this.getProductSections(node, key).reduce((sum, s) => sum + (s.productIds?.length || 0), 0);
+  }
+
+  private commitProductSections(node: IFlowNode, key: string, sections: Array<{ title: string; productIds: string[] }>): void {
+    if (!node.config) node.config = {};
+    node.config[key] = sections;
+    this.onNodeFieldChange();
+  }
+
+  addProductSection(node: IFlowNode, key: string): void {
+    this.commitProductSections(node, key, [...this.getProductSections(node, key), { title: 'Section', productIds: [] }]);
+  }
+
+  removeProductSection(node: IFlowNode, key: string, si: number): void {
+    this.commitProductSections(node, key, this.getProductSections(node, key).filter((_, i) => i !== si));
+  }
+
+  setProductSectionTitle(node: IFlowNode, key: string, si: number, value: string): void {
+    this.commitProductSections(node, key, this.getProductSections(node, key).map((s, i) => i === si ? { ...s, title: value } : s));
+  }
+
+  /** Add the chosen product to a section (ignores blanks and duplicates). */
+  addProductToSection(node: IFlowNode, key: string, si: number, productId: string): void {
+    const id = String(productId || '').trim();
+    if (!id || this.productCount(node, key) >= 30) return;
+    const sections = this.getProductSections(node, key).map((s, i) => {
+      if (i !== si) return s;
+      if ((s.productIds || []).includes(id)) return s;
+      return { ...s, productIds: [...(s.productIds || []), id] };
+    });
+    this.commitProductSections(node, key, sections);
+  }
+
+  removeProductFromSection(node: IFlowNode, key: string, si: number, pi: number): void {
+    const sections = this.getProductSections(node, key).map((s, i) =>
+      i === si ? { ...s, productIds: (s.productIds || []).filter((_, j) => j !== pi) } : s
+    );
+    this.commitProductSections(node, key, sections);
+  }
+
+  productSectionsFull(node: IFlowNode, key: string): boolean {
+    return this.productCount(node, key) >= 30;
+  }
+
+  /** Display name for a product id (falls back to the id when not loaded). */
+  productName(productId: string): string {
+    return this.products.find((p) => p._id === productId)?.name || productId;
   }
 
   toggleCat(cat: string): void {

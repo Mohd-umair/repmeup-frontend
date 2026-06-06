@@ -17,6 +17,7 @@ import { OpsStatusBadgeComponent } from '../shared/ops-status-badge.component';
 import { OpsCustomerCellComponent } from '../shared/ops-customer-cell.component';
 import { OpsDetailDrawerComponent } from '../shared/ops-detail-drawer.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { CreateOrderModalComponent } from './create-order-modal.component';
 import { formatInrCompact } from '../../../core/utils/currency-format';
 
 @Component({
@@ -29,7 +30,8 @@ import { formatInrCompact } from '../../../core/utils/currency-format';
     OpsStatusBadgeComponent,
     OpsCustomerCellComponent,
     OpsDetailDrawerComponent,
-    PaginationComponent
+    PaginationComponent,
+    CreateOrderModalComponent
   ],
   templateUrl: './inbox-order-management.component.html'
 })
@@ -53,6 +55,7 @@ export class InboxOrderManagementComponent implements OnInit, OnDestroy {
 
   drawerOpen = false;
   detail: IOpsOrderDetail | null = null;
+  createModalOpen = false;
 
   readonly tabs = [
     { value: 'all', label: 'All Orders' },
@@ -197,6 +200,11 @@ export class InboxOrderManagementComponent implements OnInit, OnDestroy {
 
   formatRevenue(n: number): string {
     return formatInrCompact(n);
+  }
+
+  onOrderCreated(): void {
+    this.loadList();
+    this.loadStats();
   }
 
   trackRow = (row: IOpsOrderRow) => row.id;

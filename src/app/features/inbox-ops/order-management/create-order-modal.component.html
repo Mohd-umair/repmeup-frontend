@@ -1,0 +1,233 @@
+<!-- Backdrop -->
+<div class="com-backdrop" (click)="close.emit()" aria-hidden="true"></div>
+
+<!-- Modal -->
+<div class="com-modal" role="dialog" aria-modal="true" aria-labelledby="com-title">
+
+  <!-- Header -->
+  <div class="com-header">
+    <div class="com-header__left">
+      <div class="com-header__icon">
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+      <div>
+        <h2 class="com-header__title" id="com-title">Create Order</h2>
+        <p class="com-header__sub">Manually create a new purchase order</p>
+      </div>
+    </div>
+    <button type="button" class="com-close-btn" (click)="close.emit()" aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="com-body">
+
+    <!-- Channel -->
+    <div class="com-field-group">
+      <label class="com-label">Channel</label>
+      <div class="com-channel-row">
+        <button
+          *ngFor="let ch of channels"
+          type="button"
+          class="com-channel-btn"
+          [class.com-channel-btn--active]="channel === ch.value"
+          (click)="channel = ch.value"
+        >
+          <i [ngClass]="ch.icon"></i>
+          {{ ch.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Product Search -->
+    <div class="com-field-group">
+      <label class="com-label" for="com-product-search">
+        Products <span class="com-required">*</span>
+      </label>
+      <div class="com-product-search-wrap">
+        <div class="com-input-icon-wrap">
+          <i class="fas fa-search com-input-icon"></i>
+          <input
+            id="com-product-search"
+            type="text"
+            class="com-input com-input--icon"
+            placeholder="Search products by name or SKU…"
+            [value]="productQuery"
+            (input)="onProductQueryChange($any($event.target).value)"
+            (blur)="closeDropdown()"
+            autocomplete="off"
+          />
+          <i *ngIf="productSearchLoading" class="fas fa-spinner fa-spin com-input-icon-right"></i>
+        </div>
+
+        <!-- Dropdown -->
+        <div *ngIf="showProductDropdown && productResults.length" class="com-product-dropdown">
+          <button
+            *ngFor="let p of productResults"
+            type="button"
+            class="com-product-option"
+            (mousedown)="addProduct(p)"
+          >
+            <img
+              *ngIf="p.images?.[0]; else noImg"
+              [src]="p.images[0]"
+              class="com-product-option__img"
+              [alt]="p.name"
+            />
+            <ng-template #noImg>
+              <div class="com-product-option__img com-product-option__img--placeholder">
+                <i class="fas fa-box"></i>
+              </div>
+            </ng-template>
+            <div class="com-product-option__info">
+              <p class="com-product-option__name">{{ p.name }}</p>
+              <p class="com-product-option__meta">
+                <span *ngIf="p.sku" class="com-product-option__sku">{{ p.sku }}</span>
+                <span class="com-product-option__price">{{ formatPrice(p) }}</span>
+              </p>
+            </div>
+            <i class="fas fa-plus com-product-option__add"></i>
+          </button>
+        </div>
+
+        <div *ngIf="showProductDropdown && !productSearchLoading && productResults.length === 0 && productQuery.length >= 1" class="com-product-empty">
+          No products found for "{{ productQuery }}"
+        </div>
+      </div>
+    </div>
+
+    <!-- Line Items -->
+    <div *ngIf="lineItems.length > 0" class="com-line-items">
+      <div class="com-line-items__header">
+        <span>Item</span>
+        <span>Unit Price</span>
+        <span>Qty</span>
+        <span>Subtotal</span>
+        <span></span>
+      </div>
+
+      <div *ngFor="let item of lineItems; let i = index" class="com-line-item">
+        <!-- Product info -->
+        <div class="com-line-item__product">
+          <img
+            *ngIf="item.product.images?.[0]; else noImgRow"
+            [src]="item.product.images[0]"
+            class="com-line-item__img"
+            [alt]="item.product.name"
+          />
+          <ng-template #noImgRow>
+            <div class="com-line-item__img com-line-item__img--placeholder">
+              <i class="fas fa-box"></i>
+            </div>
+          </ng-template>
+          <span class="com-line-item__name">{{ item.product.name }}</span>
+        </div>
+
+        <!-- Unit price -->
+        <span class="com-line-item__price">{{ formatPrice(item.product) }}</span>
+
+        <!-- Qty stepper -->
+        <div class="com-qty-stepper">
+          <button type="button" class="com-qty-btn" (click)="decrementQty(item)" [disabled]="item.qty <= 1">
+            <i class="fas fa-minus"></i>
+          </button>
+          <span class="com-qty-value">{{ item.qty }}</span>
+          <button type="button" class="com-qty-btn" (click)="incrementQty(item)">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+
+        <!-- Subtotal -->
+        <span class="com-line-item__subtotal">
+          {{ item.product.currency }}
+          {{ ((item.product.discountPercent ? item.product.price * (1 - item.product.discountPercent / 100) : item.product.price) * item.qty) | number:'1.2-2' }}
+        </span>
+
+        <!-- Remove -->
+        <button type="button" class="com-remove-btn" (click)="removeItem(i)" title="Remove item">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+
+      <!-- Order total -->
+      <div class="com-order-total">
+        <span class="com-order-total__label">Order Total</span>
+        <span class="com-order-total__value">
+          {{ orderCurrency }} {{ orderTotal | number:'1.2-2' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Buyer Details -->
+    <div class="com-section-title">Buyer Details <span class="com-optional">(optional)</span></div>
+    <div class="com-grid-2">
+      <div class="com-field-group">
+        <label class="com-label" for="com-buyer-name">Full Name</label>
+        <input
+          id="com-buyer-name"
+          type="text"
+          class="com-input"
+          placeholder="e.g. Rahul Sharma"
+          [(ngModel)]="buyerName"
+        />
+      </div>
+      <div class="com-field-group">
+        <label class="com-label" for="com-buyer-phone">Phone Number</label>
+        <input
+          id="com-buyer-phone"
+          type="tel"
+          class="com-input"
+          placeholder="e.g. +91 98765 43210"
+          [(ngModel)]="buyerPhone"
+        />
+      </div>
+    </div>
+
+    <div class="com-field-group">
+      <label class="com-label" for="com-shipping">Shipping Address</label>
+      <textarea
+        id="com-shipping"
+        class="com-input com-textarea"
+        placeholder="Enter delivery address…"
+        rows="2"
+        [(ngModel)]="shippingAddress"
+      ></textarea>
+    </div>
+
+    <div class="com-field-group">
+      <label class="com-label" for="com-notes">Notes</label>
+      <textarea
+        id="com-notes"
+        class="com-input com-textarea"
+        placeholder="Internal notes, special instructions…"
+        rows="2"
+        [(ngModel)]="notes"
+      ></textarea>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="com-footer">
+    <div *ngIf="lineItems.length > 0" class="com-footer__total">
+      <span>Total:</span>
+      <strong>{{ orderCurrency }} {{ orderTotal | number:'1.2-2' }}</strong>
+    </div>
+    <div class="com-footer__actions">
+      <button type="button" class="com-btn-secondary" (click)="close.emit()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="com-btn-primary"
+        [disabled]="!isValid || submitting"
+        (click)="submit()"
+      >
+        <i class="fas" [ngClass]="submitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+        {{ submitting ? 'Creating…' : 'Create Order' }}
+      </button>
+    </div>
+  </div>
+
+</div>
