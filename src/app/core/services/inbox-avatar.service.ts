@@ -18,8 +18,11 @@ function pickBestAvatarChannel(channels: IContactChannel[] | undefined | null): 
 }
 
 const MAX_CACHE = 300;
-/** Sentinel: key was tried and failed — never retry. */
+/** Sentinel: key was tried and failed. Retried after FAILED_TTL_MS so transient
+ *  errors (expired CDN signature, momentary token/network blip) self-heal. */
 const FAILED = '__FAILED__';
+/** How long a failed lookup is suppressed before we allow a retry (5 min). */
+const FAILED_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Industry-standard avatar strategy for the inbox:
@@ -47,10 +50,31 @@ export class InboxAvatarService {
   /** key → resolved blob/CDN URL, or FAILED sentinel */
   private resolved = new Map<string, string>();
   private keyOrder: string[] = [];
+  /** key → epoch ms when a FAILED entry was recorded (for TTL-based retry) */
+  private failedAt = new Map<string, number>();
   /** in-flight observables, keyed by cache key */
   private inFlight = new Map<string, Observable<string | null>>();
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Reads the cache for a key. Returns:
+   *  - a string URL when a successful result is cached,
+   *  - null when a FAILED result is still within its TTL (caller shows initials),
+   *  - undefined when there is no usable cache entry (caller should fetch).
+   * Expired FAILED entries are evicted so the next call re-fetches.
+   */
+  private readCache(key: string): string | null | undefined {
+    const cached = this.resolved.get(key);
+    if (cached === undefined) return undefined;
+    if (cached !== FAILED) return cached;
+    const ts = this.failedAt.get(key) || 0;
+    if (Date.now() - ts < FAILED_TTL_MS) return null; // still suppressed
+    // TTL elapsed → drop the failed entry and allow a retry
+    this.resolved.delete(key);
+    this.failedAt.delete(key);
+    return undefined;
+  }
 
   /**
    * Returns an observable that emits the avatar URL to bind to [src], or null (show initials).
@@ -133,8 +157,8 @@ export class InboxAvatarService {
   getWhatsAppAttachmentUrl(interactionId: string, mid: string): Observable<string | null> {
     if (!interactionId || !mid) return of(null);
     const key = `wa_att_${interactionId}_${mid}`;
-    const cached = this.resolved.get(key);
-    if (cached !== undefined) return of(cached === FAILED ? null : cached);
+    const cached = this.readCache(key);
+    if (cached !== undefined) return of(cached);
     const url = `${this.apiUrl}/inbox/whatsapp-media?interactionId=${encodeURIComponent(interactionId)}&mid=${encodeURIComponent(mid)}`;
     return this.fetchViaProxy(key, url);
   }
@@ -145,15 +169,15 @@ export class InboxAvatarService {
   getAttachmentUrl(interactionId: string, mid: string): Observable<string | null> {
     if (!interactionId || !mid) return of(null);
     const key = `att_${interactionId}_${mid}`;
-    const cached = this.resolved.get(key);
-    if (cached !== undefined) return of(cached === FAILED ? null : cached);
+    const cached = this.readCache(key);
+    if (cached !== undefined) return of(cached);
     const url = `${this.apiUrl}/inbox/attachment?interactionId=${encodeURIComponent(interactionId)}&mid=${encodeURIComponent(mid)}`;
     return this.fetchViaProxy(key, url);
   }
 
   private fetchViaProxy(key: string, url: string): Observable<string | null> {
-    const cached = this.resolved.get(key);
-    if (cached !== undefined) return of(cached === FAILED ? null : cached);
+    const cached = this.readCache(key);
+    if (cached !== undefined) return of(cached);
 
     const existing = this.inFlight.get(key);
     if (existing) return existing;
@@ -183,8 +207,15 @@ export class InboxAvatarService {
       const old = this.resolved.get(oldest);
       if (old && old !== FAILED && old.startsWith('blob:')) URL.revokeObjectURL(old);
       this.resolved.delete(oldest);
+      this.failedAt.delete(oldest);
     }
     this.resolved.set(key, value);
+    // Stamp failures for TTL-based retry; clear any stale stamp on success.
+    if (value === FAILED) {
+      this.failedAt.set(key, Date.now());
+    } else {
+      this.failedAt.delete(key);
+    }
     this.keyOrder.push(key);
   }
 }

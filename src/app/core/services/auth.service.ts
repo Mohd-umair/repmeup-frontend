@@ -126,6 +126,20 @@ export class AuthService {
   }
 
   /**
+   * Magic-link login for demo prospects. Exchanges a one-time token for a session.
+   */
+  demoLogin(token: string): Observable<IApiResponse<IAuthResponse>> {
+    return this.apiService.post<IApiResponse<IAuthResponse>>('/auth/demo-login', { token })
+      .pipe(
+        tap(response => {
+          if (response.success && response.data) {
+            this.handleAuthSuccess(response.data);
+          }
+        })
+      );
+  }
+
+  /**
    * Logout user
    */
   logout(): void {

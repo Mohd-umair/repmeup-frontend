@@ -189,12 +189,12 @@
 
         <div *ngIf="settings.replyDelayMode !== 'human'" class="rounded-lg border px-4 py-3"
              style="background-color: var(--surface-primary); border-color: var(--card-border);">
-          <label class="text-sm font-semibold block mb-2" style="color: var(--text-primary);">Delay (minutes)</label>
+          <label class="text-sm font-semibold block mb-2" style="color: var(--text-primary);">Delay (seconds)</label>
           <input type="number" [(ngModel)]="settings.webhookDelay" name="webhookDelay"
-                 min="0" [max]="maxDelayMinutes" step="1"
+                 min="0" [max]="maxDelaySeconds" step="1"
                  class="w-full max-w-[8rem] px-3 py-2 rounded-lg border text-sm"
                  style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);">
-          <p class="text-[10px] mt-2" style="color: var(--text-muted);">0 uses the minimum safe wait (~45 seconds) for AI processing.</p>
+          <p class="text-[10px] mt-2" style="color: var(--text-muted);">Exact wait before each reply is sent. 0 = send immediately.</p>
         </div>
 
         <p *ngIf="settings.replyDelayMode === 'human'" class="text-xs rounded-lg border px-4 py-3"

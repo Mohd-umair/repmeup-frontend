@@ -6,7 +6,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { KnowledgeBaseService } from '../../../core/services/knowledge-base.service';
+import { KnowledgeBaseService, IKbCrawlStatus } from '../../../core/services/knowledge-base.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { EntitlementsStore, FEATURE_KEY } from '../../../core/services/entitlements.store';
 
@@ -49,6 +49,15 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   pendingUrlFormData: any = null;
   readonly wordCountOptions = [1000, 2000, 3000, 4000, 5000];
   readonly tagCountOptions  = [5, 10, 15, 20, 25];
+
+  // ── Whole-website crawl ──────────────────────────────────────────────────────
+  /** When true, the URL tab crawls internal pages instead of just the homepage. */
+  crawlWholeSite = false;
+  /** Platform ceiling for pages per crawl (mirrors backend KB_CRAWL_MAX_PAGES). */
+  readonly crawlMaxPages = 25;
+  /** Live crawl progress while a background job runs (null = no active crawl). */
+  crawlProgress: IKbCrawlStatus | null = null;
+  private crawlPollTimer: ReturnType<typeof setInterval> | null = null;
 
   // ── Static lookup data ─────────────────────────────────────────────────────
   readonly typeOptions = [
@@ -161,6 +170,7 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearCrawlPoll();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -396,6 +406,12 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
     const payload = { ...this.pendingUrlFormData, tags: [...this.urlTags] };
     this.pendingUrlFormData = null;
 
+    // Whole-site crawl → background job + polling. Single page → existing flow.
+    if (this.crawlWholeSite) {
+      this.startWebsiteCrawl(payload);
+      return;
+    }
+
     this.knowledgeBaseService.createFromURL(payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -414,6 +430,104 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  /**
+   * Kick off a whole-website crawl. The request returns immediately with a
+   * crawlJobId; we then poll status until the job finishes.
+   */
+  private startWebsiteCrawl(formData: any): void {
+    // Map the single-URL form to the crawl payload (titlePrefix instead of title).
+    const payload = {
+      url: formData.url,
+      titlePrefix: formData.title || undefined,
+      category: formData.category || undefined,
+      priority: formData.priority,
+      targetWordCount: formData.targetWordCount,
+      targetTagCount: formData.targetTagCount,
+      maxPages: this.crawlMaxPages,
+      tags: [...this.urlTags]
+    };
+
+    this.knowledgeBaseService.createFromWebsiteCrawl(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const jobId = response?.data?.crawlJobId;
+          if (response.success && jobId) {
+            this.notificationService.info('Crawl Started', 'Reading your website. This may take a couple of minutes.');
+            this.crawlProgress = {
+              crawlJobId: jobId, status: 'queued', done: false,
+              startUrl: payload.url, maxPages: response.data?.maxPages || this.crawlMaxPages,
+              pagesFound: 0, pagesProcessed: 0, entriesCreated: 0,
+              currentUrl: '', creditsUsed: 0, errors: [], error: ''
+            };
+            this.pollCrawlStatus(jobId);
+          } else {
+            this.submitting = false;
+          }
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          const msg = err?.error?.error || 'Failed to start website crawl. Please try again.';
+          this.notificationService.error('Crawl Failed', msg);
+          this.submitting = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  /** Poll the crawl job every 3s until it reaches a terminal state. */
+  private pollCrawlStatus(jobId: string): void {
+    this.clearCrawlPoll();
+    this.crawlPollTimer = setInterval(() => {
+      this.knowledgeBaseService.getCrawlStatus(jobId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (!response.success || !response.data) return;
+            this.crawlProgress = response.data;
+            if (response.data.done) {
+              this.clearCrawlPoll();
+              this.submitting = false;
+              this.onCrawlFinished(response.data);
+            }
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            // Transient poll error — keep polling; a persistent failure will
+            // surface when the job itself is marked failed.
+          }
+        });
+    }, 3000);
+  }
+
+  private onCrawlFinished(status: IKbCrawlStatus): void {
+    if (status.status === 'completed') {
+      this.notificationService.success('Website Imported', `${status.entriesCreated} page(s) added to your knowledge base.`);
+      this.router.navigate(['/app/knowledge-base']);
+    } else if (status.status === 'partial') {
+      this.notificationService.success('Website Imported', `${status.entriesCreated} page(s) added. ${status.errors.length} page(s) were skipped.`);
+      this.router.navigate(['/app/knowledge-base']);
+    } else {
+      this.notificationService.error('Crawl Failed', status.error || 'Could not import the website. Please try again.');
+    }
+    this.cdr.markForCheck();
+  }
+
+  private clearCrawlPoll(): void {
+    if (this.crawlPollTimer) {
+      clearInterval(this.crawlPollTimer);
+      this.crawlPollTimer = null;
+    }
+  }
+
+  /** Crawl progress as a 0–100 percentage for the progress bar. */
+  get crawlPercent(): number {
+    if (!this.crawlProgress) return 0;
+    const { pagesProcessed, maxPages } = this.crawlProgress;
+    if (!maxPages) return 0;
+    return Math.min(100, Math.round((pagesProcessed / maxPages) * 100));
   }
 
   goBack(): void {

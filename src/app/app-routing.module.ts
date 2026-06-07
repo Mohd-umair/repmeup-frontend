@@ -99,7 +99,14 @@ const routes: Routes = [
     ],
   },
   { path: 'terms', redirectTo: 'terms-conditions', pathMatch: 'full' },
-  
+
+  // Demo prospect magic-link landing (public). Standalone component, lazy-loaded.
+  {
+    path: 'demo-login',
+    loadComponent: () =>
+      import('./features/auth/demo-login/demo-login.component').then(m => m.DemoLoginComponent)
+  },
+
   // Auth routes (public)
   {
     path: 'auth',

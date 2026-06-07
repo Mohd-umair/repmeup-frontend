@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, computed, ElementRef, ViewChild } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subscription, interval, Subject } from 'rxjs';
 import { distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
@@ -103,25 +103,36 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   // Make Math available in template
   Math = Math;
 
+  /** Tab bar element — scroll target when switching tabs via the sidebar. */
+  @ViewChild('tabsAnchor') private tabsAnchor?: ElementRef<HTMLElement>;
+
   constructor(
     private analyticsService: AnalyticsService,
     private notificationService: NotificationService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private location: Location
   ) {
     // Default to last 30 days
     this.selectedDateRange = this.analyticsService.getDateRangePreset('30days');
   }
 
   ngOnInit(): void {
-    /** Single route `/app/analytics` — tab via query only; component is not recreated on tab change */
+    let tabEmitCount = 0;
     this.route.queryParamMap
       .pipe(
         map((p) => p.get('tab') || 'overview'),
         distinctUntilChanged(),
         takeUntil(this.destroyTab$)
       )
-      .subscribe((tab) => this.applyActiveTab(tab));
+      .subscribe((tab) => {
+        this.applyActiveTab(tab);
+        // Skip the initial emission on mount — only scroll when the user
+        // clicks a sidebar sub-link after the page is already loaded.
+        if (tabEmitCount++ > 0) {
+          this.scrollTabsIntoView();
+        }
+      });
 
     this.loadDashboard();
     this.loadAgentAnalytics();
@@ -145,6 +156,18 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
       'reports'
     ];
     this.activeView = (allowed.includes(tab as typeof allowed[number]) ? tab : 'overview') as typeof this.activeView;
+  }
+
+  /**
+   * Brings the tab bar (and the tab content below it) into view after the
+   * sidebar switches tabs. Runs after the new tab content has rendered so the
+   * scroll lands accurately. Smooth-scrolls down when the user was at the top,
+   * and up when they were scrolled past — always anchoring on the tab bar.
+   */
+  private scrollTabsIntoView(): void {
+    requestAnimationFrame(() => {
+      this.tabsAnchor?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   /**
@@ -206,13 +229,14 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Switch tab without destroying the page — only updates query param
+   * Switch tab in-place: update activeView immediately (no routing, no scroll jump).
+   * URL is synced via Location.replaceState() which mutates history without
+   * triggering any Angular Router navigation — so scrollPositionRestoration:'top'
+   * never fires.
    */
   setActiveView(view: 'overview' | 'platforms' | 'trends' | 'performance' | 'reports'): void {
-    void this.router.navigate(['/app/analytics'], {
-      queryParams: { tab: view },
-      replaceUrl: true
-    });
+    this.activeView = view;
+    this.location.replaceState('/app/analytics', `tab=${view}`);
   }
 
   /**
@@ -369,23 +393,36 @@ export class AnalyticsComponent implements OnInit, OnDestroy {
     return colors[platform] || '#6B7280';
   }
 
-  getIntentEntries(): { key: string; value: number; percent: number; color: string }[] {
+  getIntentEntries(): { key: string; label: string; value: number; percent: number; color: string; icon: string }[] {
     const ib = this.dashboard?.intentBreakdown;
     if (!ib || !ib.data || ib.total === 0) return [];
-    const intentColors: { [key: string]: string } = {
-      inquiry: '#3B82F6',
-      complaint: '#EF4444',
-      praise: '#10B981',
-      feedback: '#F59E0B',
-      support: '#8B5CF6',
-      other: '#6B7280'
+
+    const defaultMeta: { [key: string]: { color: string; icon: string; label: string } } = {
+      inquiry: { color: '#3B82F6', icon: 'fas fa-question-circle', label: 'Inquiry' },
+      complaint: { color: '#EF4444', icon: 'fas fa-exclamation-triangle', label: 'Complaint' },
+      praise: { color: '#10B981', icon: 'fas fa-thumbs-up', label: 'Praise' },
+      feedback: { color: '#F59E0B', icon: 'fas fa-comment-dots', label: 'Feedback' },
+      support: { color: '#8B5CF6', icon: 'fas fa-headset', label: 'Support' },
+      other: { color: '#6B7280', icon: 'fas fa-ellipsis-h', label: 'Other' }
     };
-    return Object.entries(ib.data).map(([key, value]) => ({
-      key,
-      value,
-      percent: Math.round((value / ib.total) * 100),
-      color: intentColors[key] || '#6B7280'
-    }));
+
+    return Object.entries(ib.data)
+      .map(([key, value]) => {
+        const customMeta = ib.meta?.[key];
+        const label = customMeta?.name || customMeta?.label || defaultMeta[key]?.label || key.charAt(0).toUpperCase() + key.slice(1);
+        const color = customMeta?.color || defaultMeta[key]?.color || '#6B7280';
+        const icon = customMeta?.icon || defaultMeta[key]?.icon || 'fas fa-tag';
+
+        return {
+          key,
+          label,
+          value,
+          percent: Math.round((value / ib.total) * 100),
+          color,
+          icon
+        };
+      })
+      .sort((a, b) => b.value - a.value);
   }
 
   getIntentIcon(intent: string): string {

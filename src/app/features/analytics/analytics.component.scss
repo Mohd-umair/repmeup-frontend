@@ -1,7 +1,7 @@
 @use '../../shared/styles/theme-overrides' as theme;
 
 // Analytics Component Styles
-// Modern, responsive analytics dashboard
+// Modern, responsive analytics dashboard with industry-standard patterns
 
 :host {
   display: block;
@@ -9,10 +9,13 @@
 
 @include theme.light-mode-overrides;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Global & Baseline
+// ═══════════════════════════════════════════════════════════════════════════
 
-// Smooth transitions for all interactive elements
-* {
-  transition: all 0.2s ease-in-out;
+// Selective transitions — only on interactive elements
+button, [role="button"], input, select, [class*="hover:"], [class*="group-hover:"] {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // Custom scrollbar for analytics views
@@ -29,17 +32,22 @@
 ::-webkit-scrollbar-thumb {
   background: #D0FF00;
   border-radius: 4px;
+  transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #b8e600;
 }
 
-// Animation for metric cards
+// ═══════════════════════════════════════════════════════════════════════════
+// Animations
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Staggered fade-in for metric cards
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -48,8 +56,8 @@
 }
 
 .grid > div {
-  animation: fadeInUp 0.3s ease-out;
-  animation-fill-mode: both;
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
 }
 
 .grid > div:nth-child(1) { animation-delay: 0.05s; }
@@ -57,31 +65,131 @@
 .grid > div:nth-child(3) { animation-delay: 0.15s; }
 .grid > div:nth-child(4) { animation-delay: 0.2s; }
 
-// Hover effects for cards
-.hover\:border-rep-lime\/30:hover {
-  box-shadow: 0 0 20px rgba(208, 255, 0, 0.1);
-}
-
-// Progress bar animation
-@keyframes growWidth {
+// Progress bar fill animation with smooth ease
+@keyframes fillBar {
   from {
-    width: 0;
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
   }
 }
 
-[style*="width"] {
-  animation: growWidth 0.8s ease-out;
+// Apply to progress bars — uses transform-origin for left-to-right fill
+[role="progressbar"] {
+  transform-origin: left;
+  animation: fillBar 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-// Dropdown menu
-.group:hover .group-hover\:block {
-  display: block;
+// Smooth skeleton/placeholder animation (future loading states)
+@keyframes shimmer {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
+.skeleton {
+  animation: shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  background: linear-gradient(90deg, #374151 25%, #4B5563 50%, #374151 75%);
+  background-size: 200% 100%;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Cards & Surfaces
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Card hover state: subtle lift effect
+[class*="border-gray-800"]:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s ease;
+}
+
+// Intent analytics item hover
+.hover\:bg-gray-800\/30:hover {
+  background-color: rgba(31, 41, 55, 0.3);
+  transition: background-color 0.15s ease;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Responsive
+// ═══════════════════════════════════════════════════════════════════════════
+
+@media (max-width: 1024px) {
+  // Reduce gap on tablets
   .grid {
     gap: 1rem;
   }
+
+  // Hide desktop tables earlier
+  .hidden.lg\:block {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  // Stack cards on mobile
+  .grid {
+    gap: 0.75rem;
+  }
+
+  // Larger touch targets on mobile
+  button {
+    min-height: 44px;
+  }
+
+  // Increase padding for mobile readability
+  [class*="p-6"] {
+    padding: 1rem;
+  }
+
+  // Hide mobile view on desktop
+  .lg\:hidden {
+    display: block !important;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Utility: Smooth Scroll
+// ═══════════════════════════════════════════════════════════════════════════
+
+html {
+  scroll-behavior: smooth;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Dark Mode Enhancements
+// ═══════════════════════════════════════════════════════════════════════════
+
+@media (prefers-color-scheme: dark) {
+  // Increase contrast for accessibility on dark mode
+  .text-gray-500 {
+    color: #9CA3AF;
+  }
+
+  .text-gray-600 {
+    color: #9CA3AF;
+  }
+
+  // Subtle borders are more visible
+  [class*="border-gray-800"] {
+    border-color: rgba(107, 114, 128, 0.4);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Focus States (Accessibility)
+// ═══════════════════════════════════════════════════════════════════════════
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid #D0FF00;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
 }
 

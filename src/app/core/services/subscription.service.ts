@@ -48,6 +48,18 @@ export interface ISubscriptionLimits {
     price: number | string;
   };
   billing?: ISubscriptionBillingInfo;
+  /** Demo/trial status — null for normal (non-demo) workspaces. */
+  trial?: ISubscriptionTrialInfo | null;
+}
+
+/** Demo/trial state surfaced from the limits payload. */
+export interface ISubscriptionTrialInfo {
+  isDemo: boolean;
+  demoStatus: 'trialing' | 'locked' | 'converted';
+  locked: boolean;
+  trialEndsAt: string | null;
+  daysRemaining: number | null;
+  expired: boolean;
 }
 
 export interface ISubscription {

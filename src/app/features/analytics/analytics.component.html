@@ -21,29 +21,54 @@
           (click)="refreshData()"
           [disabled]="loading"
           type="button"
-          class="px-4 py-2 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 transition disabled:opacity-50"
+          [attr.aria-label]="loading ? 'Loading analytics data' : 'Refresh analytics data'"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition min-h-[44px]"
         >
-          <i [class]="loading ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'"></i>
-          <span class="ml-2">Refresh</span>
+          <i [class]="loading ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'" aria-hidden="true"></i>
+          <span class="hidden sm:inline font-medium">{{ loading ? 'Refreshing...' : 'Refresh' }}</span>
         </button>
-        
+
+        <!-- Export Dropdown -->
         <div class="relative group">
           <button
             type="button"
-            class="px-4 py-2 bg-rep-lime text-rep-black rounded-xl hover:shadow-lg hover:shadow-rep-lime/50 transition font-semibold"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-rep-lime text-rep-black rounded-xl hover:shadow-lg hover:shadow-rep-lime/50 transition font-semibold min-h-[44px]"
+            aria-label="Export analytics data"
+            aria-haspopup="menu"
+            aria-expanded="false"
           >
-            <i class="fas fa-download mr-2"></i>
-            Export
+            <i class="fas fa-download" aria-hidden="true"></i>
+            <span class="hidden sm:inline">Export</span>
           </button>
-          <div class="hidden group-hover:block absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl z-10">
-            <button (click)="exportData('csv')" type="button" class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-t-xl text-gray-700">
-              <i class="fas fa-file-csv mr-2"></i> Export as CSV
+          <div class="hidden group-hover:flex group-focus-within:flex flex-col absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-xl z-10 border border-gray-200 dark:border-gray-700 overflow-hidden"
+            role="menu"
+          >
+            <button
+              (click)="exportData('csv')"
+              type="button"
+              role="menuitem"
+              class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition flex items-center gap-3"
+            >
+              <i class="fas fa-file-csv text-blue-500" aria-hidden="true"></i>
+              <span>Export as CSV</span>
             </button>
-            <button (click)="exportData('xlsx')" type="button" class="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700">
-              <i class="fas fa-file-excel mr-2"></i> Export as Excel
+            <button
+              (click)="exportData('xlsx')"
+              type="button"
+              role="menuitem"
+              class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition flex items-center gap-3 border-t border-gray-200 dark:border-gray-700"
+            >
+              <i class="fas fa-file-excel text-green-500" aria-hidden="true"></i>
+              <span>Export as Excel</span>
             </button>
-            <button (click)="exportData('pdf')" type="button" class="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-b-xl text-gray-700">
-              <i class="fas fa-file-pdf mr-2"></i> Export as PDF
+            <button
+              (click)="exportData('pdf')"
+              type="button"
+              role="menuitem"
+              class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition flex items-center gap-3 border-t border-gray-200 dark:border-gray-700"
+            >
+              <i class="fas fa-file-pdf text-red-500" aria-hidden="true"></i>
+              <span>Export as PDF</span>
             </button>
           </div>
         </div>
@@ -51,17 +76,17 @@
     </div>
 
     <!-- Filters Row -->
-    <div class="flex flex-wrap items-center gap-4 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800">
+    <div class="flex flex-wrap items-center gap-4 bg-gray-900/50 backdrop-blur-sm rounded-xl p-4 border border-gray-800" role="group" aria-label="Analytics filters">
       <!-- Intent Filter -->
       <div class="flex items-center gap-2">
-        <i class="fas fa-bullseye text-rep-lime"></i>
+        <i class="fas fa-bullseye text-rep-lime" aria-hidden="true"></i>
         <span class="text-gray-400 text-sm">Intent</span>
         <span class="text-rep-white text-sm bg-gray-800 px-3 py-1.5 rounded-lg">All</span>
       </div>
 
       <!-- Platform Filters -->
-      <div class="flex items-center gap-2">
-        <i class="fas fa-filter text-rep-lime"></i>
+      <div class="flex items-center gap-2" role="group" aria-label="Platform filters">
+        <i class="fas fa-filter text-rep-lime" aria-hidden="true"></i>
         <span class="text-gray-400 text-sm">Platform</span>
         <button
           *ngFor="let platform of ['whatsapp', 'instagram', 'facebook', 'google', 'youtube']"
@@ -71,16 +96,18 @@
           [class.bg-gray-800]="!selectedPlatforms.includes(platform)"
           [class.text-gray-400]="!selectedPlatforms.includes(platform)"
           type="button"
-          class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5"
+          [attr.aria-pressed]="selectedPlatforms.includes(platform)"
+          [attr.aria-label]="'Filter by ' + platform + (selectedPlatforms.includes(platform) ? ' (active)' : '')"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 min-h-[44px]"
         >
-          <i [class]="getPlatformIcon(platform)"></i>
+          <i [class]="getPlatformIcon(platform)" aria-hidden="true"></i>
           <span class="capitalize hidden sm:inline">{{ platform }}</span>
         </button>
       </div>
 
       <!-- Date Range -->
-      <div class="flex items-center gap-2 ml-auto">
-        <i class="fas fa-calendar text-rep-lime"></i>
+      <div class="flex items-center gap-2 ml-auto" role="group" aria-label="Date range filters">
+        <i class="fas fa-calendar text-rep-lime" aria-hidden="true"></i>
         <div class="flex gap-1">
           <button
             *ngFor="let preset of dateRangePresets"
@@ -90,7 +117,9 @@
             [class.bg-gray-800]="selectedDateRange.preset !== preset.value"
             [class.text-gray-400]="selectedDateRange.preset !== preset.value"
             type="button"
-            class="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+            [attr.aria-pressed]="selectedDateRange.preset === preset.value"
+            [attr.aria-label]="preset.label + (selectedDateRange.preset === preset.value ? ' (selected)' : '')"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition min-h-[44px]"
           >
             {{ preset.label }}
           </button>
@@ -113,14 +142,17 @@
     <!-- ═══════ Metric Cards Row ═══════ -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- Total Interactions -->
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-rep-lime/30 transition">
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-rep-lime/30 transition group"
+        role="article"
+        [attr.aria-label]="'Total Interactions: ' + formatNumber(dashboard.overview.totalInteractions.value) + ', Change: ' + dashboard.overview.totalInteractions.change + '%'"
+      >
         <div class="flex items-start justify-between mb-3">
           <div>
-            <p class="text-gray-400 text-xs mb-1">Total Interactions</p>
+            <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Total Interactions</p>
             <h3 class="text-3xl font-bold text-rep-white">{{ formatNumber(dashboard.overview.totalInteractions.value) }}</h3>
           </div>
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/20">
-            <i class="fas fa-comments text-blue-400"></i>
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
+            <i class="fas fa-comments text-blue-400" aria-hidden="true"></i>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -128,8 +160,9 @@
             [class.text-green-400]="dashboard.overview.totalInteractions.changeType === 'increase'"
             [class.text-red-400]="dashboard.overview.totalInteractions.changeType === 'decrease'"
             class="text-sm font-semibold flex items-center gap-1"
+            [attr.aria-label]="dashboard.overview.totalInteractions.changeType + ': ' + dashboard.overview.totalInteractions.change + ' percent'"
           >
-            <i class="fas" [class.fa-arrow-up]="dashboard.overview.totalInteractions.changeType === 'increase'" [class.fa-arrow-down]="dashboard.overview.totalInteractions.changeType === 'decrease'"></i>
+            <i class="fas" [class.fa-arrow-up]="dashboard.overview.totalInteractions.changeType === 'increase'" [class.fa-arrow-down]="dashboard.overview.totalInteractions.changeType === 'decrease'" aria-hidden="true"></i>
             {{ dashboard.overview.totalInteractions.change }}%
           </span>
           <span class="text-gray-500 text-xs">vs previous period</span>
@@ -137,51 +170,60 @@
       </div>
 
       <!-- Positive -->
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-green-500/30 transition">
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-green-500/30 transition group"
+        role="article"
+        [attr.aria-label]="'Positive sentiment: ' + formatNumber(dashboard.sentimentBreakdown.positive) + ' (' + getPositivePercent() + '%)'"
+      >
         <div class="flex items-start justify-between mb-3">
           <div>
-            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1.5">
-              <span class="w-2 h-2 bg-green-500 rounded-full inline-block"></span> Positive
+            <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1 flex items-center gap-1.5">
+              <span class="w-2 h-2 bg-green-500 rounded-full inline-block" aria-hidden="true"></span> Positive
             </p>
             <h3 class="text-3xl font-bold text-rep-white">{{ formatNumber(dashboard.sentimentBreakdown.positive) }}</h3>
           </div>
-          <span class="text-yellow-400 text-2xl">
-            <i class="fas fa-smile"></i>
+          <span class="text-green-400 text-2xl group-hover:scale-110 transition-transform">
+            <i class="fas fa-smile" aria-hidden="true"></i>
           </span>
         </div>
-        <p class="text-gray-500 text-xs">{{ getPositivePercent() }}% Positive</p>
+        <p class="text-gray-500 text-xs">{{ getPositivePercent() }}% positive sentiment</p>
       </div>
 
       <!-- Negative -->
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-red-500/30 transition">
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-red-500/30 transition group"
+        role="article"
+        [attr.aria-label]="'Negative sentiment: ' + formatNumber(dashboard.sentimentBreakdown.negative) + ' (' + getNegativePercent() + '%)'"
+      >
         <div class="flex items-start justify-between mb-3">
           <div>
-            <p class="text-gray-400 text-xs mb-1 flex items-center gap-1.5">
-              <span class="w-2 h-2 bg-red-500 rounded-full inline-block"></span> Negative
+            <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1 flex items-center gap-1.5">
+              <span class="w-2 h-2 bg-red-500 rounded-full inline-block" aria-hidden="true"></span> Negative
             </p>
             <h3 class="text-3xl font-bold text-rep-white">{{ formatNumber(dashboard.sentimentBreakdown.negative) }}</h3>
           </div>
-          <span class="text-red-400 text-2xl">
-            <i class="fas fa-frown"></i>
+          <span class="text-red-400 text-2xl group-hover:scale-110 transition-transform">
+            <i class="fas fa-frown" aria-hidden="true"></i>
           </span>
         </div>
-        <p class="text-gray-500 text-xs">{{ getNegativePercent() }}% Negative</p>
+        <p class="text-gray-500 text-xs">{{ getNegativePercent() }}% negative sentiment</p>
       </div>
 
       <!-- Without Response -->
-      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-yellow-500/30 transition">
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-yellow-500/30 transition group"
+        role="article"
+        [attr.aria-label]="'Unaddressed interactions: ' + formatNumber(dashboard.overview.totalInteractions.value - dashboard.overview.responseRate.value * dashboard.overview.totalInteractions.value / 100)"
+      >
         <div class="flex items-start justify-between mb-3">
           <div>
-            <p class="text-gray-400 text-xs mb-1">Without Response</p>
+            <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Unaddressed</p>
             <h3 class="text-3xl font-bold text-rep-white">
               {{ formatNumber(dashboard.overview.totalInteractions.value - dashboard.overview.responseRate.value * dashboard.overview.totalInteractions.value / 100) }}
             </h3>
           </div>
-          <span class="text-red-400 text-2xl">
-            <i class="fas fa-comment-slash"></i>
+          <span class="text-yellow-500 text-2xl group-hover:scale-110 transition-transform">
+            <i class="fas fa-comment-slash" aria-hidden="true"></i>
           </span>
         </div>
-        <p class="text-red-400 text-xs">Unaddressed</p>
+        <p class="text-yellow-500 text-xs">Need attention</p>
       </div>
     </div>
 
@@ -299,91 +341,181 @@
           </div>
 
           <div *ngIf="dashboard.topInteractions && dashboard.topInteractions.length > 0">
-            <!-- Table Header -->
-            <div class="grid grid-cols-12 gap-3 px-3 pb-3 border-b border-gray-700/50 text-xs text-gray-500 font-medium">
-              <div class="col-span-5">Top Posts</div>
-              <div class="col-span-2 text-right">Reach</div>
-              <div class="col-span-2 text-right">Positive</div>
-              <div class="col-span-2 text-right">Interactions</div>
-              <div class="col-span-1"></div>
+            <!-- Mobile & Desktop View -->
+            <div class="hidden lg:block">
+              <!-- Desktop: Table View -->
+              <div class="grid grid-cols-12 gap-3 px-3 pb-3 border-b border-gray-700/50 text-xs text-gray-500 font-medium uppercase tracking-wide">
+                <div class="col-span-5">Post</div>
+                <div class="col-span-2 text-right">Reach</div>
+                <div class="col-span-2 text-right">Sentiment</div>
+                <div class="col-span-2 text-right">Comments</div>
+                <div class="col-span-1"></div>
+              </div>
+
+              <!-- Post Rows -->
+              <div
+                *ngFor="let post of dashboard.topInteractions; let idx = index"
+                class="grid grid-cols-12 gap-3 items-center px-3 py-3 border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors group"
+                [attr.aria-label]="'Post ' + (idx + 1) + ': ' + (post.content || 'Post') + ' on ' + post.platform"
+              >
+                <!-- Post Info (image + title + platform) -->
+                <div class="col-span-5 flex items-center gap-3 min-w-0">
+                  <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 relative shadow-md group-hover:shadow-lg transition-shadow"
+                    [style.background-color]="getPlatformColor(post.platform) + '20'"
+                  >
+                    <img
+                      *ngIf="post.mediaUrl"
+                      [src]="post.mediaUrl"
+                      [alt]="post.content || 'Post image'"
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <!-- Placeholder when no image: platform-coloured gradient + icon -->
+                    <div
+                      *ngIf="!post.mediaUrl"
+                      class="w-full h-full flex items-center justify-center"
+                      [style.background]="'linear-gradient(135deg,' + getPlatformColor(post.platform) + '30, ' + getPlatformColor(post.platform) + '10)'"
+                    >
+                      <i [class]="getPlatformIcon(post.platform)" [style.color]="getPlatformColor(post.platform)" class="text-2xl opacity-60"></i>
+                    </div>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-rep-white text-sm font-semibold truncate line-clamp-2">{{ post.content || 'Untitled Post' }}</p>
+                    <div class="flex items-center gap-1.5 mt-1">
+                      <i [class]="getPlatformIcon(post.platform) + ' text-xs'" [style.color]="getPlatformColor(post.platform)"></i>
+                      <span class="text-gray-400 text-xs capitalize">{{ post.platform }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Reach (Views/Likes) -->
+                <div class="col-span-2 text-right">
+                  <div class="flex flex-col items-end">
+                    <span class="text-rep-white text-sm font-bold">{{ formatNumber(post.totalLikes + post.totalViews) }}</span>
+                    <span class="text-gray-500 text-xs">reach</span>
+                  </div>
+                </div>
+
+                <!-- Sentiment Indicator -->
+                <div class="col-span-2 text-right">
+                  <div class="flex flex-col items-end gap-1">
+                    <div class="flex items-center justify-end gap-2">
+                      <span class="text-green-400 text-sm font-semibold">{{ formatNumber(post.positiveCount) }}</span>
+                      <span
+                        class="w-2.5 h-2.5 rounded-full"
+                        [ngClass]="post.sentiment === 'positive' ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-red-500 shadow-lg shadow-red-500/50'"
+                        [attr.title]="post.sentiment + ' sentiment'"
+                      ></span>
+                    </div>
+                    <span class="text-gray-500 text-xs capitalize">{{ post.sentiment }}</span>
+                  </div>
+                </div>
+
+                <!-- Comment Count -->
+                <div class="col-span-2 text-right">
+                  <div class="flex flex-col items-end">
+                    <span class="text-rep-white text-sm font-bold">{{ formatNumber(post.commentCount) }}</span>
+                    <span class="text-gray-500 text-xs">comments</span>
+                  </div>
+                </div>
+
+                <!-- View Link -->
+                <div class="col-span-1 flex items-center justify-end">
+                  <a
+                    *ngIf="post.postUrl"
+                    [href]="post.postUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-800 text-gray-400 hover:bg-rep-lime hover:text-rep-black transition-colors"
+                    [attr.aria-label]="'View ' + post.platform + ' post'"
+                    title="View on platform"
+                  >
+                    <i class="fas fa-external-link-alt text-xs"></i>
+                  </a>
+                </div>
+              </div>
             </div>
 
-            <!-- Post Rows -->
-            <div
-              *ngFor="let post of dashboard.topInteractions"
-              class="grid grid-cols-12 gap-3 items-center px-3 py-3 border-b border-gray-800/50 hover:bg-gray-800/30 transition"
-            >
-              <!-- Post Info (image + title + platform) -->
-              <div class="col-span-5 flex items-center gap-3 min-w-0">
-                <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 relative"
-                  [style.background-color]="getPlatformColor(post.platform) + '30'"
+            <!-- Mobile: Card View -->
+            <div class="lg:hidden space-y-3">
+              <div
+                *ngFor="let post of dashboard.topInteractions; let idx = index"
+                class="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50 hover:border-gray-700 transition-colors"
+                [attr.aria-label]="'Post ' + (idx + 1) + ': ' + (post.content || 'Post')"
+              >
+                <!-- Image -->
+                <div class="w-full h-40 rounded-lg overflow-hidden mb-3 bg-gray-800"
+                  [style.background-color]="getPlatformColor(post.platform) + '20'"
                 >
                   <img
                     *ngIf="post.mediaUrl"
                     [src]="post.mediaUrl"
-                    alt="Post"
+                    [alt]="post.content || 'Post image'"
                     class="w-full h-full object-cover"
+                    loading="lazy"
                   />
-                  <!-- Placeholder when no image: platform-coloured gradient + icon -->
                   <div
                     *ngIf="!post.mediaUrl"
-                    class="w-full h-full flex flex-col items-center justify-center gap-0.5"
-                    [style.background]="'linear-gradient(135deg,' + getPlatformColor(post.platform) + '25, ' + getPlatformColor(post.platform) + '10)'"
+                    class="w-full h-full flex items-center justify-center"
+                    [style.background]="'linear-gradient(135deg,' + getPlatformColor(post.platform) + '30, ' + getPlatformColor(post.platform) + '10)'"
                   >
-                    <i [class]="getPlatformIcon(post.platform) + ' text-base'" [style.color]="getPlatformColor(post.platform)"></i>
-                    <span class="text-gray-500 text-[9px] leading-none">No image</span>
+                    <i [class]="getPlatformIcon(post.platform)" [style.color]="getPlatformColor(post.platform)" class="text-5xl opacity-40"></i>
                   </div>
                 </div>
-                <div class="min-w-0">
-                  <p class="text-rep-white text-sm font-medium truncate">{{ post.content || 'Post' }}</p>
-                  <div class="flex items-center gap-1.5 mt-0.5">
-                    <i [class]="getPlatformIcon(post.platform) + ' text-xs'" [style.color]="getPlatformColor(post.platform)"></i>
-                    <span class="text-gray-500 text-xs capitalize">{{ post.platform }}</span>
+
+                <!-- Content -->
+                <p class="text-rep-white text-sm font-semibold mb-2 line-clamp-2">{{ post.content || 'Untitled Post' }}</p>
+
+                <!-- Platform Badge -->
+                <div class="flex items-center gap-1.5 mb-3 pb-3 border-b border-gray-700/50">
+                  <i [class]="getPlatformIcon(post.platform) + ' text-xs'" [style.color]="getPlatformColor(post.platform)"></i>
+                  <span class="text-gray-400 text-xs capitalize">{{ post.platform }}</span>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                  <div class="text-center p-2 bg-gray-800/50 rounded-lg">
+                    <div class="text-rep-white text-sm font-bold">{{ formatNumber(post.totalLikes + post.totalViews) }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Reach</div>
+                  </div>
+                  <div class="text-center p-2 bg-gray-800/50 rounded-lg">
+                    <div class="text-green-400 text-sm font-bold">{{ formatNumber(post.positiveCount) }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Positive</div>
+                  </div>
+                  <div class="text-center p-2 bg-gray-800/50 rounded-lg">
+                    <div class="text-rep-white text-sm font-bold">{{ formatNumber(post.commentCount) }}</div>
+                    <div class="text-gray-500 text-xs mt-1">Comments</div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Reach (Views/Likes) -->
-              <div class="col-span-2 text-right">
-                <span class="text-rep-white text-sm font-semibold">{{ formatNumber(post.totalLikes + post.totalViews) }}</span>
-              </div>
-
-              <!-- Positive Count -->
-              <div class="col-span-2 text-right">
-                <span class="text-green-400 text-sm font-semibold flex items-center justify-end gap-1">
-                  <span class="w-1.5 h-1.5 bg-green-500 rounded-full inline-block"></span>
-                  {{ formatNumber(post.positiveCount) }}
-                </span>
-              </div>
-
-              <!-- Interactions (comment count) -->
-              <div class="col-span-2 text-right">
-                <span class="text-rep-white text-sm font-semibold">{{ formatNumber(post.commentCount) }}</span>
-              </div>
-
-              <!-- Sentiment + Link -->
-              <div class="col-span-1 flex items-center justify-end gap-2">
-                <span
-                  class="w-2 h-2 rounded-full shrink-0"
-                  [ngClass]="post.sentiment === 'positive' ? 'bg-green-500' : 'bg-red-500'"
-                ></span>
-                <a
-                  *ngIf="post.postUrl"
-                  [href]="post.postUrl"
-                  target="_blank"
-                  rel="noopener"
-                  class="text-gray-500 hover:text-rep-lime text-xs"
-                  title="View on platform"
-                >
-                  <i class="fas fa-chevron-right"></i>
-                </a>
+                <!-- Sentiment + Link -->
+                <div class="flex items-center justify-between pt-2 border-t border-gray-700/50">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="w-2 h-2 rounded-full"
+                      [ngClass]="post.sentiment === 'positive' ? 'bg-green-500' : 'bg-red-500'"
+                    ></span>
+                    <span class="text-gray-400 text-xs capitalize">{{ post.sentiment }} sentiment</span>
+                  </div>
+                  <a
+                    *ngIf="post.postUrl"
+                    [href]="post.postUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-800 text-gray-400 hover:bg-rep-lime hover:text-rep-black transition-colors"
+                    [attr.aria-label]="'View ' + post.platform + ' post'"
+                  >
+                    <i class="fas fa-external-link-alt text-xs"></i>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
-          <div *ngIf="!dashboard.topInteractions || dashboard.topInteractions.length === 0" class="text-center py-8">
-            <i class="fas fa-chart-bar text-gray-700 text-3xl mb-2"></i>
-            <p class="text-gray-500 text-sm">No post engagement data in the selected period</p>
+          <div *ngIf="!dashboard.topInteractions || dashboard.topInteractions.length === 0" class="text-center py-12">
+            <i class="fas fa-image text-gray-600 text-4xl mb-3 opacity-50"></i>
+            <p class="text-gray-500 text-sm font-medium">No published posts with engagement yet</p>
+            <p class="text-gray-600 text-xs mt-1">Your published posts will appear here as they receive comments, likes, and views</p>
           </div>
         </div>
 
@@ -458,31 +590,38 @@
           <div *ngIf="getIntentEntries().length > 0" class="space-y-3">
             <div
               *ngFor="let intent of getIntentEntries()"
-              class="flex items-center gap-3"
+              class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800/30 transition-colors"
+              [attr.aria-label]="intent.label + ': ' + intent.value + ' interactions (' + intent.percent + '%)'"
             >
-              <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                [style.background-color]="intent.color + '20'"
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                [style.background-color]="intent.color + '15'"
+                [attr.title]="intent.label"
               >
-                <i [class]="getIntentIcon(intent.key)" [style.color]="intent.color" class="text-xs"></i>
+                <i [class]="intent.icon" [style.color]="intent.color" class="text-sm"></i>
               </div>
               <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="text-rep-white text-sm capitalize font-medium">{{ intent.key }}</span>
-                  <span class="text-gray-400 text-xs">{{ intent.value }} interactions ({{ intent.percent }}%)</span>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-rep-white text-sm font-medium">{{ intent.label }}</span>
+                  <span class="text-gray-400 text-xs whitespace-nowrap ml-2">{{ intent.value }} ({{ intent.percent }}%)</span>
                 </div>
-                <div class="w-full bg-gray-800 rounded-full h-1.5">
+                <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
                   <div
-                    class="h-1.5 rounded-full transition-all"
+                    class="h-full rounded-full transition-all duration-300"
                     [style.width.%]="intent.percent"
                     [style.background-color]="intent.color"
+                    role="progressbar"
+                    [attr.aria-valuenow]="intent.percent"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
                   ></div>
                 </div>
               </div>
             </div>
           </div>
-          <div *ngIf="getIntentEntries().length === 0" class="text-center py-6">
-            <i class="fas fa-bullseye text-gray-700 text-2xl mb-2"></i>
-            <p class="text-gray-500 text-sm">No intent data yet</p>
+          <div *ngIf="getIntentEntries().length === 0" class="text-center py-8">
+            <i class="fas fa-bullseye text-gray-600 text-3xl mb-3 opacity-50"></i>
+            <p class="text-gray-500 text-sm">No intent data available</p>
+            <p class="text-gray-600 text-xs mt-1">Intents will appear as conversations are classified</p>
           </div>
         </div>
 
@@ -554,7 +693,7 @@
     </div>
 
     <!-- ═══════ Tabs for Deeper Views ═══════ -->
-    <div class="flex flex-wrap gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-full sm:w-fit">
+    <div #tabsAnchor class="flex flex-wrap gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl p-2 border border-gray-800 w-full sm:w-fit">
       <button
         (click)="setActiveView('overview')"
         [class.bg-rep-lime]="activeView === 'overview'"

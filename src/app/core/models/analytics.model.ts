@@ -86,7 +86,8 @@ export interface ITopPerformers {
 }
 
 export interface IIntentBucketMeta {
-  name: string;
+  name?: string;
+  label?: string;
   color: string;
   icon: string;
 }

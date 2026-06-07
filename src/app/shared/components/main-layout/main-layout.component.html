@@ -50,8 +50,57 @@
             </a>
           </p>
         </div>
+
+        <!-- Demo trial banner (while trialing) -->
+        <div *ngIf="lim?.trial?.isDemo && lim.trial?.demoStatus === 'trialing'"
+          role="status"
+          class="sticky top-0 z-20 shrink-0 border-b border-rep-lime/40 bg-rep-lime/10 dark:bg-rep-lime/5 px-3 sm:px-4 py-3">
+          <p class="text-sm text-rep-black dark:text-rep-lime text-center leading-relaxed max-w-4xl mx-auto">
+            <i class="fas fa-rocket mr-2 opacity-90" aria-hidden="true"></i>
+            <strong>You're on a free demo trial.</strong>
+            <ng-container *ngIf="lim.trial?.daysRemaining != null">
+              <ng-container [ngSwitch]="lim.trial!.daysRemaining === 0">
+                <span *ngSwitchCase="true"> Your trial ends today.</span>
+                <span *ngSwitchDefault> {{ lim.trial?.daysRemaining }} day(s) left.</span>
+              </ng-container>
+            </ng-container>
+            Purchase a plan anytime to keep everything — your data carries over with no setup.
+            <a routerLink="/plans"
+              class="ml-1 sm:ml-2 font-bold underline underline-offset-2 hover:no-underline whitespace-nowrap">
+              Upgrade now
+            </a>
+          </p>
+        </div>
       </ng-container>
+
       <router-outlet></router-outlet>
     </main>
   </div>
+
+  <!-- Demo trial LOCK overlay — shown when the trial has expired. The backend also
+       gates API calls (UPGRADE_REQUIRED); this gives the prospect a clear path to buy. -->
+  <ng-container *ngIf="limits$ | async as lim">
+    <div *ngIf="lim?.trial?.locked"
+      class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-rep-black/80 backdrop-blur-sm"
+      role="dialog" aria-modal="true" aria-labelledby="demo-lock-title">
+      <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-7 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-amber-500/15 flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-lock text-amber-400 text-2xl" aria-hidden="true"></i>
+        </div>
+        <h2 id="demo-lock-title" class="text-xl font-bold text-rep-white mb-2">Your demo trial has ended</h2>
+        <p class="text-gray-400 mb-1">Everything you set up is safe.</p>
+        <p class="text-gray-400 mb-6">Purchase a plan to unlock this workspace — your data carries over instantly, no migration.</p>
+        <div class="flex items-center justify-center gap-3">
+          <a routerLink="/plans"
+            class="px-6 py-3 rounded-xl bg-rep-lime text-rep-black font-semibold hover:opacity-90">
+            Choose a plan
+          </a>
+          <button type="button" (click)="logoutFromLock()"
+            class="px-6 py-3 rounded-xl border border-gray-700 text-gray-300 font-medium hover:bg-gray-800">
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
 </div>

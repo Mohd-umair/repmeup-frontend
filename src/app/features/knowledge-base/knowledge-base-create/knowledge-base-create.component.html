@@ -403,6 +403,31 @@
         </p>
       </div>
 
+      <!-- Crawl whole website toggle -->
+      <div class="flex items-start gap-3 p-4 rounded-xl border-2 transition"
+        [class]="crawlWholeSite
+          ? 'border-rep-lime bg-rep-lime/10 dark:bg-rep-lime/5'
+          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900'">
+        <button type="button" role="switch" [attr.aria-checked]="crawlWholeSite"
+          (click)="crawlWholeSite = !crawlWholeSite"
+          class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition mt-0.5"
+          [class]="crawlWholeSite ? 'bg-rep-lime' : 'bg-gray-300 dark:bg-gray-600'">
+          <span class="inline-block h-4 w-4 transform rounded-full bg-white transition"
+            [class]="crawlWholeSite ? 'translate-x-6' : 'translate-x-1'"></span>
+        </button>
+        <div class="min-w-0">
+          <label class="block text-sm font-semibold text-rep-black dark:text-white cursor-pointer"
+            (click)="crawlWholeSite = !crawlWholeSite">
+            <i class="fas fa-sitemap mr-1.5"></i> Crawl the entire website
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            When on, we follow internal links and read up to
+            <strong>{{ crawlMaxPages }} pages</strong> (home, about, products, FAQ, policies…),
+            creating one knowledge base entry per page. Off = homepage only.
+          </p>
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <label class="block text-sm font-semibold text-rep-black dark:text-white mb-1.5">
@@ -470,9 +495,13 @@
       <!-- Credit estimate -->
       <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 flex items-center gap-3">
         <i class="fas fa-coins text-amber-600"></i>
-        <span class="text-sm font-medium text-amber-900 dark:text-amber-300">
+        <span class="text-sm font-medium text-amber-900 dark:text-amber-300" *ngIf="!crawlWholeSite">
           Approx. <strong>{{ estimatedCredits }}</strong> AI credit{{ estimatedCredits !== 1 ? 's' : '' }} —
           based on {{ urlForm.get('targetWordCount')?.value }} words, {{ urlForm.get('targetTagCount')?.value }} tags.
+        </span>
+        <span class="text-sm font-medium text-amber-900 dark:text-amber-300" *ngIf="crawlWholeSite">
+          Approx. <strong>{{ estimatedCredits }}</strong> AI credit{{ estimatedCredits !== 1 ? 's' : '' }} <strong>per page</strong> —
+          up to <strong>{{ crawlMaxPages }} pages</strong>. Only pages actually read are charged.
         </span>
       </div>
 
@@ -481,12 +510,20 @@
         <div class="flex items-start gap-3">
           <i class="fas fa-info-circle text-rep-black dark:text-rep-lime text-base mt-0.5 shrink-0"></i>
           <div>
-            <h4 class="font-semibold text-rep-black dark:text-white mb-1 text-sm">How URL Scraping Works</h4>
-            <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+            <h4 class="font-semibold text-rep-black dark:text-white mb-1 text-sm">
+              {{ crawlWholeSite ? 'How Website Crawling Works' : 'How URL Scraping Works' }}
+            </h4>
+            <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5" *ngIf="!crawlWholeSite">
               <li>• We fetch the webpage content</li>
               <li>• Extract main text (removing scripts, styles, nav)</li>
               <li>• AI summarises to your chosen word count and generates tags</li>
               <li>• Entry is added to your knowledge base immediately</li>
+            </ul>
+            <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5" *ngIf="crawlWholeSite">
+              <li>• We follow internal links across the same website</li>
+              <li>• Each page's main text is extracted and AI-summarised separately</li>
+              <li>• One knowledge base entry is created per page (better AI retrieval)</li>
+              <li>• Runs in the background — pages appear as they're processed</li>
             </ul>
           </div>
         </div>
@@ -499,14 +536,62 @@
         </button>
         <button type="submit" [disabled]="urlForm.invalid || submitting"
           class="px-8 py-3 bg-rep-lime text-gray-900 rounded-xl text-sm font-semibold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-          <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-download mr-2'"></i>
-          {{ submitting ? 'Scraping...' : 'Scrape & Import' }}
+          <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : (crawlWholeSite ? 'fas fa-sitemap mr-2' : 'fas fa-download mr-2')"></i>
+          {{ submitting ? (crawlWholeSite ? 'Crawling…' : 'Scraping…') : (crawlWholeSite ? 'Crawl & Import Website' : 'Scrape & Import') }}
         </button>
       </div>
 
     </form>
   </div>
 
+</div>
+
+<!-- ── Website Crawl Progress Overlay ──────────────────────────────────────── -->
+<div *ngIf="crawlProgress"
+  class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-11 h-11 rounded-xl bg-rep-lime/15 flex items-center justify-center shrink-0">
+        <i class="fas fa-sitemap text-rep-lime text-lg"
+           [class.fa-spin]="!crawlProgress.done"></i>
+      </div>
+      <div class="min-w-0">
+        <h3 class="text-base font-bold text-rep-black dark:text-white">Reading your website</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ crawlProgress.startUrl }}</p>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="w-full h-2.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden mb-2">
+      <div class="h-full bg-rep-lime rounded-full transition-all duration-500"
+        [style.width.%]="crawlPercent"></div>
+    </div>
+    <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-4">
+      <span>{{ crawlProgress.entriesCreated }} of up to {{ crawlProgress.maxPages }} pages</span>
+      <span>{{ crawlPercent }}%</span>
+    </div>
+
+    <!-- Status line -->
+    <div class="rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 p-3 mb-4">
+      <p class="text-xs text-gray-600 dark:text-gray-300" *ngIf="!crawlProgress.done">
+        <i class="fas fa-spinner fa-spin mr-1.5 text-rep-lime"></i>
+        <span *ngIf="crawlProgress.currentUrl">Processing <strong class="break-all">{{ crawlProgress.currentUrl }}</strong></span>
+        <span *ngIf="!crawlProgress.currentUrl">Starting crawl…</span>
+      </p>
+      <p class="text-xs text-gray-600 dark:text-gray-300" *ngIf="crawlProgress.done">
+        <i class="fas fa-check-circle mr-1.5 text-green-500"></i>
+        Done — {{ crawlProgress.entriesCreated }} page(s) added.
+      </p>
+      <p class="text-xs text-amber-600 dark:text-amber-400 mt-1.5" *ngIf="crawlProgress.errors?.length">
+        <i class="fas fa-exclamation-triangle mr-1"></i>
+        {{ crawlProgress.errors.length }} page(s) skipped.
+      </p>
+    </div>
+
+    <p class="text-[11px] text-gray-400 dark:text-gray-500 text-center">
+      You can keep this open — we'll take you to your knowledge base when it's finished.
+    </p>
+  </div>
 </div>
 
 <!-- ── Credit Confirmation Modal ───────────────────────────────────────────── -->

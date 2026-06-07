@@ -57,6 +57,24 @@ export interface IKnowledgeBaseListResponse {
   error?: string;
 }
 
+/** Live status of a whole-website crawl job (polled after enqueue). */
+export interface IKbCrawlStatus {
+  crawlJobId: string;
+  status: 'queued' | 'crawling' | 'completed' | 'failed' | 'partial';
+  done: boolean;
+  startUrl: string;
+  maxPages: number;
+  pagesFound: number;
+  pagesProcessed: number;
+  entriesCreated: number;
+  currentUrl: string;
+  creditsUsed: number;
+  errors: Array<{ url: string; reason: string }>;
+  error: string;
+  startedAt?: string;
+  finishedAt?: string;
+}
+
 /**
  * Knowledge Base Service - Single Responsibility Principle
  * Handles all knowledge base related API operations
@@ -106,10 +124,27 @@ export class KnowledgeBaseService {
   }
 
   /**
-   * Create knowledge base from URL
+   * Create knowledge base from a single URL (homepage only).
    */
   createFromURL(data: any): Observable<IApiResponse<IKnowledgeBase>> {
     return this.apiService.post<IApiResponse<IKnowledgeBase>>('/knowledge-base/url', data);
+  }
+
+  /**
+   * Start a whole-website crawl. Returns a crawlJobId to poll. The crawl runs in
+   * the background and creates one KB entry per page as it processes them.
+   */
+  createFromWebsiteCrawl(data: any): Observable<IApiResponse<{ crawlJobId: string; status: string; maxPages: number }>> {
+    return this.apiService.post<IApiResponse<{ crawlJobId: string; status: string; maxPages: number }>>(
+      '/knowledge-base/url/crawl', data
+    );
+  }
+
+  /**
+   * Poll the status of a website crawl job.
+   */
+  getCrawlStatus(crawlJobId: string): Observable<IApiResponse<IKbCrawlStatus>> {
+    return this.apiService.get<IApiResponse<IKbCrawlStatus>>(`/knowledge-base/url/crawl/${crawlJobId}`);
   }
 
   /**

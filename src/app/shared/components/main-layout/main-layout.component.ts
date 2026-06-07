@@ -1,11 +1,12 @@
 import { Component, ElementRef, ViewChild, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SubscriptionService } from '../../../core/services/subscription.service';
 import { EntitlementsStore } from '../../../core/services/entitlements.store';
 import { MenuService } from '../../../core/services/menu.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { NotificationComponent } from '../notification/notification.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
@@ -37,9 +38,15 @@ export class MainLayoutComponent {
   private readonly subscriptionService = inject(SubscriptionService);
   private readonly entitlements = inject(EntitlementsStore);
   private readonly menuService = inject(MenuService);
+  private readonly authService = inject(AuthService);
 
-  /** Used for app-wide subscription cancellation notice */
+  /** Used for app-wide subscription cancellation notice + demo trial banner/lock */
   readonly limits$ = this.subscriptionService.limits$;
+
+  /** Sign out from the demo trial lock overlay. */
+  logoutFromLock(): void {
+    this.authService.logout();
+  }
 
   constructor() {
     try {
@@ -62,18 +69,26 @@ export class MainLayoutComponent {
       this.menuService.loadMenus().subscribe();
     });
 
+    let previousUrl = '';
     this.router.events
-      .pipe(
-        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-        takeUntilDestroyed()
-      )
-      .subscribe(() => {
-        queueMicrotask(() => {
-          const el = this.mainScroll?.nativeElement;
-          if (el) {
-            el.scrollTop = 0;
-          }
-        });
+      .pipe(takeUntilDestroyed())
+      .subscribe((e) => {
+        if (e instanceof NavigationStart) {
+          previousUrl = this.router.url;
+        }
+        if (e instanceof NavigationEnd) {
+          // Strip query strings to compare base paths only.
+          // If the path didn't change (only query params changed), the user is
+          // switching tabs/sub-views within the same page — don't reset scroll.
+          const prevPath = previousUrl.split('?')[0];
+          const nextPath = e.urlAfterRedirects.split('?')[0];
+          if (prevPath === nextPath) return;
+
+          queueMicrotask(() => {
+            const el = this.mainScroll?.nativeElement;
+            if (el) el.scrollTop = 0;
+          });
+        }
       });
   }
 

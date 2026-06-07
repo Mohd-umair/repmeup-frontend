@@ -70,10 +70,10 @@ export class AiRepliesComponent implements OnInit, OnDestroy {
 
   readonly maxToneCustomLength = 800;
 
-  readonly maxDelayMinutes = 120;
+  readonly maxDelaySeconds = 7200;
 
   replyDelayModeOptions: { key: ReplyDelayMode; label: string; icon: string; desc: string }[] = [
-    { key: 'fixed', label: 'Fixed delay', icon: 'fas fa-clock', desc: 'Wait an exact number of minutes before each reply is sent' },
+    { key: 'fixed', label: 'Fixed delay', icon: 'fas fa-clock', desc: 'Wait an exact number of seconds before each reply is sent (0 = immediate)' },
     { key: 'human', label: 'Human delay', icon: 'fas fa-user-clock', desc: 'Send as soon as AI finishes — with a brief natural pause so it does not feel instant' },
   ];
 
@@ -98,7 +98,7 @@ export class AiRepliesComponent implements OnInit, OnDestroy {
     maxRepliesPerDay: 50,
     triggerMode: 'hybrid',
     webhookImmediate: true,
-    webhookDelay: 1,
+    webhookDelay: 60,
     replyDelayMode: 'fixed',
     scheduleInterval: '24hours',
     scheduleEnabled: true,
@@ -231,16 +231,17 @@ export class AiRepliesComponent implements OnInit, OnDestroy {
     if (this.settings.replyDelayMode === 'human') {
       return 'As soon as possible';
     }
-    return `${this.settings.webhookDelay ?? 1} min`;
+    const sec = this.settings.webhookDelay ?? 60;
+    return sec === 0 ? 'Immediate' : `${sec} sec`;
   }
 
   /** Clamp and validate delay fields before save */
   private normalizeReplyDelaySettings(): void {
     const mode = this.settings.replyDelayMode === 'human' ? 'human' : 'fixed';
-    let webhookDelay = Math.round(Number(this.settings.webhookDelay ?? 1));
+    let webhookDelay = Math.round(Number(this.settings.webhookDelay ?? 60));
 
-    if (!Number.isFinite(webhookDelay)) webhookDelay = 1;
-    webhookDelay = Math.min(this.maxDelayMinutes, Math.max(0, webhookDelay));
+    if (!Number.isFinite(webhookDelay)) webhookDelay = 60;
+    webhookDelay = Math.min(this.maxDelaySeconds, Math.max(0, webhookDelay));
 
     this.settings = {
       ...this.settings,
