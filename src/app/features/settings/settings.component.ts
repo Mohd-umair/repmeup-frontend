@@ -1440,14 +1440,51 @@ export class SettingsComponent implements OnInit, OnDestroy {
    */
   getAICreditsPercentage(): number {
     if (!this.subscriptionLimits) return 0;
-    
+
     const current = this.subscriptionLimits.usage.aiCreditsThisMonth || 0;
     const max = this.subscriptionLimits.limits.maxAICreditsPerMonth;
 
     if (max === -1) return 0; // Unlimited
     if (max === 0) return 100;
-    
+
     return Math.min(100, (current / max) * 100);
+  }
+
+  // ── Connected-accounts badge helpers (treat -1 as unlimited) ────────────────
+  // Centralizes the `-1 = unlimited` rule so the template never does the buggy
+  // `current >= max` check (which is true for any current when max is -1).
+
+  /** True when the accounts limit is unlimited (-1). */
+  isConnectionLimitUnlimited(max: number): boolean {
+    return max === -1;
+  }
+
+  /** Connection usage as 0–100% (0 when unlimited). */
+  connectionUsagePercent(current: number, max: number): number {
+    if (max === -1 || max <= 0) return 0;
+    return Math.min(100, (current / max) * 100);
+  }
+
+  /** Badge state: 'unlimited' | 'reached' | 'near' | 'ok'. */
+  connectionUsageState(current: number, max: number): 'unlimited' | 'reached' | 'near' | 'ok' {
+    if (max === -1) return 'unlimited';
+    if (current >= max) return 'reached';
+    if (max > 0 && current / max >= 0.9) return 'near';
+    return 'ok';
+  }
+
+  /** Short status label for the connected-accounts badge. */
+  connectionUsageLabel(current: number, max: number): string {
+    const state = this.connectionUsageState(current, max);
+    return state === 'unlimited' ? 'Unlimited'
+      : state === 'reached' ? 'Limit Reached'
+      : state === 'near' ? 'Near Limit'
+      : 'OK';
+  }
+
+  /** "current/max" text where -1 renders as ∞. */
+  connectionUsageCountLabel(current: number, max: number): string {
+    return `${current}/${max === -1 ? '∞' : max}`;
   }
 
   /**

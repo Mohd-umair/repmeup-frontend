@@ -29,7 +29,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <h1 class="text-rep-white text-xl font-bold mb-2">{{ upgradeRequired ? 'Your demo trial has ended' : 'Demo link issue' }}</h1>
           <p class="text-gray-400 mb-6">{{ error }}</p>
           <div class="flex items-center justify-center gap-3">
-            <a *ngIf="upgradeRequired" routerLink="/plans"
+            <a *ngIf="upgradeRequired" routerLink="/app/plans"
               class="px-5 py-2.5 rounded-xl bg-rep-lime text-rep-black font-semibold hover:opacity-90">
               View plans
             </a>
