@@ -50,6 +50,14 @@ export interface IOrganization {
   limits: ILimits;
   usage: IUsage;
   isActive: boolean;
+  isReseller?: boolean;
+  parentOrganization?: string | null;
+  resellerLevel?: number;
+  resellerSettings?: {
+    allowSubResellers?: boolean;
+    maxSubOrgs?: number;
+    defaultSubOrgPlanId?: string;
+  };
 }
 
 export interface ISubscription {

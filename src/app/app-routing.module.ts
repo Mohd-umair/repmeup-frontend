@@ -62,6 +62,10 @@ import { VoiceDashboardComponent } from './features/voice-ivr/voice-dashboard/vo
 import { VoiceAgentsComponent } from './features/voice-ivr/voice-agents/voice-agents.component';
 import { VoiceCallsComponent } from './features/voice-ivr/voice-calls/voice-calls.component';
 import { VoiceSettingsComponent } from './features/voice-ivr/voice-settings/voice-settings.component';
+import { ClientsComponent } from './features/clients/clients.component';
+import { ClientDetailComponent } from './features/clients/client-detail/client-detail.component';
+import { ClientBillingComponent } from './features/clients/client-billing/client-billing.component';
+import { ResellerGuard } from './core/guards/reseller.guard';
 import { AutomationHubComponent } from './features/automation/hub/automation-hub.component';
 import { AiRepliesComponent } from './features/automation/ai-replies/ai-replies.component';
 import { GrowthComponent } from './features/automation/growth/growth.component';
@@ -190,6 +194,16 @@ const routes: Routes = [
       { path: 'support', component: SupportComponent },
       { path: 'catalog', component: CatalogComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.COMMERCE_WA_CATALOG_ENABLED } },
       { path: 'contacts', component: ContactsContainerComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
+      {
+        path: 'clients',
+        canActivate: [ResellerGuard, PermissionGuard],
+        data: { permissions: ['reseller.manage_sub_org'] },
+        children: [
+          { path: '', component: ClientsComponent },
+          { path: 'billing', component: ClientBillingComponent, data: { permissions: ['reseller.manage_billing'] } },
+          { path: ':id', component: ClientDetailComponent }
+        ]
+      },
       { path: 'whatsapp-templates', component: WhatsAppTemplatesComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.WHATSAPP_TEMPLATES_MAX } },
       { path: 'campaigns', component: CampaignsComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.CAMPAIGNS_ENABLED } },
       { path: 'reports', component: ReportsComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['analytics.read'], planFeature: FEATURE_KEY.ANALYTICS_ADVANCED } },

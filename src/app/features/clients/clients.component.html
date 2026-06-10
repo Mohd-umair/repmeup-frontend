@@ -1,0 +1,168 @@
+<div class="clients-page min-h-full p-4 sm:p-6" style="background-color: var(--surface-primary);">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-bold" style="color: var(--text-primary);">Clients</h1>
+      <p class="text-sm mt-1" style="color: var(--text-muted);">Manage sub-organizations under your reseller account</p>
+    </div>
+    <button
+      type="button"
+      (click)="openCreate()"
+      class="px-4 py-2 rounded-lg font-semibold bg-gray-900 text-white dark:bg-rep-lime dark:text-rep-black hover:opacity-90 transition"
+    >
+      <i class="fas fa-plus mr-2" aria-hidden="true"></i>
+      Add client
+    </button>
+  </div>
+
+  <div *ngIf="dashboard" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <p class="text-xs uppercase tracking-wide" style="color: var(--text-muted);">Total clients</p>
+      <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ dashboard.counts.totalDescendants }}</p>
+    </div>
+    <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <p class="text-xs uppercase tracking-wide" style="color: var(--text-muted);">Active</p>
+      <p class="text-2xl font-bold mt-1 text-green-600 dark:text-green-400">{{ dashboard.counts.activeSubOrgs }}</p>
+    </div>
+    <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <p class="text-xs uppercase tracking-wide" style="color: var(--text-muted);">Remaining slots</p>
+      <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">
+        {{ dashboard.counts.remainingSlots == null ? '∞' : dashboard.counts.remainingSlots }}
+      </p>
+    </div>
+    <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <p class="text-xs uppercase tracking-wide" style="color: var(--text-muted);">Pending commission</p>
+      <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ formatPaise(dashboard.commission.pendingInr) }}</p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3 mb-4">
+    <select
+      [(ngModel)]="depth"
+      (ngModelChange)="reload()"
+      class="rounded-lg border px-3 py-2 text-sm"
+      style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+    >
+      <option value="all">All levels</option>
+      <option value="direct">Direct only</option>
+    </select>
+    <select
+      [(ngModel)]="statusFilter"
+      (ngModelChange)="reload()"
+      class="rounded-lg border px-3 py-2 text-sm"
+      style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
+    >
+      <option value="">All statuses</option>
+      <option value="active">Active</option>
+      <option value="suspended">Suspended</option>
+    </select>
+    <a
+      routerLink="/app/clients/billing"
+      class="text-sm font-semibold text-gray-900 dark:text-rep-lime hover:underline ml-auto"
+    >
+      View billing & commission →
+    </a>
+  </div>
+
+  <div *ngIf="loading" class="py-16 text-center" style="color: var(--text-muted);">
+    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+    <p>Loading clients...</p>
+  </div>
+
+  <div *ngIf="!loading && clients.length === 0" class="rounded-xl border p-10 text-center" style="background-color: var(--card-bg); border-color: var(--card-border);">
+    <p class="font-medium" style="color: var(--text-primary);">No clients yet</p>
+    <p class="text-sm mt-1" style="color: var(--text-muted);">Create your first sub-organization to get started.</p>
+  </div>
+
+  <div *ngIf="!loading && clients.length > 0" class="rounded-xl border overflow-hidden" style="border-color: var(--card-border);">
+    <table class="w-full text-sm">
+      <thead style="background-color: var(--surface-primary);">
+        <tr>
+          <th class="text-left px-4 py-3 font-semibold" style="color: var(--text-muted);">Organization</th>
+          <th class="text-left px-4 py-3 font-semibold hidden sm:table-cell" style="color: var(--text-muted);">Plan</th>
+          <th class="text-left px-4 py-3 font-semibold hidden md:table-cell" style="color: var(--text-muted);">Users</th>
+          <th class="text-left px-4 py-3 font-semibold" style="color: var(--text-muted);">Status</th>
+          <th class="text-right px-4 py-3 font-semibold" style="color: var(--text-muted);">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let client of clients"
+          (click)="viewClient(client)"
+          class="border-t cursor-pointer hover:opacity-90 transition"
+          style="border-color: var(--card-border); background-color: var(--card-bg);"
+        >
+          <td class="px-4 py-3">
+            <div class="font-semibold" style="color: var(--text-primary);">{{ client.name }}</div>
+            <div *ngIf="client.isReseller" class="text-xs text-purple-600 dark:text-purple-300">Sub-reseller</div>
+          </td>
+          <td class="px-4 py-3 hidden sm:table-cell" style="color: var(--text-secondary);">
+            {{ client.subscription?.planName || client.subscription?.planId || '—' }}
+          </td>
+          <td class="px-4 py-3 hidden md:table-cell" style="color: var(--text-secondary);">{{ client.userCount ?? 0 }}</td>
+          <td class="px-4 py-3">
+            <span
+              class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold"
+              [ngClass]="{
+                'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': client.isActive,
+                'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300': !client.isActive
+              }"
+            >
+              {{ client.isActive ? 'Active' : 'Suspended' }}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-right">
+            <button
+              type="button"
+              (click)="client.isActive ? suspendClient(client, $event) : activateClient(client, $event)"
+              class="text-xs font-semibold px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+              style="color: var(--text-primary);"
+            >
+              {{ client.isActive ? 'Suspend' : 'Activate' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create modal -->
+<div *ngIf="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+  <div class="w-full max-w-lg rounded-xl border p-6 shadow-2xl" style="background-color: var(--card-bg); border-color: var(--card-border);">
+    <h2 class="text-lg font-bold mb-4" style="color: var(--text-primary);">Add client organization</h2>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">Organization name</label>
+        <input [(ngModel)]="createForm.name" class="w-full rounded-lg border px-3 py-2 text-sm" style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">Admin email</label>
+        <input type="email" [(ngModel)]="createForm.adminEmail" class="w-full rounded-lg border px-3 py-2 text-sm" style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">First name</label>
+          <input [(ngModel)]="createForm.adminFirstName" class="w-full rounded-lg border px-3 py-2 text-sm" style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">Last name</label>
+          <input [(ngModel)]="createForm.adminLastName" class="w-full rounded-lg border px-3 py-2 text-sm" style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1" style="color: var(--text-muted);">Plan ID</label>
+        <input [(ngModel)]="createForm.planId" class="w-full rounded-lg border px-3 py-2 text-sm" style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+      </div>
+      <label *ngIf="dashboard?.capabilities.allowSubResellers" class="flex items-center gap-2 text-sm" style="color: var(--text-secondary);">
+        <input type="checkbox" [(ngModel)]="createForm.isSubReseller" />
+        Create as sub-reseller (can manage their own clients)
+      </label>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button type="button" (click)="closeCreate()" class="px-4 py-2 rounded-lg border" style="border-color: var(--card-border); color: var(--text-primary);">Cancel</button>
+      <button type="button" (click)="submitCreate()" [disabled]="creating" class="px-4 py-2 rounded-lg font-semibold bg-gray-900 text-white dark:bg-rep-lime dark:text-rep-black disabled:opacity-50">
+        {{ creating ? 'Creating...' : 'Create client' }}
+      </button>
+    </div>
+  </div>
+</div>

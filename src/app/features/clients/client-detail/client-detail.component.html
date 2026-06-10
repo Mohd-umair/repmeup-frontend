@@ -1,0 +1,56 @@
+<div class="min-h-full p-4 sm:p-6" style="background-color: var(--surface-primary);">
+  <a routerLink="/app/clients" class="text-sm font-semibold text-gray-900 dark:text-rep-lime hover:underline mb-4 inline-block">← Back to clients</a>
+
+  <div *ngIf="loading" class="py-16 text-center" style="color: var(--text-muted);">
+    <i class="fas fa-spinner fa-spin text-2xl"></i>
+  </div>
+
+  <div *ngIf="!loading && organization" class="space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold" style="color: var(--text-primary);">{{ organization.name }}</h1>
+      <p class="text-sm mt-1" style="color: var(--text-muted);">Aggregate stats only — inbox data is private to this client.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-xs uppercase" style="color: var(--text-muted);">Users</p>
+        <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ stats?.userCount ?? 0 }}</p>
+      </div>
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-xs uppercase" style="color: var(--text-muted);">Platforms</p>
+        <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ stats?.platformCount ?? 0 }}</p>
+      </div>
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-xs uppercase" style="color: var(--text-muted);">AI credits (month)</p>
+        <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ stats?.aiCreditsUsedThisMonth ?? 0 }}</p>
+      </div>
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-xs uppercase" style="color: var(--text-muted);">Status</p>
+        <p class="text-lg font-bold mt-1" [class.text-green-600]="organization.isActive" [class.dark:text-green-400]="organization.isActive" [class.text-red-600]="!organization.isActive" [class.dark:text-red-400]="!organization.isActive">
+          {{ organization.isActive ? 'Active' : 'Suspended' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="rounded-xl border p-5" style="background-color: var(--card-bg); border-color: var(--card-border);">
+      <h2 class="font-semibold mb-3" style="color: var(--text-primary);">Plan assignment</h2>
+      <div class="flex flex-wrap gap-2 items-end">
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-xs mb-1" style="color: var(--text-muted);">Plan ID</label>
+          <input [(ngModel)]="planId" class="w-full rounded-lg border px-3 py-2 text-sm" style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+        </div>
+        <button type="button" (click)="assignPlan()" [disabled]="savingPlan" class="px-4 py-2 rounded-lg font-semibold bg-gray-900 text-white dark:bg-rep-lime dark:text-rep-black disabled:opacity-50">
+          {{ savingPlan ? 'Saving...' : 'Assign plan' }}
+        </button>
+      </div>
+      <p *ngIf="stats?.plan" class="text-sm mt-2" style="color: var(--text-secondary);">
+        Current: {{ stats.plan.planName }} ({{ stats.plan.status }})
+      </p>
+    </div>
+
+    <div class="flex gap-2">
+      <button *ngIf="organization.isActive" type="button" (click)="suspend()" class="px-4 py-2 rounded-lg border border-red-300 text-red-700 dark:border-red-700 dark:text-red-300">Suspend client</button>
+      <button *ngIf="!organization.isActive" type="button" (click)="activate()" class="px-4 py-2 rounded-lg border border-green-300 text-green-700 dark:border-green-700 dark:text-green-300">Activate client</button>
+    </div>
+  </div>
+</div>

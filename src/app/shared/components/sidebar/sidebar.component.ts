@@ -37,7 +37,7 @@ interface MenuItem {
   sidebarParentActive?: boolean;
 }
 
-type SidebarSectionId = 'main' | 'management' | 'settings' | 'automation' | 'campaigns';
+type SidebarSectionId = 'main' | 'management' | 'settings' | 'automation' | 'campaigns' | 'reseller';
 
 interface SidebarSection {
   id: SidebarSectionId;
@@ -424,6 +424,7 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
       { id: 'settings', label: 'Settings', items: mapGroup(grouped.settings) }
     ];
     this.sidebarSections = nextSections.filter((s) => s.items.length > 0);
+    this.injectResellerClientsLink();
 
     this.pruneExpandedSubmenuKeys();
     this.applyBadgesToSections(
@@ -562,5 +563,34 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     }
 
     return this.permissionService.canAccessRoute(item.route) ? { ...item } : null;
+  }
+
+  /** Reseller orgs get a Clients link under Management when permitted (not in DB menu seed). */
+  private injectResellerClientsLink(): void {
+    const raw = this.currentUser?.organization;
+    const org = raw && typeof raw === 'object' ? raw : null;
+    if (!org?.isReseller) return;
+    if (!this.permissionService.hasPermission('reseller.manage_sub_org')) return;
+
+    const clientsItem: MenuItem = {
+      label: 'Clients',
+      route: '/app/clients',
+      icon: 'users',
+      requiredPermissions: ['reseller.manage_sub_org']
+    };
+
+    const mgmt = this.sidebarSections.find((s) => s.id === 'management');
+    if (mgmt) {
+      if (!mgmt.items.some((i) => i.route === '/app/clients')) {
+        mgmt.items = [...mgmt.items, clientsItem];
+      }
+      return;
+    }
+
+    this.sidebarSections.push({
+      id: 'reseller',
+      label: 'Reseller',
+      items: [clientsItem]
+    });
   }
 }

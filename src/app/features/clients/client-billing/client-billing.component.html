@@ -1,0 +1,45 @@
+<div class="min-h-full p-4 sm:p-6" style="background-color: var(--surface-primary);">
+  <a routerLink="/app/clients" class="text-sm font-semibold text-gray-900 dark:text-rep-lime hover:underline mb-4 inline-block">← Back to clients</a>
+  <h1 class="text-2xl font-bold mb-6" style="color: var(--text-primary);">Reseller billing</h1>
+
+  <div *ngIf="loading" class="py-16 text-center" style="color: var(--text-muted);">Loading...</div>
+
+  <div *ngIf="!loading && billing" class="space-y-6">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-xs uppercase" style="color: var(--text-muted);">Total earned</p>
+        <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ formatPaise(billing.totalEarned) }}</p>
+      </div>
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-xs uppercase" style="color: var(--text-muted);">Pending</p>
+        <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ formatPaise(billing.pendingCommission) }}</p>
+      </div>
+      <div class="rounded-xl border p-4" style="background-color: var(--card-bg); border-color: var(--card-border);">
+        <p class="text-xs uppercase" style="color: var(--text-muted);">Paid</p>
+        <p class="text-2xl font-bold mt-1" style="color: var(--text-primary);">{{ formatPaise(billing.paidCommission) }}</p>
+      </div>
+    </div>
+
+    <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border);">
+      <table class="w-full text-sm">
+        <thead style="background-color: var(--surface-primary);">
+          <tr>
+            <th class="text-left px-4 py-3" style="color: var(--text-muted);">Client</th>
+            <th class="text-left px-4 py-3" style="color: var(--text-muted);">Commission</th>
+            <th class="text-left px-4 py-3" style="color: var(--text-muted);">Status</th>
+            <th class="text-left px-4 py-3 hidden sm:table-cell" style="color: var(--text-muted);">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of billing.ledger" class="border-t" style="border-color: var(--card-border); background-color: var(--card-bg);">
+            <td class="px-4 py-3" style="color: var(--text-primary);">{{ row.subOrg?.name || '—' }}</td>
+            <td class="px-4 py-3" style="color: var(--text-secondary);">{{ formatPaise(row.amountInr) }}</td>
+            <td class="px-4 py-3 capitalize" style="color: var(--text-secondary);">{{ row.status }}</td>
+            <td class="px-4 py-3 hidden sm:table-cell" style="color: var(--text-muted);">{{ row.createdAt | date:'mediumDate' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="!billing.ledger?.length" class="p-6 text-center text-sm" style="color: var(--text-muted);">No commission entries yet.</p>
+    </div>
+  </div>
+</div>
