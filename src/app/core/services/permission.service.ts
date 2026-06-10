@@ -125,9 +125,11 @@ export class PermissionService {
   private isBypassRole(): boolean {
     if (!this.currentRole) return false;
     if (this.BYPASS_ROLES.includes(this.currentRole)) return true;
-    // Safety fallback: avoid locking out legacy admin users
-    // who are not assigned to a group yet.
-    if (this.currentRole === 'admin' && !this.hasResolvedPermissions) return true;
+    // Safety fallback: avoid locking out admin / reseller_admin users
+    // who are not assigned to a permission group yet. A reseller_admin is an
+    // admin of their own tenant (plus reseller powers), so it mirrors admin.
+    const adminLike = this.currentRole === 'admin' || this.currentRole === 'reseller_admin';
+    if (adminLike && !this.hasResolvedPermissions) return true;
     return false;
   }
 }

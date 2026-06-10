@@ -1,0 +1,224 @@
+<div class="p-4 sm:p-6 max-w-7xl mx-auto">
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-rep-black dark:text-white flex items-center gap-2">
+        <i class="fas fa-users-gear text-rep-lime"></i> Client Workspaces
+      </h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Create and manage the workspaces you provide to your customers. Open any client to manage it directly.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a routerLink="/app/reseller/billing"
+        class="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+        <i class="fas fa-coins mr-1.5"></i> Billing
+      </a>
+      <a routerLink="/app/reseller/branding"
+        class="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+        <i class="fas fa-palette mr-1.5"></i> Branding
+      </a>
+      <button type="button" (click)="openCreate()"
+        class="px-5 py-2.5 rounded-xl bg-rep-lime text-rep-black text-sm font-semibold hover:opacity-90">
+        <i class="fas fa-plus mr-1.5"></i> New client
+      </button>
+    </div>
+  </div>
+
+  <p *ngIf="error" class="text-sm text-red-500 mb-4" role="alert">{{ error }}</p>
+
+  <!-- Table -->
+  <div class="bg-white dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div *ngIf="loading" class="p-10 text-center text-gray-400">
+      <i class="fas fa-spinner fa-spin text-2xl"></i>
+    </div>
+
+    <div *ngIf="!loading && clients.length === 0" class="p-12 text-center">
+      <i class="fas fa-user-plus text-gray-500 text-4xl mb-3 opacity-50"></i>
+      <p class="text-gray-500 dark:text-gray-400">No client workspaces yet. Create one to get started.</p>
+    </div>
+
+    <div *ngIf="!loading && clients.length > 0" class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+        <thead class="bg-gray-50 dark:bg-gray-800/50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Credits</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+          <tr *ngFor="let c of clients" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+            <td class="px-4 py-3">
+              <div class="font-medium text-rep-black dark:text-white">{{ c.name }}</div>
+              <div class="text-xs text-gray-500">{{ c.prospect?.email || '—' }}</div>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ c.planName || c.planId || '—' }}</td>
+            <td class="px-4 py-3 text-sm">
+              <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
+                [ngClass]="c.demoStatus === 'locked'
+                  ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                  : c.status === 'active'
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'">
+                {{ c.demoStatus === 'locked' ? 'Locked' : (c.status || c.demoStatus || '—') }}
+              </span>
+              <span *ngIf="c.daysRemaining != null && c.demoStatus === 'trialing'" class="text-xs text-gray-400 ml-1">
+                {{ c.daysRemaining }}d left
+              </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+              {{ c.aiCreditsCap == null ? 'Unlimited' : c.aiCreditsCap + '/mo' }}
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-500">{{ fmtDate(c.createdAt) }}</td>
+            <td class="px-4 py-3 text-right">
+              <div class="inline-flex items-center justify-end gap-3">
+                <button type="button" (click)="openClient(c)" [disabled]="busyOrgId === c.organizationId"
+                  class="text-rep-lime hover:underline font-medium disabled:opacity-50">
+                  {{ busyOrgId === c.organizationId ? 'Opening…' : 'Open' }}
+                </button>
+                <button type="button" (click)="openAssign(c)" class="text-sky-600 dark:text-sky-400 hover:underline font-medium">
+                  Plan
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!loading && total > pageSize" class="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-800 text-sm">
+      <span class="text-gray-500">Page {{ page }} of {{ Math.ceil(total / pageSize) }}</span>
+      <div class="flex gap-2">
+        <button (click)="onPageChange(-1)" [disabled]="page <= 1"
+          class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 disabled:opacity-40">Prev</button>
+        <button (click)="onPageChange(1)" [disabled]="page >= Math.ceil(total / pageSize)"
+          class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 disabled:opacity-40">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create modal ─────────────────────────────────────────────────────────── -->
+<div *ngIf="createOpen" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" (click)="closeCreate()">
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+      <h2 class="text-lg font-semibold text-rep-black dark:text-white">New client workspace</h2>
+      <p class="text-sm text-gray-500 mt-1">A full workspace is provisioned under your brand.</p>
+    </div>
+    <form class="px-5 py-4 space-y-3" (ngSubmit)="submitCreate()">
+      <p *ngIf="createFormError" class="text-sm text-red-500" role="alert">{{ createFormError }}</p>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Client email *</label>
+        <input type="email" name="cEmail" required [(ngModel)]="createEmail" [disabled]="createSubmitting"
+          class="rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2 text-sm" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Client name</label>
+        <input type="text" name="cName" [(ngModel)]="createName" [disabled]="createSubmitting"
+          class="rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2 text-sm" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Company</label>
+          <input type="text" name="cCompany" [(ngModel)]="createCompany" [disabled]="createSubmitting"
+            class="rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2 text-sm" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Phone</label>
+          <input type="text" name="cPhone" [(ngModel)]="createPhone" [disabled]="createSubmitting"
+            class="rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2 text-sm" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Trial days</label>
+          <input type="number" name="cDays" min="1" max="365" [(ngModel)]="createTrialDays" [disabled]="createSubmitting"
+            class="rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2 text-sm" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-medium text-gray-600 dark:text-gray-400">AI credits / mo</label>
+          <input type="number" name="cCredits" min="0" placeholder="Blank = unlimited" [(ngModel)]="createAiCreditsCap" [disabled]="createSubmitting"
+            class="rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2 text-sm" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" (click)="closeCreate()" [disabled]="createSubmitting"
+          class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm">Cancel</button>
+        <button type="submit" [disabled]="createSubmitting"
+          class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-semibold disabled:opacity-50">
+          {{ createSubmitting ? 'Creating…' : 'Create client' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Result modal (credentials + magic link) ─────────────────────────────── -->
+<div *ngIf="created as c" class="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/50" (click)="closeResult()">
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-lg" (click)="$event.stopPropagation()">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+      <h2 class="text-lg font-semibold text-rep-black dark:text-white">Client ready 🎉</h2>
+      <p class="text-sm text-gray-500 mt-1">Share the magic link — it logs your client in with no password.</p>
+    </div>
+    <div class="px-5 py-4 space-y-3">
+      <div>
+        <div class="text-xs font-medium text-gray-500 mb-1">Magic link</div>
+        <div class="flex gap-2">
+          <code class="block flex-1 rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs break-all">{{ c.magicLink }}</code>
+          <button type="button" (click)="copy(c.magicLink, 'Magic link')" class="shrink-0 rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-xs">Copy</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <div class="text-xs font-medium text-gray-500 mb-1">Login email</div>
+          <code class="block rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs break-all">{{ c.loginEmail }}</code>
+        </div>
+        <div>
+          <div class="text-xs font-medium text-gray-500 mb-1">Password</div>
+          <code class="block rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-2 text-xs break-all">{{ c.provisionalPassword }}</code>
+        </div>
+      </div>
+      <div class="flex justify-end pt-2">
+        <button type="button" (click)="closeResult()" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-semibold">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Assign plan modal ────────────────────────────────────────────────────── -->
+<div *ngIf="assignRow as r" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" (click)="closeAssign()">
+  <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800 w-full max-w-md" (click)="$event.stopPropagation()">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+      <h2 class="text-lg font-semibold text-rep-black dark:text-white">Assign plan — {{ r.name }}</h2>
+    </div>
+    <form class="px-5 py-4 space-y-3" (ngSubmit)="submitAssign()">
+      <p *ngIf="assignFormError" class="text-sm text-red-500" role="alert">{{ assignFormError }}</p>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Plan</label>
+        <select name="aPlan" [(ngModel)]="assignPlanId" [disabled]="assignSubmitting"
+          class="rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2 text-sm">
+          <option value="">— Keep current —</option>
+          <option *ngFor="let p of plans" [value]="p.planId">{{ p.name }}</option>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-gray-600 dark:text-gray-400">AI credits / mo</label>
+        <input type="number" name="aCredits" min="0" placeholder="Blank = unlimited" [(ngModel)]="assignAiCreditsCap" [disabled]="assignSubmitting"
+          class="rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2 text-sm" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" (click)="closeAssign()" [disabled]="assignSubmitting"
+          class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm">Cancel</button>
+        <button type="submit" [disabled]="assignSubmitting"
+          class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-semibold disabled:opacity-50">
+          {{ assignSubmitting ? 'Saving…' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

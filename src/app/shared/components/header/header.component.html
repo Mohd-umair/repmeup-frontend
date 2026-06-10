@@ -196,7 +196,10 @@
         </div>
         <div class="text-left hidden md:block">
           <p class="text-sm font-medium text-rep-white">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</p>
-          <p class="text-xs text-gray-400">{{ currentUser?.role }}</p>
+          <p class="text-xs text-gray-400">
+            <ng-container *ngIf="hasMultipleOrgs && activeOrgName">{{ activeOrgName }}</ng-container>
+            <ng-container *ngIf="!(hasMultipleOrgs && activeOrgName)">{{ currentUser?.role }}</ng-container>
+          </p>
         </div>
         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -248,9 +251,42 @@
             <span>Organization</span>
           </div>
         </a>
+        <!-- Reseller: link to the client control plane -->
+        <a
+          *ngIf="isReseller"
+          routerLink="/app/reseller/clients"
+          (click)="showUserMenu = false"
+          class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white cursor-pointer"
+        >
+          <div class="flex items-center space-x-2">
+            <span>🤝</span>
+            <span>Client Workspaces</span>
+          </div>
+        </a>
+        <!-- Agency multi-account: switch between organizations -->
+        <ng-container *ngIf="hasMultipleOrgs">
+          <hr class="my-1 border-gray-800">
+          <p class="px-4 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Organizations</p>
+          <button
+            *ngFor="let m of memberships"
+            type="button"
+            (click)="switchOrg(m.organizationId)"
+            [disabled]="switchingOrgId === m.organizationId"
+            class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white disabled:opacity-60 flex items-center gap-2"
+          >
+            <span class="w-6 h-6 rounded bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
+              <img *ngIf="m.logo" [src]="m.logo" [alt]="m.name" class="w-full h-full object-cover" />
+              <span *ngIf="!m.logo" class="text-[11px] font-bold text-gray-300">{{ m.name.charAt(0) }}</span>
+            </span>
+            <span class="flex-1 min-w-0 truncate">{{ m.name }}</span>
+            <span *ngIf="switchingOrgId === m.organizationId" class="text-xs text-gray-400">…</span>
+            <span *ngIf="m.organizationId === activeOrgId && switchingOrgId !== m.organizationId" class="text-rep-lime">✓</span>
+          </button>
+        </ng-container>
+
         <hr class="my-1 border-gray-800">
-        <button 
-          (click)="logout()" 
+        <button
+          (click)="logout()"
           class="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-lime"
         >
           <div class="flex items-center space-x-2">

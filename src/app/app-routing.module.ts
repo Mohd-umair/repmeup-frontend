@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { PermissionGuard } from './core/guards/permission.guard';
 import { PlanFeatureGuard } from './core/guards/plan-feature.guard';
+import { ResellerGuard } from './core/guards/reseller.guard';
 import { FEATURE_KEY } from './core/services/entitlements.store';
 
 // Auth Components
@@ -185,6 +186,23 @@ const routes: Routes = [
       },
       { path: 'agents', component: AgentsComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['users.read'], planFeature: FEATURE_KEY.AGENTS_ENABLED } },
       { path: 'plans', component: PlansComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.manage'] } },
+      // Reseller control plane (in-app, scoped to the reseller's own clients).
+      {
+        path: 'reseller/clients',
+        canActivate: [ResellerGuard],
+        loadComponent: () => import('./features/reseller/reseller-clients.component').then(m => m.ResellerClientsComponent)
+      },
+      {
+        path: 'reseller/branding',
+        canActivate: [ResellerGuard],
+        loadComponent: () => import('./features/reseller/reseller-branding.component').then(m => m.ResellerBrandingComponent)
+      },
+      {
+        path: 'reseller/billing',
+        canActivate: [ResellerGuard],
+        loadComponent: () => import('./features/reseller/reseller-billing.component').then(m => m.ResellerBillingComponent)
+      },
+      { path: 'reseller', redirectTo: 'reseller/clients', pathMatch: 'full' },
       { path: 'ai-credits', component: AiCreditsComponent, canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },
       { path: 'notifications', component: NotificationsComponent, canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'support', component: SupportComponent },

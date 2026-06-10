@@ -1,0 +1,116 @@
+<div class="p-4 sm:p-6 max-w-5xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-rep-black dark:text-white flex items-center gap-2">
+        <i class="fas fa-coins text-rep-lime"></i> Billing & Revenue
+      </h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Your revenue, platform cost, and margin across all client workspaces. You bill your clients directly.
+      </p>
+    </div>
+    <a routerLink="/app/reseller/clients" class="text-sm text-gray-500 hover:underline">← Clients</a>
+  </div>
+
+  <p *ngIf="error" class="text-sm text-red-500 mb-4" role="alert">{{ error }}</p>
+  <div *ngIf="loading" class="p-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
+
+  <ng-container *ngIf="!loading && dashboard as d">
+    <!-- Summary cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <div class="text-xs text-gray-500 uppercase tracking-wide">Clients</div>
+        <div class="text-2xl font-bold text-rep-black dark:text-white mt-1">{{ d.summary.clientCount }}</div>
+      </div>
+      <div class="bg-white dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <div class="text-xs text-gray-500 uppercase tracking-wide">Monthly revenue</div>
+        <div class="text-2xl font-bold text-rep-black dark:text-white mt-1">{{ rupees(d.summary.totalBillableInr) }}</div>
+        <div class="text-[11px] text-gray-400 mt-0.5">what you bill clients</div>
+      </div>
+      <div class="bg-white dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-800 p-5">
+        <div class="text-xs text-gray-500 uppercase tracking-wide">Platform cost</div>
+        <div class="text-2xl font-bold text-rep-black dark:text-white mt-1">{{ rupees(d.summary.totalPlatformCostInr) }}</div>
+        <div class="text-[11px] text-gray-400 mt-0.5">your cost to us</div>
+      </div>
+      <div class="bg-rep-lime/10 dark:bg-rep-lime/5 rounded-2xl border border-rep-lime/40 p-5">
+        <div class="text-xs text-gray-600 dark:text-rep-lime uppercase tracking-wide">Your margin</div>
+        <div class="text-2xl font-bold text-rep-black dark:text-rep-lime mt-1">{{ rupees(d.summary.totalMarginInr) }}</div>
+        <div class="text-[11px] text-gray-500 dark:text-rep-lime/70 mt-0.5">{{ d.summary.marginPercent }}% margin</div>
+      </div>
+    </div>
+
+    <!-- Per-client breakdown -->
+    <div class="bg-white dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden mb-8">
+      <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800">
+        <h2 class="font-semibold text-rep-black dark:text-white">By client</h2>
+      </div>
+      <div *ngIf="d.clients.length === 0" class="p-8 text-center text-gray-500 text-sm">No clients yet.</div>
+      <div *ngIf="d.clients.length > 0" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+          <thead class="bg-gray-50 dark:bg-gray-800/50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">You charge</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Platform cost</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Margin</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            <tr *ngFor="let c of d.clients" class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+              <td class="px-4 py-3">
+                <div class="font-medium text-rep-black dark:text-white">{{ c.name }}</div>
+                <div class="text-xs text-gray-500">{{ c.clientEmail || '—' }}</div>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ c.planName || c.planId || '—' }}</td>
+              <td class="px-4 py-3 text-right text-sm text-rep-black dark:text-white">{{ rupees(c.resellerPriceInr) }}</td>
+              <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">{{ rupees(c.platformCostInr) }}</td>
+              <td class="px-4 py-3 text-right text-sm font-medium"
+                  [ngClass]="c.marginInr >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                {{ rupees(c.marginInr) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Price book editor -->
+  <div *ngIf="!loading" class="bg-white dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+      <div>
+        <h2 class="font-semibold text-rep-black dark:text-white">Your price book</h2>
+        <p class="text-xs text-gray-500 mt-0.5">Set what you charge clients per plan. Applied when you assign a plan to a client.</p>
+      </div>
+      <button type="button" (click)="savePriceBook()" [disabled]="savingPriceBook"
+        class="px-4 py-2 rounded-xl bg-rep-lime text-rep-black text-sm font-semibold disabled:opacity-50">
+        {{ savingPriceBook ? 'Saving…' : 'Save prices' }}
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+        <thead class="bg-gray-50 dark:bg-gray-800/50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Platform cost / mo</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Your price / mo (₹)</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Margin</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+          <tr *ngFor="let r of priceBook">
+            <td class="px-4 py-3 text-sm font-medium text-rep-black dark:text-white">{{ r.planName }}</td>
+            <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-400">{{ rupees(r.platformCostInr) }}</td>
+            <td class="px-4 py-3 text-right">
+              <input type="number" min="0" [(ngModel)]="r.clientPriceRupees" placeholder="—"
+                class="w-28 text-right rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-2 py-1.5 text-sm" />
+            </td>
+            <td class="px-4 py-3 text-right text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ r.clientPriceRupees != null ? marginRupees(r) : '—' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

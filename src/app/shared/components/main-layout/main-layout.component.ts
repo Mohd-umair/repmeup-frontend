@@ -7,6 +7,7 @@ import { SubscriptionService } from '../../../core/services/subscription.service
 import { EntitlementsStore } from '../../../core/services/entitlements.store';
 import { MenuService } from '../../../core/services/menu.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ThemingService } from '../../../core/services/theming.service';
 import { NotificationComponent } from '../notification/notification.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { HeaderComponent } from '../header/header.component';
@@ -39,6 +40,7 @@ export class MainLayoutComponent {
   private readonly entitlements = inject(EntitlementsStore);
   private readonly menuService = inject(MenuService);
   private readonly authService = inject(AuthService);
+  private readonly theming = inject(ThemingService);
 
   /** Used for app-wide subscription cancellation notice + demo trial banner/lock */
   readonly limits$ = this.subscriptionService.limits$;
@@ -62,6 +64,15 @@ export class MainLayoutComponent {
     // subscribe to socket invalidation so plan changes propagate instantly.
     this.entitlements.load();
     this.entitlements.wireSocketInvalidation();
+
+    // White-label theming: apply the active org's brand (logo/colors) when the
+    // user/org context loads or changes (e.g. after switching into a branded
+    // reseller client). Clears to default branding for non-white-label orgs.
+    this.authService.currentUser$.pipe(takeUntilDestroyed()).subscribe((user) => {
+      const org = user?.organization;
+      const whiteLabel = org && typeof org === 'object' ? (org as any).whiteLabel : null;
+      this.theming.apply(whiteLabel);
+    });
 
     effect(() => {
       const planId = this.entitlements.planSummary()?.planId;

@@ -23,6 +23,8 @@ export interface IUser {
 }
 
 export enum UserRole {
+  SUPER_ADMIN = 'super_admin',
+  RESELLER_ADMIN = 'reseller_admin',
   ADMIN = 'admin',
   MANAGER = 'manager',
   AGENT = 'agent',

@@ -541,8 +541,13 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private filterMenuItem(item: MenuItem): MenuItem | null {
-    if (Array.isArray(item.requiredRoles) && item.requiredRoles.length > 0) {
-      const role = this.currentUser?.role;
+    const role = this.currentUser?.role;
+    // `reseller_admin` is a superset of `admin` (admin of their own tenant +
+    // reseller powers), so it sees every menu an org admin sees. Skip the
+    // per-item role gate for admin-like roles instead of requiring each menu
+    // to enumerate reseller_admin.
+    const adminLike = role === 'admin' || role === 'reseller_admin';
+    if (!adminLike && Array.isArray(item.requiredRoles) && item.requiredRoles.length > 0) {
       if (!role || !item.requiredRoles.includes(role)) {
         return null;
       }

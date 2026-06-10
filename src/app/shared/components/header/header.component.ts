@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationDataService, INotification } from '../../../core/services/notification-data.service';
+import { AccountSwitcherService, IOrgMembership } from '../../../core/services/account-switcher.service';
 import { IUser } from '../../../core/models/user.model';
 import { Subscription, interval } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -38,11 +39,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
   aiCredits: any = null;
   loadingCredits = false;
 
+  // Agency multi-account switcher
+  memberships: IOrgMembership[] = [];
+  activeOrgId: string | null = null;
+  switchingOrgId: string | null = null;
+
   private subscriptions: Subscription[] = [];
 
   constructor(
     private authService: AuthService,
     private notificationDataService: NotificationDataService,
+    private accountSwitcher: AccountSwitcherService,
     private router: Router,
     private http: HttpClient,
     private elRef: ElementRef<HTMLElement>
@@ -61,9 +68,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.currentUser = user;
       if (user) {
         this.loadAICredits(); // Load credits when user is available
+        this.accountSwitcher.load().subscribe(); // refresh accessible orgs
       }
     });
     this.subscriptions.push(userSub);
+
+    // Agency multi-account: keep the switcher list + active org in sync.
+    this.subscriptions.push(
+      this.accountSwitcher.memberships$.subscribe(m => (this.memberships = m))
+    );
+    this.subscriptions.push(
+      this.accountSwitcher.activeOrgId$.subscribe(id => (this.activeOrgId = id))
+    );
 
     // Subscribe to notification count
     const countSub = this.notificationDataService.unreadCount$.subscribe(count => {
@@ -188,6 +204,43 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authService.logout();
+    this.showUserMenu = false;
+  }
+
+  /** Whether to show the org switcher (only when the user belongs to >1 org). */
+  get hasMultipleOrgs(): boolean {
+    return this.memberships.length > 1;
+  }
+
+  /** Reseller operators see the "Client Workspaces" link. */
+  get isReseller(): boolean {
+    const role = (this.currentUser?.role as string | undefined);
+    return role === 'reseller_admin' || role === 'super_admin';
+  }
+
+  /** Display name of the active organization (for the header label). */
+  get activeOrgName(): string {
+    const active = this.memberships.find(m => m.organizationId === this.activeOrgId);
+    return active?.name || '';
+  }
+
+  /** Switch the active organization (re-issues session + reloads app). */
+  switchOrg(organizationId: string): void {
+    if (organizationId === this.activeOrgId || this.switchingOrgId) return;
+    this.switchingOrgId = organizationId;
+    this.accountSwitcher.switchTo(organizationId).subscribe({
+      next: (switched) => {
+        if (switched) {
+          // Hard reload so every org-scoped subject/cache rebuilds cleanly.
+          this.router.navigateByUrl('/app/dashboard').then(() => window.location.reload());
+        } else {
+          this.switchingOrgId = null;
+        }
+      },
+      error: () => {
+        this.switchingOrgId = null;
+      }
+    });
     this.showUserMenu = false;
   }
 
