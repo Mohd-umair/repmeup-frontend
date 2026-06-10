@@ -7,6 +7,7 @@ import { NotificationDataService, INotification } from '../../../core/services/n
 import { IUser } from '../../../core/models/user.model';
 import { Subscription, interval } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { AccountSwitcherComponent } from '../account-switcher/account-switcher.component';
 
 /**
  * Header Component - Single Responsibility Principle
@@ -15,7 +16,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AccountSwitcherComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })

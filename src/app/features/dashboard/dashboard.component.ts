@@ -15,8 +15,11 @@ import {
 } from '../../core/models/analytics.model';
 import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
+import { distinctUntilChanged } from 'rxjs/operators';
 import { RaiseTicketModalComponent } from '../support/raise-ticket-modal/raise-ticket-modal.component';
 import { NotificationService } from '../../core/services/notification.service';
+import { AccountContextService } from '../../core/services/account-context.service';
+import { PlatformConnection } from '../../core/services/platform-connection.service';
 import { TimeSeriesChartComponent } from '../../shared/components/charts/time-series-chart.component';
 import { SentimentDonutChartComponent } from '../../shared/components/charts/sentiment-donut-chart.component';
 import { SimpleDonutChartComponent, DonutSegment } from '../../shared/components/charts/simple-donut-chart.component';
@@ -67,7 +70,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   aiHumanSegments: DonutSegment[] = [];
   intentBuckets: IntentBucket[] = [];
 
+  viewingAccountLabel: string | null = null;
+
   private subscriptions: Subscription[] = [];
+  private skipAccountContextReload = true;
 
   readonly INTENT_CONFIG: Record<string, { label: string; icon: string; colorHex: string }> = {
     inquiry:   { label: 'Inquiry',   icon: 'fas fa-question-circle', colorHex: '#3B82F6' },
@@ -81,6 +87,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private analyticsService: AnalyticsService,
+    private accountContextService: AccountContextService,
     private router: Router,
     private http: HttpClient,
     private notify: NotificationService
@@ -88,6 +95,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
+    this.viewingAccountLabel = this.buildAccountLabel(this.accountContextService.selectedConnection);
+    this.subscriptions.push(
+      this.accountContextService.selectedConnection$.pipe(
+        distinctUntilChanged((a, b) => (a?._id ?? '') === (b?._id ?? ''))
+      ).subscribe((conn) => {
+        this.viewingAccountLabel = this.buildAccountLabel(conn);
+        if (this.skipAccountContextReload) {
+          this.skipAccountContextReload = false;
+          return;
+        }
+        if (this.hasConnectedPlatforms) {
+          this.loadImpactData();
+        }
+      })
+    );
     this.checkPlatformConnections();
   }
 
@@ -142,8 +164,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Backend invalidates Redis on interaction changes; clear client cache so counts/charts refresh on each visit.
     this.analyticsService.clearCache();
     const dateRange = this.analyticsService.getDateRangePreset('30days');
+    const connectionId = this.accountContextService.selectedConnectionId;
 
-    const sub = this.analyticsService.getDashboard({ dateRange }).subscribe({
+    const sub = this.analyticsService.getDashboard({
+      dateRange,
+      ...(connectionId ? { connectionId } : {})
+    }).subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.analyticsData = response.data;
@@ -213,5 +239,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   absValue(n: number | undefined): number {
     return Math.abs(n ?? 0);
+  }
+
+  private buildAccountLabel(conn: PlatformConnection | null): string | null {
+    if (!conn) return null;
+    const platform = (conn.platform || '').toLowerCase();
+    if (platform === 'instagram') {
+      const u = conn.platformUsername || conn.platformDisplayName;
+      return u ? (u.startsWith('@') ? u : `@${u}`) : 'Instagram account';
+    }
+    if (platform === 'whatsapp') {
+      return conn.platformData?.displayPhoneNumber
+        || conn.platformDisplayName
+        || conn.platformUsername
+        || 'WhatsApp number';
+    }
+    return conn.platformDisplayName || conn.platformUsername || conn.platformEmail || 'Selected account';
   }
 }

@@ -122,12 +122,16 @@ export class InboxService {
    * Get inbox statistics
    * @param filters Optional filters (e.g. platform) for per-platform stats
    */
-  getStats(filters?: { platform?: string | string[] }): Observable<IApiResponse<IInboxStats>> {
-    const params =
-      filters?.platform != null && filters.platform !== ''
-        ? { platform: filters.platform }
-        : undefined;
-    return this.apiService.get<IApiResponse<IInboxStats>>('/inbox/stats', params)
+  getStats(filters?: { platform?: string | string[]; connectionId?: string }): Observable<IApiResponse<IInboxStats>> {
+    const params: Record<string, string | string[]> = {};
+    if (filters?.platform != null && filters.platform !== '') {
+      params['platform'] = filters.platform;
+    }
+    if (filters?.connectionId) {
+      params['connectionId'] = filters.connectionId;
+    }
+    const query = Object.keys(params).length ? params : undefined;
+    return this.apiService.get<IApiResponse<IInboxStats>>('/inbox/stats', query)
       .pipe(
         tap(response => {
           if (response.success && response.data) {

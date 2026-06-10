@@ -26,8 +26,9 @@ import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bu
 import { OrganizationService, AutoReplySettings } from '../../../core/services/organization.service';
 import { KnowledgeBaseService } from '../../../core/services/knowledge-base.service';
 import { PlatformConnectionService } from '../../../core/services/platform-connection.service';
+import { AccountContextService } from '../../../core/services/account-context.service';
 import { forkJoin, timer, Subscription, of, from, interval } from 'rxjs';
-import { exhaustMap, catchError, take, map, filter } from 'rxjs/operators';
+import { exhaustMap, catchError, take, map, filter, distinctUntilChanged } from 'rxjs/operators';
 import { Router, NavigationEnd } from '@angular/router';
 
 /**
@@ -102,6 +103,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   /** Deferred bulk-dropdown attach (replaces setTimeout 0) */
   private bulkDropdownDeferSub?: Subscription;
+  private skipAccountContextReload = true;
 
   constructor(
     private inboxService: InboxService,
@@ -114,6 +116,7 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     private organizationService: OrganizationService,
     private knowledgeBaseService: KnowledgeBaseService,
     private platformConnectionService: PlatformConnectionService,
+    private accountContextService: AccountContextService,
     private intentBucketService: IntentBucketService,
     private socketService: SocketService,
     private route: ActivatedRoute,
@@ -184,6 +187,26 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     });
 
     this.updateMergedBucketFilters();
+
+    this.subscriptions.push(
+      this.accountContextService.selectedConnection$.pipe(
+        distinctUntilChanged((a, b) => (a?._id ?? '') === (b?._id ?? ''))
+      ).subscribe((conn) => {
+        if (conn?.platform) {
+          this.platformFilters = { ...this.platformFilters, platform: conn.platform as any };
+          this.applyThemeForPlatformFilters();
+        }
+        this.updateMergedBucketFilters();
+        if (this.skipAccountContextReload) {
+          this.skipAccountContextReload = false;
+          return;
+        }
+        if (this.layoutMode !== 'buckets') {
+          this.loadInteractions(true);
+        }
+      })
+    );
+
     if (this.layoutMode !== 'buckets') {
       this.loadInteractions(true);
     }
@@ -1202,6 +1225,10 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     } else if (chatSession === 'closed') {
       out['chatOpen'] = 'false';
     }
+    const connectionId = this.accountContextService.selectedConnectionId;
+    if (connectionId) {
+      out['connectionId'] = connectionId;
+    }
     return out as IInboxFilters;
   }
 
@@ -1481,6 +1508,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     if (this.bucketSearchTerm?.trim()) extra.search = this.bucketSearchTerm.trim();
     if (this.bucketSortBy === 'oldest') { extra.sortBy = 'platformCreatedAt'; extra.sortOrder = 'asc'; }
     else { extra.sortBy = 'platformCreatedAt'; extra.sortOrder = 'desc'; }
+    const connectionId = this.accountContextService.selectedConnectionId;
+    if (connectionId) extra.connectionId = connectionId;
     this.mergedBucketFilters = { ...this.platformFilters, ...this.topFilters, ...extra };
   }
 

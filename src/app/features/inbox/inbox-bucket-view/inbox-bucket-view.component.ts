@@ -235,8 +235,11 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   loadInsightStats(): void {
     this.insightsLoading = true;
     const pl = inboxFilterSerialize(this.filters.platform as any);
-    const statsFilters = pl ? { platform: this.filters.platform as any } : undefined;
-    this.inboxService.getStats(statsFilters).subscribe({
+    const statsFilters: { platform?: string | string[]; connectionId?: string } = {};
+    if (pl) statsFilters.platform = this.filters.platform as any;
+    if (this.filters.connectionId) statsFilters.connectionId = this.filters.connectionId;
+    const query = Object.keys(statsFilters).length ? statsFilters : undefined;
+    this.inboxService.getStats(query).subscribe({
       next: (res: any) => {
         if (res.success && res.data) {
           this.inboxStats = res.data;

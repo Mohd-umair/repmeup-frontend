@@ -259,6 +259,8 @@ export interface IInboxFilters {
   sortOrder?: 'asc' | 'desc';
   /** Client-only: mapped to `chatOpen=true|false` query for GET /inbox */
   chatSession?: 'open' | 'closed';
+  /** Narrow inbox to a single connected account (PlatformConnection id) */
+  connectionId?: string;
 }
 
 export interface IAssignmentHistory {

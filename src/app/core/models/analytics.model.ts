@@ -146,6 +146,8 @@ export interface IAnalyticsFilters {
   types?: string[]; // comment, review, message
   sentiment?: string[]; // positive, neutral, negative
   status?: string[]; // unread, read, replied
+  /** Narrow analytics to a single connected account */
+  connectionId?: string;
 }
 
 export interface IAnalyticsResponse {

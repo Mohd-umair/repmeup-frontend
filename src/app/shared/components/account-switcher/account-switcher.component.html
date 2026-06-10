@@ -1,0 +1,86 @@
+<div *ngIf="visible" class="relative">
+  <button
+    type="button"
+    (click)="toggleMenu($event)"
+    class="account-switcher-trigger flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-lg border transition
+           bg-gray-100 border-gray-300 text-gray-900 hover:bg-gray-200
+           dark:bg-gray-900 dark:border-gray-700 dark:text-rep-white dark:hover:bg-gray-800"
+    [attr.aria-expanded]="showMenu"
+    aria-haspopup="listbox"
+    [title]="'Viewing: ' + getTriggerLabel()"
+  >
+    <i class="fas fa-layer-group text-sm text-gray-600 dark:text-gray-400" aria-hidden="true"></i>
+    <span class="hidden sm:inline text-sm font-medium max-w-[10rem] truncate">{{ getTriggerLabel() }}</span>
+    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+    </svg>
+  </button>
+
+  <div
+    *ngIf="showMenu"
+    class="account-switcher-menu absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-xl shadow-2xl z-50 overflow-hidden
+           bg-white border border-gray-200 text-gray-900
+           dark:bg-rep-black dark:border-gray-800 dark:text-rep-white"
+    role="listbox"
+  >
+    <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-800">
+      <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Connected accounts</p>
+    </div>
+
+    <div class="max-h-[min(24rem,70vh)] overflow-y-auto py-1">
+      <button
+        type="button"
+        (click)="selectAll($event)"
+        class="account-switcher-option w-full text-left px-4 py-2.5 flex items-center gap-3 transition
+               hover:bg-gray-100 dark:hover:bg-gray-900"
+        [ngClass]="{
+          'bg-rep-lime/15': isSelected(null),
+          'dark:bg-gray-900/60': isSelected(null)
+        }"
+      >
+        <span class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 dark:bg-gray-800 shrink-0">
+          <i class="fas fa-globe text-sm text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
+        </span>
+        <span class="flex-1 min-w-0">
+          <span class="block text-sm font-semibold">All accounts</span>
+          <span class="block text-xs text-gray-500 dark:text-gray-400">Show data from every connection</span>
+        </span>
+        <i *ngIf="isSelected(null)" class="fas fa-check text-rep-black dark:text-rep-lime shrink-0" aria-hidden="true"></i>
+      </button>
+
+      <ng-container *ngFor="let group of groups">
+        <div class="px-4 pt-3 pb-1 text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-500 flex items-center gap-2">
+          <i [class]="group.icon" aria-hidden="true"></i>
+          {{ group.label }}
+        </div>
+
+        <button
+          *ngFor="let conn of group.connections"
+          type="button"
+          (click)="selectConnection(conn, $event)"
+          class="account-switcher-option w-full text-left px-4 py-2.5 flex items-center gap-3 transition
+                 hover:bg-gray-100 dark:hover:bg-gray-900"
+          [ngClass]="{
+            'bg-rep-lime/15': isSelected(conn._id),
+            'dark:bg-gray-900/60': isSelected(conn._id)
+          }"
+        >
+          <span class="w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 shrink-0 flex items-center justify-center">
+            <img
+              *ngIf="getAvatarUrl(conn) as avatar"
+              [src]="avatar"
+              [alt]="getConnectionLabel(conn)"
+              class="w-full h-full object-cover"
+            />
+            <i *ngIf="!getAvatarUrl(conn)" [class]="group.icon + ' text-sm text-gray-600 dark:text-gray-300'" aria-hidden="true"></i>
+          </span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-sm font-semibold truncate">{{ getConnectionLabel(conn) }}</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400 truncate">{{ group.label }}</span>
+          </span>
+          <i *ngIf="isSelected(conn._id)" class="fas fa-check text-rep-black dark:text-rep-lime shrink-0" aria-hidden="true"></i>
+        </button>
+      </ng-container>
+    </div>
+  </div>
+</div>
