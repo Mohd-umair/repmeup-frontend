@@ -13,11 +13,11 @@
             <img src="assets/Images/logo.jpeg" alt="RepMeUp" class="app-logo h-11 w-11 rounded-xl object-cover shadow-sm dark:ring-1 dark:ring-white/10" width="44" height="44" />
             <div>
               <h3 class="text-lg font-black tracking-tight text-gray-900 dark:text-rep-white">RepMeUp</h3>
-              <p class="text-xs font-medium text-gray-500 dark:text-zinc-500">AI revenue platform</p>
+              <p class="text-xs font-medium text-gray-500 dark:text-zinc-500">Reppy AI revenue platform</p>
             </div>
           </div>
           <p class="text-sm leading-relaxed text-gray-600 dark:text-zinc-400 mb-3">
-            One platform to automate, engage and grow your business with AI.
+            One platform to automate, engage and grow your business with Reppy.
           </p>
           <p class="font-['Georgia',_'Times_New_Roman',_serif] text-base italic text-lime-600 dark:text-rep-lime">
             Conversations that convert.
@@ -63,7 +63,7 @@
           </div>
           <div class="footer-pillar__text">
             <p class="footer-pillar__title text-gray-900 dark:text-rep-white">All-in-One Platform</p>
-            <p class="footer-pillar__desc text-gray-600 dark:text-zinc-400">Inbox, AI, and channels in one place.</p>
+            <p class="footer-pillar__desc text-gray-600 dark:text-zinc-400">Inbox, Reppy, and channels in one place.</p>
           </div>
         </div>
         <div class="footer-pillar">
@@ -163,12 +163,22 @@
       <div class="shrink-0">
         <p class="mb-3 text-center text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500 lg:text-right">Follow Us</p>
         <div class="flex flex-wrap justify-center gap-2 lg:justify-end">
-          <a href="#" class="footer-social footer-social--wa" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
-          <a href="#" class="footer-social footer-social--ig" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
-          <a href="#" class="footer-social footer-social--fb" aria-label="Facebook"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
-          <a href="#" class="footer-social footer-social--yt" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
-          <a href="#" class="footer-social footer-social--in" aria-label="LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a>
-          <a href="#" class="footer-social footer-social--x" aria-label="X"><i class="fab fa-x-twitter" aria-hidden="true"></i></a>
+          <a
+            [href]="socialLinks.instagram"
+            class="footer-social footer-social--ig"
+            aria-label="Instagram"
+            rel="noopener noreferrer"
+            target="_blank">
+            <i class="fab fa-instagram" aria-hidden="true"></i>
+          </a>
+          <a
+            [href]="socialLinks.linkedin"
+            class="footer-social footer-social--in"
+            aria-label="LinkedIn"
+            rel="noopener noreferrer"
+            target="_blank">
+            <i class="fab fa-linkedin-in" aria-hidden="true"></i>
+          </a>
         </div>
       </div>
     </div>

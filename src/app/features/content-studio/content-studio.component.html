@@ -7,7 +7,7 @@
         <i class="fas fa-wand-magic-sparkles text-rep-lime drop-shadow-[0_0_10px_rgba(184,245,103,0.45)]"></i>
       Content Studio
     </h1>
-      <p class="text-gray-600 dark:text-gray-400 mt-1 text-sm">Create and publish social media content with AI or manually.</p>
+      <p class="text-gray-600 dark:text-gray-400 mt-1 text-sm">Create and publish social media content with Reppy or manually.</p>
     </div>
     <a routerLink="/app/scheduled-posts"
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition
@@ -25,7 +25,7 @@
         : 'bg-white text-gray-600 border border-gray-200 shadow-sm hover:bg-gray-50 hover:text-gray-900 dark:bg-gray-800 dark:border-transparent dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'"
       class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all">
       <i class="fas fa-wand-magic-sparkles text-sm"></i>
-      AI Generate
+      Reppy Generate
     </button>
     <button type="button" (click)="goToCustom()"
       class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all
@@ -80,7 +80,7 @@
         <div class="flex-1 min-w-0">
           <p [class]="generationMode === 'brand-voice' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
             class="text-sm font-semibold leading-tight">Brand Voice</p>
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Uses your AI brand analysis — tone, style &amp; visuals</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Uses your Reppy AI brand analysis — tone, style &amp; visuals</p>
           <!-- Status hint when selected -->
           <ng-container *ngIf="generationMode === 'brand-voice'">
             <div *ngIf="loadingModeContext" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-400">
@@ -154,7 +154,7 @@
         <div class="flex-1 min-w-0">
           <p [class]="generationMode === 'template' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
             class="text-sm font-semibold leading-tight">Occasion Templates</p>
-          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Use a Brand Hub template directly or as AI visual reference</p>
+          <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Use a Brand Hub template directly or as Reppy visual reference</p>
           <ng-container *ngIf="generationMode === 'template'">
             <div *ngIf="eventTemplatesLoading" class="mt-1.5 flex items-center gap-1 text-[10px] text-gray-400">
               <i class="fas fa-circle-notch fa-spin text-[9px]"></i> Loading templates…
@@ -246,7 +246,7 @@
           <div class="flex-1 min-w-0">
             <p [ngClass]="templateUseMode === 'direct' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
               class="text-sm font-semibold leading-tight">Use Same Template</p>
-            <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Use the template's caption, hashtags, and CTA directly as your post — no AI text generation</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Use the template's caption, hashtags, and CTA directly as your post — no Reppy text generation</p>
             <div *ngIf="selectedEventTemplate?.sampleCaption" class="mt-1.5 p-2 rounded-lg bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700">
               <p class="text-[10px] text-gray-500 dark:text-gray-400 italic line-clamp-2">"{{ selectedEventTemplate?.sampleCaption }}"</p>
             </div>
@@ -266,8 +266,8 @@
           </div>
           <div class="flex-1 min-w-0">
             <p [ngClass]="templateUseMode === 'reference' ? 'text-gray-900 dark:text-rep-lime' : 'text-gray-700 dark:text-gray-300'"
-              class="text-sm font-semibold leading-tight">Generate with AI</p>
-            <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">AI generates new text guided by the template's tone and visual style — add your topic in Step 3</p>
+              class="text-sm font-semibold leading-tight">Generate with Reppy</p>
+            <p class="text-xs text-gray-500 dark:text-gray-500 mt-0.5 leading-snug">Reppy generates new text guided by the template's tone and visual style — add your topic in Step 3</p>
           </div>
           <i *ngIf="templateUseMode === 'reference'" class="fas fa-circle-check text-rep-lime text-xs flex-shrink-0 mt-1"></i>
         </button>
@@ -398,7 +398,7 @@
               <p class="text-[10px] text-gray-500 dark:text-gray-500 truncate">
                 {{ completedSteps.has(2) && currentStep !== 2
                   ? contentTypeLabel
-                  : 'What kind of content should AI create?' }}
+                  : 'What kind of content should Reppy create?' }}
               </p>
             </div>
           </div>
@@ -779,7 +779,7 @@
               class="flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-bold shrink-0 transition-colors">4</span>
             <div class="flex-1 min-w-0">
               <p class="text-xs font-semibold text-gray-900 dark:text-gray-100">Review &amp; Generate</p>
-              <p class="text-[10px] text-gray-500 dark:text-gray-500">Ready? Let AI do the work.</p>
+              <p class="text-[10px] text-gray-500 dark:text-gray-500">Ready? Let Reppy do the work.</p>
             </div>
           </div>
 
@@ -827,7 +827,7 @@
             <!-- Hint -->
             <p class="text-[10px] text-center text-gray-500 dark:text-gray-600 leading-snug">
               <i class="fas fa-lock text-[9px] mr-1"></i>
-              AI-generated content is saved to your Media Library automatically.
+              Reppy-generated content is saved to your Media Library automatically.
             </p>
           </div>
         </div>
@@ -839,7 +839,7 @@
       <div *ngIf="aiCredits && !showWizardSummary"
         class="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-900/50 rounded-xl border border-gray-200 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-400 shadow-sm dark:shadow-none">
         <i class="fas fa-bolt text-rep-black dark:text-rep-lime"></i>
-        AI Credits:
+        Reppy Credits:
         <span class="ml-auto font-semibold text-gray-900 dark:text-rep-white">
           {{ aiCredits.isUnlimited ? '∞' : aiCredits.remaining }}
         </span>
@@ -940,7 +940,7 @@
           </button>
         </div>
 
-        <!-- Image Section (text-only content type: no AI Generate / Upload / Browse on variants) -->
+        <!-- Image Section (text-only content type: no Reppy Generate / Upload / Browse on variants) -->
         <ng-container *ngIf="includeImage || v.imageUrl || v.loadingImage || v.imageError">
         <div class="h-px bg-gray-200 dark:bg-gray-800 mx-4"></div>
         <div class="px-4 pt-3 pb-4">
@@ -1058,14 +1058,14 @@
             <span class="text-xs text-gray-500 dark:text-gray-500">Image pending…</span>
           </div>
 
-          <!-- No image yet: AI Generate + Upload (only when this flow includes images — not Text Only) -->
+          <!-- No image yet: Reppy Generate + Upload (only when this flow includes images — not Text Only) -->
           <div *ngIf="includeImage && !v.loadingImage && !v.imageUrl && !v.imageError && !generating" class="mb-3 flex gap-2">
             <button type="button" (click)="generateImageForVariant(i)"
               class="flex-1 h-16 rounded-lg bg-purple-50 border border-dashed border-purple-300
                      text-xs text-purple-700 hover:bg-purple-100 transition flex flex-col items-center justify-center gap-1
                      dark:bg-purple-500/10 dark:border-purple-500/30 dark:text-purple-400 dark:hover:bg-purple-500/20">
               <i class="fas fa-wand-magic-sparkles text-sm"></i>
-              <span>AI Generate</span>
+              <span>Reppy Generate</span>
             </button>
             <button type="button" (click)="openImagePicker(i)"
               class="flex-1 h-16 rounded-lg bg-blue-50 border border-dashed border-blue-300
@@ -1232,7 +1232,7 @@
           <div class="flex items-center gap-2 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
             <i class="fas fa-bolt text-yellow-500 text-sm"></i>
             <div class="flex-1">
-              <span class="text-xs font-semibold text-yellow-700 dark:text-yellow-400">Cost: 3 AI credits</span>
+              <span class="text-xs font-semibold text-yellow-700 dark:text-yellow-400">Cost: 3 Reppy credits</span>
               <span *ngIf="aiCredits && !aiCredits.isUnlimited" class="text-xs text-yellow-600 dark:text-yellow-500 ml-1.5">
                 ({{ aiCredits.remaining }} remaining)
               </span>

@@ -60,7 +60,7 @@ export class EscalationComponent implements OnInit, OnDestroy {
     { key: 'negativeSentiment',     label: 'Negative Sentiment',     desc: 'Escalate when the customer message is very negative' },
     { key: 'complexRequests',       label: 'Complex Requests',       desc: 'Escalate when the AI classifies the request as complex' },
     { key: 'repeatedMessages',      label: 'Repeated Messages',      desc: 'Escalate when the customer sends the same message multiple times' },
-    { key: 'outsideBusinessHours',  label: 'Outside Business Hours', desc: 'Queue for human review after hours instead of AI replying' },
+    { key: 'outsideBusinessHours',  label: 'Outside Business Hours', desc: 'Queue for human review after hours instead of Reppy replying' },
   ];
 
   constructor(

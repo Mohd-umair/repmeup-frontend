@@ -75,7 +75,7 @@
           </div>
           <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
             <app-ai-chat-bubble-icon iconClass="w-5 h-5 opacity-70" />
-            <span class="text-xs text-gray-400">AI Replies</span>
+            <span class="text-xs text-gray-400">Reppy AI Replies</span>
           </div>
         </nav>
         <div class="mt-2 px-2 py-2.5 bg-gray-100 dark:bg-gray-900/70 rounded-xl">
@@ -161,7 +161,7 @@
                 <span class="dot dot-dark"></span>
                 <span class="dot dot-dark"></span>
               </div>
-              <span class="text-sm text-rep-black/60 font-medium">AI writing…</span>
+              <span class="text-sm text-rep-black/60 font-medium">Reppy writing…</span>
             </div>
             <div class="w-7 h-7 rounded-full bg-rep-lime flex items-center justify-center text-rep-black text-sm font-bold shrink-0">R</div>
           </div>
@@ -199,12 +199,12 @@
                [class.processing]="isProcessing">
             <app-ai-chat-bubble-icon iconClass="w-7 h-7 shrink-0" />
             <p *ngIf="!isProcessing" class="text-sm text-gray-600 dark:text-gray-300 flex-1 truncate">
-              AI is ready — brand-tuned drafts · replies in seconds
+              Reppy is ready — brand-tuned drafts · replies in seconds
             </p>
             <p *ngIf="isProcessing" class="text-sm text-blue-600 dark:text-blue-300 flex-1 font-semibold">
               <span class="inline-flex items-center gap-1.5">
                 <span class="processing-dot"></span>
-                AI is generating a reply…
+                Reppy is generating a reply…
               </span>
             </p>
           </div>
@@ -258,13 +258,13 @@
     <div class="w-2 h-2 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse ml-1 shrink-0"></div>
   </div>
 
-  <!-- Floating badge: AI Reply Ready -->
+  <!-- Floating badge: Reppy AI Reply Ready -->
   <div class="hidden lg:flex float-badge float-delay absolute -top-5 -right-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/50 px-4 py-3 border border-black/[0.07] dark:border-white/[0.08] items-center gap-3">
     <div class="w-12 h-12 bg-white dark:bg-zinc-900 rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-rep-lime/20 border border-rep-lime/40">
       <app-ai-chat-bubble-icon iconClass="w-9 h-9" />
     </div>
     <div>
-      <p class="text-sm font-bold text-gray-900 dark:text-rep-white">AI Reply Ready</p>
+      <p class="text-sm font-bold text-gray-900 dark:text-rep-white">Reppy AI Reply Ready</p>
       <p class="text-xs text-gray-400 flex items-center gap-1">
         <span class="w-1.5 h-1.5 rounded-full bg-lime-500 dark:bg-rep-lime animate-pulse"></span>
         Matches your tone

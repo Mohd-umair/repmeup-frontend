@@ -191,7 +191,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   private buildChartSegments(): void {
     this.aiHumanSegments = [
-      { label: 'AI Replies', value: this.aiVsHuman.aiReplies, color: '#8B5CF6' },
+      { label: 'Reppy AI Replies', value: this.aiVsHuman.aiReplies, color: '#8B5CF6' },
       { label: 'Human Replies', value: this.aiVsHuman.humanReplies, color: '#D8FF00' }
     ];
 

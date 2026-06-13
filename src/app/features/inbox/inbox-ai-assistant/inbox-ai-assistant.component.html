@@ -3,7 +3,7 @@
   <div *ngIf="!interaction" class="flex-1 flex items-center justify-center p-6 text-center">
     <div class="text-gray-500 dark:text-gray-400 text-sm">
       <app-ai-chat-bubble-icon class="mb-3 block opacity-60 mx-auto" iconClass="w-14 h-14 sm:w-16 sm:h-16"></app-ai-chat-bubble-icon>
-      Select a conversation to get AI suggestions
+      Select a conversation to get Reppy suggestions
     </div>
   </div>
 
@@ -13,7 +13,7 @@
       <div class="mb-3">
         <i class="fas fa-magic text-3xl text-rep-lime opacity-80"></i>
       </div>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Generate AI-powered reply suggestions based on the conversation and your knowledge base.</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Generate Reppy-powered reply suggestions based on the conversation and your knowledge base.</p>
       <button
         (click)="generateSuggestions()"
         class="px-4 py-2 bg-rep-lime hover:bg-rep-lime/90 text-rep-black rounded-lg text-xs font-bold transition inline-flex items-center gap-2">
@@ -27,7 +27,7 @@
       <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rep-lime/10 mb-3">
         <i class="fas fa-spinner fa-spin text-rep-lime text-lg"></i>
       </div>
-      <p class="text-xs text-gray-500 dark:text-gray-400">Generating AI suggestions...</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">Generating Reppy suggestions...</p>
       <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Analyzing conversation &amp; knowledge base</p>
     </div>
 

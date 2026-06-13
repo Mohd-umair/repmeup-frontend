@@ -21,7 +21,7 @@ export class StatusBadgeComponent {
       pending: 'Pending',
       rejected: 'Rejected',
       scheduled: 'Scheduled',
-      ai_generated: 'AI Generated',
+      ai_generated: 'Reppy Generated',
       draft: 'Draft',
       published: 'Published',
       failed: 'Failed'

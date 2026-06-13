@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, timer } from 'rxjs';
 import { take, takeUntil } from 'rxjs/operators';
+import { SOCIAL_LINKS } from '../../core/constants/social-links.constants';
 import { ApiService } from '../../core/services/api.service';
 
 @Component({
@@ -14,6 +15,8 @@ import { ApiService } from '../../core/services/api.service';
   styleUrls: ['./contact.component.scss']
 })
 export class ContactComponent implements OnInit, OnDestroy {
+  readonly socialLinks = SOCIAL_LINKS;
+
   contactForm: FormGroup;
   submitted = false;
   loading = false;

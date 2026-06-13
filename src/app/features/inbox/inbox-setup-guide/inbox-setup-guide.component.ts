@@ -123,7 +123,7 @@ export class InboxSetupGuideComponent implements OnChanges {
       {
         id: 'autoreply',
         label: 'Enable Auto Reply',
-        description: 'Turn on AI-powered replies so every customer message gets an instant, personalised response.',
+        description: 'Turn on Reppy-powered replies so every customer message gets an instant, personalised response.',
         icon: '',
         useAiBrandIcon: true,
         done: !!ar?.enabled,
@@ -133,7 +133,7 @@ export class InboxSetupGuideComponent implements OnChanges {
       {
         id: 'fallback',
         label: 'Set a fallback message',
-        description: "A friendly reply for when the AI isn't confident, so no customer is left unanswered.",
+        description: "A friendly reply for when Reppy isn't confident, so no customer is left unanswered.",
         icon: 'fas fa-life-ring',
         done: !!(ar?.fallbackSettings?.enabled && ar?.fallbackSettings?.message),
         link: '/app/automation/ai-replies',

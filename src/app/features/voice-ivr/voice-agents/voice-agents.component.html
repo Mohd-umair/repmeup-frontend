@@ -2,7 +2,7 @@
   <div class="voice-agents__top">
     <div>
       <h2><i class="fas fa-robot"></i> Voice Agents</h2>
-      <p>Create industry-tuned AI receptionists with their own prompts, tools, and workflow.</p>
+      <p>Create industry-tuned Reppy AI receptionists with their own prompts, tools, and workflow.</p>
     </div>
     <button class="vi-btn vi-btn-primary" (click)="openCreate()">
       <i class="fas fa-plus"></i> New Agent
@@ -101,12 +101,12 @@
         </div>
 
         <div>
-          <label class="vi-label">Greeting message (first thing the AI says)</label>
+          <label class="vi-label">Greeting message (first thing Reppy says)</label>
           <input class="vi-input" type="text" [(ngModel)]="draft.greetingMessage" />
         </div>
 
         <div>
-          <label class="vi-label">System prompt (sets the AI's personality + goals)</label>
+          <label class="vi-label">System prompt (sets Reppy's personality + goals)</label>
           <textarea class="vi-textarea" [(ngModel)]="draft.systemPrompt" rows="5"></textarea>
         </div>
 

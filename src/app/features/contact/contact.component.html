@@ -74,31 +74,31 @@
         <div class="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
           <p class="text-sm font-semibold text-gray-400 mb-4">Connect with us</p>
           <div class="flex gap-3">
-            <a 
-              href="https://www.facebook.com/profile.php?id=61586432831752" 
-              target="_blank" 
+            <a
+              [href]="socialLinks.facebook"
+              target="_blank"
               rel="noopener noreferrer"
               class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all duration-300"
               title="Facebook"
-            >
+              aria-label="Follow RepMeUp on Facebook">
               <i class="fab fa-facebook-f text-lg"></i>
             </a>
-            <a 
-              href="https://www.instagram.com/rep_me_up/" 
-              target="_blank" 
+            <a
+              [href]="socialLinks.instagram"
+              target="_blank"
               rel="noopener noreferrer"
               class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-500 hover:text-white hover:border-transparent transition-all duration-300"
               title="Instagram"
-            >
+              aria-label="Follow RepMeUp on Instagram">
               <i class="fab fa-instagram text-lg"></i>
             </a>
-            <a 
-              href="https://www.linkedin.com/company/111395945/" 
-              target="_blank" 
+            <a
+              [href]="socialLinks.linkedin"
+              target="_blank"
               rel="noopener noreferrer"
               class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:bg-blue-700 hover:text-white hover:border-blue-600 transition-all duration-300"
               title="LinkedIn"
-            >
+              aria-label="Follow RepMeUp on LinkedIn">
               <i class="fab fa-linkedin-in text-lg"></i>
             </a>
           </div>

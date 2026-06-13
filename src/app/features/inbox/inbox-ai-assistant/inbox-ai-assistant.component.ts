@@ -97,7 +97,7 @@ export class InboxAiAssistantComponent implements OnChanges {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err?.error?.error || err?.message || 'Failed to generate AI suggestions.';
+        this.error = err?.error?.error || err?.message || 'Failed to generate Reppy suggestions.';
         this.cdr.markForCheck();
       }
     });

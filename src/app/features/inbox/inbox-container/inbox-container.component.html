@@ -460,14 +460,14 @@
       <div class="w-14 h-14 rounded-2xl bg-rep-lime/15 border border-rep-lime/30 flex items-center justify-center mb-4">
         <app-ai-chat-bubble-icon iconClass="w-14 h-14 sm:w-16 sm:h-16"></app-ai-chat-bubble-icon>
       </div>
-      <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1.5">AI tools open here</h3>
+      <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1.5">Reppy AI tools open here</h3>
       <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed max-w-[220px] mb-5">
         Pick any conversation and we'll draft a reply, summarise the thread, and suggest next actions.
       </p>
       <ul class="text-[11px] text-left space-y-2 text-gray-600 dark:text-gray-300 w-full max-w-[240px]">
         <li class="flex items-start gap-2">
           <i class="fas fa-wand-magic-sparkles text-rep-lime mt-0.5 w-4 text-center"></i>
-          <span>AI-drafted replies in your brand voice</span>
+          <span>Reppy-drafted replies in your brand voice</span>
         </li>
         <li class="flex items-start gap-2">
           <i class="fas fa-list-check text-rep-lime mt-0.5 w-4 text-center"></i>
@@ -484,7 +484,7 @@
       </ul>
     </div>
 
-    <!-- Right: Actions / AI Assistant Panel -->
+    <!-- Right: Actions / Reppy AI Assistant Panel -->
     <div *ngIf="selectedInteraction"
          class="w-full lg:flex-1 lg:min-w-0 bg-white dark:bg-gray-900/95 rounded-xl shadow-md border border-gray-200/80 dark:border-gray-700 transition-all duration-300 lg:overflow-hidden flex flex-col">
       <!-- Tab headers -->
@@ -503,7 +503,7 @@
           [class.dark:hover:text-gray-200]="rightPanelTab !== 'suggestions'">
           <app-ai-chat-bubble-icon iconClass="w-5 h-5 sm:w-6 sm:h-6 shrink-0"
             [noDarkInvert]="rightPanelTab === 'suggestions'"></app-ai-chat-bubble-icon>
-          AI Help
+          Reppy Help
         </button>
         <button
           (click)="rightPanelTab = 'actions'"
@@ -551,7 +551,7 @@
           Contact
         </button>
       </div>
-      <!-- Tab body: keep all panels mounted so AI suggestions survive tab switches -->
+      <!-- Tab body: keep all panels mounted so Reppy suggestions survive tab switches -->
       <div class="flex-1 min-h-0 overflow-hidden flex flex-col relative">
         <app-inbox-actions
           class="flex-1 min-h-0 overflow-hidden"

@@ -68,8 +68,8 @@ export class FlowListComponent implements OnInit, OnDestroy {
   ];
 
   readonly modeOptions: IModeOption[] = [
-    { value: 'workflow_only', label: 'Workflow Only', description: 'Only your flows reply. AI never runs.', icon: 'fas fa-diagram-project' },
-    { value: 'ai_only',       label: 'AI Only',       description: 'Flows are skipped. AI Auto-Reply handles every message.', icon: 'fas fa-robot' },
+    { value: 'workflow_only', label: 'Workflow Only', description: 'Only your flows reply. Reppy never runs.', icon: 'fas fa-diagram-project' },
+    { value: 'ai_only',       label: 'Reppy Only',       description: 'Flows are skipped. Reppy AI Auto-Reply handles every message.', icon: 'fas fa-robot' },
     { value: 'hybrid',        label: 'Hybrid',        description: 'Flows run first; AI fills the gap when no flow matches. (Recommended)', icon: 'fas fa-layer-group' }
   ];
 

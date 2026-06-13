@@ -629,13 +629,13 @@
         <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
           <h3 class="text-lg font-bold text-rep-white mb-4 flex items-center gap-2">
             <app-ai-chat-bubble-icon iconClass="w-5 h-5 shrink-0"></app-ai-chat-bubble-icon>
-            AI vs Human Replies
+            Reppy vs Human Replies
           </h3>
           <div *ngIf="dashboard.aiVsHuman && dashboard.aiVsHuman.totalReplies > 0">
             <div class="flex gap-4 mb-4">
               <div class="flex-1 text-center p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
                 <p class="text-2xl font-bold text-purple-400">{{ formatNumber(dashboard.aiVsHuman.aiReplies) }}</p>
-                <p class="text-xs text-gray-400 mt-1">AI Replies</p>
+                <p class="text-xs text-gray-400 mt-1">Reppy AI Replies</p>
               </div>
               <div class="flex-1 text-center p-3 rounded-xl bg-rep-lime/10 border border-rep-lime/20">
                 <p class="text-2xl font-bold text-rep-lime">{{ formatNumber(dashboard.aiVsHuman.humanReplies) }}</p>
@@ -645,7 +645,7 @@
             <!-- AI share bar -->
             <div class="mb-2">
               <div class="flex justify-between text-xs mb-1">
-                <span class="text-purple-400">AI {{ dashboard.aiVsHuman.aiPercent }}%</span>
+                <span class="text-purple-400">Reppy {{ dashboard.aiVsHuman.aiPercent }}%</span>
                 <span class="text-rep-lime">Human {{ 100 - dashboard.aiVsHuman.aiPercent }}%</span>
               </div>
               <div class="w-full h-2.5 bg-rep-lime/30 rounded-full overflow-hidden">
@@ -892,7 +892,7 @@
           </div>
           <div class="text-center">
             <div class="text-3xl font-bold text-green-500 mb-2">{{ formatPercentage(dashboard.autoReplyMetrics.successRate) }}</div>
-            <div class="text-gray-400 text-sm">AI Share</div>
+            <div class="text-gray-400 text-sm">Reppy AI Share</div>
           </div>
           <div class="text-center">
             <div class="text-3xl font-bold text-rep-lime mb-2">{{ formatNumber(dashboard.aiVsHuman?.totalReplies || 0) }}</div>

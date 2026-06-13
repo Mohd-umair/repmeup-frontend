@@ -142,7 +142,7 @@
       </div>
     </div>
 
-    <!-- AI Credits Badge -->
+    <!-- Reppy Credits Badge -->
     <a
       routerLink="/app/content-studio"
       class="flex items-center gap-2 px-3 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition cursor-pointer"
@@ -160,7 +160,7 @@
         : aiCredits.isNearLimit
           ? 'bg-amber-100 dark:bg-amber-500/20 border-amber-300 dark:border-amber-500/40 hover:bg-amber-200 dark:hover:bg-amber-500/30'
           : 'bg-purple-100 dark:bg-purple-500/20 border-purple-300 dark:border-purple-500/30 hover:bg-purple-200 dark:hover:bg-purple-500/30'"
-      title="View AI Credits Usage"
+      title="View Reppy Credits Usage"
     >
       <i class="fas fa-bolt"
          [ngClass]="aiCredits.isAtLimit ? 'text-red-600 dark:text-red-400' : aiCredits.isNearLimit ? 'text-amber-600 dark:text-amber-400' : 'text-purple-600 dark:text-purple-400'"></i>

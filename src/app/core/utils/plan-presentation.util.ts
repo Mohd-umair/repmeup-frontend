@@ -57,7 +57,7 @@ export function legacyHighlightsFromLimits(limits: IPlanCardData['limits']): IPl
     { key: FEATURE_KEY.USERS_MAX, label: 'Team members', raw: limits.maxUsers },
     { key: FEATURE_KEY.POSTS_PER_MONTH, label: 'Posts per month', raw: limits.maxPostsPerMonth },
     { key: FEATURE_KEY.CREDITS_AUTO_REPLY, label: 'Auto-replies per month', raw: limits.maxAutoRepliesPerMonth },
-    { key: FEATURE_KEY.CREDITS_AI_GENERAL, label: 'AI credits per month', raw: limits.maxAICreditsPerMonth }
+    { key: FEATURE_KEY.CREDITS_AI_GENERAL, label: 'Reppy credits per month', raw: limits.maxAICreditsPerMonth }
   ];
   return rows.map((r) => ({
     key: r.key,

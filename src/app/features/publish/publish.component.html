@@ -16,7 +16,7 @@
         class="inline-flex shrink-0 items-center justify-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-semibold text-sm sm:text-base bg-rep-lime text-rep-black hover:bg-rep-lime/90 hover:shadow-lg hover:shadow-rep-lime/30 transition-all duration-200 border border-rep-lime/80"
       >
         <i class="fas fa-wand-magic-sparkles text-sm"></i>
-        Create post with AI
+        Create post with Reppy
       </a>
     </div>
 
@@ -146,7 +146,7 @@
               <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
                 <i class="fas fa-magic text-purple-400"></i>
               </div>
-              <span class="font-semibold text-rep-white text-sm">Write with AI</span>
+              <span class="font-semibold text-rep-white text-sm">Write with Reppy</span>
               <div *ngIf="aiCredits" class="flex items-center gap-1.5 bg-purple-500/10 px-2.5 py-1 rounded-md border border-purple-500/20">
                 <i class="fas fa-bolt text-purple-400 text-xs"></i>
                 <span class="text-xs font-medium text-purple-300">
@@ -194,10 +194,10 @@
               <p class="text-xs text-gray-400 mt-1.5 flex items-center gap-1.5">
                 <i class="fas fa-info-circle"></i>
                 <span *ngIf="aiMode === 'same'">
-                  AI will generate 1 post for all {{ selectedPlatforms.length }} platforms (1 credit)
+                  Reppy will generate 1 post for all {{ selectedPlatforms.length }} platforms (1 credit)
                 </span>
                 <span *ngIf="aiMode === 'custom'">
-                  AI will generate {{ selectedPlatforms.length }} unique posts, one per platform ({{ selectedPlatforms.length }} credits)
+                  Reppy will generate {{ selectedPlatforms.length }} unique posts, one per platform ({{ selectedPlatforms.length }} credits)
                 </span>
               </p>
             </div>
@@ -210,7 +210,7 @@
               class="w-full px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold text-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <i [class]="generatingAI ? 'fas fa-spinner fa-spin' : 'fas fa-wand-magic-sparkles'" class="text-sm"></i>
-              <span *ngIf="!generatingAI">Generate Post with AI ({{ getCreditsNeeded() }} credit{{ getCreditsNeeded() > 1 ? 's' : '' }})</span>
+              <span *ngIf="!generatingAI">Generate Post with Reppy ({{ getCreditsNeeded() }} credit{{ getCreditsNeeded() > 1 ? 's' : '' }})</span>
               <span *ngIf="generatingAI">Generating...</span>
             </button>
 

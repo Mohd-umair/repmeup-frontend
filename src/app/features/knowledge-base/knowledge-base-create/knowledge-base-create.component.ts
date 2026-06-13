@@ -51,11 +51,12 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   readonly tagCountOptions  = [5, 10, 15, 20, 25];
 
   // ── Whole-website crawl ──────────────────────────────────────────────────────
-  /** When true, the URL tab crawls internal pages instead of just the homepage. */
+  /** When true, discover internal pages first, then let the user pick which to import. */
   crawlWholeSite = false;
-  /** Platform ceiling for pages per crawl (mirrors backend KB_CRAWL_MAX_PAGES). */
   readonly crawlMaxPages = 25;
-  /** Live crawl progress while a background job runs (null = no active crawl). */
+  discovering = false;
+  urlDiscoveryDone = false;
+  discoveredUrls: Array<{ url: string; title: string; depth: number; selected: boolean }> = [];
   crawlProgress: IKbCrawlStatus | null = null;
   private crawlPollTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -218,7 +219,27 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   get estimatedCredits(): number {
     const words = this.urlForm?.get('targetWordCount')?.value ?? 2000;
     const tags  = this.urlForm?.get('targetTagCount')?.value  ?? 10;
-    return Math.min(10, Math.max(1, Math.ceil(words / 500) + Math.ceil(tags / 5)));
+    const perPage = Math.min(10, Math.max(1, Math.ceil(words / 500) + Math.ceil(tags / 5)));
+    if (this.crawlWholeSite) {
+      const count = this.urlDiscoveryDone ? this.selectedDiscoveredCount : 1;
+      return perPage * Math.max(1, count);
+    }
+    return perPage;
+  }
+
+  get selectedDiscoveredCount(): number {
+    return this.discoveredUrls.filter((u) => u.selected).length;
+  }
+
+  /** Max URLs the user can select (plan KB cap + platform ceiling). */
+  get maxSelectableUrls(): number {
+    const remaining = this.entitlements.remaining(FEATURE_KEY.KB_ENTRIES_MAX);
+    if (remaining === Infinity) return this.crawlMaxPages;
+    return Math.min(this.crawlMaxPages, Math.max(0, remaining));
+  }
+
+  get selectedDiscoveredUrls(): string[] {
+    return this.discoveredUrls.filter((u) => u.selected).map((u) => u.url);
   }
 
   // ── Template helpers ───────────────────────────────────────────────────────
@@ -388,8 +409,123 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
 
   openCreditConfirmAndSubmit(): void {
     if (this.urlForm.invalid) return;
-    this.pendingUrlFormData = { ...this.urlForm.value };
+
+    if (this.crawlWholeSite) {
+      if (!this.urlDiscoveryDone) {
+        this.discoverWebsitePages();
+        return;
+      }
+      if (this.selectedDiscoveredCount === 0) {
+        this.notificationService.warning('No pages selected', 'Choose at least one page to import.');
+        return;
+      }
+    }
+
+    this.pendingUrlFormData = {
+      ...this.urlForm.value,
+      selectedUrls: this.crawlWholeSite ? this.selectedDiscoveredUrls : undefined
+    };
     this.showCreditConfirmModal = true;
+    this.cdr.markForCheck();
+  }
+
+  onCrawlToggleChange(): void {
+    this.resetUrlDiscovery();
+    this.cdr.markForCheck();
+  }
+
+  onUrlFieldChange(): void {
+    if (this.urlDiscoveryDone) {
+      this.resetUrlDiscovery();
+      this.cdr.markForCheck();
+    }
+  }
+
+  resetUrlDiscovery(): void {
+    this.urlDiscoveryDone = false;
+    this.discoveredUrls = [];
+    this.discovering = false;
+  }
+
+  /** Called by Re-discover / Try-again buttons to reset state and trigger UI refresh. */
+  onReDiscoverClick(): void {
+    this.resetUrlDiscovery();
+    this.cdr.markForCheck();
+  }
+
+  discoverWebsitePages(): void {
+    if (this.urlForm.get('url')?.invalid) return;
+    const url = this.urlForm.get('url')?.value?.trim();
+    if (!url) return;
+
+    this.discovering = true;
+    this.resetUrlDiscovery();
+    this.discovering = true;
+
+    this.knowledgeBaseService.discoverWebsiteUrls({ url, maxPages: this.crawlMaxPages })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.discovering = false;
+          if (!response.success || !response.data?.urls?.length) {
+            this.notificationService.error('Discovery failed', response.error || 'No pages found on this website.');
+            this.cdr.markForCheck();
+            return;
+          }
+          const cap = this.maxSelectableUrls;
+          this.discoveredUrls = response.data.urls.map((item, index) => ({
+            url: item.url,
+            title: item.title || item.url,
+            depth: item.depth ?? 0,
+            selected: index < cap
+          }));
+          this.urlDiscoveryDone = true;
+          this.notificationService.success(
+            'Pages found',
+            `${response.data.totalFound} internal page(s) discovered. Select which ones to import.`
+          );
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.discovering = false;
+          this.notificationService.error(
+            'Discovery failed',
+            err?.error?.error || 'Could not discover pages on this website.'
+          );
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  toggleDiscoveredUrl(index: number): void {
+    const item = this.discoveredUrls[index];
+    if (!item) return;
+    if (!item.selected && this.selectedDiscoveredCount >= this.maxSelectableUrls) {
+      this.notificationService.warning(
+        'Selection limit',
+        `You can import up to ${this.maxSelectableUrls} page(s) on your current plan.`
+      );
+      return;
+    }
+    item.selected = !item.selected;
+    this.cdr.markForCheck();
+  }
+
+  setAllDiscoveredSelected(selected: boolean): void {
+    if (selected) {
+      const cap = this.maxSelectableUrls;
+      this.discoveredUrls.forEach((item, index) => {
+        item.selected = index < cap;
+      });
+      if (this.discoveredUrls.length > cap) {
+        this.notificationService.info(
+          'Selection capped',
+          `Only the first ${cap} page(s) were selected based on your plan limit.`
+        );
+      }
+    } else {
+      this.discoveredUrls.forEach((item) => { item.selected = false; });
+    }
     this.cdr.markForCheck();
   }
 
@@ -437,15 +573,22 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
    * crawlJobId; we then poll status until the job finishes.
    */
   private startWebsiteCrawl(formData: any): void {
-    // Map the single-URL form to the crawl payload (titlePrefix instead of title).
+    const selectedUrls = Array.isArray(formData.selectedUrls) ? formData.selectedUrls : [];
+    if (!selectedUrls.length) {
+      this.submitting = false;
+      this.notificationService.warning('No pages selected', 'Choose at least one page to import.');
+      this.cdr.markForCheck();
+      return;
+    }
+
     const payload = {
       url: formData.url,
+      selectedUrls,
       titlePrefix: formData.title || undefined,
       category: formData.category || undefined,
       priority: formData.priority,
       targetWordCount: formData.targetWordCount,
       targetTagCount: formData.targetTagCount,
-      maxPages: this.crawlMaxPages,
       tags: [...this.urlTags]
     };
 
@@ -455,11 +598,11 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
         next: (response) => {
           const jobId = response?.data?.crawlJobId;
           if (response.success && jobId) {
-            this.notificationService.info('Crawl Started', 'Reading your website. This may take a couple of minutes.');
+            this.notificationService.info('Import started', `Processing ${selectedUrls.length} selected page(s).`);
             this.crawlProgress = {
               crawlJobId: jobId, status: 'queued', done: false,
-              startUrl: payload.url, maxPages: response.data?.maxPages || this.crawlMaxPages,
-              pagesFound: 0, pagesProcessed: 0, entriesCreated: 0,
+              startUrl: payload.url, maxPages: response.data?.maxPages || selectedUrls.length,
+              pagesFound: selectedUrls.length, pagesProcessed: 0, entriesCreated: 0,
               currentUrl: '', creditsUsed: 0, errors: [], error: ''
             };
             this.pollCrawlStatus(jobId);
@@ -503,6 +646,9 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   }
 
   private onCrawlFinished(status: IKbCrawlStatus): void {
+    // Always refresh entitlements so credit usage and KB counts reflect the latest state.
+    this.entitlements.load();
+
     if (status.status === 'completed') {
       this.notificationService.success('Website Imported', `${status.entriesCreated} page(s) added to your knowledge base.`);
       this.router.navigate(['/app/knowledge-base']);

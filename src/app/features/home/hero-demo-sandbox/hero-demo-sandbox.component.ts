@@ -91,7 +91,7 @@ function getAiReplyForInput(input: string): string {
   if (/custom|personalise|personalize/.test(lower)) {
     return 'Yes, we do custom orders! 🎨 Share the design you have in mind and we\'ll get back with a quote within 2 hours. We love one-of-a-kinds!';
   }
-  return 'Thanks for your message! 😊 Our AI is on it — you\'ll have a full response within 12 seconds. We\'re here 24/7 for you!';
+  return 'Thanks for your message! 😊 Reppy is on it — you\'ll have a full response within 12 seconds. We\'re here 24/7 for you!';
 }
 
 @Component({

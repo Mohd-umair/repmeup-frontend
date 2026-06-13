@@ -179,7 +179,7 @@ export class InboxReviewManagementComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (r) => {
           this.replyDraft = r.content;
-          this.notify.success('AI draft generated');
+          this.notify.success('Reppy draft generated');
         },
         error: () => this.notify.error('Failed to generate draft')
       });

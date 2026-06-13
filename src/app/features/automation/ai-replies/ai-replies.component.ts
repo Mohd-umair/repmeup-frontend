@@ -190,7 +190,7 @@ export class AiRepliesComponent implements OnInit, OnDestroy {
             this.normalizeMinConfidence();
             this.normalizeReplyDelaySettings();
           }
-          this.notify.success('Saved', 'AI Auto Reply settings saved.');
+          this.notify.success('Saved', 'Reppy AI Auto Reply settings saved.');
         },
         error: err => {
           this.notify.error('Error', err?.error?.error || 'Failed to save settings.');

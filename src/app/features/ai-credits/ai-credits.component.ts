@@ -52,7 +52,7 @@ export class AiCreditsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading credits:', error);
-        this.error = 'Failed to load AI credits';
+        this.error = 'Failed to load Reppy credits';
         this.loading = false;
       }
     });

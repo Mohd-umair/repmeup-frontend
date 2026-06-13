@@ -95,6 +95,29 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   private panning = false;
   private panStart = { x: 0, y: 0, ox: 0, oy: 0 };
 
+  // ── Performance caches ─────────────────────────────────────────────────────
+  /**
+   * Pre-computed field descriptors for the currently selected node.
+   * Rebuilt only when node selection changes — eliminates catalog.find() on
+   * every Angular change-detection cycle triggered by inspector input events.
+   */
+  selectedNodeFieldDefs: Array<{
+    key: string;
+    label: string;
+    type: string;
+    hint: string;
+    options: string[];
+    isWaTemplatePicker: boolean;
+    isPlainString: boolean;
+  }> = [];
+
+  /** Cached set of node ids that have validation errors. Rebuilt only when validationErrors changes. */
+  private _invalidNodeIds = new Set<string>();
+
+  /** rAF handle — throttles pointermove to one CD cycle per animation frame. */
+  private _rafId: number | null = null;
+  private _pendingPointerEvent: PointerEvent | null = null;
+
   readonly categoryOrder = CATEGORY_ORDER;
   readonly categoryLabels = CATEGORY_LABELS;
   channelOptions: FlowChannel[] = ['whatsapp', 'instagram', 'facebook'];
@@ -170,6 +193,10 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this._rafId !== null) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -261,6 +288,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
             .subscribe({
               next: (r) => {
                 this.validationErrors = r.data?.errors ?? [];
+                this.refreshInvalidNodeIds();
                 if (r.data?.valid) this.notify.success('Valid', 'Flow passed validation.');
                 this.cdr.markForCheck();
               }
@@ -272,12 +300,16 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   /** Node ids flagged by the latest validation run, for canvas highlighting. */
   get invalidNodeIds(): Set<string> {
+    return this._invalidNodeIds;
+  }
+
+  private refreshInvalidNodeIds(): void {
     const ids = new Set<string>();
     for (const e of this.validationErrors) {
       if (e.nodeId) ids.add(e.nodeId);
       (e.nodeIds || []).forEach((id: string) => ids.add(id));
     }
-    return ids;
+    this._invalidNodeIds = ids;
   }
 
   nodeHasError(id: string): boolean {
@@ -324,6 +356,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
             .subscribe({
               next: (r) => {
                 this.validationErrors = r.data?.validation?.errors ?? [];
+                this.refreshInvalidNodeIds();
                 this.testResult = r.data
                   ? { startNodeId: r.data.startNodeId, stepPreview: (r.data.stepPreview as any) || [] }
                   : null;
@@ -504,7 +537,46 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     if (this.selectedNode?.type === 'action.send_template') {
       this.ensureWaTemplatesLoaded();
     }
+    this.refreshSelectedNodeFieldDefs();
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Build (or rebuild) the pre-computed field-descriptor array for the currently
+   * selected node.  This is the single most impactful perf fix: instead of
+   * calling catalog.find() + getConfigFieldDef() dozens of times per Angular
+   * change-detection cycle (every keystroke!), we do it once on selection change
+   * and cache the result.
+   */
+  private refreshSelectedNodeFieldDefs(): void {
+    const node = this.selectedNode;
+    const catalogItem = node ? this.catalogItemFor(node) : undefined;
+    if (!node || !catalogItem?.configFields?.length) {
+      this.selectedNodeFieldDefs = [];
+      return;
+    }
+    this.selectedNodeFieldDefs = catalogItem.configFields.map(f => {
+      const isWaTemplatePicker = node.type === 'action.send_template' && f.key === 'templateId';
+      const isPlainString = !isWaTemplatePicker &&
+        !FlowBuilderComponent.NON_STRING_FIELD_TYPES.has(f.type ?? 'string');
+      return {
+        key: f.key,
+        label: (f as any).label ?? f.key,
+        type: f.type ?? 'string',
+        hint: (f as any).hint ?? '',
+        options: Array.isArray((f as any).options) ? (f as any).options : [],
+        isWaTemplatePicker,
+        isPlainString
+      };
+    });
+  }
+
+  trackByFieldKey(_: number, fd: { key: string }): string { return fd.key; }
+  trackByNodeId(_: number, n: IFlowNode): string { return n.id; }
+  trackByEdgeId(_: number, e: IFlowEdge): string { return e.id; }
+  trackByIndex(i: number): number { return i; }
+  trackByTemplateId(_: number, t: WhatsAppTemplate): string {
+    return String(t._id ?? t.metaTemplateId ?? t.name ?? '');
   }
 
   loadWaConnections(): void {
@@ -767,6 +839,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     this.flow.nodes = this.flow.nodes.filter((n) => n.id !== id);
     this.flow.edges = this.flow.edges.filter((e) => e.source !== id && e.target !== id);
     this.selectedNodeId = null;
+    this.selectedNodeFieldDefs = [];
     this.queueSave();
     this.cdr.markForCheck();
   }
@@ -804,23 +877,39 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
-    if (this.dragNode && this.flow) {
-      const dx = (event.clientX - this.dragStart.x) / this.zoom;
-      const dy = (event.clientY - this.dragStart.y) / this.zoom;
-      this.dragNode.position = {
-        x: Math.max(0, this.dragStart.nx + dx),
-        y: Math.max(0, this.dragStart.ny + dy)
-      };
-      this.cdr.markForCheck();
-      return;
-    }
-    if (this.panning) {
-      this.canvasOffset = {
-        x: this.panStart.ox + (event.clientX - this.panStart.x),
-        y: this.panStart.oy + (event.clientY - this.panStart.y)
-      };
-      this.cdr.markForCheck();
-    }
+    // Skip immediately when no interaction is active — avoids ANY overhead on plain mouse movement.
+    if (!this.dragNode && !this.panning) return;
+
+    // Buffer the latest event and schedule a single rAF flush.
+    // This caps Angular change detection to one cycle per display frame (~16 ms)
+    // instead of firing on every raw mousemove event (up to 250/s on some devices).
+    this._pendingPointerEvent = event;
+    if (this._rafId !== null) return;
+
+    this._rafId = requestAnimationFrame(() => {
+      this._rafId = null;
+      const ev = this._pendingPointerEvent;
+      this._pendingPointerEvent = null;
+      if (!ev) return;
+
+      if (this.dragNode && this.flow) {
+        const dx = (ev.clientX - this.dragStart.x) / this.zoom;
+        const dy = (ev.clientY - this.dragStart.y) / this.zoom;
+        this.dragNode.position = {
+          x: Math.max(0, this.dragStart.nx + dx),
+          y: Math.max(0, this.dragStart.ny + dy)
+        };
+        this.cdr.markForCheck();
+        return;
+      }
+      if (this.panning) {
+        this.canvasOffset = {
+          x: this.panStart.ox + (ev.clientX - this.panStart.x),
+          y: this.panStart.oy + (ev.clientY - this.panStart.y)
+        };
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   @HostListener('document:pointerup')
@@ -907,6 +996,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     };
     this.flow.nodes = [...this.flow.nodes, copy];
     this.selectedNodeId = id;
+    this.refreshSelectedNodeFieldDefs();
     this.queueSave();
     this.cdr.markForCheck();
   }
@@ -1105,8 +1195,15 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   addKvPair(node: IFlowNode, key: string): void {
     if (!node.config) node.config = {};
-    const obj = { ...(node.config[key] as Record<string, string> || {}), '': '' };
+    const obj = { ...(node.config[key] as Record<string, string> || {}) };
+    let placeholder = `key_${Object.keys(obj).length + 1}`;
+    let n = 0;
+    while (Object.prototype.hasOwnProperty.call(obj, placeholder)) {
+      placeholder = `key_${Object.keys(obj).length + 1 + (++n)}`;
+    }
+    obj[placeholder] = '';
     node.config[key] = obj;
+    this.cdr.markForCheck();
     this.onNodeFieldChange();
   }
 

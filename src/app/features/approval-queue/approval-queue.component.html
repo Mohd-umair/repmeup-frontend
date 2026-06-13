@@ -184,7 +184,7 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <app-status-badge
                     [status]="post.generatedBy === 'ai' ? 'ai_generated' : 'draft'"
-                    [label]="post.generatedBy === 'ai' ? 'AI' : 'Human'"
+                    [label]="post.generatedBy === 'ai' ? 'Reppy' : 'Human'"
                   ></app-status-badge>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
@@ -316,7 +316,7 @@
       <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Created by:</span>
       <app-status-badge
         [status]="selectedPost.generatedBy === 'ai' ? 'ai_generated' : 'draft'"
-        [label]="selectedPost.generatedBy === 'ai' ? 'AI Generated' : 'Human Written'"
+        [label]="selectedPost.generatedBy === 'ai' ? 'Reppy Generated' : 'Human Written'"
       ></app-status-badge>
     </div>
 
@@ -324,7 +324,7 @@
     <ng-container *ngIf="isAgent || selectedPost.status !== 'pending_approval' || !adminEditMode">
       <div>
         <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-          {{ selectedPost.originalContent ? 'Original (AI suggestion)' : 'Content' }}
+          {{ selectedPost.originalContent ? 'Original (Reppy suggestion)' : 'Content' }}
         </h3>
         <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-300 whitespace-pre-wrap">{{ selectedPost.originalContent || selectedPost.content }}</div>
       </div>
@@ -361,7 +361,7 @@
         placeholder="Edit caption or body before publishing…"
       ></textarea>
       <div *ngIf="selectedPost.originalContent" class="text-xs text-gray-500 dark:text-gray-400 border-l-2 border-gray-300 dark:border-gray-600 pl-2">
-        <span class="font-semibold text-gray-600 dark:text-gray-300">Agent / AI original: </span>
+        <span class="font-semibold text-gray-600 dark:text-gray-300">Agent / Reppy original: </span>
         <span class="whitespace-pre-wrap">{{ selectedPost.originalContent }}</span>
       </div>
       <div class="flex flex-col gap-2">

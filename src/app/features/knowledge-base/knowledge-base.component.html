@@ -10,8 +10,8 @@
     <!-- ── Page Header ── -->
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
       <div class="min-w-0 flex-1">
-        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-rep-white">AI Knowledge Base</h1>
-        <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg">Train your AI with company knowledge, FAQs, policies, and more</p>
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-rep-white">Reppy AI Knowledge Base</h1>
+        <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg">Train Reppy with company knowledge, FAQs, policies, and more</p>
       </div>
       <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
         <span class="px-3 sm:px-4 py-1.5 sm:py-2 bg-rep-white rounded-lg sm:rounded-xl shadow-sm border border-gray-800 text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
@@ -48,13 +48,13 @@
           <span class="font-semibold text-gray-900 text-sm sm:text-base">Where Your Knowledge Base Is Used</span>
           <span class="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gray-100 border border-gray-200 text-gray-900 text-xs font-semibold">
             <i class="fas fa-bolt text-[10px] text-gray-700"></i>
-            3 AI touchpoints
+            3 Reppy AI touchpoints
           </span>
         </div>
         <i [class]="showUsageBanner ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-gray-600 text-xs"></i>
       </button>
       <div *ngIf="showUsageBanner" class="px-4 sm:px-5 pb-4 sm:pb-5 pt-1 bg-gray-50/80">
-        <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">Every entry you add here flows directly into these AI systems:</p>
+        <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">Every entry you add here flows directly into these Reppy AI systems:</p>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div class="flex items-start gap-3 bg-white rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
             <span class="w-9 h-9 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
@@ -62,7 +62,7 @@
             </span>
             <div>
               <p class="text-sm font-semibold text-gray-900 mb-0.5">Auto-Replies</p>
-              <p class="text-xs text-gray-600 leading-relaxed">When a customer messages you, the AI searches your KB to craft a relevant reply automatically.</p>
+              <p class="text-xs text-gray-600 leading-relaxed">When a customer messages you, Reppy searches your KB to craft a relevant reply automatically.</p>
             </div>
           </div>
           <div class="flex items-start gap-3 bg-white rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
@@ -70,8 +70,8 @@
               <i class="fas fa-comments text-purple-900 text-sm"></i>
             </span>
             <div>
-              <p class="text-sm font-semibold text-gray-900 mb-0.5">Inbox AI Assist</p>
-              <p class="text-xs text-gray-600 leading-relaxed">Agents can click "Suggest Reply" and the AI uses your KB to draft a grounded, on-brand response.</p>
+              <p class="text-sm font-semibold text-gray-900 mb-0.5">Inbox Reppy AI Assist</p>
+              <p class="text-xs text-gray-600 leading-relaxed">Agents can click "Suggest Reply" and Reppy uses your KB to draft a grounded, on-brand response.</p>
             </div>
           </div>
           <div class="flex items-start gap-3 bg-white rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
@@ -79,14 +79,14 @@
               <i class="fas fa-cogs text-amber-900 text-sm"></i>
             </span>
             <div>
-              <p class="text-sm font-semibold text-gray-900 mb-0.5">AI Background Jobs</p>
-              <p class="text-xs text-gray-600 leading-relaxed">Batch AI processing uses your top-weighted entries as persistent context in every generation.</p>
+              <p class="text-sm font-semibold text-gray-900 mb-0.5">Reppy AI Background Jobs</p>
+              <p class="text-xs text-gray-600 leading-relaxed">Batch Reppy processing uses your top-weighted entries as persistent context in every generation.</p>
             </div>
           </div>
         </div>
         <p class="text-xs text-gray-700 mt-3 flex items-start gap-1.5">
           <i class="fas fa-lightbulb text-gray-900 mt-0.5 shrink-0"></i>
-          <span><strong class="text-gray-900">Tip:</strong> Set a high <em>Training Weight</em> (9–10) on Brand Voice entries — they'll be included in every AI response.</span>
+          <span><strong class="text-gray-900">Tip:</strong> Set a high <em>Training Weight</em> (9–10) on Brand Voice entries — they'll be included in every Reppy response.</span>
         </p>
       </div>
     </div>
@@ -159,7 +159,7 @@
                 <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Source</th>
                 <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Category</th>
                 <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Priority</th>
-                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">AI Usage</th>
+                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Reppy AI Usage</th>
                 <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Status</th>
                 <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Added</th>
                 <th class="px-4 sm:px-6 py-3 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-28">Actions</th>
@@ -250,9 +250,9 @@
             <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-rep-lime/15 border border-rep-lime/30 flex items-center justify-center mx-auto mb-4">
               <i class="fas fa-brain text-gray-900 dark:text-rep-lime text-2xl sm:text-3xl"></i>
             </div>
-            <h3 class="text-xl sm:text-2xl font-bold text-rep-black mb-2">Your AI Has No Knowledge Yet</h3>
+            <h3 class="text-xl sm:text-2xl font-bold text-rep-black mb-2">Reppy Has No Knowledge Yet</h3>
             <p class="text-sm sm:text-base text-gray-600 max-w-xl mx-auto mb-1">
-              Without a knowledge base, your AI replies are generic. Add a few entries and your AI will instantly start crafting replies using your specific company knowledge, policies, and tone.
+              Without a knowledge base, your Reppy replies are generic. Add a few entries and Reppy will instantly start crafting replies using your specific company knowledge, policies, and tone.
             </p>
             <p class="text-xs text-gray-500"><i class="fas fa-bolt text-gray-700 dark:text-rep-lime mr-1"></i>Entries take effect immediately — no training delay.</p>
           </div>
@@ -263,11 +263,11 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
               <button *ngFor="let tpl of [
                 {key:'faq',          icon:'fa-question-circle', color:'blue',   label:'FAQ',          desc:'Q&A pairs for common customer questions'},
-                {key:'brand_voice',  icon:'fa-bullhorn',        color:'purple', label:'Brand Voice',  desc:'Tone guidelines for all AI replies'},
+                {key:'brand_voice',  icon:'fa-bullhorn',        color:'purple', label:'Brand Voice',  desc:'Tone guidelines for all Reppy replies'},
                 {key:'policy',       icon:'fa-file-contract',   color:'amber',  label:'Policy',       desc:'Refund, cancellation & T&C rules'},
                 {key:'product_info', icon:'fa-box',             color:'green',  label:'Product Info', desc:'What you sell, pricing & features'},
                 {key:'procedure',    icon:'fa-tasks',           color:'rose',   label:'Procedure',    desc:'Step-by-step guides for customers'},
-                {key:'general',      icon:'fa-info-circle',     color:'gray',   label:'General',      desc:'Any other context for the AI'}
+                {key:'general',      icon:'fa-info-circle',     color:'gray',   label:'General',      desc:'Any other context for Reppy'}
               ]"
                 type="button"
                 (click)="navigateToCreate()"
@@ -499,10 +499,10 @@
           </div>
         </div>
 
-        <!-- Advanced AI Training Options -->
+        <!-- Advanced Reppy AI Training Options -->
         <div class="bg-rep-lime/10 border border-rep-lime/30 rounded-lg sm:rounded-xl p-4 sm:p-5 space-y-4">
           <h3 class="text-base sm:text-lg font-semibold text-rep-black">
-            <i class="fas fa-cog mr-1 sm:mr-2"></i> Advanced AI Training Options
+            <i class="fas fa-cog mr-1 sm:mr-2"></i> Advanced Reppy AI Training Options
           </h3>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
@@ -546,7 +546,7 @@
             <label class="flex items-center gap-2 sm:gap-3 cursor-pointer group">
               <input type="checkbox" formControlName="isTrainingData"
                 class="w-4 h-4 sm:w-5 sm:h-5 rounded focus:ring-rep-lime/25 flex-shrink-0">
-              <span class="text-xs sm:text-sm font-medium text-rep-black">Use for AI Training</span>
+              <span class="text-xs sm:text-sm font-medium text-rep-black">Use for Reppy AI Training</span>
               <span class="relative inline-flex group/tip cursor-help">
                 <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
                 <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover/tip:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
@@ -650,7 +650,7 @@
               <p class="text-[10px] text-gray-400">entries off</p>
             </div>
             <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
-              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">AI Uses</p>
+              <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Reppy AI Uses</p>
               <p class="text-xl font-extrabold text-gray-900 dark:text-white leading-tight">{{ kbTotalUsage }}</p>
               <p class="text-[10px] text-gray-400">total hits</p>
             </div>
@@ -674,8 +674,8 @@
             <app-simple-donut-chart
               [segments]="usageDonutSegments"
               [height]="170"
-              centerLabel="AI uses"
-              emptyMessage="No usage yet — AI hasn't referenced any entries.">
+              centerLabel="Reppy uses"
+              emptyMessage="No usage yet — Reppy hasn't referenced any entries.">
             </app-simple-donut-chart>
           </div>
 
@@ -685,7 +685,7 @@
               <div class="w-5 h-5 rounded-md flex items-center justify-center shrink-0 bg-gray-900 text-white dark:bg-rep-black dark:text-rep-lime border border-gray-800 dark:border-rep-lime/30">
                 <i class="fas fa-fire" style="font-size:8px;"></i>
               </div>
-              <p class="text-[11px] font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Top Used by AI</p>
+              <p class="text-[11px] font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">Top Used by Reppy</p>
             </div>
             <div *ngIf="kbTopUsed.length === 0" class="px-3 pb-3 text-center text-[11px] text-gray-400">No entries used yet</div>
             <div *ngFor="let entry of kbTopUsed; let i = index; let last = last"
@@ -721,7 +721,7 @@
               <span class="text-[11px] font-bold text-gray-900 dark:text-rep-lime">Tip</span>
             </div>
             <p class="text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed">
-              {{ kbNeverUsedEntries }} {{ kbNeverUsedEntries === 1 ? 'entry has' : 'entries have' }} never been used by the AI. Check their priority and training weight — or add better keywords.
+              {{ kbNeverUsedEntries }} {{ kbNeverUsedEntries === 1 ? 'entry has' : 'entries have' }} never been used by Reppy. Check their priority and training weight — or add better keywords.
             </p>
           </div>
 

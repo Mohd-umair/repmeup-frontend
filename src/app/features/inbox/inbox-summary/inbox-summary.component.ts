@@ -123,7 +123,7 @@ export class InboxSummaryComponent implements OnChanges, OnDestroy {
         const msg = err?.error?.error || 'Failed to generate AI summary.';
         const code = err?.error?.code;
         if (code === 'INSUFFICIENT_CREDITS') {
-          this.aiError = 'Not enough AI credits. Please upgrade your plan.';
+          this.aiError = 'Not enough Reppy credits. Please upgrade your plan.';
         } else {
           this.aiError = msg;
         }

@@ -81,7 +81,7 @@ export class BillingComponent implements OnInit, OnDestroy {
       color: 'purple'
     },
     {
-      label: 'AI Replies This Month',
+      label: 'Reppy AI Replies This Month',
       icon: '',
       iconKind: 'ai-bubble',
       key: 'autoRepliesThisMonth',
@@ -89,7 +89,7 @@ export class BillingComponent implements OnInit, OnDestroy {
       color: 'orange'
     },
     {
-      label: 'AI Credits This Month',
+      label: 'Reppy Credits This Month',
       icon: 'fas fa-bolt',
       key: 'aiCreditsThisMonth',
       limitKey: 'maxAICreditsPerMonth',

@@ -195,8 +195,8 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">AI Classification Hint</label>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Describe what kind of messages belong in this bucket. AI will use this when no keywords match.</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reppy AI Classification Hint</label>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Describe what kind of messages belong in this bucket. Reppy will use this when no keywords match.</p>
         <textarea
           [(ngModel)]="form.aiPromptHint"
           rows="3"
@@ -208,7 +208,7 @@
       <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
         <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
           <app-ai-chat-bubble-icon iconClass="w-4 h-4" aria-hidden="true" />
-          AI Reply Settings
+          Reppy AI Reply Settings
         </h4>
 
         <div class="space-y-3">
@@ -238,7 +238,7 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Custom Reply Instructions</label>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Tell the AI how to handle messages in this bucket (max 500 chars).</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Tell Reppy how to handle messages in this bucket (max 500 chars).</p>
             <textarea
               [(ngModel)]="form.replyPrompt"
               rows="3"

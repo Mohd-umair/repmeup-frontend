@@ -8,7 +8,7 @@
         Drafts
       </h1>
       <p class="text-gray-500 dark:text-gray-400 mt-1 text-sm">
-        AI-generated posts saved as drafts — review, edit, schedule or publish directly.
+        Reppy-generated posts saved as drafts — review, edit, schedule or publish directly.
       </p>
     </div>
     <div class="flex items-center gap-2 shrink-0">
@@ -34,7 +34,7 @@
       <a routerLink="/app/content-studio"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
                bg-rep-lime text-rep-black hover:bg-rep-lime/90 shadow-sm shadow-rep-lime/25 transition">
-        <i class="fas fa-plus text-rep-black"></i> New AI Post
+        <i class="fas fa-plus text-rep-black"></i> New Reppy Post
       </a>
     </div>
   </div>
@@ -87,7 +87,7 @@
           <span *ngIf="draft.generatedBy === 'ai'"
             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
                    bg-gray-200 text-rep-black border border-gray-400/40 dark:bg-rep-lime/15 dark:text-rep-lime dark:border-rep-lime/30">
-            <i class="fas fa-wand-magic-sparkles text-[8px]"></i> AI
+            <i class="fas fa-wand-magic-sparkles text-[8px]"></i> Reppy
           </span>
           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
                        bg-amber-50 text-amber-600 border border-amber-200
@@ -335,7 +335,7 @@
       <span *ngIf="selectedDraft.generatedBy === 'ai'"
         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium
                bg-rep-lime/15 text-rep-black dark:text-rep-lime border border-rep-lime/30">
-        <i class="fas fa-wand-magic-sparkles text-[8px]"></i> AI
+        <i class="fas fa-wand-magic-sparkles text-[8px]"></i> Reppy
       </span>
     </div>
     <button type="button" (click)="closeDetail()"

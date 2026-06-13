@@ -74,15 +74,15 @@
         <div class="w-14 h-14 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
           <app-ai-chat-bubble-icon iconClass="w-10 h-10"></app-ai-chat-bubble-icon>
         </div>
-        <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Configure AI Agents</h3>
+        <h3 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Configure Reppy AI Agents</h3>
         <p class="mb-6" style="color: var(--text-secondary);">
-          Set up intelligent AI assistants to automatically respond to customer inquiries.
+          Set up intelligent Reppy AI assistants to automatically respond to customer inquiries.
         </p>
         <button (click)="navigateTo('/app/agents')"
           class="w-full py-3 rounded-lg font-bold transition flex items-center justify-center gap-2"
           style="background-color: var(--surface-primary); color: var(--text-primary);">
           <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
-          Setup AI Agents
+          Setup Reppy AI Agents
         </button>
       </div>
     </div>
@@ -97,7 +97,7 @@
             Need Help Getting Started?
           </h2>
           <p class="text-sm" style="color: var(--text-secondary);">
-            Connect your social media platforms, set up AI agents, and start managing your reputation effortlessly.
+            Connect your social media platforms, set up Reppy AI agents, and start managing your reputation effortlessly.
           </p>
         </div>
         <div class="flex gap-3 flex-shrink-0">
@@ -109,7 +109,7 @@
             class="px-4 py-2 rounded-lg text-sm font-bold transition whitespace-nowrap inline-flex items-center gap-2"
             style="background-color: var(--surface-primary); color: var(--text-primary);">
             <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
-            Setup AI Agents
+            Setup Reppy AI Agents
           </button>
         </div>
       </div>
@@ -175,7 +175,7 @@
         <p class="text-sm mt-1" style="color: var(--text-secondary);">Total Conversations</p>
       </div>
 
-      <!-- AI Response Rate -->
+      <!-- Reppy AI Response Rate -->
       <div class="rounded-xl border p-5 transition-all cursor-pointer hover:shadow-md"
            style="background-color: var(--card-bg); border-color: var(--card-border);"
            (click)="navigateTo('/app/analytics')">
@@ -188,7 +188,7 @@
           {{ aiVsHuman.aiPercent ?? 0 }}%
         </p>
         <p class="text-sm mt-1" style="color: var(--text-secondary);">
-          AI Response Rate
+          Reppy AI Response Rate
           <span class="text-xs" style="color: var(--text-muted);">
             &middot; {{ aiVsHuman.aiReplies }} of {{ aiVsHuman.totalReplies }} replies
           </span>
@@ -254,7 +254,7 @@
            style="background-color: var(--card-bg); border-color: var(--card-border);">
         <h2 class="text-lg font-bold mb-4 flex items-center gap-2" style="color: var(--text-primary);">
           <app-ai-chat-bubble-icon iconClass="w-5 h-5 shrink-0"></app-ai-chat-bubble-icon>
-          AI vs Human Replies
+          Reppy vs Human Replies
         </h2>
         <app-simple-donut-chart
           [segments]="aiHumanSegments"
@@ -263,7 +263,7 @@
         </app-simple-donut-chart>
         <div class="mt-3 text-center">
           <p class="text-sm" style="color: var(--text-secondary);">
-            RepMeUp AI handled <span class="font-bold" style="color: var(--text-primary);">{{ aiVsHuman.aiPercent }}%</span> of all replies
+            Reppy AI handled <span class="font-bold" style="color: var(--text-primary);">{{ aiVsHuman.aiPercent }}%</span> of all replies
           </p>
         </div>
       </div>
@@ -375,7 +375,7 @@
             <i class="fas fa-lightbulb text-gray-900 dark:text-rep-lime"></i>
             Need Help Getting Started?
           </h2>
-          <p class="text-sm" style="color: var(--text-secondary);">Connect your social media platforms, set up AI agents, and start managing your reputation effortlessly.</p>
+          <p class="text-sm" style="color: var(--text-secondary);">Connect your social media platforms, set up Reppy AI agents, and start managing your reputation effortlessly.</p>
         </div>
         <div class="flex gap-3">
           <button (click)="navigateTo('/app/settings')"
@@ -385,7 +385,7 @@
           <button (click)="navigateTo('/app/agents')"
             class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-rep-white rounded-lg text-sm font-bold transition whitespace-nowrap inline-flex items-center gap-2">
             <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
-            Setup AI Agents
+            Setup Reppy AI Agents
           </button>
         </div>
       </div>

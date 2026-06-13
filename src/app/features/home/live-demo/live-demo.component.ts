@@ -52,10 +52,10 @@ export class LiveDemoComponent implements OnDestroy {
         'RepMeUp covers your full conversation funnel 🚀\n• Unified inbox (IG, WhatsApp, Google)\n• AI replies in your brand voice\n• Lead capture + qualification\n• Cart recovery & COD flows\n• Review & CSAT automation\n\nWant to know more about any specific feature?',
     },
     {
-      label: 'How does AI auto-reply work?',
-      question: 'How does the AI auto-reply work?',
+      label: 'How does Reppy auto-reply work?',
+      question: 'How does Reppy auto-reply work?',
       answer:
-        'You train it once, it replies forever ⚡\n\n1. Connect your channels\n2. Upload your catalog + FAQs\n3. Set your tone and guardrails\n\nThe AI reads every message, understands intent, and sends a brand-matched reply in seconds — or escalates to your team if needed.',
+        'You train it once, it replies forever ⚡\n\n1. Connect your channels\n2. Upload your catalog + FAQs\n3. Set your tone and guardrails\n\nReppy reads every message, understands intent, and sends a brand-matched reply in seconds — or escalates to your team if needed.',
     },
     {
       label: 'Is there a free trial?',

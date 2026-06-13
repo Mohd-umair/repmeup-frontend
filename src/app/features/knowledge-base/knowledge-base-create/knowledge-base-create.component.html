@@ -20,7 +20,7 @@
           Add Knowledge Entry
         </h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Teach the AI about your business — manual text, PDF, or a website URL.
+          Teach Reppy about your business — manual text, PDF, or a website URL.
         </p>
       </div>
       <button type="button" (click)="goBack()"
@@ -230,7 +230,7 @@
       <!-- Advanced AI Options -->
       <div class="bg-rep-lime/10 dark:bg-rep-lime/5 border border-rep-lime/30 rounded-xl p-5 space-y-4">
         <h3 class="text-base font-semibold text-rep-black dark:text-white">
-          <i class="fas fa-cog mr-2"></i> Advanced AI Training Options
+          <i class="fas fa-cog mr-2"></i> Advanced Reppy AI Training Options
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
@@ -268,7 +268,7 @@
           <label class="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" formControlName="isTrainingData"
               class="w-5 h-5 rounded focus:ring-rep-lime/25">
-            <span class="text-sm font-medium text-rep-black dark:text-white">Use for AI Training</span>
+            <span class="text-sm font-medium text-rep-black dark:text-white">Use for Reppy AI Training</span>
           </label>
           <label class="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" formControlName="isActive"
@@ -301,7 +301,7 @@
   <div *ngIf="activeTab === 'pdf'" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
     <div class="mb-5">
       <h2 class="text-xl font-bold text-rep-black dark:text-white mb-1">Upload PDF Document</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400">Upload a PDF to automatically extract and train AI with its content</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Upload a PDF to automatically extract and train Reppy with its content</p>
     </div>
 
     <form [formGroup]="pdfForm" (ngSubmit)="submitPDF()" class="space-y-5">
@@ -386,7 +386,7 @@
   <div *ngIf="activeTab === 'url'" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
     <div class="mb-5">
       <h2 class="text-xl font-bold text-rep-black dark:text-white mb-1">Import from Website</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400">Enter a URL to scrape and extract content for AI training</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Enter a URL to scrape and extract content for Reppy AI training</p>
     </div>
 
     <form [formGroup]="urlForm" (ngSubmit)="openCreditConfirmAndSubmit()" class="space-y-5">
@@ -397,36 +397,131 @@
           <i class="fas fa-globe mr-1"></i> Website URL *
         </label>
         <input type="url" formControlName="url" placeholder="https://example.com/about"
+          (input)="onUrlFieldChange()"
           class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime bg-white dark:bg-gray-900 text-rep-black dark:text-white transition text-sm" />
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
-          <i class="fas fa-info-circle mr-1"></i>We'll extract the main content and use it for AI training
+          <i class="fas fa-info-circle mr-1"></i>
+          {{ crawlWholeSite ? 'We will discover internal pages first — you choose which to import' : 'We\'ll extract the main content and use it for Reppy AI training' }}
         </p>
       </div>
 
       <!-- Crawl whole website toggle -->
       <div class="flex items-start gap-3 p-4 rounded-xl border-2 transition"
-        [class]="crawlWholeSite
+        [ngClass]="crawlWholeSite
           ? 'border-rep-lime bg-rep-lime/10 dark:bg-rep-lime/5'
           : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900'">
         <button type="button" role="switch" [attr.aria-checked]="crawlWholeSite"
-          (click)="crawlWholeSite = !crawlWholeSite"
+          (click)="crawlWholeSite = !crawlWholeSite; onCrawlToggleChange()"
           class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition mt-0.5"
-          [class]="crawlWholeSite ? 'bg-rep-lime' : 'bg-gray-300 dark:bg-gray-600'">
+          [ngClass]="crawlWholeSite ? 'bg-rep-lime' : 'bg-gray-300 dark:bg-gray-600'">
           <span class="inline-block h-4 w-4 transform rounded-full bg-white transition"
-            [class]="crawlWholeSite ? 'translate-x-6' : 'translate-x-1'"></span>
+            [ngClass]="crawlWholeSite ? 'translate-x-6' : 'translate-x-1'"></span>
         </button>
         <div class="min-w-0">
           <label class="block text-sm font-semibold text-rep-black dark:text-white cursor-pointer"
-            (click)="crawlWholeSite = !crawlWholeSite">
+            (click)="crawlWholeSite = !crawlWholeSite; onCrawlToggleChange()">
             <i class="fas fa-sitemap mr-1.5"></i> Crawl the entire website
           </label>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            When on, we follow internal links and read up to
-            <strong>{{ crawlMaxPages }} pages</strong> (home, about, products, FAQ, policies…),
-            creating one knowledge base entry per page. Off = homepage only.
+            When on, we discover up to <strong>{{ crawlMaxPages }} internal pages</strong>, then you pick
+            which pages to import as separate knowledge base entries.
           </p>
         </div>
       </div>
+
+      <!-- ── Step flow (crawl whole site mode) ─────────────────────────────── -->
+      <ng-container *ngIf="crawlWholeSite">
+
+        <!-- Step 1 pill: Discover — shown before discovery is done -->
+        <div *ngIf="!urlDiscoveryDone && !discovering"
+          class="flex items-center gap-3 rounded-xl border-2 border-dashed border-rep-lime/50 bg-rep-lime/5 dark:bg-rep-lime/5 px-4 py-3">
+          <span class="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-full bg-rep-lime text-rep-black font-bold text-sm">1</span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold text-rep-black dark:text-white">Discover pages first</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Click <strong>Discover pages</strong> below — we'll scan the site and show you a list of internal pages to choose from.
+            </p>
+          </div>
+          <i class="fas fa-arrow-down text-rep-lime text-lg shrink-0 animate-bounce"></i>
+        </div>
+
+        <!-- Spinner while discovering -->
+        <div *ngIf="discovering"
+          class="rounded-xl border border-rep-lime/30 bg-rep-lime/5 dark:bg-rep-lime/5 px-4 py-6 text-center">
+          <i class="fas fa-spinner fa-spin text-rep-lime text-2xl mb-2"></i>
+          <p class="text-sm font-semibold text-rep-black dark:text-white">Discovering internal pages…</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Scanning the website for internal links. This may take up to a minute.</p>
+        </div>
+
+        <!-- Step 2: Page selector — shown after successful discovery -->
+        <div *ngIf="urlDiscoveryDone && discoveredUrls.length"
+          class="rounded-xl border-2 border-rep-lime overflow-hidden">
+          <!-- Header -->
+          <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-rep-lime/10 dark:bg-rep-lime/5 border-b border-rep-lime/30">
+            <div class="flex items-center gap-2.5">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-rep-lime text-rep-black font-bold text-xs shrink-0">2</span>
+              <div>
+                <p class="text-sm font-semibold text-rep-black dark:text-white">Select pages to import</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  <strong>{{ selectedDiscoveredCount }}</strong> of {{ discoveredUrls.length }} selected
+                  <span *ngIf="maxSelectableUrls < crawlMaxPages"> · plan allows up to {{ maxSelectableUrls }}</span>
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" (click)="setAllDiscoveredSelected(true)"
+                class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                Select all
+              </button>
+              <button type="button" (click)="setAllDiscoveredSelected(false)"
+                class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                Clear
+              </button>
+              <button type="button" (click)="onReDiscoverClick()"
+                class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-rep-lime/50 text-rep-black dark:text-rep-lime hover:bg-rep-lime/10">
+                <i class="fas fa-sync-alt mr-1"></i> Re-discover
+              </button>
+            </div>
+          </div>
+          <!-- Page list -->
+          <ul class="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+            <li *ngFor="let item of discoveredUrls; let i = index"
+              class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/40 cursor-pointer transition"
+              (click)="toggleDiscoveredUrl(i)">
+              <input type="checkbox" [checked]="item.selected"
+                (click)="$event.stopPropagation(); toggleDiscoveredUrl(i)"
+                class="mt-1 h-4 w-4 rounded border-gray-300 text-rep-lime focus:ring-rep-lime shrink-0" />
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-rep-black dark:text-white truncate">{{ item.title }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 break-all">{{ item.url }}</p>
+              </div>
+            </li>
+          </ul>
+          <!-- No pages selected warning -->
+          <div *ngIf="selectedDiscoveredCount === 0"
+            class="px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border-t border-amber-200 dark:border-amber-700">
+            <p class="text-xs text-amber-800 dark:text-amber-300 font-medium">
+              <i class="fas fa-exclamation-triangle mr-1"></i>
+              Select at least one page above, then click <strong>Import selected</strong>.
+            </p>
+          </div>
+        </div>
+
+        <!-- Empty discovery result -->
+        <div *ngIf="urlDiscoveryDone && !discoveredUrls.length"
+          class="rounded-xl border border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/20 px-4 py-4 text-center">
+          <i class="fas fa-search text-amber-500 text-xl mb-1"></i>
+          <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">No internal pages found</p>
+          <p class="text-xs text-amber-700 dark:text-amber-400 mt-1">
+            The site may require login, use JavaScript rendering, or block crawlers. Try a different URL.
+          </p>
+          <button type="button" (click)="onReDiscoverClick()"
+            class="mt-2 text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-400 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition">
+            <i class="fas fa-redo mr-1"></i> Try again
+          </button>
+        </div>
+
+      </ng-container>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
@@ -496,12 +591,14 @@
       <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 flex items-center gap-3">
         <i class="fas fa-coins text-amber-600"></i>
         <span class="text-sm font-medium text-amber-900 dark:text-amber-300" *ngIf="!crawlWholeSite">
-          Approx. <strong>{{ estimatedCredits }}</strong> AI credit{{ estimatedCredits !== 1 ? 's' : '' }} —
+          Approx. <strong>{{ estimatedCredits }}</strong> Reppy credit{{ estimatedCredits !== 1 ? 's' : '' }} —
           based on {{ urlForm.get('targetWordCount')?.value }} words, {{ urlForm.get('targetTagCount')?.value }} tags.
         </span>
-        <span class="text-sm font-medium text-amber-900 dark:text-amber-300" *ngIf="crawlWholeSite">
-          Approx. <strong>{{ estimatedCredits }}</strong> AI credit{{ estimatedCredits !== 1 ? 's' : '' }} <strong>per page</strong> —
-          up to <strong>{{ crawlMaxPages }} pages</strong>. Only pages actually read are charged.
+        <span class="text-sm font-medium text-amber-900 dark:text-amber-300" *ngIf="crawlWholeSite && !urlDiscoveryDone">
+          Discovery is free. Import uses approx. <strong>{{ estimatedCredits }}</strong> Reppy credit{{ estimatedCredits !== 1 ? 's' : '' }} <strong>per page</strong> you select.
+        </span>
+        <span class="text-sm font-medium text-amber-900 dark:text-amber-300" *ngIf="crawlWholeSite && urlDiscoveryDone">
+          Importing <strong>{{ selectedDiscoveredCount }}</strong> page(s) ≈ <strong>{{ estimatedCredits }}</strong> Reppy credit{{ estimatedCredits !== 1 ? 's' : '' }} total.
         </span>
       </div>
 
@@ -516,14 +613,14 @@
             <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5" *ngIf="!crawlWholeSite">
               <li>• We fetch the webpage content</li>
               <li>• Extract main text (removing scripts, styles, nav)</li>
-              <li>• AI summarises to your chosen word count and generates tags</li>
+              <li>• Reppy summarises to your chosen word count and generates tags</li>
               <li>• Entry is added to your knowledge base immediately</li>
             </ul>
             <ul class="text-xs text-gray-600 dark:text-gray-400 space-y-0.5" *ngIf="crawlWholeSite">
-              <li>• We follow internal links across the same website</li>
-              <li>• Each page's main text is extracted and AI-summarised separately</li>
-              <li>• One knowledge base entry is created per page (better AI retrieval)</li>
-              <li>• Runs in the background — pages appear as they're processed</li>
+              <li>• We discover internal links on the same website</li>
+              <li>• You choose which pages to import via checkboxes</li>
+              <li>• Each selected page becomes one Reppy-summarised KB entry</li>
+              <li>• Import runs in the background — entries appear as they finish</li>
             </ul>
           </div>
         </div>
@@ -534,10 +631,19 @@
           class="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
           <i class="fas fa-arrow-left mr-1.5"></i> Cancel
         </button>
-        <button type="submit" [disabled]="urlForm.invalid || submitting"
+        <button type="submit"
+          [disabled]="urlForm.invalid || submitting || discovering || (crawlWholeSite && urlDiscoveryDone && selectedDiscoveredCount === 0)"
           class="px-8 py-3 bg-rep-lime text-gray-900 rounded-xl text-sm font-semibold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-          <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : (crawlWholeSite ? 'fas fa-sitemap mr-2' : 'fas fa-download mr-2')"></i>
-          {{ submitting ? (crawlWholeSite ? 'Crawling…' : 'Scraping…') : (crawlWholeSite ? 'Crawl & Import Website' : 'Scrape & Import') }}
+          <i [class]="submitting || discovering ? 'fas fa-spinner fa-spin mr-2' : (crawlWholeSite ? 'fas fa-sitemap mr-2' : 'fas fa-download mr-2')"></i>
+          <ng-container *ngIf="!crawlWholeSite">
+            {{ submitting ? 'Scraping…' : 'Scrape & Import' }}
+          </ng-container>
+          <ng-container *ngIf="crawlWholeSite && !urlDiscoveryDone">
+            {{ discovering ? 'Discovering…' : 'Discover pages' }}
+          </ng-container>
+          <ng-container *ngIf="crawlWholeSite && urlDiscoveryDone">
+            {{ submitting ? 'Importing…' : ('Import selected (' + selectedDiscoveredCount + ')' ) }}
+          </ng-container>
         </button>
       </div>
 
@@ -605,14 +711,21 @@
         <i class="fas fa-coins text-amber-600 text-sm"></i>
       </div>
       <div>
-        <h3 class="font-bold text-rep-black dark:text-white text-base">Confirm AI Credit Usage</h3>
-        <p class="text-xs text-gray-500 dark:text-gray-400">This action will consume AI credits</p>
+        <h3 class="font-bold text-rep-black dark:text-white text-base">Confirm Reppy Credit Usage</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400">This action will consume Reppy credits</p>
       </div>
     </div>
     <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 mb-5">
       <p class="text-sm text-amber-900 dark:text-amber-300">
-        Scraping <strong>{{ pendingUrlFormData?.url }}</strong> will use approximately
-        <strong>{{ estimatedCredits }} AI credit{{ estimatedCredits !== 1 ? 's' : '' }}</strong>.
+        <ng-container *ngIf="!crawlWholeSite">
+          Scraping <strong>{{ pendingUrlFormData?.url }}</strong> will use approximately
+          <strong>{{ estimatedCredits }} Reppy credit{{ estimatedCredits !== 1 ? 's' : '' }}</strong>.
+        </ng-container>
+        <ng-container *ngIf="crawlWholeSite">
+          Importing <strong>{{ pendingUrlFormData?.selectedUrls?.length || selectedDiscoveredCount }}</strong> selected page(s)
+          from <strong>{{ pendingUrlFormData?.url }}</strong> will use approximately
+          <strong>{{ estimatedCredits }} Reppy credit{{ estimatedCredits !== 1 ? 's' : '' }}</strong>.
+        </ng-container>
       </p>
     </div>
     <div class="flex gap-3">

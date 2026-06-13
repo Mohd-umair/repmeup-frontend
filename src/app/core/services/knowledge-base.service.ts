@@ -57,6 +57,13 @@ export interface IKnowledgeBaseListResponse {
   error?: string;
 }
 
+/** One discovered internal page (before user selects which to import). */
+export interface IKbDiscoveredUrl {
+  url: string;
+  title: string;
+  depth?: number;
+}
+
 /** Live status of a whole-website crawl job (polled after enqueue). */
 export interface IKbCrawlStatus {
   crawlJobId: string;
@@ -131,11 +138,36 @@ export class KnowledgeBaseService {
   }
 
   /**
-   * Start a whole-website crawl. Returns a crawlJobId to poll. The crawl runs in
-   * the background and creates one KB entry per page as it processes them.
+   * Discover internal URLs on a website (no AI). User picks pages via checkboxes next.
    */
-  createFromWebsiteCrawl(data: any): Observable<IApiResponse<{ crawlJobId: string; status: string; maxPages: number }>> {
-    return this.apiService.post<IApiResponse<{ crawlJobId: string; status: string; maxPages: number }>>(
+  discoverWebsiteUrls(data: { url: string; maxPages?: number }): Observable<IApiResponse<{
+    startUrl: string;
+    urls: IKbDiscoveredUrl[];
+    totalFound: number;
+    maxPages: number;
+  }>> {
+    return this.apiService.post<IApiResponse<{
+      startUrl: string;
+      urls: IKbDiscoveredUrl[];
+      totalFound: number;
+      maxPages: number;
+    }>>('/knowledge-base/url/discover', data);
+  }
+
+  /**
+   * Import selected pages from a website crawl. Returns a crawlJobId to poll.
+   */
+  createFromWebsiteCrawl(data: {
+    url: string;
+    selectedUrls: string[];
+    titlePrefix?: string;
+    category?: string;
+    priority?: number;
+    targetWordCount?: number;
+    targetTagCount?: number;
+    tags?: string[];
+  }): Observable<IApiResponse<{ crawlJobId: string; status: string; maxPages: number; selectedCount?: number }>> {
+    return this.apiService.post<IApiResponse<{ crawlJobId: string; status: string; maxPages: number; selectedCount?: number }>>(
       '/knowledge-base/url/crawl', data
     );
   }

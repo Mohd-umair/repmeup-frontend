@@ -260,7 +260,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
         },
         {
           title: 'Smart lead qualification',
-          description: 'AI understands intent and prioritises high-value leads.'
+          description: 'Reppy understands intent and prioritises high-value leads.'
         },
         {
           title: 'Lead data enrichment',
@@ -305,8 +305,8 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
           description: 'All channels in one place — no more tab switching.'
         },
         {
-          title: 'AI + human handoff',
-          description: 'AI handles routine queries and escalates complex ones.'
+          title: 'Reppy + human handoff',
+          description: 'Reppy handles routine queries and escalates complex ones.'
         },
         {
           title: 'Faster response',
@@ -394,7 +394,7 @@ export class HomeComponent implements OnInit, OnDestroy, AfterViewInit {
       icon: 'fas fa-star',
       transformation: 'Stop losing brand deals to slow DM replies',
       points: [
-        'Brand collab triage: AI auto-routes paid pitches vs. fan messages vs. spam',
+        'Brand collab triage: Reppy auto-routes paid pitches vs. fan messages vs. spam',
         'Auto-replies in your voice: trained on your tone, slang, and emoji style',
         'Fan engagement at scale: respond to every DM, even at 100K followers'
       ],

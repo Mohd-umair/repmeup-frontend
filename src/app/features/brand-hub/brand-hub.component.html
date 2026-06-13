@@ -4,7 +4,7 @@
       <i class="fas fa-palette text-rep-lime"></i>
       Brand Hub
     </h1>
-    <p class="text-gray-400 mt-1">Set your brand voice, tone, and compliance rules for AI-generated content.</p>
+    <p class="text-gray-400 mt-1">Set your brand voice, tone, and compliance rules for Reppy-generated content.</p>
   </div>
 
   <!-- Re-train Voice banner -->
@@ -130,8 +130,8 @@
           <div>
             <label class="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">Approved hashtags</label>
             <p class="text-xs text-gray-600 dark:text-gray-400 mb-2 leading-relaxed">
-              These are the <strong class="text-gray-800 dark:text-gray-200">only</strong> hashtags the AI is told to use when generating posts.
-              Leave empty to let the AI choose contextually. Adding tags here overrides any hashtags from the Brand Analysis.
+              These are the <strong class="text-gray-800 dark:text-gray-200">only</strong> hashtags Reppy is told to use when generating posts.
+              Leave empty to let Reppy choose contextually. Adding tags here overrides any hashtags from the Brand Analysis.
             </p>
             <div class="flex flex-wrap gap-2 mb-2">
               <span
@@ -167,7 +167,7 @@
       </div>
       <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-6">
         <h2 class="text-lg font-bold text-rep-white mb-2">Knowledge base</h2>
-        <p class="text-gray-400 text-sm mb-4">Upload documents and URLs to train AI on your brand. Manage entries in Knowledge Base.</p>
+        <p class="text-gray-400 text-sm mb-4">Upload documents and URLs to train Reppy on your brand. Manage entries in Knowledge Base.</p>
         <a routerLink="/app/knowledge-base" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition">
           <i class="fas fa-external-link-alt"></i>
           Open Knowledge Base
@@ -190,7 +190,7 @@
         </p>
         <p class="text-xs text-amber-900 dark:text-amber-400/90 mb-4 flex items-start gap-1.5">
           <i class="fas fa-coins mt-0.5 shrink-0"></i>
-          Each generation costs 1 AI credit. It is not generated automatically.
+          Each generation costs 1 Reppy credit. It is not generated automatically.
         </p>
 
         <!-- Loading -->
@@ -213,7 +213,7 @@
         <p class="text-xs text-gray-500 dark:text-gray-500 mb-3 leading-relaxed">
           <i class="fas fa-info-circle mr-1"></i>
           This preview is for testing only — it does not create or schedule any post.
-          The same AI voice is applied automatically when you generate posts via <strong class="text-gray-700 dark:text-gray-300">Content Studio</strong>.
+          The same Reppy voice is applied automatically when you generate posts via <strong class="text-gray-700 dark:text-gray-300">Content Studio</strong>.
         </p>
 
         <app-button variant="primary" size="sm" [loading]="loadingPreview" (buttonClick)="loadPreview()">
@@ -230,7 +230,7 @@
     <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl border border-gray-800 p-5">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 class="text-lg font-bold text-rep-white">AI Brand Analysis</h2>
+          <h2 class="text-lg font-bold text-rep-white">Reppy AI Brand Analysis</h2>
           <p class="text-gray-400 text-sm mt-1">Analyzes your last 10 published posts to learn your brand's writing style, visual identity, and content patterns.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -418,7 +418,7 @@
             <p class="text-sm text-gray-800 dark:text-gray-200 mt-0.5">~{{ profile.hashtagStrategy.avgCount }} per post</p>
             <div *ngIf="profile.hashtagStrategy.branded?.length || profile.hashtagStrategy.generic?.length" class="mt-2 rounded-lg border border-amber-300 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-500/10 p-3">
               <p class="text-xs font-semibold text-amber-900 dark:text-amber-300 mb-1.5">
-                <i class="fas fa-triangle-exclamation mr-1"></i>These hashtags are <strong>NOT</strong> injected into AI prompts
+                <i class="fas fa-triangle-exclamation mr-1"></i>These hashtags are <strong>NOT</strong> injected into Reppy prompts
               </p>
               <p class="text-xs text-amber-800 dark:text-amber-400/90 leading-relaxed mb-2">
                 These were detected in your old posts. Only the <strong>Approved Hashtags</strong> you set in Brand Settings are used when generating posts. If these are outdated (e.g. old campaign tags), click <strong>Clear Profile</strong> and re-analyze once your posts reflect your current style.
@@ -494,7 +494,7 @@
           <div *ngIf="config?.brandProfileOverrides" class="mt-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30">
             <p class="text-xs text-amber-400 flex items-center gap-1.5">
               <i class="fas fa-pencil-alt"></i>
-              Manual overrides are active — these values will take precedence over AI analysis.
+              Manual overrides are active — these values will take precedence over Reppy analysis.
             </p>
           </div>
         </div>
@@ -533,7 +533,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
           <div>
             <h2 class="text-lg font-bold text-rep-white">Visual Style References</h2>
-            <p class="text-gray-400 text-sm mt-1">Upload images that define your preferred visual style. The AI will match these when generating post images.</p>
+            <p class="text-gray-400 text-sm mt-1">Upload images that define your preferred visual style. Reppy will match these when generating post images.</p>
           </div>
           <div class="text-sm text-gray-400">{{ refTotal }} / {{ refMax }} images</div>
         </div>
@@ -638,7 +638,7 @@
             <i class="fas fa-lightbulb text-gray-800 dark:text-rep-lime mr-2"></i>Smart Inspiration Library
           </h2>
           <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 max-w-3xl">
-            Browse curated posts that match your sector. Pick several that fit your style, then add them as references for AI generation.
+            Browse curated posts that match your sector. Pick several that fit your style, then add them as references for Reppy generation.
           </p>
         </div>
 
@@ -760,7 +760,7 @@
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 class="text-lg font-bold text-gray-900 dark:text-rep-white">Occasion Templates</h2>
-          <p class="text-gray-400 text-sm mt-1">Create per-occasion profiles with reference images, sample captions, hashtags, and CTAs. These guide AI generation when selected in Content Studio.</p>
+          <p class="text-gray-400 text-sm mt-1">Create per-occasion profiles with reference images, sample captions, hashtags, and CTAs. These guide Reppy generation when selected in Content Studio.</p>
         </div>
         <button type="button" (click)="openCreateOccasion()"
           class="flex items-center gap-2 px-4 py-2 rounded-lg bg-rep-lime text-rep-black font-semibold text-sm hover:bg-rep-lime/90 transition">

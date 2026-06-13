@@ -10,8 +10,8 @@
         <span class="vi-badge" [class.vi-badge-success]="hasVoiceConnection()" [class.vi-badge-warning]="!hasVoiceConnection()">
           {{ hasVoiceConnection() ? 'Connected' : 'Not connected' }}
         </span>
-        <span *ngIf="credentials && credentials.voiceAiEnabled === false" class="vi-badge vi-badge-warning" title="Set platform voice AI keys on the server">
-          Voice AI unavailable
+        <span *ngIf="credentials && credentials.voiceAiEnabled === false" class="vi-badge vi-badge-warning" title="Set platform voice Reppy AI keys on the server">
+          Voice Reppy AI unavailable
         </span>
       </div>
     </div>
@@ -62,7 +62,7 @@
       </div>
 
       <p *ngIf="telephonyMode === 'managed'" class="vi-note vi-note--muted">
-        Conversational voice (speech recognition, synthesis, and dialog) runs on RepMeUp infrastructure — no third-party AI keys are stored in your workspace.
+        Conversational voice (speech recognition, synthesis, and dialog) runs on RepMeUp infrastructure — no third-party Reppy AI keys are stored in your workspace.
       </p>
 
       <div class="creds-form__actions">

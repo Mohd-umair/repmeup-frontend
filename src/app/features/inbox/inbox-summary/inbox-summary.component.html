@@ -12,7 +12,7 @@
   <!-- Main content -->
   <div *ngIf="interaction" class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
 
-    <!-- AI Generate button (top, always visible) -->
+    <!-- Reppy Generate button (top, always visible) -->
     <div class="flex items-center justify-between gap-2">
       <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
         Chat Summary
@@ -28,12 +28,12 @@
           focus:outline-none focus-visible:ring-2 focus-visible:ring-rep-lime focus-visible:ring-offset-2
           focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900
           transition-all disabled:opacity-45 disabled:cursor-not-allowed disabled:pointer-events-none disabled:active:scale-100 disabled:shadow-sm"
-        title="Generate AI summary (1 AI credit)"
-        aria-label="Generate AI summary, costs one AI credit">
+        title="Generate Reppy summary (1 Reppy credit)"
+        aria-label="Generate Reppy summary, costs one Reppy credit">
         <i *ngIf="generatingAI" class="fas fa-spinner fa-spin text-sm" aria-hidden="true"></i>
         <app-ai-chat-bubble-icon *ngIf="!generatingAI" iconClass="w-6 h-6 sm:w-7 sm:h-7 shrink-0" aria-hidden="true"
           [noDarkInvert]="true" />
-        <span>{{ generatingAI ? 'Generating…' : 'AI Generate' }}</span>
+        <span>{{ generatingAI ? 'Generating…' : 'Reppy Generate' }}</span>
         <span *ngIf="!generatingAI"
               class="ml-0.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-tight
                 bg-rep-black/15 text-rep-black dark:bg-rep-black/25">
@@ -47,8 +47,8 @@
          style="background-color: var(--surface-primary); color: var(--text-muted);">
       <i class="fas fa-info-circle mt-0.5 flex-shrink-0 text-purple-500"></i>
       <p>
-        AI Generate reads the full conversation and writes a short, plain-language note in seconds — like a quick handover message for your team.
-        <strong class="font-semibold" style="color: var(--text-secondary);">Costs 1 AI credit.</strong>
+        Reppy Generate reads the full conversation and writes a short, plain-language note in seconds — like a quick handover message for your team.
+        <strong class="font-semibold" style="color: var(--text-secondary);">Costs 1 Reppy credit.</strong>
         You can also write one manually below.
       </p>
     </div>
@@ -129,7 +129,7 @@
       </div>
       <div class="text-center">
         <p class="text-xs font-semibold" style="color: var(--text-secondary);">No summary yet</p>
-        <p class="text-[11px] mt-0.5">Use AI Generate above or write one manually.</p>
+        <p class="text-[11px] mt-0.5">Use Reppy Generate above or write one manually.</p>
       </div>
       <button
         type="button"
@@ -143,7 +143,7 @@
     <!-- ── Editor (edit mode) ── -->
     <div *ngIf="editing" class="space-y-3">
 
-      <!-- Suggested action preview (while editing AI-generated summary) -->
+      <!-- Suggested action preview (while editing Reppy-generated summary) -->
       <div *ngIf="savedSuggestedAction && interaction?.summaryGeneratedBy === 'ai'"
            class="rounded-xl border p-3 flex items-start gap-2.5"
            style="background-color: var(--surface-primary); border-color: var(--card-border);">

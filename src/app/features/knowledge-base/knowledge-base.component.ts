@@ -223,6 +223,7 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
     this.initForms();
     this.initListStream();
     this.initSearchDebounce();
+    this.ent.load();
     this.loadKnowledgeBase();
     this.loadCategories();
   }
@@ -801,6 +802,7 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
             if (this.filteredKnowledgeBase.length === 1 && this.currentPage > 1) {
               this.currentPage--;
             }
+            this.ent.load();
             this.loadKnowledgeBase();
           }
           this.cdr.markForCheck();

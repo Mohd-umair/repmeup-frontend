@@ -91,7 +91,7 @@
           </ng-container>
         </ng-container>
 
-        <!-- AI Credits Badge -->
+        <!-- Reppy Credits Badge -->
         <ng-container *ngIf="subscriptionLimits">
           <div class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 bg-rep-white dark:bg-gray-900"
                [ngClass]="getAICreditsPercentage() >= 90
@@ -101,7 +101,7 @@
                    : 'border-gray-200 dark:border-gray-700'">
             <i class="fas fa-magic text-sm"
                [ngClass]="getAICreditsPercentage() >= 90 ? 'text-red-500' : getAICreditsPercentage() >= 70 ? 'text-amber-500' : 'text-purple-500'"></i>
-            <span class="text-xs font-medium text-gray-600 dark:text-gray-300">AI Credits</span>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Reppy Credits</span>
             <span class="text-sm font-bold"
                   [ngClass]="getAICreditsPercentage() >= 90 ? 'text-red-600 dark:text-red-400' : getAICreditsPercentage() >= 70 ? 'text-amber-600 dark:text-amber-400' : 'text-rep-black dark:text-white'">
               {{ subscriptionLimits.usage.aiCreditsThisMonth || 0 }}<span class="text-gray-400 dark:text-gray-500 font-normal">/{{ subscriptionLimits.limits.maxAICreditsPerMonth === -1 ? '∞' : subscriptionLimits.limits.maxAICreditsPerMonth }}</span>
@@ -446,7 +446,7 @@
                     <i class="fas fa-magic text-rep-black dark:text-rep-lime w-5"></i>
                     <span class="text-gray-700 dark:text-gray-200">
                       <strong>{{ allPlans[planKey].limits.maxAICreditsPerMonth === -1 ? 'Unlimited' : allPlans[planKey].limits.maxAICreditsPerMonth }}</strong> 
-                      AI Credits/Month
+                      Reppy Credits/Month
                     </span>
                   </div>
                 </div>
@@ -637,7 +637,7 @@
 
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
               <i class="fas fa-info-circle mr-1"></i>
-              This logo is used as a watermark when generating AI posts in the Content Studio.
+              This logo is used as a watermark when generating Reppy AI posts in the Content Studio.
             </p>
           </div>
 
@@ -944,7 +944,7 @@
           </div>
           <div class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-600">
             <p class="font-semibold text-rep-black dark:text-white">Legal disclaimers</p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Set required disclaimer text in Brand Hub. AI-generated content will follow these rules.</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Set required disclaimer text in Brand Hub. Reppy-generated content will follow these rules.</p>
           </div>
         </div>
         <a routerLink="/app/brand-hub" class="inline-flex items-center gap-2 px-6 py-3 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg transition">
