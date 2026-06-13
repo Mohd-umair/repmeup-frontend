@@ -196,6 +196,19 @@ export interface IReply {
 
   /** Outbound WhatsApp template rich preview (inbox mirrors customer message layout) */
   whatsappTemplatePreview?: WhatsAppTemplatePreviewInline;
+
+  /** Outbound catalog product card preview (image + price) for the inbox timeline */
+  productPreview?: IProductPreview;
+}
+
+/** Rich product card stored on a reply when an agent sends a catalog product. */
+export interface IProductPreview {
+  productId: string;
+  name: string;
+  image: string | null;
+  price: number | null;
+  currency: string;
+  sku: string | null;
 }
 
 /** Subset persisted by backend — keep in sync with `whatsapp-template-preview.helpers` */

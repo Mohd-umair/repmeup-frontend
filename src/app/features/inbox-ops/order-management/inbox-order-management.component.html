@@ -115,10 +115,78 @@
         <dl class="space-y-2 text-sm">
           <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Amount</dt><dd class="font-semibold">{{ detail.amountFormatted }}</dd></div>
           <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Payment</dt><dd><app-ops-status-badge [label]="detail.paymentLabel" [tone]="detail.paymentTone" /></dd></div>
+          @if (detail.paymentMethod) {
+            <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Method</dt><dd class="uppercase font-medium">{{ detail.paymentMethod }}</dd></div>
+          }
           <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Status</dt><dd><app-ops-status-badge [label]="detail.statusLabel" [tone]="detail.statusTone" /></dd></div>
-          <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Shipping</dt><dd>{{ detail.shippingAddress }}</dd></div>
+          @if (detail.cancellationReason) {
+            <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Cancel reason</dt><dd class="text-right max-w-[60%]">{{ detail.cancellationReason }}</dd></div>
+          }
+          @if (detail.returnReason) {
+            <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Return reason</dt><dd class="text-right max-w-[60%]">{{ detail.returnReason }}</dd></div>
+          }
+          @if (detail.refund) {
+            <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Refund</dt><dd class="text-right font-medium">{{ detail.refund.amount }}@if (detail.refund.reference) {<span class="block text-xs font-normal" style="color: var(--text-muted);">{{ detail.refund.reference }}</span>}</dd></div>
+          }
         </dl>
       </section>
+
+      <!-- Structured shipping address (editable) -->
+      <section>
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold uppercase tracking-wide" style="color: var(--text-muted);">Shipping Address</h3>
+          <button type="button" class="text-xs font-semibold text-sky-600 hover:underline" (click)="openShippingEditor()"><i class="fas fa-pen mr-1"></i>Edit</button>
+        </div>
+        @if (detail.shipping && (detail.shipping.line1 || detail.shipping.city || detail.shipping.pincode)) {
+          <div class="text-sm rounded-xl border p-3" style="border-color: var(--card-border); background-color: var(--bg-primary);">
+            <p class="font-medium" style="color: var(--text-primary);">{{ detail.shipping.name || detail.customer.name }}</p>
+            @if (detail.shipping.line1) { <p style="color: var(--text-secondary);">{{ detail.shipping.line1 }}@if (detail.shipping.line2) {, {{ detail.shipping.line2 }}}</p> }
+            <p style="color: var(--text-secondary);">{{ detail.shipping.city }}@if (detail.shipping.state) {, {{ detail.shipping.state }}} {{ detail.shipping.pincode }}</p>
+            @if (detail.shipping.country) { <p style="color: var(--text-secondary);">{{ detail.shipping.country }}</p> }
+            @if (detail.shipping.phone) { <p class="mt-1 text-xs" style="color: var(--text-muted);"><i class="fas fa-phone mr-1"></i>{{ detail.shipping.phone }}</p> }
+          </div>
+        } @else {
+          <p class="text-sm" style="color: var(--text-muted);">{{ detail.shippingAddress !== '—' ? detail.shippingAddress : 'No structured address yet — click Edit to add.' }}</p>
+        }
+      </section>
+
+      <!-- Shipment tracking (shown once dispatched) -->
+      @if (detail.tracking && (detail.tracking.courier || detail.tracking.trackingNumber)) {
+        <section>
+          <h3 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">Shipment Tracking</h3>
+          <div class="text-sm rounded-xl border p-3 space-y-1.5" style="border-color: var(--card-border); background-color: var(--bg-primary);">
+            <div class="flex justify-between gap-4"><span style="color: var(--text-muted);">Courier</span><span class="font-medium">{{ detail.tracking.courier || '—' }}</span></div>
+            <div class="flex justify-between gap-4"><span style="color: var(--text-muted);">Tracking #</span><span class="font-medium">{{ detail.tracking.trackingNumber || '—' }}</span></div>
+            @if (detail.tracking.trackingUrl) {
+              <a [href]="detail.tracking.trackingUrl" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 hover:underline pt-0.5"><i class="fas fa-truck-fast"></i> Track shipment</a>
+            }
+          </div>
+        </section>
+      }
+      @if (detail.lineItems?.length) {
+        <section>
+          <h3 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">Items ({{ detail.lineItems.length }})</h3>
+          <ul class="space-y-2">
+            @for (li of detail.lineItems; track li.name) {
+              <li class="flex items-center gap-3 rounded-xl border p-2.5" style="border-color: var(--card-border); background-color: var(--bg-primary);">
+                <div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 flex items-center justify-center border" style="border-color: var(--card-border); background-color: var(--surface-primary);">
+                  @if (li.image) {
+                    <img [src]="li.image" [alt]="li.name" class="w-full h-full object-cover" loading="lazy" />
+                  } @else {
+                    <i class="fas fa-box text-lg" style="color: var(--text-muted);"></i>
+                  }
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold truncate" style="color: var(--text-primary);">{{ li.name }}</p>
+                  @if (li.sku) { <p class="text-[11px] truncate" style="color: var(--text-muted);">SKU: {{ li.sku }}</p> }
+                  <p class="text-xs mt-0.5" style="color: var(--text-secondary);">{{ li.unitPrice }} × {{ li.qty }}</p>
+                </div>
+                <div class="text-sm font-bold shrink-0" style="color: var(--text-primary);">{{ li.lineTotal }}</div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
       @if (detail.timeline?.length) {
         <section>
           <h3 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">Timeline</h3>
@@ -149,9 +217,79 @@
       @if (detail.sourceInteractionId) {
         <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="viewChat()">View Full Chat</button>
       }
-      @if (detail.actions.canMarkShipped) {
-        <button type="button" class="px-3 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold disabled:opacity-50" [disabled]="actionLoading" (click)="markShipped()">Mark Shipped</button>
+      @for (st of detail.actions.nextStatuses; track st) {
+        <button type="button"
+          class="px-3 py-2 rounded-lg text-sm font-bold disabled:opacity-50"
+          [ngClass]="(st === 'cancelled' || st === 'returned') ? 'border border-red-300 text-red-600 dark:text-red-400'
+                    : st === 'refunded' ? 'border border-amber-300 text-amber-700 dark:text-amber-400'
+                    : 'bg-rep-lime text-rep-black'"
+          [disabled]="actionLoading"
+          (click)="openStatusAction(st)">{{ statusActionLabel(st) }}</button>
       }
     </div>
   }
 </app-ops-detail-drawer>
+
+<!-- ── Action modals (dispatch / cancel / return / refund / edit shipping) ───── -->
+@if (actionModal) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40" (click)="closeActionModal()">
+    <div class="w-full max-w-md rounded-2xl shadow-xl p-5 border" style="background-color: var(--card-bg); border-color: var(--card-border);" (click)="$event.stopPropagation()">
+
+      @if (actionModal === 'dispatch') {
+        <h3 class="text-lg font-bold mb-1" style="color: var(--text-primary);"><i class="fas fa-truck mr-2 text-rep-lime"></i>Dispatch order</h3>
+        <p class="text-xs mb-4" style="color: var(--text-muted);">Capture courier &amp; tracking so the customer can follow the shipment.</p>
+        <div class="space-y-3">
+          <input [(ngModel)]="dispatchForm.courier" placeholder="Courier (e.g. Delhivery, BlueDart)" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="dispatchForm.trackingNumber" placeholder="Tracking number" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="dispatchForm.trackingUrl" placeholder="Tracking URL (optional)" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+        </div>
+        <div class="flex justify-end gap-2 mt-5">
+          <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="closeActionModal()">Cancel</button>
+          <button type="button" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold disabled:opacity-50" [disabled]="actionLoading" (click)="submitDispatch()">Dispatch</button>
+        </div>
+      }
+
+      @if (actionModal === 'cancel' || actionModal === 'return') {
+        <h3 class="text-lg font-bold mb-1" style="color: var(--text-primary);">{{ actionModal === 'cancel' ? 'Cancel order' : 'Mark as returned' }}</h3>
+        <p class="text-xs mb-4" style="color: var(--text-muted);">{{ actionModal === 'cancel' ? 'This cancels the order. Add a reason for your records.' : 'Record a customer return. Add a reason.' }}</p>
+        <textarea [(ngModel)]="reasonText" rows="3" placeholder="Reason (optional)" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);"></textarea>
+        <div class="flex justify-end gap-2 mt-5">
+          <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="closeActionModal()">Back</button>
+          <button type="button" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold disabled:opacity-50" [disabled]="actionLoading" (click)="submitReason(actionModal === 'cancel' ? 'cancelled' : 'returned')">{{ actionModal === 'cancel' ? 'Cancel order' : 'Mark returned' }}</button>
+        </div>
+      }
+
+      @if (actionModal === 'refund') {
+        <h3 class="text-lg font-bold mb-1" style="color: var(--text-primary);"><i class="fas fa-rotate-left mr-2 text-amber-500"></i>Refund order</h3>
+        <p class="text-xs mb-4" style="color: var(--text-muted);">Record the refund. Leave amount blank to refund the full order total.</p>
+        <div class="space-y-3">
+          <input [(ngModel)]="refundForm.amount" type="number" min="0" placeholder="Refund amount (₹) — defaults to total" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="refundForm.reference" placeholder="Refund reference / txn id (optional)" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+        </div>
+        <div class="flex justify-end gap-2 mt-5">
+          <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="closeActionModal()">Back</button>
+          <button type="button" class="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-bold disabled:opacity-50" [disabled]="actionLoading" (click)="submitRefund()">Refund</button>
+        </div>
+      }
+
+      @if (actionModal === 'shipping') {
+        <h3 class="text-lg font-bold mb-1" style="color: var(--text-primary);"><i class="fas fa-location-dot mr-2 text-sky-500"></i>Shipping address</h3>
+        <p class="text-xs mb-4" style="color: var(--text-muted);">Edit where this order ships.</p>
+        <div class="grid grid-cols-2 gap-3">
+          <input [(ngModel)]="shippingForm.name" placeholder="Full name" class="col-span-2 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="shippingForm.phone" placeholder="Phone" class="col-span-2 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="shippingForm.line1" placeholder="Address line 1 (house no, street)" class="col-span-2 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="shippingForm.line2" placeholder="Address line 2 (landmark, area)" class="col-span-2 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="shippingForm.city" placeholder="City" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="shippingForm.state" placeholder="State" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="shippingForm.pincode" placeholder="Pincode" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="shippingForm.country" placeholder="Country" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+        </div>
+        <div class="flex justify-end gap-2 mt-5">
+          <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="closeActionModal()">Cancel</button>
+          <button type="button" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold disabled:opacity-50" [disabled]="actionLoading" (click)="saveShipping()">Save address</button>
+        </div>
+      }
+    </div>
+  </div>
+}

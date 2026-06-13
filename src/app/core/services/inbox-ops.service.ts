@@ -15,7 +15,9 @@ import {
   IOpsOrderStats,
   IOpsReviewDetail,
   IOpsReviewRow,
-  IOpsReviewStats
+  IOpsReviewStats,
+  IOpsShipping,
+  IOrderStatusExtra
 } from '../models/inbox-ops.model';
 
 @Injectable({ providedIn: 'root' })
@@ -51,9 +53,15 @@ export class InboxOpsService {
       .pipe(map((r) => r.data!));
   }
 
-  updateOrderStatus(id: string, status: string, notes?: string): Observable<IOpsOrderDetail> {
+  updateOrderStatus(id: string, status: string, extra?: IOrderStatusExtra): Observable<IOpsOrderDetail> {
     return this.api
-      .patch<IApiResponse<IOpsOrderDetail>>(`/inbox/ops/orders/${id}/status`, { status, notes })
+      .patch<IApiResponse<IOpsOrderDetail>>(`/inbox/ops/orders/${id}/status`, { status, ...(extra || {}) })
+      .pipe(map((r) => r.data!));
+  }
+
+  updateOrderShipping(id: string, body: { shipping: IOpsShipping; buyerName?: string; buyerPhone?: string }): Observable<IOpsOrderDetail> {
+    return this.api
+      .patch<IApiResponse<IOpsOrderDetail>>(`/inbox/ops/orders/${id}/shipping`, body)
       .pipe(map((r) => r.data!));
   }
 

@@ -35,18 +35,52 @@ export interface IOpsOrderStats {
   revenueClosed: number;
   pendingPayment: number;
   shippedToday: number;
+  deliveredCount?: number;
   ordersToday?: number;
   deltaVsYesterdayPct?: number;
+  statusCounts?: Record<string, number>;
+}
+
+export interface IOpsShipping {
+  name?: string | null;
+  phone?: string | null;
+  line1?: string | null;
+  line2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  country?: string | null;
+}
+
+export interface IOpsTracking {
+  courier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
 }
 
 export interface IOpsOrderDetail extends IOpsOrderRow {
   customer: IOpsCustomer;
+  paymentMethod?: string | null;
   shippingAddress: string;
-  tracking: string;
+  shipping?: IOpsShipping | null;
+  tracking?: IOpsTracking | null;
+  cancellationReason?: string | null;
+  returnReason?: string | null;
+  refund?: { amount: string; reference: string | null; atLabel: string } | null;
   timeline: { event: string; at: string | null; atLabel: string; pending?: boolean }[];
   chatSnippet: { from: string; text: string }[];
-  lineItems: { name: string; qty: number; unitPrice: string }[];
+  lineItems: { name: string; sku: string | null; image: string | null; qty: number; unitPrice: string; lineTotal: string }[];
   actions: { canMarkShipped: boolean; canUpdateStatus: boolean; nextStatuses: string[] };
+}
+
+/** Extra payload sent with a status transition. */
+export interface IOrderStatusExtra {
+  note?: string;
+  reason?: string;
+  paymentMethod?: string;
+  paymentRef?: string;
+  tracking?: IOpsTracking;
+  refund?: { amount?: number | string; reference?: string };
 }
 
 export interface IOpsComplaintRow {
