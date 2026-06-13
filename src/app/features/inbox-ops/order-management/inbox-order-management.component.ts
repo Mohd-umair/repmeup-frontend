@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs/operators';
 import { InboxOpsService } from '../../../core/services/inbox-ops.service';
@@ -76,7 +76,8 @@ export class InboxOrderManagementComponent implements OnInit, OnDestroy {
   constructor(
     private ops: InboxOpsService,
     private notify: NotificationService,
-    public router: Router
+    public router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -88,6 +89,21 @@ export class InboxOrderManagementComponent implements OnInit, OnDestroy {
       });
     this.loadStats();
     this.loadList();
+
+    // Deep-link from the inbox "Order placed" chip: /app/inbox/order-management?order=<id>
+    const orderId = this.route.snapshot.queryParamMap.get('order');
+    if (orderId) this.openOrderById(orderId);
+  }
+
+  /** Open a specific order's detail drawer (used by the inbox deep-link). */
+  openOrderById(id: string): void {
+    this.ops.getOrderDetail(id).subscribe({
+      next: (d) => {
+        this.detail = d;
+        this.drawerOpen = true;
+      },
+      error: () => this.notify.error('Could not open that order')
+    });
   }
 
   ngOnDestroy(): void {

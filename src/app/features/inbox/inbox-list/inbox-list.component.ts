@@ -478,9 +478,9 @@ export class InboxListComponent implements OnInit, OnDestroy {
   }
 
   private static _isBracketAttachmentPlaceholder(t: string): boolean {
-    return /^\[(image|video|audio|file|attachment|shared instagram reel|shared instagram story|shared instagram post)\]$/i.test(
-      t.trim()
-    );
+    const s = t.trim();
+    return /^\[(image|video|audio|file|attachment|shared instagram reel|shared instagram story|shared instagram post|product order|order)\]$/i.test(s)
+      || /^\[Product:\s*.+\]$/i.test(s);
   }
 
   /** Map raw attachment placeholder text to a human-readable label. */
@@ -515,6 +515,8 @@ export class InboxListComponent implements OnInit, OnDestroy {
     if (/^\[shared instagram reel\]$/i.test(t)) return '🎬 Shared reel';
     if (/^\[shared instagram story\]$/i.test(t)) return '📖 Shared story';
     if (/^\[shared instagram post\]$/i.test(t)) return '🔗 Shared post';
+    if (/^\[Product:\s*.+\]$/i.test(t)) return '🛍️ ' + t.replace(/^\[Product:\s*(.+?)\]$/i, 'Product: $1');
+    if (/^\[(product order|order)\]$/i.test(t)) return '🛒 Order placed';
 
     // Substantive DM text must win over attachmentType (platform webhooks often leave stale type on text messages)
     if (t.length > 0 && !InboxListComponent._isBracketAttachmentPlaceholder(t)) {

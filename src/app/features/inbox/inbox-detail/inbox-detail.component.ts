@@ -48,6 +48,8 @@ import { AppCurrencyPipe } from '../../../shared/pipes/app-currency.pipe';
 import { CatalogService } from '../../../core/services/catalog.service';
 import { IProduct } from '../../../core/models/product.model';
 import { NotificationService } from '../../../core/services/notification.service';
+import { Router } from '@angular/router';
+import { InboxOpsService } from '../../../core/services/inbox-ops.service';
 
 /** An in-flight or failed reply injected optimistically into the timeline */
 interface IOptimisticReply {
@@ -374,7 +376,9 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     private mediaLibraryService: MediaLibraryService,
     private whatsAppTemplateService: WhatsAppTemplateService,
     private catalogService: CatalogService,
-    private notify: NotificationService
+    private notify: NotificationService,
+    private router: Router,
+    private inboxOps: InboxOpsService
   ) {
     this.replyForm = this.fb.group({
       content: ['', [Validators.required, Validators.minLength(1)]]
@@ -446,6 +450,31 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     if (!content || typeof content !== 'string') return false;
     const t = content.trim();
     return /^(\[image\]|\[attachment\]|\[Image\])$/i.test(t);
+  }
+
+  /**
+   * Commerce placeholders ("[Product: X]" outbound, "[Product order]" inbound) render as a
+   * labeled chip instead of opaque bracket text that looks like a broken media attachment.
+   * Returns null for normal messages.
+   */
+  commerceChip(content: string | undefined): { icon: string; label: string; tone: 'product' | 'order' } | null {
+    if (!content || typeof content !== 'string') return null;
+    const t = content.trim();
+    const prod = t.match(/^\[Product:\s*(.+?)\]$/i);
+    if (prod) return { icon: 'fas fa-bag-shopping', label: 'Product: ' + prod[1], tone: 'product' };
+    if (/^\[(product order|order)\]$/i.test(t)) return { icon: 'fas fa-cart-shopping', label: 'Order placed', tone: 'order' };
+    return null;
+  }
+
+  /** "Order placed" chip → open the linked order in Order Management. */
+  openLinkedOrder(): void {
+    const id = this.interaction?._id;
+    if (!id) return;
+    this.inboxOps.getOrderByInteraction(id).subscribe({
+      next: (o) => this.router.navigate(['/app/inbox/order-management'], { queryParams: { order: o.id } }),
+      // No order linked yet (e.g. older conversation) — open the list so the agent can still find it.
+      error: () => this.router.navigate(['/app/inbox/order-management'])
+    });
   }
 
   /** Hide caption line for WhatsApp/media placeholder bodies (voice note, PDF filename, etc.). */

@@ -38,6 +38,13 @@ export class InboxOpsService {
     return this.api.get<IApiResponse<IOpsOrderDetail>>(`/inbox/ops/orders/${id}`).pipe(map((r) => r.data!));
   }
 
+  /** Resolve the order linked to an inbox conversation (for the "Order placed" chip deep-link). */
+  getOrderByInteraction(interactionId: string): Observable<{ id: string; displayRef: string | null; status: string }> {
+    return this.api
+      .get<IApiResponse<{ id: string; displayRef: string | null; status: string }>>(`/inbox/ops/orders/by-interaction/${interactionId}`)
+      .pipe(map((r) => r.data!));
+  }
+
   createOrder(payload: ICreateOrderPayload): Observable<IOpsOrderDetail> {
     return this.api
       .post<IApiResponse<IOpsOrderDetail>>('/inbox/ops/orders', payload)
