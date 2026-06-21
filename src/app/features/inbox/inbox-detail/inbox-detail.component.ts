@@ -12,7 +12,7 @@ import { NotificationDataService } from '../../../core/services/notification-dat
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { Observable, of, Subscription, timer, interval } from 'rxjs';
 import { map, take } from 'rxjs/operators';
-import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
+import { InboxAvatarService, InstagramSharedMediaMeta } from '../../../core/services/inbox-avatar.service';
 import { MediaLibraryService } from '../../../core/services/media-library.service';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
 import { AiChatBubbleIconComponent } from '../../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
@@ -38,6 +38,9 @@ import {
   inboxAttachmentFilenameFromUrl,
   inboxReplyPdfDisplayName,
   isUnsupportedWhatsAppIncoming,
+  isInstagramSharedMedia,
+  isInstagramSharedPlaceholderText,
+  instagramSharedMediaLabel,
   looksLikeAttachmentFilename,
   unsupportedWhatsAppDisplayText
 } from '../../../core/utils/inbox-attachment-display';
@@ -481,6 +484,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   isIncomingAttachmentCaptionHidden(content: string | undefined, attachmentType?: string): boolean {
     if (!content || typeof content !== 'string') return false;
     const t = content.trim();
+    if (isInstagramSharedPlaceholderText(t)) return true;
     if (attachmentType === 'image' && this.isImagePlaceholder(content)) return true;
     if (attachmentType === 'video' && /^\[(video|Video)\]$/i.test(t)) return true;
     if (attachmentType === 'audio' && (/^\[audio\]$/i.test(t) || /^\[Audio Message\]$/i.test(t))) return true;
@@ -620,6 +624,34 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     content?: string;
   }): string {
     return incomingFileDisplayName(data);
+  }
+
+  isInstagramSharedIncoming(data: {
+    platform?: string;
+    attachmentType?: string;
+    igPostMediaId?: string;
+    attachmentUrl?: string;
+  }): boolean {
+    return isInstagramSharedMedia(data);
+  }
+
+  instagramSharedIncomingLabel(data: { attachmentType?: string }): string {
+    return instagramSharedMediaLabel(data.attachmentType);
+  }
+
+  getInstagramSharedMediaMeta$(interactionId: string, mid: string): Observable<InstagramSharedMediaMeta | null> {
+    return this.avatarService.getInstagramSharedMediaMeta(interactionId, mid);
+  }
+
+  canLoadInstagramSharedPreview(data: {
+    attachmentUrl?: string;
+    igPostMediaId?: string;
+    _id?: string;
+    mid?: string;
+    platform?: string;
+  }): boolean {
+    if (data.platform !== 'instagram' || !data._id || !data.mid) return false;
+    return !!(data.attachmentUrl || data.igPostMediaId);
   }
 
   getAttachmentUrl$(interactionId: string, mid: string, platform: string, directUrl: string | undefined): Observable<SafeUrl | null> {
@@ -2593,6 +2625,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
         attachmentType?: string;
         attachmentDisplayName?: string;
         mediaId?: string;
+        igPostMediaId?: string;
         type?: string;
         isUnsupported?: boolean;
       }) => {
@@ -2607,6 +2640,7 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
             mid: msg.mid,
             attachmentUrl: msg.attachmentUrl,
             attachmentType,
+            igPostMediaId: (msg as { igPostMediaId?: string }).igPostMediaId,
             attachmentDisplayName:
               msg.attachmentDisplayName ||
               (attachmentType === 'file' ? incomingFileDisplayName({ text: msg.text }) : undefined),

@@ -4,7 +4,9 @@ import {
   OnInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-  HostListener
+  HostListener,
+  ViewChild,
+  ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -86,10 +88,16 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   products: Array<{ _id: string; name: string }> = [];
   readonly edgeBranchPresets = ['yes', 'no', 'reply', 'no_reply'];
 
+  @ViewChild('canvasWrap') canvasWrap?: ElementRef<HTMLElement>;
+
   canvasOffset = { x: 0, y: 0 };
   zoom = 1;
-  private readonly minZoom = 0.4;
-  private readonly maxZoom = 1.8;
+  private readonly minZoom = 0.25;
+  private readonly maxZoom = 2;
+  /** Collapse side rails to maximize canvas workspace. */
+  paletteCollapsed = false;
+  inspectorCollapsed = false;
+  focusMode = false;
   private dragNode: IFlowNode | null = null;
   private dragStart = { x: 0, y: 0, nx: 0, ny: 0 };
   private panning = false;
@@ -231,6 +239,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
             this.addNodeFromCatalog(this.catalog.find((c) => c.category === 'trigger') || this.catalog[0]);
           }
           this.cdr.markForCheck();
+          requestAnimationFrame(() => this.fitView());
         },
         error: () => {
           this.notify.error('Load failed', 'Could not load flow.');
@@ -383,18 +392,72 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     return Math.round(this.zoom * 100);
   }
 
-  /** Frame all nodes within the canvas viewport. */
+  /** Canvas grows with node positions so large flows always have room to pan. */
+  get canvasMinWidth(): number {
+    if (!this.flow?.nodes.length) return 3200;
+    const maxX = Math.max(...this.flow.nodes.map((n) => n.position.x));
+    return Math.max(3200, maxX + 480);
+  }
+
+  get canvasMinHeight(): number {
+    if (!this.flow?.nodes.length) return 2000;
+    const maxY = Math.max(...this.flow.nodes.map((n) => n.position.y));
+    return Math.max(2000, maxY + 360);
+  }
+
+  togglePalette(): void {
+    this.paletteCollapsed = !this.paletteCollapsed;
+    if (this.paletteCollapsed && this.inspectorCollapsed) this.focusMode = true;
+    else if (!this.paletteCollapsed || !this.inspectorCollapsed) this.focusMode = false;
+    this.cdr.markForCheck();
+    requestAnimationFrame(() => this.fitView());
+  }
+
+  toggleInspector(): void {
+    this.inspectorCollapsed = !this.inspectorCollapsed;
+    if (this.paletteCollapsed && this.inspectorCollapsed) this.focusMode = true;
+    else if (!this.paletteCollapsed || !this.inspectorCollapsed) this.focusMode = false;
+    this.cdr.markForCheck();
+    requestAnimationFrame(() => this.fitView());
+  }
+
+  /** Collapse both side panels for maximum canvas area. */
+  toggleFocusMode(): void {
+    this.focusMode = !this.focusMode;
+    this.paletteCollapsed = this.focusMode;
+    this.inspectorCollapsed = this.focusMode;
+    this.cdr.markForCheck();
+    requestAnimationFrame(() => this.fitView());
+  }
+
+  /** Frame all nodes within the visible canvas viewport. */
   fitView(): void {
     if (!this.flow?.nodes.length) { this.zoomReset(); return; }
+    const wrap = this.canvasWrap?.nativeElement;
+    const vw = wrap?.clientWidth ?? 1200;
+    const vh = wrap?.clientHeight ?? 700;
+    const pad = 48;
     const xs = this.flow.nodes.map((n) => n.position.x);
     const ys = this.flow.nodes.map((n) => n.position.y);
-    const minX = Math.min(...xs), maxX = Math.max(...xs) + 220;
-    const minY = Math.min(...ys), maxY = Math.max(...ys) + 90;
-    const w = Math.max(1, maxX - minX), h = Math.max(1, maxY - minY);
-    const z = Math.min(this.maxZoom, Math.max(this.minZoom, Math.min(900 / w, 560 / h)));
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs) + 224;
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys) + 100;
+    const w = Math.max(1, maxX - minX);
+    const h = Math.max(1, maxY - minY);
+    const z = Math.min(this.maxZoom, Math.max(this.minZoom, Math.min((vw - pad * 2) / w, (vh - pad * 2) / h)));
     this.zoom = Math.round(z * 100) / 100;
-    this.canvasOffset = { x: 40 - minX * this.zoom, y: 40 - minY * this.zoom };
+    this.canvasOffset = {
+      x: pad + (vw - pad * 2 - w * this.zoom) / 2 - minX * this.zoom,
+      y: pad + (vh - pad * 2 - h * this.zoom) / 2 - minY * this.zoom
+    };
     this.cdr.markForCheck();
+  }
+
+  onCanvasWheel(event: WheelEvent): void {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? -0.08 : 0.08;
+    this.setZoom(this.zoom + delta);
   }
 
   onCanvasPointerDown(event: PointerEvent): void {
@@ -533,6 +596,10 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   selectNode(id: string): void {
     this.selectedNodeId = id;
     this.selectedEdgeId = null;
+    if (this.inspectorCollapsed) {
+      this.inspectorCollapsed = false;
+      this.focusMode = false;
+    }
     this.ensureNodeConfig(this.selectedNode);
     if (this.selectedNode?.type === 'action.send_template') {
       this.ensureWaTemplatesLoaded();
@@ -937,6 +1004,18 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
       this.selectedEdgeId = null;
       this.closePanels();
       this.cdr.markForCheck();
+    } else if (event.key === '[' && !event.metaKey && !event.ctrlKey) {
+      this.togglePalette();
+      event.preventDefault();
+    } else if (event.key === ']' && !event.metaKey && !event.ctrlKey) {
+      this.toggleInspector();
+      event.preventDefault();
+    } else if (event.key === 'f' && !event.metaKey && !event.ctrlKey) {
+      this.toggleFocusMode();
+      event.preventDefault();
+    } else if (event.key === '0' && !event.metaKey && !event.ctrlKey) {
+      this.fitView();
+      event.preventDefault();
     }
   }
 
@@ -949,6 +1028,10 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     this.selectedEdgeId = id;
     this.selectedNodeId = null;
+    if (this.inspectorCollapsed) {
+      this.inspectorCollapsed = false;
+      this.focusMode = false;
+    }
     this.cdr.markForCheck();
   }
 

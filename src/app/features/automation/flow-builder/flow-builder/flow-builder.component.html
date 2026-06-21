@@ -21,6 +21,11 @@
       </button>
     </div>
     <div class="fb-toolbar__actions">
+      <button type="button" class="fb-btn-icon" (click)="toggleFocusMode()"
+              [title]="focusMode ? 'Show side panels (F)' : 'Maximize canvas (F)'"
+              [class.fb-btn-icon--active]="focusMode">
+        <i class="fas" [ngClass]="focusMode ? 'fa-compress-arrows-alt' : 'fa-expand-arrows-alt'"></i>
+      </button>
       <button type="button" class="fb-btn-icon" (click)="openPanel('settings'); ensureSettings()" title="Flow settings">
         <i class="fas fa-sliders-h"></i>
       </button>
@@ -41,9 +46,18 @@
     </div>
   </header>
 
-  <div class="fb-layout">
+  <div class="fb-layout"
+       [class.fb-layout--focus]="focusMode"
+       [class.fb-layout--no-palette]="paletteCollapsed"
+       [class.fb-layout--no-inspector]="inspectorCollapsed">
     <!-- Palette -->
-    <aside class="fb-palette">
+    <aside class="fb-palette" [class.fb-palette--collapsed]="paletteCollapsed">
+      <button type="button" class="fb-rail-collapse fb-rail-collapse--palette"
+              (click)="togglePalette()"
+              [title]="paletteCollapsed ? 'Show node palette' : 'Hide node palette'">
+        <i class="fas" [ngClass]="paletteCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+      </button>
+      <div class="fb-palette__body">
       <div class="fb-palette__searchwrap">
         <i class="fas fa-search"></i>
         <input class="fb-palette__search" [(ngModel)]="catalogFilter" placeholder="Search nodes…" />
@@ -75,15 +89,19 @@
           </div>
         </div>
       </div>
+      </div>
     </aside>
 
     <!-- Canvas -->
-    <section class="fb-canvas-wrap" [class.fb-canvas-wrap--drop]="dragOverCanvas"
+    <section #canvasWrap class="fb-canvas-wrap" [class.fb-canvas-wrap--drop]="dragOverCanvas"
              (pointerdown)="onCanvasPointerDown($event)"
+             (wheel)="onCanvasWheel($event)"
              (dragover)="onCanvasDragOver($event)"
              (dragleave)="onCanvasDragLeave($event)"
              (drop)="onCanvasDrop($event)">
       <div class="fb-canvas"
+           [style.min-width.px]="canvasMinWidth"
+           [style.min-height.px]="canvasMinHeight"
            [style.transform]="'translate(' + canvasOffset.x + 'px,' + canvasOffset.y + 'px) scale(' + zoom + ')'">
         <svg class="fb-edges">
           <defs>
@@ -135,6 +153,13 @@
 
       <!-- Canvas controls -->
       <div class="fb-canvas-controls">
+        <button type="button" (click)="togglePalette()" [title]="paletteCollapsed ? 'Show palette' : 'Hide palette'">
+          <i class="fas fa-layer-group"></i>
+        </button>
+        <button type="button" (click)="toggleInspector()" [title]="inspectorCollapsed ? 'Show inspector' : 'Hide inspector'">
+          <i class="fas fa-sliders-h"></i>
+        </button>
+        <span class="fb-canvas-controls__sep"></span>
         <button type="button" (click)="zoomOut()" title="Zoom out"><i class="fas fa-minus"></i></button>
         <span class="fb-zoom-label">{{ zoomPercent }}%</span>
         <button type="button" (click)="zoomIn()" title="Zoom in"><i class="fas fa-plus"></i></button>
@@ -146,7 +171,13 @@
     </section>
 
     <!-- Right rail: panels or inspector -->
-    <aside class="fb-inspector">
+    <aside class="fb-inspector" [class.fb-inspector--collapsed]="inspectorCollapsed">
+      <button type="button" class="fb-rail-collapse fb-rail-collapse--inspector"
+              (click)="toggleInspector()"
+              [title]="inspectorCollapsed ? 'Show inspector' : 'Hide inspector'">
+        <i class="fas" [ngClass]="inspectorCollapsed ? 'fa-chevron-left' : 'fa-chevron-right'"></i>
+      </button>
+      <div class="fb-inspector__body">
       <!-- Validation panel -->
       <ng-container *ngIf="showValidation">
         <div class="fb-panel-head">
@@ -586,6 +617,7 @@
           <p class="fb-inspector__empty">Select a node or connection to edit it, or add nodes from the palette.</p>
         </ng-template>
       </ng-container>
+      </div>
     </aside>
   </div>
 </div>

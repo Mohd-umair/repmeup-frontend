@@ -24,6 +24,13 @@ const FAILED = '__FAILED__';
 /** How long a failed lookup is suppressed before we allow a retry (5 min). */
 const FAILED_TTL_MS = 5 * 60 * 1000;
 
+export interface InstagramSharedMediaMeta {
+  label: string;
+  permalink: string | null;
+  mediaType: string | null;
+  hasPreview: boolean;
+}
+
 /**
  * Industry-standard avatar strategy for the inbox:
  *
@@ -54,6 +61,8 @@ export class InboxAvatarService {
   private failedAt = new Map<string, number>();
   /** in-flight observables, keyed by cache key */
   private inFlight = new Map<string, Observable<string | null>>();
+  /** cached IG shared-media metadata (post/reel/story in DM) */
+  private metaCache = new Map<string, InstagramSharedMediaMeta | null>();
 
   constructor(private http: HttpClient) {}
 
@@ -164,7 +173,33 @@ export class InboxAvatarService {
   }
 
   /**
-   * Fetch a Facebook DM attachment image via the backend proxy (adds page token).
+   * Metadata for a shared Instagram post/reel/story in DM (permalink + label).
+   */
+  getInstagramSharedMediaMeta(interactionId: string, mid: string): Observable<InstagramSharedMediaMeta | null> {
+    if (!interactionId || !mid) return of(null);
+    const key = `igshare_${interactionId}_${mid}`;
+    const cached = this.metaCache.get(key);
+    if (cached !== undefined) return of(cached);
+
+    const url =
+      `${this.apiUrl}/inbox/instagram-shared-media?interactionId=${encodeURIComponent(interactionId)}` +
+      `&mid=${encodeURIComponent(mid)}`;
+    return this.http.get<{ success: boolean; data?: InstagramSharedMediaMeta }>(url).pipe(
+      map((res) => {
+        const data = res?.success && res.data ? res.data : null;
+        this.metaCache.set(key, data);
+        return data;
+      }),
+      catchError(() => {
+        this.metaCache.set(key, null);
+        return of(null);
+      }),
+      shareReplay(1)
+    );
+  }
+
+  /**
+   * Fetch a Facebook/Instagram DM attachment via the backend proxy (adds page/IG token).
    */
   getAttachmentUrl(interactionId: string, mid: string): Observable<string | null> {
     if (!interactionId || !mid) return of(null);

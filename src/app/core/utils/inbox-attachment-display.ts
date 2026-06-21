@@ -34,6 +34,40 @@ export function looksLikeAttachmentFilename(text: string | undefined | null): bo
   return ATTACHMENT_FILENAME_RE.test(t) || /^\[(document|file)\]$/i.test(t);
 }
 
+const IG_SHARED_ATTACHMENT_TYPES = new Set([
+  'ig_reel', 'reel', 'ig_post', 'share', 'story', 'ig_story'
+]);
+
+const IG_SHARED_PLACEHOLDER_RE =
+  /^\[(shared instagram reel|shared instagram story|shared instagram post)\]$/i;
+
+/** Instagram DM shared post / reel / story (Meta webhook attachment, not plain image/video). */
+export function isInstagramSharedMedia(msg: {
+  platform?: string;
+  attachmentType?: string;
+  igPostMediaId?: string;
+  attachmentUrl?: string;
+}): boolean {
+  if (msg.platform && msg.platform !== 'instagram') return false;
+  const t = String(msg.attachmentType || '').toLowerCase();
+  if (IG_SHARED_ATTACHMENT_TYPES.has(t)) return true;
+  if (msg.igPostMediaId) return true;
+  return false;
+}
+
+export function instagramSharedMediaLabel(attachmentType?: string): string {
+  const t = String(attachmentType || '').toLowerCase();
+  if (t === 'ig_reel' || t === 'reel') return 'Shared Instagram reel';
+  if (t === 'story' || t === 'ig_story') return 'Shared Instagram story';
+  if (t === 'ig_post' || t === 'share') return 'Shared Instagram post';
+  return 'Shared Instagram media';
+}
+
+export function isInstagramSharedPlaceholderText(content: string | undefined | null): boolean {
+  if (!content || typeof content !== 'string') return false;
+  return IG_SHARED_PLACEHOLDER_RE.test(content.trim());
+}
+
 /** Infer file attachment when WhatsApp stored filename as text + mediaId (no attachmentUrl). */
 export function inferIncomingAttachmentType(msg: {
   attachmentType?: string;

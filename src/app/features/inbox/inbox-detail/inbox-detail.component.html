@@ -324,8 +324,68 @@
                     {{ unsupportedIncomingMessageText(item.data) }}
                   </p>
                 </div>
+                <!-- Instagram shared post / reel / story in DM -->
+                <div *ngIf="isInstagramSharedIncoming(item.data)"
+                     class="mb-1 inbox-ig-shared-media max-w-xs">
+                  <ng-container *ngIf="(getInstagramSharedMediaMeta$(item.data._id, item.data.mid) | async) as igShare; else igShareCardOnly">
+                    <a *ngIf="igShare.permalink; else igShareCardOnlyLinked"
+                       [href]="igShare.permalink"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="inbox-ig-shared-media__link group">
+                      <div class="inbox-ig-shared-media__preview">
+                        <img *ngIf="canLoadInstagramSharedPreview(item.data) && (getAttachmentUrl$(item.data._id, item.data.mid, item.data.platform, item.data.attachmentUrl) | async) as shareThumb"
+                             [src]="shareThumb"
+                             alt=""
+                             class="inbox-ig-shared-media__thumb"
+                             loading="lazy"
+                             (error)="$any($event.target).style.display='none'">
+                        <span class="inbox-ig-shared-media__play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                      </div>
+                      <div class="inbox-ig-shared-media__footer">
+                        <i class="fab fa-instagram inbox-ig-shared-media__icon" aria-hidden="true"></i>
+                        <span class="inbox-ig-shared-media__label">{{ igShare.label || instagramSharedIncomingLabel(item.data) }}</span>
+                        <i class="fas fa-arrow-up-right-from-square text-[10px] opacity-60 group-hover:opacity-100" aria-hidden="true"></i>
+                      </div>
+                    </a>
+                    <ng-template #igShareCardOnlyLinked>
+                      <div class="inbox-ig-shared-media__card">
+                        <div class="inbox-ig-shared-media__preview">
+                          <img *ngIf="canLoadInstagramSharedPreview(item.data) && (getAttachmentUrl$(item.data._id, item.data.mid, item.data.platform, item.data.attachmentUrl) | async) as shareThumb2"
+                               [src]="shareThumb2"
+                               alt=""
+                               class="inbox-ig-shared-media__thumb"
+                               loading="lazy"
+                               (error)="$any($event.target).style.display='none'">
+                          <span class="inbox-ig-shared-media__play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                        </div>
+                        <div class="inbox-ig-shared-media__footer">
+                          <i class="fab fa-instagram inbox-ig-shared-media__icon" aria-hidden="true"></i>
+                          <span class="inbox-ig-shared-media__label">{{ igShare.label || instagramSharedIncomingLabel(item.data) }}</span>
+                        </div>
+                      </div>
+                    </ng-template>
+                  </ng-container>
+                  <ng-template #igShareCardOnly>
+                    <div class="inbox-ig-shared-media__card">
+                      <div class="inbox-ig-shared-media__preview">
+                        <img *ngIf="canLoadInstagramSharedPreview(item.data) && (getAttachmentUrl$(item.data._id, item.data.mid, item.data.platform, item.data.attachmentUrl) | async) as shareThumb3"
+                             [src]="shareThumb3"
+                             alt=""
+                             class="inbox-ig-shared-media__thumb"
+                             loading="lazy"
+                             (error)="$any($event.target).style.display='none'">
+                        <span class="inbox-ig-shared-media__play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                      </div>
+                      <div class="inbox-ig-shared-media__footer">
+                        <i class="fab fa-instagram inbox-ig-shared-media__icon" aria-hidden="true"></i>
+                        <span class="inbox-ig-shared-media__label">{{ instagramSharedIncomingLabel(item.data) }}</span>
+                      </div>
+                    </div>
+                  </ng-template>
+                </div>
                 <!-- Facebook/Instagram DM image attachment -->
-                <div *ngIf="item.data.attachmentType === 'image' && (item.data.attachmentUrl || (item.data.mid && item.data._id))" class="mb-1 min-h-[120px]">
+                <div *ngIf="item.data.attachmentType === 'image' && !isInstagramSharedIncoming(item.data) && (item.data.attachmentUrl || (item.data.mid && item.data._id))" class="mb-1 min-h-[120px]">
                   <ng-container *ngIf="(getAttachmentUrl$(item.data._id, item.data.mid, item.data.platform, item.data.attachmentUrl) | async) as attachmentImgUrl">
                     <img *ngIf="attachmentImgUrl"
                          [src]="attachmentImgUrl"
