@@ -1,0 +1,198 @@
+<div class="flex-1 overflow-auto p-4 sm:p-6" style="background-color: var(--bg-primary);">
+  <div class="mb-5 flex items-start justify-between gap-4 flex-wrap">
+    <div>
+      <h1 class="text-2xl font-bold flex items-center gap-2" style="color: var(--text-primary);">
+        <i class="fas fa-calendar-check text-rep-lime"></i>
+        Appointments
+      </h1>
+      <p class="text-sm mt-0.5" style="color: var(--text-secondary);">
+        Bookings from WhatsApp, Instagram, and your team — across all providers.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button"
+        class="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl font-semibold text-sm border"
+        style="border-color: var(--card-border); color: var(--text-primary); background-color: var(--surface-primary);"
+        (click)="router.navigate(['/app/appointments/setup'])">
+        <i class="fas fa-sliders-h"></i> Setup
+      </button>
+      <button type="button"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm"
+        style="background: #D8FF00; color: #0B0B0B; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(216,255,0,0.3);"
+        (click)="openNewBooking()">
+        <i class="fas fa-plus"></i> New Appointment
+      </button>
+    </div>
+  </div>
+
+  <app-ops-stats-row [cards]="statCards" />
+
+  <app-ops-filter-bar
+    [tabs]="tabs" [activeTab]="activeTab" [search]="search" [channel]="channel" [channelOptions]="channelOptions"
+    (tabChange)="onTabChange($event)" (searchChange)="onSearchChange($event)" (channelChange)="onChannelChange($event)"
+  />
+
+  <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border); background-color: var(--surface-primary);">
+    <div class="px-4 py-3 border-b" style="border-color: var(--card-border);">
+      <span class="font-bold text-sm" style="color: var(--text-primary);">Appointments</span>
+      <span class="text-xs ml-2" style="color: var(--text-muted);">{{ total }} records</span>
+    </div>
+
+    @if (loading) {
+      <div class="p-10 text-center text-sm" style="color: var(--text-muted);"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</div>
+    } @else if (!rows.length) {
+      <div class="p-10 text-center text-sm" style="color: var(--text-muted);">No appointments found.</div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b text-left text-xs uppercase tracking-wide" style="border-color: var(--card-border); color: var(--text-muted);">
+              <th class="px-4 py-3">Ref</th>
+              <th class="px-4 py-3">Customer</th>
+              <th class="px-4 py-3">Service</th>
+              <th class="px-4 py-3">Provider</th>
+              <th class="px-4 py-3">When</th>
+              <th class="px-4 py-3">Channel</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3 w-12"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows; track row.id) {
+              <tr class="border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50" style="border-color: var(--card-border);" (click)="openRow(row)">
+                <td class="px-4 py-3"><span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800">{{ row.displayRef }}</span></td>
+                <td class="px-4 py-3"><app-ops-customer-cell [name]="row.customerName" [handle]="row.customerHandle" /></td>
+                <td class="px-4 py-3" style="color: var(--text-secondary);">{{ row.serviceName }}<span class="block text-[11px]" style="color: var(--text-muted);">{{ row.durationLabel }}</span></td>
+                <td class="px-4 py-3" style="color: var(--text-secondary);">{{ row.providerName }}</td>
+                <td class="px-4 py-3 font-medium" style="color: var(--text-primary);">{{ row.whenLabel }}</td>
+                <td class="px-4 py-3">{{ row.channelLabel }}</td>
+                <td class="px-4 py-3"><app-ops-status-badge [label]="row.statusLabel" [tone]="row.statusTone" /></td>
+                <td class="px-4 py-3">
+                  @if (row.sourceInteractionId) {
+                    <button type="button" class="p-1.5 rounded-lg bg-rep-lime/20 text-rep-black dark:text-rep-lime" title="View chat"
+                      (click)="$event.stopPropagation(); router.navigate(['/app/inbox'], { queryParams: { selected: row.sourceInteractionId } })">
+                      <i class="fas fa-comment-dots text-sm"></i>
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (total > pageSize) {
+        <div class="px-4 py-3 border-t" style="border-color: var(--card-border);">
+          <app-pagination [currentPage]="page" [totalItems]="total" [pageSize]="pageSize" (pageChange)="onPageChange($event)" />
+        </div>
+      }
+    }
+  </div>
+</div>
+
+@if (bookingModalOpen) {
+  <app-appointment-booking-modal
+    [mode]="bookingMode" [rescheduleId]="rescheduleId" [presetServiceId]="reschedulePresetService"
+    (close)="bookingModalOpen = false" (booked)="onBooked()"
+  />
+}
+
+<app-ops-detail-drawer
+  [open]="drawerOpen"
+  [title]="detail ? detail.displayRef : ''"
+  [subtitle]="detail ? detail.serviceName + ' · ' + detail.whenLabel : ''"
+  (close)="closeDrawer()"
+>
+  @if (detail) {
+    <div class="space-y-5">
+      <section>
+        <h3 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">Customer</h3>
+        <app-ops-customer-cell [name]="detail.customer.name" [handle]="detail.customer.handle" />
+      </section>
+      <section>
+        <h3 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">Details</h3>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Service</dt><dd class="font-semibold">{{ detail.serviceName }}</dd></div>
+          <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Provider</dt><dd class="font-medium">{{ detail.providerName }}</dd></div>
+          <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">When</dt><dd class="font-medium text-right">{{ detail.whenLabel }}<span class="block text-xs" style="color: var(--text-muted);">{{ detail.timezone }}</span></dd></div>
+          <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Duration</dt><dd>{{ detail.durationLabel }}</dd></div>
+          @if (detail.priceFormatted && detail.priceFormatted !== '—') {
+            <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Price</dt><dd class="font-semibold">{{ detail.priceFormatted }}</dd></div>
+          }
+          <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Status</dt><dd><app-ops-status-badge [label]="detail.statusLabel" [tone]="detail.statusTone" /></dd></div>
+          @if (detail.cancellationReason) {
+            <div class="flex justify-between gap-4"><dt style="color: var(--text-muted);">Reason</dt><dd class="text-right max-w-[60%]">{{ detail.cancellationReason }}</dd></div>
+          }
+        </dl>
+      </section>
+
+      @if (detail.payment) {
+        <section>
+          <h3 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">Payment</h3>
+          <div class="flex items-center justify-between text-sm rounded-xl border p-3" style="border-color: var(--card-border); background-color: var(--bg-primary);">
+            <span style="color: var(--text-secondary);">Deposit {{ detail.payment.amount }}</span>
+            <app-ops-status-badge [label]="detail.payment.paid ? 'PAID' : 'DUE'" [tone]="detail.payment.paid ? 'success' : 'warning'" />
+          </div>
+        </section>
+      }
+
+      @if (detail.reminders?.length) {
+        <section>
+          <h3 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">Reminders</h3>
+          <ul class="space-y-1.5 text-sm">
+            @for (r of detail.reminders; track r.offsetMin) {
+              <li class="flex justify-between gap-4" style="color: var(--text-secondary);">
+                <span>{{ r.offsetMin >= 60 ? (r.offsetMin / 60) + 'h' : r.offsetMin + 'm' }} before</span>
+                <span class="text-xs" style="color: var(--text-muted);">{{ r.sentAt ? 'Sent' : 'Pending' }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (detail.timeline?.length) {
+        <section>
+          <h3 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">Timeline</h3>
+          <ul class="space-y-3">
+            @for (ev of detail.timeline; track ev.event) {
+              <li class="text-sm">
+                <p class="font-medium" [class.opacity-50]="ev.pending">{{ ev.event }}</p>
+                <p class="text-xs" style="color: var(--text-muted);">{{ ev.atLabel }}</p>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+  }
+  @if (detail) {
+    <div drawerFooter class="flex flex-wrap gap-2 w-full justify-end">
+      @if (detail.sourceInteractionId) {
+        <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="viewChat()">View Chat</button>
+      }
+      @if (detail.actions.canReschedule) {
+        <button type="button" class="px-3 py-2 rounded-lg border text-sm font-bold border-sky-300 text-sky-600 dark:text-sky-400" [disabled]="actionLoading" (click)="openReschedule()">Reschedule</button>
+      }
+      @for (st of detail.actions.nextStatuses; track st) {
+        <button type="button"
+          class="px-3 py-2 rounded-lg text-sm font-bold disabled:opacity-50"
+          [ngClass]="(st === 'cancelled' || st === 'no_show') ? 'border border-red-300 text-red-600 dark:text-red-400' : 'bg-rep-lime text-rep-black'"
+          [disabled]="actionLoading"
+          (click)="openStatusAction(st)">{{ statusActionLabel(st) }}</button>
+      }
+    </div>
+  }
+</app-ops-detail-drawer>
+
+@if (actionModal === 'cancel') {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40" (click)="closeActionModal()">
+    <div class="w-full max-w-md rounded-2xl shadow-xl p-5 border" style="background-color: var(--card-bg); border-color: var(--card-border);" (click)="$event.stopPropagation()">
+      <h3 class="text-lg font-bold mb-1" style="color: var(--text-primary);">Cancel appointment</h3>
+      <p class="text-xs mb-4" style="color: var(--text-muted);">This frees the slot. Add a reason for your records.</p>
+      <textarea [(ngModel)]="reasonText" rows="3" placeholder="Reason (optional)" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);"></textarea>
+      <div class="flex justify-end gap-2 mt-5">
+        <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="closeActionModal()">Back</button>
+        <button type="button" class="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold disabled:opacity-50" [disabled]="actionLoading" (click)="submitCancel()">Cancel appointment</button>
+      </div>
+    </div>
+  </div>
+}

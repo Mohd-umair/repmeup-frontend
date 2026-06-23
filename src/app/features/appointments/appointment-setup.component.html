@@ -1,0 +1,164 @@
+<div class="flex-1 overflow-auto p-4 sm:p-6" style="background-color: var(--bg-primary);">
+  <div class="mb-5">
+    <h1 class="text-2xl font-bold flex items-center gap-2" style="color: var(--text-primary);">
+      <i class="fas fa-sliders-h text-rep-lime"></i> Appointment Setup
+    </h1>
+    <p class="text-sm mt-0.5" style="color: var(--text-secondary);">Define your services and providers, set working hours, and connect Google Calendar.</p>
+  </div>
+
+  <div class="flex gap-2 mb-5">
+    <button type="button" class="px-4 py-2 rounded-lg text-sm font-bold"
+      [ngClass]="tab === 'services' ? 'bg-rep-lime text-rep-black' : 'border'"
+      [style.border-color]="tab === 'services' ? 'transparent' : 'var(--card-border)'"
+      [style.color]="tab === 'services' ? '' : 'var(--text-primary)'"
+      (click)="tab = 'services'">Services</button>
+    <button type="button" class="px-4 py-2 rounded-lg text-sm font-bold"
+      [ngClass]="tab === 'providers' ? 'bg-rep-lime text-rep-black' : 'border'"
+      [style.border-color]="tab === 'providers' ? 'transparent' : 'var(--card-border)'"
+      [style.color]="tab === 'providers' ? '' : 'var(--text-primary)'"
+      (click)="tab = 'providers'">Providers</button>
+  </div>
+
+  @if (loading) {
+    <div class="p-10 text-center text-sm" style="color: var(--text-muted);"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</div>
+  }
+
+  <!-- ── Services ─────────────────────────────────────────────────────────── -->
+  @if (!loading && tab === 'services') {
+    <div class="flex justify-end mb-3">
+      <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" style="background:#D8FF00;color:#0B0B0B;" (click)="newService()"><i class="fas fa-plus"></i> Add Service</button>
+    </div>
+    @if (!services.length) {
+      <div class="p-10 text-center text-sm rounded-xl border" style="color: var(--text-muted); border-color: var(--card-border);">No services yet. Add your first one.</div>
+    } @else {
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        @for (s of services; track s._id) {
+          <div class="rounded-xl border p-4" style="border-color: var(--card-border); background-color: var(--surface-primary);" [class.opacity-60]="!s.isActive">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p class="font-bold truncate" style="color: var(--text-primary);">{{ s.name }}</p>
+                <p class="text-xs" style="color: var(--text-muted);">{{ s.durationMin }} min @if (s.price) { · {{ s.price }} {{ s.currency }} }</p>
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full mt-1.5" [style.background]="s.isActive ? '#22c55e' : '#9ca3af'"></span>
+            </div>
+            @if (s.category) { <p class="text-xs mt-1" style="color: var(--text-secondary);">{{ s.category }}</p> }
+            <div class="flex gap-2 mt-3">
+              <button type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg border" style="border-color: var(--card-border); color: var(--text-primary);" (click)="editService(s)">Edit</button>
+              @if (s.isActive) { <button type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-red-300 text-red-600 dark:text-red-400" (click)="deleteService(s)">Remove</button> }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- ── Providers ────────────────────────────────────────────────────────── -->
+  @if (!loading && tab === 'providers') {
+    <div class="flex justify-end mb-3">
+      <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm" style="background:#D8FF00;color:#0B0B0B;" (click)="newProvider()"><i class="fas fa-plus"></i> Add Provider</button>
+    </div>
+    @if (!providers.length) {
+      <div class="p-10 text-center text-sm rounded-xl border" style="color: var(--text-muted); border-color: var(--card-border);">No providers yet. Add your team members.</div>
+    } @else {
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        @for (p of providers; track p._id) {
+          <div class="rounded-xl border p-4" style="border-color: var(--card-border); background-color: var(--surface-primary);" [class.opacity-60]="!p.isActive">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p class="font-bold truncate" style="color: var(--text-primary);">{{ p.name }}</p>
+                @if (p.title) { <p class="text-xs" style="color: var(--text-muted);">{{ p.title }}</p> }
+              </div>
+              @if (p.google?.connected) { <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">G-Cal</span> }
+            </div>
+            <p class="text-[11px] mt-1" style="color: var(--text-secondary);">{{ (p.services?.length || 0) }} service(s) · {{ p.timezone }}</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+              <button type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg border" style="border-color: var(--card-border); color: var(--text-primary);" (click)="editProvider(p)">Edit</button>
+              @if (p.google?.connected) {
+                <button type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg border" style="border-color: var(--card-border); color: var(--text-primary);" (click)="disconnectGoogle(p)">Disconnect G-Cal</button>
+              } @else {
+                <button type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-sky-300 text-sky-600 dark:text-sky-400" (click)="connectGoogle(p)"><i class="fab fa-google mr-1"></i>Connect Calendar</button>
+              }
+              @if (p.isActive) { <button type="button" class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-red-300 text-red-600 dark:text-red-400" (click)="deleteProvider(p)">Remove</button> }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>
+
+<!-- ── Service modal ───────────────────────────────────────────────────────── -->
+@if (serviceModal) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40" (click)="serviceModal = false">
+    <div class="w-full max-w-md rounded-2xl shadow-xl border max-h-[90vh] overflow-auto" style="background-color: var(--card-bg); border-color: var(--card-border);" (click)="$event.stopPropagation()">
+      <div class="px-5 py-4 border-b" style="border-color: var(--card-border);"><h3 class="text-lg font-bold" style="color: var(--text-primary);">{{ editingServiceId ? 'Edit service' : 'New service' }}</h3></div>
+      <div class="p-5 space-y-3">
+        <input [(ngModel)]="serviceForm.name" placeholder="Service name (e.g. Dental Checkup)" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+        <textarea [(ngModel)]="serviceForm.description" rows="2" placeholder="Description (optional)" class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);"></textarea>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="text-xs" style="color: var(--text-muted);">Duration (min)<input type="number" min="5" [(ngModel)]="serviceForm.durationMin" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" /></label>
+          <label class="text-xs" style="color: var(--text-muted);">Category<input [(ngModel)]="serviceForm.category" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" /></label>
+          <label class="text-xs" style="color: var(--text-muted);">Price<input type="number" min="0" [(ngModel)]="serviceForm.price" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" /></label>
+          <label class="text-xs" style="color: var(--text-muted);">Currency<input [(ngModel)]="serviceForm.currency" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" /></label>
+          <label class="text-xs" style="color: var(--text-muted);">Buffer before (min)<input type="number" min="0" [(ngModel)]="serviceForm.bufferBeforeMin" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" /></label>
+          <label class="text-xs" style="color: var(--text-muted);">Buffer after (min)<input type="number" min="0" [(ngModel)]="serviceForm.bufferAfterMin" class="mt-1 w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" /></label>
+        </div>
+      </div>
+      <div class="px-5 py-4 border-t flex justify-end gap-2" style="border-color: var(--card-border);">
+        <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="serviceModal = false">Cancel</button>
+        <button type="button" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold disabled:opacity-50" [disabled]="saving" (click)="saveService()">Save</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Provider modal ──────────────────────────────────────────────────────── -->
+@if (providerModal) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40" (click)="providerModal = false">
+    <div class="w-full max-w-lg rounded-2xl shadow-xl border max-h-[90vh] overflow-auto" style="background-color: var(--card-bg); border-color: var(--card-border);" (click)="$event.stopPropagation()">
+      <div class="px-5 py-4 border-b" style="border-color: var(--card-border);"><h3 class="text-lg font-bold" style="color: var(--text-primary);">{{ editingProviderId ? 'Edit provider' : 'New provider' }}</h3></div>
+      <div class="p-5 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <input [(ngModel)]="providerForm.name" placeholder="Name" class="col-span-2 rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="providerForm.title" placeholder="Title (e.g. Therapist)" class="rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="providerForm.timezone" placeholder="Timezone (IANA)" class="rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="providerForm.email" placeholder="Email" class="rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+          <input [(ngModel)]="providerForm.phone" placeholder="Phone" class="rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+        </div>
+
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Services</p>
+          <div class="flex flex-wrap gap-2">
+            @for (s of services; track s._id) {
+              <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold border"
+                [ngClass]="(providerForm.services || []).includes(s._id) ? 'bg-rep-lime text-rep-black border-transparent' : ''"
+                [style.border-color]="(providerForm.services || []).includes(s._id) ? 'transparent' : 'var(--card-border)'"
+                [style.color]="(providerForm.services || []).includes(s._id) ? '' : 'var(--text-primary)'"
+                (click)="toggleProviderService(s._id)">{{ s.name }}</button>
+            }
+          </div>
+        </div>
+
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Weekly availability</p>
+          <div class="space-y-1.5">
+            @for (d of weekdays; track d) {
+              <div class="flex items-center gap-2">
+                <label class="flex items-center gap-1.5 w-28 text-sm capitalize" style="color: var(--text-primary);">
+                  <input type="checkbox" [(ngModel)]="providerForm.weeklyAvailability[d].enabled" /> {{ d }}
+                </label>
+                <input type="time" [(ngModel)]="providerForm.weeklyAvailability[d].start" [disabled]="!providerForm.weeklyAvailability[d].enabled" class="rounded-lg border px-2 py-1 text-xs" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+                <span class="text-xs" style="color: var(--text-muted);">to</span>
+                <input type="time" [(ngModel)]="providerForm.weeklyAvailability[d].end" [disabled]="!providerForm.weeklyAvailability[d].enabled" class="rounded-lg border px-2 py-1 text-xs" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="px-5 py-4 border-t flex justify-end gap-2" style="border-color: var(--card-border);">
+        <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="providerModal = false">Cancel</button>
+        <button type="button" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold disabled:opacity-50" [disabled]="saving" (click)="saveProvider()">Save</button>
+      </div>
+    </div>
+  </div>
+}

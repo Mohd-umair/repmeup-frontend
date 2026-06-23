@@ -19,6 +19,7 @@ import { WhatsAppTemplateService } from '../../../../core/services/whatsapp-temp
 import { PlatformConnectionService, PlatformConnection } from '../../../../core/services/platform-connection.service';
 import { IntentBucketService } from '../../../../core/services/intent-bucket.service';
 import { CatalogService } from '../../../../core/services/catalog.service';
+import { AppointmentService } from '../../../../core/services/appointment.service';
 import { WhatsAppTemplate } from '../../../../core/models/whatsapp-template.model';
 import { MediaSelectorModalComponent } from '../../../../shared/components/media-selector-modal/media-selector-modal.component';
 import { Media } from '../../../../core/models/media.model';
@@ -86,6 +87,8 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   // Pickers
   intentBuckets: Array<{ _id: string; name: string }> = [];
   products: Array<{ _id: string; name: string }> = [];
+  services: Array<{ _id: string; name: string }> = [];
+  providers: Array<{ _id: string; name: string }> = [];
   readonly edgeBranchPresets = ['yes', 'no', 'reply', 'no_reply'];
 
   @ViewChild('canvasWrap') canvasWrap?: ElementRef<HTMLElement>;
@@ -146,6 +149,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     private platformConnectionService: PlatformConnectionService,
     private intentBucketService: IntentBucketService,
     private catalogService: CatalogService,
+    private appointmentService: AppointmentService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -197,6 +201,20 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: () => { this.products = []; }
+      });
+
+    // Appointment services + providers (for offer_slots / book_appointment pickers).
+    this.appointmentService.listServices()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (list) => { this.services = (list || []).map((s) => ({ _id: s._id, name: s.name })); this.cdr.markForCheck(); },
+        error: () => { this.services = []; }
+      });
+    this.appointmentService.listProviders()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (list) => { this.providers = (list || []).map((p) => ({ _id: p._id, name: p.name })); this.cdr.markForCheck(); },
+        error: () => { this.providers = []; }
       });
   }
 

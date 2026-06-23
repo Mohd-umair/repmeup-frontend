@@ -1,0 +1,90 @@
+<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40" (click)="close.emit()">
+  <div class="w-full max-w-lg rounded-2xl shadow-xl border max-h-[90vh] overflow-auto"
+       style="background-color: var(--card-bg); border-color: var(--card-border);" (click)="$event.stopPropagation()">
+
+    <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color: var(--card-border);">
+      <h3 class="text-lg font-bold" style="color: var(--text-primary);">
+        <i class="fas fa-calendar-plus mr-2 text-rep-lime"></i>{{ mode === 'reschedule' ? 'Reschedule appointment' : 'New appointment' }}
+      </h3>
+      <button type="button" class="p-1.5 rounded-lg" style="color: var(--text-muted);" (click)="close.emit()"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="p-5 space-y-4">
+      @if (loadingCatalog && !services.length) {
+        <p class="text-sm text-center py-4" style="color: var(--text-muted);"><i class="fas fa-spinner fa-spin mr-2"></i>Loading…</p>
+      } @else if (!services.length) {
+        <p class="text-sm text-center py-4" style="color: var(--text-muted);">No services yet. Add a service first under Appointments → Setup.</p>
+      } @else {
+        <!-- Service -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Service</label>
+          <select [(ngModel)]="serviceId" (ngModelChange)="onServiceChange()" [disabled]="mode === 'reschedule'"
+                  class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);">
+            <option value="">Select a service…</option>
+            @for (s of services; track s._id) { <option [value]="s._id">{{ s.name }} · {{ s.durationMin }} min</option> }
+          </select>
+        </div>
+
+        <!-- Provider -->
+        @if (serviceId) {
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Provider</label>
+            <select [(ngModel)]="providerId" (ngModelChange)="loadSlots()"
+                    class="w-full rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);">
+              <option value="">Any available</option>
+              @for (p of providersForService; track p._id) { <option [value]="p._id">{{ p.name }}</option> }
+            </select>
+          </div>
+
+          <!-- Customer (create only) -->
+          @if (mode === 'create') {
+            <div class="grid grid-cols-2 gap-3">
+              <input [(ngModel)]="customerName" placeholder="Customer name" class="rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+              <input [(ngModel)]="customerPhone" placeholder="Phone" class="rounded-lg border px-3 py-2 text-sm" style="border-color: var(--card-border); background-color: var(--bg-primary); color: var(--text-primary);" />
+            </div>
+          }
+
+          <!-- Slots -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Pick a time</label>
+            @if (loadingSlots) {
+              <p class="text-sm py-3 text-center" style="color: var(--text-muted);"><i class="fas fa-spinner fa-spin mr-2"></i>Finding open slots…</p>
+            } @else if (!dateKeys.length) {
+              <p class="text-sm py-3 text-center" style="color: var(--text-muted);">No open slots in the next 14 days.</p>
+            } @else {
+              <div class="space-y-3 max-h-64 overflow-auto pr-1">
+                @for (day of dateKeys; track day) {
+                  <div>
+                    <p class="text-xs font-semibold mb-1.5" style="color: var(--text-secondary);">{{ dateLabel(day) }}</p>
+                    <div class="flex flex-wrap gap-2">
+                      @for (slot of byDate[day]; track slot.startAt + slot.providerId) {
+                        <button type="button"
+                          class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors"
+                          [ngClass]="selected === slot ? 'bg-rep-lime text-rep-black border-transparent' : ''"
+                          [style.border-color]="selected === slot ? 'transparent' : 'var(--card-border)'"
+                          [style.color]="selected === slot ? '' : 'var(--text-primary)'"
+                          (click)="pick(slot)"
+                          [title]="slot.providerName">
+                          {{ slot.timeLabel }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <div class="px-5 py-4 border-t flex justify-end gap-2" style="border-color: var(--card-border);">
+      <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="close.emit()">Cancel</button>
+      <button type="button" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black text-sm font-bold disabled:opacity-50"
+              [disabled]="!selected || booking" (click)="confirm()">
+        @if (booking) { <i class="fas fa-spinner fa-spin mr-1"></i> }
+        {{ mode === 'reschedule' ? 'Reschedule' : 'Book appointment' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -545,6 +545,24 @@
               <p *ngIf="!products.length" class="fb-field__hint">No products yet — add them under Catalog.</p>
             </ng-container>
 
+            <!-- Appointment service picker -->
+            <ng-container *ngIf="fd.type === 'service'">
+              <select [ngModel]="node.config[fd.key]" (ngModelChange)="setConfigValue(node, fd.key, $event)">
+                <option value="">Select a service…</option>
+                <option *ngFor="let s of services; trackBy: trackByIndex" [ngValue]="s._id">{{ s.name }}</option>
+              </select>
+              <p *ngIf="!services.length" class="fb-field__hint">No services yet — add them under Appointments → Setup.</p>
+            </ng-container>
+
+            <!-- Appointment provider picker -->
+            <ng-container *ngIf="fd.type === 'provider'">
+              <select [ngModel]="node.config[fd.key]" (ngModelChange)="setConfigValue(node, fd.key, $event)">
+                <option value="">Any available</option>
+                <option *ngFor="let p of providers; trackBy: trackByIndex" [ngValue]="p._id">{{ p.name }}</option>
+              </select>
+              <p *ngIf="!providers.length" class="fb-field__hint">No providers yet — add them under Appointments → Setup.</p>
+            </ng-container>
+
             <!-- WhatsApp template picker -->
             <ng-container *ngIf="fd.isWaTemplatePicker">
               <div *ngIf="showWaConnectionSelector" class="fb-field fb-field--nested">

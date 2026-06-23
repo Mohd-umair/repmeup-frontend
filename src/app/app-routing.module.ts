@@ -141,6 +141,8 @@ const routes: Routes = [
       { path: 'inbox/order-management', component: InboxOrderManagementComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
       { path: 'inbox/compliant-management', component: InboxComplaintManagementComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
       { path: 'inbox/review-managment', component: InboxReviewManagementComponent, canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
+      { path: 'appointments', loadComponent: () => import('./features/appointments/appointment-management.component').then((m) => m.AppointmentManagementComponent), canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
+      { path: 'appointments/setup', loadComponent: () => import('./features/appointments/appointment-setup.component').then((m) => m.AppointmentSetupComponent), canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
       { path: 'publish', component: PublishComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.create'] } },
       { path: 'publish/calendar', component: CalendarComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
       { path: 'publish/published', component: PublishPublishedRedirectComponent, canActivate: [PermissionGuard], data: { permissions: ['posts.read'] } },
