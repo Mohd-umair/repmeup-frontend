@@ -14,6 +14,7 @@ import {
   AutomationModeByChannel
 } from '../../../../core/services/organization.service';
 import { IAutomationFlow } from '../../../../core/models/flow-builder.model';
+import { IFlowEnrollment } from '../../../../core/services/flow-builder.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
 
 interface IChannelMeta {
@@ -39,7 +40,7 @@ interface IModeOption {
 export class FlowListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  activeTab: 'my-flows' | 'blueprints' = 'my-flows';
+  activeTab: 'my-flows' | 'blueprints' | 'runs' = 'my-flows';
   flows: IAutomationFlow[] = [];
   blueprints: IAutomationFlow[] = [];
   loading = true;
@@ -51,6 +52,19 @@ export class FlowListComponent implements OnInit, OnDestroy {
   totalPages = 1;
   total = 0;
   pageSize = 12;
+
+  // ── Runs tab ───────────────────────────────────────────────────────────────
+  runsFlowId = '';
+  runsFlowName = '';
+  enrollments: IFlowEnrollment[] = [];
+  runsLoading = false;
+  runsPage = 1;
+  runsTotalPages = 1;
+  runsTotal = 0;
+  runsPageSize = 20;
+  runsStatusFilter = '';
+  selectedEnrollment: IFlowEnrollment | null = null;
+  enrollmentDetailLoading = false;
 
   // ── Automation mode (per channel) ──────────────────────────────────────────
   private orgId = '';
@@ -100,8 +114,61 @@ export class FlowListComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  setTab(tab: 'my-flows' | 'blueprints'): void {
+  setTab(tab: 'my-flows' | 'blueprints' | 'runs'): void {
     this.activeTab = tab;
+  }
+
+  openRunsForFlow(flow: IAutomationFlow): void {
+    this.runsFlowId = flow._id!;
+    this.runsFlowName = flow.name;
+    this.runsPage = 1;
+    this.runsStatusFilter = '';
+    this.selectedEnrollment = null;
+    this.activeTab = 'runs';
+    this.loadEnrollments();
+  }
+
+  loadEnrollments(): void {
+    if (!this.runsFlowId) return;
+    this.runsLoading = true;
+    this.flowService.listEnrollments(this.runsFlowId, {
+      page: this.runsPage,
+      limit: this.runsPageSize,
+      status: this.runsStatusFilter || undefined
+    })
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.runsLoading = false; }))
+      .subscribe({
+        next: (r) => {
+          this.enrollments = r.data?.enrollments ?? [];
+          const pagination = r.data?.pagination;
+          this.runsTotal = pagination?.total ?? 0;
+          this.runsTotalPages = pagination?.pages ?? 1;
+          if (r.data?.flow?.name) this.runsFlowName = r.data.flow.name;
+        },
+        error: () => this.notify.error('Load failed', 'Could not load run history.')
+      });
+  }
+
+  viewEnrollmentDetail(enr: IFlowEnrollment): void {
+    if (!this.runsFlowId || !enr._id) return;
+    this.enrollmentDetailLoading = true;
+    this.flowService.getEnrollment(this.runsFlowId, enr._id)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.enrollmentDetailLoading = false; }))
+      .subscribe({
+        next: (r) => { this.selectedEnrollment = r.data ?? null; },
+        error: () => this.notify.error('Load failed', 'Could not load run detail.')
+      });
+  }
+
+  onRunsPageChange(page: number): void {
+    this.runsPage = page;
+    this.loadEnrollments();
+  }
+
+  filterRunsByStatus(status: string): void {
+    this.runsStatusFilter = status;
+    this.runsPage = 1;
+    this.loadEnrollments();
   }
 
   loadFlows(): void {
@@ -223,6 +290,20 @@ export class FlowListComponent implements OnInit, OnDestroy {
     this.router.navigate(['/app/automation/flows', flow._id, 'edit']);
   }
 
+  duplicateFlow(flow: IAutomationFlow): void {
+    if (!flow._id) return;
+    this.flowService.duplicateFlow(flow._id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (r) => {
+          this.notify.success('Duplicated', `"${flow.name}" was copied.`);
+          if (r.data?._id) this.router.navigate(['/app/automation/flows', r.data._id, 'edit']);
+          else this.loadFlows();
+        },
+        error: (err) => this.notify.error('Duplicate failed', err.error?.error || 'Could not duplicate flow.')
+      });
+  }
+
   toggleStatus(flow: IAutomationFlow): void {
     if (!flow._id) return;
     const isPausing = flow.status === 'active';
@@ -285,11 +366,25 @@ export class FlowListComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Returns true when ALL of the flow's configured channels are set to
+   * "Reppy Only" mode — meaning the flow will never actually fire because
+   * the AI chatbot mode overrides it on every channel.
+   */
+  isAllChannelsReppyOnly(flow: IAutomationFlow): boolean {
+    const channels = (flow.channels ?? []) as AutomationChannel[];
+    if (!channels.length) return false;
+    return channels.every(
+      (ch) => (this.automationModeByChannel[ch] ?? 'hybrid') === 'ai_only'
+    );
+  }
+
   statusClass(status: string | undefined): string {
     switch (status) {
       case 'active':   return 'status-badge--active';
       case 'paused':   return 'status-badge--paused';
       case 'archived': return 'status-badge--archived';
+      case 'error':    return 'status-badge--error';
       default:         return 'status-badge--draft';
     }
   }
@@ -299,6 +394,7 @@ export class FlowListComponent implements OnInit, OnDestroy {
       case 'active':   return 'fa-check-circle';
       case 'paused':   return 'fa-pause-circle';
       case 'archived': return 'fa-archive';
+      case 'error':    return 'fa-exclamation-triangle';
       default:         return 'fa-pencil-alt';
     }
   }

@@ -15,6 +15,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, takeUntil, finalize } from 'rxjs/operators';
 import { FlowBuilderService } from '../../../../core/services/flow-builder.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { SweetAlertService } from '../../../../core/services/sweet-alert.service';
 import { WhatsAppTemplateService } from '../../../../core/services/whatsapp-template.service';
 import { PlatformConnectionService, PlatformConnection } from '../../../../core/services/platform-connection.service';
 import { IntentBucketService } from '../../../../core/services/intent-bucket.service';
@@ -52,6 +53,38 @@ const CATEGORY_LABELS: Record<NodeCategory, string> = {
   control: 'Control'
 };
 
+/**
+ * Feature-based palette groups — finer than the raw category, so related nodes
+ * (e.g. all Appointment nodes) sit together. Each node maps to exactly one group
+ * via `groupOf()`; the order below is the display order.
+ */
+interface IPaletteGroup { id: string; label: string; icon: string; }
+const PALETTE_GROUPS: IPaletteGroup[] = [
+  { id: 'trigger',     label: 'Triggers',          icon: 'fas fa-bolt' },
+  { id: 'messaging',   label: 'Messaging',         icon: 'fas fa-comment-dots' },
+  { id: 'appointment', label: 'Appointments',      icon: 'fas fa-calendar-check' },
+  { id: 'commerce',    label: 'Commerce & Orders', icon: 'fas fa-bag-shopping' },
+  { id: 'instagram',   label: 'Instagram',         icon: 'fab fa-instagram' },
+  { id: 'ai',          label: 'AI',                icon: 'fas fa-robot' },
+  { id: 'utility',     label: 'Data & Actions',    icon: 'fas fa-sliders' },
+  { id: 'logic',       label: 'Logic',             icon: 'fas fa-code-branch' },
+  { id: 'wait',        label: 'Wait',              icon: 'fas fa-hourglass-half' },
+  { id: 'control',     label: 'Control',           icon: 'fas fa-flag-checkered' },
+  { id: 'other',       label: 'Other',             icon: 'fas fa-shapes' }
+];
+const APPOINTMENT_NODE_TYPES = new Set([
+  'action.offer_services', 'action.offer_slots', 'action.book_appointment',
+  'action.reschedule_appointment', 'action.cancel_appointment', 'trigger.appointment_event'
+]);
+const COMMERCE_NODE_TYPES = new Set([
+  'action.send_product', 'action.send_product_list', 'action.send_catalog',
+  'action.send_catalog_product', 'action.send_order_details', 'action.create_order',
+  'action.save_shipping_address', 'action.save_payment_method', 'action.load_saved_address'
+]);
+const INSTAGRAM_NODE_TYPES = new Set([
+  'action.reply_public_comment', 'action.send_post_products', 'action.link_comment_thread', 'action.set_stage'
+]);
+
 @Component({
   selector: 'app-flow-builder',
   standalone: true,
@@ -81,7 +114,13 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   showTest = false;
   validationErrors: IFlowValidationResult['errors'] = [];
   validating = false;
-  testResult: { startNodeId: string; stepPreview: Array<{ nodeId: string; type: string; label: string }> } | null = null;
+  testResult: {
+    startNodeId: string;
+    simulationStatus: string;
+    lastError: string;
+    variables: Record<string, unknown>;
+    stepPreview: Array<{ nodeId: string; type: string; label: string; event: string }>;
+  } | null = null;
   testing = false;
 
   // Pickers
@@ -125,6 +164,14 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   /** Cached set of node ids that have validation errors. Rebuilt only when validationErrors changes. */
   private _invalidNodeIds = new Set<string>();
 
+  /** Undo stack for destructive canvas operations (node or edge delete). Max 10 entries. */
+  readonly _undoStack: Array<{
+    type: 'node_delete' | 'edge_delete';
+    nodes: IFlowNode[];
+    edges: IFlowEdge[];
+  }> = [];
+  private readonly _maxUndo = 10;
+
   /** rAF handle — throttles pointermove to one CD cycle per animation frame. */
   private _rafId: number | null = null;
   private _pendingPointerEvent: PointerEvent | null = null;
@@ -132,7 +179,8 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   readonly categoryOrder = CATEGORY_ORDER;
   readonly categoryLabels = CATEGORY_LABELS;
   channelOptions: FlowChannel[] = ['whatsapp', 'instagram', 'facebook'];
-  collapsedCats = new Set(['action', 'condition', 'wait', 'control']);
+  // Palette starts with the feature groups open; generic groups collapsed.
+  collapsedCats = new Set(['utility', 'logic', 'wait', 'control', 'other']);
 
   waConnections: PlatformConnection[] = [];
   waConnectionId = '';
@@ -140,11 +188,18 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   waTemplatesLoading = false;
   waTemplatesError = '';
 
+  /** All active connections keyed by platform — used for disconnected-channel banner. */
+  allConnections: PlatformConnection[] = [];
+  /** Channels used by current flow that have NO active connection. */
+  disconnectedChannels: string[] = [];
+  channelBannerDismissed = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private flowService: FlowBuilderService,
     private notify: NotificationService,
+    private swal: SweetAlertService,
     private whatsAppTemplateService: WhatsAppTemplateService,
     private platformConnectionService: PlatformConnectionService,
     private intentBucketService: IntentBucketService,
@@ -246,6 +301,46 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     return this.filteredCatalog.filter((c) => c.category === cat);
   }
 
+  /** Feature group a node belongs to (used for the grouped palette). */
+  groupOf(item: IFlowNodeCatalogItem): string {
+    if (item.category === 'trigger') return 'trigger';
+    const t = item.type;
+    if (APPOINTMENT_NODE_TYPES.has(t)) return 'appointment';
+    if (COMMERCE_NODE_TYPES.has(t)) return 'commerce';
+    if (INSTAGRAM_NODE_TYPES.has(t)) return 'instagram';
+    if (t.startsWith('action.ai_')) return 'ai';
+    if (item.category === 'action') return t.includes('send_') ? 'messaging' : 'utility';
+    if (item.category === 'condition') return 'logic';
+    if (item.category === 'wait') return 'wait';
+    if (item.category === 'control') return 'control';
+    return 'other';
+  }
+
+  catalogByGroup(groupId: string): IFlowNodeCatalogItem[] {
+    return this.filteredCatalog.filter((c) => this.groupOf(c) === groupId);
+  }
+
+  /** Maps palette feature groups to category colour tokens (--cat / --cat-soft). */
+  groupCatClass(groupId: string): string {
+    switch (groupId) {
+      case 'trigger':
+        return 'fb-cat-trigger';
+      case 'logic':
+        return 'fb-cat-condition';
+      case 'wait':
+        return 'fb-cat-wait';
+      case 'control':
+        return 'fb-cat-control';
+      default:
+        return 'fb-cat-action';
+    }
+  }
+
+  /** Palette groups that actually have visible nodes (in display order). */
+  get paletteGroups(): IPaletteGroup[] {
+    return PALETTE_GROUPS.filter((g) => this.catalogByGroup(g.id).length > 0);
+  }
+
   loadFlow(): void {
     this.loading = true;
     this.flowService.getFlow(this.flowId)
@@ -256,6 +351,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
           if (this.flow && !this.flow.nodes.length) {
             this.addNodeFromCatalog(this.catalog.find((c) => c.category === 'trigger') || this.catalog[0]);
           }
+          this.refreshDisconnectedChannels();
           this.cdr.markForCheck();
           requestAnimationFrame(() => this.fitView());
         },
@@ -279,6 +375,20 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     this.flowService.updateFlow(this.flow._id, this.flow)
       .pipe(takeUntil(this.destroy$), finalize(() => { this.saving = false; this.cdr.markForCheck(); }))
       .subscribe({
+        next: () => {
+          // Silently re-validate in background so the badge stays accurate.
+          if (this.flow?._id && this.flow.status !== 'active') {
+            this.flowService.validateFlow(this.flow._id)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                next: (r) => {
+                  this.validationErrors = r.data?.errors ?? [];
+                  this.refreshInvalidNodeIds();
+                  this.cdr.markForCheck();
+                }
+              });
+          }
+        },
         error: (err) => this.notify.error('Save failed', err.error?.error || 'Could not save flow.')
       });
   }
@@ -287,9 +397,33 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     this.persist();
   }
 
-  publish(): void {
+  async publish(): Promise<void> {
     if (!this.flow?._id) return;
+
+    const trigger = this.flow.nodes.find((n) => n.type.startsWith('trigger.'));
+    const triggerLabel = trigger
+      ? (this.catalog.find((c) => c.type === trigger.type)?.label ?? trigger.type)
+      : 'No trigger';
+    const channelNames = (this.flow.channels ?? []).map((c) => this.channelDisplayLabel(c)).join(', ') || 'None';
+    const disconnectedWarn = this.disconnectedChannels.length > 0
+      ? `<p style="color:#f59e0b;margin-top:0.5rem"><i class="fas fa-exclamation-triangle"></i> <strong>${this.disconnectedChannels.map(c => this.channelDisplayLabel(c)).join(', ')}</strong> not connected — messages on these channels will fail.</p>`
+      : '';
+
+    const html = `
+      <div style="text-align:left;font-size:0.875rem;line-height:1.6">
+        <p><strong>Flow:</strong> ${this.flow.name}</p>
+        <p><strong>Trigger:</strong> ${triggerLabel}</p>
+        <p><strong>Channels:</strong> ${channelNames}</p>
+        <p><strong>Nodes:</strong> ${this.flow.nodes.length}</p>
+        ${disconnectedWarn}
+        <p style="margin-top:0.75rem;color:#9ca3af">The flow will go live immediately and process all matching incoming messages.</p>
+      </div>`;
+
+    const result = await this.swal.confirmHtml('Publish this flow?', html, 'Go Live', 'Cancel');
+    if (!result.isConfirmed) return;
+
     this.publishing = true;
+    this.cdr.markForCheck();
     this.flowService.publishFlow(this.flow._id)
       .pipe(takeUntil(this.destroy$), finalize(() => { this.publishing = false; this.cdr.markForCheck(); }))
       .subscribe({
@@ -385,7 +519,13 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
                 this.validationErrors = r.data?.validation?.errors ?? [];
                 this.refreshInvalidNodeIds();
                 this.testResult = r.data
-                  ? { startNodeId: r.data.startNodeId, stepPreview: (r.data.stepPreview as any) || [] }
+                  ? {
+                      startNodeId: r.data.startNodeId,
+                      simulationStatus: (r.data as any).simulationStatus || '',
+                      lastError: (r.data as any).lastError || '',
+                      variables: (r.data as any).variables || {},
+                      stepPreview: (r.data.stepPreview as any) || []
+                    }
                   : null;
                 this.cdr.markForCheck();
               },
@@ -669,20 +809,37 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.waConnections = (res.data || []).filter(
-            (c) => c.platform === 'whatsapp' && c.status === 'connected' && c.isActive
-          );
+          this.allConnections = (res.data || []).filter((c) => c.status === 'connected' && c.isActive);
+          this.waConnections = this.allConnections.filter((c) => c.platform === 'whatsapp');
           if (!this.waConnectionId && this.waConnections.length) {
             this.waConnectionId = this.waConnections[0]._id;
             this.loadWaTemplates();
           }
+          this.refreshDisconnectedChannels();
           this.cdr.markForCheck();
         },
         error: () => {
           this.waConnections = [];
+          this.allConnections = [];
           this.cdr.markForCheck();
         }
       });
+  }
+
+  /** Recompute which of the flow's channels have no active platform connection. */
+  private refreshDisconnectedChannels(): void {
+    const channels = this.flow?.channels ?? [];
+    const connectedPlatforms = new Set(this.allConnections.map((c) => c.platform));
+    this.disconnectedChannels = channels.filter((ch) => !connectedPlatforms.has(ch));
+  }
+
+  disconnectedChannelNames(): string {
+    return this.disconnectedChannels.map((ch) => this.channelDisplayLabel(ch)).join(' & ');
+  }
+
+  /** Returns the human-readable label for a node type from the catalog. */
+  catalogLabelByType(nodeType: string): string {
+    return this.catalog.find((c) => c.type === nodeType)?.label || nodeType;
   }
 
   onWaConnectionChange(connectionId: string): void {
@@ -825,7 +982,10 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   private static readonly NON_STRING_FIELD_TYPES = new Set([
     'string[]', 'select', 'number', 'textarea', 'json', 'node', 'bucket',
     'product', 'template', 'reply_buttons', 'list_sections', 'product_sections',
-    'media_url'
+    'media_url',
+    // Appointment / entity pickers — each has a dedicated <select> in the template;
+    // without these the raw MongoDB ID renders as a plain string input below the picker.
+    'service', 'provider', 'wa_template'
   ]);
 
   /** True when the field should fall back to a plain text input. */
@@ -841,6 +1001,34 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   catalogItemFor(node: IFlowNode | null): IFlowNodeCatalogItem | undefined {
     if (!node) return undefined;
     return this.catalog.find((c) => c.type === node.type);
+  }
+
+  /** Resolve a node ID to its human-readable label for display in the edge inspector. */
+  nodeLabelById(nodeId: string): string {
+    const node = this.flow?.nodes?.find((n: IFlowNode) => n.id === nodeId);
+    return node?.label || nodeId;
+  }
+
+  private static readonly CHANNEL_LABELS: Record<string, string> = {
+    whatsapp: 'WhatsApp',
+    instagram: 'Instagram',
+    facebook: 'Facebook'
+  };
+
+  private static readonly CHANNEL_ICONS: Record<string, string> = {
+    whatsapp: 'fab fa-whatsapp',
+    instagram: 'fab fa-instagram',
+    facebook: 'fab fa-facebook-f'
+  };
+
+  /** Proper brand-capitalised display name for a channel enum value. */
+  channelDisplayLabel(ch: string): string {
+    return FlowBuilderComponent.CHANNEL_LABELS[ch] ?? ch.charAt(0).toUpperCase() + ch.slice(1);
+  }
+
+  /** Font-Awesome icon class for a channel. */
+  channelIcon(ch: string): string {
+    return FlowBuilderComponent.CHANNEL_ICONS[ch] ?? 'fas fa-comment';
   }
 
   private ensureNodeConfig(node: IFlowNode | null): void {
@@ -921,11 +1109,44 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   deleteSelectedNode(): void {
     if (!this.flow || !this.selectedNodeId) return;
     const id = this.selectedNodeId;
-    this.flow.nodes = this.flow.nodes.filter((n) => n.id !== id);
-    this.flow.edges = this.flow.edges.filter((e) => e.source !== id && e.target !== id);
-    this.selectedNodeId = null;
-    this.selectedNodeFieldDefs = [];
+    const node = this.flow.nodes.find((n: IFlowNode) => n.id === id);
+    const connectedEdges = this.flow.edges.filter((e: IFlowEdge) => e.source === id || e.target === id).length;
+    const edgeNote = connectedEdges > 0
+      ? ` This will also remove ${connectedEdges} connected edge${connectedEdges > 1 ? 's' : ''}.`
+      : '';
+    this.swal.confirmDelete(
+      `Delete "${node?.label || 'node'}"?`,
+      `Press Ctrl+Z to undo.${edgeNote}`
+    ).then((result) => {
+      if (!result.isConfirmed || !this.flow) return;
+      const removedEdges = this.flow.edges.filter((e: IFlowEdge) => e.source === id || e.target === id);
+      this._pushUndo({ type: 'node_delete', nodes: [node!], edges: removedEdges });
+      this.flow.nodes = this.flow.nodes.filter((n: IFlowNode) => n.id !== id);
+      this.flow.edges = this.flow.edges.filter((e: IFlowEdge) => e.source !== id && e.target !== id);
+      this.selectedNodeId = null;
+      this.selectedNodeFieldDefs = [];
+      this.queueSave();
+      this.cdr.markForCheck();
+    });
+  }
+
+  // ── Undo stack ─────────────────────────────────────────────────────────────
+  private _pushUndo(entry: { type: 'node_delete' | 'edge_delete'; nodes: IFlowNode[]; edges: IFlowEdge[] }): void {
+    this._undoStack.push(entry);
+    if (this._undoStack.length > this._maxUndo) this._undoStack.shift();
+  }
+
+  undoLastDelete(): void {
+    const entry = this._undoStack.pop();
+    if (!entry || !this.flow) return;
+    entry.nodes.forEach((n) => {
+      if (!this.flow!.nodes.some((x) => x.id === n.id)) this.flow!.nodes.push(n);
+    });
+    entry.edges.forEach((e) => {
+      if (!this.flow!.edges.some((x) => x.id === e.id)) this.flow!.edges.push(e);
+    });
     this.queueSave();
+    this.notify.success('Undone', `Restored ${entry.nodes.length > 0 ? 'node and its edges' : 'edge'}.`);
     this.cdr.markForCheck();
   }
 
@@ -1014,6 +1235,11 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   onKeyDown(event: KeyboardEvent): void {
     const tag = (event.target as HTMLElement)?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if ((event.metaKey || event.ctrlKey) && event.key === 'z') {
+      this.undoLastDelete();
+      event.preventDefault();
+      return;
+    }
     if (event.key === 'Delete' || event.key === 'Backspace') {
       if (this.selectedEdgeId) { this.deleteSelectedEdge(); event.preventDefault(); }
       else if (this.selectedNodeId) { this.deleteSelectedNode(); event.preventDefault(); }
@@ -1069,6 +1295,8 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   deleteSelectedEdge(): void {
     if (!this.flow || !this.selectedEdgeId) return;
+    const edge = this.flow.edges.find((e) => e.id === this.selectedEdgeId);
+    if (edge) this._pushUndo({ type: 'edge_delete', nodes: [], edges: [edge] });
     this.flow.edges = this.flow.edges.filter((e) => e.id !== this.selectedEdgeId);
     this.selectedEdgeId = null;
     this.queueSave();
@@ -1141,6 +1369,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     else set.add(ch);
     this.flow.channels = Array.from(set) as FlowChannel[];
     if (!this.flow.channels.length) this.flow.channels = [ch];
+    this.refreshDisconnectedChannels();
     this.queueSave();
     this.cdr.markForCheck();
   }

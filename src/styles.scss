@@ -6,6 +6,11 @@
   border: 1px solid #374151 !important;
 }
 
+/* Ensure SweetAlert always renders above full-screen overlays (e.g. flow builder z-index: 9998) */
+.swal2-container {
+  z-index: 99999 !important;
+}
+
 .swal-confirm-btn {
   background-color: #c0ff00 !important;
   color: #000000 !important;

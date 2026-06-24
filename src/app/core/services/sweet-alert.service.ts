@@ -139,6 +139,36 @@ export class SweetAlertService {
   }
 
   /**
+   * Show a confirmation dialog with arbitrary HTML body content.
+   * Use sparingly — only for rich summaries (e.g. publish confirmation).
+   */
+  confirmHtml(
+    title: string,
+    html: string,
+    confirmButtonText: string = 'Confirm',
+    cancelButtonText: string = 'Cancel'
+  ): Promise<SweetAlertResult> {
+    return Swal.fire({
+      title,
+      html,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#c0ff00',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText,
+      cancelButtonText,
+      background: '#1a1a1a',
+      color: '#ffffff',
+      customClass: {
+        popup: 'swal-dark-theme',
+        confirmButton: 'swal-confirm-btn',
+        cancelButton: 'swal-cancel-btn',
+        htmlContainer: 'swal-html-container'
+      }
+    });
+  }
+
+  /**
    * Show a toast notification (small popup at the top)
    */
   toast(

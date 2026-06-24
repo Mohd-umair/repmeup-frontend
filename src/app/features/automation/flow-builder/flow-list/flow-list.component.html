@@ -76,6 +76,10 @@
         <i class="fas fa-circle-info" aria-hidden="true"></i>
         In <strong>Hybrid</strong>, a workflow that takes over a conversation pauses Reppy fallback until it ends.
       </p>
+      <p class="amc-foot amc-foot--warn">
+        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+        A published flow <strong>only runs</strong> if the channel mode is <strong>Workflow Only</strong> or <strong>Hybrid</strong>. Flows on <em>Reppy Only</em> channels will never fire.
+      </p>
     </div>
   </div>
 
@@ -95,6 +99,14 @@
       (click)="setTab('blueprints')">
       <i class="fas fa-layer-group" aria-hidden="true"></i>
       Blueprints
+    </button>
+    <button type="button" role="tab" class="page-tab"
+      [class.is-active]="activeTab === 'runs'"
+      [attr.aria-selected]="activeTab === 'runs'"
+      (click)="setTab('runs')">
+      <i class="fas fa-list-check" aria-hidden="true"></i>
+      Runs
+      <span *ngIf="activeTab === 'runs' && runsTotal > 0" class="tab-count">{{ runsTotal }}</span>
     </button>
   </div>
 
@@ -127,8 +139,10 @@
               <th>Flow</th>
               <th>Channels</th>
               <th>Status</th>
-              <th class="col-nodes">Nodes</th>
-              <th class="col-edges">Edges</th>
+              <th class="col-stat" title="Triggered in last 7 days">Triggered</th>
+              <th class="col-stat" title="Completed in last 7 days">Completed</th>
+              <th class="col-stat" title="Failed in last 7 days">Failed</th>
+              <th class="col-date">Updated</th>
               <th class="col-actions">Actions</th>
             </tr>
           </thead>
@@ -157,21 +171,28 @@
                   <i class="fas" [ngClass]="statusIcon(flow.status)" aria-hidden="true"></i>
                   {{ (flow.status || 'draft') | titlecase }}
                 </span>
-              </td>
-
-              <!-- Nodes -->
-              <td class="col-nodes">
-                <span class="flow-chip">
-                  <i class="fas fa-sitemap" aria-hidden="true"></i>
-                  {{ flow.nodes?.length || 0 }}
+                <span *ngIf="isAllChannelsReppyOnly(flow) && flow.status === 'active'"
+                      class="reppy-only-warn"
+                      title="All channels are in Reppy-Only mode — this flow will never fire. Switch at least one channel to Workflow Only or Hybrid.">
+                  <i class="fas fa-exclamation-triangle"></i>
                 </span>
               </td>
 
-              <!-- Edges -->
-              <td class="col-edges">
-                <span class="flow-chip">
-                  <i class="fas fa-random" aria-hidden="true"></i>
-                  {{ flow.edges?.length || 0 }}
+              <!-- Stats -->
+              <td class="col-stat">
+                <span class="flow-stat flow-stat--triggered">{{ flow.stats?.triggered || 0 }}</span>
+              </td>
+              <td class="col-stat">
+                <span class="flow-stat flow-stat--completed">{{ flow.stats?.completed || 0 }}</span>
+              </td>
+              <td class="col-stat">
+                <span class="flow-stat flow-stat--failed" [class.flow-stat--zero]="!(flow.stats?.failed)">{{ flow.stats?.failed || 0 }}</span>
+              </td>
+
+              <!-- Last updated -->
+              <td class="col-date">
+                <span class="flow-date" [title]="(flow.updatedAt || flow.createdAt) | date:'dd MMM yyyy, HH:mm'">
+                  {{ (flow.updatedAt || flow.createdAt) | date:'dd MMM' }}
                 </span>
               </td>
 
@@ -180,6 +201,12 @@
                 <div class="flow-row__actions">
                   <button type="button" class="btn-icon-action" (click)="editFlow(flow)" title="Edit flow">
                     <i class="fas fa-pen-to-square" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="btn-icon-action" (click)="openRunsForFlow(flow)" title="View runs">
+                    <i class="fas fa-list-check" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="btn-icon-action" (click)="duplicateFlow(flow)" title="Duplicate flow">
+                    <i class="fas fa-copy" aria-hidden="true"></i>
                   </button>
                   <button type="button" class="btn-icon-action"
                     [disabled]="toggling.has(flow._id!)"
@@ -289,6 +316,147 @@
           </tbody>
         </table>
       </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ── Runs Tab ───────────────────────────────────────────────────────── -->
+  <ng-container *ngIf="activeTab === 'runs'">
+
+    <div class="runs-header animate-fade-in-up">
+      <div>
+        <h3 class="runs-title">
+          <i class="fas fa-list-check"></i>
+          Run History
+          <span *ngIf="runsFlowName" class="runs-flow-name">— {{ runsFlowName }}</span>
+        </h3>
+        <p class="runs-sub">Click a row to see step-by-step execution details.</p>
+      </div>
+      <div class="runs-filters">
+        <button type="button" class="runs-filter-btn" [class.is-active]="runsStatusFilter === ''"
+          (click)="filterRunsByStatus('')">All</button>
+        <button type="button" class="runs-filter-btn runs-filter-btn--completed" [class.is-active]="runsStatusFilter === 'completed'"
+          (click)="filterRunsByStatus('completed')">Completed</button>
+        <button type="button" class="runs-filter-btn runs-filter-btn--failed" [class.is-active]="runsStatusFilter === 'failed'"
+          (click)="filterRunsByStatus('failed')">Failed</button>
+        <button type="button" class="runs-filter-btn runs-filter-btn--waiting" [class.is-active]="runsStatusFilter === 'waiting'"
+          (click)="filterRunsByStatus('waiting')">Waiting</button>
+      </div>
+    </div>
+
+    <p *ngIf="!runsFlowId" class="empty-state animate-fade-in-up">
+      <i class="fas fa-arrow-up empty-state__icon"></i>
+      <br>Click the <strong>Runs</strong> <i class="fas fa-list-check"></i> button on any flow row to see its run history.
+    </p>
+
+    <p *ngIf="runsLoading && runsFlowId" class="runs-loading">
+      <i class="fas fa-spinner fa-spin"></i> Loading run history…
+    </p>
+
+    <div *ngIf="!runsLoading && runsFlowId && enrollments.length === 0" class="empty-state animate-fade-in-up">
+      <i class="fas fa-inbox empty-state__icon"></i>
+      <h3 class="empty-state__title">No Runs Yet</h3>
+      <p class="empty-state__text">This flow has not triggered any enrollments yet.</p>
+    </div>
+
+    <div *ngIf="!runsLoading && enrollments.length > 0" class="runs-layout animate-fade-in-up">
+
+      <!-- Enrollment list -->
+      <div class="runs-list-wrap">
+        <table class="runs-table">
+          <thead>
+            <tr>
+              <th>Contact</th>
+              <th>Channel</th>
+              <th>Status</th>
+              <th>Started</th>
+              <th>Last update</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let enr of enrollments"
+                class="runs-row"
+                [class.is-selected]="selectedEnrollment?._id === enr._id"
+                (click)="viewEnrollmentDetail(enr)">
+              <td class="col-contact">
+                <span class="contact-name">{{ enr.contact?.name || enr.platformUserId || '—' }}</span>
+                <span *ngIf="enr.contact?.phone" class="contact-sub">{{ enr.contact?.phone }}</span>
+                <span *ngIf="enr.contact?.flowsOptedOut" class="opted-out-badge"
+                      title="This contact sent STOP — they are opted out of automated flows.">
+                  <i class="fas fa-ban"></i> Opted Out
+                </span>
+              </td>
+              <td>
+                <span class="flow-cat" [ngClass]="channelClass(enr.platform)">
+                  <i [ngClass]="channelIcon(enr.platform)" aria-hidden="true"></i>
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="statusClass(enr.status)">
+                  <i class="fas" [ngClass]="statusIcon(enr.status)" aria-hidden="true"></i>
+                  {{ enr.status | titlecase }}
+                </span>
+              </td>
+              <td class="col-date">{{ enr.createdAt | date:'dd MMM HH:mm' }}</td>
+              <td class="col-date">{{ enr.updatedAt | date:'dd MMM HH:mm' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Pagination for runs -->
+        <div *ngIf="runsTotal > runsPageSize" class="flows-pagination-wrap">
+          <app-pagination
+            [currentPage]="runsPage"
+            [totalPages]="runsTotalPages"
+            [totalItems]="runsTotal"
+            [pageSize]="runsPageSize"
+            [loading]="runsLoading"
+            (pageChange)="onRunsPageChange($event)"
+          ></app-pagination>
+        </div>
+      </div>
+
+      <!-- Enrollment detail panel -->
+      <div class="runs-detail-panel" *ngIf="selectedEnrollment || enrollmentDetailLoading">
+        <p *ngIf="enrollmentDetailLoading" class="runs-loading"><i class="fas fa-spinner fa-spin"></i> Loading…</p>
+        <ng-container *ngIf="!enrollmentDetailLoading && selectedEnrollment">
+          <div class="runs-detail-head">
+            <h4>Run Detail</h4>
+            <button type="button" class="runs-detail-close" (click)="selectedEnrollment = null">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="runs-detail-meta">
+            <div><span class="runs-meta-label">Contact</span> {{ selectedEnrollment.contact?.name || selectedEnrollment.platformUserId }}</div>
+            <div><span class="runs-meta-label">Status</span>
+              <span class="status-badge" [ngClass]="statusClass(selectedEnrollment.status)">{{ selectedEnrollment.status | titlecase }}</span>
+            </div>
+            <div *ngIf="selectedEnrollment.lastError" class="runs-meta-error">
+              <i class="fas fa-exclamation-triangle"></i> {{ selectedEnrollment.lastError }}
+            </div>
+          </div>
+          <h5 class="runs-steps-title">Execution Steps</h5>
+          <ol class="runs-steps">
+            <li *ngFor="let h of selectedEnrollment.history" class="runs-step">
+              <span class="runs-step-event">
+                <i class="fas" [ngClass]="{
+                  'fa-bolt': h.event === 'trigger_pass',
+                  'fa-check': h.event === 'execute',
+                  'fa-forward': h.event === 'skipped_disabled',
+                  'fa-play': h.event?.startsWith('wait_resumed'),
+                  'fa-hourglass-half': h.event === 'wait_resumed:elapsed'
+                }"></i>
+              </span>
+              <div class="runs-step-info">
+                <span class="runs-step-label">{{ h.nodeLabel || h.nodeId }}</span>
+                <span class="runs-step-type">{{ h.nodeType }}</span>
+              </div>
+              <span class="runs-step-time">{{ h.at | date:'HH:mm:ss' }}</span>
+            </li>
+          </ol>
+        </ng-container>
+      </div>
+
     </div>
 
   </ng-container>

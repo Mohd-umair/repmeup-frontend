@@ -7,7 +7,16 @@
       <div>
         <input class="fb-toolbar__title" [(ngModel)]="flow.name" (ngModelChange)="queueSave()" />
         <p class="fb-toolbar__meta">
-          {{ flow.status || 'draft' }} · v{{ flow.version || 1 }}
+          <span class="fb-status-badge" [ngClass]="'fb-status-badge--' + (flow.status || 'draft')">
+            <i class="fas" [ngClass]="{
+              'fa-pencil-alt': (flow.status || 'draft') === 'draft',
+              'fa-check-circle': flow.status === 'active',
+              'fa-pause-circle': flow.status === 'paused',
+              'fa-exclamation-triangle': flow.status === 'error'
+            }"></i>
+            {{ (flow.status || 'draft') | titlecase }}
+          </span>
+          <span class="fb-toolbar__version">v{{ flow.version || 1 }}</span>
           <span *ngIf="saving" class="fb-toolbar__saving">Saving…</span>
         </p>
       </div>
@@ -17,10 +26,16 @@
               class="fb-channel-chip"
               [class.fb-channel-chip--active]="flow.channels.includes(ch)"
               (click)="toggleChannel(ch)">
-        {{ ch }}
+        <i [class]="channelIcon(ch)"></i>
+        {{ channelDisplayLabel(ch) }}
       </button>
     </div>
     <div class="fb-toolbar__actions">
+      <button type="button" class="fb-btn-icon" (click)="undoLastDelete()"
+              [disabled]="!_undoStack.length"
+              [title]="_undoStack.length ? 'Undo last delete (Ctrl+Z)' : 'Nothing to undo'">
+        <i class="fas fa-undo"></i>
+      </button>
       <button type="button" class="fb-btn-icon" (click)="toggleFocusMode()"
               [title]="focusMode ? 'Show side panels (F)' : 'Maximize canvas (F)'"
               [class.fb-btn-icon--active]="focusMode">
@@ -30,10 +45,13 @@
         <i class="fas fa-sliders-h"></i>
       </button>
       <button type="button" class="fb-btn-ghost" (click)="runTest()">
-        <i class="fas fa-flask"></i> Test
+        <i class="fas fa-play-circle"></i> Simulate
       </button>
-      <button type="button" class="fb-btn-ghost fb-btn-ghost--check" (click)="validate()">
-        <i class="fas fa-check-double"></i> Validate
+      <button type="button" class="fb-btn-ghost fb-btn-ghost--check" (click)="validate()"
+              [class.fb-btn-ghost--warn]="validationErrors.length > 0">
+        <i class="fas" [ngClass]="validating ? 'fa-spinner fa-spin' : 'fa-check-double'"></i>
+        Validate
+        <span *ngIf="validationErrors.length > 0" class="fb-validate-badge">{{ validationErrors.length }}</span>
       </button>
       <button type="button" class="fb-btn-secondary" (click)="saveNow()" [disabled]="saving">
         <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
@@ -45,6 +63,20 @@
       </button>
     </div>
   </header>
+
+  <!-- Disconnected channel warning banner -->
+  <div *ngIf="!channelBannerDismissed && disconnectedChannels.length > 0" class="fb-channel-warning">
+    <i class="fas fa-exclamation-triangle fb-channel-warning__icon"></i>
+    <span>
+      <strong>{{ disconnectedChannelNames() }}</strong>
+      {{ disconnectedChannels.length === 1 ? 'is' : 'are' }} not connected.
+      Messages sent through {{ disconnectedChannels.length === 1 ? 'this channel' : 'these channels' }} will fail at runtime.
+      <a routerLink="/app/settings/platforms" class="fb-channel-warning__link">Connect in Settings →</a>
+    </span>
+    <button type="button" class="fb-channel-warning__close" (click)="channelBannerDismissed = true">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
 
   <div class="fb-layout"
        [class.fb-layout--focus]="focusMode"
@@ -63,29 +95,33 @@
         <input class="fb-palette__search" [(ngModel)]="catalogFilter" placeholder="Search nodes…" />
       </div>
       <p class="fb-palette__tip"><i class="fas fa-hand-pointer"></i> Drag a block onto the canvas</p>
-      <div *ngFor="let cat of categoryOrder" class="fb-palette__group" [class]="'fb-cat-' + cat">
-        <button *ngIf="catalogByCategory(cat).length"
-                type="button"
+      <div *ngFor="let g of paletteGroups"
+           class="fb-palette__group fb-grp-{{ g.id }}"
+           [ngClass]="groupCatClass(g.id)">
+        <button type="button"
                 class="fb-palette__group-hdr"
-                (click)="toggleCat(cat)"
-                [attr.aria-expanded]="!isCatCollapsed(cat)">
-          <span class="fb-cat-dot"></span>
-          <span class="fb-palette__group-label">{{ categoryLabels[cat] }}</span>
-          <span class="fb-palette__group-count">{{ catalogByCategory(cat).length }}</span>
+                (click)="toggleCat(g.id)"
+                [attr.aria-expanded]="!isCatCollapsed(g.id)">
+          <span class="fb-cat-dot" aria-hidden="true"><i [class]="g.icon"></i></span>
+          <span class="fb-palette__group-label">{{ g.label }}</span>
+          <span class="fb-palette__group-count">{{ catalogByGroup(g.id).length }}</span>
           <i class="fas fa-chevron-down fb-palette__chevron"
-             [class.fb-palette__chevron--collapsed]="isCatCollapsed(cat)"
+             [class.fb-palette__chevron--collapsed]="isCatCollapsed(g.id)"
              aria-hidden="true"></i>
         </button>
-        <div class="fb-palette__items" [class.fb-palette__items--collapsed]="isCatCollapsed(cat)">
-          <div *ngFor="let item of catalogByCategory(cat)" class="fb-palette__item"
-               [title]="item.description"
-               draggable="true"
-               (dragstart)="onPaletteDragStart(item, $event)"
-               (dragend)="onPaletteDragEnd()"
-               (click)="addNodeFromCatalog(item)">
+        <div class="fb-palette__items" [class.fb-palette__items--collapsed]="isCatCollapsed(g.id)">
+          <div *ngFor="let item of catalogByGroup(g.id)"
+               class="fb-palette__item"
+               [ngClass]="['fb-cat-' + item.category, item.comingSoon ? 'fb-palette__item--coming-soon' : '']"
+               [title]="item.comingSoon ? (item.comingSoonHint || 'Coming soon') : item.description"
+               [attr.draggable]="item.comingSoon ? 'false' : 'true'"
+               (dragstart)="!item.comingSoon && onPaletteDragStart(item, $event)"
+               (dragend)="!item.comingSoon && onPaletteDragEnd()"
+               (click)="!item.comingSoon && addNodeFromCatalog(item)">
             <span class="fb-chip"><i [class]="item.icon"></i></span>
             <span class="fb-palette__label">{{ item.label }}</span>
-            <i class="fas fa-grip-vertical fb-palette__grip"></i>
+            <span *ngIf="item.comingSoon" class="fb-palette__badge fb-palette__badge--soon">Soon</span>
+            <i *ngIf="!item.comingSoon" class="fas fa-grip-vertical fb-palette__grip"></i>
           </div>
         </div>
       </div>
@@ -198,20 +234,49 @@
         </ul>
       </ng-container>
 
-      <!-- Test panel -->
+      <!-- Simulate panel -->
       <ng-container *ngIf="showTest">
         <div class="fb-panel-head">
-          <h3><i class="fas fa-vial mr-1"></i> Dry run</h3>
+          <h3><i class="fas fa-play-circle mr-1"></i> Simulate</h3>
           <button type="button" class="fb-panel-close" (click)="closePanels()"><i class="fas fa-times"></i></button>
         </div>
-        <p *ngIf="testing" class="fb-inspector__empty"><i class="fas fa-spinner fa-spin"></i> Running…</p>
+        <p class="fb-field__hint fb-simulate-notice">
+          <i class="fas fa-info-circle"></i>
+          Simulates the flow execution path without sending real messages.
+        </p>
+        <p *ngIf="testing" class="fb-inspector__empty"><i class="fas fa-spinner fa-spin"></i> Simulating…</p>
         <ng-container *ngIf="!testing && testResult">
-          <p class="fb-field__hint">Start node: <strong>{{ testResult.startNodeId || '—' }}</strong></p>
+          <p class="fb-field__hint">
+            Start node: <strong>{{ nodeLabelById(testResult.startNodeId) || '—' }}</strong>
+          </p>
+          <div *ngIf="testResult.simulationStatus" class="fb-sim-status"
+               [ngClass]="'fb-sim-status--' + testResult.simulationStatus">
+            <i class="fas" [ngClass]="{
+              'fa-check-circle': testResult.simulationStatus === 'completed',
+              'fa-exclamation-triangle': testResult.simulationStatus === 'failed',
+              'fa-hourglass-half': testResult.simulationStatus === 'waiting',
+              'fa-question-circle': testResult.simulationStatus === 'no_trigger'
+            }"></i>
+            {{ testResult.simulationStatus | titlecase }}
+            <span *ngIf="testResult.lastError" class="fb-sim-error"> — {{ testResult.lastError }}</span>
+          </div>
           <p *ngIf="validationErrors.length" class="fb-issue fb-issue--warn">
             <i class="fas fa-exclamation-triangle"></i> {{ validationErrors.length }} validation issue(s) — see Validate.
           </p>
           <ol class="fb-step-list">
-            <li *ngFor="let step of testResult.stepPreview" (click)="focusNode(step.nodeId)">
+            <li *ngFor="let step of testResult.stepPreview"
+                [class.fb-step--executed]="step.event !== 'not_executed'"
+                [class.fb-step--skipped]="step.event === 'not_executed'"
+                (click)="focusNode(step.nodeId)">
+              <span class="fb-step-event" [title]="step.event">
+                <i class="fas" [ngClass]="{
+                  'fa-bolt': step.event === 'trigger_pass',
+                  'fa-check': step.event === 'execute',
+                  'fa-forward': step.event === 'skipped_disabled',
+                  'fa-play': step.event?.startsWith('wait_resumed'),
+                  'fa-minus': step.event === 'not_executed'
+                }"></i>
+              </span>
               <span class="fb-step-type">{{ step.type }}</span>
               <span>{{ step.label }}</span>
             </li>
@@ -251,7 +316,7 @@
       <!-- Edge inspector -->
       <ng-container *ngIf="!showValidation && !showTest && !showSettings && selectedEdge as edge">
         <h3>Connection</h3>
-        <p class="fb-inspector__type">{{ edge.source }} → {{ edge.target }}</p>
+        <p class="fb-inspector__type">{{ nodeLabelById(edge.source) }} → {{ nodeLabelById(edge.target) }}</p>
         <label class="fb-field">
           <span>Branch label</span>
           <input [ngModel]="edge.label" (ngModelChange)="setEdgeLabel(edge, $event)"
@@ -289,7 +354,17 @@
             <span>Label</span>
             <input [(ngModel)]="node.label" (ngModelChange)="onNodeFieldChange()" />
           </label>
-          <p class="fb-inspector__type">{{ node.type }}</p>
+          <p class="fb-inspector__type" [title]="node.type">
+            {{ catalogLabelByType(node.type) }}
+          </p>
+
+          <!-- WhatsApp 24-hr window hint for free-form text nodes -->
+          <div *ngIf="node.type === 'action.send_text'" class="fb-wa-window-hint">
+            <i class="fas fa-clock"></i>
+            <span>
+              <strong>24-hr window:</strong> This message only sends within WhatsApp's 24-hour messaging window. For out-of-window contacts, use <em>Send Template</em> instead.
+            </span>
+          </div>
 
           <div *ngFor="let fd of selectedNodeFieldDefs; trackBy: trackByFieldKey" class="fb-field">
             <span>{{ fd.label }}</span>
@@ -585,6 +660,14 @@
               <p *ngIf="!waTemplatesLoading && waTemplates.length" class="fb-field__hint">
                 {{ waTemplates.length }} template(s) available
               </p>
+              <!-- WhatsApp 24-hour window advisory -->
+              <div class="fb-wa-window-hint">
+                <i class="fas fa-clock"></i>
+                <span>
+                  <strong>WhatsApp 24-hr window:</strong> You can only send free-form messages within 24 hours of the user's last message. Outside that window, use a pre-approved template here.
+                  <a href="https://developers.facebook.com/docs/whatsapp/messaging/conversations" target="_blank" rel="noopener" class="fb-wa-window-hint__link">Learn more ↗</a>
+                </span>
+              </div>
             </ng-container>
 
             <!-- Media URL picker (send_media node) -->

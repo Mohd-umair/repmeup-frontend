@@ -59,4 +59,31 @@ export class FlowBuilderService {
     const params = channels?.length ? { channels: channels.join(',') } : undefined;
     return this.api.get(`${this.base}/node-catalog`, params);
   }
+
+  listEnrollments(flowId: string, params?: { page?: number; limit?: number; status?: string }): Observable<IApiResponse<{
+    flow: { _id: string; name: string };
+    enrollments: IFlowEnrollment[];
+    pagination: { page: number; limit: number; total: number; pages: number };
+  }>> {
+    return this.api.get(`${this.base}/${flowId}/enrollments`, params);
+  }
+
+  getEnrollment(flowId: string, enrollmentId: string): Observable<IApiResponse<IFlowEnrollment>> {
+    return this.api.get(`${this.base}/${flowId}/enrollments/${enrollmentId}`);
+  }
+}
+
+export interface IFlowEnrollment {
+  _id: string;
+  platform: string;
+  platformUserId: string;
+  contact?: { _id: string; name?: string; phone?: string; email?: string; flowsOptedOut?: boolean } | null;
+  status: 'active' | 'waiting' | 'completed' | 'failed' | 'dropped';
+  currentNodeId: string;
+  lastError?: string;
+  flowVersion?: number;
+  createdAt: string;
+  updatedAt: string;
+  history?: Array<{ nodeId: string; event: string; at: string; nodeLabel?: string; nodeType?: string }>;
+  flow?: { _id: string; name: string };
 }

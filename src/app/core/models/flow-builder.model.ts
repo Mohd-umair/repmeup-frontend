@@ -71,6 +71,10 @@ export interface IFlowNodeCatalogItem {
     hint?: string;
   }>;
   defaultConfig?: Record<string, unknown>;
+  /** When true the node is displayed in the palette but cannot be used — it is not yet wired in the backend. */
+  comingSoon?: boolean;
+  /** Short message displayed as a tooltip and in the inspector when a node is marked comingSoon. */
+  comingSoonHint?: string;
 }
 
 export interface IFlowValidationResult {
