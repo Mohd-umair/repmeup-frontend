@@ -1,0 +1,525 @@
+<div class="audit-report">
+
+  <div class="audit-report__ambient" aria-hidden="true"></div>
+
+  <div class="audit-report__container">
+
+    <!-- ── Header ─────────────────────────────────────────────────────────── -->
+    <header class="report-top">
+      <div class="report-top__brand">
+        <span class="report-top__logo">rep.</span>
+        <div class="report-top__titles">
+          <h1 class="report-top__title">Growth Intelligence Report</h1>
+          <p class="report-top__meta">
+            <i class="fas fa-robot" aria-hidden="true"></i>
+            Analysed by RepMeUp AI · {{ audit.businessName || audit.igHandle }}
+          </p>
+        </div>
+      </div>
+      <div class="report-top__badge">
+        <span class="report-top__badge-label">Generated</span>
+        <span class="report-top__badge-value">{{ reportDate }}</span>
+      </div>
+    </header>
+
+    <!-- ── Hero: Score + Revenue Leak ───────────────────────────────────── -->
+    <section class="hero-panel" aria-label="Audit summary">
+
+      <article class="score-panel">
+        <div class="score-panel__header">
+          <span class="section-eyebrow">Conversation Score</span>
+          <span class="score-panel__pill" [style.color]="gradeColor" [style.border-color]="gradeColor">
+            Grade {{ audit.grade }}
+          </span>
+        </div>
+
+        <div class="score-panel__ring-wrap">
+          <svg class="score-panel__ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="ring-track" cx="50" cy="50" [attr.r]="RING_RADIUS" />
+            <circle
+              class="ring-progress"
+              cx="50"
+              cy="50"
+              [attr.r]="RING_RADIUS"
+              [attr.stroke]="gradeColor"
+              [attr.stroke-dasharray]="RING_CIRCUMFERENCE"
+              [attr.stroke-dashoffset]="scoreOffset"
+            />
+          </svg>
+          <div class="score-panel__value">
+            <span class="score-panel__number">{{ audit.score }}</span>
+            <span class="score-panel__denom">/100</span>
+          </div>
+        </div>
+
+        <p class="score-panel__grade" [style.color]="gradeColor">
+          {{ gradeLabel }}
+        </p>
+        <p class="score-panel__hint">
+          How effectively you convert conversations into revenue across public channels.
+        </p>
+      </article>
+
+      @if (hasInstagram) {
+      <article class="leak-panel">
+        <div class="leak-panel__glow" aria-hidden="true"></div>
+        <div class="leak-panel__content">
+          <span class="section-eyebrow leak-panel__eyebrow">Estimated monthly revenue leak</span>
+          <div class="leak-panel__amount">{{ formatCurrency(revenueLeak) }}</div>
+          <p class="leak-panel__per">per month in recoverable revenue</p>
+
+          <div class="leak-panel__stat">
+            <div class="leak-panel__stat-icon">
+              <i class="fas fa-comment-dollar" aria-hidden="true"></i>
+            </div>
+            <div>
+              <strong>{{ unansweredBuying }}</strong>
+              <span>buying-intent comments went unanswered this month</span>
+            </div>
+          </div>
+
+          @if (audit.revenueLeakFormula) {
+            <p class="leak-panel__formula">{{ audit.revenueLeakFormula }}</p>
+          }
+        </div>
+      </article>
+      }
+    </section>
+
+    @if (hasSocialAudit) {
+    <!-- ── Social Presence ────────────────────────────────────────────────── -->
+    <section class="module" aria-labelledby="social-audit-title">
+      <div class="module__head">
+        <div class="module__icon module__icon--social">
+          <i class="fas fa-hashtag" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h2 id="social-audit-title" class="module__title">Social Presence Audit</h2>
+          <p class="module__subtitle">
+            @if (hasInstagram && hasFacebook) {
+              Public Instagram & Facebook engagement signals
+            } @else if (hasInstagram) {
+              Public Instagram engagement signals
+            } @else {
+              Public Facebook engagement signals
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        @if (hasInstagram) {
+        <div class="metric-tile">
+          <div class="metric-tile__top">
+            <span class="metric-tile__value">
+              {{ audit.modules?.socialPresence?.igReplyRate || audit.teaser?.igReplyRate || 0 }}%
+            </span>
+            <span class="metric-tile__icon"><i class="fab fa-instagram"></i></span>
+          </div>
+          <span class="metric-tile__label">Instagram reply rate</span>
+          @if (audit.benchmarks?.['commentReplyRate']) {
+            <span class="metric-tile__bench" [class]="benchmarkClass(audit.modules?.socialPresence?.igReplyRate || 0, audit.benchmarks?.['commentReplyRate'])">
+              Industry {{ audit.benchmarks?.['commentReplyRate'] }}%
+              ({{ benchmarkDelta(audit.modules?.socialPresence?.igReplyRate || 0, audit.benchmarks?.['commentReplyRate']) }})
+            </span>
+          }
+          <div class="metric-tile__bar">
+            <div class="metric-tile__bar-fill"
+              [style.width]="progressWidth(audit.modules?.socialPresence?.igReplyRate || audit.teaser?.igReplyRate || 0)"></div>
+            @if (audit.benchmarks?.['commentReplyRate']) {
+              <div class="metric-tile__bar-mark" [style.left.%]="audit.benchmarks?.['commentReplyRate']"></div>
+            }
+          </div>
+        </div>
+        }
+
+        @if (hasInstagram) {
+        <div class="metric-tile">
+          <div class="metric-tile__top">
+            <span class="metric-tile__value">
+              {{ audit.modules?.socialPresence?.igBuyingIntentCount || audit.teaser?.buyingIntentCount || 0 }}
+            </span>
+            <span class="metric-tile__icon"><i class="fas fa-shopping-bag"></i></span>
+          </div>
+          <span class="metric-tile__label">Buying-intent comments</span>
+          @if (audit.modules?.socialPresence?.igUnansweredBuying) {
+            <span class="metric-tile__bench negative">
+              {{ audit.modules?.socialPresence?.igUnansweredBuying }} unanswered
+            </span>
+          }
+        </div>
+
+        @if (audit.modules?.socialPresence?.igFollowers) {
+          <div class="metric-tile">
+            <div class="metric-tile__top">
+              <span class="metric-tile__value">{{ audit.modules?.socialPresence?.igFollowers | number }}</span>
+              <span class="metric-tile__icon"><i class="fas fa-users"></i></span>
+            </div>
+            <span class="metric-tile__label">Instagram followers</span>
+          </div>
+        }
+
+        @if (audit.modules?.socialPresence?.igPostingGaps) {
+          <div class="metric-tile metric-tile--alert">
+            <div class="metric-tile__top">
+              <span class="metric-tile__value"><i class="fas fa-exclamation-triangle"></i></span>
+              <span class="metric-tile__icon metric-tile__icon--warn"><i class="fas fa-calendar-times"></i></span>
+            </div>
+            <span class="metric-tile__label">Posting gaps detected</span>
+            <span class="metric-tile__bench negative">7+ day gaps in the last 30 days</span>
+          </div>
+        }
+        }
+
+        @if (hasFacebook) {
+          <div class="metric-tile">
+            <div class="metric-tile__top">
+              <span class="metric-tile__value">{{ audit.modules?.socialPresence?.fbReplyRate ?? 0 }}%</span>
+              <span class="metric-tile__icon"><i class="fab fa-facebook-f"></i></span>
+            </div>
+            <span class="metric-tile__label">Facebook reply rate</span>
+          </div>
+        }
+      </div>
+    </section>
+    }
+
+    @if (hasReputationAudit) {
+    <!-- ── Reputation ───────────────────────────────────────────────────── -->
+    <section class="module" aria-labelledby="reputation-audit-title">
+      <div class="module__head">
+        <div class="module__icon module__icon--reputation">
+          <i class="fas fa-star" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h2 id="reputation-audit-title" class="module__title">Reputation Audit</h2>
+          <p class="module__subtitle">
+            @if (hasGoogle && hasFacebook) {
+              Google reviews and Facebook trust signals
+            } @else if (hasGoogle) {
+              Google reviews and public trust signals
+            } @else {
+              Facebook public trust signals
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        @if (hasGoogle) {
+        <div class="metric-tile">
+          <div class="metric-tile__top">
+            <span class="metric-tile__value">
+              {{ audit.modules?.reputation?.google?.rating || audit.teaser?.googleRating || '—' }}/5
+            </span>
+            <span class="metric-tile__icon"><i class="fab fa-google"></i></span>
+          </div>
+          <span class="metric-tile__label">Google rating</span>
+          @if (audit.benchmarks?.['avgRating']) {
+            <span class="metric-tile__bench"
+              [class]="benchmarkClass(audit.modules?.reputation?.google?.rating || 0, audit.benchmarks?.['avgRating'])">
+              Top brands: {{ audit.benchmarks?.['avgRating'] }}/5
+            </span>
+          }
+        </div>
+
+        <div class="metric-tile">
+          <div class="metric-tile__top">
+            <span class="metric-tile__value">
+              {{ audit.modules?.reputation?.google?.totalReviews || audit.teaser?.googleReviews || 0 | number }}
+            </span>
+            <span class="metric-tile__icon"><i class="fas fa-comments"></i></span>
+          </div>
+          <span class="metric-tile__label">Total Google reviews</span>
+        </div>
+
+        <div class="metric-tile">
+          <div class="metric-tile__top">
+            <span class="metric-tile__value">
+              {{ audit.modules?.reputation?.google?.ownerReplyRate || audit.teaser?.googleReplyRate || 0 }}%
+            </span>
+            <span class="metric-tile__icon"><i class="fas fa-reply"></i></span>
+          </div>
+          <span class="metric-tile__label">Owner reply rate</span>
+          @if (audit.benchmarks?.['reviewReplyRate']) {
+            <span class="metric-tile__bench"
+              [class]="benchmarkClass(audit.modules?.reputation?.google?.ownerReplyRate || 0, audit.benchmarks?.['reviewReplyRate'])">
+              Industry {{ audit.benchmarks?.['reviewReplyRate'] }}%
+              ({{ benchmarkDelta(audit.modules?.reputation?.google?.ownerReplyRate || 0, audit.benchmarks?.['reviewReplyRate']) }})
+            </span>
+          }
+          <div class="metric-tile__bar">
+            <div class="metric-tile__bar-fill metric-tile__bar-fill--amber"
+              [style.width]="progressWidth(audit.modules?.reputation?.google?.ownerReplyRate || audit.teaser?.googleReplyRate || 0)">
+            </div>
+          </div>
+        </div>
+
+        @if (audit.modules?.reputation?.google?.unansweredNegative) {
+          <div class="metric-tile metric-tile--alert">
+            <div class="metric-tile__top">
+              <span class="metric-tile__value">{{ audit.modules?.reputation?.google?.unansweredNegative }}</span>
+              <span class="metric-tile__icon metric-tile__icon--warn"><i class="fas fa-thumbs-down"></i></span>
+            </div>
+            <span class="metric-tile__label">Unanswered negative reviews</span>
+            <span class="metric-tile__bench negative">Each one costs future customers</span>
+          </div>
+        }
+        }
+
+        @if (hasFacebook && audit.modules?.reputation?.facebook) {
+          <div class="metric-tile">
+            <div class="metric-tile__top">
+              <span class="metric-tile__value">{{ audit.modules?.reputation?.facebook?.commentReplyRate ?? 0 }}%</span>
+              <span class="metric-tile__icon"><i class="fab fa-facebook-f"></i></span>
+            </div>
+            <span class="metric-tile__label">Facebook comment reply rate</span>
+          </div>
+        }
+      </div>
+    </section>
+    }
+
+    @if (hasInstagram) {
+    <!-- ── Revenue Leak Breakdown ─────────────────────────────────────────── -->
+    <section class="module module--leak" aria-labelledby="leak-breakdown-title">
+      <div class="module__head">
+        <div class="module__icon module__icon--leak">
+          <i class="fas fa-chart-line" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h2 id="leak-breakdown-title" class="module__title">Revenue Leak Breakdown</h2>
+          <p class="module__subtitle">From buying intent to lost revenue</p>
+        </div>
+      </div>
+
+      <div class="funnel">
+        <div class="funnel__step">
+          <span class="funnel__num">{{ audit.modules?.socialPresence?.igBuyingIntentCount || unansweredBuying }}</span>
+          <span class="funnel__label">Buying-intent comments</span>
+        </div>
+        <div class="funnel__connector" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
+        <div class="funnel__step funnel__step--success">
+          <span class="funnel__num">{{ answeredCount }}</span>
+          <span class="funnel__label">Answered</span>
+        </div>
+        <div class="funnel__connector" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
+        <div class="funnel__step funnel__step--danger">
+          <span class="funnel__num">{{ unansweredBuying }}</span>
+          <span class="funnel__label">Potential lost customers</span>
+        </div>
+        <div class="funnel__connector" aria-hidden="true"><i class="fas fa-chevron-down"></i></div>
+        <div class="funnel__step funnel__step--total">
+          <span class="funnel__num">{{ formatCurrency(revenueLeak) }}/mo</span>
+          <span class="funnel__label">Estimated revenue lost</span>
+        </div>
+      </div>
+    </section>
+    }
+
+    <!-- ── Locked sections / Lead gate ────────────────────────────────────── -->
+    @if (showLeadGate || !audit.leadCaptured) {
+
+      <section class="module module--locked" aria-labelledby="locked-recs-title">
+        <div class="module__head">
+          <div class="module__icon module__icon--ai">
+            <i class="fas fa-robot" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h2 id="locked-recs-title" class="module__title">AI Recommendations</h2>
+            <p class="module__subtitle">Personalised actions to recover revenue</p>
+          </div>
+        </div>
+        <div class="locked-preview">
+          <div class="locked-preview__blur">
+            <div class="locked-preview__line"></div>
+            <div class="locked-preview__line short"></div>
+            <div class="locked-preview__line"></div>
+            <div class="locked-preview__line medium"></div>
+          </div>
+          <div class="locked-preview__overlay">
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            <span>Unlock to view AI recommendations</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="module module--locked" aria-labelledby="locked-opp-title">
+        <div class="module__head">
+          <div class="module__icon module__icon--opp">
+            <i class="fas fa-chart-area" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h2 id="locked-opp-title" class="module__title">Opportunity Calculator</h2>
+            <p class="module__subtitle">Projected uplift vs industry benchmarks</p>
+          </div>
+        </div>
+        <div class="locked-preview">
+          <div class="locked-preview__blur">
+            <div class="locked-preview__line medium"></div>
+            <div class="locked-preview__line"></div>
+            <div class="locked-preview__line short"></div>
+          </div>
+          <div class="locked-preview__overlay">
+            <i class="fas fa-lock" aria-hidden="true"></i>
+            <span>Unlock to view opportunity model</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="unlock-panel" id="unlock" aria-labelledby="unlock-title">
+        <div class="unlock-panel__inner">
+          <div class="unlock-panel__badge">Free full report</div>
+          <h3 id="unlock-title" class="unlock-panel__title">Unlock Your Full Growth Report</h3>
+          <p class="unlock-panel__subtitle">
+            AI-written recommendations, Opportunity Calculator, shareable link, and PDF — no credit card.
+          </p>
+
+          <form [formGroup]="leadForm" (ngSubmit)="submitLead()" novalidate class="unlock-form">
+            <div class="unlock-form__row">
+              <label class="field">
+                <span class="field__label">Your name</span>
+                <input type="text" formControlName="name" class="field__input" placeholder="Mohammed Umair" />
+              </label>
+              <label class="field">
+                <span class="field__label">Email address</span>
+                <input type="email" formControlName="email" class="field__input" placeholder="you@business.com" />
+              </label>
+            </div>
+            <div class="unlock-form__row">
+              <label class="field">
+                <span class="field__label">WhatsApp number</span>
+                <input type="tel" formControlName="phone" class="field__input" placeholder="+91 98765 43210" />
+              </label>
+              <label class="field">
+                <span class="field__label">Business name</span>
+                <input type="text" formControlName="business" class="field__input" placeholder="Your brand" />
+              </label>
+            </div>
+
+            @if (leadError) {
+              <div class="unlock-form__error" role="alert">
+                <i class="fas fa-exclamation-circle"></i> {{ leadError }}
+              </div>
+            }
+
+            <button type="submit" class="unlock-form__submit" [disabled]="leadForm.invalid || leadLoading">
+              @if (leadLoading) {
+                <span class="btn-spinner"></span> Unlocking…
+              } @else {
+                Get My Full Report <i class="fas fa-arrow-right"></i>
+              }
+            </button>
+
+            <p class="unlock-form__privacy">
+              <i class="fas fa-shield-alt"></i> No spam. One follow-up max. Unsubscribe anytime.
+            </p>
+          </form>
+        </div>
+      </section>
+
+    } @else {
+
+      @if (audit.modules?.aiRecommendations?.length) {
+        <section class="module" aria-labelledby="recs-title">
+          <div class="module__head">
+            <div class="module__icon module__icon--ai">
+              <i class="fas fa-robot" aria-hidden="true"></i>
+            </div>
+            <div>
+              <h2 id="recs-title" class="module__title">RepMeUp AI Recommendations</h2>
+              <p class="module__subtitle">Prioritised actions for your business</p>
+            </div>
+          </div>
+          <div class="rec-list">
+            @for (rec of audit.modules?.aiRecommendations; track rec.rank) {
+              <article class="rec-card">
+                <div class="rec-card__rank">#{{ rec.rank }}</div>
+                <div class="rec-card__body">
+                  <h3 class="rec-card__title">{{ rec.title }}</h3>
+                  <p class="rec-card__text">{{ rec.explanation }}</p>
+                  <div class="rec-card__meta">
+                    <span class="rec-card__impact">{{ rec.expectedImpact }}</span>
+                    <span class="rec-card__feature"><i class="fas fa-wrench"></i> {{ rec.feature }}</span>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      @if (audit.modules?.opportunityCalc?.length) {
+        <section class="module" aria-labelledby="opp-title">
+          <div class="module__head">
+            <div class="module__icon module__icon--opp">
+              <i class="fas fa-chart-area" aria-hidden="true"></i>
+            </div>
+            <div>
+              <h2 id="opp-title" class="module__title">Opportunity Calculator</h2>
+              <p class="module__subtitle">Your metrics vs industry standard</p>
+            </div>
+          </div>
+          <div class="opp-list">
+            @for (opp of audit.modules?.opportunityCalc; track opp.metric) {
+              <div class="opp-row">
+                <div class="opp-row__header">
+                  <span class="opp-row__metric">{{ opp.metric }}</span>
+                  <span class="opp-row__uplift">{{ opp.upliftLabel }}</span>
+                </div>
+                <div class="opp-row__track-wrap">
+                  <span class="opp-row__val">{{ opp.currentValue }}{{ opp.unit }}</span>
+                  <div class="opp-row__track">
+                    <div class="opp-row__current" [style.width]="opportunityProgressWidth(opp)"></div>
+                  </div>
+                  <span class="opp-row__target">{{ opp.improvedValue }}{{ opp.unit }}</span>
+                </div>
+                <div class="opp-row__labels">
+                  <span>You now</span>
+                  <span>Industry standard</span>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <div class="action-row">
+        <button type="button" class="action-btn" (click)="copyShareLink()">
+          <i class="fas fa-link"></i> Copy share link
+        </button>
+        <button type="button" class="action-btn" (click)="downloadPdf()">
+          <i class="fas fa-file-pdf"></i> Download PDF
+        </button>
+      </div>
+
+    }
+
+    <!-- ── CTA ──────────────────────────────────────────────────────────── -->
+    <section class="cta-panel" aria-labelledby="cta-title">
+      <div class="cta-panel__glow" aria-hidden="true"></div>
+      <div class="cta-panel__content">
+        <h2 id="cta-title" class="cta-panel__headline">RepMeUp fixes this.</h2>
+        <p class="cta-panel__text">
+          Turn {{ audit.teaser?.igReplyRate || audit.modules?.socialPresence?.igReplyRate || 18 }}% reply rate into 95%.<br>
+          Turn unanswered reviews into 5-star responses.<br>
+          Turn {{ formatCurrency(revenueLeak) }}/month leak into retained revenue.
+        </p>
+        <div class="cta-panel__actions">
+          <button type="button" class="cta-panel__primary" (click)="bookDemo()">
+            Book a Free Demo <i class="fas fa-arrow-right"></i>
+          </button>
+          <button type="button" class="cta-panel__secondary" (click)="startTrial()">
+            Start Free Trial
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="report-footer">
+      Data sourced from public profiles only. Revenue leak is an estimate based on industry conversion benchmarks.
+      RepMeUp is not affiliated with Instagram, Facebook, or Google.
+    </footer>
+
+  </div>
+</div>

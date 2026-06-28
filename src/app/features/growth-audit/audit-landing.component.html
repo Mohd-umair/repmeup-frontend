@@ -1,0 +1,145 @@
+<section class="audit-landing">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">FREE GROWTH AUDIT · REPMEUP AI</div>
+    <h1 class="hero-title">
+      Your Business Is Losing<br>
+      <span class="hero-accent">Revenue Right Now.</span>
+    </h1>
+    <p class="hero-subtitle">
+      We scan your Instagram, Facebook &amp; Google presence and show you exactly
+      how much money is leaking from unanswered conversations — in under 60 seconds.
+    </p>
+
+    <!-- Social proof stats -->
+    <div class="stats-row">
+      @for (stat of stats; track stat.value) {
+        <div class="stat-card">
+          <span class="stat-value">{{ stat.value }}</span>
+          <span class="stat-label">{{ stat.label }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Audit form -->
+  <div class="form-wrapper">
+    <div class="form-card">
+      <h2 class="form-title">Get Your Free Growth Audit</h2>
+      <p class="form-hint">No login required · Takes 30–60 seconds</p>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+        <div class="field-group">
+          <label class="field-label">Instagram Username</label>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">&#64;</span>
+            <input
+              type="text"
+              formControlName="igHandle"
+              placeholder="yourbrand"
+              class="field-input prefix"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Facebook Page URL</label>
+          <input
+            type="url"
+            formControlName="fbPageUrl"
+            placeholder="https://facebook.com/yourpage"
+            class="field-input"
+          />
+          <span class="field-hint">Optional — only analysed if provided</span>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Business Name</label>
+          <input
+            type="text"
+            formControlName="businessName"
+            placeholder="e.g. Bose Hair Salon"
+            class="field-input"
+          />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Google Business Search</label>
+          <input
+            type="text"
+            formControlName="googleQuery"
+            placeholder="e.g. Bose Hair Salon Mumbai"
+            class="field-input"
+          />
+          <span class="field-hint">Optional — only analysed if provided</span>
+        </div>
+
+        @if (form.hasError('platformRequired') && form.touched) {
+          <span class="field-error">Provide at least one platform (Instagram, Facebook, or Google)</span>
+        }
+
+        <div class="two-col">
+          <div class="field-group">
+            <label class="field-label">Industry</label>
+            <select formControlName="industry" class="field-input">
+              @for (ind of industries; track ind.value) {
+                <option [value]="ind.value">{{ ind.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Avg. Order Value (₹)</label>
+            <input
+              type="number"
+              formControlName="avgOrderValue"
+              placeholder="e.g. 2000"
+              class="field-input"
+              min="0"
+            />
+            <span class="field-hint">Optional — used to calculate revenue leak</span>
+          </div>
+        </div>
+
+        @if (error) {
+          <div class="form-error">{{ error }}</div>
+        }
+
+        <button
+          type="submit"
+          class="submit-btn"
+          [disabled]="loading || form.invalid"
+        >
+          @if (loading) {
+            <span class="btn-spinner"></span>
+            Starting Analysis…
+          } @else {
+            Analyse My Business — Free →
+          }
+        </button>
+
+        <p class="form-disclaimer">
+          By submitting you agree we scan only public data. No password required.
+        </p>
+      </form>
+    </div>
+
+    <!-- What we analyse -->
+    <div class="checks-card">
+      <h3 class="checks-title">What RepMeUp AI Analyses</h3>
+      <ul class="checks-list">
+        <li><span class="check-icon">✓</span> Instagram comment reply rate &amp; buying-intent gaps</li>
+        <li><span class="check-icon">✓</span> Facebook page engagement &amp; response behaviour</li>
+        <li><span class="check-icon">✓</span> Google reviews — rating, owner reply rate, unanswered negatives</li>
+        <li><span class="check-icon">✓</span> Revenue leak estimate (in ₹/month)</li>
+        <li><span class="check-icon">✓</span> Industry benchmark comparison</li>
+        <li><span class="check-icon">✓</span> AI-written recommendations specific to your numbers</li>
+        <li><span class="check-icon">✓</span> Growth roadmap — what to fix first</li>
+      </ul>
+    </div>
+  </div>
+
+</section>

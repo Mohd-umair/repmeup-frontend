@@ -79,6 +79,30 @@ import { InboxReviewManagementComponent } from './features/inbox-ops/review-mana
  * Defines all application routes with proper guards
  */
 const routes: Routes = [
+  // ── Growth Intelligence public audit (no AuthGuard) ─────────────────────────
+  // Loaded outside PublicSiteShell so the report page has full viewport control.
+  {
+    path: 'growth-audit',
+    component: PublicSiteShellComponent,
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./features/growth-audit/audit-landing.component').then(m => m.AuditLandingComponent)
+      },
+      {
+        path: ':id',
+        loadComponent: () =>
+          import('./features/growth-audit/audit-page.component').then(m => m.AuditPageComponent)
+      },
+      {
+        path: 'r/:id/:token',
+        loadComponent: () =>
+          import('./features/growth-audit/audit-share.component').then(m => m.AuditShareComponent)
+      }
+    ]
+  },
+
   // Public marketing site (shared header + footer)
   {
     path: '',
@@ -195,6 +219,11 @@ const routes: Routes = [
       { path: 'whatsapp-templates', component: WhatsAppTemplatesComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.WHATSAPP_TEMPLATES_MAX } },
       { path: 'campaigns', component: CampaignsComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.CAMPAIGNS_ENABLED } },
       { path: 'reports', component: ReportsComponent, canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['analytics.read'], planFeature: FEATURE_KEY.ANALYTICS_ADVANCED } },
+      {
+        path: 'growth-intelligence',
+        loadComponent: () =>
+          import('./features/growth-intelligence/growth-intelligence.component').then(m => m.GrowthIntelligenceComponent)
+      },
       {
         path: 'voice-ivr',
         component: VoiceIvrComponent,

@@ -1,0 +1,380 @@
+<div class="min-h-screen bg-rep-black p-4 sm:p-6 w-full">
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="space-y-6 animate-pulse">
+      <div class="h-14 rounded-xl bg-gray-800/50"></div>
+      <div class="grid grid-cols-1 xl:grid-cols-[280px_1fr] gap-4">
+        <div class="h-80 rounded-xl bg-gray-800/50"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          @for (i of [1,2,3,4,5,6]; track i) {
+            <div class="h-28 rounded-xl bg-gray-800/50"></div>
+          }
+        </div>
+      </div>
+      <div class="h-48 rounded-xl bg-gray-800/50"></div>
+      <div class="h-56 rounded-xl bg-gray-800/50"></div>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!loading && error) {
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <div class="w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center mb-4">
+        <i class="fas fa-exclamation-circle text-red-400 text-2xl"></i>
+      </div>
+      <h3 class="text-xl font-bold text-rep-white mb-2">Couldn't load your dashboard</h3>
+      <p class="text-gray-400 mb-6 max-w-md">{{ error }}</p>
+      <button
+        type="button"
+        (click)="loadDashboard()"
+        class="inline-flex items-center gap-2 px-5 py-2.5 bg-rep-lime text-rep-black rounded-xl font-semibold hover:shadow-lg hover:shadow-rep-lime/40 transition min-h-[44px]"
+      >
+        <i class="fas fa-redo"></i> Retry
+      </button>
+    </div>
+  }
+
+  <!-- Dashboard -->
+  @if (!loading && !error && dashboard) {
+    <div class="space-y-6">
+
+      <!-- Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-rep-white">Growth Intelligence</h1>
+          <p class="text-gray-400 mt-1 text-sm sm:text-base">Live conversation metrics from your connected accounts</p>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-2 bg-gray-900/50 backdrop-blur-sm rounded-xl px-3 py-2 border border-gray-800">
+            <i class="fas fa-calendar text-rep-lime text-sm" aria-hidden="true"></i>
+            <label for="gi-period" class="text-gray-400 text-sm sr-only">Period</label>
+            <select
+              id="gi-period"
+              [(ngModel)]="selectedDays"
+              (change)="onDaysChange()"
+              class="bg-transparent text-rep-white text-sm font-medium border-none outline-none cursor-pointer min-h-[36px]"
+            >
+              <option [value]="7">Last 7 days</option>
+              <option [value]="14">Last 14 days</option>
+              <option [value]="30">Last 30 days</option>
+              <option [value]="60">Last 60 days</option>
+              <option [value]="90">Last 90 days</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            (click)="loadDashboard()"
+            title="Refresh"
+            class="inline-flex items-center justify-center w-11 h-11 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 transition min-h-[44px] min-w-[44px]"
+          >
+            <i class="fas fa-sync-alt" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Score + KPIs -->
+      <div class="grid grid-cols-1 xl:grid-cols-[280px_1fr] gap-4">
+
+        <!-- Conversation Score -->
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800 hover:border-rep-lime/30 transition flex flex-col items-center gap-5">
+          <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold">Conversation Score</p>
+
+          <div class="score-ring-wrap relative w-40 h-40">
+            <svg class="score-ring w-full h-full -rotate-90" viewBox="0 0 160 160" aria-hidden="true">
+              <circle class="ring-bg" cx="80" cy="80" [attr.r]="RING_RADIUS" />
+              <circle
+                class="ring-fill"
+                cx="80"
+                cy="80"
+                [attr.r]="RING_RADIUS"
+                [attr.stroke]="scoreColor"
+                [attr.stroke-dasharray]="RING_CIRCUMFERENCE"
+                [attr.stroke-dashoffset]="scoreOffset"
+              />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="text-4xl font-black text-rep-white leading-none">{{ dashboard.conversationScore }}</span>
+              <span class="text-lg font-bold mt-1" [style.color]="scoreColor">{{ dashboard.grade }}</span>
+            </div>
+          </div>
+
+          <div class="w-full rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center">
+            <p class="text-red-400 text-[11px] font-semibold uppercase tracking-wide">Est. Monthly Revenue Leak</p>
+            <p class="text-red-300 text-2xl font-black mt-1">{{ formatCurrency(dashboard.revenueLeakEstimate) }}</p>
+            <p class="text-red-400/80 text-xs mt-1">{{ dashboard.unansweredInquiries }} unanswered inquiry messages</p>
+          </div>
+        </div>
+
+        <!-- KPI grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-blue-500/30 transition group">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Response Rate</p>
+                <h3 class="text-3xl font-bold text-rep-white">{{ dashboard.responseRate | number:'1.0-1' }}%</h3>
+              </div>
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
+                <i class="fas fa-reply text-blue-400"></i>
+              </div>
+            </div>
+            <p class="text-xs font-semibold" [class]="benchmarkClass(dashboard.responseRate, dashboard.benchmarks.responseRate)">
+              {{ benchmarkDelta(dashboard.responseRate, dashboard.benchmarks.responseRate) }} vs benchmark
+            </p>
+          </div>
+
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-purple-500/30 transition group">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Avg Response Time</p>
+                <h3 class="text-3xl font-bold text-rep-white">{{ formatTime(dashboard.avgResponseTimeMins) }}</h3>
+              </div>
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-purple-500/20 group-hover:bg-purple-500/30 transition-colors">
+                <i class="fas fa-clock text-purple-400"></i>
+              </div>
+            </div>
+            <p class="text-xs font-semibold" [class]="benchmarkClass(dashboard.avgResponseTimeMins, dashboard.benchmarks.avgResponseTime, true)">
+              @if (dashboard.avgResponseTimeMins <= dashboard.benchmarks.avgResponseTime) {
+                Faster than benchmark
+              } @else {
+                {{ formatTime(dashboard.avgResponseTimeMins - dashboard.benchmarks.avgResponseTime) }} slower
+              }
+            </p>
+          </div>
+
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-red-500/30 transition group">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Unanswered</p>
+                <h3 class="text-3xl font-bold text-rep-white">{{ dashboard.unansweredCount | number }}</h3>
+              </div>
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/20 group-hover:bg-red-500/30 transition-colors">
+                <i class="fas fa-bell-slash text-red-400"></i>
+              </div>
+            </div>
+            <p class="text-xs font-semibold" [class]="dashboard.unansweredRate > 30 ? 'text-red-400' : 'text-green-400'">
+              {{ dashboard.unansweredRate }}% of total interactions
+            </p>
+          </div>
+
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-green-500/30 transition group">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Total Interactions</p>
+                <h3 class="text-3xl font-bold text-rep-white">{{ dashboard.totalInteractions | number }}</h3>
+              </div>
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-green-500/20 group-hover:bg-green-500/30 transition-colors">
+                <i class="fas fa-comments text-green-400"></i>
+              </div>
+            </div>
+            <p class="text-gray-500 text-xs">{{ dashboard.repliedCount | number }} replied</p>
+          </div>
+
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-yellow-500/30 transition group">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Sentiment Score</p>
+                <h3 class="text-3xl font-bold text-rep-white">{{ dashboard.sentiment.score }}</h3>
+              </div>
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-yellow-500/20 group-hover:bg-yellow-500/30 transition-colors">
+                <i class="fas fa-heart text-yellow-400"></i>
+              </div>
+            </div>
+            <div class="flex h-1.5 rounded-full overflow-hidden gap-0.5 mt-2">
+              <span
+                class="bg-green-500 min-w-[3px] transition-all"
+                [style.width.%]="dashboard.sentiment.total > 0 ? (dashboard.sentiment.positive / dashboard.sentiment.total) * 100 : 0"
+                [title]="dashboard.sentiment.positive + ' positive'"
+              ></span>
+              <span
+                class="bg-yellow-500 min-w-[3px] transition-all"
+                [style.width.%]="dashboard.sentiment.total > 0 ? (dashboard.sentiment.neutral / dashboard.sentiment.total) * 100 : 0"
+                [title]="dashboard.sentiment.neutral + ' neutral'"
+              ></span>
+              <span
+                class="bg-red-500 min-w-[3px] transition-all"
+                [style.width.%]="dashboard.sentiment.total > 0 ? (dashboard.sentiment.negative / dashboard.sentiment.total) * 100 : 0"
+                [title]="dashboard.sentiment.negative + ' negative'"
+              ></span>
+            </div>
+          </div>
+
+          <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-5 border border-gray-800 hover:border-orange-500/30 transition group">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <p class="text-gray-400 text-xs uppercase tracking-wide font-semibold mb-1">Buying-Intent Handled</p>
+                @if (dashboard.inquiryRate !== null) {
+                  <h3 class="text-3xl font-bold text-rep-white">{{ dashboard.inquiryRate | number:'1.0-1' }}%</h3>
+                } @else {
+                  <h3 class="text-3xl font-bold text-rep-white">—</h3>
+                }
+              </div>
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-orange-500/20 group-hover:bg-orange-500/30 transition-colors">
+                <i class="fas fa-shopping-bag text-orange-400"></i>
+              </div>
+            </div>
+            @if (dashboard.inquiryRate !== null) {
+              <p class="text-xs font-semibold" [class]="dashboard.inquiryRate >= 70 ? 'text-green-400' : 'text-red-400'">
+                @if (dashboard.inquiryRate >= 70) { On track } @else { Needs attention }
+              </p>
+            } @else {
+              <p class="text-gray-500 text-xs">No inquiry data yet</p>
+            }
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Platform Breakdown -->
+      @if (dashboard.platforms.length > 0) {
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+          <h2 class="text-lg font-bold text-rep-white flex items-center gap-2 mb-5">
+            <i class="fas fa-layer-group text-rep-lime"></i>
+            Platform Breakdown
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            @for (p of dashboard.platforms; track trackByPlatform($index, p)) {
+              <div class="rounded-xl border border-gray-800 bg-gray-800/30 p-4 hover:border-gray-700 transition">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-9 h-9 rounded-lg bg-gray-900 border border-gray-700 flex items-center justify-center text-rep-white">
+                    <i [class]="platformIcon(p.platform)"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-rep-white truncate">{{ platformLabel(p.platform) }}</p>
+                  </div>
+                  <span class="text-lg font-bold" [class]="platformRateClass(p.responseRate)">{{ p.responseRate }}%</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-gray-700 overflow-hidden mb-3">
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    [class]="platformBarClass(p.responseRate)"
+                    [style.width.%]="p.responseRate"
+                  ></div>
+                </div>
+                <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500">
+                  <span><i class="fas fa-inbox mr-1"></i>{{ p.total | number }} total</span>
+                  <span><i class="fas fa-check mr-1"></i>{{ p.responded | number }} replied</span>
+                  <span><i class="fas fa-clock mr-1"></i>{{ formatTime(p.avgResponseTimeMins) }}</span>
+                  @if (p.pending > 0) {
+                    <span class="text-orange-400 font-semibold"><i class="fas fa-hourglass-half mr-1"></i>{{ p.pending }} pending</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-10 border border-gray-800 text-center">
+          <i class="fas fa-plug text-gray-600 text-3xl mb-3 block"></i>
+          <p class="text-gray-400">
+            No connected platform data yet.
+            <a routerLink="/app/settings/platforms" class="text-rep-lime font-semibold hover:underline ml-1">Connect accounts →</a>
+          </p>
+        </div>
+      }
+
+      <!-- Trend Chart -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+          <h2 class="text-lg font-bold text-rep-white flex items-center gap-2">
+            <i class="fas fa-chart-line text-rep-lime"></i>
+            Conversation Score Trend
+          </h2>
+          <div class="flex gap-1">
+            @for (d of trendPeriods; track d) {
+              <button
+                type="button"
+                (click)="onTrendPeriodChange(d)"
+                [class.bg-rep-lime]="trendPeriod === d"
+                [class.text-rep-black]="trendPeriod === d"
+                [class.bg-gray-800]="trendPeriod !== d"
+                [class.text-gray-400]="trendPeriod !== d"
+                class="px-3 py-1.5 rounded-lg text-xs font-medium transition min-h-[36px]"
+              >
+                {{ d }}d
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (loadingTrends) {
+          <div class="h-36 rounded-xl bg-gray-800/40 animate-pulse"></div>
+        } @else if (trends.length >= 2) {
+          <div class="trend-chart-wrap">
+            <svg class="trend-svg w-full h-32" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="0" y1="30" x2="400" y2="30" class="grid-line" />
+              <line x1="0" y1="60" x2="400" y2="60" class="grid-line" />
+              <line x1="0" y1="90" x2="400" y2="90" class="grid-line" />
+              @if (trendPoints.length >= 2) {
+                <polygon
+                  class="trend-fill"
+                  [attr.points]="trendPolyline + ' ' + trendPoints[trendPoints.length-1].x + ',120 ' + trendPoints[0].x + ',120'"
+                />
+                <polyline class="trend-line" [attr.points]="trendPolyline" />
+                @for (pt of trendPoints; track pt.date) {
+                  <circle class="trend-dot" [attr.cx]="pt.x" [attr.cy]="pt.y" r="3" [attr.title]="pt.date + ': ' + pt.score" />
+                }
+              }
+            </svg>
+            @if (trendPoints.length >= 2) {
+              <div class="flex justify-between text-[11px] text-gray-500 mt-2">
+                <span>{{ trendPoints[0].date }}</span>
+                <span>{{ trendPoints[trendPoints.length - 1].date }}</span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="text-center py-10">
+            <i class="fas fa-chart-area text-gray-600 text-3xl mb-3 block"></i>
+            <p class="text-gray-400 text-sm">Not enough data yet. Score history builds daily as you use the dashboard.</p>
+          </div>
+        }
+      </div>
+
+      <!-- Recommendations -->
+      <div class="bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-800">
+        <h2 class="text-lg font-bold text-rep-white flex items-center gap-2 mb-5">
+          <i class="fas fa-robot text-rep-lime"></i>
+          Growth Recommendations
+        </h2>
+        <div class="space-y-3">
+          @for (rec of dashboard.recommendations; track trackByRec($index, rec)) {
+            <div class="rounded-xl border border-gray-800 bg-gray-800/30 p-4 hover:bg-gray-800/50 transition">
+              <div class="flex items-start gap-3">
+                <span class="w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0" [class]="priorityDotClass(rec.priority)"></span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2 mb-1">
+                    <strong class="text-sm text-rep-white">{{ rec.title }}</strong>
+                    <span class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" [class]="priorityBadgeClass(rec.priority)">
+                      {{ rec.priority }}
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-400 leading-relaxed">{{ rec.action }}</p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="flex flex-wrap gap-3 pb-4">
+        <a routerLink="/app/inbox" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 transition text-sm font-semibold min-h-[44px]">
+          <i class="fas fa-inbox"></i> Open Inbox
+        </a>
+        <a routerLink="/app/automation/ai-replies" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 transition text-sm font-semibold min-h-[44px]">
+          <i class="fas fa-robot"></i> Set up AI Replies
+        </a>
+        <a routerLink="/app/analytics" class="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-800 text-rep-white rounded-xl hover:bg-gray-700 transition text-sm font-semibold min-h-[44px]">
+          <i class="fas fa-chart-bar"></i> Full Analytics
+        </a>
+        <a href="/growth-audit" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2.5 bg-rep-lime text-rep-black rounded-xl hover:shadow-lg hover:shadow-rep-lime/40 transition text-sm font-semibold min-h-[44px]">
+          <i class="fas fa-external-link-alt"></i> Public Audit
+        </a>
+      </div>
+
+    </div>
+  }
+
+</div>

@@ -1,0 +1,86 @@
+@use '../../shared/styles/theme-overrides' as theme;
+
+:host {
+  display: block;
+}
+
+@include theme.light-mode-overrides;
+
+// Score ring (SVG specifics)
+.ring-bg {
+  fill: none;
+  stroke: rgba(55, 65, 81, 0.8);
+  stroke-width: 14;
+}
+
+.ring-fill {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Trend chart
+.trend-chart-wrap {
+  padding: 0.5rem 0;
+}
+
+.grid-line {
+  stroke: rgba(75, 85, 99, 0.35);
+  stroke-width: 1;
+}
+
+.trend-fill {
+  fill: rgba(216, 255, 0, 0.12);
+}
+
+.trend-line {
+  fill: none;
+  stroke: #d8ff00;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.trend-dot {
+  fill: #d8ff00;
+  stroke: #0f1117;
+  stroke-width: 2;
+}
+
+:host-context(html:not(.dark)) {
+  .ring-bg {
+    stroke: var(--border-secondary);
+  }
+
+  .trend-fill {
+    fill: rgba(29, 78, 216, 0.08);
+  }
+
+  .trend-line,
+  .trend-dot {
+    stroke: var(--surface-primary);
+    fill: #1d4ed8;
+  }
+
+  .trend-line {
+    fill: none;
+    stroke: #1d4ed8;
+  }
+}
+
+// Subtle card entrance (matches analytics)
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.space-y-6 > * {
+  animation: fadeInUp 0.35s ease forwards;
+}
