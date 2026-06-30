@@ -3,7 +3,7 @@ import {
   ElementRef, ViewChild, SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import ApexCharts from 'apexcharts';
+import { loadApexCharts } from './apexcharts-loader';
 import { ISentimentBreakdown } from '../../../core/models/analytics.model';
 
 @Component({
@@ -35,8 +35,9 @@ export class SentimentDonutChartComponent implements AfterViewInit, OnChanges, O
   @Input() sentimentData!: ISentimentBreakdown;
   @Input() height = 300;
 
-  private chart: ApexCharts | null = null;
+  private chart: any = null;
   private initialized = false;
+  private destroyed = false;
 
   get classifiedTotal(): number {
     if (!this.sentimentData) return 0;
@@ -72,10 +73,13 @@ export class SentimentDonutChartComponent implements AfterViewInit, OnChanges, O
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.chart?.destroy();
   }
 
-  private renderChart(): void {
+  private async renderChart(): Promise<void> {
+    const ApexCharts = await loadApexCharts();
+    if (this.destroyed || !this.chartEl?.nativeElement) return;
     this.chart?.destroy();
     const isPending = this.hasPendingClassification;
     const total = this.sentimentData.total ?? 0;

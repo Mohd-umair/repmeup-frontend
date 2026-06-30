@@ -10,7 +10,7 @@ import {
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import ApexCharts from 'apexcharts';
+import { loadApexCharts } from './apexcharts-loader';
 import { Subscription, timer } from 'rxjs';
 import { take } from 'rxjs/operators';
 
@@ -68,8 +68,9 @@ export class SimpleDonutChartComponent implements AfterViewInit, OnChanges, OnDe
   @Input() centerLabel = 'Total';
   @Input() emptyMessage = 'No data yet';
 
-  private chart: ApexCharts | null = null;
+  private chart: any = null;
   private initialized = false;
+  private destroyed = false;
   private deferRenderSub?: Subscription;
 
   constructor(private cdr: ChangeDetectorRef) {}
@@ -111,6 +112,7 @@ export class SimpleDonutChartComponent implements AfterViewInit, OnChanges, OnDe
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.deferRenderSub?.unsubscribe();
     this.chart?.destroy();
   }
@@ -125,14 +127,17 @@ export class SimpleDonutChartComponent implements AfterViewInit, OnChanges, OnDe
       });
   }
 
-  private renderChart(): void {
+  private async renderChart(): Promise<void> {
     const segs = this.activeSegments;
     const total = this.total;
     if (!this.chartEl?.nativeElement || segs.length === 0 || total <= 0) return;
 
+    const ApexCharts = await loadApexCharts();
+    if (this.destroyed || !this.chartEl?.nativeElement) return;
+
     this.chart?.destroy();
 
-    const options: ApexCharts.ApexOptions = {
+    const options: any = {
       series: segs.map((s) => s.value),
       labels: segs.map((s) => s.label),
       colors: segs.map((s) => s.color),

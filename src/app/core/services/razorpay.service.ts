@@ -31,8 +31,42 @@ declare const Razorpay: any;
 @Injectable({ providedIn: 'root' })
 export class RazorpayService {
   private readonly apiUrl = `${environment.apiUrl}/razorpay`;
+  private static readonly SDK_URL = 'https://checkout.razorpay.com/v1/checkout.js';
+  /** Cached so the SDK (and its tracker chunks) load at most once, only on first payment. */
+  private sdkPromise: Promise<void> | null = null;
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Inject the Razorpay checkout script on demand. Resolves once `window.Razorpay`
+   * is available. Loaded lazily (not globally in index.html) so Razorpay's tracking
+   * chunks don't run on every page of the app.
+   */
+  private loadSdk(): Promise<void> {
+    if (typeof Razorpay !== 'undefined') return Promise.resolve();
+    if (this.sdkPromise) return this.sdkPromise;
+
+    this.sdkPromise = new Promise<void>((resolve, reject) => {
+      const existing = document.querySelector<HTMLScriptElement>(
+        `script[src="${RazorpayService.SDK_URL}"]`
+      );
+      if (existing) {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () => reject());
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = RazorpayService.SDK_URL;
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => {
+        this.sdkPromise = null; // allow a retry on next attempt
+        reject();
+      };
+      document.body.appendChild(script);
+    });
+    return this.sdkPromise;
+  }
 
   /**
    * Full upgrade flow:
@@ -61,9 +95,11 @@ export class RazorpayService {
 
         const { subscriptionId, keyId } = createRes.data;
 
-        // Step 2 — open Razorpay checkout
-        if (typeof Razorpay === 'undefined') {
-          return reject('Razorpay SDK not loaded. Please refresh the page and try again.');
+        // Step 2 — load the checkout SDK on demand, then open Razorpay checkout
+        try {
+          await this.loadSdk();
+        } catch {
+          return reject('Could not load the payment gateway. Please check your connection and try again.');
         }
 
         const rzp = new Razorpay({

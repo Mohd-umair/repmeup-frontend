@@ -3,7 +3,7 @@ import {
   ElementRef, ViewChild, SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import ApexCharts from 'apexcharts';
+import { loadApexCharts } from './apexcharts-loader';
 import { ITimeSeriesData } from '../../../core/models/analytics.model';
 
 @Component({
@@ -40,8 +40,9 @@ export class TimeSeriesChartComponent implements AfterViewInit, OnChanges, OnDes
   @Input() data: ITimeSeriesData[] = [];
   @Input() height = 320;
 
-  private chart: ApexCharts | null = null;
+  private chart: any = null;
   private initialized = false;
+  private destroyed = false;
 
   ngAfterViewInit(): void {
     this.initialized = true;
@@ -56,10 +57,13 @@ export class TimeSeriesChartComponent implements AfterViewInit, OnChanges, OnDes
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.chart?.destroy();
   }
 
-  private renderChart(): void {
+  private async renderChart(): Promise<void> {
+    const ApexCharts = await loadApexCharts();
+    if (this.destroyed || !this.chartEl?.nativeElement) return;
     this.chart?.destroy();
     const options = {
       series: [

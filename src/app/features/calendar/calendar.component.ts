@@ -12,7 +12,13 @@ interface ScheduledPost {
   platform?: string;
   platforms?: string[];
   content: string;
-  mediaUrls?: string[];
+  // Media fields as returned by the posts API (ScheduledPost model).
+  mediaUrl?: string;
+  mediaStoragePath?: string;
+  mediaStoragePaths?: string[];   // carousel / multi-media
+  mediaType?: 'image' | 'video' | null;
+  mediaTypes?: string[];
+  mediaUrls?: string[];           // legacy fallback
   scheduledFor?: Date;
   status: 'draft' | 'scheduled' | 'published' | 'failed';
   publishedAt?: Date;
@@ -242,6 +248,39 @@ export class CalendarComponent implements OnInit {
 
   getPostPlatform(post: ScheduledPost): string {
     return post.platform || post.platforms?.[0] || '';
+  }
+
+  /** First viewable media URL for a post (image/video/carousel cover), or null. */
+  resolveMediaUrl(post: ScheduledPost): string | null {
+    return (
+      post.mediaUrl ||
+      post.mediaStoragePath ||
+      post.mediaStoragePaths?.[0] ||
+      post.mediaUrls?.[0] ||
+      null
+    );
+  }
+
+  /** Number of media attached (for the carousel count badge). */
+  getMediaCount(post: ScheduledPost): number {
+    if (post.mediaStoragePaths?.length) return post.mediaStoragePaths.length;
+    if (post.mediaUrls?.length) return post.mediaUrls.length;
+    return this.resolveMediaUrl(post) ? 1 : 0;
+  }
+
+  /** Whether the cover media is a video (by declared type or file extension). */
+  mediaIsVideo(post: ScheduledPost): boolean {
+    if (post.mediaType === 'video') return true;
+    if (post.mediaTypes?.[0] === 'video') return true;
+    const url = this.resolveMediaUrl(post);
+    return !!url && /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url);
+  }
+
+  /** Hide a thumbnail that fails to load so we fall back to the placeholder tile. */
+  onMediaError(event: Event): void {
+    const el = event.target as HTMLElement;
+    el.style.display = 'none';
+    el.parentElement?.classList.add('media-failed');
   }
 
   getPlatformIcon(platform: string): string {

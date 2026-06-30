@@ -158,64 +158,119 @@
           <div class="space-y-4">
             <div
               *ngFor="let post of selectedDatePosts"
-              [ngClass]="post.status === 'published' ? 'bg-green-500/10 border-green-500/30' : 
+              [ngClass]="post.status === 'published' ? 'bg-green-500/10 border-green-500/30' :
                          post.status === 'scheduled' ? 'bg-blue-500/10 border-blue-500/30' :
                          post.status === 'failed' ? 'bg-red-500/10 border-red-500/30' : 'bg-gray-800/50 border-gray-700'"
               class="border rounded-xl p-4 sm:p-5 transition-all duration-300 hover:border-rep-lime/50"
             >
-              <!-- Post Header -->
-              <div class="flex items-start justify-between mb-3">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <i *ngIf="getPostPlatform(post)" 
-                     [class]="getPlatformIcon(getPostPlatform(post)) + ' text-xl sm:text-2xl text-gray-400'"></i>
-                  <span class="text-sm font-semibold text-gray-300">
-                    {{ getPlatformName(getPostPlatform(post)) }}
-                  </span>
+              <div class="flex gap-4">
+                <!-- Media preview thumbnail -->
+                <div class="shrink-0">
+                  <div class="media-tile relative w-20 h-20 sm:w-28 sm:h-28 rounded-lg overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center">
+                    <ng-container *ngIf="resolveMediaUrl(post) as media; else noMedia">
+                      <img
+                        *ngIf="!mediaIsVideo(post)"
+                        [src]="media"
+                        loading="lazy"
+                        (error)="onMediaError($event)"
+                        alt="Post media preview"
+                        class="w-full h-full object-cover" />
+                      <video
+                        *ngIf="mediaIsVideo(post)"
+                        [src]="media"
+                        muted
+                        playsinline
+                        preload="metadata"
+                        class="w-full h-full object-cover"></video>
+                      <!-- Video play badge -->
+                      <div *ngIf="mediaIsVideo(post)" class="absolute inset-0 flex items-center justify-center bg-black/25 pointer-events-none">
+                        <i class="fas fa-circle-play text-white/90 text-2xl"></i>
+                      </div>
+                      <!-- Carousel count badge -->
+                      <div *ngIf="getMediaCount(post) > 1" class="absolute top-1.5 right-1.5 bg-black/70 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                        <i class="fas fa-layer-group"></i> {{ getMediaCount(post) }}
+                      </div>
+                    </ng-container>
+                    <!-- Text-only fallback -->
+                    <ng-template #noMedia>
+                      <i class="fas fa-align-left text-gray-600 text-xl"></i>
+                    </ng-template>
+                    <!-- Shown only when an image fails to load -->
+                    <i class="media-fallback-icon fas fa-image text-gray-600 text-xl absolute"></i>
+                  </div>
                 </div>
-                <div class="flex flex-col items-end gap-2">
-                  <span [ngClass]="post.status === 'published' ? 'bg-green-500/20 text-green-400' :
-                                   post.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400' :
-                                   post.status === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400'"
-                        class="px-3 py-1 rounded-full text-xs font-bold uppercase">
-                    {{ post.status }}
-                  </span>
-                  <div class="flex gap-2">
-                    <button *ngIf="post.status === 'scheduled'" (click)="openReschedule(post); $event.stopPropagation()" class="text-xs text-rep-lime hover:text-rep-lime/80">Reschedule</button>
-                    <button *ngIf="post.status === 'scheduled'" (click)="openDuplicate(post); $event.stopPropagation()" class="text-xs text-gray-400 hover:text-white">Duplicate</button>
-                    <a *ngIf="post.status === 'scheduled'" routerLink="/app/content-studio" class="text-xs text-gray-400 hover:text-white">Edit</a>
+
+                <!-- Post details -->
+                <div class="flex-1 min-w-0">
+                  <!-- Post Header -->
+                  <div class="flex items-start justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <i *ngIf="getPostPlatform(post)"
+                         [class]="getPlatformIcon(getPostPlatform(post)) + ' text-lg sm:text-xl text-gray-400'"></i>
+                      <span class="text-sm font-semibold text-gray-300">
+                        {{ getPlatformName(getPostPlatform(post)) }}
+                      </span>
+                      <span *ngIf="post.postType" class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-gray-700/60 text-gray-300">
+                        {{ post.postType }}
+                      </span>
+                    </div>
+                    <span [ngClass]="post.status === 'published' ? 'bg-green-500/20 text-green-400' :
+                                     post.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400' :
+                                     post.status === 'failed' ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400'"
+                          class="shrink-0 px-3 py-1 rounded-full text-xs font-bold uppercase">
+                      {{ post.status }}
+                    </span>
+                  </div>
+
+                  <!-- Post Content -->
+                  <p *ngIf="post.content" class="text-sm sm:text-base text-gray-300 mb-2 whitespace-pre-wrap line-clamp-4">{{ post.content }}</p>
+                  <p *ngIf="!post.content" class="text-sm text-gray-500 italic mb-2">No caption</p>
+
+                  <!-- First comment -->
+                  <p *ngIf="post.firstComment" class="text-xs text-gray-400 mb-2 flex items-start gap-1.5">
+                    <i class="fas fa-comment-dots mt-0.5 text-gray-500"></i>
+                    <span class="line-clamp-2">{{ post.firstComment }}</span>
+                  </p>
+
+                  <!-- Post Metadata -->
+                  <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-400 border-t border-gray-800 pt-2.5">
+                    <div class="flex items-center gap-1">
+                      <i class="fas fa-clock"></i>
+                      <span *ngIf="post.status === 'published'">{{ formatDate(post.publishedAt!) }}</span>
+                      <span *ngIf="post.status === 'scheduled'">{{ formatDate(post.scheduledFor!) }}</span>
+                    </div>
+
+                    <span *ngIf="post.location" class="flex items-center gap-1">
+                      <i class="fas fa-location-dot"></i>{{ post.location }}
+                    </span>
+
+                    <a *ngIf="post.platformPostUrl"
+                       [href]="post.platformPostUrl"
+                       target="_blank"
+                       class="flex items-center gap-1 text-rep-lime hover:text-rep-lime/80 font-medium">
+                      <i class="fas fa-external-link-alt"></i>
+                      View on {{ getPlatformName(getPostPlatform(post)) }}
+                    </a>
+                  </div>
+
+                  <!-- Actions -->
+                  <div *ngIf="post.status === 'scheduled'" class="flex flex-wrap items-center gap-3 mt-3">
+                    <button (click)="openReschedule(post); $event.stopPropagation()" class="text-xs font-medium text-rep-lime hover:text-rep-lime/80 flex items-center gap-1">
+                      <i class="fas fa-calendar-day"></i> Reschedule
+                    </button>
+                    <button (click)="openDuplicate(post); $event.stopPropagation()" class="text-xs font-medium text-gray-400 hover:text-white flex items-center gap-1">
+                      <i class="fas fa-copy"></i> Duplicate
+                    </button>
+                    <a routerLink="/app/content-studio" class="text-xs font-medium text-gray-400 hover:text-white flex items-center gap-1">
+                      <i class="fas fa-pen"></i> Edit
+                    </a>
                     <button
-                      *ngIf="post.status === 'scheduled'"
                       (click)="deleteScheduledPost(post._id!)"
-                      class="text-red-400 hover:text-red-300 transition text-sm">
-                      <i class="fas fa-trash-can mr-1"></i>
-                      Delete
+                      class="text-xs font-medium text-red-400 hover:text-red-300 transition flex items-center gap-1">
+                      <i class="fas fa-trash-can"></i> Delete
                     </button>
                   </div>
                 </div>
-              </div>
-              
-              <!-- Post Content -->
-              <p class="text-sm sm:text-base text-gray-300 mb-3 whitespace-pre-wrap">{{ post.content }}</p>
-              
-              <!-- Post Metadata -->
-              <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400 border-t border-gray-800 pt-3">
-                <div class="flex items-center gap-1">
-                  <i class="fas fa-clock"></i>
-                  <span *ngIf="post.status === 'published'">
-                    Published: {{ formatDate(post.publishedAt!) }}
-                  </span>
-                  <span *ngIf="post.status === 'scheduled'">
-                    Scheduled: {{ formatDate(post.scheduledFor!) }}
-                  </span>
-                </div>
-                
-                <a *ngIf="post.platformPostUrl" 
-                   [href]="post.platformPostUrl" 
-                   target="_blank"
-                   class="flex items-center gap-1 text-rep-lime hover:text-rep-lime/80 font-medium">
-                  <i class="fas fa-external-link-alt"></i>
-                  View on {{ getPlatformName(getPostPlatform(post)) }}
-                </a>
               </div>
             </div>
           </div>

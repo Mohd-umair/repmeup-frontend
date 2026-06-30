@@ -56,5 +56,17 @@
   flex-shrink: 0;
 }
 
+// Media thumbnail in the posts popup: the fallback icon is hidden until an image
+// fails to load (onMediaError adds .media-failed to the tile).
+.media-tile {
+  .media-fallback-icon {
+    display: none;
+  }
+
+  &.media-failed .media-fallback-icon {
+    display: block;
+  }
+}
+
 @include theme.light-mode-overrides;
 

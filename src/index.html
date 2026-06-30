@@ -28,7 +28,13 @@
   <link rel="canonical" href="https://repmeup.in/">
   <link rel="icon" type="image/x-icon" href="assets/Images/Favicon.ico">
   <link rel="apple-touch-icon" href="assets/Images/logo.jpeg">
-  <link rel="stylesheet" href="assets/css/fontawesome.min.css">
+  <!--
+    FontAwesome loaded async (non-render-blocking): the print-media swap lets the
+    browser fetch it without delaying first paint, then flips it to all media on load.
+    Falls back to a normal blocking stylesheet when JS is disabled.
+  -->
+  <link rel="stylesheet" href="assets/css/fontawesome.min.css" media="print" onload="this.onload=null;this.media='all'">
+  <noscript><link rel="stylesheet" href="assets/css/fontawesome.min.css"></noscript>
   <script>
     (function () {
       try {
@@ -47,7 +53,10 @@
 </head>
 <body>
   <app-root></app-root>
-  <!-- Razorpay checkout SDK — loaded globally so RazorpayService can use window.Razorpay -->
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <!--
+    Razorpay checkout SDK is loaded on demand by RazorpayService (only when the user
+    starts a payment), NOT globally here. Loading it globally boots Razorpay's tracking
+    chunks (v2-entry-intl-card-trackers) on every page and makes them poll continuously.
+  -->
 </body>
 </html>

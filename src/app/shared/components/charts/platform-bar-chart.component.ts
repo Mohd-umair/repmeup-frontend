@@ -3,7 +3,7 @@ import {
   ElementRef, ViewChild, SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import ApexCharts from 'apexcharts';
+import { loadApexCharts } from './apexcharts-loader';
 import { IPlatformMetrics } from '../../../core/models/analytics.model';
 
 @Component({
@@ -28,8 +28,9 @@ export class PlatformBarChartComponent implements AfterViewInit, OnChanges, OnDe
   @Input() platforms: IPlatformMetrics[] = [];
   @Input() height = 300;
 
-  private chart: ApexCharts | null = null;
+  private chart: any = null;
   private initialized = false;
+  private destroyed = false;
 
   ngAfterViewInit(): void {
     this.initialized = true;
@@ -44,10 +45,13 @@ export class PlatformBarChartComponent implements AfterViewInit, OnChanges, OnDe
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.chart?.destroy();
   }
 
-  private renderChart(): void {
+  private async renderChart(): Promise<void> {
+    const ApexCharts = await loadApexCharts();
+    if (this.destroyed || !this.chartEl?.nativeElement) return;
     this.chart?.destroy();
     const sorted = [...this.platforms].sort((a, b) => b.totalInteractions - a.totalInteractions);
     const options = {

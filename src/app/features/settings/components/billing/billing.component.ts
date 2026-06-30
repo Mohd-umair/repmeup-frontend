@@ -186,6 +186,25 @@ export class BillingComponent implements OnInit, OnDestroy {
     return planTier > this.subscriptionLimits.tier;
   }
 
+  /**
+   * Demo/trial workspace. Demo plans run on an unlimited, top-tier internal plan,
+   * so no public plan is ever an "upgrade" — without this the purchase CTA never
+   * shows and a demo user can't subscribe. We surface a buy button for them instead.
+   */
+  get isDemo(): boolean {
+    return !!this.subscriptionLimits?.trial?.isDemo;
+  }
+
+  /** Whether a buy/upgrade CTA should show for a plan card. */
+  canPurchasePlan(planTier: number): boolean {
+    return this.isDemo || this.isUpgrade(planTier);
+  }
+
+  /** CTA label — demo users subscribe to convert; existing customers upgrade. */
+  get purchaseCtaLabel(): string {
+    return this.isDemo ? 'Get this plan' : 'Upgrade';
+  }
+
   getUsagePercent(metric: UsageMetric): number {
     if (!this.subscriptionLimits) return 0;
     const used = this.subscriptionLimits.usage[metric.key] as number;

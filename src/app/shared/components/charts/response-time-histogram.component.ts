@@ -3,7 +3,7 @@ import {
   ElementRef, ViewChild, SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import ApexCharts from 'apexcharts';
+import { loadApexCharts } from './apexcharts-loader';
 import { IResponseTimeMetrics } from '../../../core/models/analytics.model';
 
 @Component({
@@ -31,8 +31,9 @@ export class ResponseTimeHistogramComponent implements AfterViewInit, OnChanges,
   @Input() metrics!: IResponseTimeMetrics;
   @Input() height = 280;
 
-  private chart: ApexCharts | null = null;
+  private chart: any = null;
   private initialized = false;
+  private destroyed = false;
 
   get hasData(): boolean {
     if (!this.metrics) return false;
@@ -56,10 +57,13 @@ export class ResponseTimeHistogramComponent implements AfterViewInit, OnChanges,
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.chart?.destroy();
   }
 
-  private renderChart(): void {
+  private async renderChart(): Promise<void> {
+    const ApexCharts = await loadApexCharts();
+    if (this.destroyed || !this.chartEl?.nativeElement) return;
     this.chart?.destroy();
     const annotations: any = {};
     if (this.metrics.avg) {

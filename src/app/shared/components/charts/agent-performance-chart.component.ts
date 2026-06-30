@@ -3,7 +3,7 @@ import {
   ElementRef, ViewChild, SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import ApexCharts from 'apexcharts';
+import { loadApexCharts } from './apexcharts-loader';
 import { Subscription, timer } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { IAgentStats } from '../../../core/models/analytics.model';
@@ -36,8 +36,9 @@ export class AgentPerformanceChartComponent implements AfterViewInit, OnChanges,
   @Input() agents: IAgentStats[] = [];
   @Input() height = 320;
 
-  private chart: ApexCharts | null = null;
+  private chart: any = null;
   private initialized = false;
+  private destroyed = false;
   private renderScheduled = false;
   private scheduleSub?: Subscription;
 
@@ -54,6 +55,7 @@ export class AgentPerformanceChartComponent implements AfterViewInit, OnChanges,
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
     this.scheduleSub?.unsubscribe();
     this.chart?.destroy();
   }
@@ -71,10 +73,11 @@ export class AgentPerformanceChartComponent implements AfterViewInit, OnChanges,
       });
   }
 
-  private renderChart(): void {
+  private async renderChart(): Promise<void> {
     if (!this.agents?.length) return;
+    const ApexCharts = await loadApexCharts();
     const el = this.chartEl?.nativeElement;
-    if (!el) return;
+    if (this.destroyed || !el) return;
     this.chart?.destroy();
     this.chart = null;
     const names = this.agents.map(a => (a.name || 'Unknown').trim() || 'Agent');

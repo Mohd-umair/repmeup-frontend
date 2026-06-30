@@ -292,7 +292,7 @@
             Current Plan
           </button>
 
-          <button *ngIf="!isCurrentPlan(planKey) && isUpgrade(getPlan(planKey).tier)"
+          <button *ngIf="!isCurrentPlan(planKey) && canPurchasePlan(getPlan(planKey).tier)"
             (click)="upgradePlan(planKey, getPlan(planKey).name ?? planKey)"
             [disabled]="upgradingPlan !== null"
             class="w-full py-2.5 px-4 font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 bg-rep-lime text-rep-black hover:shadow-md hover:shadow-rep-lime/30">
@@ -301,12 +301,12 @@
               Processing…
             </ng-container>
             <ng-template #ctaLabel>
-              <i class="fas fa-arrow-up" style="font-size:10px"></i>
-              Upgrade
+              <i [class]="isDemo ? 'fas fa-bolt' : 'fas fa-arrow-up'" style="font-size:10px"></i>
+              {{ purchaseCtaLabel }}
             </ng-template>
           </button>
 
-          <div *ngIf="!isCurrentPlan(planKey) && !isUpgrade(getPlan(planKey).tier)"
+          <div *ngIf="!isCurrentPlan(planKey) && !canPurchasePlan(getPlan(planKey).tier)"
             class="w-full min-h-[2.5rem]" aria-hidden="true"></div>
         </ng-template>
       </div>
