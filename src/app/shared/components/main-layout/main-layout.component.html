@@ -80,7 +80,7 @@
   <!-- Demo trial LOCK overlay — shown when the trial has expired. The backend also
        gates API calls (UPGRADE_REQUIRED); this gives the prospect a clear path to buy. -->
   <ng-container *ngIf="limits$ | async as lim">
-    <div *ngIf="lim?.trial?.locked"
+    <div *ngIf="lim?.trial?.locked && !isDemoLockSuppressed()"
       class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-rep-black/80 backdrop-blur-sm"
       role="dialog" aria-modal="true" aria-labelledby="demo-lock-title">
       <div class="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl w-full max-w-md p-7 text-center">

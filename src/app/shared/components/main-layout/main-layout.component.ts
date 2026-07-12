@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, effect, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -43,6 +43,22 @@ export class MainLayoutComponent {
   /** Used for app-wide subscription cancellation notice + demo trial banner/lock */
   readonly limits$ = this.subscriptionService.limits$;
 
+  /**
+   * Routes where the expired-demo LOCK overlay must NOT show — the user needs
+   * these to actually purchase a plan and unlock the workspace. Mirrors the
+   * backend's DEMO_UNLOCKED_PATH_PATTERNS (see middlewares/auth.js).
+   */
+  private readonly DEMO_UNLOCKED_PATHS = ['/app/plans'];
+
+  /** Current route path (updated on navigation) — drives lock-overlay suppression. */
+  readonly currentUrl = signal(this.router.url);
+
+  /** True when the demo-lock overlay must be hidden so the user can buy a plan. */
+  isDemoLockSuppressed(): boolean {
+    const path = this.currentUrl().split('?')[0];
+    return this.DEMO_UNLOCKED_PATHS.some((p) => path.startsWith(p));
+  }
+
   /** Sign out from the demo trial lock overlay. */
   logoutFromLock(): void {
     this.authService.logout();
@@ -77,6 +93,7 @@ export class MainLayoutComponent {
           previousUrl = this.router.url;
         }
         if (e instanceof NavigationEnd) {
+          this.currentUrl.set(e.urlAfterRedirects);
           // Strip query strings to compare base paths only.
           // If the path didn't change (only query params changed), the user is
           // switching tabs/sub-views within the same page — don't reset scroll.

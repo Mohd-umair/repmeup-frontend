@@ -122,15 +122,20 @@
     <div *ngIf="!loadingProducts && products.length > 0"
          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <div *ngFor="let product of products; trackBy: trackByProduct"
-           class="rounded-xl border flex flex-col"
+           (click)="openProductDetail(product)"
+           (keydown.enter)="openProductDetail(product)"
+           tabindex="0"
+           role="button"
+           [attr.aria-label]="'View details for ' + product.name"
+           class="rounded-xl border flex flex-col cursor-pointer transition hover:shadow-md"
            style="background-color: var(--card-bg); border-color: var(--card-border);">
 
-        <!-- Thumbnail -->
+        <!-- Thumbnail — object-contain so the full image is visible (no top/bottom crop) -->
         <div class="h-44 rounded-t-xl overflow-hidden flex items-center justify-center relative"
              style="background-color: var(--surface-primary);">
           <img *ngIf="product.images.length > 0"
                [src]="displayImageUrl(product.images[0])"
-               class="w-full h-full object-cover"
+               class="w-full h-full object-contain"
                alt="{{ product.name }}"
                (error)="$any($event.target).style.display='none'" />
           <i *ngIf="product.images.length === 0" class="fas fa-image text-4xl" style="color: var(--text-muted);"></i>
@@ -191,21 +196,21 @@
           </div>
         </div>
 
-        <!-- Footer actions -->
+        <!-- Footer actions (stopPropagation: card click opens the detail sidebar) -->
         <div class="flex border-t" style="border-color: var(--card-border);">
-          <button (click)="openEditModal(product)"
+          <button (click)="openEditModal(product); $event.stopPropagation()"
                   class="flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition hover:opacity-80 rounded-bl-xl"
                   style="color: var(--text-secondary);">
             <i class="fas fa-pen"></i> Edit
           </button>
           <div class="w-px shrink-0" style="background-color: var(--card-border);"></div>
-          <button (click)="openAttachPosts(product)"
+          <button (click)="openAttachPosts(product); $event.stopPropagation()"
                   class="flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition hover:opacity-80"
                   style="color: var(--accent);">
             <i class="fas fa-link"></i> Attach Post
           </button>
           <div class="w-px shrink-0" style="background-color: var(--card-border);"></div>
-          <button (click)="deleteProduct(product)"
+          <button (click)="deleteProduct(product); $event.stopPropagation()"
                   class="flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 transition text-red-500 hover:opacity-80 rounded-br-xl">
             <i class="fas fa-trash"></i> Delete
           </button>
@@ -657,123 +662,405 @@
       </button>
     </div>
 
-    <div class="overflow-auto p-5 space-y-4 flex-1">
-      <form [formGroup]="productForm">
+    <div class="overflow-auto p-5 space-y-3 flex-1">
+      <form [formGroup]="productForm" class="space-y-3">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="sm:col-span-2">
-            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Product Name *</label>
-            <input formControlName="name" type="text" placeholder="e.g. Blue Embroidered Suit"
-                   class="w-full px-3 py-2 rounded-lg border text-sm"
-                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-          </div>
+        <!-- ─────────────── SECTION: Basics ─────────────── -->
+        <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border);">
+          <button type="button" (click)="toggleFormSection('basics')"
+                  class="w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition"
+                  style="background-color: var(--surface-primary); color: var(--text-primary);">
+            <span><i class="fas fa-box-open mr-2" style="color: var(--accent);"></i>Basics</span>
+            <i class="fas text-xs" [ngClass]="formSections['basics'] ? 'fa-chevron-up' : 'fa-chevron-down'" style="color: var(--text-muted);"></i>
+          </button>
+          <div *ngIf="formSections['basics']" class="p-4 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Product Name *</label>
+                <input formControlName="name" type="text" placeholder="e.g. Blue Embroidered Suit"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
 
-          <div>
-            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Price *</label>
-            <input formControlName="price" type="number" min="0" placeholder="149"
-                   class="w-full px-3 py-2 rounded-lg border text-sm"
-                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Currency</label>
-            <input formControlName="currency" type="text" placeholder="INR"
-                   class="w-full px-3 py-2 rounded-lg border text-sm"
-                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-          </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">SKU</label>
+                <input formControlName="sku" type="text" placeholder="e.g. KURTI-BLK-01"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+                <p class="text-[11px] mt-1" style="color: var(--text-muted);">Used as the WhatsApp catalog retailer ID.</p>
+                <p *ngIf="editingProduct?.whatsapp?.syncStatus === 'synced'" class="text-[11px] mt-1 text-amber-600 dark:text-amber-400">
+                  <i class="fas fa-triangle-exclamation mr-1"></i>Changing the SKU re-creates this item in your WhatsApp catalog.
+                </p>
+              </div>
+              <div formGroupName="commerce">
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Brand</label>
+                <input formControlName="brand" type="text" placeholder="Brand name"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
 
-          <div>
-            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Discount %</label>
-            <input formControlName="discountPercent" type="number" min="0" max="100" placeholder="0"
-                   class="w-full px-3 py-2 rounded-lg border text-sm"
-                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
-              Stock <span class="font-normal text-xs" style="color: var(--text-muted);">(blank = unlimited)</span>
-            </label>
-            <input formControlName="stock" type="number" min="0" placeholder="∞"
-                   class="w-full px-3 py-2 rounded-lg border text-sm"
-                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-          </div>
-        </div>
+              <ng-container formGroupName="commerce">
+                <div>
+                  <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Condition</label>
+                  <select formControlName="condition"
+                          class="w-full px-3 py-2 rounded-lg border text-sm capitalize"
+                          style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+                    <option *ngFor="let c of conditionOptions" [value]="c" class="capitalize">{{ c }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Availability</label>
+                  <select formControlName="availability"
+                          class="w-full px-3 py-2 rounded-lg border text-sm"
+                          style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+                    <option value="">Auto (from stock)</option>
+                    <option value="in stock">In stock</option>
+                    <option value="out of stock">Out of stock</option>
+                  </select>
+                </div>
+              </ng-container>
 
-        <p *ngIf="productForm.value.discountPercent > 0" class="text-xs text-green-600 dark:text-green-400">
-          Effective price after discount: {{ effectivePrice | appCurrency:productForm.value.currency }}
-        </p>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Price *</label>
+                <input formControlName="price" type="number" min="0" placeholder="149"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Currency</label>
+                <input formControlName="currency" type="text" placeholder="INR"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
 
-        <div>
-          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Description</label>
-          <textarea formControlName="description" rows="2" placeholder="Short product description…"
-                    class="w-full px-3 py-2 rounded-lg border text-sm resize-none"
-                    style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
-        </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Discount %</label>
+                <input formControlName="discountPercent" type="number" min="0" max="100" placeholder="0"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
+                  Stock <span class="font-normal text-xs" style="color: var(--text-muted);">(blank = unlimited)</span>
+                </label>
+                <input formControlName="stock" type="number" min="0" placeholder="∞"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+            </div>
 
-        <div>
-          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Payment / Checkout URL</label>
-          <input formControlName="paymentUrl" type="url" placeholder="https://pay.yourstore.com/product-123"
-                 class="w-full px-3 py-2 rounded-lg border text-sm"
-                 style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-        </div>
+            <!-- Sale window — only meaningful with a discount -->
+            <div *ngIf="productForm.value.discountPercent > 0" formGroupName="commerce"
+                 class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Sale starts <span class="font-normal text-xs" style="color: var(--text-muted);">(optional)</span></label>
+                <input formControlName="salePriceStart" type="date"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Sale ends <span class="font-normal text-xs" style="color: var(--text-muted);">(optional)</span></label>
+                <input formControlName="salePriceEnd" type="date"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+            </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
-              Sizes <span class="font-normal text-xs" style="color: var(--text-muted);">(comma-separated)</span>
-            </label>
-            <input [(ngModel)]="sizesInput" [ngModelOptions]="{standalone: true}" type="text" placeholder="S, M, L, XL"
-                   class="w-full px-3 py-2 rounded-lg border text-sm"
-                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-          </div>
-          <div>
-            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
-              Colors <span class="font-normal text-xs" style="color: var(--text-muted);">(comma-separated)</span>
-            </label>
-            <input [(ngModel)]="colorsInput" [ngModelOptions]="{standalone: true}" type="text" placeholder="Blue, Red, Green"
-                   class="w-full px-3 py-2 rounded-lg border text-sm"
-                   style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
-          </div>
-        </div>
+            <p *ngIf="productForm.value.discountPercent > 0" class="text-xs text-green-600 dark:text-green-400">
+              Sale price after discount: {{ effectivePrice | appCurrency:productForm.value.currency }} — customers see the original price struck through.
+            </p>
+            <p *ngIf="productForm.get('commerce.availability')?.value === 'in stock' && productForm.value.stock === 0"
+               class="text-xs text-amber-600 dark:text-amber-400">
+              <i class="fas fa-triangle-exclamation mr-1"></i>Availability is forced to “In stock” while stock is 0.
+            </p>
 
-        <div>
-          <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Product images</label>
-          <p class="text-xs mb-2" style="color: var(--text-muted);">
-            Open your media library or upload from device. Images are stored in the library and linked here.
-          </p>
+            <div>
+              <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Description</label>
+              <textarea formControlName="description" rows="2" placeholder="Short product description…"
+                        class="w-full px-3 py-2 rounded-lg border text-sm resize-none"
+                        style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
+            </div>
 
-          <div *ngIf="productImageUrls.length" class="flex flex-wrap gap-2 mb-3">
-            <div *ngFor="let url of productImageUrls; let i = index; trackBy: trackByImageUrl"
-                 class="relative group w-[4.5rem] h-[4.5rem] rounded-lg overflow-hidden border shrink-0"
-                 style="border-color: var(--card-border);">
-              <img [src]="displayImageUrl(url)" alt="" class="w-full h-full object-cover"
-                   loading="lazy" />
-              <button type="button"
-                      (click)="removeProductImageAt(i)"
-                      class="absolute inset-0 flex items-center justify-center text-white text-sm transition-opacity opacity-0 group-hover:opacity-100"
-                      style="background-color: rgba(0,0,0,0.55);"
-                      [attr.aria-label]="'Remove image ' + (i + 1)">
-                <i class="fas fa-trash-alt"></i>
-              </button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Product page URL</label>
+                <input formControlName="websiteUrl" type="url" placeholder="https://yourstore.com/products/…"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+                <p class="text-[11px] mt-1" style="color: var(--text-muted);">Shown as the product link on WhatsApp.</p>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Payment / Checkout URL</label>
+                <input formControlName="paymentUrl" type="url" placeholder="https://pay.yourstore.com/product-123"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
             </div>
           </div>
+        </div>
 
-          <button type="button"
-                  (click)="openProductImagesModal()"
-                  class="catalog-btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold">
-            <i class="fas fa-image"></i>
-            Select images
+        <!-- ─────────────── SECTION: Media ─────────────── -->
+        <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border);">
+          <button type="button" (click)="toggleFormSection('media')"
+                  class="w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition"
+                  style="background-color: var(--surface-primary); color: var(--text-primary);">
+            <span><i class="fas fa-images mr-2" style="color: var(--accent);"></i>Media</span>
+            <i class="fas text-xs" [ngClass]="formSections['media'] ? 'fa-chevron-up' : 'fa-chevron-down'" style="color: var(--text-muted);"></i>
           </button>
+          <div *ngIf="formSections['media']" class="p-4">
+            <p class="text-xs mb-2" style="color: var(--text-muted);">
+              The first image is the main WhatsApp image; up to 20 more are sent as additional images.
+            </p>
 
-          <details class="mt-3 group">
-            <summary class="text-xs font-semibold cursor-pointer list-none flex items-center gap-1 outline-none [&::-webkit-details-marker]:hidden"
-                     style="color: var(--text-muted);">
-              <i class="fas fa-chevron-right text-[10px] transition-transform group-open:rotate-90"></i>
-              Paste image URLs instead
-            </summary>
-            <textarea [(ngModel)]="imagesInput" [ngModelOptions]="{standalone: true}" rows="3"
-                      placeholder="https://…"
-                      class="w-full mt-2 px-3 py-2 rounded-lg border text-sm resize-none"
-                      style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
-          </details>
+            <div *ngIf="productImageUrls.length" class="flex flex-wrap gap-2 mb-3">
+              <div *ngFor="let url of productImageUrls; let i = index; trackBy: trackByImageUrl"
+                   class="relative group w-[4.5rem] h-[4.5rem] rounded-lg overflow-hidden border shrink-0"
+                   style="border-color: var(--card-border);">
+                <img [src]="displayImageUrl(url)" alt="" class="w-full h-full object-cover" loading="lazy" />
+                <span *ngIf="i === 0" class="absolute top-0 left-0 text-[9px] font-bold px-1 py-0.5 rounded-br"
+                      style="background-color: var(--accent); color: #fff;">Main</span>
+                <button type="button"
+                        (click)="removeProductImageAt(i)"
+                        class="absolute inset-0 flex items-center justify-center text-white text-sm transition-opacity opacity-0 group-hover:opacity-100"
+                        style="background-color: rgba(0,0,0,0.55);"
+                        [attr.aria-label]="'Remove image ' + (i + 1)">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+
+            <button type="button"
+                    (click)="openProductImagesModal()"
+                    class="catalog-btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold">
+              <i class="fas fa-image"></i>
+              Select images
+            </button>
+
+            <details class="mt-3 group">
+              <summary class="text-xs font-semibold cursor-pointer list-none flex items-center gap-1 outline-none [&::-webkit-details-marker]:hidden"
+                       style="color: var(--text-muted);">
+                <i class="fas fa-chevron-right text-[10px] transition-transform group-open:rotate-90"></i>
+                Paste image URLs instead
+              </summary>
+              <textarea [(ngModel)]="imagesInput" [ngModelOptions]="{standalone: true}" rows="3"
+                        placeholder="https://…"
+                        class="w-full mt-2 px-3 py-2 rounded-lg border text-sm resize-none"
+                        style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);"></textarea>
+            </details>
+          </div>
+        </div>
+
+        <!-- ─────────────── SECTION: Variants & attributes ─────────────── -->
+        <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border);">
+          <button type="button" (click)="toggleFormSection('variants')"
+                  class="w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition"
+                  style="background-color: var(--surface-primary); color: var(--text-primary);">
+            <span><i class="fas fa-sliders mr-2" style="color: var(--accent);"></i>Variants &amp; attributes</span>
+            <i class="fas text-xs" [ngClass]="formSections['variants'] ? 'fa-chevron-up' : 'fa-chevron-down'" style="color: var(--text-muted);"></i>
+          </button>
+          <div *ngIf="formSections['variants']" class="p-4 space-y-4" formGroupName="commerce">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Item group ID</label>
+                <input formControlName="itemGroupId" type="text" placeholder="Same value groups product variants"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Colour</label>
+                <input formControlName="color" type="text" placeholder="e.g. Royal Blue"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Size</label>
+                <input formControlName="size" type="text" placeholder="e.g. Medium, US 12"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Material</label>
+                <input formControlName="material" type="text" placeholder="e.g. Organic Cotton"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Pattern</label>
+                <input formControlName="pattern" type="text" placeholder="e.g. Polka dots"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Gender</label>
+                <select formControlName="gender"
+                        class="w-full px-3 py-2 rounded-lg border text-sm capitalize"
+                        style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+                  <option value="">—</option>
+                  <option *ngFor="let g of genderOptions" [value]="g" class="capitalize">{{ g }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Age group</label>
+                <select formControlName="ageGroup"
+                        class="w-full px-3 py-2 rounded-lg border text-sm capitalize"
+                        style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+                  <option value="">—</option>
+                  <option *ngFor="let a of ageGroupOptions" [value]="a" class="capitalize">{{ a }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t" style="border-color: var(--card-border);">
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
+                  Sizes offered <span class="font-normal text-xs" style="color: var(--text-muted);">(DM automation)</span>
+                </label>
+                <input [(ngModel)]="sizesInput" [ngModelOptions]="{standalone: true}" type="text" placeholder="S, M, L, XL"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">
+                  Colours offered <span class="font-normal text-xs" style="color: var(--text-muted);">(DM automation)</span>
+                </label>
+                <input [(ngModel)]="colorsInput" [ngModelOptions]="{standalone: true}" type="text" placeholder="Blue, Red, Green"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────── SECTION: Category & identifiers ─────────────── -->
+        <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border);">
+          <button type="button" (click)="toggleFormSection('category')"
+                  class="w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition"
+                  style="background-color: var(--surface-primary); color: var(--text-primary);">
+            <span><i class="fas fa-tags mr-2" style="color: var(--accent);"></i>Category &amp; identifiers</span>
+            <i class="fas text-xs" [ngClass]="formSections['category'] ? 'fa-chevron-up' : 'fa-chevron-down'" style="color: var(--text-muted);"></i>
+          </button>
+          <div *ngIf="formSections['category']" class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4" formGroupName="commerce">
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Google product category</label>
+              <input formControlName="googleProductCategory" type="text" placeholder="e.g. Apparel & Accessories > Clothing"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Facebook product category</label>
+              <input formControlName="fbProductCategory" type="text" placeholder="e.g. Clothing"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Product type</label>
+              <input formControlName="productType" type="text" placeholder="Your own categorization"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">GTIN / barcode</label>
+              <input formControlName="gtin" type="text" placeholder="8-14 digits"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">MPN</label>
+              <input formControlName="mpn" type="text" placeholder="Manufacturer part number"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────── SECTION: Compliance (India) ─────────────── -->
+        <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border);">
+          <button type="button" (click)="toggleFormSection('compliance')"
+                  class="w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition"
+                  style="background-color: var(--surface-primary); color: var(--text-primary);">
+            <span><i class="fas fa-shield-halved mr-2" style="color: var(--accent);"></i>Compliance (India)</span>
+            <i class="fas text-xs" [ngClass]="formSections['compliance'] ? 'fa-chevron-up' : 'fa-chevron-down'" style="color: var(--text-muted);"></i>
+          </button>
+          <div *ngIf="formSections['compliance']" class="p-4 space-y-4" formGroupName="commerce">
+            <p class="text-xs" style="color: var(--text-muted);">
+              Required by WhatsApp for India sellers. Importer details are needed when the origin country is not India.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Origin country</label>
+                <input formControlName="originCountry" type="text" maxlength="2" placeholder="IN"
+                       class="w-full px-3 py-2 rounded-lg border text-sm uppercase"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+                <p class="text-[11px] mt-1" style="color: var(--text-muted);">2-letter ISO code.</p>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">WhatsApp compliance category</label>
+                <select formControlName="waComplianceCategory"
+                        class="w-full px-3 py-2 rounded-lg border text-sm"
+                        style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+                  <option value="DEFAULT">Default (physical goods)</option>
+                  <option value="COUNTRY_ORIGIN_EXEMPT">Country-origin exempt (services/non-physical)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Importer name</label>
+                <input formControlName="importerName" type="text" placeholder="Legal entity name"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Manufacturer info</label>
+                <input formControlName="manufacturerInfo" type="text" placeholder="Manufacturer name & address"
+                       class="w-full px-3 py-2 rounded-lg border text-sm"
+                       style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              </div>
+            </div>
+
+            <p class="text-xs font-semibold" style="color: var(--text-secondary);">Importer address</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input formControlName="importerStreet1" type="text" placeholder="Street 1"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              <input formControlName="importerStreet2" type="text" placeholder="Street 2"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              <input formControlName="importerCity" type="text" placeholder="City"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              <input formControlName="importerRegion" type="text" placeholder="State / region"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              <input formControlName="importerPostalCode" type="text" placeholder="Postal code"
+                     class="w-full px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              <input formControlName="importerCountry" type="text" maxlength="2" placeholder="Country (IN)"
+                     class="w-full px-3 py-2 rounded-lg border text-sm uppercase"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────── SECTION: Shipping ─────────────── -->
+        <div class="rounded-xl border overflow-hidden" style="border-color: var(--card-border);">
+          <button type="button" (click)="toggleFormSection('shipping')"
+                  class="w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition"
+                  style="background-color: var(--surface-primary); color: var(--text-primary);">
+            <span><i class="fas fa-truck mr-2" style="color: var(--accent);"></i>Shipping</span>
+            <i class="fas text-xs" [ngClass]="formSections['shipping'] ? 'fa-chevron-up' : 'fa-chevron-down'" style="color: var(--text-muted);"></i>
+          </button>
+          <div *ngIf="formSections['shipping']" class="p-4" formGroupName="commerce">
+            <label class="block text-sm font-semibold mb-1" style="color: var(--text-primary);">Shipping weight</label>
+            <div class="flex gap-2">
+              <input formControlName="shippingWeightValue" type="number" min="0" step="0.01" placeholder="0.5"
+                     class="flex-1 px-3 py-2 rounded-lg border text-sm"
+                     style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);" />
+              <select formControlName="shippingWeightUnit"
+                      class="w-24 px-3 py-2 rounded-lg border text-sm"
+                      style="background-color: var(--surface-primary); border-color: var(--card-border); color: var(--text-primary);">
+                <option *ngFor="let u of weightUnitOptions" [value]="u">{{ u }}</option>
+              </select>
+            </div>
+          </div>
         </div>
 
       </form>
@@ -1832,3 +2119,304 @@
   </div>
 
 </div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     Product detail sidebar (right slide-over) — opens on product card click
+     ════════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="selectedProduct"
+     (click)="closeProductDetail()"
+     class="fixed inset-0 z-30 bg-black/30 backdrop-blur-[2px]"
+     aria-hidden="true"></div>
+
+<aside *ngIf="selectedProduct"
+       role="dialog"
+       [attr.aria-label]="selectedProduct.name + ' details'"
+       class="fixed inset-y-0 right-0 w-full max-w-md z-40 border-l shadow-2xl flex flex-col"
+       style="background-color: var(--card-bg); border-color: var(--card-border);">
+
+  <!-- Header -->
+  <div class="flex items-start justify-between gap-3 px-5 py-4 border-b shrink-0"
+       style="border-color: var(--card-border);">
+    <div class="min-w-0">
+      <h2 class="text-base font-bold leading-tight truncate" style="color: var(--text-primary);">
+        {{ selectedProduct.name }}
+      </h2>
+      <div class="flex items-center gap-2 mt-1">
+        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full"
+              [class.bg-green-100]="selectedProduct.isActive" [class.text-green-700]="selectedProduct.isActive"
+              [class.dark:bg-green-900]="selectedProduct.isActive" [class.dark:text-green-300]="selectedProduct.isActive"
+              [class.bg-gray-100]="!selectedProduct.isActive" [class.text-gray-600]="!selectedProduct.isActive">
+          {{ selectedProduct.isActive ? 'Active' : 'Inactive' }}
+        </span>
+        <span *ngIf="selectedProduct.sku" class="text-[11px] font-mono" style="color: var(--text-muted);">
+          SKU: {{ selectedProduct.sku }}
+        </span>
+      </div>
+    </div>
+    <button (click)="closeProductDetail()" aria-label="Close product details"
+            class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center text-lg transition hover:opacity-70"
+            style="color: var(--text-muted);">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="flex-1 overflow-y-auto min-h-0">
+
+    <!-- Image gallery — full image, never cropped -->
+    <div class="h-64 flex items-center justify-center relative border-b"
+         style="background-color: var(--surface-primary); border-color: var(--card-border);">
+      <img *ngIf="selectedProduct.images.length > 0"
+           [src]="displayImageUrl(selectedProduct.images[detailImageIndex] || selectedProduct.images[0])"
+           class="w-full h-full object-contain"
+           alt="{{ selectedProduct.name }}"
+           (error)="$any($event.target).style.display='none'" />
+      <i *ngIf="selectedProduct.images.length === 0" class="fas fa-image text-5xl" style="color: var(--text-muted);"></i>
+    </div>
+    <div *ngIf="selectedProduct.images.length > 1" class="flex gap-2 px-5 py-3 overflow-x-auto">
+      <button *ngFor="let img of selectedProduct.images; let i = index"
+              (click)="detailImageIndex = i"
+              class="w-14 h-14 shrink-0 rounded-lg overflow-hidden border-2 transition"
+              [style.border-color]="i === detailImageIndex ? 'var(--accent)' : 'var(--card-border)'"
+              [attr.aria-label]="'Show image ' + (i + 1)">
+        <img [src]="displayImageUrl(img)" class="w-full h-full object-cover" alt=""
+             (error)="$any($event.target).style.display='none'" />
+      </button>
+    </div>
+
+    <div class="px-5 py-4 space-y-5">
+
+      <!-- Price / stock -->
+      <div class="flex items-center flex-wrap gap-2">
+        <span class="text-2xl font-extrabold" style="color: var(--text-primary);">
+          {{ (detailEffectivePrice(selectedProduct) ?? selectedProduct.price) | appCurrency:selectedProduct.currency }}
+        </span>
+        <ng-container *ngIf="detailEffectivePrice(selectedProduct) !== null">
+          <span class="text-sm line-through" style="color: var(--text-muted);">
+            {{ selectedProduct.price | appCurrency:selectedProduct.currency }}
+          </span>
+          <span class="text-xs font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+            -{{ selectedProduct.discountPercent }}%
+          </span>
+        </ng-container>
+        <span *ngIf="selectedProduct.stock !== null && selectedProduct.stock !== undefined"
+              class="ml-auto text-xs font-semibold px-2 py-1 rounded-lg"
+              [class.text-red-600]="selectedProduct.stock === 0"
+              style="background-color: var(--surface-primary); color: var(--text-secondary);">
+          {{ selectedProduct.stock === 0 ? 'Out of stock' : 'Stock: ' + selectedProduct.stock }}
+        </span>
+      </div>
+
+      <!-- Description -->
+      <div *ngIf="selectedProduct.description">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Description</h4>
+        <p class="text-sm whitespace-pre-line" style="color: var(--text-secondary);">{{ selectedProduct.description }}</p>
+      </div>
+
+      <!-- Variants -->
+      <div *ngIf="selectedProduct.sizes.length > 0">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Sizes</h4>
+        <div class="flex flex-wrap gap-1.5">
+          <span *ngFor="let s of selectedProduct.sizes"
+                class="text-xs font-bold px-2.5 py-1 rounded-full"
+                style="background-color: var(--surface-primary); color: var(--text-secondary);">{{ s }}</span>
+        </div>
+      </div>
+      <div *ngIf="selectedProduct.colors.length > 0">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Colours</h4>
+        <div class="flex flex-wrap gap-1.5">
+          <span *ngFor="let c of selectedProduct.colors"
+                class="text-xs font-bold px-2.5 py-1 rounded-full"
+                style="background-color: var(--surface-primary); color: var(--text-secondary);">{{ c }}</span>
+        </div>
+      </div>
+
+      <!-- Brand / condition / availability chips -->
+      <div *ngIf="selectedProduct.commerce?.brand || selectedProduct.commerce?.condition || selectedProduct.commerce?.availability"
+           class="flex flex-wrap gap-1.5">
+        <span *ngIf="selectedProduct.commerce?.brand"
+              class="text-xs font-bold px-2.5 py-1 rounded-full"
+              style="background-color: var(--surface-primary); color: var(--text-secondary);">
+          {{ selectedProduct.commerce?.brand }}
+        </span>
+        <span *ngIf="selectedProduct.commerce?.condition"
+              class="text-xs font-bold px-2.5 py-1 rounded-full capitalize"
+              style="background-color: var(--surface-primary); color: var(--text-secondary);">
+          {{ selectedProduct.commerce?.condition }}
+        </span>
+        <span *ngIf="selectedProduct.commerce?.availability"
+              class="text-xs font-bold px-2.5 py-1 rounded-full capitalize"
+              style="background-color: var(--surface-primary); color: var(--text-secondary);">
+          {{ selectedProduct.commerce?.availability }}
+        </span>
+      </div>
+
+      <!-- Website / payment links -->
+      <div *ngIf="selectedProduct.websiteUrl">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Product page</h4>
+        <a [href]="selectedProduct.websiteUrl" target="_blank" rel="noopener noreferrer"
+           class="text-sm break-all hover:underline" style="color: var(--accent);">
+          {{ selectedProduct.websiteUrl }} <i class="fas fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+        </a>
+      </div>
+      <div *ngIf="selectedProduct.paymentUrl">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Payment link</h4>
+        <a [href]="selectedProduct.paymentUrl" target="_blank" rel="noopener noreferrer"
+           class="text-sm break-all hover:underline" style="color: var(--accent);">
+          {{ selectedProduct.paymentUrl }} <i class="fas fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+        </a>
+      </div>
+
+      <!-- Variant attributes -->
+      <div *ngIf="selectedProduct.commerce?.itemGroupId || selectedProduct.commerce?.color || selectedProduct.commerce?.size || selectedProduct.commerce?.material || selectedProduct.commerce?.pattern || selectedProduct.commerce?.gender || selectedProduct.commerce?.ageGroup">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Variant attributes</h4>
+        <dl class="text-sm grid grid-cols-2 gap-x-3 gap-y-1" style="color: var(--text-secondary);">
+          <ng-container *ngIf="selectedProduct.commerce?.color"><dt class="text-xs" style="color: var(--text-muted);">Colour</dt><dd>{{ selectedProduct.commerce?.color }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.size"><dt class="text-xs" style="color: var(--text-muted);">Size</dt><dd>{{ selectedProduct.commerce?.size }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.material"><dt class="text-xs" style="color: var(--text-muted);">Material</dt><dd>{{ selectedProduct.commerce?.material }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.pattern"><dt class="text-xs" style="color: var(--text-muted);">Pattern</dt><dd>{{ selectedProduct.commerce?.pattern }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.gender"><dt class="text-xs" style="color: var(--text-muted);">Gender</dt><dd class="capitalize">{{ selectedProduct.commerce?.gender }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.ageGroup"><dt class="text-xs" style="color: var(--text-muted);">Age group</dt><dd class="capitalize">{{ selectedProduct.commerce?.ageGroup }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.itemGroupId"><dt class="text-xs" style="color: var(--text-muted);">Group ID</dt><dd class="break-all">{{ selectedProduct.commerce?.itemGroupId }}</dd></ng-container>
+        </dl>
+      </div>
+
+      <!-- Category & identifiers -->
+      <div *ngIf="selectedProduct.commerce?.googleProductCategory || selectedProduct.commerce?.fbProductCategory || selectedProduct.commerce?.productType || selectedProduct.commerce?.gtin || selectedProduct.commerce?.mpn">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Category &amp; identifiers</h4>
+        <dl class="text-sm space-y-1" style="color: var(--text-secondary);">
+          <ng-container *ngIf="selectedProduct.commerce?.googleProductCategory"><dt class="text-xs" style="color: var(--text-muted);">Google category</dt><dd>{{ selectedProduct.commerce?.googleProductCategory }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.fbProductCategory"><dt class="text-xs" style="color: var(--text-muted);">Facebook category</dt><dd>{{ selectedProduct.commerce?.fbProductCategory }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.productType"><dt class="text-xs" style="color: var(--text-muted);">Product type</dt><dd>{{ selectedProduct.commerce?.productType }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.gtin"><dt class="text-xs" style="color: var(--text-muted);">GTIN</dt><dd>{{ selectedProduct.commerce?.gtin }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.mpn"><dt class="text-xs" style="color: var(--text-muted);">MPN</dt><dd>{{ selectedProduct.commerce?.mpn }}</dd></ng-container>
+        </dl>
+      </div>
+
+      <!-- Compliance -->
+      <div *ngIf="selectedProduct.commerce?.originCountry || selectedProduct.commerce?.importerName || selectedProduct.commerce?.manufacturerInfo">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-1.5" style="color: var(--text-muted);">Compliance</h4>
+        <dl class="text-sm space-y-1" style="color: var(--text-secondary);">
+          <ng-container *ngIf="selectedProduct.commerce?.originCountry"><dt class="text-xs" style="color: var(--text-muted);">Origin country</dt><dd>{{ selectedProduct.commerce?.originCountry }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.importerName"><dt class="text-xs" style="color: var(--text-muted);">Importer</dt><dd>{{ selectedProduct.commerce?.importerName }}</dd></ng-container>
+          <ng-container *ngIf="selectedProduct.commerce?.manufacturerInfo"><dt class="text-xs" style="color: var(--text-muted);">Manufacturer</dt><dd>{{ selectedProduct.commerce?.manufacturerInfo }}</dd></ng-container>
+        </dl>
+      </div>
+
+      <!-- Shipping weight -->
+      <div *ngIf="selectedProduct.commerce?.shippingWeight?.value" class="text-sm" style="color: var(--text-secondary);">
+        <span class="text-xs" style="color: var(--text-muted);">Shipping weight: </span>
+        {{ selectedProduct.commerce?.shippingWeight?.value }} {{ selectedProduct.commerce?.shippingWeight?.unit }}
+      </div>
+
+      <!-- WhatsApp catalog status -->
+      <div class="flex items-start gap-2 text-sm" style="color: var(--text-secondary);">
+        <i class="fab fa-whatsapp mt-0.5"
+           [class.text-green-500]="selectedProduct.whatsapp?.syncStatus === 'synced'"
+           [class.text-red-500]="selectedProduct.whatsapp?.syncStatus === 'failed'"></i>
+        <div>
+          <span>{{ detailWaSyncLabel(selectedProduct) }}</span>
+          <p *ngIf="selectedProduct.whatsapp?.syncStatus === 'failed' && selectedProduct.whatsapp?.syncError"
+             class="text-xs mt-0.5 text-red-500">{{ selectedProduct.whatsapp?.syncError }}</p>
+        </div>
+      </div>
+
+      <!-- Connected Instagram posts -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-bold uppercase tracking-wide" style="color: var(--text-muted);">
+            <i class="fab fa-instagram mr-1"></i>
+            Connected posts ({{ selectedProduct.instagramPostIds.length }})
+          </h4>
+          <button (click)="openAttachPosts(selectedProduct)"
+                  class="text-xs font-bold hover:underline" style="color: var(--accent);">
+            <i class="fas fa-link mr-1"></i>Attach
+          </button>
+        </div>
+
+        <p *ngIf="selectedProduct.instagramPostIds.length === 0"
+           class="text-sm rounded-lg px-3 py-2.5"
+           style="background-color: var(--surface-primary); color: var(--text-muted);">
+          No posts connected yet. Comments on connected posts trigger the automatic product DM.
+        </p>
+
+        <div *ngIf="loadingMedia && selectedProduct.instagramPostIds.length > 0"
+             class="text-xs py-2" style="color: var(--text-muted);">
+          <i class="fas fa-spinner fa-spin mr-1"></i> Loading post previews…
+        </div>
+
+        <div class="space-y-2">
+          <div *ngFor="let postId of selectedProduct.instagramPostIds"
+               class="flex items-center gap-3 rounded-lg border px-3 py-2"
+               style="border-color: var(--card-border); background-color: var(--surface-primary);">
+            <ng-container *ngIf="detailMediaFor(postId) as media; else noPreview">
+              <img *ngIf="media.thumbnailUrl" [src]="media.thumbnailUrl"
+                   class="w-11 h-11 rounded-md object-cover shrink-0" alt=""
+                   (error)="$any($event.target).style.display='none'" />
+              <div class="min-w-0 flex-1">
+                <p class="text-xs truncate" style="color: var(--text-secondary);">
+                  {{ media.caption || 'Instagram post' }}
+                </p>
+                <p class="text-[10px] font-mono truncate" style="color: var(--text-muted);">{{ postId }}</p>
+              </div>
+            </ng-container>
+            <ng-template #noPreview>
+              <div class="w-11 h-11 rounded-md flex items-center justify-center shrink-0"
+                   style="background-color: var(--card-bg);">
+                <i class="fab fa-instagram" style="color: var(--text-muted);"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs" style="color: var(--text-secondary);">Instagram post</p>
+                <p class="text-[10px] font-mono truncate" style="color: var(--text-muted);">{{ postId }}</p>
+              </div>
+            </ng-template>
+            <span *ngIf="detailSlideIndex(selectedProduct, postId) as slideNo"
+                  class="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300">
+              Slide {{ slideNo }}
+            </span>
+            <button (click)="detailUnlinkPost(selectedProduct, postId)"
+                    [disabled]="detailUnlinkingPostIds.has(postId)"
+                    class="w-7 h-7 shrink-0 rounded-md flex items-center justify-center text-xs transition hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 disabled:opacity-40"
+                    [attr.aria-label]="'Unlink post ' + postId">
+              <i class="fas" [class.fa-link-slash]="!detailUnlinkingPostIds.has(postId)"
+                 [class.fa-spinner]="detailUnlinkingPostIds.has(postId)"
+                 [class.fa-spin]="detailUnlinkingPostIds.has(postId)"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connected stories -->
+      <div *ngIf="(selectedProduct.instagramStoryIds?.length || 0) > 0">
+        <h4 class="text-xs font-bold uppercase tracking-wide mb-2" style="color: var(--text-muted);">
+          <i class="fas fa-circle-play mr-1"></i>
+          Connected stories ({{ selectedProduct.instagramStoryIds?.length }})
+        </h4>
+        <div class="flex flex-wrap gap-1.5">
+          <span *ngFor="let sid of selectedProduct.instagramStoryIds"
+                class="text-[10px] font-mono px-2 py-1 rounded-full truncate max-w-[160px]"
+                style="background-color: var(--surface-primary); color: var(--text-muted);">{{ sid }}</span>
+        </div>
+      </div>
+
+      <!-- Timestamps -->
+      <div class="text-[11px] pt-2 border-t space-y-0.5" style="color: var(--text-muted); border-color: var(--card-border);">
+        <p>Created: {{ selectedProduct.createdAt | date:'medium' }}</p>
+        <p>Updated: {{ selectedProduct.updatedAt | date:'medium' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer actions -->
+  <div class="flex gap-2 px-5 py-4 border-t shrink-0" style="border-color: var(--card-border);">
+    <button (click)="openEditModal(selectedProduct)"
+            class="catalog-btn-primary flex-1 py-2.5 rounded-lg font-bold text-sm">
+      <i class="fas fa-pen mr-1.5"></i> Edit Product
+    </button>
+    <button (click)="openAttachPosts(selectedProduct)"
+            class="flex-1 py-2.5 rounded-lg font-bold text-sm border transition hover:opacity-80"
+            style="border-color: var(--card-border); color: var(--text-secondary); background-color: var(--surface-primary);">
+      <i class="fas fa-link mr-1.5"></i> Attach Post
+    </button>
+  </div>
+</aside>

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, HostListener, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject, firstValueFrom } from 'rxjs';
@@ -12,6 +12,7 @@ import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements
 import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
 import {
   IProduct,
+  IProductCommerce,
   ISalesFlowSettings,
   ISalesFlowCtaButton,
   IProductDmConfig,
@@ -19,7 +20,11 @@ import {
   IInstagramCarouselSlide,
   IWhatsAppCatalogSettings,
   IWhatsAppCsvImportResult,
-  WhatsAppSyncStatus
+  WhatsAppSyncStatus,
+  PRODUCT_CONDITIONS,
+  PRODUCT_GENDERS,
+  PRODUCT_AGE_GROUPS,
+  WEIGHT_UNITS
 } from '../../core/models/product.model';
 import {
   ICommerceOrder,
@@ -59,12 +64,37 @@ export class CatalogComponent implements OnInit, OnDestroy {
   searchQuery = '';
   totalProducts = 0;
 
+  // ── Product detail sidebar ─────────────────
+  selectedProduct: IProduct | null = null;
+  detailImageIndex = 0;
+  detailUnlinkingPostIds = new Set<string>();
+
   // ── Product modal ──────────────────────────
   showProductModal = false;
   editingProduct: IProduct | null = null;
   productForm!: FormGroup;
   savingProduct = false;
   productError = '';
+
+  // Wizard step 1 collapsible sections (Basics + Media open by default)
+  formSections: Record<string, boolean> = {
+    basics: true,
+    media: true,
+    variants: false,
+    category: false,
+    compliance: false,
+    shipping: false
+  };
+
+  // Select options for Meta commerce fields (labels shown Title-cased in template)
+  readonly conditionOptions = PRODUCT_CONDITIONS;
+  readonly genderOptions = PRODUCT_GENDERS;
+  readonly ageGroupOptions = PRODUCT_AGE_GROUPS;
+  readonly weightUnitOptions = WEIGHT_UNITS;
+
+  toggleFormSection(key: string): void {
+    this.formSections[key] = !this.formSections[key];
+  }
 
   sizesInput = '';
   colorsInput = '';
@@ -510,15 +540,107 @@ export class CatalogComponent implements OnInit, OnDestroy {
   }
 
   private buildProductForm(product?: IProduct): void {
+    const c = product?.commerce;
     this.productForm = this.fb.group({
       name: [product?.name ?? '', Validators.required],
+      sku: [product?.sku ?? ''],
       description: [product?.description ?? ''],
       price: [product?.price ?? '', [Validators.required, Validators.min(0)]],
       currency: [product?.currency ?? DEFAULT_CURRENCY, Validators.required],
       discountPercent: [product?.discountPercent ?? 0, [Validators.min(0), Validators.max(100)]],
       paymentUrl: [product?.paymentUrl ?? ''],
-      stock: [product?.stock ?? '']
+      websiteUrl: [product?.websiteUrl ?? ''],
+      stock: [product?.stock ?? ''],
+      commerce: this.fb.group({
+        brand: [c?.brand ?? '', Validators.maxLength(100)],
+        condition: [c?.condition ?? 'new'],
+        availability: [c?.availability ?? ''], // '' = Auto (from stock)
+        gtin: [c?.gtin ?? ''],
+        mpn: [c?.mpn ?? '', Validators.maxLength(100)],
+        googleProductCategory: [c?.googleProductCategory ?? '', Validators.maxLength(750)],
+        fbProductCategory: [c?.fbProductCategory ?? '', Validators.maxLength(750)],
+        productType: [c?.productType ?? '', Validators.maxLength(750)],
+        itemGroupId: [c?.itemGroupId ?? '', Validators.maxLength(100)],
+        color: [c?.color ?? '', Validators.maxLength(200)],
+        size: [c?.size ?? '', Validators.maxLength(200)],
+        gender: [c?.gender ?? ''],
+        ageGroup: [c?.ageGroup ?? ''],
+        material: [c?.material ?? '', Validators.maxLength(200)],
+        pattern: [c?.pattern ?? '', Validators.maxLength(100)],
+        originCountry: [c?.originCountry ?? 'IN', Validators.pattern(/^[A-Za-z]{2}$/)],
+        importerName: [c?.importerName ?? '', Validators.maxLength(200)],
+        importerStreet1: [c?.importerAddress?.street1 ?? ''],
+        importerStreet2: [c?.importerAddress?.street2 ?? ''],
+        importerCity: [c?.importerAddress?.city ?? ''],
+        importerRegion: [c?.importerAddress?.region ?? ''],
+        importerPostalCode: [c?.importerAddress?.postalCode ?? '', Validators.maxLength(20)],
+        importerCountry: [c?.importerAddress?.country ?? ''],
+        manufacturerInfo: [c?.manufacturerInfo ?? '', Validators.maxLength(1000)],
+        waComplianceCategory: [c?.waComplianceCategory ?? 'DEFAULT'],
+        salePriceStart: [c?.salePriceStart ? String(c.salePriceStart).slice(0, 10) : ''],
+        salePriceEnd: [c?.salePriceEnd ? String(c.salePriceEnd).slice(0, 10) : ''],
+        shippingWeightValue: [c?.shippingWeight?.value ?? ''],
+        shippingWeightUnit: [c?.shippingWeight?.unit ?? 'kg']
+      })
     });
+  }
+
+  /**
+   * Assemble the `commerce` payload from the nested form group — only non-empty
+   * values are sent so blanks never overwrite stored data with empty strings.
+   */
+  private buildCommercePayload(raw: any): IProductCommerce | undefined {
+    const c = raw?.commerce || {};
+    const out: any = {};
+    const setIf = (key: string, value: any) => {
+      const v = typeof value === 'string' ? value.trim() : value;
+      if (v !== '' && v !== null && v !== undefined) out[key] = v;
+    };
+
+    setIf('brand', c.brand);
+    setIf('condition', c.condition);
+    setIf('availability', c.availability); // '' (Auto) is dropped → backend derives from stock
+    setIf('gtin', c.gtin);
+    setIf('mpn', c.mpn);
+    setIf('googleProductCategory', c.googleProductCategory);
+    setIf('fbProductCategory', c.fbProductCategory);
+    setIf('productType', c.productType);
+    setIf('itemGroupId', c.itemGroupId);
+    setIf('color', c.color);
+    setIf('size', c.size);
+    setIf('gender', c.gender);
+    setIf('ageGroup', c.ageGroup);
+    setIf('material', c.material);
+    setIf('pattern', c.pattern);
+    setIf('originCountry', (c.originCountry || '').toUpperCase());
+    setIf('importerName', c.importerName);
+    setIf('manufacturerInfo', c.manufacturerInfo);
+    setIf('waComplianceCategory', c.waComplianceCategory);
+
+    const addr: any = {};
+    const setAddr = (key: string, value: any) => {
+      const v = typeof value === 'string' ? value.trim() : value;
+      if (v) addr[key] = v;
+    };
+    setAddr('street1', c.importerStreet1);
+    setAddr('street2', c.importerStreet2);
+    setAddr('city', c.importerCity);
+    setAddr('region', c.importerRegion);
+    setAddr('postalCode', c.importerPostalCode);
+    setAddr('country', (c.importerCountry || '').toUpperCase());
+    if (Object.keys(addr).length) out.importerAddress = addr;
+
+    if (c.salePriceStart && c.salePriceEnd) {
+      out.salePriceStart = c.salePriceStart;
+      out.salePriceEnd = c.salePriceEnd;
+    }
+
+    const weightValue = Number(c.shippingWeightValue);
+    if (Number.isFinite(weightValue) && weightValue > 0 && c.shippingWeightUnit) {
+      out.shippingWeight = { value: weightValue, unit: c.shippingWeightUnit };
+    }
+
+    return Object.keys(out).length ? out : undefined;
   }
 
   saveProduct(): void {
@@ -527,14 +649,18 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.productError = '';
 
     const raw = this.productForm.value;
+    const { commerce: _rawCommerce, ...baseRaw } = raw;
     const payload: Partial<IProduct> = {
-      ...raw,
+      ...baseRaw,
+      sku: (raw.sku || '').trim(),
+      websiteUrl: (raw.websiteUrl || '').trim(),
       price: Number(raw.price),
       discountPercent: Number(raw.discountPercent || 0),
       stock: raw.stock !== '' && raw.stock != null ? Number(raw.stock) : null,
       sizes: this.sizesInput.split(',').map(s => s.trim()).filter(Boolean),
       colors: this.colorsInput.split(',').map(s => s.trim()).filter(Boolean),
-      images: this.imagesInput.split('\n').map(s => s.trim()).filter(Boolean)
+      images: this.imagesInput.split('\n').map(s => s.trim()).filter(Boolean),
+      commerce: this.buildCommercePayload(raw)
     };
 
     const isNew = !this.editingProduct;
@@ -788,6 +914,82 @@ export class CatalogComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ── Product detail sidebar ───────────────────────────────────────────────
+
+  openProductDetail(product: IProduct): void {
+    this.selectedProduct = product;
+    this.detailImageIndex = 0;
+    // Lazy-load recent IG media once so linked posts render with thumbnails/captions.
+    if (this.instagramMedia.length === 0 && !this.loadingMedia) {
+      this.loadInstagramMedia();
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeProductDetail(): void {
+    this.selectedProduct = null;
+    this.cdr.markForCheck();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    // Modals sit above the sidebar (z-100 vs z-40) and manage their own close
+    // buttons — only close the sidebar when no modal is open.
+    if (this.selectedProduct && !this.showProductModal && !this.showPostLinkModal &&
+        !this.showImportModal && !this.showProductImagesModal) {
+      this.closeProductDetail();
+    }
+  }
+
+  /** Recent-media match for a linked post id (thumbnail + caption), or null. */
+  detailMediaFor(postId: string): IInstagramMediaItem | null {
+    const pid = String(postId);
+    return this.instagramMedia.find(m => m.id === pid || m.shortcode === pid) || null;
+  }
+
+  /** Carousel slide number (1-based) this product is pinned to on a post, or null. */
+  detailSlideIndex(product: IProduct, postId: string): number | null {
+    const link = (product.instagramPostLinks || []).find(l => String(l.postId) === String(postId));
+    return link?.slideIndex != null ? link.slideIndex + 1 : null;
+  }
+
+  detailUnlinkPost(product: IProduct, postId: string): void {
+    if (this.detailUnlinkingPostIds.has(postId)) return;
+    this.detailUnlinkingPostIds.add(postId);
+    this.catalogService.unlinkPost(product._id, postId)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => { this.detailUnlinkingPostIds.delete(postId); this.cdr.markForCheck(); })
+      )
+      .subscribe({
+        next: r => {
+          if (r.data) {
+            this.applyProductLinkUpdate(r.data);
+            if (this.selectedProduct?._id === r.data._id) this.selectedProduct = r.data;
+            this.refreshProductsAfterLink();
+            this.notify.success('Post unlinked from product');
+          }
+          this.cdr.markForCheck();
+        },
+        error: err => this.notify.error(err.error?.error || 'Failed to unlink post')
+      });
+  }
+
+  /** Discounted price when a discount is set, else null (template shows base price). */
+  detailEffectivePrice(product: IProduct): number | null {
+    if (!product.discountPercent) return null;
+    return +(product.price * (1 - product.discountPercent / 100)).toFixed(2);
+  }
+
+  detailWaSyncLabel(product: IProduct): string {
+    switch (product.whatsapp?.syncStatus) {
+      case 'synced': return 'Synced to WhatsApp catalog';
+      case 'pending': return 'WhatsApp sync pending';
+      case 'failed': return 'WhatsApp sync failed';
+      default: return 'Not synced to WhatsApp';
+    }
   }
 
   loadSalesFlowSettings(): void {
@@ -1353,6 +1555,16 @@ export class CatalogComponent implements OnInit, OnDestroy {
       error?.trim() ||
         `"${productName}" was saved locally but could not be synced to Meta. Check catalog permissions and try Sync again.`
     );
+    // Guide the user to the form section that likely holds the offending field.
+    if (this.showProductModal && error) {
+      const e = error.toLowerCase();
+      if (/brand|condition|gtin|mpn|category/.test(e)) this.formSections['category'] = true;
+      if (/brand/.test(e)) this.formSections['basics'] = true;
+      if (/origin|importer|compliance|manufacturer/.test(e)) this.formSections['compliance'] = true;
+      if (/image|video/.test(e)) this.formSections['media'] = true;
+      if (/link|url|website/.test(e)) this.formSections['basics'] = true;
+      if (/weight|shipping/.test(e)) this.formSections['shipping'] = true;
+    }
   }
 
   waSyncStatusClass(status?: WhatsAppSyncStatus): string {

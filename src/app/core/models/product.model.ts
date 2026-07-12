@@ -1,3 +1,57 @@
+export type ProductCondition = 'new' | 'refurbished' | 'used';
+export type ProductAvailability = 'in stock' | 'out of stock';
+export type ProductGender = 'female' | 'male' | 'unisex';
+export type ProductAgeGroup = 'adult' | 'all ages' | 'teen' | 'kids' | 'toddler' | 'infant' | 'newborn';
+export type WaComplianceCategory = 'COUNTRY_ORIGIN_EXEMPT' | 'DEFAULT';
+export type WeightUnit = 'kg' | 'g' | 'lb' | 'oz';
+
+export const PRODUCT_CONDITIONS: ProductCondition[] = ['new', 'refurbished', 'used'];
+export const PRODUCT_GENDERS: ProductGender[] = ['female', 'male', 'unisex'];
+export const PRODUCT_AGE_GROUPS: ProductAgeGroup[] = ['adult', 'all ages', 'teen', 'kids', 'toddler', 'infant', 'newborn'];
+export const WEIGHT_UNITS: WeightUnit[] = ['kg', 'g', 'lb', 'oz'];
+
+export interface IProductImporterAddress {
+  street1?: string;
+  street2?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  country?: string;
+}
+
+/**
+ * Meta/WhatsApp Commerce catalog attributes (all optional).
+ * Mirrors backend Product.commerce — see backend utils/productCommerceFields.js.
+ */
+export interface IProductCommerce {
+  brand?: string;
+  condition?: ProductCondition;
+  /** Explicit override; unset = derived from stock on the backend */
+  availability?: ProductAvailability;
+  gtin?: string;
+  mpn?: string;
+  googleProductCategory?: string;
+  fbProductCategory?: string;
+  productType?: string;
+  itemGroupId?: string;
+  color?: string;
+  size?: string;
+  gender?: ProductGender;
+  ageGroup?: ProductAgeGroup;
+  material?: string;
+  pattern?: string;
+  originCountry?: string;
+  importerName?: string;
+  importerAddress?: IProductImporterAddress;
+  manufacturerInfo?: string;
+  waComplianceCategory?: WaComplianceCategory;
+  salePriceStart?: string | null;
+  salePriceEnd?: string | null;
+  unitPrice?: { value: number; currency: string; unit: string };
+  shippingWeight?: { value: number; unit: WeightUnit };
+  videoUrls?: string[];
+}
+
 export interface IProduct {
   _id: string;
   organization: string;
@@ -9,6 +63,10 @@ export interface IProduct {
   discountPercent: number;
   images: string[];
   paymentUrl?: string;
+  /** Product page URL — sent to Meta as the catalog item link */
+  websiteUrl?: string;
+  /** Meta/WhatsApp commerce attributes */
+  commerce?: IProductCommerce;
   sizes: string[];
   colors: string[];
   stock?: number | null;
