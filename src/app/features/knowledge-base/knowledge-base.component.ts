@@ -43,9 +43,25 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
 
   /** Key / value rows — composed to `content` on save */
   templateFields: KbTemplateField[] = [];
+  /** Default view is a single plain-text box; power users can opt into separate Q&A rows. */
+  useStructuredFields = false;
+  /** Category / tags / importance are tucked away by default to keep the form simple. */
+  showMoreDetails = false;
+
+  readonly importanceOptions: Array<{
+    value: 'normal' | 'important' | 'critical';
+    label: string; hint: string; icon: string; priority: number; weight: number;
+  }> = [
+    { value: 'normal',    label: 'Normal',    hint: 'Everyday info — used when it\'s relevant to the question.', icon: 'fa-circle-dot', priority: 5,  weight: 5 },
+    { value: 'important', label: 'Important', hint: 'Used often — good for policies, pricing, product details.', icon: 'fa-star',       priority: 7,  weight: 7 },
+    { value: 'critical',  label: 'Critical',  hint: 'Always applied to every reply — best for brand tone.',      icon: 'fa-bolt',        priority: 10, weight: 10 }
+  ];
+  importanceLevel: 'normal' | 'important' | 'critical' = 'normal';
 
   /** Analytics sidebar */
   kbInsightsTab: 'overview' | 'breakdown' = 'overview';
+  /** KB Analytics sidebar is hidden by default; opened from the "KB Analytics" header button. */
+  showKbAnalytics = false;
 
   // Data (list = current server page)
   categories: string[] = [];
@@ -468,14 +484,17 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
   applyTemplate(key: string): void {
     const tpl = this.quickStartTemplates[key];
     if (!tpl) return;
+    this.templateFields = tpl.fields.map(f => ({ ...f }));
+    const composed = this.composeContentFromFields();
     this.manualForm.patchValue({
       title: tpl.title, type: tpl.type, category: tpl.category,
-      trainingContext: tpl.trainingContext,
-      priority: 7, trainingWeight: 7, isTrainingData: true, isActive: true
+      trainingContext: tpl.trainingContext, content: composed,
+      isTrainingData: true, isActive: true
     });
     this.manualTags = tpl.tags.split(',').map(t => t.trim()).filter(Boolean);
-    this.templateFields = tpl.fields.map(f => ({ ...f }));
-    this.manualForm.patchValue({ content: '' });
+    this.setImportance(tpl.type === 'brand_voice' ? 'critical' : (tpl.type === 'policy' ? 'important' : 'normal'));
+    this.useStructuredFields = false;
+    this.showMoreDetails = true;
     this.activeTab = 'manual';
   }
 
@@ -503,6 +522,9 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
     });
     this.manualTags = [];
     this.manualTagInput = '';
+    this.useStructuredFields = false;
+    this.showMoreDetails = false;
+    this.importanceLevel = 'normal';
     this.resetManualContentFields();
     this.activeTab = 'manual';
   }
@@ -524,6 +546,49 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
 
   get fieldEditorHasContent(): boolean {
     return this.templateFields.some(f => f.value.trim().length > 0);
+  }
+
+  /** Length of whatever content the user has actually entered, in either mode. */
+  get manualContentLength(): number {
+    return this.useStructuredFields
+      ? this.composeContentFromFields().trim().length
+      : (this.manualForm?.get('content')?.value || '').trim().length;
+  }
+
+  get canSubmitManual(): boolean {
+    return !this.manualForm?.get('title')?.invalid && this.manualContentLength >= 10 && !this.submitting;
+  }
+
+  get selectedImportanceHint(): string {
+    return this.importanceOptions.find(o => o.value === this.importanceLevel)?.hint ?? '';
+  }
+
+  /** Maps the simple 3-level "Importance" picker onto the underlying priority/weight fields. */
+  setImportance(level: 'normal' | 'important' | 'critical'): void {
+    this.importanceLevel = level;
+    const opt = this.importanceOptions.find(o => o.value === level);
+    if (opt) this.manualForm.patchValue({ priority: opt.priority, trainingWeight: opt.weight });
+  }
+
+  private importanceFromScore(score: number): 'normal' | 'important' | 'critical' {
+    if (score >= 9) return 'critical';
+    if (score >= 7) return 'important';
+    return 'normal';
+  }
+
+  /** Toggle between the default single textarea and the structured Q&A row editor. */
+  toggleStructuredFields(): void {
+    if (!this.useStructuredFields) {
+      if (this.templateFields.every(f => !f.key.trim() && !f.value.trim())) {
+        const current = (this.manualForm.get('content')?.value || '').trim();
+        this.templateFields = [{ key: '', value: current }];
+      }
+      this.useStructuredFields = true;
+    } else {
+      this.manualForm.patchValue({ content: this.composeContentFromFields() });
+      this.useStructuredFields = false;
+    }
+    this.cdr.markForCheck();
   }
 
   private parseContentToFields(content: string): KbTemplateField[] {
@@ -559,15 +624,20 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
     });
     this.manualTags    = [...(entry.tags || [])];
     this.manualTagInput = '';
+    this.importanceLevel = this.importanceFromScore(Math.max(entry.priority ?? 5, entry.trainingWeight ?? 5));
 
-    if (entry.templateFields && entry.templateFields.length > 0) {
-      this.templateFields = entry.templateFields.map(f => ({ ...f }));
+    // Multi-row entries (real Q&A pairs) stay structured; everything else opens as plain text.
+    const hasRealFields = Array.isArray(entry.templateFields) && entry.templateFields.length > 1;
+    if (hasRealFields) {
+      this.templateFields = entry.templateFields!.map(f => ({ ...f }));
+      this.useStructuredFields = true;
+      this.manualForm.patchValue({ content: this.composeContentFromFields() });
     } else {
-      const parsed = this.parseContentToFields(entry.content || '');
-      this.templateFields =
-        parsed.length > 0 ? parsed : [{ key: '', value: (entry.content || '').trim() }];
+      this.templateFields = [{ key: '', value: '' }];
+      this.useStructuredFields = false;
+      this.manualForm.patchValue({ content: entry.content || '' });
     }
-    this.manualForm.patchValue({ content: '' });
+    this.showMoreDetails = !!(entry.category || (entry.tags && entry.tags.length) || entry.trainingContext);
     this.activeTab = 'manual';
     this.cdr.markForCheck();
   }
@@ -578,6 +648,9 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
     this.manualForm.reset({ type: 'general', priority: 5, trainingWeight: 5, isTrainingData: true, isActive: true });
     this.manualTags     = [];
     this.manualTagInput = '';
+    this.useStructuredFields = false;
+    this.showMoreDetails = false;
+    this.importanceLevel = 'normal';
     this.resetManualContentFields();
     this.activeTab = 'list';
   }
@@ -645,16 +718,27 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
   // ─── Form submissions ─────────────────────────────────────────────────────
 
   submitManual(): void {
-    const composed = this.composeContentFromFields();
-    this.manualForm.patchValue({ content: composed });
+    const content = this.useStructuredFields
+      ? this.composeContentFromFields()
+      : (this.manualForm.get('content')?.value || '').trim();
+    this.manualForm.patchValue({ content });
     const titleCtrl = this.manualForm.get('title');
-    if (titleCtrl?.invalid || composed.trim().length < 10) return;
+    if (titleCtrl?.invalid || content.length < 10) {
+      this.notificationService.warning(
+        'Just a bit more',
+        'Add a title and at least a couple of sentences of content before saving.'
+      );
+      return;
+    }
     if (this.manualForm.invalid) return;
     this.submitting = true;
     const formData: any = {
       ...this.manualForm.value,
+      isTrainingData: true,
       tags: [...this.manualTags],
-      templateFields: this.templateFields.filter(f => f.key.trim() || f.value.trim())
+      templateFields: this.useStructuredFields
+        ? this.templateFields.filter(f => f.key.trim() || f.value.trim())
+        : []
     };
 
     if (this.isEditMode && this.editingEntryId) {
@@ -689,6 +773,9 @@ export class KnowledgeBaseComponent implements OnInit, OnDestroy {
           this.manualForm.reset({ type: 'general', priority: 5, trainingWeight: 5, isTrainingData: true, isActive: true });
           this.manualTags = [];
           this.manualTagInput = '';
+          this.useStructuredFields = false;
+          this.showMoreDetails = false;
+          this.importanceLevel = 'normal';
           this.resetManualContentFields();
           this.currentPage = 1;
           this.activeTab = 'list';

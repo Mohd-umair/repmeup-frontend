@@ -24,9 +24,12 @@
       [syncDisabled]="syncing || loading"
       [syncButtonTitle]="getSyncButtonTitle()"
       [syncButtonLabel]="getSyncButtonLabel()"
+      [searchTerm]="topFilters.search || ''"
       (filtersChange)="onTopFilterChange($event)"
       (viewModeChange)="onQuickExtraViewFilter($event)"
       (autoSyncToggle)="toggleAutoSync()"
+      (searchChange)="onSearchChange($event)"
+      (layoutChange)="switchLayout($event)"
       (syncClick)="onSyncClick()">
     </app-inbox-top-filters>
   </div>
@@ -52,119 +55,6 @@
       {{ analyzingSentiment ? 'Analyzing...' : 'Analyze Sentiment' }}
     </button>
   </div>
-
-  <!-- Bucket search + sort bar (only in buckets view) -->
-  <div *ngIf="viewMode === 'buckets'" class="mb-2 flex-shrink-0 flex flex-col gap-2 px-3 py-2 bg-white dark:bg-gray-900/95 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-
-    <!-- Search + Sort -->
-    <div class="flex items-center gap-2">
-    <!-- Search -->
-    <div class="relative flex-1 min-w-0">
-      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-      <input
-        type="text"
-        placeholder="Search conversations…"
-        class="w-full pl-8 pr-8 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/90 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:bg-white dark:focus:bg-gray-800 transition-all"
-        [value]="bucketSearchTerm"
-        (input)="onBucketSearchChange($any($event.target).value)"
-      />
-      <button
-        *ngIf="bucketSearchTerm"
-        type="button"
-        (click)="onBucketSearchChange('')"
-        class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors">
-        <i class="fas fa-xmark" style="font-size: 9px;"></i>
-      </button>
-    </div>
-
-    <!-- Divider -->
-    <div class="w-px h-5 bg-gray-200 dark:bg-gray-600 flex-shrink-0"></div>
-
-    <!-- Sort -->
-    <div class="flex items-center gap-1.5 flex-shrink-0">
-      <i class="fas fa-sort-amount-down text-gray-400 text-xs"></i>
-      <span class="text-xs text-gray-500 dark:text-gray-400 font-medium hidden sm:inline">Sort:</span>
-      <div class="flex gap-1">
-        <button
-          type="button"
-          (click)="onBucketSortChange('newest')"
-          class="px-2 py-1 rounded-md text-xs font-medium transition-all"
-          [ngClass]="bucketSortBy === 'newest' ? 'bg-gray-900 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
-          title="Newest first">
-          <i class="fas fa-arrow-down"></i>
-          <span class="ml-1 hidden md:inline">Newest</span>
-        </button>
-        <button
-          type="button"
-          (click)="onBucketSortChange('oldest')"
-          class="px-2 py-1 rounded-md text-xs font-medium transition-all"
-          [ngClass]="bucketSortBy === 'oldest' ? 'bg-gray-900 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'"
-          title="Oldest first">
-          <i class="fas fa-arrow-up"></i>
-          <span class="ml-1 hidden md:inline">Oldest</span>
-        </button>
-      </div>
-
-      <!-- Sentiment filter dropdown -->
-      <div class="w-px h-5 bg-gray-200 dark:bg-gray-600 flex-shrink-0"></div>
-      <div class="relative flex-shrink-0">
-        <button
-          type="button"
-          (click)="toggleBucketSentimentDropdown()"
-          class="px-2 py-1 rounded-md text-xs font-medium transition-all inline-flex items-center gap-1"
-          [ngClass]="(showBucketSentimentDropdown || bucketSentimentFilterActive())
-            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200'
-            : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'">
-          <i class="fas fa-heart text-[10px]"></i>
-          <span class="hidden sm:inline">Sentiment</span>
-          <i class="fas fa-chevron-down text-[9px] opacity-70"></i>
-        </button>
-        <div
-          *ngIf="showBucketSentimentDropdown"
-          class="absolute right-0 top-full mt-1 min-w-[160px] z-40 py-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg"
-        >
-          <button
-            type="button"
-            (click)="setBucketSentimentFilter()"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center gap-2">
-            <i class="fas fa-layer-group text-[11px] text-gray-500 dark:text-gray-400 w-3.5"></i>
-            All sentiments
-          </button>
-          <button
-            type="button"
-            (click)="setBucketSentimentFilter('positive')"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
-            <span class="inline-flex items-center gap-2">
-              <i class="fas fa-smile text-emerald-500 text-[11px] w-3.5"></i>
-              Positive
-            </span>
-            <i *ngIf="isBucketSentimentValue('positive')" class="fas fa-check text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
-          </button>
-          <button
-            type="button"
-            (click)="setBucketSentimentFilter('negative')"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
-            <span class="inline-flex items-center gap-2">
-              <i class="fas fa-frown text-rose-500 text-[11px] w-3.5"></i>
-              Negative
-            </span>
-            <i *ngIf="isBucketSentimentValue('negative')" class="fas fa-check text-rose-600 dark:text-rose-400 text-[10px]"></i>
-          </button>
-          <button
-            type="button"
-            (click)="setBucketSentimentFilter('neutral')"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/80 inline-flex items-center justify-between gap-2">
-            <span class="inline-flex items-center gap-2">
-              <i class="fas fa-meh text-gray-400 text-[11px] w-3.5"></i>
-              Neutral
-            </span>
-            <i *ngIf="isBucketSentimentValue('neutral')" class="fas fa-check text-gray-500 dark:text-gray-400 text-[10px]"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-    </div><!-- end Search + Sort row -->
-  </div><!-- end bucket controls card -->
 
   <!-- Bucket Kanban View -->
   <div *ngIf="viewMode === 'buckets'" class="flex-1 lg:min-h-0 lg:overflow-hidden">
@@ -228,16 +118,9 @@
               <i class="fas fa-comments mr-2 text-gray-600 dark:text-gray-300"></i>
               Conversations
             </span>
-            <button
-              type="button"
-              class="text-xs font-medium text-gray-600 dark:text-gray-400 inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-              (click)="showConversationSearch = !showConversationSearch"
-              [attr.aria-expanded]="showConversationSearch"
-              title="Toggle conversation search"
-            >
-              <span>{{ totalConversations }}</span>
-              <i class="fas text-xs" [class.fa-chevron-down]="!showConversationSearch" [class.fa-chevron-up]="showConversationSearch"></i>
-            </button>
+            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800">
+              {{ totalConversations }}
+            </span>
           </h2>
         </div>
         <!-- Bulk actions bar (z-50 so dropdowns render above the list) -->
@@ -432,7 +315,7 @@
             [loadingMore]="loadingMoreConversations"
             [hasMore]="hasMoreConversations"
             [totalConversations]="totalConversations"
-            [showSearch]="showConversationSearch"
+            [showSearch]="false"
             (interactionSelect)="onInteractionSelect($event)"
             (searchChange)="onSearchChange($event)"
             (selectionChange)="onSelectionChange($event)"
@@ -443,13 +326,15 @@
       </div>
     </div>
 
-    <!-- Middle: Detail View -->
-    <div class="lg:w-[46%] lg:flex-shrink-0 lg:min-h-0 bg-white dark:bg-gray-900/95 rounded-xl shadow-md border border-gray-200/80 dark:border-gray-700 min-w-0 max-w-full transition-all duration-300 overflow-hidden flex flex-col min-h-[400px]">
+    <!-- Middle: Detail View — grows to fill the space when the tools panel is closed -->
+    <div class="lg:min-h-0 bg-white dark:bg-gray-900/95 rounded-xl shadow-md border border-gray-200/80 dark:border-gray-700 min-w-0 max-w-full transition-all duration-300 overflow-hidden flex flex-col min-h-[400px]"
+         [ngClass]="rightPanelOpen ? 'lg:w-[46%] lg:flex-shrink-0' : 'lg:flex-1'">
       <div class="flex-1 min-h-0 w-full overflow-hidden flex flex-col">
-        <app-inbox-detail 
+        <app-inbox-detail
           class="flex-1 min-h-0 overflow-hidden"
           [interaction]="selectedInteraction"
           (interactionUpdate)="onInteractionUpdate()"
+          (openToolPanel)="openRightPanel($event)"
         ></app-inbox-detail>
       </div>
     </div>
@@ -484,14 +369,18 @@
       </ul>
     </div>
 
-    <!-- Right: Actions / Reppy AI Assistant Panel -->
+    <!-- Right: Actions / Reppy AI Assistant Panel — hidden by default, opened from the
+         chat header three-dots menu (Reppy Help / Actions / Summary / Contact).
+         Kept mounted (display toggle, not *ngIf) so generated Reppy suggestions survive
+         closing/reopening the panel and don't burn AI credits on regeneration. -->
     <div *ngIf="selectedInteraction"
+         [style.display]="rightPanelOpen ? null : 'none'"
          class="w-full lg:flex-1 lg:min-w-0 bg-white dark:bg-gray-900/95 rounded-xl shadow-md border border-gray-200/80 dark:border-gray-700 transition-all duration-300 lg:overflow-hidden flex flex-col">
       <!-- Tab headers -->
-      <div class="flex border-b border-gray-100 dark:border-gray-700">
+      <div class="flex items-stretch border-b border-gray-100 dark:border-gray-700">
         <button
           (click)="rightPanelTab = 'suggestions'"
-          class="flex-1 px-2 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1"
+          class="flex-1 px-2 py-3 text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1"
           [class.text-rep-black]="rightPanelTab === 'suggestions'"
           [class.bg-rep-lime]="rightPanelTab === 'suggestions'"
           [class.rounded-t-md]="rightPanelTab === 'suggestions'"
@@ -507,7 +396,7 @@
         </button>
         <button
           (click)="rightPanelTab = 'actions'"
-          class="flex-1 px-2 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1"
+          class="flex-1 px-2 py-3 text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1"
           [class.text-rep-black]="rightPanelTab === 'actions'"
           [class.bg-rep-lime]="rightPanelTab === 'actions'"
           [class.rounded-t-md]="rightPanelTab === 'actions'"
@@ -522,7 +411,7 @@
         </button>
         <button
           (click)="rightPanelTab = 'summary'"
-          class="flex-1 px-2 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1"
+          class="flex-1 px-2 py-3 text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1"
           [class.text-rep-black]="rightPanelTab === 'summary'"
           [class.bg-rep-lime]="rightPanelTab === 'summary'"
           [class.rounded-t-md]="rightPanelTab === 'summary'"
@@ -537,7 +426,7 @@
         </button>
         <button
           (click)="rightPanelTab = 'contact'"
-          class="flex-1 px-2 py-2.5 text-[11px] font-bold transition-all duration-200 flex items-center justify-center gap-1"
+          class="flex-1 px-2 py-3 text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1"
           [class.text-rep-black]="rightPanelTab === 'contact'"
           [class.bg-rep-lime]="rightPanelTab === 'contact'"
           [class.rounded-t-md]="rightPanelTab === 'contact'"
@@ -549,6 +438,14 @@
           [class.dark:hover:text-gray-200]="rightPanelTab !== 'contact'">
           <i class="fas fa-user text-[10px]"></i>
           Contact
+        </button>
+        <!-- Close the tools panel (returns to the wider chat-only layout) -->
+        <button
+          (click)="closeRightPanel()"
+          class="px-2.5 shrink-0 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition flex items-center justify-center border-l border-gray-100 dark:border-gray-700"
+          title="Close panel"
+          aria-label="Close panel">
+          <i class="fas fa-xmark text-sm"></i>
         </button>
       </div>
       <!-- Tab body: keep all panels mounted so Reppy suggestions survive tab switches -->

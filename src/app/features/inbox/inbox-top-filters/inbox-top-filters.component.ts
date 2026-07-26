@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -16,6 +16,10 @@ import {
   InboxMultiselectFilterComponent,
   InboxMultiselectOption
 } from '../inbox-multiselect-filter/inbox-multiselect-filter.component';
+import {
+  PremiumSelectComponent,
+  PremiumSelectOption
+} from '../../../shared/components/premium-select/premium-select.component';
 import { IIntentBucket } from '../../../core/services/intent-bucket.service';
 
 /** Synthetic keys merged into the Status multiselect for chat session */
@@ -31,16 +35,21 @@ export interface AppliedFilterChip {
 @Component({
   selector: 'app-inbox-top-filters',
   standalone: true,
-  imports: [CommonModule, FormsModule, InboxMultiselectFilterComponent],
+  imports: [CommonModule, FormsModule, InboxMultiselectFilterComponent, PremiumSelectComponent],
   templateUrl: './inbox-top-filters.component.html',
   styleUrls: ['./inbox-top-filters.component.scss']
 })
-export class InboxTopFiltersComponent implements OnChanges {
+export class InboxTopFiltersComponent implements OnChanges, OnDestroy {
   @Output() filtersChange = new EventEmitter<IInboxFilters>();
+  /** Conversation free-text search (debounced) — moved into this bar so it is always visible. */
+  @Output() searchChange = new EventEmitter<string>();
+  @Input() searchTerm = '';
   /** Emitted when list preset (All / Priority / …) changes from the Extra filter control */
   @Output() viewModeChange = new EventEmitter<InboxViewMode>();
   @Output() autoSyncToggle = new EventEmitter<void>();
   @Output() syncClick = new EventEmitter<void>();
+  /** Switch between the Inbox (list) and Bucket board views. */
+  @Output() layoutChange = new EventEmitter<'list' | 'buckets'>();
   @Input() initialFilters: IInboxFilters = {};
   /** Synced from parent `platformFilters.platform` — not stored in `initialFilters` */
   @Input() initialPlatform: IInboxFilters['platform'];
@@ -60,6 +69,20 @@ export class InboxTopFiltersComponent implements OnChanges {
   dateFromModel = '';
   dateToModel = '';
   expanded = false;
+
+  /** Options for the "Extra filter" premium dropdown (list presets). */
+  readonly viewModeSelectOptions: PremiumSelectOption[] = [
+    { value: 'all', label: 'All', iconClass: 'fas fa-inbox', colorClass: 'text-gray-500' },
+    { value: 'priority', label: 'Priority', iconClass: 'fas fa-fire', colorClass: 'text-orange-500' },
+    { value: 'assigned', label: 'Mine', iconClass: 'fas fa-user', colorClass: 'text-blue-500' },
+    { value: 'needs_response', label: 'Pending', iconClass: 'fas fa-clock', colorClass: 'text-amber-500' },
+    { value: 'overdue', label: 'Overdue', iconClass: 'fas fa-triangle-exclamation', colorClass: 'text-red-500' },
+    { value: 'archived', label: 'Archived', iconClass: 'fas fa-box-archive', colorClass: 'text-gray-500' }
+  ];
+
+  /** Local model for the always-visible conversation search input. */
+  searchModel = '';
+  private searchDebounce?: ReturnType<typeof setTimeout>;
 
   selectedLabelIds: string[] = [];
   selectedTypes: string[] = [];
@@ -147,6 +170,25 @@ export class InboxTopFiltersComponent implements OnChanges {
     this.expanded = !this.expanded;
   }
 
+  /** Debounced conversation search — emits the trimmed term to the parent. */
+  onSearchInput(value: string): void {
+    this.searchModel = value ?? '';
+    if (this.searchDebounce) clearTimeout(this.searchDebounce);
+    this.searchDebounce = setTimeout(() => {
+      this.searchChange.emit(this.searchModel.trim());
+    }, 300);
+  }
+
+  clearSearch(): void {
+    if (this.searchDebounce) clearTimeout(this.searchDebounce);
+    this.searchModel = '';
+    this.searchChange.emit('');
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchDebounce) clearTimeout(this.searchDebounce);
+  }
+
   onAutoSyncClick(ev: Event): void {
     ev.stopPropagation();
     this.autoSyncToggle.emit();
@@ -158,6 +200,9 @@ export class InboxTopFiltersComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['searchTerm']) {
+      this.searchModel = this.searchTerm || '';
+    }
     if (changes['initialFilters']) {
       this.filters = { ...(this.initialFilters || {}) };
       this.dateFromModel = this.filters.dateFrom || '';

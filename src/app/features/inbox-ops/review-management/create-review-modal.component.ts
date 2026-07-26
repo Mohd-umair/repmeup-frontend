@@ -1,8 +1,11 @@
 import {
   Component,
   EventEmitter,
+  Input,
+  OnChanges,
   OnDestroy,
-  Output
+  Output,
+  SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +22,15 @@ import { IOpsReviewDetail } from '../../../core/models/inbox-ops.model';
   templateUrl: './create-review-modal.component.html',
   styleUrls: ['./create-review-modal.component.scss']
 })
-export class CreateReviewModalComponent implements OnDestroy {
+export class CreateReviewModalComponent implements OnChanges, OnDestroy {
+  /** Link the review back to the originating inbox chat. */
+  @Input() sourceInteractionId?: string;
+  @Input() prefillCustomerName?: string;
+  @Input() prefillCustomerHandle?: string;
+  @Input() prefillPlatform?: 'google' | 'facebook' | 'instagram' | 'website';
+  /** Prefill the review body with the last customer message (editable). */
+  @Input() prefillBody?: string;
+
   @Output() close = new EventEmitter<void>();
   @Output() created = new EventEmitter<IOpsReviewDetail>();
 
@@ -55,6 +66,13 @@ export class CreateReviewModalComponent implements OnDestroy {
     private notify: NotificationService
   ) {}
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['prefillCustomerName']?.currentValue) this.customerName = this.prefillCustomerName!;
+    if (changes['prefillCustomerHandle']?.currentValue) this.customerHandle = this.prefillCustomerHandle!;
+    if (changes['prefillPlatform']?.currentValue) this.platform = this.prefillPlatform!;
+    if (changes['prefillBody']?.currentValue) this.reviewBody = this.prefillBody!;
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -89,7 +107,8 @@ export class CreateReviewModalComponent implements OnDestroy {
         customerHandle: this.customerHandle.trim() || undefined,
         rating: this.rating,
         reviewBody: this.reviewBody.trim(),
-        sentiment: (this.sentiment || undefined) as 'positive' | 'negative' | 'neutral' | undefined
+        sentiment: (this.sentiment || undefined) as 'positive' | 'negative' | 'neutral' | undefined,
+        sourceInteractionId: this.sourceInteractionId || undefined
       })
       .pipe(finalize(() => (this.submitting = false)), takeUntil(this.destroy$))
       .subscribe({

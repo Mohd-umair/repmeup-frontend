@@ -1,0 +1,78 @@
+<div class="premium-select relative" [class.w-full]="fullWidth">
+  <label *ngIf="label"
+         class="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 tracking-wide">
+    {{ label }}
+  </label>
+
+  <!-- Trigger -->
+  <button
+    #trigger
+    type="button"
+    [disabled]="disabled"
+    (click)="toggle($event)"
+    [ngClass]="triggerSizeClasses + (open ? ' ring-2 ring-rep-lime/40 border-rep-lime shadow-md' : '')"
+    class="premium-select__trigger group w-full flex items-center gap-2 border text-left font-medium
+      bg-white dark:bg-gray-800/70 border-gray-200 dark:border-gray-700
+      text-gray-800 dark:text-gray-100 shadow-sm
+      transition-all duration-200
+      hover:border-rep-lime/70 hover:shadow-md
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-rep-lime/40 focus-visible:border-rep-lime
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="open">
+    <i *ngIf="leadingIcon" [class]="leadingIcon" class="text-gray-400 dark:text-gray-500 shrink-0"></i>
+
+    <span class="flex-1 min-w-0 flex items-center gap-2">
+      <ng-container *ngIf="selectedOption() as sel; else placeholderTpl">
+        <span *ngIf="sel.icon" class="shrink-0 leading-none">{{ sel.icon }}</span>
+        <i *ngIf="sel.iconClass" [class]="sel.iconClass" [ngClass]="sel.colorClass || 'text-gray-500'" class="shrink-0"></i>
+        <span class="truncate">{{ sel.label }}</span>
+      </ng-container>
+      <ng-template #placeholderTpl>
+        <span class="truncate text-gray-400 dark:text-gray-500 font-normal">{{ placeholder }}</span>
+      </ng-template>
+    </span>
+
+    <i class="fas fa-chevron-down text-[11px] text-gray-400 shrink-0 transition-transform duration-200"
+       [class.rotate-180]="open"></i>
+  </button>
+
+  <!-- Panel -->
+  <div
+    *ngIf="open"
+    #panel
+    role="listbox"
+    (click)="$event.stopPropagation()"
+    class="premium-select__panel absolute z-[70] mt-2 w-full min-w-[11rem] rounded-xl p-1.5
+      bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-700
+      shadow-2xl shadow-black/10 dark:shadow-black/50 ring-1 ring-black/5 dark:ring-white/10"
+    [class.left-0]="align !== 'right'"
+    [class.right-0]="align === 'right'">
+    <div class="premium-select__scroll max-h-64 overflow-y-auto">
+      <button
+        *ngFor="let opt of options; trackBy: trackByValue"
+        type="button"
+        role="option"
+        [attr.aria-selected]="isSelected(opt)"
+        [disabled]="opt.disabled"
+        (click)="select(opt)"
+        [ngClass]="{ 'bg-rep-lime/15 dark:bg-rep-lime/10': isSelected(opt) }"
+        class="premium-select__option w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm
+          transition-colors duration-150
+          hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10
+          disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent">
+        <span *ngIf="opt.icon" class="shrink-0 text-base leading-none">{{ opt.icon }}</span>
+        <i *ngIf="opt.iconClass" [class]="opt.iconClass" [ngClass]="opt.colorClass || 'text-gray-500 dark:text-gray-400'" class="shrink-0 w-4 text-center"></i>
+        <span class="flex-1 min-w-0 truncate"
+              [ngClass]="isSelected(opt) ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-200'">
+          {{ opt.label }}
+        </span>
+        <i *ngIf="isSelected(opt)" class="fas fa-check text-rep-lime text-xs shrink-0"></i>
+      </button>
+
+      <div *ngIf="options.length === 0" class="px-2.5 py-3 text-sm text-gray-400 dark:text-gray-500 text-center">
+        {{ emptyText }}
+      </div>
+    </div>
+  </div>
+</div>

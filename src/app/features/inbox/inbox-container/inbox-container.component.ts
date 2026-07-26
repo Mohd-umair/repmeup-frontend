@@ -49,7 +49,6 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   hasMoreConversations = false;
   loadingMoreConversations = false;
   totalConversations = 0;
-  showConversationSearch = false;
   /** No longer drives active states — kept only so old template bindings compile. Use isXxxActive() helpers instead. */
   conversationQuickFilter: 'all' | 'unread' | 'platforms' | 'intent' = 'all';
   showConversationPlatformDropdown = false;
@@ -58,6 +57,8 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
   conversationPlatformOptions: string[] = [];
   conversationIntentBuckets: IIntentBucket[] = [];
   rightPanelTab: 'actions' | 'suggestions' | 'summary' | 'contact' = 'suggestions';
+  /** Reppy tools side panel is hidden by default; opened from the chat header three-dots menu. */
+  rightPanelOpen = false;
 
   // Setup guide
   orgAutoReplySettings: AutoReplySettings | null = null;
@@ -1105,6 +1106,15 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Switch between the Inbox (list) and Bucket board views by navigating to the
+   * matching route — `applyLayoutFromRoute()` then re-syncs `layoutMode`/`viewMode`.
+   */
+  switchLayout(mode: 'list' | 'buckets'): void {
+    if (this.layoutMode === mode) return;
+    this.router.navigate([mode === 'buckets' ? '/app/inbox/buckets' : '/app/inbox']);
+  }
+
   /** Sync list vs bucket layout from route data (`inboxLayout`). */
   private applyLayoutFromRoute(): void {
     const layout = this.route.snapshot.data['inboxLayout'] as 'list' | 'buckets' | undefined;
@@ -1593,6 +1603,17 @@ export class InboxContainerComponent implements OnInit, OnDestroy {
         this.inboxService.setSelectedInteraction(interaction);
       }
     });
+  }
+
+  /** Open the Reppy tools side panel on the tab chosen from the chat header menu. */
+  openRightPanel(tab: 'suggestions' | 'actions' | 'summary' | 'contact'): void {
+    this.rightPanelTab = tab;
+    this.rightPanelOpen = true;
+  }
+
+  /** Close the Reppy tools side panel (back to the chat-only, wider layout). */
+  closeRightPanel(): void {
+    this.rightPanelOpen = false;
   }
 
   onInteractionUpdate(): void {

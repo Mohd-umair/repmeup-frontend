@@ -31,6 +31,10 @@ import { map, take } from 'rxjs/operators';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { InboxLinkifiedTextComponent } from '../../../shared/components/inbox-linkified-text/inbox-linkified-text.component';
 import { WhatsAppDeliveryTicksComponent } from '../../../shared/components/whatsapp-delivery-ticks/whatsapp-delivery-ticks.component';
+import { InboxActionsComponent } from '../inbox-actions/inbox-actions.component';
+import { InboxAiAssistantComponent } from '../inbox-ai-assistant/inbox-ai-assistant.component';
+import { InboxSummaryComponent } from '../inbox-summary/inbox-summary.component';
+import { InboxContactPanelComponent } from '../inbox-contact-panel/inbox-contact-panel.component';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 
 interface BucketColumn {
@@ -53,7 +57,7 @@ interface SentimentStats {
 @Component({
   selector: 'app-inbox-bucket-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, AiChatBubbleIconComponent, SentimentDonutChartComponent, MediaSelectorModalComponent, InboxLinkifiedTextComponent, WhatsAppDeliveryTicksComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, AiChatBubbleIconComponent, SentimentDonutChartComponent, MediaSelectorModalComponent, InboxLinkifiedTextComponent, WhatsAppDeliveryTicksComponent, InboxActionsComponent, InboxAiAssistantComponent, InboxSummaryComponent, InboxContactPanelComponent],
   templateUrl: './inbox-bucket-view.component.html',
   styleUrls: ['./inbox-bucket-view.component.scss'],
   animations: INBOX_BUCKET_ANIMATIONS,
@@ -82,12 +86,16 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
   connectedDropLists: string[] = [];
 
   // AI Insights panel
-  insightsTab: 'sentiment' | 'topics' = 'sentiment';
+  insightsTab: 'sentiment' | 'topics' = 'topics';
   inboxStats: any = null;
   insightsLoading = false;
 
   // ── Inline chat panel ──
   activeChatInteraction: IInteraction | null = null;
+
+  /** Reppy tools overlay in the bucket chat (mirrors the inbox tools panel). */
+  activeToolTab: 'suggestions' | 'actions' | 'summary' | 'contact' | null = null;
+  showChatToolsMenu = false;
   chatLoading = false;
   replyText = '';
   replying = false;
@@ -382,9 +390,49 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     return null;
   }
 
+  // ── Reppy tools (Reppy Help / Actions / Summary / Contact) inside the bucket chat ──
+
+  /** Toggle the three-dots tools menu in the chat header. */
+  toggleChatToolsMenu(ev: Event): void {
+    ev.stopPropagation();
+    this.showChatToolsMenu = !this.showChatToolsMenu;
+  }
+
+  /** Open a tool tab in the overlay (from the three-dots menu or the tab bar). */
+  openChatTool(tab: 'suggestions' | 'actions' | 'summary' | 'contact'): void {
+    this.activeToolTab = tab;
+    this.showChatToolsMenu = false;
+  }
+
+  closeChatTool(): void {
+    this.activeToolTab = null;
+  }
+
+  /** Reppy Help → insert the drafted reply into the composer (user reviews, then sends). */
+  onToolReplyInsert(content: string): void {
+    if (content) this.replyText = content;
+    this.activeToolTab = null;
+  }
+
+  /** Reppy Help → suggested product: append its name to the reply as a graceful fallback. */
+  onToolSuggestedProduct(product: any): void {
+    const name = product?.name;
+    if (name) this.replyText = (this.replyText ? this.replyText + '\n' : '') + name;
+    this.activeToolTab = null;
+  }
+
+  /** Actions/Summary changed the interaction → reload the chat so status/labels/summary refresh. */
+  onToolUpdated(): void {
+    if (this.activeChatInteraction?._id) {
+      this.loadChatDetail(this.activeChatInteraction._id);
+    }
+  }
+
   closeChat(): void {
     this.activeChatInteraction = null;
     this.selectedInteractionId = null;
+    this.activeToolTab = null;
+    this.showChatToolsMenu = false;
     this.replyText = '';
     this.replying = false;
     this.resolving = false;
@@ -534,6 +582,9 @@ export class InboxBucketViewComponent implements OnInit, OnDestroy, OnChanges {
     const target = event.target as HTMLElement;
     if (!target.closest('.emoji-panel') && !target.closest('.emoji-toggle-btn')) {
       this.showEmojiPicker = false;
+    }
+    if (this.showChatToolsMenu && !target.closest('.chat-tools-menu')) {
+      this.showChatToolsMenu = false;
     }
   }
 

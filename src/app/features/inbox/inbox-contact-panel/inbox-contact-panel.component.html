@@ -7,8 +7,8 @@
       <div class="w-16 h-16 bg-rep-lime/20 border border-rep-lime/30 rounded-full flex items-center justify-center mx-auto mb-3">
         <i class="fas fa-user text-2xl text-rep-black dark:text-rep-lime"></i>
       </div>
-      <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">Select a conversation</p>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Customer info will appear here</p>
+      <p class="text-base font-semibold text-gray-700 dark:text-gray-200">Select a conversation</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Customer info will appear here</p>
     </div>
   </div>
 
@@ -19,8 +19,8 @@
       <i class="fas fa-user-slash text-xl text-gray-400 dark:text-gray-500"></i>
     </div>
     <div>
-      <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">No contact linked</p>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-[200px]">
+      <p class="text-base font-semibold text-gray-700 dark:text-gray-200">No contact linked</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-[200px]">
         Contacts are auto-created on new messages. Older conversations may not have one yet.
       </p>
     </div>
@@ -30,13 +30,13 @@
   <div *ngIf="loading" class="flex-1 flex items-center justify-center">
     <div class="text-center">
       <div class="w-10 h-10 border-4 border-rep-lime/20 border-t-rep-lime rounded-full animate-spin mx-auto mb-2"></div>
-      <p class="text-xs text-gray-500 dark:text-gray-400">Loading…</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
     </div>
   </div>
 
   <!-- Error -->
   <div *ngIf="error && !loading"
-       class="m-4 p-3 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-sm text-red-700 dark:text-red-300">
+       class="m-4 p-3 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-base text-red-700 dark:text-red-300">
     <i class="fas fa-exclamation-circle mr-1.5"></i>{{ error }}
   </div>
 
@@ -57,64 +57,43 @@
         </ng-container>
       </div>
       <div class="min-w-0 flex-1">
-        <h3 class="text-sm font-bold text-gray-900 dark:text-rep-white truncate">{{ contact.primaryName }}</h3>
+        <h3 class="text-base font-bold text-gray-900 dark:text-rep-white truncate">{{ contact.primaryName }}</h3>
         <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
           <span *ngFor="let ch of contact.channels"
-                class="text-sm font-medium flex items-center gap-1"
+                class="text-base font-medium flex items-center gap-1"
                 [ngClass]="getPlatformColor(ch.platform)"
                 [title]="ch.platform">
             <i class="fab" [ngClass]="getPlatformIcon(ch.platform)"></i>
-            <span *ngIf="ch.username" class="text-xs truncate max-w-[60px]">{{ '@' + ch.username }}</span>
+            <span *ngIf="ch.username" class="text-sm truncate max-w-[60px]">{{ '@' + ch.username }}</span>
           </span>
         </div>
       </div>
     </div>
 
-    <!-- Reppy AI Insights -->
-    <div *ngIf="contact.aiInsights?.sentiment || contact.aiInsights?.intent || contact.aiInsights?.priority"
-         class="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
-      <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Reppy AI Insights</p>
-      <div class="flex flex-wrap gap-1.5">
-        <span *ngIf="contact.aiInsights?.sentiment"
-              class="px-2.5 py-1 rounded-lg text-xs font-semibold"
-              [ngClass]="getSentimentBadge(contact.aiInsights?.sentiment).cls">
-          <i class="fas fa-heart mr-1"></i>{{ getSentimentBadge(contact.aiInsights?.sentiment).label }}
-        </span>
-        <span *ngIf="contact.aiInsights?.intent"
-              class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-          <i class="fas fa-brain mr-1"></i>{{ contact.aiInsights?.intent }}
-        </span>
-        <span *ngIf="contact.aiInsights?.priority"
-              class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-          <i class="fas fa-flag mr-1"></i>{{ contact.aiInsights?.priority }}
-        </span>
-      </div>
-    </div>
-
     <!-- Contact info -->
     <div class="space-y-2">
-      <div *ngIf="contact.primaryPhone" class="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200">
+      <div *ngIf="contact.primaryPhone" class="flex items-center gap-2.5 text-base text-gray-700 dark:text-gray-200">
         <div class="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-          <i class="fas fa-phone text-xs text-gray-500 dark:text-gray-400"></i>
+          <i class="fas fa-phone text-sm text-gray-500 dark:text-gray-400"></i>
         </div>
         {{ contact.primaryPhone }}
       </div>
-      <div *ngIf="contact.primaryEmail" class="flex items-center gap-2.5 text-sm text-gray-700 dark:text-gray-200">
+      <div *ngIf="contact.primaryEmail" class="flex items-center gap-2.5 text-base text-gray-700 dark:text-gray-200">
         <div class="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
-          <i class="fas fa-envelope text-xs text-gray-500 dark:text-gray-400"></i>
+          <i class="fas fa-envelope text-sm text-gray-500 dark:text-gray-400"></i>
         </div>
         <span class="truncate">{{ contact.primaryEmail }}</span>
       </div>
       <p *ngIf="!contact.primaryPhone && !contact.primaryEmail"
-         class="text-sm text-gray-400 dark:text-gray-500 italic">No phone or email on record.</p>
+         class="text-base text-gray-400 dark:text-gray-500 italic">No phone or email on record.</p>
     </div>
 
     <!-- Tags -->
     <div *ngIf="contact.tags && contact.tags.length > 0">
-      <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Tags</p>
+      <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">Tags</p>
       <div class="flex flex-wrap gap-1.5">
         <span *ngFor="let tag of contact.tags"
-              class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+              class="px-2.5 py-0.5 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
           {{ tag }}
         </span>
       </div>
@@ -122,19 +101,19 @@
 
     <!-- Notes -->
     <div *ngIf="contact.notes">
-      <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Notes</p>
-      <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{{ contact.notes }}</p>
+      <p class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Notes</p>
+      <p class="text-base text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{{ contact.notes }}</p>
     </div>
 
     <!-- Last seen -->
-    <p *ngIf="contact.lastInteractionAt" class="text-xs text-gray-400 dark:text-gray-500">
+    <p *ngIf="contact.lastInteractionAt" class="text-sm text-gray-400 dark:text-gray-500">
       Last seen {{ contact.lastInteractionAt | date:'MMM d, yyyy' }}
     </p>
 
     <!-- View Full Profile button -->
     <a [routerLink]="['/app/contacts']" [queryParams]="{ id: contact._id }"
-       class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-bold bg-rep-lime text-rep-black hover:shadow-lg hover:shadow-rep-lime/50 transition">
-      <i class="fas fa-arrow-up-right-from-square text-xs"></i>
+       class="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-base font-bold bg-rep-lime text-rep-black hover:shadow-lg hover:shadow-rep-lime/50 transition">
+      <i class="fas fa-arrow-up-right-from-square text-sm"></i>
       View Full Profile
     </a>
   </div>

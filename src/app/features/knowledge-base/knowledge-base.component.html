@@ -14,9 +14,19 @@
         <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg">Train Reppy with company knowledge, FAQs, policies, and more</p>
       </div>
       <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-        <span class="px-3 sm:px-4 py-1.5 sm:py-2 bg-rep-white rounded-lg sm:rounded-xl shadow-sm border border-gray-800 text-xs sm:text-sm font-medium text-rep-black whitespace-nowrap">
-          <i class="fas fa-database mr-1 sm:mr-2"></i>{{ totalItems }} Entries
-        </span>
+        <!-- KB Analytics toggle — opens the insights sidebar on demand -->
+        <button
+          type="button"
+          (click)="showKbAnalytics = !showKbAnalytics"
+          [attr.aria-pressed]="showKbAnalytics"
+          class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl shadow-sm border text-xs sm:text-sm font-medium whitespace-nowrap transition-colors inline-flex items-center gap-1.5 sm:gap-2"
+          [ngClass]="showKbAnalytics
+            ? 'bg-rep-lime text-rep-black border-rep-lime'
+            : 'bg-rep-white text-rep-black border-gray-800 hover:bg-gray-100'"
+          [title]="showKbAnalytics ? 'Hide KB Analytics' : 'Show KB Analytics'">
+          <i class="fas fa-chart-bar"></i>
+          <span>KB Analytics</span>
+        </button>
         <app-usage-meter
           class="hidden sm:block min-w-[10rem]"
           [featureKey]="FEATURE_KEY.KB_ENTRIES_MAX"
@@ -33,61 +43,6 @@
           <i class="fas fa-plus text-xs"></i>
           Add New
         </button>
-      </div>
-    </div>
-
-    <!-- ── Where Your KB Is Used — collapsible banner (list tab only; kb-usage-banner = dark text fixes) ── -->
-    <div *ngIf="activeTab === 'list'" class="kb-usage-banner rounded-xl sm:rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-      <button type="button" (click)="showUsageBanner = !showUsageBanner"
-        class="w-full flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 hover:bg-gray-50 transition-colors border-b border-transparent"
-        [class.border-gray-100]="showUsageBanner">
-        <div class="flex items-center gap-2 sm:gap-3">
-          <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-rep-lime/25 border border-rep-lime/40 flex items-center justify-center shrink-0">
-            <app-ai-chat-bubble-icon iconClass="w-4 h-4 sm:w-[18px] sm:h-[18px]"></app-ai-chat-bubble-icon>
-          </span>
-          <span class="font-semibold text-gray-900 text-sm sm:text-base">Where Your Knowledge Base Is Used</span>
-          <span class="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gray-100 border border-gray-200 text-gray-900 text-xs font-semibold">
-            <i class="fas fa-bolt text-[10px] text-gray-700"></i>
-            3 Reppy AI touchpoints
-          </span>
-        </div>
-        <i [class]="showUsageBanner ? 'fas fa-chevron-up' : 'fas fa-chevron-down'" class="text-gray-600 text-xs"></i>
-      </button>
-      <div *ngIf="showUsageBanner" class="px-4 sm:px-5 pb-4 sm:pb-5 pt-1 bg-gray-50/80">
-        <p class="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4">Every entry you add here flows directly into these Reppy AI systems:</p>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div class="flex items-start gap-3 bg-white rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
-            <span class="w-9 h-9 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
-              <i class="fas fa-reply text-blue-900 text-sm"></i>
-            </span>
-            <div>
-              <p class="text-sm font-semibold text-gray-900 mb-0.5">Auto-Replies</p>
-              <p class="text-xs text-gray-600 leading-relaxed">When a customer messages you, Reppy searches your KB to craft a relevant reply automatically.</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3 bg-white rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
-            <span class="w-9 h-9 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center shrink-0">
-              <i class="fas fa-comments text-purple-900 text-sm"></i>
-            </span>
-            <div>
-              <p class="text-sm font-semibold text-gray-900 mb-0.5">Inbox Reppy AI Assist</p>
-              <p class="text-xs text-gray-600 leading-relaxed">Agents can click "Suggest Reply" and Reppy uses your KB to draft a grounded, on-brand response.</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3 bg-white rounded-xl p-3 sm:p-4 border border-gray-200 shadow-sm">
-            <span class="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
-              <i class="fas fa-cogs text-amber-900 text-sm"></i>
-            </span>
-            <div>
-              <p class="text-sm font-semibold text-gray-900 mb-0.5">Reppy AI Background Jobs</p>
-              <p class="text-xs text-gray-600 leading-relaxed">Batch Reppy processing uses your top-weighted entries as persistent context in every generation.</p>
-            </div>
-          </div>
-        </div>
-        <p class="text-xs text-gray-700 mt-3 flex items-start gap-1.5">
-          <i class="fas fa-lightbulb text-gray-900 mt-0.5 shrink-0"></i>
-          <span><strong class="text-gray-900">Tip:</strong> Set a high <em>Training Weight</em> (9–10) on Brand Voice entries — they'll be included in every Reppy response.</span>
-        </p>
       </div>
     </div>
 
@@ -153,20 +108,22 @@
 
           <!-- Table -->
           <table *ngIf="!loading && filteredKnowledgeBase.length > 0" class="w-full min-w-[760px]">
-            <thead class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
-              <tr>
-                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Entry</th>
-                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Source</th>
-                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Category</th>
-                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Priority</th>
-                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Reppy AI Usage</th>
-                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Status</th>
-                <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Added</th>
-                <th class="px-4 sm:px-6 py-3 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-28">Actions</th>
+            <thead>
+              <tr class="border-b text-xs uppercase tracking-wide" style="border-color: var(--card-border); color: var(--text-muted);">
+                <th class="px-4 sm:px-6 py-3 text-left">Entry</th>
+                <th class="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Source</th>
+                <th class="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Category</th>
+                <th class="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Priority</th>
+                <th class="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Reppy AI Usage</th>
+                <th class="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Status</th>
+                <th class="px-4 sm:px-6 py-3 text-left whitespace-nowrap">Added</th>
+                <th class="px-4 sm:px-6 py-3 text-right w-28">Actions</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-              <tr *ngFor="let entry of filteredKnowledgeBase" class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition">
+            <tbody>
+              <tr *ngFor="let entry of filteredKnowledgeBase"
+                  class="border-b hover:bg-gray-50 dark:hover:bg-gray-800/50 transition"
+                  style="border-color: var(--card-border);">
                 <td class="px-4 sm:px-6 py-4 align-top min-w-0 max-w-[14rem] sm:max-w-xs">
                   <button type="button"
                     class="text-left w-full min-w-0 group"
@@ -315,39 +272,6 @@
         </button>
       </div>
 
-      <!-- Quick-start template row (hidden in edit mode) -->
-      <div *ngIf="false" class="mb-5 p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
-        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-          <i class="fas fa-magic mr-1.5 text-gray-800 dark:text-rep-lime"></i> Start from a template
-        </p>
-        <div class="flex flex-wrap gap-2">
-          <button type="button" (click)="applyTemplate('faq')"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 transition">
-            <i class="fas fa-question-circle"></i> FAQ
-          </button>
-          <button type="button" (click)="applyTemplate('brand_voice')"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 text-purple-700 text-xs font-medium hover:bg-purple-100 transition">
-            <i class="fas fa-bullhorn"></i> Brand Voice
-          </button>
-          <button type="button" (click)="applyTemplate('policy')"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 text-xs font-medium hover:bg-amber-100 transition">
-            <i class="fas fa-file-contract"></i> Policy
-          </button>
-          <button type="button" (click)="applyTemplate('product_info')"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 text-green-700 text-xs font-medium hover:bg-green-100 transition">
-            <i class="fas fa-box"></i> Product Info
-          </button>
-          <button type="button" (click)="applyTemplate('procedure')"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs font-medium hover:bg-rose-100 transition">
-            <i class="fas fa-tasks"></i> Procedure
-          </button>
-          <button type="button" (click)="applyTemplate('general')"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 transition">
-            <i class="fas fa-info-circle"></i> General
-          </button>
-        </div>
-      </div>
-
       <form [formGroup]="manualForm" (ngSubmit)="submitManual()" class="space-y-4 sm:space-y-5">
 
         <!-- Title -->
@@ -360,18 +284,54 @@
             class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm sm:text-base" />
         </div>
 
-        <!-- Content — key / value fields -->
+        <!-- Type + contextual description -->
         <div>
           <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
-            <i class="fas fa-align-left mr-1"></i> Content *
+            <i class="fas fa-tag mr-1"></i> What kind of info is this?
           </label>
+          <select formControlName="type"
+            class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm sm:text-base">
+            <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.label }}</option>
+          </select>
+          <p *ngIf="selectedTypeDescription" class="mt-1.5 text-xs text-gray-500 flex items-start gap-1.5">
+            <i class="fas fa-info-circle text-gray-600 dark:text-rep-lime mt-0.5 shrink-0"></i>
+            {{ selectedTypeDescription }}
+          </p>
+        </div>
 
-          <div class="space-y-2">
+        <!-- Content -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+            <label class="block text-xs sm:text-sm font-semibold text-rep-black">
+              <i class="fas fa-align-left mr-1"></i> Content *
+            </label>
+            <button type="button" (click)="toggleStructuredFields()"
+              class="text-xs font-semibold text-gray-500 hover:text-rep-black dark:hover:text-rep-lime underline decoration-dotted underline-offset-2 transition">
+              {{ useStructuredFields ? '← Switch back to plain text' : 'Prefer separate Q&A rows?' }}
+            </button>
+          </div>
+
+          <!-- Default: one simple, friendly text box -->
+          <ng-container *ngIf="!useStructuredFields">
+            <textarea formControlName="content" rows="9"
+              placeholder="Write freely, like an email to a colleague. For example:
+
+We accept returns within 30 days of purchase, as long as items are unused and in original packaging.
+
+Standard shipping takes 5–7 business days. Express shipping (2–3 days) is available at checkout."
+              class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm sm:text-base leading-relaxed resize-y"></textarea>
+            <p class="text-xs text-gray-400 mt-1.5">
+              {{ manualContentLength }} character{{ manualContentLength === 1 ? '' : 's' }} · plain language is best, Reppy will understand it
+            </p>
+          </ng-container>
+
+          <!-- Opt-in: structured key/value rows for power users who prefer separate Q&A pairs -->
+          <div *ngIf="useStructuredFields" class="space-y-2">
 
             <!-- Column header -->
             <div class="hidden sm:grid grid-cols-[200px_1fr_28px] gap-2 px-1">
-              <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Key / Label</span>
-              <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Value</span>
+              <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Question / Label</span>
+              <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Answer / Value</span>
               <span></span>
             </div>
 
@@ -380,25 +340,22 @@
               *ngFor="let field of templateFields; let i = index"
               class="group grid grid-cols-1 sm:grid-cols-[200px_1fr_28px] gap-2 items-start rounded-xl border border-gray-200 bg-gray-50/60 hover:border-rep-lime/40 p-2.5 transition-colors"
             >
-              <!-- Key input -->
               <input
                 type="text"
                 [(ngModel)]="field.key"
                 [ngModelOptions]="{standalone: true}"
-                placeholder="e.g. ABOUT US"
-                class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs font-bold uppercase tracking-wide text-gray-800 focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition placeholder:normal-case placeholder:font-normal placeholder:tracking-normal placeholder:text-gray-400"
+                placeholder="e.g. Q: What is your return policy?"
+                class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-xs font-bold text-gray-800 focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 transition placeholder:font-normal placeholder:text-gray-400"
               />
 
-              <!-- Value textarea -->
               <textarea
                 [(ngModel)]="field.value"
                 [ngModelOptions]="{standalone: true}"
                 rows="2"
-                placeholder="Enter value…"
+                placeholder="e.g. A: We accept returns within 30 days…"
                 class="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-sm text-gray-800 focus:border-rep-lime focus:ring-2 focus:ring-rep-lime/20 resize-y transition"
               ></textarea>
 
-              <!-- Remove button -->
               <button
                 *ngIf="templateFields.length > 1"
                 type="button"
@@ -408,164 +365,109 @@
               >
                 <i class="fas fa-xmark text-xs"></i>
               </button>
-              <!-- placeholder so grid stays 3-col when no remove button -->
               <span *ngIf="templateFields.length <= 1" class="hidden sm:block"></span>
             </div>
 
-            <!-- Add field row -->
-            <div class="flex items-center gap-3 pt-1">
-              <button
-                type="button"
-                (click)="addTemplateField()"
-                class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-gray-300 hover:border-rep-lime rounded-lg text-xs text-gray-500 hover:text-rep-black transition"
-              >
-                <i class="fas fa-plus text-[10px]"></i> Add field
-              </button>
-              <span class="text-xs text-gray-400">
-                <i class="fas fa-info-circle text-[10px] mr-0.5"></i>
-                Each field becomes <code class="bg-gray-100 px-1 rounded">KEY:\nvalue</code>
-              </span>
-            </div>
+            <button
+              type="button"
+              (click)="addTemplateField()"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border-2 border-dashed border-gray-300 text-gray-500 hover:border-rep-lime hover:text-rep-black transition"
+            >
+              <i class="fas fa-plus text-xs"></i> Add another row
+            </button>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+        <!-- Add more details — collapsed by default so the essentials stay front and center -->
+        <div class="border border-gray-200 rounded-xl overflow-hidden">
+          <button type="button" (click)="showMoreDetails = !showMoreDetails"
+            [attr.aria-expanded]="showMoreDetails"
+            class="w-full flex items-center justify-between gap-3 px-4 py-3 bg-gray-50 hover:bg-gray-100 transition text-left">
+            <span class="text-sm font-semibold text-rep-black">
+              <i class="fas fa-sliders mr-1.5 text-gray-400"></i> Category, tags &amp; importance
+              <span class="ml-1.5 text-xs font-normal text-gray-400">(optional)</span>
+            </span>
+            <i class="fas fa-chevron-down text-xs text-gray-400 transition-transform duration-200"
+              [class.rotate-180]="showMoreDetails"></i>
+          </button>
 
-          <!-- Type + contextual description -->
-          <div>
-            <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
-              <i class="fas fa-tag mr-1"></i> Type
-            </label>
-            <select formControlName="type"
-              class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm sm:text-base">
-              <option *ngFor="let t of typeOptions" [value]="t.value">{{ t.label }}</option>
-            </select>
-            <p *ngIf="selectedTypeDescription" class="mt-1.5 text-xs text-gray-500 flex items-start gap-1.5">
-              <i class="fas fa-info-circle text-gray-600 dark:text-rep-lime mt-0.5 shrink-0"></i>
-              {{ selectedTypeDescription }}
-            </p>
-          </div>
+          <div *ngIf="showMoreDetails" class="p-4 sm:p-5 space-y-5 border-t border-gray-200">
 
-          <!-- Category -->
-          <div>
-            <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
-              <i class="fas fa-folder mr-1"></i> Category
-            </label>
-            <input type="text" formControlName="category"
-              placeholder="e.g., Support, Sales, Product..."
-              class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm sm:text-base" />
-          </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+              <!-- Category -->
+              <div>
+                <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
+                  <i class="fas fa-folder mr-1"></i> Category
+                </label>
+                <input type="text" formControlName="category"
+                  placeholder="e.g., Support, Sales, Product..."
+                  class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm sm:text-base" />
+              </div>
 
-          <!-- Tags chip input -->
-          <div>
-            <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
-              <i class="fas fa-tags mr-1"></i> Tags
-            </label>
-            <div class="kb-tag-well flex flex-wrap gap-1.5 px-3 py-2 border-2 rounded-lg sm:rounded-xl focus-within:ring-4 focus-within:ring-rep-lime/20 focus-within:border-rep-lime transition min-h-[46px] cursor-text"
-              (click)="$any($event.currentTarget).querySelector('input').focus()">
-              <span *ngFor="let tag of manualTags; let i = index"
-                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold border bg-rep-lime text-rep-black border-rep-lime dark:bg-rep-lime/20 dark:text-rep-lime dark:border-rep-lime/50">
-                #{{ tag }}
-                <button type="button" (click)="removeTag('manual', i)"
-                  class="hover:opacity-80 dark:hover:text-white leading-none text-rep-black dark:text-rep-lime">&times;</button>
-              </span>
-              <input
-                type="text"
-                [(ngModel)]="manualTagInput"
-                [ngModelOptions]="{standalone: true}"
-                (keydown)="onTagKeydown($event, 'manual')"
-                (blur)="commitTagOnBlur('manual')"
-                [placeholder]="manualTags.length === 0 ? 'Type tag, press Enter or comma...' : ''"
-                class="kb-tag-input flex-1 min-w-[120px] outline-none text-sm bg-transparent py-0.5" />
+              <!-- Tags chip input -->
+              <div>
+                <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
+                  <i class="fas fa-tags mr-1"></i> Tags
+                </label>
+                <div class="kb-tag-well flex flex-wrap gap-1.5 px-3 py-2 border-2 rounded-lg sm:rounded-xl focus-within:ring-4 focus-within:ring-rep-lime/20 focus-within:border-rep-lime transition min-h-[46px] cursor-text"
+                  (click)="$any($event.currentTarget).querySelector('input').focus()">
+                  <span *ngFor="let tag of manualTags; let i = index"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-semibold border bg-rep-lime text-rep-black border-rep-lime dark:bg-rep-lime/20 dark:text-rep-lime dark:border-rep-lime/50">
+                    #{{ tag }}
+                    <button type="button" (click)="removeTag('manual', i)"
+                      class="hover:opacity-80 dark:hover:text-white leading-none text-rep-black dark:text-rep-lime">&times;</button>
+                  </span>
+                  <input
+                    type="text"
+                    [(ngModel)]="manualTagInput"
+                    [ngModelOptions]="{standalone: true}"
+                    (keydown)="onTagKeydown($event, 'manual')"
+                    (blur)="commitTagOnBlur('manual')"
+                    [placeholder]="manualTags.length === 0 ? 'Type tag, press Enter or comma...' : ''"
+                    class="kb-tag-input flex-1 min-w-[120px] outline-none text-sm bg-transparent py-0.5" />
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Press <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-mono">Enter</kbd> to add</p>
+              </div>
             </div>
-            <p class="text-xs text-gray-400 mt-1">Press <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-mono">Enter</kbd> or <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-mono">,</kbd> to add a tag · <kbd class="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-[10px] font-mono">Backspace</kbd> to remove last</p>
-          </div>
 
-          <!-- Priority -->
-          <div>
-            <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
-              <i class="fas fa-star mr-1"></i> Priority (1–10)
-              <!-- Tooltip -->
-              <span class="relative inline-flex ml-1 group cursor-help">
-                <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
-                <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
-                  {{ tooltips.priority }}
-                  <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
-                </span>
-              </span>
-            </label>
-            <input type="number" formControlName="priority" min="1" max="10"
-              class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition text-sm sm:text-base" />
-          </div>
-        </div>
-
-        <!-- Advanced Reppy AI Training Options -->
-        <div class="bg-rep-lime/10 border border-rep-lime/30 rounded-lg sm:rounded-xl p-4 sm:p-5 space-y-4">
-          <h3 class="text-base sm:text-lg font-semibold text-rep-black">
-            <i class="fas fa-cog mr-1 sm:mr-2"></i> Advanced Reppy AI Training Options
-          </h3>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-            <!-- Training Context -->
+            <!-- Importance — replaces raw "Priority" + "Training Weight" numbers with 3 plain-English levels -->
             <div>
               <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
-                <i class="fas fa-brain mr-1"></i> Training Context
-                <span class="relative inline-flex ml-1 group cursor-help">
-                  <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
-                  <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
-                    {{ tooltips.trainingContext }}
-                    <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
-                  </span>
-                </span>
+                <i class="fas fa-gauge-high mr-1"></i> Importance
+              </label>
+              <div class="grid grid-cols-3 gap-2">
+                <button *ngFor="let opt of importanceOptions" type="button" (click)="setImportance(opt.value)"
+                  [attr.aria-pressed]="importanceLevel === opt.value"
+                  class="flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border-2 text-xs font-semibold transition"
+                  [ngClass]="importanceLevel === opt.value
+                    ? 'border-rep-lime bg-rep-lime/10 text-rep-black'
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300'">
+                  <i class="fas" [ngClass]="opt.icon"></i>
+                  {{ opt.label }}
+                </button>
+              </div>
+              <p class="mt-1.5 text-xs text-gray-500 flex items-start gap-1.5">
+                <i class="fas fa-info-circle text-gray-600 dark:text-rep-lime mt-0.5 shrink-0"></i>
+                {{ selectedImportanceHint }}
+              </p>
+            </div>
+
+            <!-- When to use this (optional) -->
+            <div>
+              <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
+                <i class="fas fa-comment-dots mr-1"></i> When should Reppy use this?
+                <span class="text-xs font-normal text-gray-400">(optional)</span>
               </label>
               <input type="text" formControlName="trainingContext"
-                placeholder='e.g., "Use when customer asks about returns"'
+                placeholder='e.g., "Use when a customer asks about returns" — leave blank to let Reppy decide'
                 class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white text-sm sm:text-base" />
             </div>
 
-            <!-- Training Weight -->
-            <div>
-              <label class="block text-xs sm:text-sm font-semibold text-rep-black mb-1.5">
-                <i class="fas fa-weight-hanging mr-1"></i> Training Weight (1–10)
-                <span class="relative inline-flex ml-1 group cursor-help">
-                  <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
-                  <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
-                    {{ tooltips.trainingWeight }}
-                    <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
-                  </span>
-                </span>
-              </label>
-              <input type="number" formControlName="trainingWeight" min="1" max="10"
-                class="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition bg-white text-sm sm:text-base" />
-              <p class="text-xs text-gray-500 mt-1">Brand Voice → 9–10 · Policies → 7–8 · FAQs → 5–6</p>
-            </div>
-          </div>
-
-          <!-- Toggles -->
-          <div class="flex flex-col xs:flex-row items-start xs:items-center gap-4 sm:gap-6">
-            <label class="flex items-center gap-2 sm:gap-3 cursor-pointer group">
-              <input type="checkbox" formControlName="isTrainingData"
-                class="w-4 h-4 sm:w-5 sm:h-5 rounded focus:ring-rep-lime/25 flex-shrink-0">
-              <span class="text-xs sm:text-sm font-medium text-rep-black">Use for Reppy AI Training</span>
-              <span class="relative inline-flex group/tip cursor-help">
-                <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
-                <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover/tip:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
-                  {{ tooltips.isTrainingData }}
-                  <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
-                </span>
-              </span>
-            </label>
-            <label class="flex items-center gap-2 sm:gap-3 cursor-pointer group">
+            <!-- Enabled toggle -->
+            <label class="flex items-center gap-2 sm:gap-3 cursor-pointer w-fit">
               <input type="checkbox" formControlName="isActive"
                 class="w-4 h-4 sm:w-5 sm:h-5 rounded focus:ring-rep-lime/25 flex-shrink-0">
-              <span class="text-xs sm:text-sm font-medium text-rep-black">Active</span>
-              <span class="relative inline-flex group/tip cursor-help">
-                <i class="fas fa-info-circle text-gray-400 hover:text-gray-900 dark:hover:text-rep-lime transition text-xs"></i>
-                <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover/tip:opacity-100 transition-opacity z-50 shadow-xl text-center leading-relaxed">
-                  {{ tooltips.isActive }}
-                  <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
-                </span>
-              </span>
+              <span class="text-xs sm:text-sm font-medium text-rep-black">Enabled — Reppy can use this entry right away</span>
             </label>
           </div>
         </div>
@@ -577,7 +479,7 @@
             <i class="fas fa-arrow-left mr-1.5"></i>
             Discard Changes
           </button>
-          <button type="submit" [disabled]="!fieldEditorHasContent || manualForm.get('title')?.invalid || submitting"
+          <button type="submit" [disabled]="!canSubmitManual"
             class="px-6 sm:px-8 py-2 sm:py-3 bg-rep-lime text-gray-900 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:shadow-xl hover:shadow-rep-lime/50 transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
             <i [class]="submitting ? 'fas fa-spinner fa-spin mr-2' : 'fas fa-save mr-2'"></i>
             {{ submitting ? 'Updating...' : 'Update Entry' }}
@@ -594,7 +496,7 @@
     <!-- ══════════════════════════════════════════════════════════════
          RIGHT: KB ANALYTICS SIDEBAR
          ══════════════════════════════════════════════════════════════ -->
-    <aside *ngIf="activeTab === 'list'"
+    <aside *ngIf="activeTab === 'list' && showKbAnalytics"
       class="kb-analytics-panel flex flex-col flex-shrink-0 overflow-hidden border-l border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900"
       style="width: 288px;">
 
@@ -606,7 +508,14 @@
           </div>
           <span class="font-bold text-[13px] text-gray-800 dark:text-white">KB Analytics</span>
         </div>
-        <span class="text-[10px] text-gray-400">{{ kbAnalytics?.totalEntries ?? 0 }} total</span>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-gray-400">{{ kbAnalytics?.totalEntries ?? 0 }} total</span>
+          <button type="button" (click)="showKbAnalytics = false"
+            class="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            title="Close analytics" aria-label="Close analytics">
+            <i class="fas fa-xmark text-xs"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Tabs -->

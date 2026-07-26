@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs/operators';
 import { InboxOpsService } from '../../../core/services/inbox-ops.service';
@@ -76,7 +76,8 @@ export class InboxComplaintManagementComponent implements OnInit, OnDestroy {
     private ops: InboxOpsService,
     private notify: NotificationService,
     private users: UserService,
-    public router: Router
+    public router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -91,6 +92,34 @@ export class InboxComplaintManagementComponent implements OnInit, OnDestroy {
     });
     this.loadStats();
     this.loadList();
+
+    // Deep-link from inbox badge: /app/inbox/compliant-management?complaint=<displayRef>
+    const displayRef = this.route.snapshot.queryParamMap.get('complaint');
+    if (displayRef) this.openComplaintByDisplayRef(displayRef);
+  }
+
+  /** Open a specific complaint by displayRef — used by the inbox badge deep-link. */
+  openComplaintByDisplayRef(displayRef: string): void {
+    // displayRef is used as the id param in the complaint ops service (it's the interaction ID, not displayRef)
+    // We search the list for a matching displayRef and open that row's detail.
+    const pollDetail = () => {
+      const match = this.rows.find((r) => r.displayRef === displayRef);
+      if (match) {
+        this.openRow(match);
+      } else {
+        // List may not be loaded yet — retry once after load completes
+        setTimeout(() => {
+          const m = this.rows.find((r) => r.displayRef === displayRef);
+          if (m) this.openRow(m);
+        }, 800);
+      }
+    };
+    if (this.rows.length) {
+      pollDetail();
+    } else {
+      // Wait for initial list load
+      setTimeout(pollDetail, 600);
+    }
   }
 
   ngOnDestroy(): void {

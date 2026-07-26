@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, finalize, takeUntil } from 'rxjs/operators';
 import { InboxOpsService } from '../../../core/services/inbox-ops.service';
@@ -75,7 +75,8 @@ export class InboxReviewManagementComponent implements OnInit, OnDestroy {
   constructor(
     private ops: InboxOpsService,
     private notify: NotificationService,
-    public router: Router
+    public router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -87,6 +88,21 @@ export class InboxReviewManagementComponent implements OnInit, OnDestroy {
       });
     this.loadStats();
     this.loadList();
+
+    // Deep-link from inbox badge: /app/inbox/review-managment?review=<id>
+    const reviewId = this.route.snapshot.queryParamMap.get('review');
+    if (reviewId) this.openReviewById(reviewId);
+  }
+
+  /** Open a specific review detail drawer — used by the inbox badge deep-link. */
+  openReviewById(id: string): void {
+    this.ops.getReviewDetail(id).subscribe({
+      next: (d) => {
+        this.detail = d;
+        this.drawerOpen = true;
+      },
+      error: () => this.notify.error('Could not open that review')
+    });
   }
 
   ngOnDestroy(): void {

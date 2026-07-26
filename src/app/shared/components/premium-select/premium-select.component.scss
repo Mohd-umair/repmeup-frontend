@@ -2,13 +2,13 @@
   display: block;
 }
 
-/* Premium entrance animation — matches app-premium-select */
-.ms-panel {
+/* Premium entrance animation for the floating panel */
+.premium-select__panel {
   transform-origin: top center;
-  animation: msPanelIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: premiumSelectIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes msPanelIn {
+@keyframes premiumSelectIn {
   from {
     opacity: 0;
     transform: translateY(-6px) scale(0.97);
@@ -20,12 +20,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ms-panel {
+  .premium-select__panel {
     animation: none;
   }
 }
 
-.ms-scroll {
+/* Slim, unobtrusive scrollbar inside the panel */
+.premium-select__scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
 

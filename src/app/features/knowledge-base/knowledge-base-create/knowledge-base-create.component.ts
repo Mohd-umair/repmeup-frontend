@@ -26,7 +26,8 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   protected readonly entitlements = inject(EntitlementsStore);
   protected readonly FEATURE_KEY = FEATURE_KEY;
 
-  activeTab: 'manual' | 'pdf' | 'url' = 'manual';
+  /** null = show the method-picker landing; a value = show that create form. */
+  activeTab: 'manual' | 'pdf' | 'url' | null = null;
   submitting = false;
 
   // ── Manual form ────────────────────────────────────────────────────────────
@@ -34,6 +35,20 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   manualTags: string[] = [];
   manualTagInput = '';
   templateFields: KbCreateTemplateField[] = [{ key: '', value: '' }];
+  /** Default view is a single plain-text box; power users can opt into separate Q&A rows. */
+  useStructuredFields = false;
+  /** Category / tags / importance are tucked away by default to keep the form to 3 fields. */
+  showMoreDetails = false;
+
+  readonly importanceOptions: Array<{
+    value: 'normal' | 'important' | 'critical';
+    label: string; hint: string; icon: string; priority: number; weight: number;
+  }> = [
+    { value: 'normal',    label: 'Normal',    hint: 'Everyday info — used when it\'s relevant to the question.', icon: 'fa-circle-dot', priority: 5,  weight: 5 },
+    { value: 'important', label: 'Important', hint: 'Used often — good for policies, pricing, product details.', icon: 'fa-star',       priority: 7,  weight: 7 },
+    { value: 'critical',  label: 'Critical',  hint: 'Always applied to every reply — best for brand tone.',      icon: 'fa-bolt',        priority: 10, weight: 10 }
+  ];
+  importanceLevel: 'normal' | 'important' | 'critical' = 'normal';
 
   // ── PDF form ───────────────────────────────────────────────────────────────
   pdfForm!: FormGroup;
@@ -216,6 +231,21 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
     return this.templateFields.some(f => f.value.trim().length > 0);
   }
 
+  /** Length of whatever content the user has actually entered, in either mode. */
+  get manualContentLength(): number {
+    return this.useStructuredFields
+      ? this.composeContentFromFields().trim().length
+      : (this.manualForm?.get('content')?.value || '').trim().length;
+  }
+
+  get canSubmitManual(): boolean {
+    return !this.manualForm?.get('title')?.invalid && this.manualContentLength >= 10 && !this.submitting;
+  }
+
+  get selectedImportanceHint(): string {
+    return this.importanceOptions.find(o => o.value === this.importanceLevel)?.hint ?? '';
+  }
+
   get estimatedCredits(): number {
     const words = this.urlForm?.get('targetWordCount')?.value ?? 2000;
     const tags  = this.urlForm?.get('targetTagCount')?.value  ?? 10;
@@ -247,15 +277,42 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   applyTemplate(key: string): void {
     const tpl = this.quickStartTemplates[key];
     if (!tpl) return;
+    this.templateFields = tpl.fields.map(f => ({ ...f }));
+    const composed = this.composeContentFromFields();
     this.manualForm.patchValue({
       title: tpl.title, type: tpl.type, category: tpl.category,
-      trainingContext: tpl.trainingContext,
-      priority: 7, trainingWeight: 7, isTrainingData: true, isActive: true
+      trainingContext: tpl.trainingContext, content: composed,
+      isTrainingData: true, isActive: true
     });
-    this.manualTags   = tpl.tags.split(',').map(t => t.trim()).filter(Boolean);
-    this.templateFields = tpl.fields.map(f => ({ ...f }));
-    this.manualForm.patchValue({ content: '' });
+    this.manualTags = tpl.tags.split(',').map(t => t.trim()).filter(Boolean);
+    this.setImportance(tpl.type === 'brand_voice' ? 'critical' : (tpl.type === 'policy' ? 'important' : 'normal'));
+    // Show as one friendly, fully-editable text block rather than separate rows.
+    this.useStructuredFields = false;
+    // Reveal category/tags/importance since the template already filled them in.
+    this.showMoreDetails = true;
     this.activeTab = 'manual';
+    this.cdr.markForCheck();
+  }
+
+  /** Maps the simple 3-level "Importance" picker onto the underlying priority/weight fields. */
+  setImportance(level: 'normal' | 'important' | 'critical'): void {
+    this.importanceLevel = level;
+    const opt = this.importanceOptions.find(o => o.value === level);
+    if (opt) this.manualForm.patchValue({ priority: opt.priority, trainingWeight: opt.weight });
+  }
+
+  /** Toggle between the default single textarea and the structured Q&A row editor. */
+  toggleStructuredFields(): void {
+    if (!this.useStructuredFields) {
+      if (this.templateFields.every(f => !f.key.trim() && !f.value.trim())) {
+        const current = (this.manualForm.get('content')?.value || '').trim();
+        this.templateFields = [{ key: '', value: current }];
+      }
+      this.useStructuredFields = true;
+    } else {
+      this.manualForm.patchValue({ content: this.composeContentFromFields() });
+      this.useStructuredFields = false;
+    }
     this.cdr.markForCheck();
   }
 
@@ -341,16 +398,28 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   // ── Form submissions ───────────────────────────────────────────────────────
 
   submitManual(): void {
-    const composed = this.composeContentFromFields();
-    this.manualForm.patchValue({ content: composed });
-    if (this.manualForm.get('title')?.invalid || composed.trim().length < 10) return;
+    const content = this.useStructuredFields
+      ? this.composeContentFromFields()
+      : (this.manualForm.get('content')?.value || '').trim();
+    this.manualForm.patchValue({ content });
+
+    if (this.manualForm.get('title')?.invalid || content.length < 10) {
+      this.notificationService.warning(
+        'Just a bit more',
+        'Add a title and at least a couple of sentences of content before saving.'
+      );
+      return;
+    }
     if (this.manualForm.invalid) return;
 
     this.submitting = true;
     const formData: any = {
       ...this.manualForm.value,
+      isTrainingData: true,
       tags: [...this.manualTags],
-      templateFields: this.templateFields.filter(f => f.key.trim() || f.value.trim())
+      templateFields: this.useStructuredFields
+        ? this.templateFields.filter(f => f.key.trim() || f.value.trim())
+        : []
     };
 
     this.knowledgeBaseService.createManual(formData)

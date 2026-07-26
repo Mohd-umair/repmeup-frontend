@@ -1,0 +1,86 @@
+<!-- Backdrop -->
+<div class="rcm-backdrop" (click)="close.emit()" aria-hidden="true"></div>
+
+<!-- Modal -->
+<div class="rcm-modal" role="dialog" aria-modal="true" aria-labelledby="rcm-title">
+
+  <!-- Header -->
+  <div class="rcm-header">
+    <div class="rcm-header__left">
+      <div class="rcm-header__icon">
+        <i class="fas fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h2 class="rcm-header__title" id="rcm-title">Raise Complaint</h2>
+        <p class="rcm-header__sub">Log a customer complaint from this conversation</p>
+      </div>
+    </div>
+    <button type="button" class="rcm-close-btn" (click)="close.emit()" aria-label="Close">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="rcm-body">
+
+    <!-- Issue Summary -->
+    <div class="rcm-field-group">
+      <label class="rcm-label" for="rcm-summary">
+        Issue Summary <span class="rcm-required">*</span>
+      </label>
+      <textarea
+        id="rcm-summary"
+        class="rcm-input rcm-textarea"
+        placeholder="Describe the customer's issue clearly…"
+        [(ngModel)]="issueSummary"
+        maxlength="280"
+        rows="4"
+      ></textarea>
+      <span class="rcm-char-count" [class.rcm-char-count--warn]="charCount > 250">
+        {{ charCount }} / 280
+      </span>
+    </div>
+
+    <!-- Priority -->
+    <div class="rcm-field-group">
+      <label class="rcm-label">Priority</label>
+      <div class="rcm-priority-row">
+        <button
+          *ngFor="let p of priorities"
+          type="button"
+          class="rcm-priority-btn"
+          [class.rcm-priority-btn--active]="priority === p.value"
+          [attr.data-priority]="p.value"
+          (click)="priority = p.value"
+        >
+          <i class="fas" [ngClass]="p.icon"></i>
+          {{ p.label }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="rcm-footer">
+    <div class="rcm-footer__hint" *ngIf="issueSummary.trim().length < 5">
+      <i class="fas fa-info-circle"></i>
+      Add at least a few words describing the issue.
+    </div>
+    <div class="rcm-footer__actions">
+      <button type="button" class="rcm-btn-secondary" (click)="close.emit()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="rcm-btn-primary"
+        [disabled]="!isValid || submitting"
+        (click)="submit()"
+      >
+        <i class="fas" [ngClass]="submitting ? 'fa-spinner fa-spin' : 'fa-triangle-exclamation'"></i>
+        {{ submitting ? 'Raising…' : 'Raise Complaint' }}
+      </button>
+    </div>
+  </div>
+
+</div>

@@ -171,6 +171,8 @@ export interface ICreateReviewPayload {
   rating?: number | null;
   reviewBody: string;
   sentiment?: 'positive' | 'negative' | 'neutral';
+  /** Link this review back to the originating inbox chat interaction */
+  sourceInteractionId?: string;
 }
 
 export interface ICreateOrderLineItem {
@@ -185,6 +187,26 @@ export interface ICreateOrderPayload {
   buyerPhone?: string;
   shippingAddress?: string;
   notes?: string;
+  /** Link this order back to the originating inbox chat interaction */
+  sourceInteraction?: string;
+}
+
+export interface ICreateComplaintPayload {
+  issueSummary?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+}
+
+/** Lightweight ref returned by by-interaction lookup endpoints */
+export interface ILinkedOrderRef {
+  id: string;
+  displayRef: string | null;
+  status: string;
+}
+
+export interface ILinkedReviewRef {
+  id: string;
+  displayRef: string;
+  sentiment: string | null;
 }
 
 export interface IOpsTableColumn {

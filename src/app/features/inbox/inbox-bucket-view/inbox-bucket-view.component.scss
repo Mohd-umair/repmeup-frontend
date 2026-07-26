@@ -57,6 +57,20 @@
   }
 }
 
+/* Vertical bucket name inside a collapsed bar — reads bottom-to-top, truncates if long */
+.collapsed-col-name {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  max-height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 :host-context(html.dark) .collapsed-col:hover {
   filter: brightness(1.06);
 }

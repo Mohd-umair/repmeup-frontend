@@ -1,6 +1,7 @@
 import {
   Component,
   EventEmitter,
+  Input,
   OnDestroy,
   OnInit,
   Output
@@ -28,6 +29,13 @@ interface ILineItemDraft {
   styleUrls: ['./create-order-modal.component.scss']
 })
 export class CreateOrderModalComponent implements OnInit, OnDestroy {
+  /** When opened from inbox chat header, pass the originating interaction ID to link the order. */
+  @Input() sourceInteractionId?: string;
+  /** Prefill buyer name from the chat author */
+  @Input() prefillBuyerName?: string;
+  /** Prefill buyer phone from the chat author */
+  @Input() prefillBuyerPhone?: string;
+
   @Output() close = new EventEmitter<void>();
   @Output() created = new EventEmitter<IOpsOrderDetail>();
 
@@ -67,6 +75,9 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    if (this.prefillBuyerName) this.buyerName = this.prefillBuyerName;
+    if (this.prefillBuyerPhone) this.buyerPhone = this.prefillBuyerPhone;
+
     this.productSearch$
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((q) => this.fetchProducts(q));
@@ -172,7 +183,8 @@ export class CreateOrderModalComponent implements OnInit, OnDestroy {
         buyerName: this.buyerName.trim() || undefined,
         buyerPhone: this.buyerPhone.trim() || undefined,
         shippingAddress: this.shippingAddress.trim() || undefined,
-        notes: this.notes.trim() || undefined
+        notes: this.notes.trim() || undefined,
+        sourceInteraction: this.sourceInteractionId || undefined
       })
       .pipe(finalize(() => (this.submitting = false)), takeUntil(this.destroy$))
       .subscribe({

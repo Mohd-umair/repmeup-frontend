@@ -4,6 +4,10 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } 
 import { INBOX_DETAIL_ANIMATIONS } from '../inbox.animations';
 import { DomSanitizer, SafeUrl, SafeHtml } from '@angular/platform-browser';
 import { IInteraction, InteractionStatus, IAssignmentHistory } from '../../../core/models/interaction.model';
+import { ILinkedOrderRef, ILinkedReviewRef, IOpsComplaintDetail, IOpsOrderDetail, IOpsReviewDetail } from '../../../core/models/inbox-ops.model';
+import { CreateOrderModalComponent } from '../../inbox-ops/order-management/create-order-modal.component';
+import { CreateReviewModalComponent } from '../../inbox-ops/review-management/create-review-modal.component';
+import { RaiseComplaintModalComponent } from '../../inbox-ops/complaint-management/raise-complaint-modal.component';
 import { InboxService, INBOX_THREAD_MESSAGE_PAGE_SIZE } from '../../../core/services/inbox.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
@@ -84,7 +88,7 @@ interface IOptimisticReply {
 @Component({
   selector: 'app-inbox-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MediaSelectorModalComponent, AiChatBubbleIconComponent, InboxLinkifiedTextComponent, WhatsAppTemplatePickerComponent, WhatsAppDeliveryTicksComponent, AppCurrencyPipe],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MediaSelectorModalComponent, AiChatBubbleIconComponent, InboxLinkifiedTextComponent, WhatsAppTemplatePickerComponent, WhatsAppDeliveryTicksComponent, AppCurrencyPipe, CreateOrderModalComponent, CreateReviewModalComponent, RaiseComplaintModalComponent],
   templateUrl: './inbox-detail.component.html',
   styleUrls: ['./inbox-detail.component.scss'],
   animations: INBOX_DETAIL_ANIMATIONS,
@@ -92,6 +96,8 @@ interface IOptimisticReply {
 export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
   @Input() interaction: IInteraction | null = null;
   @Output() interactionUpdate = new EventEmitter<void>();
+  /** Open the Reppy tools side panel on a specific tab (from the header three-dots menu). */
+  @Output() openToolPanel = new EventEmitter<'suggestions' | 'actions' | 'summary' | 'contact'>();
   @ViewChild('replyTextarea') replyTextarea?: ElementRef<HTMLTextAreaElement>;
 
   replyForm: FormGroup;
@@ -152,6 +158,20 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
   /** Three-dots actions menu open state */
   showActionsMenu = false;
+
+  /** Three-dots "Reppy tools" menu (Reppy Help / Actions / Summary / Contact) open state */
+  showToolsMenu = false;
+
+  // ── Send-to (Order / Complaint / Review) ──────────────────────────────────
+  showSendToMenu = false;
+  showOrderModal = false;
+  showReviewModal = false;
+  showComplaintModal = false;
+
+  /** Linked records discovered from backend (null = not found or not loaded yet) */
+  linkedOrder: ILinkedOrderRef | null = null;
+  linkedReview: ILinkedReviewRef | null = null;
+  /** Complaint is embedded directly on the interaction model — read from interaction.complaint */
 
   /** Emoji picker visibility */
   showEmojiPicker = false;
@@ -341,10 +361,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
 
       // WhatsApp inbox: reload approved templates when conversation changes.
       if (changes['interaction'].firstChange || !isSameConversation) {
-        this.resetWaTemplateState();
-        this.loadWhatsAppTemplatesForInbox();
-        this.loadIgLinkedPostProducts();
-      }
+          this.resetWaTemplateState();
+          this.loadWhatsAppTemplatesForInbox();
+          this.loadIgLinkedPostProducts();
+          if (next) this.loadLinkedRecords(next._id);
+        }
 
       this.updateTimeline();
     }
@@ -478,6 +499,97 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       // No order linked yet (e.g. older conversation) — open the list so the agent can still find it.
       error: () => this.router.navigate(['/app/inbox/order-management'])
     });
+  }
+
+  // ── Send-to (Order / Complaint / Review) ────────────────────────────────────
+
+  toggleSendToMenu(event: Event): void {
+    event.stopPropagation();
+    this.showSendToMenu = !this.showSendToMenu;
+    if (this.showSendToMenu) {
+      this.showToolsMenu = false;
+      this.showActionsMenu = false;
+    }
+  }
+
+  openSendToOrder(): void {
+    this.showSendToMenu = false;
+    this.showOrderModal = true;
+  }
+
+  openSendToReview(): void {
+    this.showSendToMenu = false;
+    this.showReviewModal = true;
+  }
+
+  openRaiseComplaint(): void {
+    this.showSendToMenu = false;
+    this.showComplaintModal = true;
+  }
+
+  onOrderCreated(order: IOpsOrderDetail): void {
+    this.linkedOrder = { id: order.id, displayRef: order.displayRef, status: order.status };
+    this.showOrderModal = false;
+    this.cdr.markForCheck();
+  }
+
+  onReviewCreated(review: IOpsReviewDetail): void {
+    this.linkedReview = { id: review.id, displayRef: review.displayRef, sentiment: review.replyStatus };
+    this.showReviewModal = false;
+    this.cdr.markForCheck();
+  }
+
+  onComplaintRaised(detail: IOpsComplaintDetail): void {
+    // The complaint is on the interaction itself; trigger a refresh so the header badge appears.
+    this.showComplaintModal = false;
+    this.interactionUpdate.emit();
+    this.cdr.markForCheck();
+  }
+
+  goToLinkedOrder(): void {
+    if (this.linkedOrder?.id) {
+      this.router.navigate(['/app/inbox/order-management'], { queryParams: { order: this.linkedOrder.id } });
+    }
+  }
+
+  goToLinkedComplaint(): void {
+    const displayRef = this.interaction?.complaint?.displayRef;
+    if (displayRef) {
+      this.router.navigate(['/app/inbox/compliant-management'], { queryParams: { complaint: displayRef } });
+    }
+  }
+
+  goToLinkedReview(): void {
+    if (this.linkedReview?.id) {
+      this.router.navigate(['/app/inbox/review-managment'], { queryParams: { review: this.linkedReview.id } });
+    }
+  }
+
+  /**
+   * Load the order and review records linked to this conversation from the backend.
+   * Runs in parallel; "not found" (404) simply leaves the ref null.
+   */
+  private loadLinkedRecords(interactionId: string): void {
+    this.linkedOrder = null;
+    this.linkedReview = null;
+
+    this.inboxOps.getOrderByInteraction(interactionId).subscribe({
+      next: (ref) => { this.linkedOrder = ref; this.cdr.markForCheck(); },
+      error: () => { /* 404 = no linked order, that's fine */ }
+    });
+
+    this.inboxOps.getReviewByInteraction(interactionId).subscribe({
+      next: (ref) => { this.linkedReview = ref; this.cdr.markForCheck(); },
+      error: () => { /* 404 = no linked review */ }
+    });
+  }
+
+  /** Last customer message text (used to prefill complaint/review modals). */
+  get lastCustomerMessageText(): string {
+    const incoming: any[] = this.allIncomingMessages ?? (this.interaction as any)?.metadata?.incomingMessages ?? [];
+    if (!incoming.length) return this.interaction?.content ?? '';
+    const last = [...incoming].reverse().find((m: any) => m.text?.trim());
+    return last?.text?.trim() ?? this.interaction?.content ?? '';
   }
 
   /** Hide caption line for WhatsApp/media placeholder bodies (voice note, PDF filename, etc.). */
@@ -2198,6 +2310,22 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     this.showActionsMenu = false;
   }
 
+  /** Toggle the Reppy tools three-dots menu (Reppy Help / Actions / Summary / Contact). */
+  toggleToolsMenu(event: Event): void {
+    event.stopPropagation();
+    this.showToolsMenu = !this.showToolsMenu;
+  }
+
+  closeToolsMenu(): void {
+    this.showToolsMenu = false;
+  }
+
+  /** Pick a tool from the menu → ask the container to open that side-panel tab. */
+  selectTool(tab: 'suggestions' | 'actions' | 'summary' | 'contact'): void {
+    this.openToolPanel.emit(tab);
+    this.showToolsMenu = false;
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
     const target = (event?.target as HTMLElement) || null;
@@ -2206,6 +2334,11 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
       this.cdr.markForCheck();
     }
     this.closeActionsMenu();
+    this.closeToolsMenu();
+    if (this.showSendToMenu && target && !target.closest('.inbox-send-to-menu-container')) {
+      this.showSendToMenu = false;
+      this.cdr.markForCheck();
+    }
   }
 
   /**

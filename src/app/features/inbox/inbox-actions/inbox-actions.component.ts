@@ -6,11 +6,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { IInteraction, InteractionStatus } from '../../../core/models/interaction.model';
+import { PremiumSelectComponent, PremiumSelectOption } from '../../../shared/components/premium-select/premium-select.component';
 
 @Component({
   selector: 'app-inbox-actions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PremiumSelectComponent],
   templateUrl: './inbox-actions.component.html',
   styleUrls: ['./inbox-actions.component.scss']
 })
@@ -47,6 +48,38 @@ export class InboxActionsComponent implements OnInit {
     private userService: UserService,
     private sweetAlertService: SweetAlertService
   ) {}
+
+  /** Premium-select options for the Assign dropdown. */
+  get agentSelectOptions(): PremiumSelectOption[] {
+    return (this.availableAgents || []).map((a) => ({
+      value: a._id,
+      label: `${a.firstName} ${a.lastName}`.trim(),
+      iconClass: 'fas fa-user',
+      colorClass: 'text-gray-400'
+    }));
+  }
+
+  /** Premium-select options for the Status dropdown (current status disabled). */
+  get statusSelectOptions(): PremiumSelectOption[] {
+    return this.statusOptions.map((o) => ({
+      value: o.value,
+      label: o.label,
+      iconClass: `fas ${o.icon}`,
+      colorClass: o.colorClass,
+      disabled: this.interaction?.status === o.value
+    }));
+  }
+
+  /** Premium-select options for the Add-label dropdown (already-applied disabled). */
+  get labelSelectOptions(): PremiumSelectOption[] {
+    return (this.orgLabels || []).map((l) => ({
+      value: l._id,
+      label: l.name,
+      iconClass: 'fas fa-tag',
+      colorClass: 'text-gray-400',
+      disabled: this.hasLabel(l._id)
+    }));
+  }
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;

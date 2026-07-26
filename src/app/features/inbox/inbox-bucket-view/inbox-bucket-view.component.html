@@ -54,9 +54,9 @@
         </div>
       </div>
 
-      <!-- Column Header (collapsed – icon + count, click anywhere to expand) -->
+      <!-- Column Header (collapsed – icon + vertical name + count, click anywhere to expand) -->
       <div *ngIf="isCollapsed(col.bucket._id)"
-           class="collapsed-col flex flex-col items-center justify-center gap-3 h-full cursor-pointer py-4"
+           class="collapsed-col flex flex-col items-center gap-2.5 h-full cursor-pointer py-3"
            [style.--bucket-color]="col.bucket.color"
            [style.background]="'linear-gradient(180deg,' + col.bucket.color + '18,' + col.bucket.color + '05)'"
            (click)="toggleCollapse(col.bucket._id)"
@@ -69,14 +69,18 @@
              [style.border]="'1.5px solid ' + col.bucket.color + '50'">
           <i [class]="col.bucket.icon" [style.color]="col.bucket.color" class="text-sm"></i>
         </div>
+        <!-- Vertical name — keeps every collapsed bar identifiable at a glance -->
+        <div class="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+          <span class="collapsed-col-name" [style.color]="col.bucket.color">{{ col.bucket.name }}</span>
+        </div>
         <!-- Count badge -->
-        <span class="text-[11px] font-extrabold px-1.5 py-0.5 rounded-lg"
+        <span class="text-[11px] font-extrabold px-1.5 py-0.5 rounded-lg flex-shrink-0"
               [style.backgroundColor]="col.bucket.color"
               style="color:#fff; min-width:22px; text-align:center; line-height:1.4;">
           {{ col.total }}
         </span>
         <!-- Expand chevron -->
-        <i class="fas fa-chevron-down text-[9px] text-gray-400 mt-auto mb-1"></i>
+        <i class="fas fa-chevron-down text-[9px] text-gray-400 flex-shrink-0 mb-0.5"></i>
       </div>
 
       <!-- Drop Zone -->
@@ -209,7 +213,7 @@
 
       <!-- Header collapsed – Uncategorized -->
       <div *ngIf="isCollapsed('__unassigned__')"
-           class="collapsed-col collapsed-col-unassigned flex flex-col items-center justify-center gap-3 h-full cursor-pointer py-4 bg-gray-50/60 dark:bg-gray-900"
+           class="collapsed-col collapsed-col-unassigned flex flex-col items-center gap-2.5 h-full cursor-pointer py-3 bg-gray-50/60 dark:bg-gray-900"
            (click)="toggleCollapse('__unassigned__')"
            [title]="'Uncategorized (' + unassignedColumn.total + ') — click to expand'">
         <!-- Accent dot -->
@@ -218,13 +222,17 @@
         <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gray-200/70 dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
           <i class="fas fa-layer-group text-sm text-gray-500 dark:text-gray-400"></i>
         </div>
+        <!-- Vertical name -->
+        <div class="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+          <span class="collapsed-col-name text-gray-500 dark:text-gray-400">Uncategorized</span>
+        </div>
         <!-- Count badge -->
-        <span class="text-[11px] font-extrabold px-1.5 py-0.5 rounded-lg bg-gray-400 text-white"
+        <span class="text-[11px] font-extrabold px-1.5 py-0.5 rounded-lg bg-gray-400 text-white flex-shrink-0"
               style="min-width:22px; text-align:center; line-height:1.4;">
           {{ unassignedColumn.total }}
         </span>
         <!-- Expand chevron -->
-        <i class="fas fa-chevron-down text-[9px] text-gray-400 mt-auto mb-1"></i>
+        <i class="fas fa-chevron-down text-[9px] text-gray-400 flex-shrink-0 mb-0.5"></i>
       </div>
 
       <div *ngIf="!isCollapsed('__unassigned__')"
@@ -318,7 +326,7 @@
   <!-- ──────────────────── RIGHT: Chat Panel OR Reppy AI Insights ──────────────────── -->
   <ng-container *ngIf="activeChatInteraction && entitlements.can(FEATURE_KEY.INBOX_BUCKET_CHAT); else insightsPanel">
   <!-- ── Mini Inline Chat Panel ── -->
-  <div class="chat-panel flex flex-col rounded-2xl overflow-hidden flex-shrink-0 bg-white border border-gray-100 dark:border-gray-700 shadow-md"
+  <div class="chat-panel relative flex flex-col rounded-2xl overflow-hidden flex-shrink-0 bg-white border border-gray-100 dark:border-gray-700 shadow-md"
        style="flex: 0 0 380px; width: 380px;">
 
     <!-- Chat Header -->
@@ -372,12 +380,104 @@
           </span>
         </div>
       </div>
+      <!-- Reppy tools three-dots menu (Reppy Help / Actions / Summary / Contact) -->
+      <div class="chat-tools-menu relative flex-shrink-0">
+        <button type="button" (click)="toggleChatToolsMenu($event)"
+                class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                title="Reppy tools" aria-haspopup="true" [attr.aria-expanded]="showChatToolsMenu">
+          <i class="fas fa-ellipsis-v text-xs"></i>
+        </button>
+        <div *ngIf="showChatToolsMenu" (click)="$event.stopPropagation()"
+             class="absolute right-0 top-full mt-1 py-1 min-w-[180px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-40">
+          <button type="button" (click)="openChatTool('suggestions')"
+            class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/15 dark:hover:bg-rep-lime/10 flex items-center gap-2.5">
+            <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
+            Reppy Help
+          </button>
+          <button type="button" (click)="openChatTool('actions')"
+            class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/15 dark:hover:bg-rep-lime/10 flex items-center gap-2.5">
+            <i class="fas fa-bolt text-xs w-4 text-center text-gray-500 dark:text-gray-400"></i>
+            Actions
+          </button>
+          <button type="button" (click)="openChatTool('summary')"
+            class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/15 dark:hover:bg-rep-lime/10 flex items-center gap-2.5">
+            <i class="fas fa-file-alt text-xs w-4 text-center text-gray-500 dark:text-gray-400"></i>
+            Summary
+          </button>
+          <button type="button" (click)="openChatTool('contact')"
+            class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/15 dark:hover:bg-rep-lime/10 flex items-center gap-2.5">
+            <i class="fas fa-user text-xs w-4 text-center text-gray-500 dark:text-gray-400"></i>
+            Contact
+          </button>
+        </div>
+      </div>
+
       <!-- Close button -->
       <button type="button" (click)="closeChat()"
               class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
               title="Close">
         <i class="fas fa-xmark text-xs"></i>
       </button>
+    </div>
+
+    <!-- Reppy tools overlay: reuses the exact inbox tool panels -->
+    <div *ngIf="activeToolTab" class="absolute inset-0 z-30 flex flex-col bg-white dark:bg-gray-900 rounded-2xl overflow-hidden">
+      <!-- Tab bar -->
+      <div class="flex items-stretch border-b border-gray-100 dark:border-gray-700 flex-shrink-0">
+        <button type="button" (click)="openChatTool('suggestions')"
+          class="flex-1 px-1.5 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors"
+          [ngClass]="activeToolTab === 'suggestions' ? 'bg-rep-lime text-rep-black' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0" [noDarkInvert]="activeToolTab === 'suggestions'"></app-ai-chat-bubble-icon>
+          <span class="hidden sm:inline">Reppy</span>
+        </button>
+        <button type="button" (click)="openChatTool('actions')"
+          class="flex-1 px-1.5 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors"
+          [ngClass]="activeToolTab === 'actions' ? 'bg-rep-lime text-rep-black' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          <i class="fas fa-bolt text-[10px]"></i><span class="hidden sm:inline">Actions</span>
+        </button>
+        <button type="button" (click)="openChatTool('summary')"
+          class="flex-1 px-1.5 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors"
+          [ngClass]="activeToolTab === 'summary' ? 'bg-rep-lime text-rep-black' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          <i class="fas fa-file-alt text-[10px]"></i><span class="hidden sm:inline">Summary</span>
+        </button>
+        <button type="button" (click)="openChatTool('contact')"
+          class="flex-1 px-1.5 py-3 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors"
+          [ngClass]="activeToolTab === 'contact' ? 'bg-rep-lime text-rep-black' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'">
+          <i class="fas fa-user text-[10px]"></i><span class="hidden sm:inline">Contact</span>
+        </button>
+        <button type="button" (click)="closeChatTool()"
+          class="px-2.5 shrink-0 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition flex items-center justify-center border-l border-gray-100 dark:border-gray-700"
+          title="Back to chat" aria-label="Back to chat">
+          <i class="fas fa-xmark text-sm"></i>
+        </button>
+      </div>
+      <!-- Body: all panels mounted so Reppy suggestions survive tab switches -->
+      <div class="flex-1 min-h-0 overflow-hidden flex flex-col relative">
+        <app-inbox-ai-assistant
+          class="flex-1 min-h-0 overflow-hidden"
+          [style.display]="activeToolTab === 'suggestions' ? 'block' : 'none'"
+          [interaction]="activeChatInteraction"
+          (sendReply)="onToolReplyInsert($event)"
+          (sendSuggestedProduct)="onToolSuggestedProduct($event)">
+        </app-inbox-ai-assistant>
+        <app-inbox-actions
+          class="flex-1 min-h-0 overflow-hidden"
+          [style.display]="activeToolTab === 'actions' ? 'block' : 'none'"
+          [interaction]="activeChatInteraction"
+          (updated)="onToolUpdated()">
+        </app-inbox-actions>
+        <app-inbox-summary
+          class="flex-1 min-h-0 overflow-hidden"
+          [style.display]="activeToolTab === 'summary' ? 'block' : 'none'"
+          [interaction]="activeChatInteraction"
+          (updated)="onToolUpdated()">
+        </app-inbox-summary>
+        <app-inbox-contact-panel
+          class="flex-1 min-h-0 overflow-hidden"
+          [style.display]="activeToolTab === 'contact' ? 'block' : 'none'"
+          [interaction]="activeChatInteraction">
+        </app-inbox-contact-panel>
+      </div>
     </div>
 
     <!-- Thread -->
@@ -728,51 +828,6 @@
           </app-sentiment-donut-chart>
         </div>
 
-        <!-- Most Common Comments -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-          <div class="px-4 pt-3 pb-2 flex items-center gap-2">
-            <div class="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0
-                        bg-rep-lime text-rep-black
-                        dark:bg-rep-black dark:text-rep-lime
-                        border border-rep-lime/40 dark:border-rep-lime/30">
-              <i class="fas fa-fire" style="font-size:8px;"></i>
-            </div>
-            <p class="text-[11px] font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-              Most Common Topics
-            </p>
-            <span *ngIf="totalMessagesAnalysed" class="text-[9px] text-gray-400 ml-auto">{{ totalMessagesAnalysed }} msgs</span>
-          </div>
-          <div *ngIf="commonComments.length === 0" class="px-4 pb-4 text-center text-[11px] text-gray-400">No data yet</div>
-          <div *ngFor="let item of commonComments; let last = last"
-               class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-               [class.border-b]="!last"
-               [class.border-gray-100]="!last"
-               [class.dark:border-gray-700]="!last">
-            <div class="flex items-center justify-between gap-2 mb-1">
-              <!-- Keyword badge: lime bg + black text in light, dark bg + lime text in dark -->
-              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize
-                           bg-rep-lime text-rep-black
-                           dark:bg-rep-black dark:text-rep-lime
-                           border border-rep-lime/40 dark:border-rep-lime/30">
-                <i class="fas fa-hashtag text-[8px]"></i>{{ item.keyword }}
-              </span>
-              <!-- Count pill -->
-              <span class="text-[10px] font-bold text-rep-black dark:text-rep-lime flex-shrink-0">{{ item.count }}×</span>
-            </div>
-            <!-- Sample message -->
-            <p class="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
-              {{ item.sample.content }}
-            </p>
-            <div class="flex items-center gap-1.5 mt-1">
-              <span class="text-[9px] text-gray-400 capitalize">{{ item.sample.platform }}</span>
-              <span class="text-gray-200 dark:text-gray-600">·</span>
-              <span *ngIf="item.sample.sentiment === 'positive'" class="text-[10px] font-medium" style="color:#10B981">😊 Positive</span>
-              <span *ngIf="item.sample.sentiment === 'negative'" class="text-[10px] font-medium" style="color:#EF4444">😠 Negative</span>
-              <span *ngIf="item.sample.sentiment === 'neutral'" class="text-[10px] font-medium text-gray-400">😐 Neutral</span>
-            </div>
-          </div>
-        </div>
-
         <!-- Reppy AI Recommendation -->
         <div class="rounded-xl border p-4 bg-rep-black">
           <div class="flex items-center gap-2 mb-2">
@@ -817,6 +872,51 @@
           </div>
           <div class="w-10 h-10 rounded-xl bg-rep-lime/10 flex items-center justify-center">
             <i class="fas fa-layer-group text-rep-lime"></i>
+          </div>
+        </div>
+
+        <!-- Most Common Topics -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div class="px-4 pt-3 pb-2 flex items-center gap-2">
+            <div class="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0
+                        bg-rep-lime text-rep-black
+                        dark:bg-rep-black dark:text-rep-lime
+                        border border-rep-lime/40 dark:border-rep-lime/30">
+              <i class="fas fa-fire" style="font-size:8px;"></i>
+            </div>
+            <p class="text-[11px] font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              Most Common Topics
+            </p>
+            <span *ngIf="totalMessagesAnalysed" class="text-[9px] text-gray-400 ml-auto">{{ totalMessagesAnalysed }} msgs</span>
+          </div>
+          <div *ngIf="commonComments.length === 0" class="px-4 pb-4 text-center text-[11px] text-gray-400">No data yet</div>
+          <div *ngFor="let item of commonComments; let last = last"
+               class="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+               [class.border-b]="!last"
+               [class.border-gray-100]="!last"
+               [class.dark:border-gray-700]="!last">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <!-- Keyword badge: lime bg + black text in light, dark bg + lime text in dark -->
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold capitalize
+                           bg-rep-lime text-rep-black
+                           dark:bg-rep-black dark:text-rep-lime
+                           border border-rep-lime/40 dark:border-rep-lime/30">
+                <i class="fas fa-hashtag text-[8px]"></i>{{ item.keyword }}
+              </span>
+              <!-- Count pill -->
+              <span class="text-[10px] font-bold text-rep-black dark:text-rep-lime flex-shrink-0">{{ item.count }}×</span>
+            </div>
+            <!-- Sample message -->
+            <p class="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+              {{ item.sample.content }}
+            </p>
+            <div class="flex items-center gap-1.5 mt-1">
+              <span class="text-[9px] text-gray-400 capitalize">{{ item.sample.platform }}</span>
+              <span class="text-gray-200 dark:text-gray-600">·</span>
+              <span *ngIf="item.sample.sentiment === 'positive'" class="text-[10px] font-medium" style="color:#10B981">😊 Positive</span>
+              <span *ngIf="item.sample.sentiment === 'negative'" class="text-[10px] font-medium" style="color:#EF4444">😠 Negative</span>
+              <span *ngIf="item.sample.sentiment === 'neutral'" class="text-[10px] font-medium text-gray-400">😐 Neutral</span>
+            </div>
           </div>
         </div>
       </div>

@@ -142,15 +142,20 @@
       </div>
     </div>
 
-    <!-- Reppy Credits Badge -->
+    <!-- Generate CTA — Content Studio -->
     <a
       routerLink="/app/content-studio"
-      class="flex items-center gap-2 px-3 py-2 bg-rep-lime text-rep-black rounded-lg font-semibold hover:shadow-lg transition cursor-pointer"
+      class="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rep-lime text-rep-black font-bold text-sm
+             shadow-md shadow-rep-lime/40 ring-1 ring-rep-lime/50
+             hover:shadow-lg hover:shadow-rep-lime/60 hover:brightness-[0.98] hover:-translate-y-0.5
+             active:translate-y-0 active:scale-[0.97] transition-all duration-200 cursor-pointer whitespace-nowrap"
       title="Create post (Content Studio)"
     >
-      <i class="fas fa-wand-magic-sparkles"></i>
+      <i class="fas fa-wand-magic-sparkles group-hover:rotate-6 transition-transform"></i>
       <span class="hidden sm:inline">Generate</span>
     </a>
+
+    <!-- Reppy Credits Badge -->
     <button 
       *ngIf="aiCredits"
       (click)="navigateToCredits()"

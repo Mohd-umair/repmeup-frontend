@@ -4,8 +4,11 @@ import { map } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
 import {
+  ICreateComplaintPayload,
   ICreateOrderPayload,
   ICreateReviewPayload,
+  ILinkedOrderRef,
+  ILinkedReviewRef,
   IOpsComplaintDetail,
   IOpsComplaintRow,
   IOpsComplaintStats,
@@ -41,9 +44,9 @@ export class InboxOpsService {
   }
 
   /** Resolve the order linked to an inbox conversation (for the "Order placed" chip deep-link). */
-  getOrderByInteraction(interactionId: string): Observable<{ id: string; displayRef: string | null; status: string }> {
+  getOrderByInteraction(interactionId: string): Observable<ILinkedOrderRef> {
     return this.api
-      .get<IApiResponse<{ id: string; displayRef: string | null; status: string }>>(`/inbox/ops/orders/by-interaction/${interactionId}`)
+      .get<IApiResponse<ILinkedOrderRef>>(`/inbox/ops/orders/by-interaction/${interactionId}`)
       .pipe(map((r) => r.data!));
   }
 
@@ -107,6 +110,13 @@ export class InboxOpsService {
       .pipe(map((r) => r.data!));
   }
 
+  /** Manually raise a complaint on an existing inbox conversation. */
+  raiseComplaint(interactionId: string, payload: ICreateComplaintPayload): Observable<IOpsComplaintDetail> {
+    return this.api
+      .post<IApiResponse<IOpsComplaintDetail>>(`/inbox/ops/complaints/from-interaction/${interactionId}`, payload)
+      .pipe(map((r) => r.data!));
+  }
+
   createReview(payload: ICreateReviewPayload): Observable<IOpsReviewDetail> {
     return this.api
       .post<IApiResponse<IOpsReviewDetail>>('/inbox/ops/reviews', payload)
@@ -140,6 +150,13 @@ export class InboxOpsService {
   publishReviewReply(id: string, content: string): Observable<IOpsReviewDetail> {
     return this.api
       .post<IApiResponse<IOpsReviewDetail>>(`/inbox/ops/reviews/${id}/reply`, { content })
+      .pipe(map((r) => r.data!));
+  }
+
+  /** Resolve the newest review linked to an inbox conversation. */
+  getReviewByInteraction(interactionId: string): Observable<ILinkedReviewRef> {
+    return this.api
+      .get<IApiResponse<ILinkedReviewRef>>(`/inbox/ops/reviews/by-interaction/${interactionId}`)
       .pipe(map((r) => r.data!));
   }
 }

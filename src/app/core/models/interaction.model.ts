@@ -55,6 +55,16 @@ export interface IInteraction {
   chatNumber?: number;
   /** Formatted ticket reference e.g. #REP-101 */
   chatRef?: string;
+  /** Embedded complaint subdocument (set by AI auto-detect or manual raise) */
+  complaint?: IComplaintSubdoc;
+}
+
+export interface IComplaintSubdoc {
+  displayRef?: string;
+  status?: 'open' | 'acknowledged' | 'in_progress' | 'resolved' | 'closed';
+  issueSummary?: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  linkedOrderId?: string;
 }
 
 export interface IInteractionMetadata {
