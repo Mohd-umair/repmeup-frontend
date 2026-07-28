@@ -73,158 +73,269 @@
           </div>
         </div>
 
-        <div class="flex items-center flex-wrap gap-1.5 flex-shrink-0">
+        <!-- ── Header Action Bar ─────────────────────────────────────────── -->
+        <div class="flex items-center gap-1 flex-shrink-0">
+
+          <!-- Sort toggle (utility, icon only) -->
           <button
             type="button"
             (click)="toggleTimelineSort()"
-            class="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 transition"
-            [title]="timelineSortOrder === 'asc' ? 'Sort: oldest first (click for newest first)' : 'Sort: newest first (click for oldest first)'"
-            [attr.aria-label]="timelineSortOrder === 'asc' ? 'Sort oldest first' : 'Sort newest first'">
-            <i class="fas text-xs" [class.fa-sort-amount-down]="timelineSortOrder === 'asc'" [class.fa-sort-amount-up]="timelineSortOrder === 'desc'"></i>
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500
+                   hover:bg-gray-100 dark:hover:bg-gray-700/60 hover:text-gray-600 dark:hover:text-gray-300
+                   transition-all duration-150"
+            [title]="timelineSortOrder === 'asc' ? 'Oldest first — click for newest first' : 'Newest first — click for oldest first'">
+            <i class="fas text-[11px]"
+               [class.fa-sort-amount-down]="timelineSortOrder === 'asc'"
+               [class.fa-sort-amount-up]="timelineSortOrder === 'desc'"></i>
           </button>
-          <span 
-            *ngIf="interaction.status !== 'replied'"
-            [class]="'px-1.5 py-0.5 rounded-md text-[10px] font-medium ' + getStatusColor(interaction.status)">
-            {{ interaction.status }}
+
+          <!-- Status badge (read-only indicator) -->
+          <span
+            *ngIf="interaction.status && interaction.status !== 'replied'"
+            [class]="'inline-flex items-center gap-1 px-2 h-8 rounded-lg text-[11px] font-semibold tracking-wide ' + getStatusColor(interaction.status)">
+            {{ interaction.status | titlecase }}
           </span>
-          <button 
+
+          <!-- Divider -->
+          <div class="w-px h-5 bg-gray-200 dark:bg-gray-600/50 mx-0.5 flex-shrink-0"></div>
+
+          <!-- Resolve button (primary action) -->
+          <button
             *ngIf="canResolve()"
+            type="button"
             (click)="resolveInteraction()"
             [disabled]="resolvingInteraction"
-            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rep-lime hover:bg-rep-lime/80 text-rep-black transition disabled:opacity-50"
+            class="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-bold
+                   bg-rep-lime hover:bg-rep-lime/85 text-rep-black
+                   shadow-sm hover:shadow transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Mark as resolved">
-            <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-circle-check'"></i>
+            <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-circle-check text-[10px]'"></i>
+            <span>Resolve</span>
           </button>
-          <button 
+
+          <!-- Reopen button -->
+          <button
             *ngIf="isResolved()"
+            type="button"
             (click)="reopenInteraction()"
             [disabled]="resolvingInteraction"
-            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-500 hover:bg-gray-600 text-white transition disabled:opacity-50"
+            class="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-bold
+                   bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600
+                   text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600
+                   transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Reopen conversation">
-            <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin' : 'fas fa-redo'"></i>
+            <i [class]="resolvingInteraction ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-rotate-left text-[10px]'"></i>
+            <span>Reopen</span>
           </button>
+
+          <!-- Close Chat session button -->
           <button
             *ngIf="isChatSessionOpen()"
             type="button"
             (click)="closeChatSession()"
             [disabled]="updatingChatOpen"
-            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-200 hover:bg-gray-300 text-gray-800 transition disabled:opacity-50"
+            class="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-bold
+                   bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600
+                   text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600
+                   transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             title="Close chat session">
-            <i [class]="updatingChatOpen ? 'fas fa-spinner fa-spin' : 'fas fa-circle-xmark'"></i>
-            <span class="ml-1 hidden sm:inline">Close chat</span>
+            <i [class]="updatingChatOpen ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-circle-xmark text-[10px]'"></i>
+            <span class="hidden sm:inline">Close chat</span>
           </button>
+
+          <!-- Open Chat session button -->
           <button
             *ngIf="!isChatSessionOpen()"
             type="button"
             (click)="reopenChatSession()"
             [disabled]="updatingChatOpen"
-            class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition disabled:opacity-50"
+            class="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-bold
+                   bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-700
+                   text-white shadow-sm hover:shadow transition-all duration-150
+                   disabled:opacity-50 disabled:cursor-not-allowed"
             title="Open chat session">
-            <i [class]="updatingChatOpen ? 'fas fa-spinner fa-spin' : 'fas fa-comment-dots'"></i>
-            <span class="ml-1 hidden sm:inline">Open chat</span>
+            <i [class]="updatingChatOpen ? 'fas fa-spinner fa-spin text-[10px]' : 'fas fa-comment-dots text-[10px]'"></i>
+            <span class="hidden sm:inline">Open chat</span>
           </button>
-          <!-- Three-dots menu: Reppy tools (opens the side panel on the chosen tab) -->
-          <div class="relative">
-            <button
-              type="button"
-              (click)="toggleToolsMenu($event)"
-              class="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 transition"
-              title="Reppy tools"
-              aria-haspopup="true"
-              [attr.aria-expanded]="showToolsMenu">
-              <i class="fas fa-ellipsis-v text-sm"></i>
-            </button>
-            <div
-              *ngIf="showToolsMenu"
-              class="absolute right-0 top-full mt-1 py-1 min-w-[180px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50"
-              (click)="$event.stopPropagation()">
-              <button type="button" (click)="selectTool('suggestions')"
-                class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/15 dark:hover:bg-rep-lime/10 flex items-center gap-2.5">
-                <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
-                Reppy Help
-              </button>
-              <button type="button" (click)="selectTool('actions')"
-                class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/15 dark:hover:bg-rep-lime/10 flex items-center gap-2.5">
-                <i class="fas fa-bolt text-xs w-4 text-center text-gray-500 dark:text-gray-400"></i>
-                Actions
-              </button>
-              <button type="button" (click)="selectTool('summary')"
-                class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/15 dark:hover:bg-rep-lime/10 flex items-center gap-2.5">
-                <i class="fas fa-file-alt text-xs w-4 text-center text-gray-500 dark:text-gray-400"></i>
-                Summary
-              </button>
-              <button type="button" (click)="selectTool('contact')"
-                class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/15 dark:hover:bg-rep-lime/10 flex items-center gap-2.5">
-                <i class="fas fa-user text-xs w-4 text-center text-gray-500 dark:text-gray-400"></i>
-                Contact
-              </button>
-            </div>
-          </div>
+
+          <!-- Divider -->
+          <div class="w-px h-5 bg-gray-200 dark:bg-gray-600/50 mx-0.5 flex-shrink-0"></div>
 
           <!-- Send to: Order / Complaint / Review -->
           <div class="relative inbox-send-to-menu-container">
             <button
               type="button"
               (click)="toggleSendToMenu($event)"
-              class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600 transition flex items-center gap-1"
+              class="h-8 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-bold
+                     bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700
+                     text-gray-700 dark:text-gray-200
+                     border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
+                     shadow-sm transition-all duration-150"
               title="Send this chat to Order, Complaint or Review"
               aria-haspopup="true"
               [attr.aria-expanded]="showSendToMenu">
-              <i class="fas fa-paper-plane text-[10px]"></i>
-              <span class="hidden sm:inline">Send to</span>
-              <i class="fas fa-chevron-down text-[8px] opacity-60"></i>
+              <i class="fas fa-paper-plane text-[10px] text-indigo-500 dark:text-indigo-400"></i>
+              <span>Send to</span>
+              <i class="fas fa-chevron-down text-[8px] opacity-50 ml-0.5"
+                 [class.rotate-180]="showSendToMenu"
+                 style="transition: transform 0.15s ease"></i>
             </button>
+
+            <!-- Dropdown -->
             <div
               *ngIf="showSendToMenu"
-              class="absolute right-0 top-full mt-1 py-1 min-w-[200px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50"
+              class="absolute right-0 top-full mt-1.5 py-1.5 w-52
+                     bg-white dark:bg-gray-800 rounded-xl
+                     shadow-xl shadow-black/10 dark:shadow-black/30
+                     border border-gray-200 dark:border-gray-700 z-50"
               (click)="$event.stopPropagation()">
+
+              <!-- Header label -->
+              <p class="px-3 pb-1 pt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                Send this chat to
+              </p>
+
               <!-- Create Order -->
               <button type="button" (click)="openSendToOrder()"
-                class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 flex items-center gap-2.5">
-                <i class="fas fa-cart-shopping text-xs w-4 text-center text-amber-500"></i>
-                Create Order
+                class="w-full px-3 py-2 text-left text-sm font-medium
+                       text-gray-700 dark:text-gray-200
+                       hover:bg-amber-50 dark:hover:bg-amber-900/20
+                       flex items-center gap-3 transition-colors">
+                <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-cart-shopping text-[11px] text-amber-600 dark:text-amber-400"></i>
+                </span>
+                <div class="leading-tight">
+                  <div class="font-semibold text-[13px]">Create Order</div>
+                  <div class="text-[11px] text-gray-400 dark:text-gray-500">Log a purchase</div>
+                </div>
               </button>
+
               <!-- Raise / View Complaint -->
               <button type="button"
                 (click)="interaction?.complaint?.displayRef && ['open','acknowledged','in_progress'].includes(interaction?.complaint?.status ?? '') ? goToLinkedComplaint() : openRaiseComplaint()"
-                class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2.5">
-                <i class="fas fa-triangle-exclamation text-xs w-4 text-center text-red-500"></i>
-                {{ interaction?.complaint?.displayRef ? 'View Complaint' : 'Raise Complaint' }}
+                class="w-full px-3 py-2 text-left text-sm font-medium
+                       text-gray-700 dark:text-gray-200
+                       hover:bg-red-50 dark:hover:bg-red-900/20
+                       flex items-center gap-3 transition-colors">
+                <span class="w-7 h-7 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-triangle-exclamation text-[11px] text-red-600 dark:text-red-400"></i>
+                </span>
+                <div class="leading-tight">
+                  <div class="font-semibold text-[13px]">
+                    {{ interaction?.complaint?.displayRef ? 'View Complaint' : 'Raise Complaint' }}
+                  </div>
+                  <div class="text-[11px] text-gray-400 dark:text-gray-500">
+                    {{ interaction?.complaint?.displayRef ? interaction?.complaint?.displayRef : 'Open a complaint ticket' }}
+                  </div>
+                </div>
               </button>
+
               <!-- Log Review -->
               <button type="button" (click)="openSendToReview()"
-                class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center gap-2.5">
-                <i class="fas fa-star text-xs w-4 text-center text-blue-500"></i>
-                Log Review
+                class="w-full px-3 py-2 text-left text-sm font-medium
+                       text-gray-700 dark:text-gray-200
+                       hover:bg-blue-50 dark:hover:bg-blue-900/20
+                       flex items-center gap-3 transition-colors">
+                <span class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-star text-[11px] text-blue-600 dark:text-blue-400"></i>
+                </span>
+                <div class="leading-tight">
+                  <div class="font-semibold text-[13px]">Log Review</div>
+                  <div class="text-[11px] text-gray-400 dark:text-gray-500">Record customer feedback</div>
+                </div>
               </button>
             </div>
           </div>
 
-          <!-- Three-dots menu: Edit & Delete (Facebook comments) -->
+          <!-- Reppy tools menu (icon button) -->
+          <div class="relative">
+            <button
+              type="button"
+              (click)="toggleToolsMenu($event)"
+              class="w-8 h-8 flex items-center justify-center rounded-lg
+                     text-gray-500 dark:text-gray-400
+                     hover:bg-gray-100 dark:hover:bg-gray-700/60
+                     hover:text-gray-700 dark:hover:text-gray-200
+                     border border-transparent hover:border-gray-200 dark:hover:border-gray-600
+                     transition-all duration-150"
+              title="Reppy tools"
+              aria-haspopup="true"
+              [attr.aria-expanded]="showToolsMenu">
+              <i class="fas fa-ellipsis-vertical text-sm"></i>
+            </button>
+            <div
+              *ngIf="showToolsMenu"
+              class="absolute right-0 top-full mt-1.5 py-1.5 w-48
+                     bg-white dark:bg-gray-800 rounded-xl
+                     shadow-xl shadow-black/10 dark:shadow-black/30
+                     border border-gray-200 dark:border-gray-700 z-50"
+              (click)="$event.stopPropagation()">
+              <p class="px-3 pb-1 pt-0.5 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                Reppy Tools
+              </p>
+              <button type="button" (click)="selectTool('suggestions')"
+                class="w-full px-3 py-2 text-left text-[13px] font-medium text-gray-700 dark:text-gray-200
+                       hover:bg-rep-lime/10 dark:hover:bg-rep-lime/8 flex items-center gap-2.5 transition-colors">
+                <app-ai-chat-bubble-icon iconClass="w-4 h-4 shrink-0"></app-ai-chat-bubble-icon>
+                Reppy Help
+              </button>
+              <button type="button" (click)="selectTool('actions')"
+                class="w-full px-3 py-2 text-left text-[13px] font-medium text-gray-700 dark:text-gray-200
+                       hover:bg-rep-lime/10 dark:hover:bg-rep-lime/8 flex items-center gap-2.5 transition-colors">
+                <i class="fas fa-bolt text-[11px] w-4 text-center text-amber-500"></i>
+                Actions
+              </button>
+              <button type="button" (click)="selectTool('summary')"
+                class="w-full px-3 py-2 text-left text-[13px] font-medium text-gray-700 dark:text-gray-200
+                       hover:bg-rep-lime/10 dark:hover:bg-rep-lime/8 flex items-center gap-2.5 transition-colors">
+                <i class="fas fa-file-lines text-[11px] w-4 text-center text-blue-500"></i>
+                Summary
+              </button>
+              <button type="button" (click)="selectTool('contact')"
+                class="w-full px-3 py-2 text-left text-[13px] font-medium text-gray-700 dark:text-gray-200
+                       hover:bg-rep-lime/10 dark:hover:bg-rep-lime/8 flex items-center gap-2.5 transition-colors">
+                <i class="fas fa-user text-[11px] w-4 text-center text-purple-500"></i>
+                Contact
+              </button>
+            </div>
+          </div>
+
+          <!-- More actions menu (Facebook comment delete, etc.) -->
           <div *ngIf="showActionsMenuForInteraction()" class="relative" #actionsMenuContainer>
             <button
               type="button"
               (click)="toggleActionsMenu($event)"
-              class="p-1.5 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 transition"
+              class="w-8 h-8 flex items-center justify-center rounded-lg
+                     text-gray-500 dark:text-gray-400
+                     hover:bg-red-50 dark:hover:bg-red-900/20
+                     hover:text-red-600 dark:hover:text-red-400
+                     border border-transparent hover:border-red-200 dark:hover:border-red-800
+                     transition-all duration-150"
               title="More actions"
               aria-haspopup="true"
               [attr.aria-expanded]="showActionsMenu">
-              <i class="fas fa-ellipsis-v text-sm"></i>
+              <i class="fas fa-ellipsis-vertical text-sm"></i>
             </button>
             <div
               *ngIf="showActionsMenu"
-              class="absolute right-0 top-full mt-1 py-1 min-w-[140px] bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 z-50"
+              class="absolute right-0 top-full mt-1.5 py-1.5 w-44
+                     bg-white dark:bg-gray-800 rounded-xl
+                     shadow-xl shadow-black/10 dark:shadow-black/30
+                     border border-gray-200 dark:border-gray-700 z-50"
               (click)="$event.stopPropagation()">
               <button
                 type="button"
                 (click)="deleteComment(); closeActionsMenu()"
                 [disabled]="deletingComment"
-                class="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2 disabled:opacity-50">
-                <i [class]="deletingComment ? 'fas fa-spinner fa-spin' : 'fas fa-trash-alt'"></i>
+                class="w-full px-3 py-2 text-left text-[13px] font-medium text-red-600 dark:text-red-400
+                       hover:bg-red-50 dark:hover:bg-red-950/40 flex items-center gap-2.5
+                       disabled:opacity-50 transition-colors">
+                <i [class]="deletingComment ? 'fas fa-spinner fa-spin text-[11px]' : 'fas fa-trash-alt text-[11px]'"></i>
                 Delete comment
               </button>
             </div>
           </div>
+
         </div>
       </div>
 
