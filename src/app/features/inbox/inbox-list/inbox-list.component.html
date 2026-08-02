@@ -193,6 +193,13 @@
               <span *ngIf="interaction.sentiment" class="text-xs">
                 {{ getSentimentIcon(interaction.sentiment) }}
               </span>
+              <!-- Skip reason pill — shown when Reppy skipped auto-reply for a user-visible reason -->
+              <span *ngIf="getSkipReasonLabel(interaction.aiSkipReason) as skipLabel"
+                    class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 flex-shrink-0"
+                    [title]="'Reppy skipped auto-reply: ' + skipLabel">
+                <i class="fas fa-robot text-[9px] opacity-70"></i>
+                {{ skipLabel }}
+              </span>
             </div>
 
             <span *ngIf="getSlaLabel(interaction) as sla"

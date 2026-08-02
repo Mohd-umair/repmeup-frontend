@@ -11,3 +11,40 @@
     box-shadow: var(--card-shadow);
   }
 }
+
+.header-org-mark {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  overflow: hidden;
+  background: #111827;
+  border: 1px solid rgba(200, 245, 96, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.header-org-mark--lg {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.7rem;
+}
+
+.header-user-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #c8f560 0%, #84cc16 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(132, 204, 22, 0.22);
+}
+
+.header-user-initials {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #0a0a0a;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}

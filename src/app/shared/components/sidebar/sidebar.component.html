@@ -1,18 +1,18 @@
 <aside
-  class="bg-rep-black border-r border-gray-800 h-screen flex flex-col shadow-2xl lg:shadow-none transition-[width] duration-300 ease-in-out overflow-x-visible w-64 max-w-[85vw] lg:max-w-none shrink-0"
-  [ngClass]="collapsed ? 'lg:w-[4.5rem]' : 'lg:w-64'"
+  class="bg-rep-black border-r border-gray-800 h-screen flex flex-col shadow-2xl lg:shadow-none transition-[width] duration-300 ease-in-out overflow-x-visible w-80 max-w-[90vw] lg:max-w-none shrink-0"
+  [ngClass]="collapsed ? 'lg:w-[4.5rem]' : 'lg:w-80'"
 >
-  <!-- Logo Section -->
+  <!-- Compact brand logo -->
   <div
-    class="border-b border-gray-800 flex justify-center"
-    [ngClass]="collapsed ? 'p-2 lg:p-3' : 'p-4 sm:p-6'"
+    class="border-b border-gray-800 flex justify-center shrink-0"
+    [ngClass]="collapsed ? 'p-2 lg:p-2.5' : 'px-4 py-3'"
   >
-    <a routerLink="/" class="cursor-pointer block" [title]="collapsed ? 'Home' : null">
+    <a routerLink="/" class="cursor-pointer block" [title]="collapsed ? 'Home' : null" (click)="onMenuItemClick()">
       <img
         src="assets/Images/logo.jpeg"
-        alt="RepMeUp Logo"
-        class="app-logo rounded-lg shadow-lg transition-all duration-300"
-        [ngClass]="collapsed ? 'w-9 h-9 object-cover lg:w-10 lg:h-10' : 'max-h-12 w-auto'"
+        alt="RepMeUp"
+        class="rounded-md shadow-md transition-all duration-300"
+        [ngClass]="collapsed ? 'w-8 h-8 object-cover lg:w-8 lg:h-8' : 'h-8 w-auto max-h-8'"
       />
     </a>
   </div>
@@ -21,7 +21,7 @@
   <nav class="flex-1 p-3 sm:p-4 space-y-4 overflow-y-auto overflow-x-visible min-h-0">
     <div *ngFor="let section of sidebarSections; trackBy: trackBySection">
       <p
-        class="px-3 sm:px-4 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider max-lg:block"
+        class="px-3 sm:px-4 mb-2.5 text-sm font-bold text-gray-500 uppercase tracking-wider max-lg:block"
         [ngClass]="{ 'lg:hidden': collapsed }"
       >
         {{ section.label }}
@@ -42,7 +42,7 @@
                 'lg:justify-center': collapsed,
                 'lg:px-2': collapsed
               }"
-              class="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-rep-white transition cursor-pointer border-l-4 border-transparent text-left max-lg:justify-between"
+              class="w-full flex items-center justify-between px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-rep-white transition cursor-pointer border-l-4 border-transparent text-left max-lg:justify-between"
               [attr.title]="collapsed ? item.label : null"
               [attr.aria-label]="item.label"
             >
@@ -51,20 +51,20 @@
                 [ngClass]="{ 'lg:justify-center': collapsed, 'lg:space-x-0': collapsed }"
               >
                 <span class="relative shrink-0">
-                  <i *ngIf="isFaIcon(item.icon)" [class]="item.icon + ' text-lg sm:text-xl w-5'" aria-hidden="true"></i>
-                  <span *ngIf="!isFaIcon(item.icon)" class="text-xl sm:text-2xl" aria-hidden="true">{{ item.icon }}</span>
+                  <i *ngIf="isFaIcon(item.icon)" [class]="item.icon + ' text-xl sm:text-2xl w-6'" aria-hidden="true"></i>
+                  <span *ngIf="!isFaIcon(item.icon)" class="text-2xl sm:text-3xl" aria-hidden="true">{{ item.icon }}</span>
                   <span
                     *ngIf="collapsed && item.badge && item.badge > 0"
                     class="lg:absolute lg:-top-1 lg:-right-1 lg:w-2 lg:h-2 lg:rounded-full lg:bg-rep-lime max-lg:hidden"
                     aria-hidden="true"
                   ></span>
                 </span>
-                <span class="text-sm sm:text-base font-medium truncate max-lg:inline" [ngClass]="{ 'lg:hidden': collapsed }">{{
+                <span class="text-base sm:text-lg font-semibold truncate max-lg:inline" [ngClass]="{ 'lg:hidden': collapsed }">{{
                   item.label
                 }}</span>
               </div>
               <i
-                class="submenu-chevron fas fa-chevron-down text-xs text-gray-500 shrink-0 ml-2 max-lg:inline-block"
+                class="submenu-chevron fas fa-chevron-down text-sm text-gray-500 shrink-0 ml-2 max-lg:inline-block"
                 [ngClass]="{ 'lg:hidden': collapsed, 'submenu-chevron--open': isSubmenuExpanded(section, item) }"
                 aria-hidden="true"
               ></i>
@@ -88,11 +88,11 @@
                     (click)="onMenuItemClick(); closeFlyout()"
                     routerLinkActive="bg-rep-lime/10 text-rep-lime border-rep-lime"
                     [routerLinkActiveOptions]="childLinkActiveOptions(child)"
-                    class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-rep-white transition cursor-pointer border-l-4 border-transparent"
+                    class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 rounded-lg text-base text-gray-400 hover:bg-gray-800 hover:text-rep-white transition cursor-pointer border-l-4 border-transparent"
                   >
-                    <i *ngIf="isFaIcon(child.icon)" [class]="child.icon + ' text-sm w-4 shrink-0'" aria-hidden="true"></i>
-                    <span *ngIf="!isFaIcon(child.icon)" class="text-base shrink-0" aria-hidden="true">{{ child.icon }}</span>
-                    <span class="font-medium truncate">{{ child.label }}</span>
+                    <i *ngIf="isFaIcon(child.icon)" [class]="child.icon + ' text-base w-5 shrink-0'" aria-hidden="true"></i>
+                    <span *ngIf="!isFaIcon(child.icon)" class="text-lg shrink-0" aria-hidden="true">{{ child.icon }}</span>
+                    <span class="font-semibold truncate">{{ child.label }}</span>
                   </a>
                 </div>
               </div>
@@ -101,7 +101,7 @@
             <!-- Collapsed desktop: fixed flyout (not clipped by nav overflow; above main content) -->
             <div
               *ngIf="collapsed && isFlyoutOpen(section, item) && flyoutPosition"
-              class="hidden lg:block fixed w-56 rounded-lg border border-gray-700 bg-rep-black shadow-2xl py-1 z-[100]"
+              class="hidden lg:block fixed w-64 rounded-lg border border-gray-700 bg-rep-black shadow-2xl py-1 z-[100]"
               role="menu"
               [attr.aria-label]="item.label"
               [style.top.px]="flyoutPosition.top"
@@ -114,11 +114,11 @@
                 (click)="onMenuItemClick(); closeFlyout()"
                 routerLinkActive="bg-rep-lime/10 text-rep-lime"
                 [routerLinkActiveOptions]="childLinkActiveOptions(child)"
-                class="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-rep-white transition"
+                class="flex items-center gap-2 px-3 py-2.5 text-base text-gray-300 hover:bg-gray-800 hover:text-rep-white transition"
               >
-                <i *ngIf="isFaIcon(child.icon)" [class]="child.icon + ' text-sm w-4 shrink-0'" aria-hidden="true"></i>
-                <span *ngIf="!isFaIcon(child.icon)" class="text-base shrink-0" aria-hidden="true">{{ child.icon }}</span>
-                <span class="font-medium truncate">{{ child.label }}</span>
+                <i *ngIf="isFaIcon(child.icon)" [class]="child.icon + ' text-base w-5 shrink-0'" aria-hidden="true"></i>
+                <span *ngIf="!isFaIcon(child.icon)" class="text-lg shrink-0" aria-hidden="true">{{ child.icon }}</span>
+                <span class="font-semibold truncate">{{ child.label }}</span>
               </a>
             </div>
           </div>
@@ -130,26 +130,26 @@
             (click)="onMenuItemClick(); closeFlyout()"
             routerLinkActive="bg-rep-lime/10 text-rep-lime border-rep-lime"
             [routerLinkActiveOptions]="routerLinkActiveOptionsForTopLevel(item.route)"
-            class="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-rep-white transition cursor-pointer border-l-4 border-transparent"
+            class="flex items-center justify-between px-3 sm:px-4 py-3 sm:py-3.5 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-rep-white transition cursor-pointer border-l-4 border-transparent"
             [ngClass]="{ 'lg:justify-center': collapsed, 'lg:px-2': collapsed }"
             [attr.title]="collapsed ? item.label : null"
             [attr.aria-label]="item.label"
           >
             <div class="flex items-center space-x-2 sm:space-x-3 min-w-0" [ngClass]="{ 'lg:justify-center': collapsed, 'lg:space-x-0': collapsed }">
               <span class="relative shrink-0">
-                <i *ngIf="isFaIcon(item.icon)" [class]="item.icon + ' text-lg sm:text-xl w-5'" aria-hidden="true"></i>
-                <span *ngIf="!isFaIcon(item.icon)" class="text-xl sm:text-2xl" aria-hidden="true">{{ item.icon }}</span>
+                <i *ngIf="isFaIcon(item.icon)" [class]="item.icon + ' text-xl sm:text-2xl w-6'" aria-hidden="true"></i>
+                <span *ngIf="!isFaIcon(item.icon)" class="text-2xl sm:text-3xl" aria-hidden="true">{{ item.icon }}</span>
                 <span
                   *ngIf="collapsed && item.badge && item.badge > 0"
                   class="lg:absolute lg:-top-1 lg:-right-1 lg:w-2 lg:h-2 lg:rounded-full lg:bg-rep-lime max-lg:hidden"
                   aria-hidden="true"
                 ></span>
               </span>
-              <span class="text-sm sm:text-base font-medium max-lg:inline" [ngClass]="{ 'lg:hidden': collapsed }">{{ item.label }}</span>
+              <span class="text-base sm:text-lg font-semibold max-lg:inline" [ngClass]="{ 'lg:hidden': collapsed }">{{ item.label }}</span>
             </div>
             <span
               *ngIf="item.badge && item.badge > 0"
-              class="px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold text-rep-black bg-rep-lime rounded-full max-lg:inline-flex"
+              class="px-2 sm:px-2.5 py-0.5 sm:py-1 text-sm font-bold text-rep-black bg-rep-lime rounded-full max-lg:inline-flex"
               [ngClass]="{ 'lg:hidden': collapsed }"
             >
               {{ item.badge }}
@@ -160,8 +160,16 @@
     </div>
   </nav>
 
+  <!-- Reppy AI status — pinned to bottom of sidebar -->
+  <div [ngClass]="{ 'lg:hidden': collapsed }" class="border-t border-gray-800/60 shrink-0 pb-1">
+    <app-inbox-automation-status
+      *ngIf="sidebarOrgId"
+      [orgId]="sidebarOrgId!">
+    </app-inbox-automation-status>
+  </div>
+
   <!-- Theme Toggle -->
-  <div class="px-3 sm:px-4 pt-3 border-t border-gray-800" [ngClass]="{ 'lg:px-2': collapsed }">
+  <div class="px-3 sm:px-4 pt-2 pb-3 border-t border-gray-800 shrink-0" [ngClass]="{ 'lg:px-2': collapsed }">
     <div
       class="flex items-center justify-center gap-2 p-1.5 bg-gray-900/60 rounded-lg"
       [ngClass]="{ 'lg:flex-col': collapsed, 'lg:gap-1': collapsed }"
@@ -169,7 +177,7 @@
       <button
         type="button"
         (click)="appearance.setMode('light')"
-        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 hover:text-gray-200"
+        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-all duration-200 hover:text-gray-200"
         [class.bg-rep-white]="!appearance.isDark()"
         [class.text-rep-black]="!appearance.isDark()"
         [class.shadow-sm]="!appearance.isDark()"
@@ -177,13 +185,13 @@
         [attr.title]="'Light theme'"
         [attr.aria-label]="'Light theme'"
       >
-        <i class="fas fa-sun text-[10px]"></i>
+        <i class="fas fa-sun text-xs"></i>
         <span class="max-lg:inline" [ngClass]="{ 'lg:hidden': collapsed }">Light</span>
       </button>
       <button
         type="button"
         (click)="appearance.setMode('dark')"
-        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 hover:text-gray-200"
+        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-all duration-200 hover:text-gray-200"
         [class.bg-gray-700]="appearance.isDark()"
         [class.text-rep-white]="appearance.isDark()"
         [class.shadow-sm]="appearance.isDark()"
@@ -191,7 +199,7 @@
         [attr.title]="'Dark theme'"
         [attr.aria-label]="'Dark theme'"
       >
-        <i class="fas fa-moon text-[10px]"></i>
+        <i class="fas fa-moon text-xs"></i>
         <span class="max-lg:inline" [ngClass]="{ 'lg:hidden': collapsed }">Dark</span>
       </button>
     </div>

@@ -23,18 +23,22 @@
   <div *ngIf="!loading && !error && credits" class="space-y-6">
     <!-- Credits Overview Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- Total Credits Card -->
+      <!-- Total / Effective Credits Card -->
       <div class="bg-white dark:bg-gray-900/50 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <div class="w-12 h-12 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
             <i class="fas fa-infinity text-purple-600 dark:text-purple-400 text-xl"></i>
           </div>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Monthly Limit</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Available This Month</span>
         </div>
         <div class="text-3xl font-bold text-rep-black dark:text-white mb-1">
-          {{ credits.isUnlimited ? '∞' : credits.limit }}
+          {{ credits.isUnlimited ? '∞' : formatNumber(credits.effectiveLimit ?? credits.limit) }}
         </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Total available credits</p>
+        <!-- Breakdown when carry-forward credits are present -->
+        <p *ngIf="!credits.isUnlimited && hasCarryForward()" class="text-xs text-purple-600 dark:text-purple-400 font-medium">
+          {{ formatNumber(credits.planLimit) }} plan + {{ formatNumber(credits.carriedCredits) }} carried
+        </p>
+        <p *ngIf="credits.isUnlimited || !hasCarryForward()" class="text-sm text-gray-500 dark:text-gray-400">Total available credits</p>
       </div>
 
       <!-- Used Credits Card -->
@@ -46,7 +50,7 @@
           <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">This Month</span>
         </div>
         <div class="text-3xl font-bold text-rep-black dark:text-white mb-1">
-          {{ credits.current }}
+          {{ formatNumber(credits.current) }}
         </div>
         <p class="text-sm text-gray-500 dark:text-gray-400">Credits used</p>
       </div>
@@ -60,9 +64,25 @@
           <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Available</span>
         </div>
         <div class="text-3xl font-bold" [class]="credits.isNearLimit ? 'text-yellow-500' : credits.isAtLimit ? 'text-red-500' : 'text-rep-lime'">
-          {{ credits.isUnlimited ? '∞' : credits.remaining }}
+          {{ credits.isUnlimited ? '∞' : formatNumber(credits.remaining) }}
         </div>
         <p class="text-sm text-gray-500 dark:text-gray-400">Credits remaining</p>
+      </div>
+    </div>
+
+    <!-- Carry-Forward Breakdown Banner -->
+    <div *ngIf="!credits.isUnlimited && hasCarryForward()"
+      class="bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 rounded-xl p-4 flex items-start gap-3">
+      <div class="w-10 h-10 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+        <i class="fas fa-piggy-bank text-purple-600 dark:text-purple-400"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-purple-700 dark:text-purple-300 font-semibold text-sm mb-1">Credits Carried Forward</p>
+        <p class="text-purple-600 dark:text-purple-400/80 text-xs">
+          You have <strong>{{ formatNumber(credits.carriedCredits) }} unused credits</strong> rolled over from last month.
+          Your effective allowance this month is
+          <strong>{{ formatNumber(credits.planLimit) }} (plan) + {{ formatNumber(credits.carriedCredits) }} (carried) = {{ formatNumber(credits.effectiveLimit) }}</strong>.
+        </p>
       </div>
     </div>
 
@@ -82,7 +102,7 @@
         ></div>
       </div>
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-        {{ credits.current }} of {{ credits.limit }} credits used this month
+        {{ formatNumber(credits.current) }} of {{ formatNumber(credits.effectiveLimit ?? credits.limit) }} credits used this month
       </p>
     </div>
 
@@ -113,7 +133,7 @@
           <i class="fas fa-history text-purple-500 dark:text-purple-400"></i>
           Usage History
         </h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Detailed breakdown of your Reppy credit usage</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Detailed breakdown of Reppy credit usage — who used them and when</p>
       </div>
 
       <!-- Empty State -->
@@ -125,20 +145,40 @@
 
       <div *ngIf="usageHistory.length > 0" class="divide-y divide-gray-100 dark:divide-gray-800">
         <div *ngFor="let usage of usageHistory" class="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
-          <div class="flex items-start justify-between">
-            <div class="flex items-start gap-3 flex-1">
-              <!-- Icon -->
-              <div class="w-10 h-10 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <i [class]="getOperationIcon(usage.operation) + ' text-purple-600 dark:text-purple-400'"></i>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3 flex-1 min-w-0">
+              <!-- Operation Icon -->
+              <div
+                [class]="isRollover(usage.operation)
+                  ? 'w-10 h-10 bg-green-100 dark:bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5'
+                  : 'w-10 h-10 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5'"
+              >
+                <i [class]="getOperationIcon(usage.operation) + (isRollover(usage.operation) ? ' text-green-600 dark:text-green-400' : ' text-purple-600 dark:text-purple-400')"></i>
               </div>
 
               <!-- Details -->
               <div class="flex-1 min-w-0">
-                <h3 class="text-sm font-semibold text-rep-black dark:text-white">{{ getOperationLabel(usage.operation) }}</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ formatDate(usage.createdAt) }}</p>
-                
-                <!-- Metadata -->
-                <div *ngIf="usage.metadata" class="mt-2 flex flex-wrap gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-sm font-semibold text-rep-black dark:text-white">{{ getOperationLabel(usage.operation) }}</h3>
+                </div>
+
+                <!-- Who used it + when -->
+                <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                  <!-- User avatar + name -->
+                  <div class="flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded-full bg-indigo-500 dark:bg-indigo-400 flex items-center justify-center flex-shrink-0">
+                      <span class="text-white text-[9px] font-bold leading-none">{{ getUserInitials(usage.user) }}</span>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[140px]">{{ getUserName(usage.user) }}</span>
+                  </div>
+                  <!-- Separator -->
+                  <span class="text-gray-300 dark:text-gray-600 text-xs">·</span>
+                  <!-- Date-time -->
+                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ formatDate(usage.createdAt) }}</span>
+                </div>
+
+                <!-- Metadata tags -->
+                <div *ngIf="usage.metadata" class="mt-2 flex flex-wrap gap-1.5">
                   <span *ngIf="usage.metadata.mode" class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded text-xs">
                     Mode: {{ usage.metadata.mode }}
                   </span>
@@ -149,17 +189,23 @@
                     Type: {{ usage.metadata.postType }}
                   </span>
                 </div>
-                
-                <!-- Prompt Preview -->
-                <p *ngIf="usage.metadata?.prompt" class="text-xs text-gray-400 dark:text-gray-500 mt-2 line-clamp-2">
+
+                <!-- Prompt preview -->
+                <p *ngIf="usage.metadata?.prompt" class="text-xs text-gray-400 dark:text-gray-500 mt-1.5 line-clamp-2">
                   "{{ usage.metadata.prompt }}"
                 </p>
               </div>
             </div>
 
-            <!-- Credits Used Badge -->
-            <div class="flex-shrink-0 ml-4">
-              <div class="flex items-center gap-1.5 bg-purple-100 dark:bg-purple-500/20 px-3 py-1.5 rounded-lg border border-purple-200 dark:border-purple-500/30">
+            <!-- Credits badge -->
+            <div class="flex-shrink-0">
+              <!-- Rollover = positive green -->
+              <div *ngIf="isRollover(usage.operation)" class="flex items-center gap-1.5 bg-green-100 dark:bg-green-500/20 px-3 py-1.5 rounded-lg border border-green-200 dark:border-green-500/30">
+                <i class="fas fa-arrow-up text-green-500 dark:text-green-400 text-xs"></i>
+                <span class="text-sm font-bold text-green-700 dark:text-green-300">+{{ usage.creditsUsed }}</span>
+              </div>
+              <!-- Normal deduction = purple -->
+              <div *ngIf="!isRollover(usage.operation)" class="flex items-center gap-1.5 bg-purple-100 dark:bg-purple-500/20 px-3 py-1.5 rounded-lg border border-purple-200 dark:border-purple-500/30">
                 <i class="fas fa-bolt text-purple-500 dark:text-purple-400 text-xs"></i>
                 <span class="text-sm font-bold text-purple-700 dark:text-purple-300">-{{ usage.creditsUsed }}</span>
               </div>

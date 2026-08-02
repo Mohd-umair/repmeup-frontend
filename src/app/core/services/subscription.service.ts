@@ -37,6 +37,16 @@ export interface ISubscriptionLimits {
     postsThisMonth: number;
     autoRepliesThisMonth: number;
     aiCreditsThisMonth: number;
+    carriedCredits?: number;
+    creditPeriodStart?: string;
+  };
+  /** Carry-forward breakdown for AI credits. Present when the plan has a credit limit. */
+  creditSummary?: {
+    planLimit: number;
+    carriedCredits: number;
+    effectiveLimit: number;
+    remaining: number;
+    isUnlimited: boolean;
   };
   canConnectMore: boolean;
   remaining: number;
@@ -81,7 +91,9 @@ export interface ISubscription {
     postsThisMonth: number;
     autoRepliesThisMonth: number;
     aiCreditsThisMonth: number;
+    carriedCredits?: number;
     lastResetAt: Date;
+    creditPeriodStart?: Date;
   };
   status: string;
   features: string[];

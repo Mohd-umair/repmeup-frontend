@@ -300,6 +300,20 @@ export class InboxListComponent implements OnInit, OnDestroy {
     return interaction.status === 'replied' || interaction.status === 'resolved';
   }
 
+  getSkipReasonLabel(reason?: string | null): string | null {
+    if (!reason) return null;
+    const labels: Record<string, string> = {
+      quiet_hours: '🌙 Quiet hours',
+      blocked_keyword: '🚫 Blocked keyword',
+      whatsapp_24h_window_closed: '⏱ 24h window closed',
+      agent_recently_active: '👤 Agent active',
+      max_auto_replies_reached: '⚠ Reply limit hit',
+      auto_reply_disabled: 'Auto-reply off',
+      credits_exhausted: '⚡ Credits used up'
+    };
+    return labels[reason] ?? null;
+  }
+
   formatTime(date: Date): string {
     const now = new Date();
     const diff = now.getTime() - new Date(date).getTime();

@@ -10,6 +10,33 @@ export interface AutoReplyFallbackSettings {
   notifyByEmail: boolean;
 }
 
+export interface IAutomationStatusItem {
+  key: string;
+  label: string;
+  done: boolean;
+  link: string;
+}
+
+export interface IAutomationStatus {
+  autoReply: {
+    enabled: boolean;
+    mode: 'ai_only' | 'workflow_only' | 'hybrid';
+    platforms: string[];
+    quietHours: {
+      enabled: boolean;
+      isActiveNow: boolean;
+      start: string;
+      end: string;
+      timezone: string;
+    };
+    fallback: { enabled: boolean; message: string };
+  };
+  profileCompleteness: {
+    score: number;
+    items: IAutomationStatusItem[];
+  };
+}
+
 export interface AutoReplySettings {
   enabled: boolean;
   enabledPlatforms: string[];
@@ -120,6 +147,14 @@ export class OrganizationService {
    */
   getAutoReplySettings(id: string): Observable<IApiResponse<AutoReplySettings>> {
     return this.apiService.get<IApiResponse<AutoReplySettings>>(`/organizations/${id}/auto-reply-settings`);
+  }
+
+  /**
+   * Get live automation status: auto-reply enabled/mode, quiet hours, profile completeness.
+   * Used by the inbox status panel.
+   */
+  getAutomationStatus(id: string): Observable<IApiResponse<IAutomationStatus>> {
+    return this.apiService.get<IApiResponse<IAutomationStatus>>(`/organizations/${id}/automation-status`);
   }
 
   /**

@@ -19,6 +19,7 @@ export interface IInteraction {
   aiSuggestion?: IAISuggestion;
   autoReplyEligible?: boolean;
   autoReplied?: boolean;
+  aiSkipReason?: 'quiet_hours' | 'blocked_keyword' | 'whatsapp_24h_window_closed' | 'agent_recently_active' | 'max_auto_replies_reached' | 'auto_reply_disabled' | 'credits_exhausted' | null;
   assignedTo?: string;
   assignedBy?: string;
   assignedAt?: Date;

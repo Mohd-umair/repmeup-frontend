@@ -224,8 +224,25 @@ export class BillingComponent implements OnInit, OnDestroy {
   }
 
   getLimitValue(key: keyof ISubscriptionLimits['limits']): number | string {
+    // For AI credits, use the effective limit (plan + carried) when available
+    // so the progress bar and denominator reflect the real available pool.
+    if (key === 'maxAICreditsPerMonth' && this.subscriptionLimits?.creditSummary) {
+      const s = this.subscriptionLimits.creditSummary;
+      if (!s.isUnlimited) return s.effectiveLimit;
+    }
     const val = this.subscriptionLimits?.limits[key] as number;
     return val === -1 ? '∞' : val;
+  }
+
+  hasCreditCarryForward(): boolean {
+    const s = this.subscriptionLimits?.creditSummary;
+    return !!(s && !s.isUnlimited && s.carriedCredits > 0);
+  }
+
+  getCreditCarryNote(): string {
+    const s = this.subscriptionLimits?.creditSummary;
+    if (!s || s.isUnlimited || s.carriedCredits <= 0) return '';
+    return `${s.planLimit.toLocaleString()} plan + ${s.carriedCredits.toLocaleString()} carried`;
   }
 
   isNearLimit(metric: UsageMetric): boolean {

@@ -172,6 +172,11 @@
           <ng-container *ngIf="getUsagePercentLabel(metric) === '—'; else pctUsed">Unlimited</ng-container>
           <ng-template #pctUsed>{{ getUsagePercentLabel(metric) }}% used</ng-template>
         </p>
+        <!-- Carry-forward note: only rendered for the AI credits card -->
+        <p *ngIf="metric.key === 'aiCreditsThisMonth' && hasCreditCarryForward()"
+          class="text-xs text-purple-600 dark:text-purple-400 mt-1 font-medium">
+          <i class="fas fa-piggy-bank mr-1"></i>{{ getCreditCarryNote() }}
+        </p>
       </div>
     </div>
   </div>

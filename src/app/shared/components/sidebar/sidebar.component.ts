@@ -23,6 +23,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { PermissionService } from '../../../core/services/permission.service';
 import { AppearanceService } from '../../../core/services/appearance.service';
 import { IUser } from '../../../core/models/user.model';
+import { InboxAutomationStatusComponent } from '../../../features/inbox/inbox-automation-status/inbox-automation-status.component';
 
 /** View model only — single copy kept on the component (no parallel raw/filtered trees). */
 interface MenuItem {
@@ -48,12 +49,18 @@ interface SidebarSection {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, InboxAutomationStatusComponent],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
+  get sidebarOrgId(): string | null {
+    const org = this.currentUser?.organization;
+    if (!org) return null;
+    return typeof org === 'string' ? org : ((org as any)._id ?? null);
+  }
+
   /** Desktop (lg+): narrow icon rail — controlled by main layout */
   @Input() collapsed = false;
 
@@ -262,7 +269,7 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     this.flyoutAnchorEl = anchor;
     const r = anchor.getBoundingClientRect();
     const gap = 4;
-    const panelWidth = 224; // matches w-56
+    const panelWidth = 256; // matches w-64 flyout
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     let left = r.right + gap;

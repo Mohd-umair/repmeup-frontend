@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
+import { OrganizationService } from '../../../core/services/organization.service';
 import { NotificationDataService, INotification } from '../../../core/services/notification-data.service';
-import { IUser } from '../../../core/models/user.model';
+import { IUser, IOrganization } from '../../../core/models/user.model';
 import { Subscription, interval } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AccountSwitcherComponent } from '../account-switcher/account-switcher.component';
@@ -29,6 +30,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   @Output() sidebarCollapseToggle = new EventEmitter<void>();
   
   currentUser: IUser | null = null;
+  organization: IOrganization | null = null;
+  orgLogoBroken = false;
+  userAvatarBroken = false;
   showUserMenu = false;
   showNotifications = false;
   notificationCount = 0;
@@ -40,9 +44,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   loadingCredits = false;
 
   private subscriptions: Subscription[] = [];
+  private lastLoadedOrgId: string | null = null;
 
   constructor(
     private authService: AuthService,
+    private organizationService: OrganizationService,
     private notificationDataService: NotificationDataService,
     private router: Router,
     private http: HttpClient,
@@ -60,8 +66,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const userSub = this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+      this.userAvatarBroken = false;
       if (user) {
-        this.loadAICredits(); // Load credits when user is available
+        this.hydrateOrganizationFromUser(user);
+        this.loadOrganizationProfile();
+        this.loadAICredits();
+      } else {
+        this.organization = null;
+        this.lastLoadedOrgId = null;
+        this.orgLogoBroken = false;
       }
     });
     this.subscriptions.push(userSub);
@@ -194,7 +207,87 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   getUserInitials(): string {
     if (!this.currentUser) return 'U';
-    return `${this.currentUser.firstName.charAt(0)}${this.currentUser.lastName.charAt(0)}`.toUpperCase();
+    const first = this.currentUser.firstName?.[0] ?? '';
+    const last = this.currentUser.lastName?.[0] ?? '';
+    if (first || last) return (first + last).toUpperCase();
+    return (this.currentUser.email?.[0] ?? 'U').toUpperCase();
+  }
+
+  get userDisplayName(): string {
+    if (!this.currentUser) return 'User';
+    const name = [this.currentUser.firstName, this.currentUser.lastName].filter(Boolean).join(' ').trim();
+    return name || this.currentUser.email || 'User';
+  }
+
+  get userRoleLabel(): string {
+    const role = this.currentUser?.role;
+    if (!role) return '';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  }
+
+  get organizationName(): string {
+    return this.organization?.name
+      || (typeof this.currentUser?.organization === 'object' ? this.currentUser.organization?.name : '')
+      || 'Your organisation';
+  }
+
+  get organizationLogoUrl(): string | null {
+    if (this.orgLogoBroken) return null;
+    const logo = this.organization?.logo
+      || (typeof this.currentUser?.organization === 'object' ? this.currentUser.organization?.logo : undefined);
+    if (!logo) return null;
+    return this.resolveMediaUrl(logo);
+  }
+
+  get userAvatarUrl(): string | null {
+    if (this.userAvatarBroken || !this.currentUser?.avatar) return null;
+    return this.resolveMediaUrl(this.currentUser.avatar);
+  }
+
+  onOrgLogoError(): void {
+    this.orgLogoBroken = true;
+  }
+
+  onUserAvatarError(): void {
+    this.userAvatarBroken = true;
+  }
+
+  private hydrateOrganizationFromUser(user: IUser | null): void {
+    const org = user?.organization;
+    if (org && typeof org === 'object') {
+      this.organization = org as IOrganization;
+      this.orgLogoBroken = false;
+    }
+  }
+
+  private loadOrganizationProfile(): void {
+    const org = this.currentUser?.organization;
+    const orgId = !org ? null : (typeof org === 'string' ? org : org._id);
+    if (!orgId || orgId === this.lastLoadedOrgId) return;
+    this.lastLoadedOrgId = orgId;
+
+    const sub = this.organizationService.getOrganization(orgId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.organization = {
+            ...(this.organization || {}),
+            ...res.data
+          } as IOrganization;
+          this.orgLogoBroken = false;
+        }
+      },
+      error: () => { /* keep hydrated user org */ }
+    });
+    this.subscriptions.push(sub);
+  }
+
+  private resolveMediaUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+      return path;
+    }
+    const apiBase = environment.apiUrl.replace(/\/api\/?$/, '');
+    return path.startsWith('/') ? `${apiBase}${path}` : `${apiBase}/${path}`;
   }
 
   loadAICredits(): void {
