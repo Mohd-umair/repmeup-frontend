@@ -74,6 +74,11 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   discoveredUrls: Array<{ url: string; title: string; depth: number; selected: boolean }> = [];
   crawlProgress: IKbCrawlStatus | null = null;
   private crawlPollTimer: ReturnType<typeof setInterval> | null = null;
+  private crawlPollStartedAt = 0;
+  /** Abort if still queued with no progress after this many ms. */
+  private readonly crawlQueuedTimeoutMs = 90_000;
+  /** Absolute safety timeout for long crawls. */
+  private readonly crawlAbsoluteTimeoutMs = 10 * 60_000;
 
   // ── Static lookup data ─────────────────────────────────────────────────────
   readonly typeOptions = [
@@ -692,26 +697,86 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
   /** Poll the crawl job every 3s until it reaches a terminal state. */
   private pollCrawlStatus(jobId: string): void {
     this.clearCrawlPoll();
-    this.crawlPollTimer = setInterval(() => {
-      this.knowledgeBaseService.getCrawlStatus(jobId)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response) => {
-            if (!response.success || !response.data) return;
-            this.crawlProgress = response.data;
-            if (response.data.done) {
-              this.clearCrawlPoll();
-              this.submitting = false;
-              this.onCrawlFinished(response.data);
-            }
+    this.crawlPollStartedAt = Date.now();
+    // Immediate first poll so the UI doesn't wait 3s to leave "Starting crawl…"
+    this.fetchCrawlStatusOnce(jobId);
+    this.crawlPollTimer = setInterval(() => this.fetchCrawlStatusOnce(jobId), 3000);
+  }
+
+  private fetchCrawlStatusOnce(jobId: string): void {
+    const elapsed = Date.now() - this.crawlPollStartedAt;
+
+    this.knowledgeBaseService.getCrawlStatus(jobId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (!response.success || !response.data) return;
+          this.crawlProgress = response.data;
+
+          if (response.data.done) {
+            this.clearCrawlPoll();
+            this.submitting = false;
+            this.onCrawlFinished(response.data);
             this.cdr.markForCheck();
-          },
-          error: () => {
-            // Transient poll error — keep polling; a persistent failure will
-            // surface when the job itself is marked failed.
+            return;
           }
-        });
-    }, 3000);
+
+          // Stuck in queued with no worker pickup.
+          if (
+            response.data.status === 'queued' &&
+            elapsed >= this.crawlQueuedTimeoutMs
+          ) {
+            this.clearCrawlPoll();
+            this.submitting = false;
+            this.crawlProgress = {
+              ...response.data,
+              done: true,
+              status: 'failed',
+              error:
+                'Import is still waiting to start. The background worker may be offline — please try again in a minute, or import a single page without "Crawl the entire website".'
+            };
+            this.onCrawlFinished(this.crawlProgress);
+            this.cdr.markForCheck();
+            return;
+          }
+
+          // Absolute safety net for crawls that never finish.
+          if (elapsed >= this.crawlAbsoluteTimeoutMs) {
+            this.clearCrawlPoll();
+            this.submitting = false;
+            this.crawlProgress = {
+              ...response.data,
+              done: true,
+              status: 'failed',
+              error: 'Import timed out. Please try again with fewer pages selected.'
+            };
+            this.onCrawlFinished(this.crawlProgress);
+          }
+
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          // Transient poll error — keep polling unless absolute timeout hit.
+          if (elapsed >= this.crawlAbsoluteTimeoutMs) {
+            this.clearCrawlPoll();
+            this.submitting = false;
+            this.notificationService.error(
+              'Crawl Failed',
+              'Lost connection while checking import status. Please refresh and check your knowledge base.'
+            );
+            this.crawlProgress = null;
+            this.cdr.markForCheck();
+          }
+        }
+      });
+  }
+
+  /** User dismisses a stuck/failed overlay without navigating away. */
+  dismissCrawlProgress(): void {
+    this.clearCrawlPoll();
+    this.crawlProgress = null;
+    this.submitting = false;
+    this.cdr.markForCheck();
   }
 
   private onCrawlFinished(status: IKbCrawlStatus): void {
@@ -735,6 +800,26 @@ export class KnowledgeBaseCreateComponent implements OnInit, OnDestroy {
       clearInterval(this.crawlPollTimer);
       this.crawlPollTimer = null;
     }
+  }
+
+  /** Human-readable status line for the crawl overlay. */
+  get crawlStatusLabel(): string {
+    if (!this.crawlProgress) return '';
+    if (this.crawlProgress.done) {
+      return this.crawlProgress.status === 'failed'
+        ? (this.crawlProgress.error || 'Import failed.')
+        : `Done — ${this.crawlProgress.entriesCreated} page(s) added.`;
+    }
+    if (this.crawlProgress.currentUrl) {
+      return `Processing ${this.crawlProgress.currentUrl}`;
+    }
+    if (this.crawlProgress.status === 'queued') {
+      return 'Queued — starting import…';
+    }
+    if (this.crawlProgress.status === 'crawling') {
+      return 'Reading pages…';
+    }
+    return 'Starting crawl…';
   }
 
   /** Crawl progress as a 0–100 percentage for the progress bar. */

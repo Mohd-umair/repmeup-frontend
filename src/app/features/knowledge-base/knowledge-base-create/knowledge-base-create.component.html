@@ -753,12 +753,15 @@ Standard shipping takes 5–7 business days. Express shipping (2–3 days) is av
     <div class="rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 p-3 mb-4">
       <p class="text-xs text-gray-600 dark:text-gray-300" *ngIf="!crawlProgress.done">
         <i class="fas fa-spinner fa-spin mr-1.5 text-rep-lime"></i>
-        <span *ngIf="crawlProgress.currentUrl">Processing <strong class="break-all">{{ crawlProgress.currentUrl }}</strong></span>
-        <span *ngIf="!crawlProgress.currentUrl">Starting crawl…</span>
+        <span class="break-all">{{ crawlStatusLabel }}</span>
       </p>
-      <p class="text-xs text-gray-600 dark:text-gray-300" *ngIf="crawlProgress.done">
+      <p class="text-xs text-gray-600 dark:text-gray-300" *ngIf="crawlProgress.done && crawlProgress.status !== 'failed'">
         <i class="fas fa-check-circle mr-1.5 text-green-500"></i>
         Done — {{ crawlProgress.entriesCreated }} page(s) added.
+      </p>
+      <p class="text-xs text-red-600 dark:text-red-400" *ngIf="crawlProgress.done && crawlProgress.status === 'failed'">
+        <i class="fas fa-times-circle mr-1.5"></i>
+        {{ crawlProgress.error || 'Import failed.' }}
       </p>
       <p class="text-xs text-amber-600 dark:text-amber-400 mt-1.5" *ngIf="crawlProgress.errors?.length">
         <i class="fas fa-exclamation-triangle mr-1"></i>
@@ -766,9 +769,15 @@ Standard shipping takes 5–7 business days. Express shipping (2–3 days) is av
       </p>
     </div>
 
-    <p class="text-[11px] text-gray-400 dark:text-gray-500 text-center">
+    <p class="text-[11px] text-gray-400 dark:text-gray-500 text-center mb-3" *ngIf="!crawlProgress.done">
       You can keep this open — we'll take you to your knowledge base when it's finished.
     </p>
+
+    <button type="button" *ngIf="crawlProgress.done && crawlProgress.status === 'failed'"
+      (click)="dismissCrawlProgress()"
+      class="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+      Close &amp; try again
+    </button>
   </div>
 </div>
 
