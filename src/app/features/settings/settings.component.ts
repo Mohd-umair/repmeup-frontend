@@ -25,6 +25,7 @@ import { EmailConnectComponent } from './email-connect/email-connect.component';
 import { RouterModule } from '@angular/router';
 import { Observable, Subscription, timer } from 'rxjs';
 import { take } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 /**
  * Settings Component - Single Responsibility Principle
@@ -978,16 +979,17 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   /**
    * Handle refresh Google locations (SOLID: Dependency Inversion)
+   * @param accountId Optional manual GBP account id — skips Google accounts.list (quota workaround)
    */
-  onRefreshLocations(connection: any): void {
-    this.platformConnectionService.refreshGoogleLocations(connection._id).subscribe({
+  onRefreshLocations(connection: any, accountId?: string): void {
+    const options = accountId ? { accountId } : undefined;
+    this.platformConnectionService.refreshGoogleLocations(connection._id, options).subscribe({
       next: (response) => {
         if (response.success) {
           const locationsCount = response.data?.locationsCount || 0;
           const locationNames = response.data?.locationNames || [];
-          
+
           if (locationsCount === 0) {
-            // Still no locations found
             const details = [
               '1. Visit https://business.google.com/',
               '2. Create or claim your business location',
@@ -1002,16 +1004,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
               10000
             );
           } else {
-            // Locations found successfully
-            const locationList = locationNames.length > 0 
-              ? locationNames.join(', ') 
+            const locationList = locationNames.length > 0
+              ? locationNames.join(', ')
               : '';
             this.notificationService.success(
               'Locations Found',
               `Successfully configured ${locationsCount} business location${locationsCount !== 1 ? 's' : ''}: ${locationList}`,
               8000
             );
-            // Refresh connections to update UI
             this.platformConnectionService.refresh().subscribe();
           }
         }
@@ -1020,7 +1020,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
         console.error('Error refreshing locations:', error);
         const errorCode = error.error?.code;
         const errorMessage = error.error?.message || error.error?.error || 'Failed to fetch locations. Please try again.';
-        
+
         if (errorCode === 'NO_ACCOUNTS') {
           const details = [
             '1. Visit https://business.google.com/',
@@ -1064,6 +1064,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
             details,
             10000
           );
+        } else if (errorCode === 'GBP_QUOTA_EXCEEDED' || error?.status === 429) {
+          // Offer manual account ID — bypasses accounts.list which is quota-blocked
+          void this.promptGoogleAccountId(connection);
+        } else if (errorCode === 'API_NOT_FOUND' || error?.status === 404) {
+          void this.promptGoogleAccountId(connection);
+        } else if (errorCode === 'INVALID_ACCOUNT_ID') {
+          this.notificationService.error('Invalid Account ID', errorMessage);
+          void this.promptGoogleAccountId(connection);
         } else {
           this.notificationService.error(
             'Setup Failed',
@@ -1072,6 +1080,46 @@ export class SettingsComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  /**
+   * Prompt for GBP account ID when Google Account Management API quota blocks listing.
+   */
+  private async promptGoogleAccountId(connection: any): Promise<void> {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Google API quota blocked',
+      html:
+        '<p class="text-left text-sm mb-3">Google Account Management API quota is 0/exhausted on your GCP project. You can still set up by pasting your Business Profile <b>Account ID</b>.</p>' +
+        '<p class="text-left text-xs opacity-80 mb-2">How to find it:</p>' +
+        '<ol class="text-left text-xs opacity-80 list-decimal pl-4 space-y-1">' +
+        '<li>Open <a href="https://business.google.com/" target="_blank" rel="noopener" style="color:#c0ff00">business.google.com</a></li>' +
+        '<li>Open DevTools → Network, reload, search for <code>accounts/</code></li>' +
+        '<li>Or use a URL like <code>.../accounts/1234567890/...</code></li>' +
+        '<li>Paste just the number (or <code>accounts/123…</code>)</li>' +
+        '</ol>' +
+        '<p class="text-left text-xs mt-3 opacity-70">Long-term: request GBP API access + quota increase for project 226322968200.</p>',
+      input: 'text',
+      inputLabel: 'Google Business Account ID',
+      inputPlaceholder: 'accounts/1234567890',
+      showCancelButton: true,
+      confirmButtonText: 'Setup with Account ID',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#c0ff00',
+      cancelButtonColor: '#6b7280',
+      background: '#1a1a1a',
+      color: '#ffffff',
+      inputValidator: (value) => {
+        const v = (value || '').trim();
+        if (!v) return 'Account ID is required';
+        if (!/^(accounts\/)?\d+/.test(v)) return 'Use a numeric ID, e.g. 1234567890';
+        return null;
+      }
+    });
+
+    if (result.isConfirmed && result.value) {
+      this.onRefreshLocations(connection, String(result.value).trim());
+    }
   }
 
   /**

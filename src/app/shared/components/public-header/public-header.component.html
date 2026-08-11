@@ -10,6 +10,7 @@
         <button type="button" (click)="goSection('ecosystem')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Products</button>
         <button type="button" (click)="goSection('use-cases')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Solutions</button>
         <button type="button" (click)="goSection('testimonials')" class="text-gray-300 hover:text-rep-lime font-medium cursor-pointer transition text-sm bg-transparent border-0">Testimonials</button>
+        <a routerLink="/pricing" routerLinkActive="text-rep-lime" class="text-gray-300 hover:text-rep-lime font-medium transition text-sm">Pricing</a>
         <a routerLink="/book-demo" class="text-gray-300 hover:text-rep-lime font-medium transition text-sm">Book a Demo</a>
       </div>
 
@@ -91,6 +92,7 @@
     <button type="button" (click)="goSection('ecosystem'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Products</button>
     <button type="button" (click)="goSection('use-cases'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Solutions</button>
     <button type="button" (click)="goSection('testimonials'); showMobileMenu = false" class="w-full text-left flex items-center px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium cursor-pointer transition">Testimonials</button>
+    <a routerLink="/pricing" (click)="showMobileMenu = false" class="block px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium transition">Pricing</a>
     <a routerLink="/book-demo" (click)="showMobileMenu = false" class="block px-4 py-3 text-gray-300 hover:text-rep-lime hover:bg-gray-800 rounded-xl font-medium transition">Book a Demo</a>
     <div class="pt-2 border-t border-gray-800 flex flex-col gap-2" *ngIf="!currentUser">
       <button (click)="navigateToLogin(); showMobileMenu = false" class="w-full px-4 py-3 text-center text-gray-300 font-medium hover:text-rep-lime border border-gray-700 rounded-xl transition">Sign In</button>

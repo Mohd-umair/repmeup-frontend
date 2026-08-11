@@ -1,0 +1,334 @@
+<section class="bg-white dark:bg-rep-black text-rep-black dark:text-white transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+
+    <!-- Heading -->
+    <div class="max-w-3xl">
+      <p class="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.15em] uppercase text-gray-500 dark:text-gray-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-rep-lime" aria-hidden="true"></span>
+        Pricing — India
+      </p>
+      <h1 class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+        Three plans, one meter:<br class="hidden sm:block" />
+        AI conversations that convert
+      </h1>
+      <p class="mt-4 text-base sm:text-lg text-gray-600 dark:text-gray-300">
+        What scales with you is Users, Active Contacts, and AI conversation credits — across
+        Instagram, WhatsApp, YouTube and Facebook.
+      </p>
+      <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        All prices exclude GST. Billed monthly.
+      </p>
+    </div>
+
+    @if (loading()) {
+      <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6" aria-busy="true" aria-live="polite">
+        @for (i of [1,2,3]; track i) {
+          <div class="rounded-2xl border border-gray-200 dark:border-gray-800 p-6 animate-pulse">
+            <div class="h-5 w-28 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            <div class="mt-4 h-10 w-40 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            <div class="mt-6 space-y-3">
+              @for (j of [1,2,3,4]; track j) {
+                <div class="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded"></div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <span class="sr-only">Loading pricing…</span>
+    }
+
+    @if (error()) {
+      <p class="mt-10 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-700 dark:text-red-300" role="alert">
+        {{ error() }}
+      </p>
+    }
+
+    @if (data(); as page) {
+      <!-- Billing cycle toggle -->
+      @if (hasAnnualOption()) {
+        <div class="mt-10 flex justify-center">
+          <div
+            class="inline-flex items-center rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-1"
+            role="group"
+            aria-label="Billing cycle"
+          >
+            <button
+              type="button"
+              class="px-5 py-2 text-sm font-semibold rounded-full transition"
+              [class]="cycle() === 'monthly'
+                ? 'bg-rep-black text-white dark:bg-rep-lime dark:text-rep-black shadow'
+                : 'text-gray-600 dark:text-gray-300 hover:text-rep-black dark:hover:text-white'"
+              [attr.aria-pressed]="cycle() === 'monthly'"
+              (click)="setCycle('monthly')"
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              class="px-5 py-2 text-sm font-semibold rounded-full transition"
+              [class]="cycle() === 'annual'
+                ? 'bg-rep-black text-white dark:bg-rep-lime dark:text-rep-black shadow'
+                : 'text-gray-600 dark:text-gray-300 hover:text-rep-black dark:hover:text-white'"
+              [attr.aria-pressed]="cycle() === 'annual'"
+              (click)="setCycle('annual')"
+            >
+              Annual
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Plan cards -->
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+        @for (plan of page.plans; track plan.planId) {
+          <div
+            class="relative rounded-2xl border p-6 flex flex-col h-full transition-shadow hover:shadow-lg"
+            [class]="isDark(plan)
+              ? 'bg-rep-black text-white border-rep-black shadow-xl ring-2 ring-rep-lime dark:ring-rep-lime'
+              : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'"
+          >
+            <!-- Badge -->
+            @if (plan.badge) {
+              <span
+                class="absolute -top-3 right-6 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide bg-rep-lime text-rep-black"
+              >
+                {{ plan.badge }}
+              </span>
+            }
+
+            <h2 class="text-xl font-bold" [class.text-white]="isDark(plan)">{{ plan.name }}</h2>
+            @if (plan.tagline) {
+              <p class="mt-1.5 text-sm" [class]="isDark(plan) ? 'text-gray-300' : 'text-gray-600 dark:text-gray-400'">
+                {{ plan.tagline }}
+              </p>
+            }
+
+            <!-- Price -->
+            <div class="mt-5">
+              @if (priceFor(plan).strikeThrough) {
+                <p class="text-sm line-through" [class]="isDark(plan) ? 'text-gray-500' : 'text-gray-400'">
+                  Monthly plan: {{ priceFor(plan).strikeThrough }}
+                </p>
+              }
+              <p class="flex items-baseline gap-1">
+                <span class="text-4xl font-bold tracking-tight">{{ priceFor(plan).display }}</span>
+                @if (priceFor(plan).suffix) {
+                  <span class="text-sm" [class]="isDark(plan) ? 'text-gray-400' : 'text-gray-500'">{{ priceFor(plan).suffix }}</span>
+                }
+              </p>
+              @if (priceFor(plan).savingsLabel) {
+                <p class="mt-2 inline-block rounded bg-rep-lime/90 text-rep-black text-xs font-semibold px-2 py-1">
+                  {{ priceFor(plan).savingsLabel }}
+                </p>
+              }
+              @if (priceFor(plan).perMonthEquivalentDisplay) {
+                <p class="mt-1 text-xs" [class]="isDark(plan) ? 'text-gray-400' : 'text-gray-500'">
+                  Works out to {{ priceFor(plan).perMonthEquivalentDisplay }}
+                </p>
+              }
+              <p class="mt-1 text-xs" [class]="isDark(plan) ? 'text-gray-500' : 'text-gray-400'">+ GST</p>
+            </div>
+
+            <!-- Headline metrics -->
+            @if (plan.headline.length) {
+              <div class="mt-5 grid grid-cols-2 gap-2">
+                @for (m of plan.headline; track m.key; let i = $index) {
+                  <div
+                    class="rounded-xl border p-3"
+                    [class]="isDark(plan) ? 'border-gray-700 bg-white/5' : 'border-gray-200 dark:border-gray-700'"
+                    [class.col-span-2]="i === 0"
+                  >
+                    <p class="text-lg font-bold" [class.text-rep-lime]="isDark(plan)">{{ m.value }}</p>
+                    <p class="text-[11px] leading-tight" [class]="isDark(plan) ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400'">
+                      {{ m.label }}
+                    </p>
+                    @if (m.note) {
+                      <p class="text-[11px] leading-tight mt-0.5" [class]="isDark(plan) ? 'text-gray-500' : 'text-gray-400'">
+                        {{ m.note }}
+                      </p>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Bullets -->
+            <ul class="mt-5 space-y-2.5 grow">
+              @if (plan.inheritsFrom) {
+                <li class="flex items-start gap-2 text-sm font-semibold">
+                  <i class="fas fa-circle-check mt-0.5 text-rep-lime" aria-hidden="true"></i>
+                  <span>Everything in {{ plan.inheritsFrom }}</span>
+                </li>
+              }
+              @for (b of plan.bullets; track b.label) {
+                <li
+                  class="flex items-start gap-2 text-sm"
+                  [class]="b.included
+                    ? (isDark(plan) ? 'text-gray-100' : 'text-gray-800 dark:text-gray-200')
+                    : (isDark(plan) ? 'text-gray-600' : 'text-gray-400 dark:text-gray-600')"
+                >
+                  @if (b.included) {
+                    <i class="fas fa-circle-check mt-0.5 text-rep-lime" aria-hidden="true"></i>
+                  } @else {
+                    <i class="far fa-circle mt-0.5" aria-hidden="true"></i>
+                  }
+                  <span>
+                    {{ b.label }}
+                    @if (!b.included) {
+                      <span class="sr-only">(not included)</span>
+                    }
+                    @if (b.note) {
+                      <span class="block text-xs opacity-75">{{ b.note }}</span>
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+
+            <a
+              routerLink="/register"
+              [queryParams]="{ plan: plan.planId, cycle: cycle() }"
+              (click)="rememberChoice(plan)"
+              class="mt-6 block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition"
+              [class]="isDark(plan)
+                ? 'bg-rep-lime text-rep-black hover:brightness-95'
+                : 'bg-rep-black text-white hover:bg-gray-800 dark:bg-white dark:text-rep-black dark:hover:bg-gray-200'"
+            >
+              Get started
+            </a>
+          </div>
+        }
+      </div>
+
+      <!-- AC / NAC legend -->
+      <div class="mt-10 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 p-5">
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          @for (l of page.legend; track l.code) {
+            <div class="flex items-start gap-3">
+              <dt>
+                <span
+                  class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold"
+                  [class]="l.code === 'AC'
+                    ? 'bg-rep-lime text-rep-black'
+                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'"
+                >{{ l.code }}</span>
+              </dt>
+              <dd class="text-xs leading-relaxed text-gray-600 dark:text-gray-300">{{ l.description }}</dd>
+            </div>
+          }
+        </dl>
+      </div>
+
+      <!-- Comparison table -->
+      <div class="mt-12">
+        <h2 class="text-2xl font-bold">Full feature comparison</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          Ordered from what every plan gets down to what's exclusive to Pro.
+        </p>
+
+        <div class="mt-5 overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
+          <table class="min-w-full text-sm">
+            <caption class="sr-only">Feature comparison across all plans</caption>
+            <thead>
+              <tr class="bg-rep-black text-white">
+                <th scope="col" class="text-left font-semibold px-4 py-3 min-w-[240px]">Feature</th>
+                <th scope="col" class="text-center font-semibold px-3 py-3 w-20">AC /<br />NAC</th>
+                @for (col of page.comparison.planColumns; track col.planId) {
+                  <th
+                    scope="col"
+                    class="text-center font-semibold px-4 py-3 min-w-[150px]"
+                    [class.text-rep-lime]="col.highlighted"
+                  >
+                    {{ col.name }}
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (section of page.comparison.sections; track section.id) {
+                <tr class="bg-gray-50 dark:bg-gray-900">
+                  <th
+                    scope="colgroup"
+                    [attr.colspan]="page.comparison.planColumns.length + 2"
+                    class="text-left px-4 py-2 text-[11px] font-bold tracking-[0.12em] uppercase text-gray-500 dark:text-gray-400"
+                  >
+                    {{ section.title }}
+                  </th>
+                </tr>
+                @for (row of section.rows; track row.label) {
+                  <tr class="border-t border-gray-100 dark:border-gray-800">
+                    <th scope="row" class="text-left font-semibold px-4 py-3 align-middle">{{ row.label }}</th>
+                    <td class="text-center px-3 py-3 align-middle">
+                      <span
+                        class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold"
+                        [class]="row.metering === 'AC'
+                          ? 'bg-rep-lime text-rep-black'
+                          : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'"
+                      >{{ row.metering }}</span>
+                    </td>
+                    @if (row.spansAllColumns) {
+                      <td
+                        [attr.colspan]="page.comparison.planColumns.length"
+                        class="px-4 py-3 text-center text-gray-600 dark:text-gray-400"
+                      >
+                        {{ row.cells[0].display }}
+                      </td>
+                    } @else {
+                      @for (cell of row.cells; track $index) {
+                        <td
+                          class="px-4 py-3 text-center align-middle"
+                          [class]="cell.highlighted ? 'bg-rep-lime/15 dark:bg-rep-lime/10 font-semibold' : ''"
+                          [class.text-gray-400]="!cell.included"
+                          [class.dark:text-gray-600]="!cell.included"
+                        >
+                          {{ cell.display }}
+                          @if (cell.note) {
+                            <span class="block text-[11px] text-gray-500 dark:text-gray-400">{{ cell.note }}</span>
+                          }
+                        </td>
+                      }
+                    }
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!--
+        WhatsApp pass-through cost panel intentionally not rendered.
+        The API still returns `page.whatsappRates` — kept server-side so it can be
+        switched back on without a backend change.
+      -->
+
+      <!-- Enterprise CTA -->
+      @if (page.enterprise; as ent) {
+        <div class="mt-8 rounded-2xl bg-rep-black text-white p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-6 justify-between">
+          <div>
+            <h3 class="text-xl sm:text-2xl font-bold">Need more than the Pro plan?</h3>
+            <p class="mt-2 text-sm text-gray-300 max-w-2xl">
+              {{ ent.tagline || 'Enterprise is custom-priced around your volume.' }}
+            </p>
+            @if (ent.bullets.length) {
+              <ul class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-gray-300">
+                @for (b of ent.bullets; track b.label) {
+                  <li class="flex items-center gap-1.5">
+                    <i class="fas fa-circle-check text-rep-lime text-xs" aria-hidden="true"></i>
+                    {{ b.label }}
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+          <a
+            routerLink="/contact"
+            class="shrink-0 inline-block rounded-full bg-rep-lime text-rep-black px-6 py-3 text-sm font-semibold hover:brightness-95 transition"
+          >
+            Talk to sales
+          </a>
+        </div>
+      }
+    }
+  </div>
+</section>

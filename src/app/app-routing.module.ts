@@ -63,6 +63,7 @@ const routes: Routes = [
       { path: 'home', redirectTo: '', pathMatch: 'full' },
       { path: 'privacy-policy', component: PrivacyPolicyComponent },
       { path: 'terms-conditions', component: TermsConditionsComponent },
+      { path: 'pricing', loadComponent: () => import('./features/pricing/pricing.component').then(m => m.PricingComponent) },
       { path: 'contact', loadComponent: () => import('./features/contact/contact.component').then(m => m.ContactComponent) },
       { path: 'book-demo', loadComponent: () => import('./features/book-demo/book-demo.component').then(m => m.BookDemoComponent) },
       { path: 'demo', redirectTo: 'book-demo', pathMatch: 'full' },

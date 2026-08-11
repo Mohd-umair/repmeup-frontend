@@ -153,10 +153,15 @@ export class PlatformConnectionService implements OnDestroy {
   /**
    * Refresh Google Business Profile locations
    * @param connectionId Connection ID to refresh
+   * @param options Optional accountId to skip Google accounts.list (quota workaround)
    * @returns Observable with refresh result
    */
-  refreshGoogleLocations(connectionId: string): Observable<any> {
-    return this.apiService.post(`/platforms/${connectionId}/refresh-locations`, {});
+  refreshGoogleLocations(
+    connectionId: string,
+    options?: { accountId?: string }
+  ): Observable<any> {
+    const body = options?.accountId ? { accountId: options.accountId } : {};
+    return this.apiService.post(`/platforms/${connectionId}/refresh-locations`, body);
   }
 
   /**

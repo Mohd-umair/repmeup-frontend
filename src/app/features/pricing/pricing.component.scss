@@ -1,0 +1,14 @@
+/* Sticky first column keeps the feature name visible while the table scrolls sideways. */
+:host ::ng-deep table th[scope='row'] {
+  position: sticky;
+  left: 0;
+  background: inherit;
+}
+
+table tbody tr {
+  background: var(--pricing-row-bg, #fff);
+}
+
+:host-context(.dark) table tbody tr {
+  background: var(--pricing-row-bg, #0B0B0B);
+}

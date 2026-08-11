@@ -7,10 +7,15 @@ import { takeUntil } from 'rxjs/operators';
 import {
   SubscriptionService,
   ISubscriptionLimits,
+  IPlanMeter,
+  IAddOnOffer,
+  IMyRecurringAddOn,
+  IWhatsAppSpend,
   IPlanTier
 } from '../../../../core/services/subscription.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { RazorpayService } from '../../../../core/services/razorpay.service';
+import { PlanIntentService } from '../../../../core/services/plan-intent.service';
 import { formatPlanPriceMonthly } from '../../../../core/utils/plan-price-format';
 import {
   IPlanCardData,
@@ -101,12 +106,16 @@ export class BillingComponent implements OnInit, OnDestroy {
     private subscriptionService: SubscriptionService,
     private notificationService: NotificationService,
     private razorpayService: RazorpayService,
+    private planIntent: PlanIntentService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadLimits();
     this.loadPlans();
+    this.loadAddOns();
+    this.loadMyAddOns();
+    this.loadWhatsAppSpend();
 
     this.subscriptionService.limits$
       .pipe(takeUntil(this.destroy$))
@@ -150,6 +159,8 @@ export class BillingComponent implements OnInit, OnDestroy {
         next: (res) => {
           if (res.success) {
             this.allPlans = res.data;
+            // Needs the loaded plans to resolve the name, price and current-plan check.
+            this.applyPlanIntent();
           }
           this.loadingPlans = false;
         },
@@ -203,6 +214,174 @@ export class BillingComponent implements OnInit, OnDestroy {
   /** CTA label — demo users subscribe to convert; existing customers upgrade. */
   get purchaseCtaLabel(): string {
     return this.isDemo ? 'Get this plan' : 'Upgrade';
+  }
+
+  // ── Pricing-sheet meters ────────────────────────────────────────────────
+  // These come from the backend already resolved and formatted (live counts,
+  // purchased top-ups, percentages) — this component only picks them out.
+
+  get planMeters(): IPlanMeter[] {
+    const m = this.subscriptionLimits?.meters;
+    if (!m) return [];
+    return [m.aiConversations, m.activeContacts].filter((x): x is IPlanMeter => !!x);
+  }
+
+  /** Contacts dropped this month because the org was at its Active Contacts ceiling. */
+  get contactsNotSaved(): number {
+    return this.subscriptionLimits?.meters?.contactsNotSaved || 0;
+  }
+
+  // ── WhatsApp pass-through spend ─────────────────────────────────────────
+  // Meta's conversation charges. Identical on every plan, so this sits apart from
+  // the plan meters — it's a cost, not an allowance.
+  whatsappSpend: IWhatsAppSpend | null = null;
+
+  private loadWhatsAppSpend(): void {
+    this.subscriptionService.getWhatsAppSpend()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => { this.whatsappSpend = res?.success ? (res.data ?? null) : null; },
+        error: () => { this.whatsappSpend = null; }
+      });
+  }
+
+  // ── Add-ons ("Boost your plan") ─────────────────────────────────────────
+  addOns: IAddOnOffer[] = [];
+  addOnQuantity: Record<string, number> = {};
+  purchasingAddOnId: string | null = null;
+
+  private loadAddOns(): void {
+    this.subscriptionService.getAvailableAddOns()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.addOns = res?.success && res.data ? res.data.items : [];
+          for (const a of this.addOns) {
+            this.addOnQuantity[a.addOnId] = a.minQuantity || 1;
+          }
+        },
+        error: () => { this.addOns = []; }
+      });
+  }
+
+  changeAddOnQuantity(addOn: IAddOnOffer, delta: number): void {
+    const current = this.addOnQuantity[addOn.addOnId] || addOn.minQuantity || 1;
+    const next = Math.min(addOn.maxQuantity || 1, Math.max(addOn.minQuantity || 1, current + delta));
+    this.addOnQuantity[addOn.addOnId] = next;
+  }
+
+  /** Total for the chosen quantity — the only arithmetic here, and it's presentational. */
+  addOnTotalDisplay(addOn: IAddOnOffer): string {
+    const qty = this.addOnQuantity[addOn.addOnId] || 1;
+    const rupees = Math.round((addOn.priceInr * qty) / 100);
+    return `₹${rupees.toLocaleString('en-IN')}`;
+  }
+
+  /**
+   * Buy an add-on. One-time SKUs go through Razorpay Orders, recurring ones create
+   * their own subscription — the SKU's `kind` decides, so the tile is identical.
+   */
+  async purchaseAddOn(addOn: IAddOnOffer): Promise<void> {
+    if (!addOn.purchasable || this.purchasingAddOnId) return;
+    this.purchasingAddOnId = addOn.addOnId;
+    const checkout = {
+      addOnId: addOn.addOnId,
+      name: addOn.name,
+      quantity: this.addOnQuantity[addOn.addOnId] || 1,
+      description: addOn.offerDisplay
+    };
+    try {
+      if (addOn.kind === 'recurring') {
+        await this.razorpayService.subscribeAddOn(checkout);
+        this.notificationService.success(
+          'Add-on active',
+          `${addOn.name} is now active and will renew monthly.`
+        );
+      } else {
+        await this.razorpayService.purchaseAddOn(checkout);
+        this.notificationService.success('Add-on applied', `${addOn.name} is now active on your plan.`);
+      }
+      this.loadLimits();     // refresh the meters so the new capacity shows immediately
+      this.loadAddOns();
+      this.loadMyAddOns();
+    } catch (err: any) {
+      const message = typeof err === 'string' ? err : (err?.message || 'Purchase failed.');
+      if (message !== 'Payment cancelled.') this.notificationService.error('Purchase failed', message);
+    } finally {
+      this.purchasingAddOnId = null;
+    }
+  }
+
+  // ── Active recurring add-ons ────────────────────────────────────────────
+  myRecurringAddOns: IMyRecurringAddOn[] = [];
+  cancellingAddOnId: string | null = null;
+
+  private loadMyAddOns(): void {
+    this.subscriptionService.getMyAddOns()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.myRecurringAddOns = res?.success && res.data ? res.data.recurring : [];
+        },
+        error: () => { this.myRecurringAddOns = []; }
+      });
+  }
+
+  /** Display name for an owned add-on — falls back to the id if the SKU isn't on offer. */
+  addOnName(addOnId: string): string {
+    return this.addOns.find((a) => a.addOnId === addOnId)?.name || addOnId;
+  }
+
+  async cancelAddOn(addOn: IMyRecurringAddOn): Promise<void> {
+    if (this.cancellingAddOnId) return;
+    const name = this.addOnName(addOn.addOnId);
+    const confirmed = confirm(
+      `Cancel ${name}?\n\nYou'll keep it until the end of the period you've already paid for.`
+    );
+    if (!confirmed) return;
+
+    this.cancellingAddOnId = addOn.addOnId;
+    this.subscriptionService.cancelAddOnSubscription(addOn.addOnId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (res?.success) {
+            this.notificationService.success(
+              'Add-on cancelled',
+              `${name} will stop renewing. You keep it until the current period ends.`
+            );
+            this.loadMyAddOns();
+            this.loadAddOns();
+          } else {
+            this.notificationService.error('Could not cancel', res?.error || 'Please try again.');
+          }
+          this.cancellingAddOnId = null;
+        },
+        error: (err) => {
+          this.notificationService.error(
+            'Could not cancel',
+            err?.error?.error || 'Please try again.'
+          );
+          this.cancellingAddOnId = null;
+        }
+      });
+  }
+
+  scrollToPlans(): void {
+    document.getElementById('available-plans')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  meterBarClass(meter: IPlanMeter): string {
+    if (meter.isExhausted) return 'bg-red-500';
+    if (meter.percentUsed >= 90) return 'bg-amber-500';
+    return 'bg-rep-lime';
+  }
+
+  /** "10,000 + 3,000 purchased" when a top-up is active, otherwise null. */
+  meterAllowanceNote(meter: IPlanMeter): string | null {
+    if (!meter.purchasedDelta) return null;
+    return `${meter.baseLimit.toLocaleString('en-IN')} plan `
+      + `+ ${meter.purchasedDelta.toLocaleString('en-IN')} purchased`;
   }
 
   getUsagePercent(metric: UsageMetric): number {
@@ -315,6 +494,81 @@ export class BillingComponent implements OnInit, OnDestroy {
 
   // ─── Actions ────────────────────────────────────────────────────────────────
 
+  // ── Billing cycle choice ────────────────────────────────────────────────
+  /** Which leg the plan cards price and purchase. */
+  billingCycle: 'monthly' | 'yearly' = 'monthly';
+
+  /**
+   * The plan this customer picked on the public pricing page before signing up.
+   *
+   * Deliberately surfaced as a banner they must click, rather than auto-opening
+   * Razorpay: a payment sheet appearing unprompted on page load is startling, and the
+   * customer may well have changed their mind during sign-up.
+   */
+  pendingPlanIntent: { planId: string; planName: string; priceLabel: string } | null = null;
+
+  private applyPlanIntent(): void {
+    const intent = this.planIntent.peek();
+    if (!intent || !this.allPlans) return;
+
+    const plan = this.allPlans[intent.planId];
+    // Plan retired or renamed since they chose it — drop the stale intent silently.
+    if (!plan || this.isCurrentPlan(intent.planId)) {
+      this.planIntent.clear();
+      return;
+    }
+
+    this.billingCycle = intent.billingCycle === 'yearly' && plan.pricing?.annual
+      ? 'yearly'
+      : 'monthly';
+    this.pendingPlanIntent = {
+      planId: intent.planId,
+      planName: plan.name ?? intent.planId,
+      priceLabel: this.planPrice(intent.planId).display
+    };
+  }
+
+  resumePlanIntent(): void {
+    const intent = this.pendingPlanIntent;
+    if (!intent) return;
+    this.planIntent.clear();
+    this.pendingPlanIntent = null;
+    this.upgradePlan(intent.planId, intent.planName);
+  }
+
+  dismissPlanIntent(): void {
+    this.planIntent.clear();
+    this.pendingPlanIntent = null;
+  }
+
+  /** True when at least one plan publishes an annual price — hides the toggle otherwise. */
+  get hasAnnualOption(): boolean {
+    return Object.values(this.allPlans || {}).some((p) => !!p.pricing?.annual);
+  }
+
+  setBillingCycle(cycle: 'monthly' | 'yearly'): void {
+    this.billingCycle = cycle;
+  }
+
+  /** The price block to show for a plan at the current cycle, backend-formatted. */
+  planPrice(planKey: string): { display: string; suffix: string | null; note: string | null } {
+    const pricing = this.getPlan(planKey)?.pricing;
+    const annual = pricing?.annual;
+    if (this.billingCycle === 'yearly' && annual) {
+      return {
+        display: annual.display,
+        suffix: annual.suffix,
+        note: annual.savingsLabel || annual.perMonthEquivalentDisplay
+      };
+    }
+    // Monthly, or a plan with no annual option — falls back so a mixed lineup still renders.
+    return {
+      display: pricing?.monthly?.display ?? formatPlanPriceMonthly(this.getPlan(planKey)?.price),
+      suffix: pricing?.monthly?.suffix ?? null,
+      note: null
+    };
+  }
+
   upgradePlan(planId: string, planName: string): void {
     const plan = this.allPlans?.[planId];
     if (!plan) return;
@@ -340,11 +594,15 @@ export class BillingComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Paid plan — open Razorpay checkout
+    // Paid plan — open Razorpay checkout on the leg the customer is looking at.
+    // A plan without an annual price always falls back to monthly, so the toggle can
+    // never send someone to a billing leg that does not exist.
     this.upgradingPlan = planId;
-    const priceLabel = formatPlanPriceMonthly(plan.price);
+    const wantsAnnual = this.billingCycle === 'yearly' && !!plan.pricing?.annual;
+    const billingCycle: 'monthly' | 'yearly' = wantsAnnual ? 'yearly' : 'monthly';
+    const priceLabel = this.planPrice(planId).display;
 
-    this.razorpayService.initiateUpgrade({ planId, planName, priceLabel })
+    this.razorpayService.initiateUpgrade({ planId, planName, priceLabel, billingCycle })
       .then((res) => {
         if (res.success) {
           this.notificationService.success(
