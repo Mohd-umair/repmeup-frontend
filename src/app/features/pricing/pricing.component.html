@@ -185,17 +185,16 @@
               }
             </ul>
 
-            <a
-              routerLink="/register"
-              [queryParams]="{ plan: plan.planId, cycle: cycle() }"
-              (click)="rememberChoice(plan)"
+            <button
+              type="button"
+              (click)="choosePlan(plan)"
               class="mt-6 block w-full text-center rounded-full px-5 py-3 text-sm font-semibold transition"
               [class]="isDark(plan)
                 ? 'bg-rep-lime text-rep-black hover:brightness-95'
                 : 'bg-rep-black text-white hover:bg-gray-800 dark:bg-white dark:text-rep-black dark:hover:bg-gray-200'"
             >
               Get started
-            </a>
+            </button>
           </div>
         }
       </div>

@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PricingService } from '../../core/services/pricing.service';
 import { PlanIntentService } from '../../core/services/plan-intent.service';
+import { AuthService } from '../../core/services/auth.service';
 import {
   PricingPageData,
   PricingPlanCard,
@@ -34,19 +35,35 @@ export class PricingComponent implements OnInit, OnDestroy {
 
   constructor(
     private pricing: PricingService,
-    private planIntent: PlanIntentService
+    private planIntent: PlanIntentService,
+    private auth: AuthService,
+    private router: Router
   ) {}
 
+  /** Where a customer completes the purchase — the Billing tab. */
+  private readonly BILLING_URL = '/app/settings/accounts';
+
   /**
-   * Carry the chosen plan and cycle through sign-up.
+   * "Get started" — send the customer to the right place for their state.
    *
-   * The query params are for the register page; the stored copy is what actually
-   * survives, because registration routes through email verification and the customer
-   * comes back via a fresh link with no state.
+   * Signed in  → straight to Billing, where the chosen plan is waiting.
+   * Signed out → login, with `returnUrl` so they land on Billing afterwards rather
+   *              than the dashboard. The login page links to sign-up for new visitors.
+   *
+   * The plan choice is stored either way, because sign-up routes through email
+   * verification: the customer returns via an inbox link, so nothing in the URL survives.
    */
-  rememberChoice(plan: PricingPlanCard): void {
+  choosePlan(plan: PricingPlanCard): void {
     const cycle = this.cycle() === 'annual' && plan.pricing.annual ? 'yearly' : 'monthly';
     this.planIntent.remember(plan.planId, cycle);
+
+    if (this.auth.isAuthenticated()) {
+      void this.router.navigate([this.BILLING_URL]);
+      return;
+    }
+    void this.router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: this.BILLING_URL }
+    });
   }
 
   ngOnInit(): void {
