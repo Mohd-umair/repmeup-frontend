@@ -1,0 +1,131 @@
+<div class="wa-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header animate-fade-in-up">
+    <div class="page-header__left">
+      <div class="page-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div>
+        <h1 class="page-title">WhatsApp Forms</h1>
+        <p class="page-subtitle">Interactive forms customers fill in without leaving the chat</p>
+      </div>
+    </div>
+    <button class="btn-wa-primary" (click)="createNew()">
+      <i class="fas fa-plus"></i> New Form
+    </button>
+  </div>
+
+  <p class="wa-template-hint animate-fade-in-up" style="animation-delay:.04s">
+    Build a form once, then <strong>publish</strong> it to Meta to start sending. Published forms are
+    locked by Meta — to change the wording, deprecate it and publish a new version.
+  </p>
+
+  <div *ngIf="error && !loading" class="alert-danger-themed">
+    <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+  </div>
+
+  <!-- ── Loading skeleton ─────────────────────────────────────────────────── -->
+  <div *ngIf="loading" class="skeleton-grid">
+    <div class="skeleton-card" *ngFor="let i of [1,2,3]"></div>
+  </div>
+
+  <!-- ── Empty list ───────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && flows.length === 0 && !error" class="empty-state animate-fade-in-up">
+    <i class="fas fa-clipboard-list empty-state__icon"></i>
+    <h3 class="empty-state__title">No Forms Yet</h3>
+    <p class="empty-state__text">
+      Create your first WhatsApp form to collect ratings and feedback directly inside the conversation.
+    </p>
+    <button class="btn-wa-primary mt-3" (click)="createNew()">
+      <i class="fas fa-plus"></i> Create Form
+    </button>
+  </div>
+
+  <!-- ── Flow grid ────────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && flows.length > 0" class="template-grid">
+    <div class="template-card animate-fade-in-up"
+         *ngFor="let flow of flows; trackBy: trackByFlow; let i = index"
+         [style.animation-delay]="(i * 0.05) + 's'">
+
+      <div class="template-card__header">
+        <div class="template-card__meta">
+          <span class="template-cat cat-utility">
+            <i class="fas fa-star"></i>
+            {{ templateLabel(flow.templateKey) }}
+          </span>
+        </div>
+        <span class="status-badge" [ngClass]="statusClass(flow.status)">
+          <i class="fas" [ngClass]="statusIcon(flow.status)"></i>
+          {{ flow.status | titlecase }}
+        </span>
+      </div>
+
+      <h3 class="template-card__name">{{ flow.name }}</h3>
+
+      <p class="template-card__preview">
+        {{ flow.customization?.['headerText'] || flow.description || '— no header text —' }}
+      </p>
+
+      <div class="flow-stats" *ngIf="flow.stats">
+        <span class="flow-stats__item">
+          <i class="fas fa-paper-plane"></i> {{ flow.stats.sent || 0 }} sent
+        </span>
+        <span class="flow-stats__item">
+          <i class="fas fa-check-circle"></i> {{ flow.stats.completed || 0 }} completed
+        </span>
+        <span class="flow-stats__item" *ngIf="flow.stats.avgRating">
+          <i class="fas fa-star"></i> {{ flow.stats.avgRating | number:'1.1-1' }} avg
+        </span>
+      </div>
+
+      <div class="template-card__footer">
+        <span class="template-card__id" *ngIf="flow.metaFlowId">
+          ID: {{ flow.metaFlowId }}
+        </span>
+        <span class="template-card__id" *ngIf="!flow.metaFlowId">Not published to Meta</span>
+
+        <div class="card-actions">
+          <button
+            type="button"
+            class="btn-icon-action"
+            [disabled]="flow.status !== 'draft'"
+            (click)="editFlow(flow._id)"
+            [title]="flow.status === 'draft' ? 'Edit form' : 'Published forms cannot be edited'">
+            <i class="fas fa-pen"></i>
+          </button>
+
+          <button
+            *ngIf="flow.status === 'draft'"
+            type="button"
+            class="btn-icon-action btn-icon-action--publish"
+            [disabled]="busyId === flow._id"
+            (click)="publishFlow(flow._id)"
+            title="Publish to Meta">
+            <i class="fas" [ngClass]="busyId === flow._id ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+          </button>
+
+          <button
+            *ngIf="flow.status === 'published'"
+            type="button"
+            class="btn-icon-action btn-icon-action--warn"
+            [disabled]="busyId === flow._id"
+            (click)="deprecateFlow(flow._id)"
+            title="Deprecate form">
+            <i class="fas" [ngClass]="busyId === flow._id ? 'fa-spinner fa-spin' : 'fa-ban'"></i>
+          </button>
+
+          <button
+            type="button"
+            class="btn-icon-danger"
+            [disabled]="flow.status === 'published'"
+            (click)="deleteFlow(flow._id)"
+            [title]="flow.status === 'published' ? 'Deprecate before deleting' : 'Delete form'">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

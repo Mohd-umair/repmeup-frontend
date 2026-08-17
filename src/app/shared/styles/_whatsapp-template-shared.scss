@@ -324,3 +324,335 @@
     font-weight: 600;
   }
 }
+
+// ─────────────────────────────────────────────
+// PAGE SHELL — header, title, primary action.
+// Extracted from whatsapp-templates so every WhatsApp-surface page renders
+// the same chrome instead of re-declaring it per feature.
+// ─────────────────────────────────────────────
+.wa-page {
+  padding: 1.75rem;
+  min-height: 100%;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+}
+
+.page-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 1rem;
+  background: #D8FF00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #0B0B0B;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(216, 255, 0, 0.35);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 1.2rem;
+    background: #D8FF00;
+    opacity: 0.2;
+    filter: blur(8px);
+    z-index: -1;
+  }
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0.1rem 0 0;
+}
+
+.btn-wa-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 0.75rem;
+  background: #D8FF00;
+  color: #0B0B0B;
+  font-size: 0.875rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(216, 255, 0, 0.35);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: #e4ff33;
+    box-shadow: 0 8px 24px rgba(216, 255, 0, 0.45);
+  }
+  &:active:not(:disabled) { transform: scale(0.96); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+// ─────────────────────────────────────────────
+// LIST-VIEW ACTION ICONS
+// One shape for every row action; only the colour changes per intent so the
+// same icon always means the same thing across list views.
+// ─────────────────────────────────────────────
+.btn-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: var(--surface-tertiary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--surface-secondary);
+    color: var(--text-primary);
+    transform: scale(1.06);
+  }
+  &:active:not(:disabled) { transform: scale(0.94); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  &--publish {
+    background: rgba(22, 163, 74, 0.08);
+    border-color: rgba(22, 163, 74, 0.2);
+    color: #16a34a;
+    &:hover:not(:disabled) { background: rgba(22, 163, 74, 0.16); color: #16a34a; }
+  }
+
+  &--warn {
+    background: rgba(234, 179, 8, 0.08);
+    border-color: rgba(234, 179, 8, 0.22);
+    color: #ca8a04;
+    &:hover:not(:disabled) { background: rgba(234, 179, 8, 0.16); color: #ca8a04; }
+  }
+}
+
+.btn-icon-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  color: #dc2626;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover { background: rgba(239, 68, 68, 0.16); transform: scale(1.06); }
+  &:active { transform: scale(0.94); }
+}
+
+.card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+// ─────────────────────────────────────────────
+// FORM PRIMITIVES
+// Same field chrome as the template wizard.
+// ─────────────────────────────────────────────
+.form-group { margin-bottom: 1.25rem; }
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: .4rem;
+}
+
+.form-hint {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: .3rem;
+  line-height: 1.45;
+}
+
+.form-input, .form-select-field, .form-textarea {
+  width: 100%;
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1.5px solid var(--input-border);
+  border-radius: 0.625rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color .2s ease, box-shadow .2s ease;
+
+  &::placeholder { color: var(--input-placeholder); }
+
+  &:focus {
+    outline: none;
+    border-color: #D8FF00;
+    box-shadow: 0 0 0 3px rgba(216, 255, 0, 0.15);
+  }
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+// ─────────────────────────────────────────────
+// SELECTABLE CARD (template / category picker)
+// ─────────────────────────────────────────────
+.choice-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 0.875rem;
+}
+
+.choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 1.1rem;
+  border: 1.5px solid var(--card-border);
+  border-radius: 1rem;
+  background: var(--card-bg);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover { transform: translateY(-2px); }
+
+  &.selected {
+    border-color: transparent;
+    box-shadow: 0 0 0 1.5px rgba(216, 255, 0, 0.65),
+                0 8px 20px rgba(216, 255, 0, 0.12);
+    background: rgba(216, 255, 0, 0.04);
+  }
+
+  &__icon-wrap {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-tertiary);
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+
+  &__label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -.01em;
+  }
+
+  &__desc {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+}
+
+// ─────────────────────────────────────────────
+// FOOTER ACTIONS
+// ─────────────────────────────────────────────
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--border-primary);
+  flex-wrap: wrap;
+}
+
+.btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 0.7rem;
+  border: 1.5px solid var(--border-secondary);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+
+  &:hover { background: var(--surface-secondary); color: var(--text-primary); }
+}
+
+.btn-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.4rem;
+  border-radius: 0.7rem;
+  background: #D8FF00;
+  color: #0B0B0B;
+  font-size: 0.875rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(216, 255, 0, 0.35);
+  transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: #e4ff33;
+    box-shadow: 0 8px 24px rgba(216, 255, 0, 0.45);
+  }
+  &:active:not(:disabled) { transform: scale(0.96); }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+// ─────────────────────────────────────────────
+// ENTRANCE ANIMATION (matches settings / templates pages)
+// ─────────────────────────────────────────────
+@keyframes waFadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: waFadeInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}

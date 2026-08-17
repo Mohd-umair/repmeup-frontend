@@ -169,6 +169,16 @@ const routes: Routes = [
       { path: 'catalog', loadComponent: () => import('./features/catalog/catalog.component').then(m => m.CatalogComponent), canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.COMMERCE_WA_CATALOG_ENABLED } },
       { path: 'contacts', loadComponent: () => import('./features/contacts/contacts-container/contacts-container.component').then(m => m.ContactsContainerComponent), canActivate: [PermissionGuard], data: { permissions: ['inbox.read'] } },
       { path: 'whatsapp-templates', loadComponent: () => import('./features/whatsapp-templates/whatsapp-templates.component').then(m => m.WhatsAppTemplatesComponent), canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.WHATSAPP_TEMPLATES_MAX } },
+      {
+        path: 'whatsapp-form-flows',
+        canActivate: [PermissionGuard, PlanFeatureGuard],
+        data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.WHATSAPP_FLOWS_ENABLED },
+        children: [
+          { path: '', loadComponent: () => import('./features/whatsapp-form-flows/flow-list/flow-list.component').then(m => m.FlowListComponent) },
+          { path: 'create', loadComponent: () => import('./features/whatsapp-form-flows/flow-editor/flow-editor.component').then(m => m.FlowEditorComponent) },
+          { path: ':id/edit', loadComponent: () => import('./features/whatsapp-form-flows/flow-editor/flow-editor.component').then(m => m.FlowEditorComponent) }
+        ]
+      },
       { path: 'campaigns', loadComponent: () => import('./features/campaigns/campaigns.component').then(m => m.CampaignsComponent), canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['settings.read'], planFeature: FEATURE_KEY.CAMPAIGNS_ENABLED } },
       { path: 'reports', loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent), canActivate: [PermissionGuard, PlanFeatureGuard], data: { permissions: ['analytics.read'], planFeature: FEATURE_KEY.ANALYTICS_ADVANCED } },
       {

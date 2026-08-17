@@ -1,0 +1,131 @@
+<div class="wa-page">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header animate-fade-in-up">
+    <div class="page-header__left">
+      <div class="page-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div>
+        <h1 class="page-title">{{ isNew ? 'New WhatsApp Form' : 'Edit Form' }}</h1>
+        <p class="page-subtitle">
+          {{ isNew
+            ? 'Pick a template, write your questions, publish when it reads right'
+            : 'Changes apply the next time this form is published' }}
+        </p>
+      </div>
+    </div>
+    <button class="btn-cancel" (click)="goBack()">
+      <i class="fas fa-chevron-left"></i> Back
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert-danger-themed">
+    <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+  </div>
+
+  <!-- ── Step 1: pick a template (new flows only) ─────────────────────────── -->
+  <section *ngIf="isNew && !selectedTemplate" class="animate-fade-in-up" style="animation-delay:.04s">
+    <p class="wa-template-hint">
+      Every form starts from a template. Pick the one that matches what you want to ask —
+      you rewrite all of the wording in the next step.
+    </p>
+
+    <div *ngIf="loadingTemplates" class="skeleton-grid">
+      <div class="skeleton-card" *ngFor="let i of [1,2,3]"></div>
+    </div>
+
+    <div *ngIf="!loadingTemplates" class="choice-cards">
+      <button type="button"
+              class="choice-card"
+              *ngFor="let template of templates"
+              (click)="selectTemplate(template)">
+        <span class="choice-card__icon-wrap"><i class="fas fa-star"></i></span>
+        <span class="choice-card__label">{{ template.name }}</span>
+        <span class="choice-card__desc">{{ template.description }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Step 2: customise + preview ──────────────────────────────────────── -->
+  <section *ngIf="!isNew || selectedTemplate" class="editor-grid animate-fade-in-up" style="animation-delay:.04s">
+
+    <!-- Left: the form -->
+    <div class="panel">
+      <h2 class="panel__title">
+        <i class="fas fa-sliders-h"></i> Form content
+      </h2>
+      <p class="panel__desc">
+        This is exactly what your customer reads inside WhatsApp. Keep it short — forms with
+        two or three plain questions get answered most.
+      </p>
+
+      <form [formGroup]="customizationForm">
+        <div class="form-group">
+          <label class="form-label" for="flow-name">Form name</label>
+          <input id="flow-name" type="text" class="form-input" formControlName="name"
+                 placeholder="Post-purchase review">
+          <p class="form-hint">Internal only — your customer never sees this.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="flow-business">Business name</label>
+          <input id="flow-business" type="text" class="form-input" formControlName="businessName"
+                 placeholder="Your business name">
+          <p class="form-hint">Shown at the top of the form so people know who is asking.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="flow-header">Header text</label>
+          <input id="flow-header" type="text" class="form-input" formControlName="headerText"
+                 placeholder="How was your experience?">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="flow-rating">Rating question</label>
+          <input id="flow-rating" type="text" class="form-input" formControlName="ratingPrompt"
+                 placeholder="Please rate your experience">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="flow-comment">Comment question</label>
+          <input id="flow-comment" type="text" class="form-input" formControlName="commentPrompt"
+                 placeholder="Anything you would like us to know?">
+          <p class="form-hint">Answering is optional for the customer.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="flow-thanks">Thank-you message</label>
+          <textarea id="flow-thanks" class="form-textarea" formControlName="thankYouText"
+                    placeholder="Thank you for your feedback!"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" (click)="goBack()">Cancel</button>
+          <button type="button" class="btn-submit" [disabled]="saving || customizationForm.invalid"
+                  (click)="isNew ? createFlow() : saveChanges()">
+            <i class="fas" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+            {{ isNew ? 'Create form' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Right: live preview -->
+    <div class="panel panel--preview">
+      <h2 class="panel__title">
+        <i class="fab fa-whatsapp"></i> Live preview
+      </h2>
+      <p class="panel__desc">Tap the stars to walk through the form the way a customer would.</p>
+
+      <app-whatsapp-flow-preview
+        [headerText]="customizationForm.get('headerText')?.value"
+        [ratingPrompt]="customizationForm.get('ratingPrompt')?.value"
+        [commentPrompt]="customizationForm.get('commentPrompt')?.value"
+        [thankYouText]="customizationForm.get('thankYouText')?.value">
+      </app-whatsapp-flow-preview>
+    </div>
+
+  </section>
+
+</div>

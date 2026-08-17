@@ -1,0 +1,128 @@
+:host {
+  display: flex;
+  justify-content: center;
+}
+
+.phone {
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid var(--card-border);
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #ECE5DD;
+  box-shadow: var(--card-shadow);
+
+  &__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.85rem;
+    background: #075E54;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  &__app {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  &__chat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    min-height: 380px;
+  }
+}
+
+.bubble {
+  align-self: flex-start;
+  max-width: 85%;
+  background: #fff;
+  color: #111827;
+  border-radius: 0.75rem;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  word-break: break-word;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+}
+
+.card {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+
+  &__label {
+    font-size: 0.75rem;
+    color: #4B5563;
+    margin: 0.75rem 0 0.35rem;
+  }
+
+  &__input {
+    width: 100%;
+    border: 1px solid #E5E7EB;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    font-family: inherit;
+    color: #111827;
+    background: #fff;
+    resize: none;
+  }
+
+  &__submit {
+    width: 100%;
+    margin-top: 0.6rem;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 999px;
+    background: #25D366;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:active { transform: scale(0.98); }
+  }
+}
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.star {
+  background: none;
+  border: none;
+  padding: 0.15rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #D1D5DB;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease;
+
+  &:hover { transform: scale(1.12); }
+  &.is-on { color: #FBBF24; }
+}
+
+.reset {
+  align-self: center;
+  margin-top: auto;
+  background: none;
+  border: none;
+  color: #4B5563;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+
+  &:hover { color: #111827; }
+}

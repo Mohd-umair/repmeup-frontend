@@ -1,0 +1,36 @@
+<div class="phone">
+  <div class="phone__bar">
+    <span><i class="fas fa-signal"></i> 9:41</span>
+    <span class="phone__app"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+  </div>
+
+  <div class="phone__chat">
+    <div class="bubble" *ngIf="headerText">{{ headerText }}</div>
+    <div class="bubble" *ngIf="ratingPrompt">{{ ratingPrompt }}</div>
+
+    <div class="card">
+      <div class="stars">
+        <button type="button"
+                class="star"
+                *ngFor="let star of stars"
+                [class.is-on]="star <= selectedRating"
+                (click)="selectRating(star)"
+                [attr.aria-label]="star + ' star' + (star > 1 ? 's' : '')">
+          <i class="fas fa-star"></i>
+        </button>
+      </div>
+
+      <ng-container *ngIf="selectedRating > 0">
+        <p class="card__label" *ngIf="commentPrompt">{{ commentPrompt }}</p>
+        <textarea class="card__input" rows="2" placeholder="Optional…" readonly></textarea>
+        <button type="button" class="card__submit" (click)="submit()">Submit</button>
+      </ng-container>
+    </div>
+
+    <div class="bubble" *ngIf="submitted && thankYouText">{{ thankYouText }}</div>
+
+    <button type="button" class="reset" *ngIf="selectedRating > 0" (click)="reset()">
+      <i class="fas fa-rotate-left"></i> Reset preview
+    </button>
+  </div>
+</div>

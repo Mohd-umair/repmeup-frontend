@@ -5,6 +5,7 @@ export const ROUTE_PLAN_FEATURES: Record<string, FeatureKey> = {
   '/app/campaigns': FEATURE_KEY.CAMPAIGNS_ENABLED,
   '/app/catalog': FEATURE_KEY.COMMERCE_WA_CATALOG_ENABLED,
   '/app/whatsapp-templates': FEATURE_KEY.WHATSAPP_TEMPLATES_MAX,
+  '/app/whatsapp-form-flows': FEATURE_KEY.WHATSAPP_FLOWS_ENABLED,
   '/app/agents': FEATURE_KEY.AGENTS_ENABLED,
   '/app/reports': FEATURE_KEY.ANALYTICS_ADVANCED,
   '/app/analytics': FEATURE_KEY.ANALYTICS_ADVANCED,

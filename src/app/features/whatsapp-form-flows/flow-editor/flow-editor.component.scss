@@ -1,0 +1,58 @@
+@use '../../../shared/styles/theme-overrides' as theme;
+@use '../../../shared/styles/whatsapp-template-shared';
+
+@include theme.light-mode-overrides;
+
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+              box-shadow 0.3s ease, color 0.3s ease;
+}
+
+// Page-specific layout only — every control inside comes from the shared partial.
+.editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  gap: 1.25rem;
+  align-items: start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  box-shadow: var(--card-shadow);
+
+  &--preview {
+    position: sticky;
+    top: 1rem;
+
+    @media (max-width: 1024px) {
+      position: static;
+    }
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: var(--text-primary);
+    margin: 0 0 0.3rem;
+
+    .fa-whatsapp { color: #25D366; }
+  }
+
+  &__desc {
+    font-size: 0.845rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0 0 1.5rem;
+  }
+}

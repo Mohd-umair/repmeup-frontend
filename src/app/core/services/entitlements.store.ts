@@ -77,6 +77,8 @@ export const FEATURE_KEY = {
   CAMPAIGNS_RECIPIENTS_MONTHLY: 'campaigns.recipients.monthly',
   WHATSAPP_TEMPLATES_MAX: 'whatsapp.templates.max',
   WHATSAPP_BROADCAST_ENABLED: 'whatsapp.broadcast.enabled',
+  WHATSAPP_FLOWS_ENABLED: 'whatsapp.flows.enabled',
+  WHATSAPP_FLOWS_MAX: 'whatsapp.flows.max',
   AUTOMATION_FLOWS_MAX: 'automation.flows.max',
   CONTACTS_MAX: 'contacts.max'
 } as const;
