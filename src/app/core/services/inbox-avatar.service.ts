@@ -32,6 +32,13 @@ export interface InstagramSharedMediaMeta {
 }
 
 /**
+ * Stable "no metadata" result. Returning a fresh `of(null)` per call would hand the
+ * template a new observable reference every change-detection pass, which is exactly
+ * the churn this service is memoizing away.
+ */
+const NULL_SHARED_MEDIA$: Observable<InstagramSharedMediaMeta | null> = of(null);
+
+/**
  * Industry-standard avatar strategy for the inbox:
  *
  * 1. During sync / webhook, the backend resolves the actual CDN URL
@@ -61,8 +68,14 @@ export class InboxAvatarService {
   private failedAt = new Map<string, number>();
   /** in-flight observables, keyed by cache key */
   private inFlight = new Map<string, Observable<string | null>>();
-  /** cached IG shared-media metadata (post/reel/story in DM) */
-  private metaCache = new Map<string, InstagramSharedMediaMeta | null>();
+  /**
+   * Memoized IG shared-media metadata requests (post/reel/story in DM).
+   * Stores the *observable*, not the value: the `shareReplay` below makes it the
+   * cache, and keeping one reference per key is what stops the async pipe from
+   * re-subscribing (and re-requesting) on every change-detection pass.
+   */
+  private metaShared = new Map<string, Observable<InstagramSharedMediaMeta | null>>();
+  private metaKeyOrder: string[] = [];
 
   constructor(private http: HttpClient) {}
 
@@ -174,28 +187,48 @@ export class InboxAvatarService {
 
   /**
    * Metadata for a shared Instagram post/reel/story in DM (permalink + label).
+   *
+   * This is bound straight from the template with `| async`, so the returned
+   * observable MUST keep a stable reference per (interaction, mid). Handing back a
+   * fresh observable on each call made the async pipe unsubscribe and resubscribe on
+   * every change-detection pass, firing `/inbox/instagram-shared-media` in a loop —
+   * once per pass, before the first response had even landed to populate a cache.
+   *
+   * Memoizing the observable fixes both halves: concurrent subscribers share one
+   * in-flight request, and `shareReplay` replays the settled result to every later
+   * subscriber. The endpoint is hit exactly once per (interaction, mid) per session.
    */
   getInstagramSharedMediaMeta(interactionId: string, mid: string): Observable<InstagramSharedMediaMeta | null> {
-    if (!interactionId || !mid) return of(null);
+    if (!interactionId || !mid) return NULL_SHARED_MEDIA$;
     const key = `igshare_${interactionId}_${mid}`;
-    const cached = this.metaCache.get(key);
-    if (cached !== undefined) return of(cached);
+
+    const memoized = this.metaShared.get(key);
+    if (memoized) return memoized;
 
     const url =
       `${this.apiUrl}/inbox/instagram-shared-media?interactionId=${encodeURIComponent(interactionId)}` +
       `&mid=${encodeURIComponent(mid)}`;
-    return this.http.get<{ success: boolean; data?: InstagramSharedMediaMeta }>(url).pipe(
-      map((res) => {
-        const data = res?.success && res.data ? res.data : null;
-        this.metaCache.set(key, data);
-        return data;
-      }),
-      catchError(() => {
-        this.metaCache.set(key, null);
-        return of(null);
-      }),
-      shareReplay(1)
+
+    // refCount:false — keep the replayed value after the last subscriber drops, so
+    // scrolling a message out of and back into view does not re-request.
+    const shared = this.http.get<{ success: boolean; data?: InstagramSharedMediaMeta }>(url).pipe(
+      map((res) => (res?.success && res.data ? res.data : null)),
+      catchError(() => of(null)),
+      shareReplay({ bufferSize: 1, refCount: false })
     );
+
+    this.rememberMetaKey(key);
+    this.metaShared.set(key, shared);
+    return shared;
+  }
+
+  /** Bounds the memo map the same way `setCache` bounds the avatar cache. */
+  private rememberMetaKey(key: string): void {
+    if (this.metaShared.size >= MAX_CACHE) {
+      const oldest = this.metaKeyOrder.shift();
+      if (oldest) this.metaShared.delete(oldest);
+    }
+    this.metaKeyOrder.push(key);
   }
 
   /**

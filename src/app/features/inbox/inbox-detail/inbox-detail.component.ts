@@ -15,7 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { NotificationDataService } from '../../../core/services/notification-data.service';
 import { SweetAlertService } from '../../../core/services/sweet-alert.service';
 import { Observable, of, Subscription, timer, interval } from 'rxjs';
-import { map, take } from 'rxjs/operators';
+import { map, take, shareReplay } from 'rxjs/operators';
 import { InboxAvatarService, InstagramSharedMediaMeta } from '../../../core/services/inbox-avatar.service';
 import { MediaLibraryService } from '../../../core/services/media-library.service';
 import { INBOX_EMOJI_LIST } from '../../../core/constants/inbox-emoji-list';
@@ -80,6 +80,9 @@ interface IOptimisticReply {
   };
   whatsappTemplatePreview?: WhatsAppTemplatePreviewDisplay;
 }
+
+/** Upper bound for the memoized attachment-observable map (mirrors InboxAvatarService's MAX_CACHE). */
+const ATTACHMENT_URL_CACHE_MAX = 300;
 
 /**
  * Inbox Detail Component - Single Responsibility Principle
@@ -751,6 +754,10 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     return instagramSharedMediaLabel(data.attachmentType);
   }
 
+  /** Memoized attachment observables — see `getAttachmentUrl$` for why this is required. */
+  private attachmentUrlCache = new Map<string, Observable<SafeUrl | null>>();
+  private attachmentUrlKeyOrder: string[] = [];
+
   getInstagramSharedMediaMeta$(interactionId: string, mid: string): Observable<InstagramSharedMediaMeta | null> {
     return this.avatarService.getInstagramSharedMediaMeta(interactionId, mid);
   }
@@ -766,18 +773,41 @@ export class InboxDetailComponent implements OnChanges, OnInit, OnDestroy {
     return !!(data.attachmentUrl || data.igPostMediaId);
   }
 
+  /**
+   * Attachment URL for a message bubble, bound from the template with `| async`.
+   *
+   * Memoized per (interaction, mid, platform): the `.pipe(map(...))` wrapper below
+   * builds a NEW observable on every call, so returning it directly made the async
+   * pipe resubscribe on every change-detection pass and mark the view dirty again on
+   * each emission — a self-sustaining CD loop. The service dedupes the underlying
+   * HTTP, but the wrapper still has to keep a stable reference for the pipe.
+   */
   getAttachmentUrl$(interactionId: string, mid: string, platform: string, directUrl: string | undefined): Observable<SafeUrl | null> {
+    const key = `${platform}|${interactionId}|${mid}|${directUrl || ''}`;
+    const memoized = this.attachmentUrlCache.get(key);
+    if (memoized) return memoized;
+
+    let source: Observable<SafeUrl | null>;
     if ((platform === 'facebook' || platform === 'instagram') && interactionId && mid) {
-      return this.avatarService.getAttachmentUrl(interactionId, mid).pipe(
+      source = this.avatarService.getAttachmentUrl(interactionId, mid).pipe(
         map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
       );
-    }
-    if (platform === 'whatsapp' && interactionId && mid) {
-      return this.avatarService.getWhatsAppAttachmentUrl(interactionId, mid).pipe(
+    } else if (platform === 'whatsapp' && interactionId && mid) {
+      source = this.avatarService.getWhatsAppAttachmentUrl(interactionId, mid).pipe(
         map(url => (url ? this.sanitizer.bypassSecurityTrustUrl(url) : null))
       );
+    } else {
+      source = of(directUrl ? this.sanitizer.bypassSecurityTrustUrl(directUrl) : null);
     }
-    return of(directUrl ? this.sanitizer.bypassSecurityTrustUrl(directUrl) : null);
+
+    const shared = source.pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    if (this.attachmentUrlCache.size >= ATTACHMENT_URL_CACHE_MAX) {
+      const oldest = this.attachmentUrlKeyOrder.shift();
+      if (oldest) this.attachmentUrlCache.delete(oldest);
+    }
+    this.attachmentUrlKeyOrder.push(key);
+    this.attachmentUrlCache.set(key, shared);
+    return shared;
   }
 
   /** Display name with platform fallback when profile isn't available (e.g. Instagram without Advanced Access). */
