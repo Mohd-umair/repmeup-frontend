@@ -8,6 +8,7 @@ import { InboxOpsService } from '../../../core/services/inbox-ops.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserService, IAvailableAgent } from '../../../core/services/user.service';
 import {
+  ICreateManualComplaintPayload,
   IOpsComplaintDetail,
   IOpsComplaintRow,
   IOpsComplaintStats,
@@ -52,6 +53,11 @@ export class InboxComplaintManagementComponent implements OnInit, OnDestroy {
   channel = '';
   agents: IAvailableAgent[] = [];
   selectedAssignee = '';
+
+  /** Manual "Log Complaint" modal — for complaints with no originating chat. */
+  logOpen = false;
+  logSubmitting = false;
+  logForm: ICreateManualComplaintPayload = this.emptyLogForm();
 
   drawerOpen = false;
   detail: IOpsComplaintDetail | null = null;
@@ -120,6 +126,49 @@ export class InboxComplaintManagementComponent implements OnInit, OnDestroy {
       // Wait for initial list load
       setTimeout(pollDetail, 600);
     }
+  }
+
+
+  private emptyLogForm(): ICreateManualComplaintPayload {
+    return { customerName: '', customerHandle: '', channel: 'website', issueSummary: '', priority: 'medium' };
+  }
+
+  openLogModal(): void {
+    this.logForm = this.emptyLogForm();
+    this.logOpen = true;
+  }
+
+  closeLogModal(): void {
+    if (this.logSubmitting) return;
+    this.logOpen = false;
+  }
+
+  get logValid(): boolean {
+    return this.logForm.customerName.trim().length > 0 && this.logForm.issueSummary.trim().length >= 5;
+  }
+
+  submitLog(): void {
+    if (!this.logValid || this.logSubmitting) return;
+    this.logSubmitting = true;
+    this.ops
+      .createManualComplaint({
+        ...this.logForm,
+        customerName: this.logForm.customerName.trim(),
+        customerHandle: this.logForm.customerHandle?.trim() || undefined,
+        issueSummary: this.logForm.issueSummary.trim()
+      })
+      .pipe(finalize(() => (this.logSubmitting = false)), takeUntil(this.destroy$))
+      .subscribe({
+        next: (detail) => {
+          this.notify.success('Complaint logged', detail.displayRef);
+          this.logOpen = false;
+          this.page = 1;
+          this.loadStats();
+          this.loadList();
+        },
+        error: (err) =>
+          this.notify.error(err?.error?.error || 'Could not log the complaint. Please try again.')
+      });
   }
 
   ngOnDestroy(): void {

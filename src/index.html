@@ -26,8 +26,18 @@
   <meta name="twitter:image" content="https://repmeup.in/assets/Images/logo.png">
 
   <link rel="canonical" href="https://repmeup.in/">
-  <link rel="icon" type="image/x-icon" href="assets/Images/Favicon.ico">
-  <link rel="apple-touch-icon" href="assets/Images/logo.jpeg">
+  <!--
+    Favicons. Google only accepts a SQUARE icon whose dimensions are a multiple of
+    48px (48/96/144...); the previous 40x40 Favicon.ico failed that check, so Google
+    fell back to the only square image on the page (og:image = the old black "rep."
+    logo) and showed that in search results instead.
+    Google also probes /favicon.ico at the domain root regardless of these tags, so
+    src/favicon.ico must carry the same mark — it used to be Angular's default icon.
+  -->
+  <link rel="icon" type="image/png" sizes="48x48" href="assets/Images/favicon-48.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="assets/Images/favicon-96.png">
+  <link rel="icon" type="image/png" sizes="144x144" href="assets/Images/favicon-144.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/Images/apple-touch-icon.png">
   <!--
     FontAwesome loaded async (non-render-blocking): the print-media swap lets the
     browser fetch it without delaying first paint, then flips it to all media on load.

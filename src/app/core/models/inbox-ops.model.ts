@@ -196,6 +196,15 @@ export interface ICreateComplaintPayload {
   priority?: 'low' | 'medium' | 'high' | 'urgent';
 }
 
+/** Manually logged complaint — no originating chat (walk-in, phone, offline). */
+export interface ICreateManualComplaintPayload {
+  customerName: string;
+  customerHandle?: string;
+  channel: 'whatsapp' | 'instagram' | 'facebook' | 'email' | 'website';
+  issueSummary: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+}
+
 /** Lightweight ref returned by by-interaction lookup endpoints */
 export interface ILinkedOrderRef {
   id: string;

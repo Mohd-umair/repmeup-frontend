@@ -5,6 +5,7 @@ import { ApiService } from './api.service';
 import { IApiResponse } from '../models/api-response.model';
 import {
   ICreateComplaintPayload,
+  ICreateManualComplaintPayload,
   ICreateOrderPayload,
   ICreateReviewPayload,
   ILinkedOrderRef,
@@ -114,6 +115,13 @@ export class InboxOpsService {
   raiseComplaint(interactionId: string, payload: ICreateComplaintPayload): Observable<IOpsComplaintDetail> {
     return this.api
       .post<IApiResponse<IOpsComplaintDetail>>(`/inbox/ops/complaints/from-interaction/${interactionId}`, payload)
+      .pipe(map((r) => r.data!));
+  }
+
+  /** Log a complaint with no originating chat — the service creates the backing interaction. */
+  createManualComplaint(payload: ICreateManualComplaintPayload): Observable<IOpsComplaintDetail> {
+    return this.api
+      .post<IApiResponse<IOpsComplaintDetail>>('/inbox/ops/complaints/manual', payload)
       .pipe(map((r) => r.data!));
   }
 

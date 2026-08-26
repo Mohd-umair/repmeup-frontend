@@ -1,12 +1,42 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
 import { NotificationService } from './notification.service';
+import { FacebookSdkService } from './facebook-sdk.service';
 
 /**
  * Posted from the OAuth popup (/whatsapp-oauth-callback) to the opener tab.
  */
 export const WHATSAPP_OAUTH_POSTMESSAGE_TYPE = 'repmeup-whatsapp-oauth';
+
+/**
+ * Embedded Signup configuration served by the backend.
+ * `solutionId` is non-null only when the platform is set up as an Interakt tech
+ * partner — its presence is what selects the SDK flow over the redirect popup.
+ */
+export interface WhatsAppEmbeddedSignupConfig {
+  appId: string | null;
+  configId: string | null;
+  solutionId: string | null;
+  graphVersion?: string;
+}
+
+export interface WhatsAppConnectInit {
+  authUrl: string;
+  embeddedSignup: WhatsAppEmbeddedSignupConfig;
+}
+
+export interface WhatsAppEmbeddedSignupResult {
+  success: boolean;
+  error?: string;
+  data?: {
+    connectionId: string;
+    phoneNumberId: string;
+    wabaId: string;
+    displayPhoneNumber?: string;
+    interakt?: { registered: boolean; webhookConfigured: boolean; error: string | null };
+  };
+}
 
 export interface WhatsAppOAuthPopupResult {
   /** True after Meta returned success (may be absent if popup closed manually). */
@@ -71,7 +101,8 @@ export interface SyncResponse {
 export class PlatformService {
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private facebookSdk: FacebookSdkService
   ) {}
 
   /**
@@ -256,8 +287,85 @@ export class PlatformService {
    * onboarding setup for https://business.facebook.com/messaging/whatsapp/onboard/?app_id=…&config_id=…
    * @see https://developers.facebook.com/docs/whatsapp/embedded-signup
    */
-  initiateWhatsAppConnection(): Observable<{ success: boolean; data: { authUrl: string } }> {
-    return this.apiService.get<{ success: boolean; data: { authUrl: string } }>('/platforms/whatsapp/connect');
+  initiateWhatsAppConnection(): Observable<{ success: boolean; data: WhatsAppConnectInit }> {
+    return this.apiService.get<{ success: boolean; data: WhatsAppConnectInit }>('/platforms/whatsapp/connect');
+  }
+
+  /**
+   * Complete Embedded Signup using the Facebook JS SDK.
+   *
+   * This is the path Meta documents for Tech Providers: `extras.setup.solutionID`
+   * attaches the new WABA to our partner solution, and `sessionInfoVersion: 3` makes
+   * the SDK post back the waba_id and phone_number_id directly — so the backend does
+   * not have to rediscover them through debug_token.
+   *
+   * Falls back to the redirect popup when the server reports no solution id, which is
+   * the case for a plain Meta-direct deployment.
+   */
+  async connectWhatsAppEmbeddedSignup(cfg: WhatsAppEmbeddedSignupConfig): Promise<WhatsAppEmbeddedSignupResult> {
+    if (!cfg.appId) throw new Error('WhatsApp signup is not configured (missing app id).');
+    if (!cfg.configId) throw new Error('WhatsApp signup is not configured (missing config id).');
+
+    const FB = await this.facebookSdk.load(cfg.appId, cfg.graphVersion || 'v23.0');
+
+    // The SDK reports the selected WABA/number over postMessage, separately from the
+    // login callback that carries the code. Collect both, then resolve.
+    let sessionInfo: { wabaId?: string; phoneNumberId?: string } = {};
+
+    const onMessage = (ev: MessageEvent) => {
+      if (!/facebook\.com$/.test(new URL(ev.origin).hostname)) return;
+      try {
+        const payload = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data;
+        if (payload?.type !== 'WA_EMBEDDED_SIGNUP') return;
+        if (payload.event === 'FINISH' || payload.event === 'FINISH_ONLY_WABA') {
+          sessionInfo = {
+            wabaId: payload.data?.waba_id,
+            phoneNumberId: payload.data?.phone_number_id
+          };
+        }
+      } catch {
+        /* not a signup message — ignore */
+      }
+    };
+    window.addEventListener('message', onMessage);
+
+    try {
+      const code = await new Promise<string>((resolve, reject) => {
+        FB.login(
+          (response) => {
+            const c = response?.authResponse?.code;
+            if (c) resolve(c);
+            else reject(new Error('WhatsApp signup was cancelled before it completed.'));
+          },
+          {
+            config_id: cfg.configId,
+            response_type: 'code',
+            override_default_response_type: true,
+            extras: {
+              setup: { solutionID: cfg.solutionId },
+              featureType: '',
+              sessionInfoVersion: '3'
+            }
+          }
+        );
+      });
+
+      if (!sessionInfo.wabaId || !sessionInfo.phoneNumberId) {
+        throw new Error(
+          'Signup finished but Meta did not return the WhatsApp account details. Please try again.'
+        );
+      }
+
+      return await firstValueFrom(
+        this.apiService.post<WhatsAppEmbeddedSignupResult>('/platforms/whatsapp/embedded-signup', {
+          code,
+          wabaId: sessionInfo.wabaId,
+          phoneNumberId: sessionInfo.phoneNumberId
+        })
+      );
+    } finally {
+      window.removeEventListener('message', onMessage);
+    }
   }
 
   /**

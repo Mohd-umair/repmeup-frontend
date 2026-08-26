@@ -23,7 +23,7 @@ import { BillingComponent } from './components/billing/billing.component';
 import { WhatsAppConnectComponent } from './whatsapp-connect/whatsapp-connect.component';
 import { EmailConnectComponent } from './email-connect/email-connect.component';
 import { RouterModule } from '@angular/router';
-import { Observable, Subscription, timer } from 'rxjs';
+import { Observable, Subscription, timer, firstValueFrom } from 'rxjs';
 import { take } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
@@ -890,6 +890,31 @@ export class SettingsComponent implements OnInit, OnDestroy {
     const whatsappPlatform = this.platforms.find(p => p.id === 'whatsapp');
     if (whatsappPlatform) whatsappPlatform.loading = true;
     try {
+      // Ask the server which signup flow applies. A solutionId means this platform is
+      // set up as an Interakt tech partner, so we must use the Facebook JS SDK — only
+      // that path can pass extras.setup.solutionID and attach the WABA to the solution.
+      const init = await firstValueFrom(this.platformService.initiateWhatsAppConnection());
+      const cfg = init?.data?.embeddedSignup;
+
+      if (cfg?.solutionId) {
+        const res = await this.platformService.connectWhatsAppEmbeddedSignup(cfg);
+        this.loadPlatformConnections();
+        this.loadSubscriptionLimits();
+
+        if (res.success) {
+          this.notificationService.success(
+            'WhatsApp Connected',
+            `${res.data?.displayPhoneNumber || 'Your number'} is connected and ready to send.`
+          );
+        } else {
+          this.notificationService.error(
+            'WhatsApp Connection Failed',
+            res.error || 'Could not finish WhatsApp signup. Please try again.'
+          );
+        }
+        return;
+      }
+
       const result = await this.platformService.connectWhatsAppOAuth();
       this.loadPlatformConnections();
       this.loadSubscriptionLimits();
