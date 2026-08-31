@@ -14,6 +14,10 @@ import { finalize, takeUntil } from 'rxjs/operators';
 import { InboxOpsService } from '../../../core/services/inbox-ops.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { IOpsReviewDetail } from '../../../core/models/inbox-ops.model';
+import {
+  COMING_SOON_PLATFORM_LABEL,
+  isComingSoonPlatform
+} from '../../../core/constants/platform-availability.constants';
 
 @Component({
   selector: 'app-create-review-modal',
@@ -37,7 +41,7 @@ export class CreateReviewModalComponent implements OnChanges, OnDestroy {
   private destroy$ = new Subject<void>();
 
   // Form fields
-  platform: 'google' | 'facebook' | 'instagram' | 'website' = 'google';
+  platform: 'google' | 'facebook' | 'instagram' | 'website' = 'facebook';
   customerName = '';
   customerHandle = '';
   rating: number | null = null;
@@ -46,8 +50,10 @@ export class CreateReviewModalComponent implements OnChanges, OnDestroy {
 
   submitting = false;
 
+  readonly comingSoonLabel = COMING_SOON_PLATFORM_LABEL;
+
   readonly platforms = [
-    { value: 'google' as const,    label: 'Google',    icon: 'fab fa-google' },
+    { value: 'google' as const,    label: 'Google',    icon: 'fab fa-google',    comingSoon: true },
     { value: 'facebook' as const,  label: 'Facebook',  icon: 'fab fa-facebook-f' },
     { value: 'instagram' as const, label: 'Instagram', icon: 'fab fa-instagram' },
     { value: 'website' as const,   label: 'Website',   icon: 'fas fa-globe' }
@@ -69,7 +75,10 @@ export class CreateReviewModalComponent implements OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['prefillCustomerName']?.currentValue) this.customerName = this.prefillCustomerName!;
     if (changes['prefillCustomerHandle']?.currentValue) this.customerHandle = this.prefillCustomerHandle!;
-    if (changes['prefillPlatform']?.currentValue) this.platform = this.prefillPlatform!;
+    if (changes['prefillPlatform']?.currentValue) {
+      const next = this.prefillPlatform!;
+      this.platform = isComingSoonPlatform(next) ? 'facebook' : next;
+    }
     if (changes['prefillBody']?.currentValue) this.reviewBody = this.prefillBody!;
   }
 
@@ -94,6 +103,15 @@ export class CreateReviewModalComponent implements OnChanges, OnDestroy {
 
   get charCount(): number {
     return this.reviewBody.length;
+  }
+
+  isPlatformComingSoon(value: string): boolean {
+    return isComingSoonPlatform(value);
+  }
+
+  selectPlatform(value: 'google' | 'facebook' | 'instagram' | 'website'): void {
+    if (isComingSoonPlatform(value)) return;
+    this.platform = value;
   }
 
   submit(): void {

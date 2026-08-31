@@ -332,13 +332,17 @@
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Leave empty to handle all channels</p>
             <div class="flex flex-wrap gap-2 p-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800">
               <label *ngFor="let p of platformOptions"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg cursor-pointer text-xs font-medium transition border"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition border"
                 [class]="addSelectedPlatforms.has(p.value)
                   ? 'bg-rep-lime text-rep-black border-rep-lime'
                   : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
+                [class.opacity-50]="p.comingSoon"
+                [class.cursor-not-allowed]="p.comingSoon"
+                [class.cursor-pointer]="!p.comingSoon"
                 (click)="togglePlatform(addSelectedPlatforms, p.value)">
                 <i [class]="p.icon"></i>
                 {{ p.label }}
+                <span *ngIf="p.comingSoon" class="text-[10px] uppercase tracking-wide opacity-70">{{ comingSoonLabel }}</span>
               </label>
             </div>
           </div>
@@ -434,13 +438,17 @@
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Leave empty to handle all channels</p>
             <div class="flex flex-wrap gap-2 p-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800">
               <label *ngFor="let p of platformOptions"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg cursor-pointer text-xs font-medium transition border"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition border"
                 [class]="editSelectedPlatforms.has(p.value)
                   ? 'bg-rep-lime text-rep-black border-rep-lime'
                   : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600'"
+                [class.opacity-50]="p.comingSoon"
+                [class.cursor-not-allowed]="p.comingSoon"
+                [class.cursor-pointer]="!p.comingSoon"
                 (click)="togglePlatform(editSelectedPlatforms, p.value)">
                 <i [class]="p.icon"></i>
                 {{ p.label }}
+                <span *ngIf="p.comingSoon" class="text-[10px] uppercase tracking-wide opacity-70">{{ comingSoonLabel }}</span>
               </label>
             </div>
           </div>

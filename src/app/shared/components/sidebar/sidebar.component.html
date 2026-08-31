@@ -160,48 +160,32 @@
     </div>
   </nav>
 
-  <!-- Reppy AI status — pinned to bottom of sidebar -->
-  <div [ngClass]="{ 'lg:hidden': collapsed }" class="border-t border-gray-800/60 shrink-0 pb-1">
-    <app-inbox-automation-status
-      *ngIf="sidebarOrgId"
-      [orgId]="sidebarOrgId!">
-    </app-inbox-automation-status>
-  </div>
-
-  <!-- Theme Toggle -->
-  <div class="px-3 sm:px-4 pt-2 pb-3 border-t border-gray-800 shrink-0" [ngClass]="{ 'lg:px-2': collapsed }">
-    <div
-      class="flex items-center justify-center gap-2 p-1.5 bg-gray-900/60 rounded-lg"
-      [ngClass]="{ 'lg:flex-col': collapsed, 'lg:gap-1': collapsed }"
-    >
-      <button
-        type="button"
-        (click)="appearance.setMode('light')"
-        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-all duration-200 hover:text-gray-200"
-        [class.bg-rep-white]="!appearance.isDark()"
-        [class.text-rep-black]="!appearance.isDark()"
-        [class.shadow-sm]="!appearance.isDark()"
-        [class.text-gray-400]="appearance.isDark()"
-        [attr.title]="'Light theme'"
-        [attr.aria-label]="'Light theme'"
+  <!-- Plan + Reppy AI — compact summary (no expandable status panel) -->
+  <div
+    class="sidebar-plan-strip border-t border-gray-800/60 shrink-0 px-3 sm:px-4 py-3"
+    [ngClass]="{ 'lg:hidden': collapsed }"
+    aria-label="Plan and Reppy AI status"
+  >
+    <div class="sidebar-plan-strip__row">
+      <span class="sidebar-plan-strip__label">Plan</span>
+      <span class="sidebar-plan-strip__value">{{ planName }}</span>
+    </div>
+    <div class="sidebar-plan-strip__row">
+      <span class="sidebar-plan-strip__label">Reppy AI</span>
+      <span
+        class="sidebar-plan-strip__badge"
+        [class.sidebar-plan-strip__badge--enabled]="aiStatusTone === 'enabled'"
+        [class.sidebar-plan-strip__badge--disabled]="aiStatusTone === 'disabled'"
+        [class.sidebar-plan-strip__badge--unavailable]="aiStatusTone === 'unavailable'"
+        [class.sidebar-plan-strip__badge--loading]="aiStatusTone === 'loading'"
       >
-        <i class="fas fa-sun text-xs"></i>
-        <span class="max-lg:inline" [ngClass]="{ 'lg:hidden': collapsed }">Light</span>
-      </button>
-      <button
-        type="button"
-        (click)="appearance.setMode('dark')"
-        class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-all duration-200 hover:text-gray-200"
-        [class.bg-gray-700]="appearance.isDark()"
-        [class.text-rep-white]="appearance.isDark()"
-        [class.shadow-sm]="appearance.isDark()"
-        [class.text-gray-400]="!appearance.isDark()"
-        [attr.title]="'Dark theme'"
-        [attr.aria-label]="'Dark theme'"
-      >
-        <i class="fas fa-moon text-xs"></i>
-        <span class="max-lg:inline" [ngClass]="{ 'lg:hidden': collapsed }">Dark</span>
-      </button>
+        <span
+          *ngIf="aiStatusTone === 'enabled' || aiStatusTone === 'disabled'"
+          class="sidebar-plan-strip__dot"
+          aria-hidden="true"
+        ></span>
+        {{ aiStatusLabel }}
+      </span>
     </div>
   </div>
 </aside>

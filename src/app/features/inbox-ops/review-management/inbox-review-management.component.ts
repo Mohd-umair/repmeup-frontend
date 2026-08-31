@@ -68,7 +68,6 @@ export class InboxReviewManagementComponent implements OnInit, OnDestroy {
   ];
 
   readonly platformOptions = [
-    { value: 'google', label: 'Google' },
     { value: 'facebook', label: 'Facebook' }
   ];
 

@@ -152,6 +152,8 @@ const routes: Routes = [
       { path: 'settings/organization', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent), canActivate: [PermissionGuard], data: { permissions: ['organization.read'] } },
       { path: 'settings/notifications', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent), canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/auto-reply', redirectTo: '/app/automation/ai-replies', pathMatch: 'full' },
+      { path: 'settings/payment-gateways', loadComponent: () => import('./features/settings/components/payment-gateways/payment-gateways.component').then(m => m.PaymentGatewaysComponent), canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
+      { path: 'payments/analytics', loadComponent: () => import('./features/payments/analytics/payment-analytics.component').then(m => m.PaymentAnalyticsComponent), canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/brand-rules', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent), canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/compliance', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent), canActivate: [PermissionGuard], data: { permissions: ['settings.read'] } },
       { path: 'settings/accounts', loadComponent: () => import('./features/settings/settings.component').then(m => m.SettingsComponent), canActivate: [PermissionGuard], data: { permissions: ['billing.read'] } },

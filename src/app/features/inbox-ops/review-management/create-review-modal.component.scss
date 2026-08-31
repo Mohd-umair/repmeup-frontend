@@ -239,6 +239,21 @@
     background: rgba(245, 158, 11, 0.1);
     color: var(--text-primary);
   }
+
+  &--disabled,
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    filter: grayscale(0.35);
+  }
+}
+
+.crm-platform-soon {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
 }
 
 // ─────────────────────────────────────────────

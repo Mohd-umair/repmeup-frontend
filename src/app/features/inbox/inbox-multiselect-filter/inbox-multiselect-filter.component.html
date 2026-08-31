@@ -48,9 +48,14 @@
         *ngFor="let opt of options"
         type="button"
         (click)="toggleValue(opt.value, $event)"
-        [ngClass]="{ 'bg-rep-lime/15 dark:bg-rep-lime/10': isSelected(opt.value) }"
+        [disabled]="opt.disabled"
+        [attr.title]="opt.disabled ? (opt.disabledHint || 'Coming soon') : null"
+        [ngClass]="{
+          'bg-rep-lime/15 dark:bg-rep-lime/10': isSelected(opt.value),
+          'opacity-50 cursor-not-allowed': opt.disabled
+        }"
         class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-sm transition-colors duration-150
-          hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10 text-gray-700 dark:text-gray-200">
+          hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10 text-gray-700 dark:text-gray-200 disabled:hover:bg-transparent">
         <span
           class="w-4 h-4 rounded-[5px] border flex items-center justify-center flex-shrink-0 transition-colors"
           [class.bg-rep-lime]="isSelected(opt.value)"
@@ -63,6 +68,9 @@
         <span class="truncate"
               [ngClass]="isSelected(opt.value) ? 'font-semibold text-gray-900 dark:text-white' : ''">
           {{ opt.label }}
+        </span>
+        <span *ngIf="opt.disabled" class="ml-auto text-[10px] font-semibold uppercase tracking-wide text-gray-400 shrink-0">
+          {{ opt.disabledHint || 'Soon' }}
         </span>
       </button>
       <div *ngIf="options.length === 0" class="px-2.5 py-3 text-sm text-gray-400 dark:text-gray-500 text-center">No options</div>

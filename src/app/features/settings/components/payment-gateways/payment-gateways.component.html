@@ -1,0 +1,295 @@
+<!-- Payment Gateways Settings -->
+<div class="max-w-3xl mx-auto px-4 py-8">
+
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Payment Gateways</h1>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      Connect your organization's payment gateway to accept payments from customers directly in conversations.
+      RepMeUp never holds funds — your gateway handles settlement.
+    </p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex items-center justify-center py-16">
+    <div class="flex flex-col items-center gap-3">
+      <div class="w-8 h-8 border-2 border-rep-lime border-t-transparent rounded-full animate-spin"></div>
+      <span class="text-sm text-gray-500 dark:text-gray-400">Loading gateways…</span>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="!loading && error"
+    class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 flex items-start gap-3">
+    <i class="fas fa-exclamation-circle text-red-500 mt-0.5 flex-shrink-0"></i>
+    <div>
+      <p class="text-sm font-medium text-red-700 dark:text-red-400">{{ error }}</p>
+      <button (click)="load()"
+        class="mt-2 text-xs text-red-600 dark:text-red-400 underline hover:no-underline">Try again</button>
+    </div>
+  </div>
+
+  <!-- Sandbox notice -->
+  <div *ngIf="!loading && !error"
+    class="mb-6 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 flex items-start gap-3">
+    <i class="fas fa-flask text-amber-500 mt-0.5 flex-shrink-0"></i>
+    <div>
+      <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Test mode only</p>
+      <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+        Live merchant onboarding requires Razorpay Technology Partner approval.
+        Use test credentials to explore the integration now — no real payments are processed.
+      </p>
+    </div>
+  </div>
+
+  <!-- Provider cards -->
+  <div *ngIf="!loading && !error" class="space-y-4">
+    <div *ngFor="let provider of providers"
+      class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm transition-shadow hover:shadow-md">
+
+      <div class="flex items-start justify-between gap-4">
+        <!-- Provider info -->
+        <div class="flex items-center gap-4 min-w-0">
+          <!-- Logo placeholder / icon -->
+          <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-credit-card text-gray-500 dark:text-gray-400 text-lg"></i>
+          </div>
+          <div class="min-w-0">
+            <h3 class="font-semibold text-gray-900 dark:text-white text-base">
+              {{ getProviderMeta(provider.provider).label }}
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+              {{ getProviderMeta(provider.provider).description }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Action -->
+        <div class="flex-shrink-0">
+          <ng-container *ngIf="getIntegration(provider.provider) as integration; else connectBtn">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+              [ngClass]="statusBadgeClass('connected')">
+              <i class="fas fa-check-circle"></i> Connected
+            </span>
+          </ng-container>
+          <ng-template #connectBtn>
+            <button (click)="openConnectModal(provider)"
+              class="px-4 py-2 bg-rep-lime text-gray-900 font-semibold text-sm rounded-lg hover:bg-lime-400 transition-colors">
+              Connect
+            </button>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Connected integration detail -->
+      <ng-container *ngIf="getIntegration(provider.provider) as integration">
+        <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div class="flex flex-wrap items-center gap-3 text-xs">
+
+            <!-- Environment badge -->
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium"
+              [ngClass]="envBadgeClass(integration.environment)">
+              <i class="fas fa-flask"></i> {{ integration.environment | titlecase }}
+            </span>
+
+            <!-- Default badge -->
+            <span *ngIf="integration.isDefault"
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+              <i class="fas fa-star"></i> Default
+            </span>
+
+            <!-- Masked identifier -->
+            <span *ngIf="integration.safeMerchantIdentifier"
+              class="font-mono text-gray-500 dark:text-gray-400">
+              {{ integration.safeMerchantIdentifier }}
+            </span>
+
+            <!-- Health indicator -->
+            <span class="inline-flex items-center gap-1" [ngClass]="healthBadgeClass(integration.lastHealthCheckStatus)">
+              <i class="fas"
+                [ngClass]="integration.lastHealthCheckStatus === 'ok' ? 'fa-circle-check' : integration.lastHealthCheckStatus === 'error' ? 'fa-circle-exclamation' : 'fa-circle-question'"></i>
+              <span *ngIf="integration.lastHealthCheckStatus === 'ok'">Credentials valid</span>
+              <span *ngIf="integration.lastHealthCheckStatus === 'error'">Credential error</span>
+              <span *ngIf="!integration.lastHealthCheckStatus">Not checked</span>
+            </span>
+
+          </div>
+
+          <!-- Actions row -->
+          <div class="mt-3 flex items-center gap-2">
+            <button (click)="healthCheck(integration)"
+              [disabled]="isLoading(integration._id + '-health')"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors disabled:opacity-50">
+              <i class="fas fa-stethoscope" [ngClass]="{'animate-pulse': isLoading(integration._id + '-health')}"></i>
+              {{ isLoading(integration._id + '-health') ? 'Checking…' : 'Health check' }}
+            </button>
+
+            <button *ngIf="!integration.isDefault" (click)="setDefault(integration)"
+              [disabled]="isLoading(integration._id + '-default')"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors disabled:opacity-50">
+              <i class="fas fa-star" [ngClass]="{'animate-pulse': isLoading(integration._id + '-default')}"></i>
+              Set as default
+            </button>
+
+            <button (click)="disconnect(integration)"
+              [disabled]="isLoading(integration._id + '-disconnect')"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors disabled:opacity-50 ml-auto">
+              <i class="fas fa-unlink" [ngClass]="{'animate-pulse': isLoading(integration._id + '-disconnect')}"></i>
+              Disconnect
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Capabilities chips -->
+      <div class="mt-3 flex flex-wrap gap-2">
+        <span *ngIf="provider.capabilities.paymentLinks"
+          class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+          <i class="fas fa-link text-rep-lime"></i> Payment links
+        </span>
+        <span *ngIf="provider.capabilities.refunds"
+          class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+          <i class="fas fa-rotate-left text-rep-lime"></i> Refunds
+        </span>
+        <span *ngIf="provider.capabilities.partialRefunds"
+          class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+          <i class="fas fa-split text-rep-lime"></i> Partial refunds
+        </span>
+        <span *ngIf="provider.capabilities.webhooks"
+          class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+          <i class="fas fa-bolt text-rep-lime"></i> Webhooks
+        </span>
+      </div>
+
+    </div><!-- /provider card -->
+  </div>
+
+</div>
+
+<!-- ── Connect Modal ─────────────────────────────────────────────────────────── -->
+<div *ngIf="connectModal.open"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+  (click)="$event.target === $event.currentTarget && closeConnectModal()">
+
+  <div class="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
+    (click)="$event.stopPropagation()">
+
+    <!-- Modal header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+      <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+        Connect {{ getProviderMeta(connectModal.provider!.provider).label }}
+      </h2>
+      <button (click)="closeConnectModal()"
+        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Webhook URL success state -->
+    <div *ngIf="connectModal.webhookUrl" class="px-6 py-5 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+        </div>
+        <div>
+          <p class="font-semibold text-gray-900 dark:text-white text-sm">Gateway connected!</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Copy your webhook URL and paste it in your provider dashboard.</p>
+        </div>
+      </div>
+
+      <div class="rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3">
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Webhook URL</p>
+        <div class="flex items-center gap-2">
+          <code class="text-xs text-gray-700 dark:text-gray-300 break-all flex-1">{{ connectModal.webhookUrl }}</code>
+          <button (click)="copyWebhookUrl()"
+            class="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors">
+            <i class="fas" [ngClass]="connectModal.webhookCopied ? 'fa-check text-green-500' : 'fa-copy'"></i>
+          </button>
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-500 dark:text-gray-400">
+        In your {{ getProviderMeta(connectModal.provider!.provider).label }} dashboard → Webhooks → Add new → paste the URL above.
+        Enable events: <strong>payment.captured</strong>, <strong>payment.failed</strong>, <strong>payment_link.paid</strong>.
+      </p>
+
+      <button (click)="closeConnectModal()"
+        class="w-full py-2.5 bg-rep-lime text-gray-900 font-semibold text-sm rounded-xl hover:bg-lime-400 transition-colors">
+        Done
+      </button>
+    </div>
+
+    <!-- Connect form -->
+    <form *ngIf="!connectModal.webhookUrl && connectModal.form" [formGroup]="connectModal.form"
+      (ngSubmit)="submitConnect()" class="px-6 py-5 space-y-4">
+
+      <!-- Environment toggle -->
+      <div>
+        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Environment</label>
+        <div class="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <button type="button" (click)="connectModal.environment = 'test'; onEnvironmentChange()"
+            class="flex-1 py-2 text-sm font-medium transition-colors"
+            [ngClass]="connectModal.environment === 'test'
+              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'">
+            <i class="fas fa-flask mr-1.5"></i> Test
+          </button>
+          <button type="button" (click)="connectModal.environment = 'live'; onEnvironmentChange()"
+            disabled
+            class="flex-1 py-2 text-sm font-medium text-gray-400 dark:text-gray-600 cursor-not-allowed"
+            title="Live mode available after Razorpay Technology Partner approval">
+            <i class="fas fa-lock mr-1.5"></i> Live (coming soon)
+          </button>
+        </div>
+      </div>
+
+      <!-- Display name -->
+      <div>
+        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Display name</label>
+        <input type="text" [(ngModel)]="connectModal.displayName" [ngModelOptions]="{standalone: true}"
+          class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rep-lime/50"
+          placeholder="e.g. My Razorpay Account" />
+      </div>
+
+      <!-- Dynamic credential fields -->
+      <div *ngFor="let field of connectModal.schema" class="space-y-1">
+        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300">
+          {{ field.label }}
+          <span class="text-red-500 ml-0.5">*</span>
+        </label>
+        <input [type]="field.secret ? 'password' : 'text'"
+          [formControlName]="field.key"
+          [placeholder]="field.hint || ''"
+          class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:ring-2 focus:ring-rep-lime/50 transition-colors"
+          [ngClass]="fieldError(field.key)
+            ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10 text-red-900 dark:text-red-400'
+            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white'" />
+        <p *ngIf="fieldError(field.key)" class="text-xs text-red-500">{{ field.label }} is required</p>
+        <p *ngIf="field.hint && !fieldError(field.key)" class="text-xs text-gray-400 dark:text-gray-500">{{ field.hint }}</p>
+      </div>
+
+      <!-- Docs link -->
+      <a *ngIf="getProviderMeta(connectModal.provider!.provider).docs"
+        [href]="getProviderMeta(connectModal.provider!.provider).docs" target="_blank" rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 text-xs text-rep-lime hover:underline">
+        <i class="fas fa-external-link-alt"></i>
+        Where to find API keys →
+      </a>
+
+      <!-- Submit -->
+      <div class="flex gap-3 pt-2">
+        <button type="button" (click)="closeConnectModal()"
+          class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="connectModal.submitting"
+          class="flex-1 py-2.5 bg-rep-lime text-gray-900 font-semibold text-sm rounded-xl hover:bg-lime-400 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <span *ngIf="connectModal.submitting" class="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></span>
+          {{ connectModal.submitting ? 'Connecting…' : 'Connect' }}
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>

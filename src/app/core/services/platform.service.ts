@@ -3,6 +3,11 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
 import { NotificationService } from './notification.service';
 import { FacebookSdkService } from './facebook-sdk.service';
+import {
+  COMING_SOON_PLATFORM_LABEL,
+  COMING_SOON_PLATFORM_MESSAGE,
+  isComingSoonPlatform
+} from '../constants/platform-availability.constants';
 
 /**
  * Posted from the OAuth popup (/whatsapp-oauth-callback) to the opener tab.
@@ -151,6 +156,10 @@ export class PlatformService {
    * Redirects user to Google authorization page
    */
   connectGoogle(type: 'reviews' | 'youtube' = 'reviews'): void {
+    if (type === 'reviews' && isComingSoonPlatform('google')) {
+      this.notificationService.info(COMING_SOON_PLATFORM_LABEL, COMING_SOON_PLATFORM_MESSAGE);
+      return;
+    }
     this.getGoogleAuthorizationUrl(type).subscribe({
       next: (response) => {
         if (response.success && response.data.authorizationUrl) {
@@ -263,6 +272,10 @@ export class PlatformService {
    * Initiate LinkedIn OAuth flow
    */
   connectLinkedIn(): void {
+    if (isComingSoonPlatform('linkedin')) {
+      this.notificationService.info(COMING_SOON_PLATFORM_LABEL, COMING_SOON_PLATFORM_MESSAGE);
+      return;
+    }
     this.apiService.get<{ success: boolean; authUrl: string }>('/auth/linkedin').subscribe({
       next: (response) => {
         if (response.success && response.authUrl) {

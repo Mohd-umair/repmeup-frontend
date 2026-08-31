@@ -40,12 +40,15 @@
               *ngFor="let p of platforms"
               type="button"
               (click)="onPlatformFilter(p)"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+              [disabled]="isPlatformComingSoon(p)"
+              [attr.title]="platformFilterTitle(p)"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
               [ngClass]="selectedPlatform === p
                 ? 'bg-rep-lime text-rep-black border-rep-lime shadow-sm'
                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-rep-lime/60'">
               <i class="fab text-sm" [ngClass]="getPlatformIcon(p)"></i>
               <span class="capitalize">{{ p }}</span>
+              <span *ngIf="isPlatformComingSoon(p)" class="text-[10px] uppercase tracking-wide opacity-70">Soon</span>
             </button>
           </div>
         </div>

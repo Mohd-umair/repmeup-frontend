@@ -15,15 +15,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
-import { Subject, merge, combineLatest, Subscription, timer } from 'rxjs';
-import { distinctUntilChanged, filter, map, take, takeUntil } from 'rxjs/operators';
+import { Subject, merge, combineLatest, Subscription, timer, of } from 'rxjs';
+import { distinctUntilChanged, filter, map, switchMap, take, takeUntil, catchError } from 'rxjs/operators';
 import { NotificationDataService } from '../../../core/services/notification-data.service';
 import { MenuService, IMenuItem } from '../../../core/services/menu.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { PermissionService } from '../../../core/services/permission.service';
-import { AppearanceService } from '../../../core/services/appearance.service';
+import { EntitlementsStore, FEATURE_KEY } from '../../../core/services/entitlements.store';
+import { OrganizationService } from '../../../core/services/organization.service';
 import { IUser } from '../../../core/models/user.model';
-import { InboxAutomationStatusComponent } from '../../../features/inbox/inbox-automation-status/inbox-automation-status.component';
 
 /** View model only — single copy kept on the component (no parallel raw/filtered trees). */
 interface MenuItem {
@@ -49,16 +49,33 @@ interface SidebarSection {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, InboxAutomationStatusComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
-  get sidebarOrgId(): string | null {
-    const org = this.currentUser?.organization;
-    if (!org) return null;
-    return typeof org === 'string' ? org : ((org as any)._id ?? null);
+  /** Reppy auto-reply runtime toggle from org settings (null = loading). */
+  aiReplyEnabled: boolean | null = null;
+
+  get planName(): string {
+    return this.entitlements.planSummary()?.planName?.trim() || '—';
+  }
+
+  get aiIncludedOnPlan(): boolean {
+    return this.entitlements.can(FEATURE_KEY.AUTO_REPLY_ENABLED);
+  }
+
+  get aiStatusLabel(): string {
+    if (!this.aiIncludedOnPlan) return 'Not on plan';
+    if (this.aiReplyEnabled === null) return '…';
+    return this.aiReplyEnabled ? 'Enabled' : 'Disabled';
+  }
+
+  get aiStatusTone(): 'enabled' | 'disabled' | 'unavailable' | 'loading' {
+    if (!this.aiIncludedOnPlan) return 'unavailable';
+    if (this.aiReplyEnabled === null) return 'loading';
+    return this.aiReplyEnabled ? 'enabled' : 'disabled';
   }
 
   /** Desktop (lg+): narrow icon rail — controlled by main layout */
@@ -114,7 +131,8 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
     private menuService: MenuService,
     private authService: AuthService,
     private permissionService: PermissionService,
-    public appearance: AppearanceService,
+    readonly entitlements: EntitlementsStore,
+    private orgService: OrganizationService,
     private cdr: ChangeDetectorRef,
     private elementRef: ElementRef<HTMLElement>,
     private ngZone: NgZone
@@ -134,6 +152,33 @@ export class SidebarComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(takeUntil(this.destroy$))
       .subscribe((user) => {
         this.currentUser = user;
+        this.cdr.markForCheck();
+      });
+
+    this.authService.currentUser$
+      .pipe(
+        map((user) => {
+          const org = user?.organization;
+          if (!org) return null;
+          return typeof org === 'string' ? org : ((org as any)._id ?? null);
+        }),
+        distinctUntilChanged(),
+        switchMap((orgId) => {
+          if (!orgId) {
+            this.aiReplyEnabled = null;
+            return of(null);
+          }
+          this.aiReplyEnabled = null;
+          return this.orgService.getOrganization(orgId).pipe(
+            map((res) => !!res.data?.autoReplySettings?.enabled),
+            catchError(() => of(false))
+          );
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((enabled) => {
+        if (enabled === null) return;
+        this.aiReplyEnabled = enabled;
         this.cdr.markForCheck();
       });
 

@@ -2,6 +2,10 @@ import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThemeService } from '../../../core/services/theme.service';
 import { IInboxFilters, Platform, InteractionType, Sentiment, InteractionStatus, ILabel } from '../../../core/models/interaction.model';
+import {
+  COMING_SOON_PLATFORM_LABEL,
+  isComingSoonPlatform
+} from '../../../core/constants/platform-availability.constants';
 
 /**
  * Inbox Filters Component - Single Responsibility Principle
@@ -38,8 +42,8 @@ export class InboxFiltersComponent {
     { value: Platform.INSTAGRAM, label: 'Instagram', icon: 'fab fa-instagram', color: 'text-pink-600', bgColor: '#E4405F', gradientFrom: '#833AB4', gradientTo: '#FD1D1D' },
     { value: Platform.FACEBOOK, label: 'Facebook', icon: 'fab fa-facebook-f', color: 'text-blue-600', bgColor: '#1877F2', gradientFrom: '#1877F2', gradientTo: '#0C63D4' },
     { value: Platform.YOUTUBE, label: 'YouTube', icon: 'fab fa-youtube', color: 'text-red-600', bgColor: '#FF0000', gradientFrom: '#FF0000', gradientTo: '#CC0000' },
-    { value: Platform.GOOGLE, label: 'Google', icon: 'fab fa-google', color: 'text-blue-500', bgColor: '#4285F4', gradientFrom: '#4285F4', gradientTo: '#34A853' },
-    { value: Platform.LINKEDIN, label: 'LinkedIn', icon: 'fab fa-linkedin', color: 'text-blue-700', bgColor: '#0A66C2', gradientFrom: '#0A66C2', gradientTo: '#004182' },
+    { value: Platform.GOOGLE, label: 'Google', icon: 'fab fa-google', color: 'text-blue-500', bgColor: '#4285F4', gradientFrom: '#4285F4', gradientTo: '#34A853', comingSoon: true },
+    { value: Platform.LINKEDIN, label: 'LinkedIn', icon: 'fab fa-linkedin', color: 'text-blue-700', bgColor: '#0A66C2', gradientFrom: '#0A66C2', gradientTo: '#004182', comingSoon: true },
     { value: Platform.WHATSAPP, label: 'WhatsApp', icon: 'fab fa-whatsapp', color: 'text-green-500', bgColor: '#25D366', gradientFrom: '#25D366', gradientTo: '#128C7E' }
     // { value: Platform.EMAIL, ... } — re-enable when email integration is turned on in Settings
   ];
@@ -67,12 +71,23 @@ export class InboxFiltersComponent {
   ];
 
   toggleFilter(filterType: keyof IInboxFilters, value: any): void {
+    if (filterType === 'platform' && isComingSoonPlatform(value)) {
+      return;
+    }
     if (this.filters[filterType] === value) {
       delete this.filters[filterType];
     } else {
       this.filters[filterType] = value;
     }
     this.emitFilters();
+  }
+
+  isPlatformComingSoon(platform: { value: Platform; comingSoon?: boolean }): boolean {
+    return !!platform.comingSoon || isComingSoonPlatform(platform.value);
+  }
+
+  platformFilterTitle(platform: { label: string; comingSoon?: boolean; value: Platform }): string {
+    return this.isPlatformComingSoon(platform) ? `${platform.label} — ${COMING_SOON_PLATFORM_LABEL}` : platform.label;
   }
 
   isFilterActive(filterType: keyof IInboxFilters, value: any): boolean {

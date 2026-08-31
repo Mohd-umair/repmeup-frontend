@@ -15,6 +15,12 @@ import { PostEditorComponent, PostEditorOutput } from '../post-editor/post-edito
 import { Media } from '../../core/models/media.model';
 import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
 import { validateScheduleDateTimeStrings } from '../../shared/utils/schedule-validation';
+import {
+  COMING_SOON_PLATFORM_IDS,
+  COMING_SOON_PLATFORM_LABEL,
+  COMING_SOON_PLATFORM_MESSAGE,
+  isComingSoonPlatform
+} from '../../core/constants/platform-availability.constants';
 
 export interface EventTemplateItem {
   _id: string;
@@ -57,6 +63,7 @@ export interface PlatformOption {
   id: string;
   name: string;
   icon: string;
+  comingSoon?: boolean;
 }
 
 export interface DesignDna {
@@ -194,11 +201,11 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
 
   /** All possible post format options — filtered dynamically by selected platforms */
   private readonly allPostFormatOptions = [
-    { id: 'post',  label: 'Post',  icon: 'fa-image',      platforms: ['instagram','facebook','linkedin','youtube'] },
+    { id: 'post',  label: 'Post',  icon: 'fa-image',      platforms: ['instagram','facebook','youtube'] },
     { id: 'story', label: 'Story', icon: 'fa-circle-dot', platforms: ['instagram','facebook'] },
     { id: 'reel',  label: 'Reel',  icon: 'fa-film',       platforms: ['instagram','facebook'] },
     /** Long-form "Video" is for IG/FB/LinkedIn only — YouTube in this studio is Shorts-only */
-    { id: 'video', label: 'Video', icon: 'fa-video',      platforms: ['instagram','facebook','linkedin'] },
+    { id: 'video', label: 'Video', icon: 'fa-video',      platforms: ['instagram','facebook'] },
     { id: 'short', label: 'Short', icon: 'fa-bolt',       platforms: ['youtube'] },
   ];
 
@@ -460,19 +467,34 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
           if (res.success && res.data) {
             const nameMap: Record<string, string> = {
               instagram: 'Instagram', facebook: 'Facebook',
-              linkedin: 'LinkedIn', youtube: 'YouTube'
+              linkedin: 'LinkedIn', youtube: 'YouTube', google: 'Google'
             };
             const iconMap: Record<string, string> = {
               instagram: 'fab fa-instagram', facebook: 'fab fa-facebook',
-              linkedin: 'fab fa-linkedin',   youtube: 'fab fa-youtube'
+              linkedin: 'fab fa-linkedin',   youtube: 'fab fa-youtube',
+              google: 'fab fa-google'
             };
-            // 'google' is excluded — not a social post platform
-            const excluded = new Set(['google', 'whatsapp']);
+            const excluded = new Set(['whatsapp']);
             const seen = new Map<string, PlatformOption>();
             for (const c of res.data.filter((c: any) => c.status === 'connected')) {
               const id = c.platform?.toLowerCase();
               if (id && !excluded.has(id) && !seen.has(id)) {
-                seen.set(id, { id, name: nameMap[id] || c.platform, icon: iconMap[id] || 'fas fa-share-alt' });
+                seen.set(id, {
+                  id,
+                  name: nameMap[id] || c.platform,
+                  icon: iconMap[id] || 'fas fa-share-alt',
+                  comingSoon: isComingSoonPlatform(id)
+                });
+              }
+            }
+            for (const id of COMING_SOON_PLATFORM_IDS) {
+              if (!seen.has(id)) {
+                seen.set(id, {
+                  id,
+                  name: nameMap[id] || id,
+                  icon: iconMap[id] || 'fas fa-share-alt',
+                  comingSoon: true
+                });
               }
             }
             this.platforms = Array.from(seen.values());
@@ -617,6 +639,11 @@ export class ContentStudioComponent implements OnInit, OnDestroy {
   }
 
   togglePlatform(id: string): void {
+    const platform = this.platforms.find(p => p.id === id);
+    if (platform?.comingSoon || isComingSoonPlatform(id)) {
+      this.notify.info(COMING_SOON_PLATFORM_LABEL, `${platform?.name || id} — ${COMING_SOON_PLATFORM_MESSAGE}`);
+      return;
+    }
     const cap = this.entitlements.limit(FEATURE_KEY.POSTS_PLATFORMS_MAX);
     const isUnlimited = cap === undefined || cap === -1;
 

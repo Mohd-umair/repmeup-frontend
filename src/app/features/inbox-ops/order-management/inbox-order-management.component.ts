@@ -22,6 +22,8 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
 import { CreateOrderModalComponent } from './create-order-modal.component';
 import { formatInrCompact } from '../../../core/utils/currency-format';
 
+import { RequestPaymentModalComponent, IPaymentRequestContext } from './request-payment/request-payment-modal.component';
+
 @Component({
   selector: 'app-inbox-order-management',
   standalone: true,
@@ -34,7 +36,8 @@ import { formatInrCompact } from '../../../core/utils/currency-format';
     OpsCustomerCellComponent,
     OpsDetailDrawerComponent,
     PaginationComponent,
-    CreateOrderModalComponent
+    CreateOrderModalComponent,
+    RequestPaymentModalComponent
   ],
   templateUrl: './inbox-order-management.component.html'
 })
@@ -59,6 +62,10 @@ export class InboxOrderManagementComponent implements OnInit, OnDestroy {
   drawerOpen = false;
   detail: IOpsOrderDetail | null = null;
   createModalOpen = false;
+
+  // Payment request modal
+  paymentModalOpen = false;
+  paymentContext: IPaymentRequestContext | null = null;
 
   // Action modals for status transitions that need extra input.
   actionModal: 'dispatch' | 'cancel' | 'return' | 'refund' | 'shipping' | null = null;
@@ -197,6 +204,34 @@ export class InboxOrderManagementComponent implements OnInit, OnDestroy {
   closeDrawer(): void {
     this.drawerOpen = false;
     this.detail = null;
+  }
+
+  openPaymentModal(): void {
+    if (!this.detail) return;
+    const totalPaise = Math.round((this.detail.totalAmount || 0) * 100);
+    this.paymentContext = {
+      orderId: this.detail.id,
+      orderRef: this.detail.displayRef || this.detail.id,
+      totalAmount: totalPaise,
+      currency: this.detail.currency || 'INR',
+      contactName: this.detail.customerName || undefined,
+      interactionId: this.detail.sourceInteractionId || undefined,
+      channel: this.detail.channel || 'manual'
+    };
+    this.paymentModalOpen = true;
+  }
+
+  closePaymentModal(): void {
+    this.paymentModalOpen = false;
+    this.paymentContext = null;
+  }
+
+  onPaymentCreated(payment: any): void {
+    this.notify.success(
+      'Payment link created',
+      `Link: ${payment.shortUrl || payment.paymentUrl}`
+    );
+    this.loadList();
   }
 
   viewChat(): void {

@@ -1,0 +1,28 @@
+/* Payment Gateways Settings — light/dark mode styles */
+:host {
+  display: block;
+}
+
+/* Custom rep-lime color variable (matches existing Tailwind config) */
+.bg-rep-lime { background-color: var(--color-rep-lime, #c8f135); }
+.text-rep-lime { color: var(--color-rep-lime, #c8f135); }
+.border-rep-lime { border-color: var(--color-rep-lime, #c8f135); }
+
+/* Ensure modal overlay covers everything */
+.fixed.inset-0 {
+  animation: fadeIn 0.15s ease-out;
+}
+
+.rounded-2xl {
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}

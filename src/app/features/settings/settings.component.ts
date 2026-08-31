@@ -15,6 +15,11 @@ import { SocialAccountsService, ISocialAccount } from '../../core/services/socia
 import { PermissionService } from '../../core/services/permission.service';
 import { UserService, IAvailableAgent } from '../../core/services/user.service';
 import { IUser } from '../../core/models/user.model';
+import {
+  COMING_SOON_PLATFORM_LABEL,
+  COMING_SOON_PLATFORM_MESSAGE,
+  isComingSoonPlatform
+} from '../../core/constants/platform-availability.constants';
 import { AiChatBubbleIconComponent } from '../../shared/components/ai-chat-bubble-icon/ai-chat-bubble-icon.component';
 import { ConnectedAccountsListComponent } from '../../shared/components/connected-accounts-list/connected-accounts-list.component';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
@@ -49,6 +54,7 @@ interface Platform {
   dataPoints?: number;
   connectionId?: string; // Store connection ID for disconnect/sync
   loading?: boolean; // Loading state for connect/disconnect
+  comingSoon?: boolean;
 }
 
 interface SettingsNavTab {
@@ -72,6 +78,8 @@ interface SettingsNavTab {
 export class SettingsComponent implements OnInit, OnDestroy {
   private readonly entitlements = inject(EntitlementsStore);
   readonly FEATURE_KEY = FEATURE_KEY;
+  readonly comingSoonLabel = COMING_SOON_PLATFORM_LABEL;
+  readonly isComingSoonPlatform = isComingSoonPlatform;
   /** Toggle on to show Email inbox (Gmail / Outlook / IMAP) in Settings and related UI. */
   emailIntegrationEnabled = false;
 
@@ -188,28 +196,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
       loading: false
     },
     {
-      id: 'google',
-      name: 'Google Business',
-      icon: 'fab fa-google',
-      brandColor: '#4285F4',
-      gradientFrom: '#4285F4',
-      gradientTo: '#34A853',
-      description: 'Manage Google Business Profile reviews and Q&A',
-      connected: false,
-      loading: false
-    },
-    {
-      id: 'linkedin',
-      name: 'Twitter (X)',
-      icon: 'fab fa-twitter',
-      brandColor: '#1DA1F2',
-      gradientFrom: '#1DA1F2',
-      gradientTo: '#0C85D0',
-      description: 'Monitor mentions, replies, and direct messages',
-      connected: false,
-      loading: false
-    },
-    {
       id: 'whatsapp',
       name: 'WhatsApp Business',
       icon: 'fab fa-whatsapp',
@@ -219,6 +205,30 @@ export class SettingsComponent implements OnInit, OnDestroy {
       description: 'Connect WhatsApp Business API to manage customer messages',
       connected: false,
       loading: false
+    },
+    {
+      id: 'google',
+      name: 'Google Business',
+      icon: 'fab fa-google',
+      brandColor: '#4285F4',
+      gradientFrom: '#4285F4',
+      gradientTo: '#34A853',
+      description: 'Manage Google Business Profile reviews and Q&A',
+      connected: false,
+      loading: false,
+      comingSoon: true
+    },
+    {
+      id: 'linkedin',
+      name: 'LinkedIn',
+      icon: 'fab fa-linkedin',
+      brandColor: '#0A66C2',
+      gradientFrom: '#0A66C2',
+      gradientTo: '#004182',
+      description: 'Manage LinkedIn company page posts and comments',
+      connected: false,
+      loading: false,
+      comingSoon: true
     }
   ];
 
@@ -753,6 +763,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (platform.comingSoon || isComingSoonPlatform(platform.id)) {
+      this.notificationService.info('Coming Soon', `${platform.name} — ${COMING_SOON_PLATFORM_MESSAGE}`);
+      return;
+    }
+
     console.log('connectPlatform called for:', platform.id, 'Connected:', platform.connected, 'Loading:', platform.loading);
 
     if (platform.connected) {
@@ -1262,6 +1277,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
    * Connect an available account
    */
   connectAvailableAccount(account: ISocialAccount): void {
+    if (isComingSoonPlatform(account.platform)) {
+      this.notificationService.info('Coming Soon', `${account.platformUsername || account.platform} — ${COMING_SOON_PLATFORM_MESSAGE}`);
+      return;
+    }
     if (!this.canConnectMoreAccounts()) {
       const maxAccounts =
         this.entitlements.limit(FEATURE_KEY.ACCOUNTS_MAX) ??

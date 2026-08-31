@@ -149,11 +149,20 @@
               <div class="flex items-center gap-2">
                 <i [class]="getPlatformDef(p.key).icon + ' text-sm ' + getPlatformDef(p.key).color"></i>
                 <span class="text-sm font-bold" style="color: var(--text-primary);">{{ getPlatformDef(p.key).label }}</span>
+                <span *ngIf="isPlatformComingSoon(p.key)"
+                      class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
+                      style="background-color: var(--surface-primary); color: var(--text-muted);">
+                  {{ comingSoonLabel }}
+                </span>
               </div>
               <app-automation-switch [(ngModel)]="p.active" [name]="'pActive'+i"
+                                     [disabled]="isPlatformComingSoon(p.key)"
                                      [ariaLabel]="'Enable ' + getPlatformDef(p.key).label"></app-automation-switch>
             </div>
-            <input *ngIf="p.active" type="url" [(ngModel)]="p.url" [name]="'pUrl'+i"
+            <p *ngIf="isPlatformComingSoon(p.key)" class="text-xs mb-2" style="color: var(--text-muted);">
+              Google Reviews integration is coming soon and cannot be configured yet.
+            </p>
+            <input *ngIf="p.active && !isPlatformComingSoon(p.key)" type="url" [(ngModel)]="p.url" [name]="'pUrl'+i"
                    class="w-full px-3 py-1.5 rounded-lg border text-sm"
                    style="background-color: var(--card-bg); border-color: var(--card-border); color: var(--text-primary);"
                    placeholder="https://…/review">

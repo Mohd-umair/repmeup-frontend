@@ -13,9 +13,13 @@ import { NotificationService } from '../../../core/services/notification.service
 import { AutomationPageShellComponent } from '../shared/automation-page-shell.component';
 import { ALL_CHANNELS } from '../shared/automation-channel-toggle.component';
 import { AutomationSwitchComponent } from '../shared/automation-switch.component';
+import {
+  COMING_SOON_PLATFORM_LABEL,
+  isComingSoonPlatform
+} from '../../../core/constants/platform-availability.constants';
 
 const PLATFORM_DEFS = [
-  { key: 'google', label: 'Google Reviews', icon: 'fab fa-google', color: 'text-red-500' },
+  { key: 'google', label: 'Google Reviews', icon: 'fab fa-google', color: 'text-red-500', comingSoon: true },
   { key: 'facebook', label: 'Facebook', icon: 'fab fa-facebook', color: 'text-blue-600' },
   { key: 'tripadvisor', label: 'TripAdvisor', icon: 'fas fa-plane', color: 'text-emerald-600' },
   { key: 'custom', label: 'Custom URL', icon: 'fas fa-link', color: 'text-purple-500' }
@@ -30,6 +34,8 @@ const PLATFORM_DEFS = [
 })
 export class ReviewCollectionComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+
+  readonly comingSoonLabel = COMING_SOON_PLATFORM_LABEL;
 
   loading = true;
   saving = false;
@@ -71,7 +77,9 @@ export class ReviewCollectionComponent implements OnInit, OnDestroy {
           this.settings = {
             ...this.settings,
             ...r.data,
-            platforms: this.normalizePlatformsFromApi(r.data.platforms)
+            platforms: this.normalizePlatformsFromApi(r.data.platforms).map(p =>
+              this.isPlatformComingSoon(p.key) ? { ...p, active: false } : p
+            )
           };
         }
       });
@@ -109,6 +117,10 @@ export class ReviewCollectionComponent implements OnInit, OnDestroy {
 
   getPlatformDef(key: string) {
     return PLATFORM_DEFS.find(p => p.key === key) ?? PLATFORM_DEFS[0];
+  }
+
+  isPlatformComingSoon(key: string): boolean {
+    return isComingSoonPlatform(key) || !!this.getPlatformDef(key)?.comingSoon;
   }
 
   get previewMessage(): string {

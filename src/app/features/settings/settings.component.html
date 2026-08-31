@@ -233,41 +233,61 @@
             <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">YouTube</span>
           </button>
 
-          <!-- Google Business -->
-          <button 
-            (click)="connectPlatform(platforms[3])"
-            [disabled]="!canAddConnection || loading || platforms[3]?.connected"
+          <!-- WhatsApp — OAuth Embedded Signup -->
+          <button
+            (click)="connectWhatsAppOAuth()"
+            [disabled]="!canAddConnection || platforms[3].loading"
             class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            [title]="platforms[3]?.connected ? 'Already connected' : (canAddConnection ? 'Connect Google Business' : connectionLimitMessage)">
-            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center mb-2">
+            [title]="canAddConnection ? 'Connect WhatsApp Business' : connectionLimitMessage">
+            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-2">
+              <i *ngIf="!platforms[3].loading" class="fab fa-whatsapp text-white text-xl"></i>
+              <i *ngIf="platforms[3].loading" class="fas fa-spinner fa-spin text-white text-xl"></i>
+            </div>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">WhatsApp</span>
+          </button>
+
+          <!-- Google Business -->
+          <button
+            (click)="connectPlatform(platforms[4])"
+            [disabled]="platforms[4]?.comingSoon || !canAddConnection || loading || platforms[4]?.connected"
+            class="relative flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            [ngClass]="{
+              'hover:border-green-500': !platforms[4]?.comingSoon,
+              'hover:bg-green-50': !platforms[4]?.comingSoon,
+              'dark:hover:bg-green-950/30': !platforms[4]?.comingSoon
+            }"
+            [title]="platforms[4]?.comingSoon ? comingSoonLabel : (platforms[4]?.connected ? 'Already connected' : (canAddConnection ? 'Connect Google Business' : connectionLimitMessage))">
+            <span *ngIf="platforms[4]?.comingSoon"
+                  class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+              {{ comingSoonLabel }}
+            </span>
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center mb-2"
+                 [class.grayscale]="platforms[4]?.comingSoon">
               <i class="fab fa-google text-white text-xl"></i>
             </div>
             <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">Google</span>
           </button>
 
           <!-- LinkedIn -->
-          <button 
-            (click)="connectPlatform(platforms[4])"
-            [disabled]="!canAddConnection || loading || platforms[4].connected"
-            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            [title]="platforms[4].connected ? 'Already connected' : (canAddConnection ? 'Connect LinkedIn' : connectionLimitMessage)">
-            <div class="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mb-2">
+          <button
+            (click)="connectPlatform(platforms[5])"
+            [disabled]="platforms[5]?.comingSoon || !canAddConnection || loading || platforms[5]?.connected"
+            class="relative flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            [ngClass]="{
+              'hover:border-blue-700': !platforms[5]?.comingSoon,
+              'hover:bg-blue-50': !platforms[5]?.comingSoon,
+              'dark:hover:bg-blue-950/30': !platforms[5]?.comingSoon
+            }"
+            [title]="platforms[5]?.comingSoon ? comingSoonLabel : (platforms[5]?.connected ? 'Already connected' : (canAddConnection ? 'Connect LinkedIn' : connectionLimitMessage))">
+            <span *ngIf="platforms[5]?.comingSoon"
+                  class="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+              {{ comingSoonLabel }}
+            </span>
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-700 to-blue-800 rounded-xl flex items-center justify-center mb-2"
+                 [class.grayscale]="platforms[5]?.comingSoon">
               <i class="fab fa-linkedin text-white text-xl"></i>
             </div>
             <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">LinkedIn</span>
-          </button>
-
-          <!-- WhatsApp — OAuth Embedded Signup -->
-          <button
-            (click)="connectWhatsAppOAuth()"
-            [disabled]="!canAddConnection || platforms[5].loading"
-            class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            [title]="canAddConnection ? 'Connect WhatsApp Business' : connectionLimitMessage">
-            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-2">
-              <i *ngIf="!platforms[5].loading" class="fab fa-whatsapp text-white text-xl"></i>
-              <i *ngIf="platforms[5].loading" class="fas fa-spinner fa-spin text-white text-xl"></i>
-            </div>
-            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">WhatsApp</span>
           </button>
 
           <!-- Email (hidden until emailIntegrationEnabled) -->
@@ -321,10 +341,10 @@
             
             <button 
               (click)="connectAvailableAccount(account)"
-              [disabled]="!canConnectMoreAccounts()"
+              [disabled]="!canConnectMoreAccounts() || isComingSoonPlatform(account.platform)"
               class="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               <i class="fas fa-circle-check mr-2"></i>
-              Connect Now
+              {{ isComingSoonPlatform(account.platform) ? comingSoonLabel : 'Connect Now' }}
             </button>
           </div>
         </div>

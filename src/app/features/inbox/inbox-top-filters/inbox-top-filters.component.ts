@@ -10,6 +10,10 @@ import {
   Platform,
   InboxViewMode
 } from '../../../core/models/interaction.model';
+import {
+  COMING_SOON_PLATFORM_LABEL,
+  isComingSoonPlatform
+} from '../../../core/constants/platform-availability.constants';
 import { ThemeService } from '../../../core/services/theme.service';
 import { inboxFilterToArray } from '../../../core/utils/inbox-filter-values';
 import {
@@ -124,8 +128,8 @@ export class InboxTopFiltersComponent implements OnChanges, OnDestroy {
     { value: Platform.INSTAGRAM, label: 'Instagram', icon: '📷' },
     { value: Platform.FACEBOOK, label: 'Facebook', icon: '👤' },
     { value: Platform.YOUTUBE, label: 'YouTube', icon: '▶️' },
-    { value: Platform.GOOGLE, label: 'Google', icon: '🔍' },
-    { value: Platform.LINKEDIN, label: 'LinkedIn', icon: '💼' },
+    { value: Platform.GOOGLE, label: 'Google', icon: '🔍', disabled: true, disabledHint: COMING_SOON_PLATFORM_LABEL },
+    { value: Platform.LINKEDIN, label: 'LinkedIn', icon: '💼', disabled: true, disabledHint: COMING_SOON_PLATFORM_LABEL },
     { value: Platform.WHATSAPP, label: 'WhatsApp', icon: '💬' },
     { value: Platform.WEBSITE, label: 'Website', icon: '🌐' }
   ];
@@ -210,8 +214,14 @@ export class InboxTopFiltersComponent implements OnChanges, OnDestroy {
       this.syncSelectionsFromFilters();
     }
     if (changes['initialPlatform']) {
-      this.selectedPlatforms = inboxFilterToArray(this.initialPlatform as any);
+      this.selectedPlatforms = this.stripComingSoonPlatforms(
+        inboxFilterToArray(this.initialPlatform as any)
+      );
     }
+  }
+
+  private stripComingSoonPlatforms(vals: string[]): string[] {
+    return vals.filter((v) => !isComingSoonPlatform(v));
   }
 
   private syncSelectionsFromFilters(): void {
@@ -261,7 +271,7 @@ export class InboxTopFiltersComponent implements OnChanges, OnDestroy {
   }
 
   onPlatformsChange(vals: string[]): void {
-    this.selectedPlatforms = vals;
+    this.selectedPlatforms = this.stripComingSoonPlatforms(vals);
     this.emitFilters(true);
   }
 

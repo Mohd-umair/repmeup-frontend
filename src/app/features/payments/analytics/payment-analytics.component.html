@@ -1,0 +1,191 @@
+<div class="payment-analytics">
+  <!-- Header -->
+  <div class="pa-header">
+    <div class="pa-header__left">
+      <h2 class="pa-header__title">
+        <i class="fas fa-chart-line"></i>
+        Payment Analytics
+      </h2>
+      <p class="pa-header__sub">Revenue, conversion, and operational health for your payment gateways.</p>
+    </div>
+    <div class="pa-header__filters">
+      <label class="sr-only" for="pa-from">From</label>
+      <input id="pa-from" type="date" class="pa-input" [(ngModel)]="from" (change)="applyFilter()" />
+      <span class="pa-filter-sep">to</span>
+      <label class="sr-only" for="pa-to">To</label>
+      <input id="pa-to" type="date" class="pa-input" [(ngModel)]="to" (change)="applyFilter()" />
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="pa-loading">
+    <span class="pa-spinner"></span>
+    Loading analytics...
+  </div>
+
+  <!-- Tabs -->
+  <div class="pa-tabs" *ngIf="!loading">
+    <button class="pa-tab" [class.active]="activeTab==='overview'" (click)="setTab('overview')">Overview</button>
+    <button class="pa-tab" [class.active]="activeTab==='health'" (click)="setTab('health')">
+      Operational Health
+      <span *ngIf="health && (health.recentUnknownWebhookEvents > 0 || health.pendingPaymentsOlderThan3Days > 0)"
+            class="pa-tab-badge">!</span>
+    </button>
+    <button class="pa-tab" [class.active]="activeTab==='agents'" (click)="setTab('agents')">Agents</button>
+  </div>
+
+  <!-- Overview tab -->
+  <ng-container *ngIf="!loading && activeTab==='overview'">
+
+    <!-- KPI cards -->
+    <div class="pa-kpi-grid" *ngIf="summary">
+      <div class="pa-kpi-card pa-kpi-card--green">
+        <div class="pa-kpi-card__label">Total Collected</div>
+        <div class="pa-kpi-card__value">{{ formatAmount(summary.totalCollected) }}</div>
+        <div class="pa-kpi-card__sub">{{ summary.paidCount }} payments</div>
+      </div>
+      <div class="pa-kpi-card pa-kpi-card--orange">
+        <div class="pa-kpi-card__label">Pending</div>
+        <div class="pa-kpi-card__value">{{ formatAmount(summary.pendingAmount) }}</div>
+      </div>
+      <div class="pa-kpi-card pa-kpi-card--red">
+        <div class="pa-kpi-card__label">Refunded</div>
+        <div class="pa-kpi-card__value">{{ formatAmount(summary.refundedAmount) }}</div>
+      </div>
+      <div class="pa-kpi-card pa-kpi-card--blue">
+        <div class="pa-kpi-card__label">Conversion Rate</div>
+        <div class="pa-kpi-card__value">{{ summary.conversionRate }}%</div>
+        <div class="pa-kpi-card__sub">{{ summary.failedCount }} failed · {{ summary.expiredCount }} expired</div>
+      </div>
+    </div>
+
+    <!-- Time series chart -->
+    <div class="pa-section" *ngIf="timeSeries.length">
+      <h3 class="pa-section__title">Daily Revenue</h3>
+      <div class="pa-bar-chart">
+        <div class="pa-bar-chart__bar-wrap" *ngFor="let d of timeSeriesChartData" [title]="d.date + ': ' + formatAmount(d.amount)">
+          <div class="pa-bar-chart__bar" [style.height.%]="d.pct"></div>
+          <div class="pa-bar-chart__label">{{ d.date | date:'d' }}</div>
+        </div>
+      </div>
+      <div class="pa-bar-chart__legend">
+        <span>{{ timeSeries[0]?.date | date:'MMM d' }}</span>
+        <span>{{ timeSeries[timeSeries.length-1]?.date | date:'MMM d' }}</span>
+      </div>
+    </div>
+    <div class="pa-empty" *ngIf="!timeSeries.length && !loading">
+      No paid payments in this date range.
+    </div>
+
+    <!-- By provider + by channel -->
+    <div class="pa-row">
+      <div class="pa-section pa-section--half" *ngIf="byProvider.length">
+        <h3 class="pa-section__title">By Provider</h3>
+        <table class="pa-table">
+          <thead><tr><th>Provider</th><th>Collected</th><th>Paid</th><th>Failed</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let p of byProvider">
+              <td><span class="pa-provider-badge">{{ providerLabel(p._id) }}</span></td>
+              <td>{{ formatAmount(p.totalAmount) }}</td>
+              <td>{{ p.paidCount }}</td>
+              <td>{{ p.failedCount }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pa-section pa-section--half" *ngIf="byChannel.length">
+        <h3 class="pa-section__title">By Channel</h3>
+        <table class="pa-table">
+          <thead><tr><th>Channel</th><th>Collected</th><th>Paid</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let c of byChannel">
+              <td>{{ channelLabel(c._id) }}</td>
+              <td>{{ formatAmount(c.totalAmount) }}</td>
+              <td>{{ c.paidCount }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Status breakdown -->
+    <div class="pa-section" *ngIf="summary?.byStatus?.length">
+      <h3 class="pa-section__title">Status Breakdown</h3>
+      <div class="pa-badge-row">
+        <span *ngFor="let s of summary!.byStatus" class="pa-status-pill" [class]="statusClass(s._id)">
+          {{ s._id }} — {{ s.count }}
+        </span>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- Health tab -->
+  <ng-container *ngIf="activeTab==='health'">
+    <div *ngIf="healthLoading" class="pa-loading"><span class="pa-spinner"></span> Loading...</div>
+
+    <div *ngIf="!healthLoading && health" class="pa-health">
+      <div class="pa-kpi-grid">
+        <div class="pa-kpi-card" [class.pa-kpi-card--red]="health.recentUnknownWebhookEvents > 0"
+             [class.pa-kpi-card--green]="health.recentUnknownWebhookEvents === 0">
+          <div class="pa-kpi-card__label">Unknown webhook events (24h)</div>
+          <div class="pa-kpi-card__value">{{ health.recentUnknownWebhookEvents }}</div>
+        </div>
+        <div class="pa-kpi-card" [class.pa-kpi-card--red]="health.pendingPaymentsOlderThan3Days > 0"
+             [class.pa-kpi-card--green]="health.pendingPaymentsOlderThan3Days === 0">
+          <div class="pa-kpi-card__label">Stale pending payments (&gt;3 days)</div>
+          <div class="pa-kpi-card__value">{{ health.pendingPaymentsOlderThan3Days }}</div>
+        </div>
+        <div class="pa-kpi-card pa-kpi-card--orange">
+          <div class="pa-kpi-card__label">Expired links (24h)</div>
+          <div class="pa-kpi-card__value">{{ health.expiredLinksLast24h }}</div>
+        </div>
+      </div>
+
+      <div class="pa-section" *ngIf="health.integrations.length">
+        <h3 class="pa-section__title">Gateway Connections</h3>
+        <table class="pa-table">
+          <thead><tr><th>Provider</th><th>Env</th><th>Webhook</th><th>Failures</th><th>Last event</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let i of health.integrations">
+              <td>{{ providerLabel(i.provider) }}</td>
+              <td><span class="pa-env-badge" [class.pa-env-badge--live]="i.environment==='live'">{{ i.environment }}</span></td>
+              <td>
+                <span *ngIf="i.webhookHealthy === true" class="pa-dot pa-dot--green" title="Healthy"></span>
+                <span *ngIf="i.webhookHealthy === false" class="pa-dot pa-dot--red" title="Stale"></span>
+                <span *ngIf="i.webhookHealthy === null" class="pa-dot pa-dot--grey" title="No events yet"></span>
+              </td>
+              <td>{{ i.webhookFailureCount }}</td>
+              <td class="pa-muted">{{ i.lastWebhookAt ? (i.lastWebhookAt | date:'MMM d, HH:mm') : '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div *ngIf="!healthLoading && !health" class="pa-empty">
+      Health data not available.
+    </div>
+  </ng-container>
+
+  <!-- Agents tab -->
+  <ng-container *ngIf="activeTab==='agents'">
+    <div *ngIf="!byAgent.length" class="pa-empty">No agent-attributed payments in this range.</div>
+    <div class="pa-section" *ngIf="byAgent.length">
+      <h3 class="pa-section__title">Agent Leaderboard</h3>
+      <table class="pa-table">
+        <thead><tr><th>#</th><th>Agent ID</th><th>Requests</th><th>Paid</th><th>Collected</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let a of byAgent; let i = index">
+            <td class="pa-muted">{{ i + 1 }}</td>
+            <td>{{ a._id || 'Unknown' }}</td>
+            <td>{{ a.requestCount }}</td>
+            <td>{{ a.paidCount }}</td>
+            <td>{{ formatAmount(a.totalAmount) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>

@@ -44,6 +44,8 @@ export class PermissionService {
     '/app/settings/profile':          'settings.read',
     '/app/settings/organization':     'organization.read',
     '/app/settings/notifications':    'settings.read',
+    '/app/settings/payment-gateways': 'settings.read',
+    '/app/payments/analytics':         'settings.read',
     '/app/automation/ai-replies':      'settings.read',
     '/app/settings/brand-rules':      'settings.read',
     '/app/settings/compliance':       'settings.read',

@@ -11,6 +11,12 @@ import { MediaUploadGuideComponent } from '../../shared/components/media-upload-
 import { SocialPreviewComponent } from '../publish/social-preview/social-preview.component';
 import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
 import { validateScheduleDateTimeStrings } from '../../shared/utils/schedule-validation';
+import {
+  COMING_SOON_PLATFORM_IDS,
+  COMING_SOON_PLATFORM_LABEL,
+  COMING_SOON_PLATFORM_MESSAGE,
+  isComingSoonPlatform
+} from '../../core/constants/platform-availability.constants';
 
 interface Platform {
   id: string;
@@ -21,6 +27,7 @@ interface Platform {
   platformUserId?: string;
   platformUsername?: string;
   selected?: boolean;
+  comingSoon?: boolean;
 }
 
 interface MediaFile {
@@ -105,7 +112,7 @@ export class PublishComponent implements OnInit {
   
   // Post type options
   postTypes = [
-    { value: 'post', label: 'Post', icon: 'fas fa-image', description: 'Regular feed post', platforms: ['instagram', 'facebook', 'linkedin', 'youtube'] },
+    { value: 'post', label: 'Post', icon: 'fas fa-image', description: 'Regular feed post', platforms: ['instagram', 'facebook', 'youtube'] },
     { value: 'story', label: 'Story', icon: 'fas fa-clock', description: '24-hour temporary content', platforms: ['instagram', 'facebook'] },
     { value: 'reel', label: 'Reel', icon: 'fas fa-video', description: 'Short-form video content', platforms: ['instagram', 'facebook'] },
     { value: 'short', label: 'Short', icon: 'fas fa-film', description: 'Vertical short video', platforms: ['facebook', 'youtube'] }
@@ -288,23 +295,34 @@ export class PublishComponent implements OnInit {
         
         connections.forEach((conn: any) => {
           const platform = conn.platform.toLowerCase();
-          // Publish targets social/video channels only — not Google Business Profile
-          if (platform === 'google') {
-            return;
-          }
           if (!platformMap.has(platform)) {
             platformMap.set(platform, {
               id: platform,
               name: this.getPlatformName(platform),
               icon: this.getPlatformIcon(platform),
               color: this.getPlatformColor(platform),
-              connected: true,
+              connected: !isComingSoonPlatform(platform),
               platformUserId: conn.platformUserId,
               platformUsername: conn.platformUsername,
-              selected: false
+              selected: false,
+              comingSoon: isComingSoonPlatform(platform)
             });
           }
         });
+        
+        for (const id of COMING_SOON_PLATFORM_IDS) {
+          if (!platformMap.has(id)) {
+            platformMap.set(id, {
+              id,
+              name: this.getPlatformName(id),
+              icon: this.getPlatformIcon(id),
+              color: this.getPlatformColor(id),
+              connected: false,
+              selected: false,
+              comingSoon: true
+            });
+          }
+        }
         
         this.platforms = Array.from(platformMap.values());
         this.loading = false;
@@ -321,6 +339,10 @@ export class PublishComponent implements OnInit {
    * Toggle platform selection
    */
   togglePlatform(platform: Platform): void {
+    if (platform.comingSoon || isComingSoonPlatform(platform.id)) {
+      this.notificationService.info('Coming Soon', `${platform.name} — ${COMING_SOON_PLATFORM_MESSAGE}`);
+      return;
+    }
     // Deselecting is always free; only selection has to clear the plan cap.
     if (!platform.selected) {
       const cap = this.entitlements.limit(FEATURE_KEY.POSTS_PLATFORMS_MAX);
@@ -343,12 +365,14 @@ export class PublishComponent implements OnInit {
    * Select all platforms (capped to `posts.platforms.maxPerPost`).
    */
   selectAllPlatforms(): void {
+    const selectable = this.platforms.filter(p => !p.comingSoon && !isComingSoonPlatform(p.id));
     const cap = this.entitlements.limit(FEATURE_KEY.POSTS_PLATFORMS_MAX);
-    const allowed = typeof cap === 'number' && cap > 0 ? cap : this.platforms.length;
-    this.platforms.forEach((p, idx) => p.selected = idx < allowed);
+    const allowed = typeof cap === 'number' && cap > 0 ? cap : selectable.length;
+    this.platforms.forEach(p => p.selected = false);
+    selectable.forEach((p, idx) => p.selected = idx < allowed);
     this.selectedPlatforms = this.platforms.filter(p => p.selected);
 
-    if (typeof cap === 'number' && cap > 0 && cap < this.platforms.length) {
+    if (typeof cap === 'number' && cap > 0 && cap < selectable.length) {
       this.notificationService.warning(
         'Plan limit reached',
         `Selected the first ${cap} platform${cap === 1 ? '' : 's'} (your plan limit per post).`

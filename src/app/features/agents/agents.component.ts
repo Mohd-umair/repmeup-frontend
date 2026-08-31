@@ -4,6 +4,10 @@ import { UserService, IUser, ICreateUserDto, IUpdateUserDto } from '../../core/s
 import { IntentBucketService, IIntentBucket } from '../../core/services/intent-bucket.service';
 import { IPagination } from '../../core/models/api-response.model';
 import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
+import {
+  COMING_SOON_PLATFORM_LABEL,
+  isComingSoonPlatform
+} from '../../core/constants/platform-availability.constants';
 
 @Component({
   selector: 'app-agents',
@@ -42,13 +46,15 @@ export class AgentsComponent implements OnInit {
 
   buckets: IIntentBucket[] = [];
 
-  readonly platformOptions: { value: string; label: string; icon: string }[] = [
+  readonly comingSoonLabel = COMING_SOON_PLATFORM_LABEL;
+
+  readonly platformOptions: { value: string; label: string; icon: string; comingSoon?: boolean }[] = [
     { value: 'instagram', label: 'Instagram', icon: 'fab fa-instagram' },
     { value: 'facebook', label: 'Facebook', icon: 'fab fa-facebook' },
     { value: 'youtube', label: 'YouTube', icon: 'fab fa-youtube' },
-    { value: 'google', label: 'Google', icon: 'fab fa-google' },
+    { value: 'google', label: 'Google', icon: 'fab fa-google', comingSoon: true },
     { value: 'whatsapp', label: 'WhatsApp', icon: 'fab fa-whatsapp' },
-    { value: 'linkedin', label: 'LinkedIn', icon: 'fab fa-linkedin' }
+    { value: 'linkedin', label: 'LinkedIn', icon: 'fab fa-linkedin', comingSoon: true }
   ];
 
   addSelectedBuckets: Set<string> = new Set();
@@ -303,7 +309,12 @@ export class AgentsComponent implements OnInit {
   }
 
   togglePlatform(set: Set<string>, platform: string): void {
+    if (isComingSoonPlatform(platform)) return;
     set.has(platform) ? set.delete(platform) : set.add(platform);
+  }
+
+  isPlatformComingSoon(platform: string): boolean {
+    return isComingSoonPlatform(platform);
   }
 
   getBucketName(id: string): string {

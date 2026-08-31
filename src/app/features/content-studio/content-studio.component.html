@@ -336,11 +336,13 @@
               </label>
               <div class="flex flex-wrap gap-2">
                 <button *ngFor="let p of platforms" type="button" (click)="togglePlatform(p.id)"
+                  [disabled]="p.comingSoon"
                   [class]="selectedPlatformIds.includes(p.id)
                     ? 'bg-rep-lime text-rep-black shadow-sm shadow-rep-lime/30'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'"
-                  class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5">
+                  class="px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale">
                   <i [class]="p.icon + ' text-sm'"></i>{{ p.name }}
+                  <span *ngIf="p.comingSoon" class="text-[10px] uppercase tracking-wide opacity-70">Soon</span>
                 </button>
                 <a *ngIf="platforms.length === 0" routerLink="/app/settings"
                   class="text-xs text-rep-black dark:text-rep-lime underline italic">

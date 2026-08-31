@@ -1,13 +1,10 @@
 <button
   type="button"
-  class="theme-toggle-fab"
+  [class]="variant === 'header' ? 'theme-toggle theme-toggle--header' : 'theme-toggle theme-toggle--fab'"
   (click)="theme.toggle()"
   [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
   [title]="theme.isDark() ? 'Light mode' : 'Dark mode'"
 >
-  @if (theme.isDark()) {
-    <span class="text-lg leading-none" aria-hidden="true">☀️</span>
-  } @else {
-    <span class="text-lg leading-none" aria-hidden="true">🌙</span>
-  }
+  <i *ngIf="theme.isDark()" class="fas fa-sun" aria-hidden="true"></i>
+  <i *ngIf="!theme.isDark()" class="fas fa-moon" aria-hidden="true"></i>
 </button>

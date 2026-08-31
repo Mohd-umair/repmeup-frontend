@@ -10,6 +10,10 @@ import { ContactService } from '../../../core/services/contact.service';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 import { IContact } from '../../../core/models/contact.model';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import {
+  COMING_SOON_PLATFORM_LABEL,
+  isComingSoonPlatform
+} from '../../../core/constants/platform-availability.constants';
 
 const PLATFORMS = ['instagram', 'facebook', 'whatsapp', 'youtube', 'google', 'linkedin'];
 
@@ -36,6 +40,7 @@ export class ContactsListComponent implements OnInit, OnDestroy {
   totalContacts = 0;
   pageSize = 20;
   readonly platforms = PLATFORMS;
+  readonly comingSoonLabel = COMING_SOON_PLATFORM_LABEL;
 
   /** Hide broken avatar img and show initials fallback */
   avatarErrors: Record<string, boolean> = {};
@@ -97,6 +102,7 @@ export class ContactsListComponent implements OnInit, OnDestroy {
   }
 
   onPlatformFilter(platform: string): void {
+    if (isComingSoonPlatform(platform)) return;
     this.selectedPlatform = this.selectedPlatform === platform ? '' : platform;
     this.currentPage = 1;
     this.loadContacts();
@@ -116,6 +122,14 @@ export class ContactsListComponent implements OnInit, OnDestroy {
 
   selectContact(contact: IContact): void {
     this.contactSelected.emit(contact);
+  }
+
+  isPlatformComingSoon(platform: string): boolean {
+    return isComingSoonPlatform(platform);
+  }
+
+  platformFilterTitle(platform: string): string {
+    return this.isPlatformComingSoon(platform) ? `${platform} — ${this.comingSoonLabel}` : platform;
   }
 
   getPlatformIcon(platform: string): string {

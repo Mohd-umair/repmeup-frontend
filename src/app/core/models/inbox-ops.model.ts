@@ -71,6 +71,10 @@ export interface IOpsOrderDetail extends IOpsOrderRow {
   chatSnippet: { from: string; text: string }[];
   lineItems: { name: string; sku: string | null; image: string | null; qty: number; unitPrice: string; lineTotal: string }[];
   actions: { canMarkShipped: boolean; canUpdateStatus: boolean; nextStatuses: string[] };
+  /** Raw order total in major currency units (e.g. 1234.50) — returned by getOrderDetail for payment modal use */
+  totalAmount?: number;
+  /** ISO currency code (e.g. 'INR') */
+  currency?: string;
 }
 
 /** Extra payload sent with a status transition. */

@@ -32,10 +32,13 @@
           type="button"
           class="crm-platform-btn"
           [class.crm-platform-btn--active]="platform === p.value"
-          (click)="platform = p.value"
+          [class.crm-platform-btn--disabled]="p.comingSoon || isPlatformComingSoon(p.value)"
+          [disabled]="p.comingSoon || isPlatformComingSoon(p.value)"
+          (click)="selectPlatform(p.value)"
         >
           <i [ngClass]="p.icon"></i>
           {{ p.label }}
+          <span *ngIf="p.comingSoon || isPlatformComingSoon(p.value)" class="crm-platform-soon">{{ comingSoonLabel }}</span>
         </button>
       </div>
     </div>

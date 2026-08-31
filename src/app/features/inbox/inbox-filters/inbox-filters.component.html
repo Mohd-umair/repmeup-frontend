@@ -15,9 +15,10 @@
     <button
       *ngFor="let platform of platforms"
       (click)="toggleFilter('platform', platform.value)"
-      [attr.title]="platform.label"
+      [disabled]="isPlatformComingSoon(platform)"
+      [attr.title]="platformFilterTitle(platform)"
       type="button"
-      class="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 text-sm"
+      class="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:grayscale"
       [style.background]="isFilterActive('platform', platform.value) 
         ? 'linear-gradient(135deg, ' + platform.gradientFrom + ', ' + platform.gradientTo + ')' 
         : 'rgba(0,0,0,0.04)'"

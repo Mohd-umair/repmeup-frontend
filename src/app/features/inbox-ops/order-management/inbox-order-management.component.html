@@ -98,6 +98,14 @@
   />
 }
 
+<!-- Request Payment Modal -->
+<app-request-payment-modal
+  [open]="paymentModalOpen"
+  [context]="paymentContext"
+  (closed)="closePaymentModal()"
+  (paymentCreated)="onPaymentCreated($event)"
+/>
+
 <app-ops-detail-drawer
   [open]="drawerOpen"
   [title]="detail ? 'Order ' + detail.displayRef : ''"
@@ -216,6 +224,15 @@
     <div drawerFooter class="flex flex-wrap gap-2 w-full justify-end">
       @if (detail.sourceInteractionId) {
         <button type="button" class="px-3 py-2 rounded-lg border text-sm font-semibold" style="border-color: var(--card-border); color: var(--text-primary);" (click)="viewChat()">View Full Chat</button>
+      }
+      <!-- Payment request button (visible for orders with a total) -->
+      @if (detail.totalAmount && detail.totalAmount > 0 && detail.status !== 'paid' && detail.status !== 'refunded' && detail.status !== 'cancelled') {
+        <button type="button"
+          class="px-3 py-2 rounded-lg border text-sm font-semibold flex items-center gap-1.5"
+          style="border-color: var(--card-border); color: var(--text-primary);"
+          (click)="openPaymentModal()">
+          <i class="fas fa-money-bill-wave text-rep-lime"></i> Request Payment
+        </button>
       }
       @for (st of detail.actions.nextStatuses; track st) {
         <button type="button"

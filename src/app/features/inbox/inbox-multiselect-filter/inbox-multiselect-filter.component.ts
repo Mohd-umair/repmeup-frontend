@@ -13,6 +13,8 @@ export interface InboxMultiselectOption {
   value: string;
   label: string;
   icon?: string;
+  disabled?: boolean;
+  disabledHint?: string;
 }
 
 @Component({
@@ -47,6 +49,8 @@ export class InboxMultiselectFilterComponent {
 
   toggleValue(value: string, ev: Event): void {
     ev.stopPropagation();
+    const opt = this.options.find((x) => x.value === value);
+    if (opt?.disabled) return;
     const set = new Set(this.selected);
     if (set.has(value)) set.delete(value);
     else set.add(value);

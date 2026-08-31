@@ -9,6 +9,7 @@ import { IUser, IOrganization } from '../../../core/models/user.model';
 import { Subscription, interval } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AccountSwitcherComponent } from '../account-switcher/account-switcher.component';
+import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
 /**
  * Header Component - Single Responsibility Principle
@@ -17,7 +18,7 @@ import { AccountSwitcherComponent } from '../account-switcher/account-switcher.c
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule, AccountSwitcherComponent],
+  imports: [CommonModule, RouterModule, AccountSwitcherComponent, ThemeToggleComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })

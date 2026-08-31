@@ -48,12 +48,14 @@
                 <button
                   *ngFor="let platform of platforms"
                   (click)="togglePlatform(platform)"
+                  [disabled]="platform.comingSoon"
                   [class]="platform.selected ? 'bg-rep-lime text-rep-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'"
-                  class="px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5"
-                  [title]="'@' + (platform.platformUsername || 'Connected')"
+                  class="px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  [title]="platform.comingSoon ? 'Coming soon' : ('@' + (platform.platformUsername || 'Connected'))"
                 >
                   <i [class]="platform.icon + ' text-sm'"></i>
                   <span>{{ platform.name }}</span>
+                  <span *ngIf="platform.comingSoon" class="text-[10px] uppercase tracking-wide opacity-70">Soon</span>
                   <i *ngIf="platform.selected" class="fas fa-check text-xs"></i>
                 </button>
               </div>
