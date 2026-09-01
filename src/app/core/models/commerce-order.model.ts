@@ -1,6 +1,6 @@
 import { IProduct } from './product.model';
 
-export type CommerceChannel = 'instagram' | 'whatsapp' | 'voice' | 'manual';
+export type CommerceChannel = 'instagram' | 'whatsapp' | 'voice' | 'manual' | 'shopify';
 
 export type CommerceOrderStatus =
   | 'intent'
@@ -89,5 +89,6 @@ export const CHANNEL_LABELS: Record<CommerceChannel, string> = {
   instagram: 'Instagram',
   whatsapp: 'WhatsApp',
   voice: 'Voice',
-  manual: 'Manual'
+  manual: 'Manual',
+  shopify: 'Shopify'
 };

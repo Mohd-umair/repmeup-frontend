@@ -83,6 +83,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
   /** Toggle on to show Email inbox (Gmail / Outlook / IMAP) in Settings and related UI. */
   emailIntegrationEnabled = false;
 
+  // ── Shopify modal state ─────────────────────────────────────────────────────
+  showShopifyModal = false;
+  shopifyForm = { shopDomain: '', accessToken: '' };
+  shopifyConnecting = false;
+
   activeTab: SettingsTab = 'platforms';
   loading = false;
   organizationId: string = '';
@@ -229,6 +234,17 @@ export class SettingsComponent implements OnInit, OnDestroy {
       connected: false,
       loading: false,
       comingSoon: true
+    },
+    {
+      id: 'shopify',
+      name: 'Shopify',
+      icon: 'fab fa-shopify',
+      brandColor: '#95BF47',
+      gradientFrom: '#95BF47',
+      gradientTo: '#5E8E3E',
+      description: 'Sync products, customers and orders from your Shopify store automatically',
+      connected: false,
+      loading: false
     }
   ];
 
@@ -847,6 +863,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
       } else if (platform.id === 'whatsapp') {
         // WhatsApp uses dedicated connectWhatsAppOAuth() — skip here
         platform.loading = false;
+      } else if (platform.id === 'shopify') {
+        // Shopify — open token-paste modal
+        platform.loading = false;
+        this.shopifyForm = { shopDomain: '', accessToken: '' };
+        this.showShopifyModal = true;
       } else {
         // Other platforms - show coming soon
         platform.loading = false;
@@ -856,6 +877,35 @@ export class SettingsComponent implements OnInit, OnDestroy {
         );
       }
     }
+  }
+
+  /**
+   * Submit the Shopify token-paste modal.
+   */
+  connectShopifySubmit(): void {
+    const domain = this.shopifyForm.shopDomain?.trim();
+    const token = this.shopifyForm.accessToken?.trim();
+    if (!domain || !token) {
+      this.notificationService.error('Missing fields', 'Please enter both your shop domain and access token.');
+      return;
+    }
+    this.shopifyConnecting = true;
+    this.platformService.connectShopify(domain, token).subscribe({
+      next: (res) => {
+        this.shopifyConnecting = false;
+        this.showShopifyModal = false;
+        if (res.success) {
+          this.notificationService.success('Shopify Connected', res.message || 'Sync started in the background.');
+          this.loadPlatformConnections();
+          this.loadSubscriptionLimits();
+        }
+      },
+      error: (err) => {
+        this.shopifyConnecting = false;
+        const msg = err?.error?.error || err?.message || 'Failed to connect. Please check your credentials.';
+        this.notificationService.error('Shopify Connection Failed', msg);
+      }
+    });
   }
 
   /**

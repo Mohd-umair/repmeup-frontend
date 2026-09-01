@@ -290,6 +290,19 @@
             <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">LinkedIn</span>
           </button>
 
+          <!-- Shopify -->
+          <button
+            (click)="connectPlatform(platforms[6])"
+            [disabled]="!canAddConnection || loading || platforms[6]?.connected"
+            class="relative flex flex-col items-center justify-center p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-[#95BF47] hover:bg-green-50 dark:hover:bg-green-950/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            [title]="platforms[6]?.connected ? 'Already connected' : (canAddConnection ? 'Connect Shopify' : connectionLimitMessage)">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#95BF47] to-[#5E8E3E] rounded-xl flex items-center justify-center mb-2">
+              <i *ngIf="!platforms[6]?.loading" class="fab fa-shopify text-white text-xl"></i>
+              <i *ngIf="platforms[6]?.loading" class="fas fa-spinner fa-spin text-white text-xl"></i>
+            </div>
+            <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">Shopify</span>
+          </button>
+
           <!-- Email (hidden until emailIntegrationEnabled) -->
           <button
             *ngIf="emailIntegrationEnabled"
@@ -972,6 +985,84 @@
           Open Brand Hub
         </a>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Shopify Connect Modal ──────────────────────────────────────────────── -->
+<div *ngIf="showShopifyModal"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+     (click)="!shopifyConnecting && (showShopifyModal = false)">
+  <div class="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6"
+       (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#95BF47] to-[#5E8E3E] flex items-center justify-center flex-shrink-0">
+        <i class="fab fa-shopify text-white text-lg"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Connect Shopify Store</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400">Products, customers &amp; orders sync automatically</p>
+      </div>
+      <button (click)="showShopifyModal = false" [disabled]="shopifyConnecting"
+              class="ml-auto p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-40">
+        <i class="fas fa-times text-sm"></i>
+      </button>
+    </div>
+
+    <!-- Instruction hint -->
+    <div class="mb-5 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+      <strong class="block mb-1">How to generate a Custom App token:</strong>
+      Shopify Admin → <strong>Settings → Apps → Develop apps</strong> → Create an app →
+      Configure <em>Admin API access scopes</em> (read_products, read_customers, read_orders, write_webhooks) →
+      Install the app → copy the <strong>Admin API access token</strong>.
+    </div>
+
+    <!-- Form -->
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+          Shop domain <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          [(ngModel)]="shopifyForm.shopDomain"
+          placeholder="my-store.myshopify.com"
+          [disabled]="shopifyConnecting"
+          class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#95BF47]/50 disabled:opacity-60" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+          Admin API access token <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="password"
+          [(ngModel)]="shopifyForm.accessToken"
+          placeholder="shpat_••••••••••••••••••••••••••••"
+          [disabled]="shopifyConnecting"
+          class="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#95BF47]/50 disabled:opacity-60" />
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3 mt-6">
+      <button
+        type="button"
+        (click)="showShopifyModal = false"
+        [disabled]="shopifyConnecting"
+        class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-40">
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="connectShopifySubmit()"
+        [disabled]="shopifyConnecting || !shopifyForm.shopDomain || !shopifyForm.accessToken"
+        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#95BF47] text-white text-sm font-semibold hover:bg-[#7da83a] transition disabled:opacity-50 disabled:cursor-not-allowed">
+        <i *ngIf="shopifyConnecting" class="fas fa-spinner fa-spin text-sm"></i>
+        <i *ngIf="!shopifyConnecting" class="fab fa-shopify text-sm"></i>
+        {{ shopifyConnecting ? 'Connecting…' : 'Connect Store' }}
+      </button>
     </div>
   </div>
 </div>

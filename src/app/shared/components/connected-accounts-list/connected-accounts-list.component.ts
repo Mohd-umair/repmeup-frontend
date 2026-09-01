@@ -34,7 +34,8 @@ export class ConnectedAccountsListComponent {
     'youtube': 'fab fa-youtube',
     'google': 'fab fa-google',
     'linkedin': 'fab fa-linkedin',
-    'whatsapp': 'fab fa-whatsapp'
+    'whatsapp': 'fab fa-whatsapp',
+    'shopify': 'fab fa-shopify'
   };
 
   platformColors: Record<string, { bg: string, text: string, border: string }> = {
@@ -43,7 +44,8 @@ export class ConnectedAccountsListComponent {
     'youtube': { bg: 'bg-red-600', text: 'text-white', border: 'border-red-600' },
     'google': { bg: 'bg-gradient-to-r from-blue-500 to-green-500', text: 'text-white', border: 'border-blue-500' },
     'linkedin': { bg: 'bg-blue-700', text: 'text-white', border: 'border-blue-700' },
-    'whatsapp': { bg: 'bg-green-500', text: 'text-white', border: 'border-green-500' }
+    'whatsapp': { bg: 'bg-green-500', text: 'text-white', border: 'border-green-500' },
+    'shopify': { bg: 'bg-gradient-to-r from-[#95BF47] to-[#5E8E3E]', text: 'text-white', border: 'border-[#95BF47]' }
   };
 
   getPlatformIcon(platform: string): string {
@@ -61,7 +63,8 @@ export class ConnectedAccountsListComponent {
       'youtube': 'YouTube',
       'google': 'Google Business',
       'linkedin': 'LinkedIn',
-      'whatsapp': 'WhatsApp'
+      'whatsapp': 'WhatsApp',
+      'shopify': 'Shopify'
     };
     return labels[platform] || platform;
   }

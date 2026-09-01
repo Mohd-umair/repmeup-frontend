@@ -480,6 +480,15 @@ export class PlatformService {
   getWhatsAppStatus(): Observable<any> {
     return this.apiService.get<any>('/platforms/whatsapp/status');
   }
+
+  // ── Shopify ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Connect a Shopify store via Custom App access token.
+   */
+  connectShopify(shopDomain: string, accessToken: string): Observable<{ success: boolean; message: string; data?: { connectionId: string; shopName: string; shopDomain: string } }> {
+    return this.apiService.post('/platforms/shopify/connect', { shopDomain, accessToken });
+  }
 }
 
 

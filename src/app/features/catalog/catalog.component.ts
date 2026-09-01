@@ -7,6 +7,7 @@ import { CatalogService, IImportSummary } from '../../core/services/catalog.serv
 import { MediaLibraryService } from '../../core/services/media-library.service';
 import { Media } from '../../core/models/media.model';
 import { NotificationService } from '../../core/services/notification.service';
+import { PlatformConnectionService } from '../../core/services/platform-connection.service';
 import { FileUploadZoneComponent } from '../../shared/components/file-upload-zone/file-upload-zone.component';
 import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements.store';
 import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
@@ -160,6 +161,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
   // Shopify
   shopifyDomain = '';
   shopifyToken = '';
+  /** True when an active Shopify PlatformConnection already exists for this org */
+  hasShopifyConnection = false;
 
   // Custom URL
   importApiUrl = '';
@@ -219,7 +222,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
     private mediaLibraryService: MediaLibraryService,
     private notify: NotificationService,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private platformConnectionService: PlatformConnectionService
   ) {}
 
   ngOnInit(): void {
@@ -227,6 +231,20 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.loadProducts();
     this.loadSalesFlowSettings();
     this.loadWACatalogSettings();
+    this.checkShopifyConnection();
+  }
+
+  private checkShopifyConnection(): void {
+    this.platformConnectionService.getConnections().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        if (res.success && Array.isArray(res.data)) {
+          this.hasShopifyConnection = res.data.some(
+            (c: any) => c.platform === 'shopify' && c.isActive
+          );
+        }
+      },
+      error: () => { /* non-fatal */ }
+    });
   }
 
   // ── Orders tab ─────────────────────────────

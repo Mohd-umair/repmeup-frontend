@@ -83,6 +83,10 @@ export interface IProduct {
   dmConfig?: IProductDmConfig;
   /** WhatsApp Commerce Catalog sync state */
   whatsapp?: IProductWhatsAppCatalog;
+  /** Origin of the product — manual entry or platform sync */
+  source?: 'manual' | 'shopify' | 'woocommerce' | 'custom_url';
+  /** Shopify sync metadata */
+  shopify?: { productId?: string; variantId?: string; syncedAt?: string };
 }
 
 export type WhatsAppSyncStatus = 'synced' | 'pending' | 'failed' | 'not_synced';
