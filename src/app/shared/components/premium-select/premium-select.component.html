@@ -37,17 +37,18 @@
        [class.rotate-180]="open"></i>
   </button>
 
-  <!-- Panel -->
+  <!-- Panel (fixed so parent overflow:hidden does not clip options) -->
   <div
-    *ngIf="open"
+    *ngIf="open && panelStyle"
     #panel
     role="listbox"
     (click)="$event.stopPropagation()"
-    class="premium-select__panel absolute z-[70] mt-2 w-full min-w-[11rem] rounded-xl p-1.5
+    class="premium-select__panel fixed z-[9999] rounded-xl p-1.5
       bg-white dark:bg-gray-900 border border-gray-200/80 dark:border-gray-700
       shadow-2xl shadow-black/10 dark:shadow-black/50 ring-1 ring-black/5 dark:ring-white/10"
-    [class.left-0]="align !== 'right'"
-    [class.right-0]="align === 'right'">
+    [style.top]="panelStyle.top"
+    [style.left]="panelStyle.left"
+    [style.width]="panelStyle.width">
     <div class="premium-select__scroll max-h-64 overflow-y-auto">
       <button
         *ngFor="let opt of options; trackBy: trackByValue"

@@ -36,6 +36,7 @@ import {
   IFlowNode,
   IFlowNodeCatalogItem,
   IFlowValidationResult,
+  IFlowKeywordConflict,
   FlowChannel,
   NodeCategory
 } from '../../../../core/models/flow-builder.model';
@@ -130,6 +131,9 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   saving = false;
   publishing = false;
 
+  /** Other active flows whose trigger.keyword(s) overlap this flow's — see checkKeywordOverlapNow(). */
+  keywordOverlapConflicts: IFlowKeywordConflict[] = [];
+
   // Right-rail panels (only one open at a time alongside the inspector)
   showValidation = false;
   showSettings = false;
@@ -151,6 +155,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   services: Array<{ _id: string; name: string }> = [];
   providers: Array<{ _id: string; name: string }> = [];
   readonly edgeBranchPresets = ['yes', 'no', 'reply', 'no_reply'];
+  private readonly timeoutEdgeLabels = new Set(['no_reply', 'timeout', 'expired', 'no']);
 
   @ViewChild('canvasWrap') canvasWrap?: ElementRef<HTMLElement>;
 
@@ -435,6 +440,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
             }
           }
           this.refreshDisconnectedChannels();
+          this.checkKeywordOverlapNow();
           this.cdr.markForCheck();
           requestAnimationFrame(() => this.fitView());
         },
@@ -471,6 +477,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
                 }
               });
           }
+          this.checkKeywordOverlapNow();
         },
         error: (err) => this.notify.error('Save failed', err.error?.error || 'Could not save flow.')
       });
@@ -478,6 +485,42 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   saveNow(): void {
     this.persist();
+  }
+
+  /**
+   * Design-time warning: does this flow's keyword(s) overlap with another active flow on
+   * the same channel? Runs silently after every autosave (piggybacking on the existing
+   * 800ms debounce — see save$) so the warning banner stays in sync as the user types
+   * keywords, without a separate debounce timer. A single customer message would otherwise
+   * fire both flows and get multiple replies for one message.
+   */
+  keywordOverlapConflictNames(): string {
+    return this.keywordOverlapConflicts.map((c) => c.flowName).join(', ');
+  }
+
+  private checkKeywordOverlapNow(): void {
+    if (!this.flow) return;
+    const keywords = [...new Set(
+      this.flow.nodes
+        .filter((n) => n.type === 'trigger.keyword')
+        .flatMap((n) => (n.config?.['keywords'] as string[] | undefined) || [])
+        .map((k) => String(k).trim().toLowerCase())
+        .filter(Boolean)
+    )];
+    if (!keywords.length) {
+      this.keywordOverlapConflicts = [];
+      this.cdr.markForCheck();
+      return;
+    }
+    this.flowService.checkKeywordOverlap({ keywords, channels: this.flow.channels, flowId: this.flow._id })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (r) => {
+          this.keywordOverlapConflicts = r.conflicts || [];
+          this.cdr.markForCheck();
+        },
+        error: () => { /* non-fatal — just skip the warning if the check itself fails */ }
+      });
   }
 
   async publish(): Promise<void> {
@@ -520,17 +563,54 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     const result = await this.swal.confirmHtml('Turn this on?', html, 'Turn on', 'Not yet');
     if (!result.isConfirmed) return;
 
+    this.doPublish(false);
+  }
+
+  /**
+   * Actually calls the publish endpoint. `acknowledgeOverlap` is only true when the user has
+   * already seen the keyword-conflict warning (see below) and explicitly chose to proceed —
+   * the backend records that decision on the flow (`acknowledgedOverlap`) for audit purposes.
+   */
+  private doPublish(acknowledgeOverlap: boolean): void {
+    if (!this.flow?._id) return;
     this.publishing = true;
     this.cdr.markForCheck();
-    this.flowService.publishFlow(this.flow._id)
+    this.flowService.publishFlow(this.flow._id, acknowledgeOverlap)
       .pipe(takeUntil(this.destroy$), finalize(() => { this.publishing = false; this.cdr.markForCheck(); }))
       .subscribe({
         next: (r) => {
           this.flow = r.data ?? this.flow;
           this.notify.success('It’s on', 'This flow is now live.');
         },
-        error: (err) => this.notify.error('Could not turn on', err.error?.error || 'Fix the highlighted blocks first.')
+        error: (err) => {
+          if (err?.error?.code === 'KEYWORD_OVERLAP') {
+            this.handleKeywordOverlapOnPublish(err.error.conflicts || []);
+            return;
+          }
+          this.notify.error('Could not turn on', err?.error?.error || 'Fix the highlighted blocks first.');
+        }
       });
+  }
+
+  /**
+   * The backend blocked activation because this flow's keyword(s) overlap with another
+   * already-active flow — a customer message would trigger both and get multiple replies.
+   * Show exactly which flow(s) conflict and let the user explicitly choose to proceed
+   * anyway (recorded server-side) or go fix the keyword instead.
+   */
+  private async handleKeywordOverlapOnPublish(conflicts: IFlowKeywordConflict[]): Promise<void> {
+    const list = conflicts
+      .map((c) => `<li><strong>${c.flowName}</strong> — keyword(s): ${c.keywords.join(', ')}</li>`)
+      .join('');
+    const html = `
+      <div style="text-align:left;font-size:0.875rem;line-height:1.65">
+        <p>This flow's keyword is already used by another <strong>active</strong> flow on the same channel:</p>
+        <ul style="margin:0.5rem 0 0.75rem 1.1rem;padding:0">${list}</ul>
+        <p style="color:#f59e0b"><i class="fas fa-exclamation-triangle"></i> If you turn this on anyway, a customer sending that keyword will trigger <strong>both</strong> flows and get more than one reply.</p>
+        <p style="margin-top:0.5rem;color:#9ca3af">Change the keyword instead, or turn it on anyway if this is intentional.</p>
+      </div>`;
+    const result = await this.swal.confirmHtml('Keyword conflict', html, 'Activate anyway', 'Cancel');
+    if (result.isConfirmed) this.doPublish(true);
   }
 
   validate(): void {
@@ -1961,6 +2041,26 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     const amount = this.getDurationAmount(node, key);
     this.durationUnitByField.set(this.durationCacheKey(node, key), unit);
     this.setConfigValue(node, key, durationToSeconds(amount, unit));
+  }
+
+  /**
+   * If `node` is reached via a "no reply" / timeout edge from a `wait.user_reply`
+   * node, return that wait node — so its "Timeout" (how long to wait before giving
+   * up on a reply) can be edited right here too, instead of only on the separate
+   * "Wait for their answer" block. This is what actually controls how long until the
+   * flow gives up waiting and follows the "If they don't reply" path — it defaults to
+   * 24 hours but is a normal editable duration (minutes/hours/days), never fixed.
+   */
+  feedingWaitTimeoutNode(node: IFlowNode | null): IFlowNode | null {
+    if (!node || !this.flow) return null;
+    const edge = this.flow.edges.find((e) => {
+      if (e.target !== node.id) return false;
+      if (!this.timeoutEdgeLabels.has(String(e.label || '').trim().toLowerCase())) return false;
+      const src = this.flow!.nodes.find((n) => n.id === e.source);
+      return src?.type === 'wait.user_reply';
+    });
+    if (!edge) return null;
+    return this.flow.nodes.find((n) => n.id === edge.source) || null;
   }
 
   /** Per-node enable/disable (skipped at runtime when disabled). */

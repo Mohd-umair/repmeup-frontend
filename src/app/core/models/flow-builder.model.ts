@@ -52,6 +52,20 @@ export interface IAutomationFlow {
   isBlueprint?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  /** Set once the user explicitly confirms "Activate anyway" on a keyword conflict. */
+  acknowledgedOverlap?: {
+    flag: boolean;
+    keywords: string[];
+    conflictingFlowIds: string[];
+    at: string | null;
+  };
+}
+
+/** One other active flow whose trigger.keyword(s) overlap with this flow's — see flowKeywordOverlapService (backend). */
+export interface IFlowKeywordConflict {
+  flowId: string;
+  flowName: string;
+  keywords: string[];
 }
 
 export interface IFlowNodeCatalogItem {

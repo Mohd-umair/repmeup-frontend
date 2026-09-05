@@ -1086,6 +1086,16 @@
   margin-bottom: 0.5rem;
 }
 
+/** Draws attention to a cross-node setting surfaced in a different node's inspector
+ *  (e.g. the wait-node timeout shown from the "If they don't reply" step) — same amber
+ *  accent as .fb-channel-warning, themed for both light and dark mode. */
+.fb-field--highlight {
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 .fb-delete-btn {
   margin-top: 1rem;
   width: 100%;

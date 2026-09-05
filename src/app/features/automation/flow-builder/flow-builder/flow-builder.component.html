@@ -93,6 +93,21 @@
     </button>
   </div>
 
+  <!-- Keyword-overlap warning: another active flow already reacts to (one of) this
+       flow's keyword(s) — one customer message would trigger both and send multiple
+       replies. Not dismissible (unlike the banners above) since it reflects live data
+       that changes as keywords are edited; it disappears on its own once resolved. -->
+  <div *ngIf="keywordOverlapConflicts.length > 0" class="fb-channel-warning" role="alert">
+    <i class="fas fa-exclamation-triangle fb-channel-warning__icon"></i>
+    <span>
+      <strong>Keyword conflict:</strong>
+      this flow's keyword is already used by
+      <strong>{{ keywordOverlapConflictNames() }}</strong>
+      (active). A customer sending that keyword will get a reply from both flows.
+      Change the keyword, or turn this flow on with "Activate anyway" if that's intentional.
+    </span>
+  </div>
+
   <div class="fb-layout"
        [class.fb-layout--focus]="focusMode"
        [class.fb-layout--no-palette]="paletteCollapsed"
@@ -404,6 +419,34 @@
               <strong>24-hour window:</strong> This text only sends if they messaged you in the last 24 hours. After that, use a WhatsApp template instead.
             </span>
           </div>
+
+          <!-- This block only exists because a "Wait for their answer" node's timeout
+               elapsed with no reply. Surface that timeout right here — editable, not
+               fixed to any duration — so you don't have to hunt for the hidden wait
+               block just to change how long we wait before giving up. -->
+          <ng-container *ngIf="feedingWaitTimeoutNode(node) as waitNode">
+            <label class="fb-field fb-field--highlight">
+              <span>Give up and go here after</span>
+              <div class="fb-duration">
+                <input type="number" min="0" step="1"
+                       [ngModel]="getDurationAmount(waitNode, 'timeoutSec')"
+                       (ngModelChange)="setDurationAmount(waitNode, 'timeoutSec', $event)" />
+                <select [ngModel]="getDurationUnit(waitNode, 'timeoutSec')"
+                        (ngModelChange)="setDurationUnit(waitNode, 'timeoutSec', $event)">
+                  <option value="minutes">minutes</option>
+                  <option value="hours">hours</option>
+                  <option value="days">days</option>
+                  <option value="seconds">seconds</option>
+                </select>
+              </div>
+              <p class="fb-field__hint">
+                How long we wait for their reply before giving up and running this "If they
+                don't reply" step instead. Set this to whatever fits your flow — a few
+                minutes for a quick question, hours or days for something they might need
+                time to think about.
+              </p>
+            </label>
+          </ng-container>
 
           <div *ngFor="let fd of selectedNodeFieldDefs; trackBy: trackByFieldKey" class="fb-field">
             <span>{{ isDurationConfigField(fd.key) ? durationFieldLabel(fd.key, fd.label) : fd.label }}</span>
@@ -760,7 +803,7 @@
             <p *ngIf="fd.hint && !isDurationConfigField(fd.key)" class="fb-field__hint">{{ fd.hint }}</p>
             <p *ngIf="isDurationConfigField(fd.key)" class="fb-field__hint">
               {{ fd.key === 'timeoutSec'
-                ? 'If they don’t reply in time, connect a “no reply” path from this block.'
+                ? 'How long to wait for a reply before giving up — set it to whatever fits this flow (minutes, hours, or days), then connect a “no reply” path from this block for what happens next.'
                 : 'How long to wait before the next step.' }}
             </p>
           </div>

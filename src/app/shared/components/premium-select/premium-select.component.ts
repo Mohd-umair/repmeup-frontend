@@ -58,8 +58,10 @@ export class PremiumSelectComponent {
   @Output() valueChange = new EventEmitter<string>();
 
   @ViewChild('panel') panel?: ElementRef<HTMLElement>;
+  @ViewChild('trigger') trigger?: ElementRef<HTMLButtonElement>;
 
   open = false;
+  panelStyle: { top: string; left: string; width: string } | null = null;
 
   constructor(private host: ElementRef<HTMLElement>) {}
 
@@ -87,12 +89,33 @@ export class PremiumSelectComponent {
     ev.stopPropagation();
     if (this.disabled) return;
     this.open = !this.open;
+    if (this.open) {
+      this.updatePanelPosition();
+    } else {
+      this.panelStyle = null;
+    }
+  }
+
+  private updatePanelPosition(): void {
+    const el = this.trigger?.nativeElement;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const gap = 8;
+    const width = Math.max(rect.width, 176);
+    let left = this.align === 'right' ? rect.right - width : rect.left;
+    left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+    this.panelStyle = {
+      top: `${rect.bottom + gap}px`,
+      left: `${left}px`,
+      width: `${width}px`
+    };
   }
 
   select(opt: PremiumSelectOption): void {
     if (opt.disabled) return;
     this.valueChange.emit(opt.value);
     this.open = false;
+    this.panelStyle = null;
   }
 
   trackByValue(_i: number, opt: PremiumSelectOption): string {
@@ -103,11 +126,21 @@ export class PremiumSelectComponent {
   onDocumentClick(ev: MouseEvent): void {
     if (!this.open) return;
     if (this.host.nativeElement.contains(ev.target as Node)) return;
+    if (this.panel?.nativeElement.contains(ev.target as Node)) return;
     this.open = false;
+    this.panelStyle = null;
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.open = false;
+    this.panelStyle = null;
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onViewportChange(): void {
+    if (!this.open) return;
+    this.updatePanelPosition();
   }
 }

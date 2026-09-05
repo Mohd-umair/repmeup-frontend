@@ -6,6 +6,7 @@ import {
   IAutomationFlow,
   IFlowNodeCatalogItem,
   IFlowValidationResult,
+  IFlowKeywordConflict,
   FlowChannel
 } from '../models/flow-builder.model';
 
@@ -35,8 +36,17 @@ export class FlowBuilderService {
     return this.api.delete(`${this.base}/${id}`);
   }
 
-  publishFlow(id: string): Observable<IApiResponse<IAutomationFlow>> {
-    return this.api.post(`${this.base}/${id}/publish`, {});
+  publishFlow(id: string, acknowledgeOverlap = false): Observable<IApiResponse<IAutomationFlow>> {
+    return this.api.post(`${this.base}/${id}/publish`, { acknowledgeOverlap });
+  }
+
+  /**
+   * Design-time check: does this keyword set overlap with another already-active flow on
+   * the same channel(s)? Called (debounced) while editing a trigger.keyword node, and again
+   * server-side on publish so the check can't be skipped by bypassing the UI.
+   */
+  checkKeywordOverlap(params: { keywords: string[]; channels: FlowChannel[]; flowId?: string }): Observable<IApiResponse<void> & { conflicts: IFlowKeywordConflict[] }> {
+    return this.api.post(`${this.base}/check-keyword-overlap`, params);
   }
 
   pauseFlow(id: string): Observable<IApiResponse<IAutomationFlow>> {
