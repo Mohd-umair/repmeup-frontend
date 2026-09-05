@@ -221,6 +221,7 @@
 <!-- Upload Modal -->
 <app-media-upload-modal
   *ngIf="showUploadModal"
+  [overlayZIndex]="overlayZIndex + 1"
   (close)="closeUploadModal()"
   (uploadSuccess)="onUploadSuccess($any($event))">
 </app-media-upload-modal>

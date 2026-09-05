@@ -54,7 +54,8 @@ export class PermissionService {
     '/app/ai-credits':      'billing.read',
     '/app/notifications':   'settings.read',
     '/app/media-library':   'media.read',
-    '/app/campaigns':       'settings.read'
+    '/app/campaigns':       'settings.read',
+    '/app/contacts':        'inbox.read'
   };
 
   constructor(private authService: AuthService) {

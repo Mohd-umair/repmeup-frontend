@@ -16,6 +16,7 @@ import {
 import { IAutomationFlow } from '../../../../core/models/flow-builder.model';
 import { IFlowEnrollment } from '../../../../core/services/flow-builder.service';
 import { PaginationComponent } from '../../../../shared/components/pagination/pagination.component';
+import { stampRecipeGraph } from '../utils/flow-recipes.util';
 
 interface IChannelMeta {
   key: AutomationChannel;
@@ -28,6 +29,18 @@ interface IModeOption {
   label: string;
   description: string;
   icon: string;
+}
+
+interface IFlowRecipe {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  triggerType: string;
+  channels: AutomationChannel[];
+  flowName: string;
+  /** When set, copy the matching ready-made template instead of stamping a mini graph. */
+  blueprintNameIncludes?: string;
 }
 
 @Component({
@@ -82,10 +95,77 @@ export class FlowListComponent implements OnInit, OnDestroy {
   ];
 
   readonly modeOptions: IModeOption[] = [
-    { value: 'workflow_only', label: 'Workflow Only', description: 'Only your flows reply. Reppy never runs.', icon: 'fas fa-diagram-project' },
-    { value: 'ai_only',       label: 'Reppy Only',       description: 'Flows are skipped. Reppy AI Auto-Reply handles every message.', icon: 'fas fa-robot' },
-    { value: 'hybrid',        label: 'Hybrid',        description: 'Flows run first; AI fills the gap when no flow matches. (Recommended)', icon: 'fas fa-layer-group' }
+    {
+      value: 'hybrid',
+      label: 'Flow Automation + AI',
+      description: 'Your flows run first. AI replies only answer when nothing matches. Recommended.',
+      icon: 'fas fa-layer-group'
+    },
+    {
+      value: 'workflow_only',
+      label: 'Only Flow Automation',
+      description: 'Only the flows you build here. AI replies will not answer.',
+      icon: 'fas fa-diagram-project'
+    },
+    {
+      value: 'ai_only',
+      label: 'Only AI replies',
+      description: 'AI replies answer every message. Your flows will not run.',
+      icon: 'fas fa-robot'
+    }
   ];
+
+  readonly recipes: IFlowRecipe[] = [
+    {
+      id: 'welcome',
+      name: 'Welcome message',
+      description: 'First WhatsApp hello.',
+      icon: 'fas fa-hand-sparkles',
+      triggerType: 'trigger.first_message',
+      channels: ['whatsapp'],
+      flowName: 'Welcome message'
+    },
+    {
+      id: 'comment_dm',
+      name: 'Comment to message',
+      description: 'Instagram comment → DM.',
+      icon: 'fab fa-instagram',
+      triggerType: 'trigger.ig_comment',
+      channels: ['instagram'],
+      flowName: 'Comment to message'
+    },
+    {
+      id: 'keyword',
+      name: 'Keyword reply',
+      description: 'Reply to words like “price”.',
+      icon: 'fas fa-comment-dots',
+      triggerType: 'trigger.keyword',
+      channels: ['whatsapp'],
+      flowName: 'Keyword reply'
+    },
+    {
+      id: 'book',
+      name: 'Book appointment',
+      description: 'Offer times and book.',
+      icon: 'fas fa-calendar-check',
+      triggerType: 'trigger.keyword',
+      channels: ['whatsapp'],
+      flowName: 'Book appointment',
+      blueprintNameIncludes: 'book appointment'
+    },
+    {
+      id: 'custom',
+      name: 'Start from scratch',
+      description: 'Blank canvas.',
+      icon: 'fas fa-pen-ruler',
+      triggerType: 'custom',
+      channels: ['whatsapp', 'instagram'],
+      flowName: 'Untitled'
+    }
+  ];
+
+  showRecipePicker = false;
+  creatingRecipe = false;
 
   constructor(
     private flowService: FlowBuilderService,
@@ -261,29 +341,127 @@ export class FlowListComponent implements OnInit, OnDestroy {
     this.loadFlows();
   }
 
+  openRecipePicker(): void {
+    this.showRecipePicker = true;
+  }
+
+  closeRecipePicker(): void {
+    if (this.creatingRecipe) return;
+    this.showRecipePicker = false;
+  }
+
   createBlank(): void {
-    this.flowService.createFlow({
-      name: 'Untitled flow',
-      channels: ['whatsapp', 'instagram'],
-      nodes: [],
-      edges: []
-    }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (r) => {
-        if (r.data?._id) this.router.navigate(['/app/automation/flows', r.data._id, 'edit']);
-      },
-      error: (err) => this.notify.error('Create failed', err.error?.error || 'Could not create flow.')
-    });
+    this.openRecipePicker();
+  }
+
+  createFromRecipe(recipe: IFlowRecipe): void {
+    if (this.creatingRecipe) return;
+    if (recipe.id === 'custom') {
+      this.createFlowAndOpen({
+        name: recipe.flowName,
+        channels: recipe.channels,
+        nodes: [],
+        edges: []
+      }, { start: 'custom' });
+      return;
+    }
+    if (recipe.blueprintNameIncludes) {
+      const match = this.findBlueprint(recipe.blueprintNameIncludes);
+      if (match) {
+        this.openBlueprintCopy(match);
+        return;
+      }
+      this.creatingRecipe = true;
+      this.flowService.listFlows({ blueprints: 'true' })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (r) => {
+            this.blueprints = r.data ?? [];
+            this.creatingRecipe = false;
+            const bp = this.findBlueprint(recipe.blueprintNameIncludes!);
+            if (bp) {
+              this.openBlueprintCopy(bp);
+              return;
+            }
+            this.createStampedRecipe(recipe);
+          },
+          error: () => {
+            this.creatingRecipe = false;
+            this.createStampedRecipe(recipe);
+          }
+        });
+      return;
+    }
+    this.createStampedRecipe(recipe);
   }
 
   useBlueprint(bp: IAutomationFlow): void {
-    this.flowService.duplicateFlow(bp._id!)
-      .pipe(takeUntil(this.destroy$))
+    this.openBlueprintCopy(bp);
+  }
+
+  private findBlueprint(nameIncludes: string): IAutomationFlow | undefined {
+    const needle = nameIncludes.toLowerCase();
+    return this.blueprints.find((b) => (b.name || '').toLowerCase().includes(needle));
+  }
+
+  private createStampedRecipe(recipe: IFlowRecipe): void {
+    const stamp = stampRecipeGraph(recipe.id);
+    this.createFlowAndOpen({
+      name: recipe.flowName,
+      description: recipe.description,
+      channels: recipe.channels,
+      entryNodeId: stamp?.entryNodeId || '',
+      nodes: stamp?.nodes || [],
+      edges: stamp?.edges || []
+    });
+  }
+
+  private createFlowAndOpen(
+    payload: Partial<IAutomationFlow>,
+    queryParams?: Record<string, string>
+  ): void {
+    if (this.creatingRecipe) return;
+    this.creatingRecipe = true;
+    this.flowService.createFlow(payload)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.creatingRecipe = false; }))
       .subscribe({
         next: (r) => {
+          this.showRecipePicker = false;
+          if (r.data?._id) {
+            const extras = queryParams ? { queryParams } : {};
+            this.router.navigate(['/app/automation/flows', r.data._id, 'edit'], extras);
+          }
+        },
+        error: (err) => this.notify.error('Could not create', err.error?.error || 'Please try again.')
+      });
+  }
+
+  private openBlueprintCopy(bp: IAutomationFlow): void {
+    if (!bp._id || this.creatingRecipe) return;
+    this.creatingRecipe = true;
+    this.flowService.duplicateFlow(bp._id)
+      .pipe(takeUntil(this.destroy$), finalize(() => { this.creatingRecipe = false; }))
+      .subscribe({
+        next: (r) => {
+          this.showRecipePicker = false;
           if (r.data?._id) this.router.navigate(['/app/automation/flows', r.data._id, 'edit']);
         },
-        error: (err) => this.notify.error('Import failed', err.error?.error || 'Could not import blueprint.')
+        error: (err) => this.notify.error('Could not copy', err.error?.error || 'Please try again.')
       });
+  }
+
+  blueprintIcon(bp: IAutomationFlow): string {
+    const channels = bp.channels || [];
+    if (channels.length === 1) return this.channelIcon(channels[0]);
+    if (channels.includes('whatsapp')) return 'fab fa-whatsapp';
+    if (channels.includes('instagram')) return 'fab fa-instagram';
+    return 'fas fa-layer-group';
+  }
+
+  shortBlueprintDesc(bp: IAutomationFlow): string {
+    const raw = String(bp.description || '').trim();
+    if (!raw) return `${bp.nodes?.length || 0} steps`;
+    return raw.length > 48 ? `${raw.slice(0, 45).trimEnd()}…` : raw;
   }
 
   editFlow(flow: IAutomationFlow): void {
@@ -307,12 +485,19 @@ export class FlowListComponent implements OnInit, OnDestroy {
   toggleStatus(flow: IAutomationFlow): void {
     if (!flow._id) return;
     const isPausing = flow.status === 'active';
+    if (!isPausing && this.isAllChannelsReppyOnly(flow)) {
+      void this.swal.warning(
+        'This flow will not run',
+        'These apps are set to “Only AI replies”. Switch to “Flow Automation + AI” above, then turn this on.'
+      );
+      return;
+    }
     this.swal.confirm(
-      isPausing ? `Pause "${flow.name}"?` : `Publish "${flow.name}"?`,
+      isPausing ? `Pause “${flow.name}”?` : `Turn on “${flow.name}”?`,
       isPausing
-        ? 'The flow will stop processing new triggers until resumed.'
-        : 'The flow will go live and start processing triggers.',
-      isPausing ? 'Yes, pause it' : 'Yes, publish it'
+        ? 'It will stop answering new messages until you turn it on again.'
+        : 'It will start answering matching messages right away.',
+      isPausing ? 'Yes, pause' : 'Yes, turn on'
     ).then((result) => {
       if (!result.isConfirmed || !flow._id) return;
       this.toggling.add(flow._id);
@@ -321,8 +506,8 @@ export class FlowListComponent implements OnInit, OnDestroy {
         : this.flowService.publishFlow(flow._id);
       req$.pipe(takeUntil(this.destroy$), finalize(() => this.toggling.delete(flow._id!)))
         .subscribe({
-          next: () => { this.notify.success('Updated', 'Flow status updated.'); this.loadFlows(); },
-          error: (err) => this.notify.error('Update failed', err.error?.error || 'Could not update flow.')
+          next: () => { this.notify.success('Updated', isPausing ? 'Paused.' : 'It’s on.'); this.loadFlows(); },
+          error: (err) => this.notify.error('Update failed', err.error?.error || 'Could not update.')
         });
     });
   }

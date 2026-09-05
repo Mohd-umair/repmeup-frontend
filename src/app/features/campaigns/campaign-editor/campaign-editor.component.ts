@@ -19,6 +19,8 @@ import {
   ITemplateSlots
 } from '../../../core/services/campaign.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ContactService } from '../../../core/services/contact.service';
+import { CampaignAudiencePrefill } from '../../../core/services/campaign-audience-prefill.service';
 import { PlatformService, PlatformConnection } from '../../../core/services/platform.service';
 import { WhatsAppTemplateService } from '../../../core/services/whatsapp-template.service';
 import { WhatsAppTemplate } from '../../../core/models/whatsapp-template.model';
@@ -56,6 +58,7 @@ type Step = 1 | 2 | 3 | 4 | 5;
 })
 export class CampaignEditorComponent implements OnInit, OnDestroy {
   @Input() campaign: ICampaign | null = null;
+  @Input() audiencePrefill: CampaignAudiencePrefill | null = null;
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();
 
@@ -106,6 +109,9 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
   defaultCountry = 'IN';
   supportedRegions: string[] = [];
   private phonePreviewDebounce: ReturnType<typeof setTimeout> | null = null;
+  audiencePrefillLoading = false;
+  audiencePrefillBanner = '';
+  private audiencePrefillApplied = false;
 
   countryLabel = campaignCountryLabel;
   readonly fallbackRegions = Object.keys(CAMPAIGN_COUNTRY_LABELS);
@@ -129,6 +135,7 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
 
   constructor(
     private campaignService: CampaignService,
+    private contactService: ContactService,
     private notify: NotificationService,
     private platformService: PlatformService,
     private templateService: WhatsAppTemplateService,
@@ -292,8 +299,73 @@ export class CampaignEditorComponent implements OnInit, OnDestroy {
             this.defaultCountry = r.suggestedDefaultCountry;
           }
           this.cdr.markForCheck();
+          this.applyAudiencePrefillIfNeeded();
         },
-        error: () => { /* non-blocking */ }
+        error: () => {
+          this.applyAudiencePrefillIfNeeded();
+        }
+      });
+  }
+
+  /** Resolve CRM selection/filters into phone lines when arriving from Contacts. */
+  private applyAudiencePrefillIfNeeded(): void {
+    if (!this.audiencePrefill || this.audiencePrefillApplied || !this.createdCampaignId) return;
+    if (this.rawPhoneText.trim()) return;
+
+    this.audiencePrefillApplied = true;
+    this.audiencePrefillLoading = true;
+    const sourceLabel = this.audiencePrefill.sourceLabel || 'Contacts';
+    this.audiencePrefillBanner = `Loading audience from ${sourceLabel}…`;
+
+    const { contactIds, filterQuery, search, platform, tag } = this.audiencePrefill;
+    this.contactService
+      .resolveCampaignAudience({ contactIds, filterQuery, search, platform, tag })
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.audiencePrefillLoading = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: res => {
+          const data = res.data;
+          if (!data?.lines?.length) {
+            this.audiencePrefillBanner = '';
+            if (data?.skippedNoPhone) {
+              this.notify.warning('Selected contacts have no phone numbers on file.');
+            } else {
+              this.notify.warning('No contacts with phone numbers found for this audience.');
+            }
+            return;
+          }
+
+          this.rawPhoneText = data.lines
+            .map(l => (l.name ? `${l.phone},${l.name}` : l.phone))
+            .join('\n');
+          this.audienceTab = 'paste';
+
+          const parts = [
+            `${data.total} recipient${data.total === 1 ? '' : 's'} from ${sourceLabel}`
+          ];
+          if (data.skippedNoPhone) {
+            parts.push(`${data.skippedNoPhone} skipped (no phone)`);
+          }
+          this.audiencePrefillBanner = parts.join(' · ');
+          this.schedulePhonePreview();
+
+          if (this.paramFormState.varsFromCsv.length === 0) {
+            this.submitAudience();
+          } else {
+            this.notify.info(
+              'Audience prefilled. Upload a CSV or set fixed values for template variables marked "from CSV".'
+            );
+          }
+        },
+        error: err => {
+          this.audiencePrefillBanner = '';
+          this.notify.error(err?.error?.error || 'Failed to load contacts for campaign');
+        }
       });
   }
 

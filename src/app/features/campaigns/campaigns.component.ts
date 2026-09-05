@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { CampaignService, ICampaign, CampaignStatus } from '../../core/services/campaign.service';
@@ -9,6 +10,7 @@ import { EntitlementsStore, FEATURE_KEY } from '../../core/services/entitlements
 import { UpgradePromptComponent } from '../../shared/components/upgrade-prompt/upgrade-prompt.component';
 import { CampaignEditorComponent } from './campaign-editor';
 import { CampaignRecipientsReportComponent } from './campaign-recipients-report/campaign-recipients-report.component';
+import { CampaignAudiencePrefillService, CampaignAudiencePrefill } from '../../core/services/campaign-audience-prefill.service';
 import { UsageMeterComponent } from '../../shared/components/usage-meter/usage-meter.component';
 
 @Component({
@@ -35,6 +37,7 @@ export class CampaignsComponent implements OnInit, OnDestroy {
   // Editor panel
   showEditor = false;
   editingCampaign: ICampaign | null = null;
+  audiencePrefill: CampaignAudiencePrefill | null = null;
 
   // Delete confirm
   confirmDeleteId: string | null = null;
@@ -55,11 +58,26 @@ export class CampaignsComponent implements OnInit, OnDestroy {
 
   constructor(
     private campaignService: CampaignService,
-    private notify: NotificationService
+    private notify: NotificationService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private campaignPrefill: CampaignAudiencePrefillService
   ) {}
 
   ngOnInit(): void {
     this.load();
+    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const create = params.get('create');
+      if (create === '1' || create === 'true') {
+        this.openCreate(this.campaignPrefill.consume());
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { create: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -86,7 +104,8 @@ export class CampaignsComponent implements OnInit, OnDestroy {
     this.load();
   }
 
-  openCreate(): void {
+  openCreate(prefill: CampaignAudiencePrefill | null = null): void {
+    this.audiencePrefill = prefill;
     this.editingCampaign = null;
     this.showEditor = true;
   }
@@ -103,11 +122,13 @@ export class CampaignsComponent implements OnInit, OnDestroy {
   onEditorClose(): void {
     this.showEditor = false;
     this.editingCampaign = null;
+    this.audiencePrefill = null;
   }
 
   onEditorSaved(): void {
     this.showEditor = false;
     this.editingCampaign = null;
+    this.audiencePrefill = null;
     this.load();
   }
 

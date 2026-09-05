@@ -12,6 +12,7 @@ import { ContactService } from '../../../core/services/contact.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { InboxAvatarService } from '../../../core/services/inbox-avatar.service';
 import { IContact } from '../../../core/models/contact.model';
+import { formatAiIntentLabel } from '../../../core/utils/contact-ai-display.util';
 
 @Component({
   selector: 'app-contact-detail',
@@ -204,7 +205,8 @@ export class ContactDetailComponent implements OnChanges, OnDestroy {
     const icons: Record<string, string> = {
       instagram: 'fa-instagram', facebook: 'fa-facebook',
       whatsapp: 'fa-whatsapp', youtube: 'fa-youtube',
-      google: 'fa-google', linkedin: 'fa-linkedin', twitter: 'fa-twitter'
+      google: 'fa-google', linkedin: 'fa-linkedin', twitter: 'fa-twitter',
+      shopify: 'fa-shopify'
     };
     return icons[platform] || 'fa-globe';
   }
@@ -213,7 +215,8 @@ export class ContactDetailComponent implements OnChanges, OnDestroy {
     const colors: Record<string, string> = {
       instagram: 'text-pink-500', facebook: 'text-blue-600',
       whatsapp: 'text-green-500', youtube: 'text-red-500',
-      google: 'text-yellow-500', linkedin: 'text-blue-700', twitter: 'text-sky-500'
+      google: 'text-yellow-500', linkedin: 'text-blue-700', twitter: 'text-sky-500',
+      shopify: 'text-[#95BF47]'
     };
     return colors[platform] || 'text-gray-500';
   }
@@ -232,6 +235,10 @@ export class ContactDetailComponent implements OnChanges, OnDestroy {
   onContactAvatarError(): void {
     this.contactAvatarError = true;
     this.cdr.markForCheck();
+  }
+
+  get displayIntent(): string | null {
+    return formatAiIntentLabel(this.contact?.aiInsights?.intent);
   }
 
   getSentimentBadge(sentiment: string | null | undefined): { label: string; cls: string } {

@@ -1021,10 +1021,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.platformConnectionService.syncConnection(connection._id).subscribe({
       next: (response) => {
         if (response.success) {
-          this.notificationService.success(
-            'Sync Completed',
-            `Found ${response.data?.interactionsAdded || 0} new interactions.`
-          );
+          const shopifyStats = response.data?.shopifyStats;
+          if (connection.platform === 'shopify' && shopifyStats) {
+            this.notificationService.success(
+              'Shopify Sync Completed',
+              `${shopifyStats.products} product(s), ${shopifyStats.customers} customer(s), ${shopifyStats.orders} order(s) synced.`
+            );
+          } else {
+            this.notificationService.success(
+              'Sync Completed',
+              response.message || `Found ${response.data?.interactionsAdded || 0} new interactions.`
+            );
+          }
           // Refresh connections to update last sync time
           this.platformConnectionService.refresh().subscribe();
         }

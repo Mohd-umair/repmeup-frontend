@@ -93,7 +93,8 @@ export class InboxContactPanelComponent implements OnChanges, OnDestroy {
     const icons: Record<string, string> = {
       instagram: 'fa-instagram', facebook: 'fa-facebook',
       whatsapp: 'fa-whatsapp', youtube: 'fa-youtube',
-      google: 'fa-google', linkedin: 'fa-linkedin', twitter: 'fa-twitter'
+      google: 'fa-google', linkedin: 'fa-linkedin', twitter: 'fa-twitter',
+      shopify: 'fa-shopify'
     };
     return icons[platform] || 'fa-globe';
   }
@@ -102,7 +103,8 @@ export class InboxContactPanelComponent implements OnChanges, OnDestroy {
     const colors: Record<string, string> = {
       instagram: 'text-pink-500', facebook: 'text-blue-600',
       whatsapp: 'text-green-500', youtube: 'text-red-500',
-      google: 'text-yellow-500', linkedin: 'text-blue-700', twitter: 'text-sky-500'
+      google: 'text-yellow-500', linkedin: 'text-blue-700', twitter: 'text-sky-500',
+      shopify: 'text-[#95BF47]'
     };
     return colors[platform] || 'text-gray-500';
   }

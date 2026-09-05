@@ -173,6 +173,25 @@
 
     <!-- ══ STEP 3: Audience ══════════════════════════════════════════════ -->
     <ng-container *ngIf="step === 3">
+      <div *ngIf="audiencePrefillLoading || audiencePrefillBanner"
+           class="rounded-xl border p-4 flex items-start gap-3"
+           style="border-color: #25d366; background-color: rgba(37,211,102,0.08);">
+        <i class="text-green-500 text-lg mt-0.5"
+           [class.fas]="audiencePrefillLoading"
+           [class.fa-spinner]="audiencePrefillLoading"
+           [class.fa-spin]="audiencePrefillLoading"
+           [class.fab]="!audiencePrefillLoading"
+           [class.fa-whatsapp]="!audiencePrefillLoading"></i>
+        <div class="min-w-0">
+          <p class="text-sm font-semibold" style="color: var(--text-primary);">
+            {{ audiencePrefillLoading ? 'Loading contacts…' : 'Audience from CRM' }}
+          </p>
+          <p *ngIf="audiencePrefillBanner" class="text-xs mt-0.5" style="color: var(--text-muted);">
+            {{ audiencePrefillBanner }}
+          </p>
+        </div>
+      </div>
+
       <!-- Default country for local numbers -->
       <div class="rounded-xl border p-4 space-y-2"
            style="border-color: var(--card-border); background-color: var(--card-bg);">

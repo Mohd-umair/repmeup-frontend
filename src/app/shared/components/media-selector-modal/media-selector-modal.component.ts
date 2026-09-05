@@ -163,7 +163,15 @@ export class MediaSelectorModalComponent implements OnInit {
 
   onUploadSuccess(media: Media): void {
     this.closeUploadModal();
-    // Reload the media list to show the newly uploaded item
+    if (media?._id) {
+      if (this.allowMultiple) {
+        if (!this.selectedMedia.some((m) => m._id === media._id)) {
+          this.selectedMedia.push(media);
+        }
+      } else {
+        this.selectedMedia = [media];
+      }
+    }
     this.loadMedia();
   }
 

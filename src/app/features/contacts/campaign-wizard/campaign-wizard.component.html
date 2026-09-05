@@ -1,0 +1,93 @@
+<div class="p-6 max-w-3xl mx-auto text-gray-900 dark:text-white">
+  <a routerLink="/app/contacts" class="text-xs text-gray-500">← Contacts</a>
+  <h1 class="text-2xl font-extrabold mb-1">Create campaign</h1>
+  <p class="text-sm text-gray-500 mb-6">Audience → Channel → Content → Review → Schedule</p>
+
+  <div class="flex gap-2 text-xs font-bold mb-6">
+    <span *ngFor="let s of [1,2,3,4,5]" class="px-2 py-1 rounded" [class.bg-rep-lime]="step === s">{{ s }}</span>
+  </div>
+
+  <section *ngIf="step === 1" class="space-y-3">
+    <input [(ngModel)]="name" class="w-full rounded-lg border px-3 py-2 bg-transparent" />
+    <div class="rounded-xl border p-4">
+      <p class="font-bold">Campaign audience</p>
+      <p class="text-sm">{{ audience?.totalMatched || 0 }} contacts</p>
+      <p class="text-xs text-gray-500">This list is frozen when you continue, so later contact changes will not change who is included.</p>
+      <p class="text-sm mt-2">WhatsApp eligible: {{ eligibleFor('whatsapp') }} · Unavailable: {{ excludedFor('whatsapp') }}</p>
+    </div>
+  </section>
+
+  <section *ngIf="step === 2" class="space-y-3">
+    <label *ngFor="let ch of channels" class="flex items-center gap-2 p-3 rounded-xl border"
+           [class.opacity-50]="eligibleFor(ch) === 0">
+      <input type="radio" name="ch" [value]="ch" [(ngModel)]="channel" [disabled]="eligibleFor(ch) === 0" />
+      <span class="capitalize">{{ ch }}</span>
+      <span class="text-xs text-gray-500">{{ eligibleFor(ch) }} eligible</span>
+    </label>
+    <p *ngIf="channel !== 'whatsapp'" class="text-xs text-amber-600">Only contacts with an active 24-hour conversation can receive Instagram or Facebook DMs.</p>
+    <select [(ngModel)]="connectionId" class="w-full rounded-lg border px-3 py-2 bg-transparent text-sm">
+      <option value="">Choose connected account</option>
+      <option *ngFor="let c of channelConnections()" [value]="c._id">{{ c.platformDisplayName || c.platformUsername || c.platform }}</option>
+    </select>
+  </section>
+
+  <section *ngIf="step === 3" class="space-y-3">
+    <ng-container *ngIf="channel === 'whatsapp'">
+      <p class="text-sm font-bold">Approved WhatsApp template</p>
+      <select [(ngModel)]="templateId" class="w-full rounded-lg border px-3 py-2 bg-transparent text-sm">
+        <option value="">Choose template</option>
+        <option *ngFor="let t of templates" [value]="t._id || t.id">{{ t.name }}</option>
+      </select>
+    </ng-container>
+    <div class="grid grid-cols-2 gap-2">
+      <select [(ngModel)]="goal" class="rounded-lg border px-2 py-2 bg-transparent text-sm"><option>Promotion</option><option>Re-engagement</option><option>Follow-up</option></select>
+      <select [(ngModel)]="tone" class="rounded-lg border px-2 py-2 bg-transparent text-sm"><option>Friendly</option><option>Professional</option><option>Concise</option></select>
+    </div>
+    <input [(ngModel)]="offer" placeholder="Offer" class="w-full rounded-lg border px-3 py-2 bg-transparent" />
+    <button type="button" (click)="generate()" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-rep-lime text-rep-black">Generate with AI</button>
+    <textarea [(ngModel)]="body" rows="6" class="w-full rounded-xl border px-3 py-2 bg-transparent"></textarea>
+    <div class="flex gap-2 text-xs">
+      <button type="button" (click)="loadPreview(previewOffset)" class="underline">Preview personalization</button>
+      <button type="button" (click)="loadPreview(previewOffset - 1)" [disabled]="previewOffset <= 0">← Previous</button>
+      <button type="button" (click)="loadPreview(previewOffset + 1)" [disabled]="preview && previewOffset + 1 >= (preview.total || 0)">Next →</button>
+    </div>
+    <div *ngIf="preview" class="p-3 rounded-xl bg-gray-50 dark:bg-gray-800 text-sm">
+      <p class="font-bold">{{ preview.contact?.name }}</p>
+      <p class="whitespace-pre-wrap">{{ preview.preview }}</p>
+    </div>
+  </section>
+
+  <section *ngIf="step === 4" class="space-y-3">
+    <p class="font-bold">Campaign check</p>
+    <p *ngFor="let c of validation?.checks" class="text-sm">{{ c.ok ? '✓' : '✕' }} {{ c.label }}</p>
+    <p *ngFor="let w of validation?.warnings" class="text-xs text-amber-600">⚠ {{ w }}</p>
+    <p class="text-sm">Sendable: {{ validation?.sendable || eligibleFor(channel) }}</p>
+  </section>
+
+  <section *ngIf="step === 5" class="space-y-3">
+    <p><strong>{{ name }}</strong></p>
+    <p class="text-sm">Matched {{ audience?.totalMatched || 0 }} · Sendable {{ eligibleFor(channel) }} · Excluded {{ excludedFor(channel) }}</p>
+    <p class="text-sm capitalize">Channel: {{ channel }}</p>
+    <input type="datetime-local" [(ngModel)]="sendAt" class="rounded-lg border px-3 py-2 bg-transparent" />
+    <div class="flex gap-2">
+      <button type="button" (click)="confirmOpen = true" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black font-bold">Send now</button>
+      <button type="button" (click)="launch(false)" class="px-4 py-2 rounded-lg border">Schedule</button>
+    </div>
+  </section>
+
+  <div class="mt-6 flex justify-between">
+    <button type="button" (click)="back()" [disabled]="step === 1" class="text-sm">Back</button>
+    <button *ngIf="step < 5" type="button" (click)="next()" class="px-4 py-2 rounded-lg bg-rep-lime text-rep-black font-bold">Continue</button>
+  </div>
+
+  <div *ngIf="confirmOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full">
+      <p class="font-bold">Ready to send</p>
+      <p class="text-sm my-2">{{ eligibleFor(channel) }} contacts on {{ channel }}</p>
+      <div class="flex gap-2">
+        <button type="button" (click)="confirmOpen = false">Cancel</button>
+        <button type="button" (click)="launch(true)" class="px-3 py-1.5 rounded-lg bg-rep-lime text-rep-black font-bold">Confirm & send</button>
+      </div>
+    </div>
+  </div>
+</div>

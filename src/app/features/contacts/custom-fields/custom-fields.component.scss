@@ -1,0 +1,12 @@
+.contacts-fields-create {
+  animation: fieldsPanelIn 0.2s ease-out;
+}
+
+@keyframes fieldsPanelIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contacts-fields-create { animation: none; }
+}

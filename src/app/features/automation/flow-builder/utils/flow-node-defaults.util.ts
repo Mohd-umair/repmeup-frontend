@@ -138,3 +138,49 @@ export function getConfigFieldDef(
 ) {
   return catalogItem?.configFields.find((f) => f.key === key);
 }
+
+const DURATION_FIELD_KEYS = new Set(['delaySec', 'timeoutSec', 'minSec', 'maxSec']);
+
+export type DurationUnit = 'seconds' | 'minutes' | 'hours' | 'days';
+
+export function isDurationField(key: string): boolean {
+  return DURATION_FIELD_KEYS.has(key);
+}
+
+/** Pick the largest unit that divides the stored seconds evenly. */
+export function inferDurationUnit(seconds: number): DurationUnit {
+  const s = Math.max(0, Number(seconds) || 0);
+  if (s === 0) return 'minutes';
+  if (s % 86400 === 0) return 'days';
+  if (s % 3600 === 0) return 'hours';
+  if (s % 60 === 0) return 'minutes';
+  return 'seconds';
+}
+
+export function secondsToAmount(seconds: number, unit: DurationUnit): number {
+  const s = Math.max(0, Number(seconds) || 0);
+  switch (unit) {
+    case 'days':
+      return s / 86400;
+    case 'hours':
+      return s / 3600;
+    case 'minutes':
+      return s / 60;
+    default:
+      return s;
+  }
+}
+
+export function durationToSeconds(amount: number, unit: DurationUnit): number {
+  const n = Math.max(0, Number(amount) || 0);
+  switch (unit) {
+    case 'days':
+      return Math.round(n * 86400);
+    case 'hours':
+      return Math.round(n * 3600);
+    case 'minutes':
+      return Math.round(n * 60);
+    default:
+      return Math.round(n);
+  }
+}

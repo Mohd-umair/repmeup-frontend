@@ -1,0 +1,20 @@
+@keyframes segmentsPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.segments-create-panel {
+  animation: segmentsPanelIn 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segments-create-panel {
+    animation: none;
+  }
+}

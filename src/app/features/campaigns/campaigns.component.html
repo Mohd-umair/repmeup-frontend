@@ -261,6 +261,7 @@
 <app-campaign-editor
   *ngIf="showEditor"
   [campaign]="editingCampaign"
+  [audiencePrefill]="audiencePrefill"
   (closed)="onEditorClose()"
   (saved)="onEditorSaved()">
 </app-campaign-editor>

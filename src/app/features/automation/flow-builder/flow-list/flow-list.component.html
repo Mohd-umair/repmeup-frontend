@@ -10,18 +10,22 @@
         <div class="page-breadcrumb">
           <a routerLink="/app/automation">Automation Hub</a>
           <i class="fas fa-chevron-right"></i>
-          <span>Flow Builder</span>
+          <span>Flow Automation</span>
         </div>
-        <h1 class="page-title">Flow Builder</h1>
-        <p class="page-subtitle">Design cross-channel automations for WhatsApp, Instagram, and Facebook.</p>
+        <h1 class="page-title">Flow Automation</h1>
+        <p class="page-subtitle">
+          Build step-by-step replies — welcome messages, buttons, and wait-for-reply.
+          For AI that answers on its own, open
+          <a routerLink="/app/automation/ai-replies">AI replies</a>.
+        </p>
       </div>
     </div>
     <div class="page-header__actions">
       <button type="button" class="btn-secondary" routerLink="/app/automation">
         <i class="fas fa-arrow-left"></i> Hub
       </button>
-      <button type="button" class="btn-primary" (click)="createBlank()">
-        <i class="fas fa-plus"></i> New Flow
+      <button type="button" class="btn-primary" (click)="openRecipePicker()">
+        <i class="fas fa-plus"></i> New flow
       </button>
     </div>
   </div>
@@ -31,8 +35,8 @@
     <button type="button" class="amc-head" (click)="toggleModePanel()" [attr.aria-expanded]="showModePanel">
       <div class="amc-head__icon"><i class="fas fa-sliders" aria-hidden="true"></i></div>
       <div class="amc-head__text">
-        <h3 class="amc-head__title">Automation Mode</h3>
-        <p class="amc-head__sub">Choose how each channel replies — Workflow, Reppy, or both.</p>
+        <h3 class="amc-head__title">Who should reply?</h3>
+        <p class="amc-head__sub">Choose for WhatsApp, Instagram, and Facebook — Flow Automation, AI replies, or both.</p>
       </div>
 
       <!-- Compact current-state summary chips (always visible) -->
@@ -74,11 +78,11 @@
 
       <p class="amc-foot">
         <i class="fas fa-circle-info" aria-hidden="true"></i>
-        In <strong>Hybrid</strong>, a workflow that takes over a conversation pauses Reppy fallback until it ends.
+        With <strong>Flow Automation + AI</strong>, your saved flow runs first. AI replies only answer when nothing matches.
       </p>
       <p class="amc-foot amc-foot--warn">
         <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-        A published flow <strong>only runs</strong> if the channel mode is <strong>Workflow Only</strong> or <strong>Hybrid</strong>. Flows on <em>Reppy Only</em> channels will never fire.
+        If a channel is <strong>Only AI replies</strong>, Flow Automation on that channel will never run.
       </p>
     </div>
   </div>
@@ -90,7 +94,7 @@
       [attr.aria-selected]="activeTab === 'my-flows'"
       (click)="setTab('my-flows')">
       <i class="fas fa-project-diagram" aria-hidden="true"></i>
-      My Flows
+      My flows
       <span *ngIf="total > 0" class="tab-count">{{ total }}</span>
     </button>
     <button type="button" role="tab" class="page-tab"
@@ -98,14 +102,14 @@
       [attr.aria-selected]="activeTab === 'blueprints'"
       (click)="setTab('blueprints')">
       <i class="fas fa-layer-group" aria-hidden="true"></i>
-      Blueprints
+      Ready-made
     </button>
     <button type="button" role="tab" class="page-tab"
       [class.is-active]="activeTab === 'runs'"
       [attr.aria-selected]="activeTab === 'runs'"
       (click)="setTab('runs')">
       <i class="fas fa-list-check" aria-hidden="true"></i>
-      Runs
+      Activity
       <span *ngIf="activeTab === 'runs' && runsTotal > 0" class="tab-count">{{ runsTotal }}</span>
     </button>
   </div>
@@ -120,14 +124,20 @@
 
     <!-- Empty state -->
     <div *ngIf="!loading && flows.length === 0" class="empty-state animate-fade-in-up">
-      <i class="fas fa-project-diagram empty-state__icon"></i>
-      <h3 class="empty-state__title">No Flows Yet</h3>
+      <i class="fas fa-comments empty-state__icon"></i>
+      <h3 class="empty-state__title">No flows yet</h3>
       <p class="empty-state__text">
-        Start from a blueprint or create a blank flow to automate your customer journey.
+        Pick what you want to happen. We’ll build a working flow you can edit.
       </p>
-      <button type="button" class="btn-primary mt-3" (click)="createBlank()">
-        <i class="fas fa-plus"></i> Create Flow
-      </button>
+      <div class="recipe-grid">
+        <button *ngFor="let recipe of recipes" type="button" class="recipe-card"
+                [disabled]="creatingRecipe"
+                (click)="createFromRecipe(recipe)">
+          <i [class]="recipe.icon" class="recipe-card__icon"></i>
+          <span class="recipe-card__name">{{ recipe.name }}</span>
+          <span class="recipe-card__desc">{{ recipe.description }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- List table -->
@@ -137,9 +147,9 @@
           <thead>
             <tr>
               <th>Flow</th>
-              <th>Channels</th>
+              <th>Apps</th>
               <th>Status</th>
-              <th class="col-stat" title="Triggered in last 7 days">Triggered</th>
+              <th class="col-stat" title="Started in last 7 days">Started</th>
               <th class="col-stat" title="Completed in last 7 days">Completed</th>
               <th class="col-stat" title="Failed in last 7 days">Failed</th>
               <th class="col-date">Updated</th>
@@ -173,7 +183,7 @@
                 </span>
                 <span *ngIf="isAllChannelsReppyOnly(flow) && flow.status === 'active'"
                       class="reppy-only-warn"
-                      title="All channels are in Reppy-Only mode — this flow will never fire. Switch at least one channel to Workflow Only or Hybrid.">
+                      title="All apps are set to Only AI replies — this flow will never run. Switch at least one to Flow Automation + AI.">
                   <i class="fas fa-exclamation-triangle"></i>
                 </span>
               </td>
@@ -199,19 +209,19 @@
               <!-- Actions -->
               <td class="col-actions">
                 <div class="flow-row__actions">
-                  <button type="button" class="btn-icon-action" (click)="editFlow(flow)" title="Edit flow">
+                  <button type="button" class="btn-icon-action" (click)="editFlow(flow)" title="Edit">
                     <i class="fas fa-pen-to-square" aria-hidden="true"></i>
                   </button>
-                  <button type="button" class="btn-icon-action" (click)="openRunsForFlow(flow)" title="View runs">
+                  <button type="button" class="btn-icon-action" (click)="openRunsForFlow(flow)" title="See activity">
                     <i class="fas fa-list-check" aria-hidden="true"></i>
                   </button>
-                  <button type="button" class="btn-icon-action" (click)="duplicateFlow(flow)" title="Duplicate flow">
+                  <button type="button" class="btn-icon-action" (click)="duplicateFlow(flow)" title="Make a copy">
                     <i class="fas fa-copy" aria-hidden="true"></i>
                   </button>
                   <button type="button" class="btn-icon-action"
                     [disabled]="toggling.has(flow._id!)"
                     (click)="toggleStatus(flow)"
-                    [title]="flow.status === 'active' ? 'Pause flow' : 'Publish flow'">
+                    [title]="flow.status === 'active' ? 'Pause' : 'Turn on'">
                     <i class="fas"
                        [ngClass]="toggling.has(flow._id!) ? 'fa-spinner fa-spin' : (flow.status === 'active' ? 'fa-pause' : 'fa-play')"
                        aria-hidden="true"></i>
@@ -252,8 +262,8 @@
 
     <div *ngIf="!blueprints.length" class="empty-state animate-fade-in-up">
       <i class="fas fa-layer-group empty-state__icon"></i>
-      <h3 class="empty-state__title">No Blueprints Available</h3>
-      <p class="empty-state__text">Pre-built flow templates will appear here to help you get started quickly.</p>
+      <h3 class="empty-state__title">No ready-made templates yet</h3>
+      <p class="empty-state__text">Start from a recipe instead — tap New flow.</p>
     </div>
 
     <div *ngIf="blueprints.length" class="flows-table-wrap animate-fade-in-up">
@@ -261,10 +271,9 @@
         <table class="flows-table">
           <thead>
             <tr>
-              <th>Blueprint</th>
-              <th>Channels</th>
-              <th class="col-nodes">Nodes</th>
-              <th class="col-edges">Edges</th>
+              <th>Template</th>
+              <th>Apps</th>
+              <th class="col-nodes">Steps</th>
               <th class="col-actions">Action</th>
             </tr>
           </thead>
@@ -289,7 +298,7 @@
                 </div>
               </td>
 
-              <!-- Nodes -->
+              <!-- Steps -->
               <td class="col-nodes">
                 <span class="flow-chip">
                   <i class="fas fa-sitemap" aria-hidden="true"></i>
@@ -297,19 +306,11 @@
                 </span>
               </td>
 
-              <!-- Edges -->
-              <td class="col-edges">
-                <span class="flow-chip">
-                  <i class="fas fa-random" aria-hidden="true"></i>
-                  {{ bp.edges?.length || 0 }}
-                </span>
-              </td>
-
               <!-- Action -->
               <td class="col-actions">
                 <button type="button" class="btn-primary btn-blueprint" (click)="useBlueprint(bp)">
                   <i class="fas fa-magic" aria-hidden="true"></i>
-                  Use Blueprint
+                  Use this
                 </button>
               </td>
             </tr>
@@ -327,10 +328,10 @@
       <div>
         <h3 class="runs-title">
           <i class="fas fa-list-check"></i>
-          Run History
+          Activity
           <span *ngIf="runsFlowName" class="runs-flow-name">— {{ runsFlowName }}</span>
         </h3>
-        <p class="runs-sub">Click a row to see step-by-step execution details.</p>
+        <p class="runs-sub">Who this flow talked to. Click a row for details.</p>
       </div>
       <div class="runs-filters">
         <button type="button" class="runs-filter-btn" [class.is-active]="runsStatusFilter === ''"
@@ -346,7 +347,7 @@
 
     <p *ngIf="!runsFlowId" class="empty-state animate-fade-in-up">
       <i class="fas fa-arrow-up empty-state__icon"></i>
-      <br>Click the <strong>Runs</strong> <i class="fas fa-list-check"></i> button on any flow row to see its run history.
+      <br>Open any flow and tap the <strong>activity</strong> <i class="fas fa-list-check"></i> icon to see who it talked to.
     </p>
 
     <p *ngIf="runsLoading && runsFlowId" class="runs-loading">
@@ -355,8 +356,8 @@
 
     <div *ngIf="!runsLoading && runsFlowId && enrollments.length === 0" class="empty-state animate-fade-in-up">
       <i class="fas fa-inbox empty-state__icon"></i>
-      <h3 class="empty-state__title">No Runs Yet</h3>
-      <p class="empty-state__text">This flow has not triggered any enrollments yet.</p>
+      <h3 class="empty-state__title">Nobody has used this yet</h3>
+      <p class="empty-state__text">It will show up here after a customer matches this flow.</p>
     </div>
 
     <div *ngIf="!runsLoading && enrollments.length > 0" class="runs-layout animate-fade-in-up">
@@ -461,4 +462,50 @@
 
   </ng-container>
 
+</div>
+
+<div *ngIf="showRecipePicker" class="recipe-overlay" (click)="closeRecipePicker()">
+  <div class="recipe-modal" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="recipe-modal-title">
+    <div class="recipe-modal__head">
+      <div>
+        <h2 id="recipe-modal-title" class="recipe-modal__title">What should happen?</h2>
+        <p class="recipe-modal__sub">Pick a start. We’ll connect the steps — you can edit the words.</p>
+      </div>
+      <button type="button" class="recipe-modal__close" (click)="closeRecipePicker()" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="recipe-grid recipe-grid--modal">
+      <button *ngFor="let recipe of recipes" type="button" class="recipe-card"
+              [disabled]="creatingRecipe"
+              (click)="createFromRecipe(recipe)">
+        <i [class]="recipe.icon" class="recipe-card__icon"></i>
+        <span class="recipe-card__name">{{ recipe.name }}</span>
+        <span class="recipe-card__desc">{{ recipe.description }}</span>
+      </button>
+    </div>
+
+    <ng-container *ngIf="blueprints.length">
+      <h3 class="recipe-modal__section">Ready-made templates</h3>
+      <p class="recipe-modal__section-sub">Ready to use — tap to copy.</p>
+      <div class="recipe-grid recipe-grid--modal">
+        <button *ngFor="let bp of blueprints" type="button" class="recipe-card recipe-card--blueprint"
+                [disabled]="creatingRecipe"
+                (click)="useBlueprint(bp)">
+          <i [class]="blueprintIcon(bp)" class="recipe-card__icon"></i>
+          <span class="recipe-card__name">{{ bp.name }}</span>
+          <span class="recipe-card__desc">{{ shortBlueprintDesc(bp) }}</span>
+          <span class="recipe-card__meta">
+            <span *ngFor="let ch of bp.channels" class="recipe-card__ch">
+              <i [ngClass]="channelIcon(ch)"></i> {{ ch | titlecase }}
+            </span>
+            <span class="recipe-card__steps">{{ bp.nodes?.length || 0 }} steps</span>
+          </span>
+        </button>
+      </div>
+    </ng-container>
+    <p *ngIf="creatingRecipe" class="recipe-modal__loading">
+      <i class="fas fa-spinner fa-spin"></i> Opening…
+    </p>
+  </div>
 </div>

@@ -21,6 +21,12 @@ import { PlatformConnectionService, PlatformConnection } from '../../../../core/
 import { IntentBucketService } from '../../../../core/services/intent-bucket.service';
 import { CatalogService } from '../../../../core/services/catalog.service';
 import { AppointmentService } from '../../../../core/services/appointment.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import {
+  OrganizationService,
+  AutomationChannel,
+  AutomationModeByChannel
+} from '../../../../core/services/organization.service';
 import { WhatsAppTemplate } from '../../../../core/models/whatsapp-template.model';
 import { MediaSelectorModalComponent } from '../../../../shared/components/media-selector-modal/media-selector-modal.component';
 import { Media } from '../../../../core/models/media.model';
@@ -41,16 +47,30 @@ import {
   parseStringArray,
   formatJsonField,
   parseJsonField,
-  getConfigFieldDef
+  getConfigFieldDef,
+  isDurationField,
+  inferDurationUnit,
+  secondsToAmount,
+  durationToSeconds,
+  DurationUnit
 } from '../utils/flow-node-defaults.util';
+import {
+  SIMPLE_PALETTE_TYPES,
+  stampByTriggerType,
+  IStampedFlow,
+  simpleNodeLabel,
+  humanEdgeLabel,
+  slugFromTitle,
+  fillPreviewVars
+} from '../utils/flow-recipes.util';
 
 const CATEGORY_ORDER: NodeCategory[] = ['trigger', 'action', 'condition', 'wait', 'control'];
 const CATEGORY_LABELS: Record<NodeCategory, string> = {
-  trigger: 'Triggers',
-  action: 'Actions',
-  condition: 'Logic',
+  trigger: 'When',
+  action: 'Then',
+  condition: 'If',
   wait: 'Wait',
-  control: 'Control'
+  control: 'End'
 };
 
 /**
@@ -58,18 +78,19 @@ const CATEGORY_LABELS: Record<NodeCategory, string> = {
  * (e.g. all Appointment nodes) sit together. Each node maps to exactly one group
  * via `groupOf()`; the order below is the display order.
  */
-interface IPaletteGroup { id: string; label: string; icon: string; }
+interface IPaletteGroup { id: string; label: string; simpleLabel?: string; icon: string; }
 const PALETTE_GROUPS: IPaletteGroup[] = [
-  { id: 'trigger',     label: 'Triggers',          icon: 'fas fa-bolt' },
-  { id: 'messaging',   label: 'Messaging',         icon: 'fas fa-comment-dots' },
+  { id: 'trigger',     label: 'When this happens', simpleLabel: 'When this happens', icon: 'fas fa-bolt' },
+  { id: 'messaging',   label: 'Send a message',    simpleLabel: 'Send something',    icon: 'fas fa-comment-dots' },
+  { id: 'handoff',     label: 'Send to a person',  simpleLabel: 'Send to a person',  icon: 'fas fa-headset' },
   { id: 'appointment', label: 'Appointments',      icon: 'fas fa-calendar-check' },
-  { id: 'commerce',    label: 'Commerce & Orders', icon: 'fas fa-bag-shopping' },
+  { id: 'commerce',    label: 'Orders & payments', icon: 'fas fa-bag-shopping' },
   { id: 'instagram',   label: 'Instagram',         icon: 'fab fa-instagram' },
-  { id: 'ai',          label: 'AI',                icon: 'fas fa-robot' },
-  { id: 'utility',     label: 'Data & Actions',    icon: 'fas fa-sliders' },
-  { id: 'logic',       label: 'Logic',             icon: 'fas fa-code-branch' },
-  { id: 'wait',        label: 'Wait',              icon: 'fas fa-hourglass-half' },
-  { id: 'control',     label: 'Control',           icon: 'fas fa-flag-checkered' },
+  { id: 'ai',          label: 'AI replies',        icon: 'fas fa-robot' },
+  { id: 'utility',     label: 'More actions',      icon: 'fas fa-sliders' },
+  { id: 'logic',       label: 'If…',               icon: 'fas fa-code-branch' },
+  { id: 'wait',        label: 'Wait',              simpleLabel: 'Wait',              icon: 'fas fa-hourglass-half' },
+  { id: 'control',     label: 'Stop / jump',       simpleLabel: 'Stop',              icon: 'fas fa-flag-checkered' },
   { id: 'other',       label: 'Other',             icon: 'fas fa-shapes' }
 ];
 const APPOINTMENT_NODE_TYPES = new Set([
@@ -101,6 +122,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   flow: IAutomationFlow | null = null;
   catalog: IFlowNodeCatalogItem[] = [];
   catalogFilter = '';
+  paletteSimpleMode = true;
   selectedNodeId: string | null = null;
   selectedEdgeId: string | null = null;
   connectingFrom: string | null = null;
@@ -145,6 +167,16 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   private panning = false;
   private panStart = { x: 0, y: 0, ox: 0, oy: 0 };
 
+  /** Pointer drag from the palette onto the canvas (HTML5 DnD is unreliable here). */
+  palettePress: {
+    item: IFlowNodeCatalogItem;
+    pointerId: number;
+    startX: number;
+    startY: number;
+    dragging: boolean;
+  } | null = null;
+  paletteGhost: { x: number; y: number; label: string } | null = null;
+
   // ── Performance caches ─────────────────────────────────────────────────────
   /**
    * Pre-computed field descriptors for the currently selected node.
@@ -180,7 +212,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   readonly categoryLabels = CATEGORY_LABELS;
   channelOptions: FlowChannel[] = ['whatsapp', 'instagram', 'facebook'];
   // Palette starts with the feature groups open; generic groups collapsed.
-  collapsedCats = new Set(['utility', 'logic', 'wait', 'control', 'other']);
+  collapsedCats = new Set(['appointment', 'commerce', 'instagram', 'ai', 'utility', 'logic', 'other']);
 
   waConnections: PlatformConnection[] = [];
   waConnectionId = '';
@@ -193,6 +225,23 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   /** Channels used by current flow that have NO active connection. */
   disconnectedChannels: string[] = [];
   channelBannerDismissed = false;
+  modeBannerDismissed = false;
+
+  /** Per-channel reply mode — used to block Turn on when flows cannot fire. */
+  automationModeByChannel: AutomationModeByChannel = {
+    whatsapp: 'hybrid', instagram: 'hybrid', facebook: 'hybrid'
+  };
+  private orgId = '';
+
+  /** Remember which time unit the user last picked for delay/timeout fields. */
+  private durationUnitByField = new Map<string, DurationUnit>();
+
+  /** Empty-canvas starter recipes (same as list page). */
+  readonly canvasStarters: Array<{ label: string; hint: string; icon: string; triggerType: string }> = [
+    { label: 'First WhatsApp message', hint: 'Welcome them', icon: 'fas fa-hand-sparkles', triggerType: 'trigger.first_message' },
+    { label: 'Instagram comment', hint: 'Reply in DM', icon: 'fab fa-instagram', triggerType: 'trigger.ig_comment' },
+    { label: 'They type a word', hint: 'Keyword reply', icon: 'fas fa-comment-dots', triggerType: 'trigger.keyword' }
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -205,6 +254,8 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     private intentBucketService: IntentBucketService,
     private catalogService: CatalogService,
     private appointmentService: AppointmentService,
+    private auth: AuthService,
+    private orgService: OrganizationService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -216,6 +267,15 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     }
 
     this.save$.pipe(debounceTime(800), takeUntil(this.destroy$)).subscribe(() => this.persist());
+
+    this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe((user) => {
+      if (user?.organization) {
+        this.orgId = typeof user.organization === 'string'
+          ? user.organization
+          : (user.organization as { _id?: string })._id || '';
+        this.loadAutomationMode();
+      }
+    });
 
     this.flowService.getNodeCatalog(this.channelOptions)
       .pipe(takeUntil(this.destroy$))
@@ -292,8 +352,10 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     return this.catalog.filter((item) => {
       const channelOk = item.supportedChannels.some((c) => channels.includes(c as FlowChannel));
       if (!channelOk) return false;
+      if (this.paletteSimpleMode && !q && !SIMPLE_PALETTE_TYPES.has(item.type)) return false;
       if (!q) return true;
-      return item.label.toLowerCase().includes(q) || item.type.toLowerCase().includes(q);
+      const hay = `${item.label} ${item.type} ${simpleNodeLabel(item.type)}`.toLowerCase();
+      return hay.includes(q);
     });
   }
 
@@ -303,6 +365,15 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   /** Feature group a node belongs to (used for the grouped palette). */
   groupOf(item: IFlowNodeCatalogItem): string {
+    if (this.paletteSimpleMode) {
+      if (item.category === 'trigger') return 'trigger';
+      if (item.type === 'action.escalate_human') return 'handoff';
+      if (item.type === 'action.send_text' || item.type === 'action.send_media' || item.type === 'action.send_buttons') {
+        return 'messaging';
+      }
+      if (item.category === 'wait') return 'wait';
+      if (item.category === 'control') return 'control';
+    }
     if (item.category === 'trigger') return 'trigger';
     const t = item.type;
     if (APPOINTMENT_NODE_TYPES.has(t)) return 'appointment';
@@ -331,6 +402,8 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
         return 'fb-cat-wait';
       case 'control':
         return 'fb-cat-control';
+      case 'handoff':
+        return 'fb-cat-action';
       default:
         return 'fb-cat-action';
     }
@@ -338,7 +411,9 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   /** Palette groups that actually have visible nodes (in display order). */
   get paletteGroups(): IPaletteGroup[] {
-    return PALETTE_GROUPS.filter((g) => this.catalogByGroup(g.id).length > 0);
+    return PALETTE_GROUPS
+      .filter((g) => this.catalogByGroup(g.id).length > 0)
+      .map((g) => this.paletteSimpleMode && g.simpleLabel ? { ...g, label: g.simpleLabel } : g);
   }
 
   loadFlow(): void {
@@ -349,7 +424,15 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
         next: (r) => {
           this.flow = r.data ?? null;
           if (this.flow && !this.flow.nodes.length) {
-            this.addNodeFromCatalog(this.catalog.find((c) => c.category === 'trigger') || this.catalog[0]);
+            const start = this.route.snapshot.queryParamMap.get('start');
+            if (start && start !== 'custom') {
+              const stamp = stampByTriggerType(start);
+              if (stamp) this.applyStampedFlow(stamp);
+              else {
+                const match = this.catalog.find((c) => c.type === start);
+                if (match) this.addNodeFromCatalog(match);
+              }
+            }
           }
           this.refreshDisconnectedChannels();
           this.cdr.markForCheck();
@@ -400,26 +483,41 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   async publish(): Promise<void> {
     if (!this.flow?._id) return;
 
+    if (this.flowCannotFire) {
+      await this.swal.warning(
+        'This flow will not run',
+        'These channels are set to “Only AI replies”, so Flow Automation stays off. Switch to “Flow Automation + AI” on the Flow Automation page, then try again.'
+      );
+      return;
+    }
+
     const trigger = this.flow.nodes.find((n) => n.type.startsWith('trigger.'));
     const triggerLabel = trigger
-      ? (this.catalog.find((c) => c.type === trigger.type)?.label ?? trigger.type)
-      : 'No trigger';
+      ? (this.catalog.find((c) => c.type === trigger.type)?.label ?? 'when something happens')
+      : 'not set yet — add a “When this happens” block';
     const channelNames = (this.flow.channels ?? []).map((c) => this.channelDisplayLabel(c)).join(', ') || 'None';
+    const sendNode = this.flow.nodes.find((n) => n.type.startsWith('action.send_') || n.type === 'action.ai_reply');
+    const thenLabel = sendNode
+      ? (this.catalog.find((c) => c.type === sendNode.type)?.label ?? 'send a message')
+      : 'nothing yet — add a “Then do this” block';
+
     const disconnectedWarn = this.disconnectedChannels.length > 0
-      ? `<p style="color:#f59e0b;margin-top:0.5rem"><i class="fas fa-exclamation-triangle"></i> <strong>${this.disconnectedChannels.map(c => this.channelDisplayLabel(c)).join(', ')}</strong> not connected — messages on these channels will fail.</p>`
+      ? `<p style="color:#f59e0b;margin-top:0.5rem"><i class="fas fa-exclamation-triangle"></i> <strong>${this.disconnectedChannels.map((c) => this.channelDisplayLabel(c)).join(', ')}</strong> is not connected. Connect it in Settings or messages will not send.</p>`
       : '';
 
     const html = `
-      <div style="text-align:left;font-size:0.875rem;line-height:1.6">
-        <p><strong>Flow:</strong> ${this.flow.name}</p>
-        <p><strong>Trigger:</strong> ${triggerLabel}</p>
-        <p><strong>Channels:</strong> ${channelNames}</p>
-        <p><strong>Nodes:</strong> ${this.flow.nodes.length}</p>
+      <div style="text-align:left;font-size:0.875rem;line-height:1.65">
+        <p>When you turn this on:</p>
+        <ul style="margin:0.5rem 0 0.75rem 1.1rem;padding:0">
+          <li><strong>When:</strong> ${triggerLabel}</li>
+          <li><strong>On:</strong> ${channelNames}</li>
+          <li><strong>Then:</strong> ${thenLabel}</li>
+        </ul>
         ${disconnectedWarn}
-        <p style="margin-top:0.75rem;color:#9ca3af">The flow will go live immediately and process all matching incoming messages.</p>
+        <p style="margin-top:0.5rem;color:#9ca3af">It starts working on the next matching message. You can pause it anytime.</p>
       </div>`;
 
-    const result = await this.swal.confirmHtml('Publish this flow?', html, 'Go Live', 'Cancel');
+    const result = await this.swal.confirmHtml('Turn this on?', html, 'Turn on', 'Not yet');
     if (!result.isConfirmed) return;
 
     this.publishing = true;
@@ -429,9 +527,9 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (r) => {
           this.flow = r.data ?? this.flow;
-          this.notify.success('Published', 'Flow is now active.');
+          this.notify.success('It’s on', 'This flow is now live.');
         },
-        error: (err) => this.notify.error('Publish failed', err.error?.error || 'Fix validation errors first.')
+        error: (err) => this.notify.error('Could not turn on', err.error?.error || 'Fix the highlighted blocks first.')
       });
   }
 
@@ -619,6 +717,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   }
 
   onCanvasPointerDown(event: PointerEvent): void {
+    if (this.palettePress) return;
     // Start panning only when the empty canvas background is grabbed.
     const target = event.target as HTMLElement;
     if (target.closest('.fb-node') || target.closest('.fb-edge-hit')) return;
@@ -629,11 +728,10 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  /** Click-to-add: drops a node at the first non-overlapping grid position. */
+  /** Click-to-add: drops a node below the selected (or last) block and wires it. */
   addNodeFromCatalog(item?: IFlowNodeCatalogItem): void {
     if (!this.flow || !item) return;
-    const pos = this.findFreePosition();
-    this.createNodeAt(item, pos.x, pos.y);
+    this.createNodeAt(item);
   }
 
   /**
@@ -670,18 +768,44 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   }
 
   /** Shared node factory used by both click-to-add and drag-and-drop. */
-  private createNodeAt(item: IFlowNodeCatalogItem, x: number, y: number): void {
+  private createNodeAt(item: IFlowNodeCatalogItem, dropX?: number, dropY?: number): void {
     if (!this.flow) return;
+    const fromDrop = dropX != null && dropY != null;
+    const source = this.autoConnectSource(item.type);
     const id = `node_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+    let x: number;
+    let y: number;
+    if (fromDrop) {
+      x = Math.max(0, Math.round(dropX!));
+      y = Math.max(0, Math.round(dropY!));
+    } else if (source) {
+      const stacked = this.stackPosition(source);
+      x = stacked.x;
+      y = stacked.y;
+    } else {
+      const free = this.findFreePosition();
+      x = free.x;
+      y = free.y;
+    }
+
     const node: IFlowNode = {
       id,
       type: item.type,
-      label: item.label,
-      position: { x: Math.max(0, Math.round(x)), y: Math.max(0, Math.round(y)) },
+      label: this.paletteSimpleMode ? simpleNodeLabel(item.type, item.label) : item.label,
+      position: { x, y },
       config: buildDefaultConfig(item),
       supportedChannels: item.supportedChannels as FlowChannel[]
     };
     this.flow.nodes = [...this.flow.nodes, node];
+    if (!this.flow.entryNodeId && item.type.startsWith('trigger.')) {
+      this.flow.entryNodeId = id;
+    }
+    this.wireNewNode(node, source, fromDrop);
+    if (this.paletteSimpleMode) {
+      if (item.type === 'action.send_buttons') this.scaffoldQuestion(node, fromDrop);
+      else if (item.type === 'wait.user_reply') this.scaffoldWaitBranches(node);
+    }
     this.selectedNodeId = id;
     this.selectedEdgeId = null;
     if (item.type === 'action.send_template') {
@@ -691,59 +815,280 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  // ── Drag-and-drop from palette → canvas ────────────────────────────────────
-  private draggedItem: IFlowNodeCatalogItem | null = null;
-  dragOverCanvas = false;
+  private autoConnectSource(newType: string): IFlowNode | null {
+    if (!this.flow || newType.startsWith('trigger.')) return null;
+    if (this.selectedNode) return this.selectedNode;
+    const sorted = [...this.flow.nodes].sort((a, b) => b.position.y - a.position.y);
+    return sorted[0] || null;
+  }
 
-  onPaletteDragStart(item: IFlowNodeCatalogItem, event: DragEvent): void {
-    this.draggedItem = item;
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'copy';
-      // Some browsers require data to be set for the drag to start.
-      event.dataTransfer.setData('text/plain', item.type);
+  private stackPosition(source: IFlowNode): { x: number; y: number } {
+    if (source.type === 'control.end') {
+      return { x: source.position.x, y: source.position.y };
+    }
+    return { x: source.position.x, y: source.position.y + 130 };
+  }
+
+  private isBranchingType(type: string): boolean {
+    if (type.startsWith('condition.')) return true;
+    return [
+      'wait.user_reply',
+      'control.ab_split',
+      'control.random_branch',
+      'action.send_buttons',
+      'action.send_list',
+      'action.offer_slots',
+      'action.offer_services',
+      'action.book_appointment'
+    ].includes(type);
+  }
+
+  private wireNewNode(newNode: IFlowNode, source: IFlowNode | null, fromDrop: boolean): void {
+    if (!this.flow || !source) return;
+
+    if (source.type === 'control.end') {
+      const incoming = this.flow.edges.filter((e) => e.target === source.id);
+      const from = incoming[incoming.length - 1];
+      if (from) {
+        this.flow.edges = this.flow.edges.filter((e) => e.id !== from.id);
+        this.pushEdge(from.source, newNode.id, from.label);
+      }
+      this.pushEdge(newNode.id, source.id);
+      if (!fromDrop) {
+        source.position = { ...source.position, y: newNode.position.y + 130 };
+      }
+      return;
+    }
+
+    const outgoing = this.flow.edges.filter((e) => e.source === source.id);
+    if (!this.isBranchingType(source.type) && outgoing.length === 1) {
+      const old = outgoing[0];
+      this.flow.edges = this.flow.edges.filter((e) => e.id !== old.id);
+      this.pushEdge(source.id, newNode.id, old.label);
+      this.pushEdge(newNode.id, old.target);
+      if (!fromDrop) {
+        const target = this.flow.nodes.find((n) => n.id === old.target);
+        if (target && target.position.y <= newNode.position.y) {
+          target.position = { ...target.position, y: newNode.position.y + 130 };
+        }
+      }
+      return;
+    }
+
+    this.pushEdge(source.id, newNode.id);
+  }
+
+  private pushEdge(sourceId: string, targetId: string, label?: string): void {
+    if (!this.flow || sourceId === targetId) return;
+    if (this.flow.edges.some((e) => e.source === sourceId && e.target === targetId)) return;
+    const sourceNode = this.flow.nodes.find((n) => n.id === sourceId);
+    const targetNode = this.flow.nodes.find((n) => n.id === targetId);
+    const edge: IFlowEdge = {
+      id: `e_${sourceId}_${targetId}_${Date.now().toString(36).slice(2, 7)}`,
+      source: sourceId,
+      target: targetId,
+      label: label ?? this.suggestBranchLabel(sourceNode)
+    };
+    if (sourceNode && targetNode) {
+      inheritConfigOnConnect(
+        sourceNode,
+        targetNode,
+        this.catalogItemFor(sourceNode),
+        this.catalogItemFor(targetNode)
+      );
+    }
+    this.flow.edges = [...this.flow.edges, edge];
+  }
+
+  private appendCatalogNode(type: string, x: number, y: number, configPatch?: Record<string, unknown>): IFlowNode | null {
+    if (!this.flow) return null;
+    const item = this.catalog.find((c) => c.type === type);
+    const id = `node_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const node: IFlowNode = {
+      id,
+      type,
+      label: simpleNodeLabel(type, item?.label),
+      position: { x, y },
+      config: { ...buildDefaultConfig(item), ...(configPatch || {}) },
+      supportedChannels: (item?.supportedChannels || []) as FlowChannel[]
+    };
+    this.flow.nodes = [...this.flow.nodes, node];
+    return node;
+  }
+
+  /** After "Ask a question", add Wait + They replied / If they don't reply paths. */
+  private scaffoldQuestion(buttons: IFlowNode, fromDrop: boolean): void {
+    if (!this.flow) return;
+    const nextId = this.flow.edges.find((e) => e.source === buttons.id)?.target;
+    const next = nextId ? this.flow.nodes.find((n) => n.id === nextId) : null;
+    if (next?.type === 'wait.user_reply') {
+      this.scaffoldWaitBranches(next);
+      return;
+    }
+    const wait = this.appendCatalogNode(
+      'wait.user_reply',
+      buttons.position.x,
+      buttons.position.y + 130
+    );
+    if (!wait) return;
+    if (nextId) {
+      this.flow.edges = this.flow.edges.filter((e) => !(e.source === buttons.id && e.target === nextId));
+      this.pushEdge(buttons.id, wait.id);
+      this.pushEdge(wait.id, nextId, 'reply');
+      if (!fromDrop) {
+        const target = this.flow.nodes.find((n) => n.id === nextId);
+        if (target && target.position.y <= wait.position.y) {
+          target.position = { ...target.position, y: wait.position.y + 130 };
+        }
+      }
+    } else {
+      this.pushEdge(buttons.id, wait.id);
+    }
+    this.scaffoldWaitBranches(wait);
+  }
+
+  /** Label the reply path and add an "If they don't reply" reminder if missing. */
+  private scaffoldWaitBranches(wait: IFlowNode): void {
+    if (!this.flow) return;
+    const timeoutLabels = new Set(['no_reply', 'timeout', 'expired']);
+    const replyLabels = new Set(['reply', 'replied', 'yes']);
+    const outgoing = this.flow.edges.filter((e) => e.source === wait.id);
+    const hasTimeout = outgoing.some((e) => timeoutLabels.has(String(e.label || '').toLowerCase()));
+    const hasReply = outgoing.some((e) => replyLabels.has(String(e.label || '').toLowerCase()));
+
+    if (!hasReply) {
+      const unlabeled = outgoing.find((e) => !e.label);
+      if (unlabeled) unlabeled.label = 'reply';
+    }
+
+    if (hasTimeout) return;
+
+    const reminder = this.appendCatalogNode(
+      'action.send_text',
+      wait.position.x + 280,
+      wait.position.y,
+      { text: "Still there? Reply when you're ready. 😊" }
+    );
+    if (!reminder) return;
+    reminder.label = "If they don't reply";
+
+    const replyTarget = this.flow.edges.find((e) => e.source === wait.id && String(e.label || '').toLowerCase() === 'reply')?.target;
+    let end = this.flow.nodes.find(
+      (n) => n.type === 'control.end' && n.id !== replyTarget && n.position.x >= wait.position.x
+    );
+    if (!end) {
+      end = this.appendCatalogNode('control.end', reminder.position.x, reminder.position.y + 130) || undefined;
+    }
+    this.pushEdge(wait.id, reminder.id, 'no_reply');
+    if (end) this.pushEdge(reminder.id, end.id);
+
+    const hasReplyNow = this.flow.edges.some(
+      (e) => e.source === wait.id && replyLabels.has(String(e.label || '').toLowerCase())
+    );
+    if (!hasReplyNow) {
+      const mainEnd = this.flow.nodes.find((n) => n.type === 'control.end' && n.id !== end?.id);
+      const replyTo = mainEnd || end;
+      if (replyTo) this.pushEdge(wait.id, replyTo.id, 'reply');
     }
   }
 
-  onPaletteDragEnd(): void {
-    this.draggedItem = null;
-    this.dragOverCanvas = false;
+  paletteItemLabel(item: IFlowNodeCatalogItem): string {
+    return this.paletteSimpleMode ? simpleNodeLabel(item.type, item.label) : item.label;
+  }
+
+  displayNodeKind(type: string): string {
+    return simpleNodeLabel(type, this.catalogLabelByType(type));
+  }
+
+  edgeDisplayLabel(label?: string | null): string {
+    return humanEdgeLabel(label);
+  }
+
+  edgeLabelWidth(label?: string | null): number {
+    const text = humanEdgeLabel(label) || String(label || '');
+    return Math.max(44, Math.min(168, Math.round(text.length * 7.2 + 18)));
+  }
+
+  branchPresetLabel(preset: string): string {
+    return humanEdgeLabel(preset) || preset;
+  }
+
+  // ── Drag from palette → canvas (pointer-based) ─────────────────────────────
+  dragOverCanvas = false;
+
+  onPalettePointerDown(item: IFlowNodeCatalogItem, event: PointerEvent): void {
+    if (item.comingSoon || event.button !== 0) return;
+    event.preventDefault();
+    this.palettePress = {
+      item,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      dragging: false
+    };
+    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+  }
+
+  private updatePaletteDrag(event: PointerEvent): void {
+    const press = this.palettePress;
+    if (!press || event.pointerId !== press.pointerId) return;
+    const dx = event.clientX - press.startX;
+    const dy = event.clientY - press.startY;
+    if (!press.dragging && (dx * dx + dy * dy) >= 64) {
+      press.dragging = true;
+    }
+    if (!press.dragging) return;
+
+    this.paletteGhost = {
+      x: event.clientX + 12,
+      y: event.clientY + 12,
+      label: this.paletteItemLabel(press.item)
+    };
+    const wrap = this.canvasWrap?.nativeElement;
+    let over = false;
+    if (wrap) {
+      const r = wrap.getBoundingClientRect();
+      over = event.clientX >= r.left && event.clientX <= r.right
+        && event.clientY >= r.top && event.clientY <= r.bottom;
+    }
+    this.dragOverCanvas = over;
     this.cdr.markForCheck();
   }
 
-  onCanvasDragOver(event: DragEvent): void {
-    if (!this.draggedItem) return;
-    event.preventDefault();
-    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
-    if (!this.dragOverCanvas) {
-      this.dragOverCanvas = true;
-      this.cdr.markForCheck();
-    }
-  }
-
-  onCanvasDragLeave(event: DragEvent): void {
-    // Only clear when leaving the wrapper itself, not when moving over child nodes.
-    if (event.target === event.currentTarget) {
-      this.dragOverCanvas = false;
-      this.cdr.markForCheck();
-    }
-  }
-
-  onCanvasDrop(event: DragEvent): void {
-    event.preventDefault();
+  private finishPalettePointer(event: PointerEvent): void {
+    const press = this.palettePress;
+    this.palettePress = null;
+    this.paletteGhost = null;
     this.dragOverCanvas = false;
-    const item = this.draggedItem;
-    this.draggedItem = null;
-    if (!item) return;
-
-    const canvasEl = (event.currentTarget as HTMLElement).querySelector('.fb-canvas');
+    if (!press || event.pointerId !== press.pointerId) {
+      this.cdr.markForCheck();
+      return;
+    }
+    if (!press.dragging) {
+      this.addNodeFromCatalog(press.item);
+      return;
+    }
+    const wrap = this.canvasWrap?.nativeElement;
+    if (!wrap) {
+      this.cdr.markForCheck();
+      return;
+    }
+    const r = wrap.getBoundingClientRect();
+    const over = event.clientX >= r.left && event.clientX <= r.right
+      && event.clientY >= r.top && event.clientY <= r.bottom;
+    if (!over) {
+      this.cdr.markForCheck();
+      return;
+    }
+    const canvasEl = wrap.querySelector('.fb-canvas');
     const rect = canvasEl?.getBoundingClientRect();
-    if (!rect) { this.addNodeFromCatalog(item); return; }
-
-    // getBoundingClientRect already reflects pan + zoom (transform-origin 0 0),
-    // so undo only the scale to land in content coordinates. Center the card on the cursor.
+    if (!rect) {
+      this.addNodeFromCatalog(press.item);
+      return;
+    }
     const x = (event.clientX - rect.left) / this.zoom - 110;
     const y = (event.clientY - rect.top) / this.zoom - 28;
-    this.createNodeAt(item, x, y);
+    this.createNodeAt(press.item, x, y);
   }
 
   /** Category key used to colour-code nodes and palette chips. */
@@ -837,6 +1182,77 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     return this.disconnectedChannels.map((ch) => this.channelDisplayLabel(ch)).join(' & ');
   }
 
+  private loadAutomationMode(): void {
+    if (!this.orgId) return;
+    this.orgService.getOrganization(this.orgId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (r) => {
+          const modes = r.data?.automationModeByChannel;
+          if (modes) {
+            this.automationModeByChannel = {
+              whatsapp: modes.whatsapp ?? 'hybrid',
+              instagram: modes.instagram ?? 'hybrid',
+              facebook: modes.facebook ?? 'hybrid'
+            };
+            this.cdr.markForCheck();
+          }
+        }
+      });
+  }
+
+  /** True when every channel on this flow is AI-only — auto-replies will never fire. */
+  get flowCannotFire(): boolean {
+    const channels = (this.flow?.channels ?? []) as AutomationChannel[];
+    if (!channels.length) return false;
+    return channels.every((ch) => (this.automationModeByChannel[ch] ?? 'hybrid') === 'ai_only');
+  }
+
+  addStarterTrigger(triggerType: string): void {
+    if (!triggerType || !this.flow) return;
+    if (this.flow.nodes.length === 0) {
+      const stamp = stampByTriggerType(triggerType);
+      if (stamp) {
+        this.applyStampedFlow(stamp);
+        return;
+      }
+    }
+    const match = this.catalog.find((c) => c.type === triggerType);
+    if (match) this.addNodeFromCatalog(match);
+  }
+
+  setPaletteSimple(simple: boolean): void {
+    this.paletteSimpleMode = simple;
+    this.cdr.markForCheck();
+  }
+
+  onCatalogFilterChange(): void {
+    this.cdr.markForCheck();
+  }
+
+  private applyStampedFlow(stamp: IStampedFlow): void {
+    if (!this.flow) return;
+    this.flow.nodes = JSON.parse(JSON.stringify(stamp.nodes));
+    this.flow.edges = JSON.parse(JSON.stringify(stamp.edges));
+    this.flow.entryNodeId = stamp.entryNodeId;
+    for (const ch of stamp.channels) {
+      if (!this.flow.channels.includes(ch)) {
+        this.flow.channels = [...this.flow.channels, ch];
+      }
+    }
+    if (!this.flow.name || /^untitled$/i.test(this.flow.name.trim())) {
+      this.flow.name = stamp.name;
+    }
+    const firstAction = stamp.nodes.find((n) => n.type.startsWith('action.'));
+    this.selectedNodeId = firstAction?.id ?? stamp.entryNodeId;
+    this.selectedEdgeId = null;
+    this.ensureNodeConfig(this.selectedNode);
+    this.refreshSelectedNodeFieldDefs();
+    this.queueSave();
+    this.cdr.markForCheck();
+    requestAnimationFrame(() => this.fitView());
+  }
+
   /** Returns the human-readable label for a node type from the catalog. */
   catalogLabelByType(nodeType: string): string {
     return this.catalog.find((c) => c.type === nodeType)?.label || nodeType;
@@ -917,8 +1333,11 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   // ── Media picker ──────────────────────────────────────────────────────────
 
   showMediaPicker = false;
+  /** Stack above `.fb-editor` (z-index 9998) so library/upload modals are not hidden. */
+  readonly mediaPickerOverlayZIndex = 10000;
+
   /** Node + key that triggered the media picker, so we know where to write the URL back. */
-  private mediaPickerTarget: { node: IFlowNode; key: string } | null = null;
+  mediaPickerTarget: { node: IFlowNode; key: string } | null = null;
 
   /** Map from WA media type to the filter the media library understands. */
   private static readonly WA_TO_LIB_TYPE: Record<string, 'image' | 'video' | 'audio' | 'file' | 'all'> = {
@@ -1036,6 +1455,131 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     ensureNodeConfigKeys(node, this.catalogItemFor(node));
   }
 
+  get previewChannel(): FlowChannel {
+    const node = this.selectedNode;
+    const channels = this.flow?.channels ?? ['whatsapp'];
+    if (node && (
+      node.type.includes('.ig_')
+      || node.type.includes('instagram')
+      || INSTAGRAM_NODE_TYPES.has(node.type)
+    )) {
+      return 'instagram';
+    }
+    if (channels.includes('whatsapp')) return 'whatsapp';
+    return (channels[0] as FlowChannel) || 'whatsapp';
+  }
+
+  get previewHeaderName(): string {
+    const name = (this.flow?.name || '').trim();
+    if (name && !/^untitled$/i.test(name)) return name;
+    if (this.previewChannel === 'instagram') return 'your.shop';
+    if (this.previewChannel === 'facebook') return 'Your Page';
+    return 'Your shop';
+  }
+
+  get previewAvatarLetter(): string {
+    const ch = this.previewHeaderName.trim().charAt(0);
+    return (ch || 'S').toUpperCase();
+  }
+
+  get previewHeaderSub(): string {
+    return this.previewChannel === 'whatsapp' ? 'online' : 'Active now';
+  }
+
+  get previewComposerPlaceholder(): string {
+    if (this.previewChannel === 'facebook') return 'Aa';
+    return 'Message';
+  }
+
+  get chatPreview(): {
+    inbound?: string;
+    outbound?: string;
+    mediaUrl?: string;
+    buttons?: string[];
+    status?: string;
+  } {
+    const node = this.selectedNode;
+    if (!node) return {};
+    const cfg = node.config || {};
+    const inbound = this.sampleInboundText(node);
+    const t = node.type;
+
+    if (t.startsWith('trigger.')) {
+      return { inbound, status: 'This starts the flow' };
+    }
+    if (t === 'wait.user_reply') {
+      return { inbound, status: 'Waiting for their reply…' };
+    }
+    if (t === 'wait.delay' || t === 'wait.human_delay') {
+      return { status: 'Waiting a moment…' };
+    }
+    if (t === 'control.end') {
+      return { status: 'Done — this flow stops here' };
+    }
+    if (t === 'action.escalate_human') {
+      return { inbound, status: 'A teammate will continue this chat' };
+    }
+    if (t === 'action.send_text' || t === 'action.reply_public_comment') {
+      return { inbound, outbound: fillPreviewVars(cfg['text']) || 'Type a message below' };
+    }
+    if (t === 'action.send_media') {
+      const caption = fillPreviewVars(cfg['caption']);
+      const url = String(cfg['mediaUrl'] || '');
+      const image = this.isPreviewableImage(node, 'mediaUrl') ? url : '';
+      return {
+        inbound,
+        outbound: caption || (image ? '' : 'Pick a photo below'),
+        mediaUrl: image || undefined
+      };
+    }
+    if (t === 'action.send_buttons') {
+      const buttons = this.getReplyButtons(node, 'buttons').map((b) => b.title).filter(Boolean);
+      return {
+        inbound,
+        outbound: fillPreviewVars(cfg['bodyText']) || 'Type the question below',
+        buttons: buttons.length ? buttons : ['Yes', 'No']
+      };
+    }
+    if (t === 'action.send_list') {
+      return {
+        inbound,
+        outbound: fillPreviewVars(cfg['bodyText']),
+        buttons: [String(cfg['buttonText'] || 'View options')]
+      };
+    }
+    if (t === 'action.send_generic_template') {
+      const title = fillPreviewVars(cfg['title']);
+      const subtitle = fillPreviewVars(cfg['subtitle']);
+      const labels = this.getButtons(node, 'buttons').map((b) => b.label).filter(Boolean);
+      return {
+        inbound,
+        outbound: [title, subtitle].filter(Boolean).join('\n') || 'Card preview',
+        mediaUrl: String(cfg['imageUrl'] || '') || undefined,
+        buttons: labels
+      };
+    }
+    if (t === 'action.send_template') {
+      return { inbound, outbound: fillPreviewVars(this.previewMessage) || 'Pick a WhatsApp template' };
+    }
+    const fallback = fillPreviewVars(this.previewMessage);
+    if (fallback) return { inbound, outbound: fallback };
+    return { inbound, status: this.displayNodeKind(t) };
+  }
+
+  private sampleInboundText(selected?: IFlowNode | null): string {
+    const trigger = selected?.type.startsWith('trigger.')
+      ? selected
+      : this.flow?.nodes.find((n) => n.type.startsWith('trigger.'));
+    if (!trigger) return 'Hi';
+    const keywords = trigger.config?.['keywords'];
+    const word = Array.isArray(keywords) && keywords[0] ? String(keywords[0]) : '';
+    if (trigger.type === 'trigger.ig_comment') return word ? `${word}?` : 'What’s the price?';
+    if (trigger.type === 'trigger.keyword') return word || 'price';
+    if (trigger.type === 'trigger.first_message') return 'Hi';
+    if (trigger.type === 'trigger.ig_dm') return 'Hi';
+    return 'Hi';
+  }
+
   get previewMessage(): string | null {
     const node = this.selectedNode;
     if (!node) return null;
@@ -1070,10 +1614,18 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
   /** Auto-label a new edge leaving a branching node (first=yes/reply, second=no/no_reply). */
   private suggestBranchLabel(sourceNode?: IFlowNode): string {
     if (!sourceNode || !this.flow) return '';
-    const existing = this.flow.edges.filter((e) => e.source === sourceNode.id).length;
-    if (sourceNode.type.startsWith('condition.')) return existing === 0 ? 'yes' : existing === 1 ? 'no' : '';
-    if (sourceNode.type === 'wait.user_reply') return existing === 0 ? 'reply' : existing === 1 ? 'no_reply' : '';
-    if (sourceNode.type === 'control.ab_split') return existing === 0 ? 'A' : existing === 1 ? 'B' : '';
+    const existing = this.flow.edges.filter((e) => e.source === sourceNode.id);
+    const used = new Set(existing.map((e) => e.label).filter(Boolean));
+    if (sourceNode.type === 'action.send_buttons') {
+      const buttons = Array.isArray(sourceNode.config?.['buttons'])
+        ? (sourceNode.config['buttons'] as Array<{ id?: string }>)
+        : [];
+      const next = buttons.find((b) => b.id && !used.has(b.id));
+      return next?.id || '';
+    }
+    if (sourceNode.type.startsWith('condition.')) return existing.length === 0 ? 'yes' : existing.length === 1 ? 'no' : '';
+    if (sourceNode.type === 'wait.user_reply') return existing.length === 0 ? 'reply' : existing.length === 1 ? 'no_reply' : '';
+    if (sourceNode.type === 'control.ab_split') return existing.length === 0 ? 'A' : existing.length === 1 ? 'B' : '';
     return '';
   }
 
@@ -1152,6 +1704,7 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   onNodeFieldChange(): void {
     this.queueSave();
+    this.cdr.markForCheck();
   }
 
   nodeCategory(type: string): string {
@@ -1183,6 +1736,10 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   @HostListener('document:pointermove', ['$event'])
   onPointerMove(event: PointerEvent): void {
+    if (this.palettePress) {
+      this.updatePaletteDrag(event);
+      return;
+    }
     // Skip immediately when no interaction is active — avoids ANY overhead on plain mouse movement.
     if (!this.dragNode && !this.panning) return;
 
@@ -1218,8 +1775,13 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     });
   }
 
-  @HostListener('document:pointerup')
-  onPointerUp(): void {
+  @HostListener('document:pointerup', ['$event'])
+  @HostListener('document:pointercancel', ['$event'])
+  onPointerUp(event: PointerEvent): void {
+    if (this.palettePress) {
+      this.finishPalettePointer(event);
+      return;
+    }
     if (this.dragNode) {
       this.dragNode = null;
       this.queueSave();
@@ -1246,6 +1808,9 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     } else if (event.key === 'Escape') {
       this.connectingFrom = null;
       this.selectedEdgeId = null;
+      this.palettePress = null;
+      this.paletteGhost = null;
+      this.dragOverCanvas = false;
       this.closePanels();
       this.cdr.markForCheck();
     } else if (event.key === '[' && !event.metaKey && !event.ctrlKey) {
@@ -1349,6 +1914,53 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
     if (!node.config) node.config = {};
     node.config[key] = value;
     this.onNodeFieldChange();
+  }
+
+  isDurationConfigField(key: string): boolean {
+    return isDurationField(key);
+  }
+
+  durationFieldLabel(key: string, fallback: string): string {
+    switch (key) {
+      case 'delaySec':
+        return 'Wait';
+      case 'timeoutSec':
+        return 'Give up after';
+      case 'minSec':
+        return 'Wait at least';
+      case 'maxSec':
+        return 'Wait at most';
+      default:
+        return fallback.replace(/\s*\(seconds\)\s*/i, '').trim() || fallback;
+    }
+  }
+
+  private durationCacheKey(node: IFlowNode, key: string): string {
+    return `${node.id}:${key}`;
+  }
+
+  getDurationUnit(node: IFlowNode, key: string): DurationUnit {
+    const cacheKey = this.durationCacheKey(node, key);
+    const cached = this.durationUnitByField.get(cacheKey);
+    if (cached) return cached;
+    const unit = inferDurationUnit(Number(node.config?.[key]) || 0);
+    this.durationUnitByField.set(cacheKey, unit);
+    return unit;
+  }
+
+  getDurationAmount(node: IFlowNode, key: string): number {
+    return secondsToAmount(Number(node.config?.[key]) || 0, this.getDurationUnit(node, key));
+  }
+
+  setDurationAmount(node: IFlowNode, key: string, amount: number | string): void {
+    const unit = this.getDurationUnit(node, key);
+    this.setConfigValue(node, key, durationToSeconds(Number(amount), unit));
+  }
+
+  setDurationUnit(node: IFlowNode, key: string, unit: DurationUnit): void {
+    const amount = this.getDurationAmount(node, key);
+    this.durationUnitByField.set(this.durationCacheKey(node, key), unit);
+    this.setConfigValue(node, key, durationToSeconds(amount, unit));
   }
 
   /** Per-node enable/disable (skipped at runtime when disabled). */
@@ -1578,7 +2190,15 @@ export class FlowBuilderComponent implements OnInit, OnDestroy {
 
   setReplyButtonField(node: IFlowNode, key: string, index: number, field: 'id' | 'title', value: string): void {
     if (!node.config) node.config = {};
-    node.config[key] = this.getReplyButtons(node, key).map((b, i) => i === index ? { ...b, [field]: value } : b);
+    node.config[key] = this.getReplyButtons(node, key).map((b, i) => {
+      if (i !== index) return b;
+      if (field === 'title') {
+        const prevSlug = slugFromTitle(b.title);
+        const shouldSyncId = this.paletteSimpleMode || !b.id || b.id === prevSlug || b.id.startsWith('button_');
+        return { ...b, title: value, id: shouldSyncId ? slugFromTitle(value) : b.id };
+      }
+      return { ...b, [field]: value };
+    });
     this.onNodeFieldChange();
   }
 

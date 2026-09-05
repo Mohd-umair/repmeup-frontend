@@ -74,6 +74,17 @@ export class ApiService {
   }
 
   /**
+   * GET a binary file (CSV export) using the same auth interceptor as JSON.
+   */
+  getBlob(endpoint: string, params?: any): Observable<Blob> {
+    const httpParams = this.buildParams(params);
+    return this.http.get(`${this.apiUrl}${endpoint}`, {
+      params: httpParams,
+      responseType: 'blob'
+    });
+  }
+
+  /**
    * POST with FormData (file uploads) — does NOT set Content-Type so the
    * browser can include the multipart boundary automatically.
    */

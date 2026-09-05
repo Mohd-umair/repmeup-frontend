@@ -204,7 +204,12 @@ export class FileUploadZoneComponent {
   private resolveMediaUrl(publicUrl: string): string {
     if (!publicUrl) return publicUrl;
     if (publicUrl.startsWith('http://') || publicUrl.startsWith('https://')) {
-      return publicUrl;
+      // Remote storage (e.g. S3) does not grant this origin CORS access for direct
+      // XHR/fetch reads. Route through our own backend proxy, which fetches the file
+      // server-side (no browser CORS involved) and streams it back with
+      // Access-Control-Allow-Origin: * — same pattern already used for OpenAI CDN
+      // images elsewhere in the app (see media-library/proxy route).
+      return `${environment.apiUrl}/media-library/proxy?url=${encodeURIComponent(publicUrl)}`;
     }
     const base = environment.apiUrl.replace(/\/api\/?$/, '');
     return publicUrl.startsWith('/') ? `${base}${publicUrl}` : `${base}/${publicUrl}`;

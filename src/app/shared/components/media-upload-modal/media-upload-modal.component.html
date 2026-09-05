@@ -1,4 +1,6 @@
-<div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" (click)="closeModal()">
+<div class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+     [style.z-index]="overlayZIndex"
+     (click)="closeModal()">
   <div class="bg-gray-900 rounded-2xl border border-gray-800 w-full max-w-2xl max-h-[90vh] flex flex-col animate-scale-up" (click)="$event.stopPropagation()">
     
     <!-- Header (Fixed) -->

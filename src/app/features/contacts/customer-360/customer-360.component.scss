@@ -1,0 +1,34 @@
+.customer-360-tab {
+  @apply border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400;
+}
+
+.customer-360-tab--active {
+  @apply bg-rep-lime text-rep-black border-rep-lime shadow-sm;
+}
+
+.theme-checkbox {
+  @apply relative flex items-center justify-center w-5 h-5 rounded-md border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 transition-all duration-150;
+}
+
+.theme-checkbox--checked {
+  @apply border-rep-lime bg-rep-lime text-rep-black;
+}
+
+.theme-checkbox i {
+  @apply text-rep-black;
+}
+
+.customer-360-savebar {
+  animation: saveBarIn 0.2s ease-out;
+}
+
+@keyframes saveBarIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customer-360-savebar {
+    animation: none;
+  }
+}

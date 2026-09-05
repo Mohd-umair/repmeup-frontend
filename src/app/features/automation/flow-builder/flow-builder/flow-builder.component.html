@@ -1,4 +1,7 @@
 <div class="fb-editor" *ngIf="!loading && flow">
+  <div *ngIf="paletteGhost" class="fb-palette-ghost" [style.left.px]="paletteGhost.x" [style.top.px]="paletteGhost.y">
+    {{ paletteGhost.label }}
+  </div>
   <header class="fb-toolbar">
     <div class="fb-toolbar__left">
       <button type="button" class="fb-toolbar__btn" (click)="backToList()" title="Back to flows">
@@ -45,12 +48,12 @@
         <i class="fas fa-sliders-h"></i>
       </button>
       <button type="button" class="fb-btn-ghost" (click)="runTest()">
-        <i class="fas fa-play-circle"></i> Simulate
+        <i class="fas fa-play-circle"></i> Preview
       </button>
       <button type="button" class="fb-btn-ghost fb-btn-ghost--check" (click)="validate()"
               [class.fb-btn-ghost--warn]="validationErrors.length > 0">
         <i class="fas" [ngClass]="validating ? 'fa-spinner fa-spin' : 'fa-check-double'"></i>
-        Validate
+        Check
         <span *ngIf="validationErrors.length > 0" class="fb-validate-badge">{{ validationErrors.length }}</span>
       </button>
       <button type="button" class="fb-btn-secondary" (click)="saveNow()" [disabled]="saving">
@@ -58,8 +61,8 @@
         {{ saving ? 'Saving…' : 'Save' }}
       </button>
       <button type="button" class="fb-btn-primary" (click)="publish()" [disabled]="publishing">
-        <i class="fas" [ngClass]="publishing ? 'fa-spinner fa-spin' : 'fa-rocket'"></i>
-        {{ publishing ? 'Publishing…' : 'Publish' }}
+        <i class="fas" [ngClass]="publishing ? 'fa-spinner fa-spin' : 'fa-power-off'"></i>
+        {{ publishing ? 'Turning on…' : (flow.status === 'active' ? 'On' : 'Turn on') }}
       </button>
     </div>
   </header>
@@ -70,10 +73,22 @@
     <span>
       <strong>{{ disconnectedChannelNames() }}</strong>
       {{ disconnectedChannels.length === 1 ? 'is' : 'are' }} not connected.
-      Messages sent through {{ disconnectedChannels.length === 1 ? 'this channel' : 'these channels' }} will fail at runtime.
-      <a routerLink="/app/settings/platforms" class="fb-channel-warning__link">Connect in Settings →</a>
+      Messages on {{ disconnectedChannels.length === 1 ? 'this app' : 'these apps' }} will not send.
+      <a routerLink="/app/settings/platforms" class="fb-channel-warning__link">Connect now →</a>
     </span>
     <button type="button" class="fb-channel-warning__close" (click)="channelBannerDismissed = true">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <div *ngIf="!modeBannerDismissed && flowCannotFire" class="fb-channel-warning">
+    <i class="fas fa-exclamation-triangle fb-channel-warning__icon"></i>
+    <span>
+      <strong>This flow will not run.</strong>
+      These apps are set to “Only AI replies”, so Flow Automation stays off.
+      <a routerLink="/app/automation/flows" class="fb-channel-warning__link">Turn Flow Automation on →</a>
+    </span>
+    <button type="button" class="fb-channel-warning__close" (click)="modeBannerDismissed = true">
       <i class="fas fa-times"></i>
     </button>
   </div>
@@ -92,9 +107,22 @@
       <div class="fb-palette__body">
       <div class="fb-palette__searchwrap">
         <i class="fas fa-search"></i>
-        <input class="fb-palette__search" [(ngModel)]="catalogFilter" placeholder="Search nodes…" />
+        <input class="fb-palette__search" [(ngModel)]="catalogFilter"
+               (ngModelChange)="onCatalogFilterChange()" placeholder="Search blocks…" />
       </div>
-      <p class="fb-palette__tip"><i class="fas fa-hand-pointer"></i> Drag a block onto the canvas</p>
+      <div class="fb-palette__mode" role="group" aria-label="Block list">
+        <button type="button" class="fb-palette__mode-btn"
+                [class.fb-palette__mode-btn--on]="paletteSimpleMode"
+                (click)="setPaletteSimple(true)">Basic</button>
+        <button type="button" class="fb-palette__mode-btn"
+                [class.fb-palette__mode-btn--on]="!paletteSimpleMode"
+                (click)="setPaletteSimple(false)">Advanced</button>
+      </div>
+      <p class="fb-palette__tip">
+        <i class="fas fa-hand-pointer"></i>
+        <ng-container *ngIf="paletteSimpleMode">Click to add, or drag onto the canvas — we’ll connect it.</ng-container>
+        <ng-container *ngIf="!paletteSimpleMode">Click or drag a block onto the canvas.</ng-container>
+      </p>
       <div *ngFor="let g of paletteGroups"
            class="fb-palette__group fb-grp-{{ g.id }}"
            [ngClass]="groupCatClass(g.id)">
@@ -113,13 +141,11 @@
           <div *ngFor="let item of catalogByGroup(g.id)"
                class="fb-palette__item"
                [ngClass]="['fb-cat-' + item.category, item.comingSoon ? 'fb-palette__item--coming-soon' : '']"
+               [class.fb-palette__item--dragging]="palettePress?.item === item && palettePress?.dragging"
                [title]="item.comingSoon ? (item.comingSoonHint || 'Coming soon') : item.description"
-               [attr.draggable]="item.comingSoon ? 'false' : 'true'"
-               (dragstart)="!item.comingSoon && onPaletteDragStart(item, $event)"
-               (dragend)="!item.comingSoon && onPaletteDragEnd()"
-               (click)="!item.comingSoon && addNodeFromCatalog(item)">
+               (pointerdown)="onPalettePointerDown(item, $event)">
             <span class="fb-chip"><i [class]="item.icon"></i></span>
-            <span class="fb-palette__label">{{ item.label }}</span>
+            <span class="fb-palette__label">{{ paletteItemLabel(item) }}</span>
             <span *ngIf="item.comingSoon" class="fb-palette__badge fb-palette__badge--soon">Soon</span>
             <i *ngIf="!item.comingSoon" class="fas fa-grip-vertical fb-palette__grip"></i>
           </div>
@@ -131,10 +157,7 @@
     <!-- Canvas -->
     <section #canvasWrap class="fb-canvas-wrap" [class.fb-canvas-wrap--drop]="dragOverCanvas"
              (pointerdown)="onCanvasPointerDown($event)"
-             (wheel)="onCanvasWheel($event)"
-             (dragover)="onCanvasDragOver($event)"
-             (dragleave)="onCanvasDragLeave($event)"
-             (drop)="onCanvasDrop($event)">
+             (wheel)="onCanvasWheel($event)">
       <div class="fb-canvas"
            [style.min-width.px]="canvasMinWidth"
            [style.min-height.px]="canvasMinHeight"
@@ -150,9 +173,10 @@
                   marker-end="url(#fb-arrow)" />
             <path [attr.d]="edgePath(edge)" class="fb-edge-hit" (pointerdown)="selectEdge(edge.id, $event)" />
             <g *ngIf="edge.label && edgeLabelPoint(edge) as p">
-              <rect [attr.x]="p.x - 22" [attr.y]="p.y - 11" width="44" height="20" rx="6" class="fb-edge-label-bg"
+              <rect [attr.x]="p.x - (edgeLabelWidth(edge.label) / 2)" [attr.y]="p.y - 11"
+                    [attr.width]="edgeLabelWidth(edge.label)" height="20" rx="6" class="fb-edge-label-bg"
                     (pointerdown)="selectEdge(edge.id, $event)" />
-              <text [attr.x]="p.x" [attr.y]="p.y + 3" class="fb-edge-label-text" text-anchor="middle">{{ edge.label }}</text>
+              <text [attr.x]="p.x" [attr.y]="p.y + 3" class="fb-edge-label-text" text-anchor="middle">{{ edgeDisplayLabel(edge.label) }}</text>
             </g>
           </g>
         </svg>
@@ -203,7 +227,20 @@
         <button type="button" (click)="zoomReset()" title="Reset view"><i class="fas fa-compress-arrows-alt"></i></button>
       </div>
 
-      <p *ngIf="connectingFrom" class="fb-connect-hint">Click a target node to connect, or press Esc / the link icon to cancel.</p>
+      <p *ngIf="connectingFrom" class="fb-connect-hint">Click the next block to connect, or press Esc to cancel.</p>
+
+      <div *ngIf="flow.nodes.length === 0" class="fb-canvas-empty">
+        <h3 class="fb-canvas-empty__title">When should this run?</h3>
+        <p class="fb-canvas-empty__sub">Pick a start — we’ll drop in a working reply you can edit.</p>
+        <div class="fb-canvas-empty__grid">
+          <button *ngFor="let s of canvasStarters" type="button" class="fb-starter-card"
+                  (click)="addStarterTrigger(s.triggerType)">
+            <i [class]="s.icon"></i>
+            <span class="fb-starter-card__label">{{ s.label }}</span>
+            <span class="fb-starter-card__hint">{{ s.hint }}</span>
+          </button>
+        </div>
+      </div>
     </section>
 
     <!-- Right rail: panels or inspector -->
@@ -237,12 +274,12 @@
       <!-- Simulate panel -->
       <ng-container *ngIf="showTest">
         <div class="fb-panel-head">
-          <h3><i class="fas fa-play-circle mr-1"></i> Simulate</h3>
+          <h3><i class="fas fa-play-circle mr-1"></i> Preview</h3>
           <button type="button" class="fb-panel-close" (click)="closePanels()"><i class="fas fa-times"></i></button>
         </div>
         <p class="fb-field__hint fb-simulate-notice">
           <i class="fas fa-info-circle"></i>
-          Simulates the flow execution path without sending real messages.
+          Simulates the path without sending real messages to customers.
         </p>
         <p *ngIf="testing" class="fb-inspector__empty"><i class="fas fa-spinner fa-spin"></i> Simulating…</p>
         <ng-container *ngIf="!testing && testResult">
@@ -287,24 +324,24 @@
       <!-- Settings panel -->
       <ng-container *ngIf="showSettings && flow.settings">
         <div class="fb-panel-head">
-          <h3><i class="fas fa-sliders-h mr-1"></i> Flow settings</h3>
+          <h3><i class="fas fa-sliders-h mr-1"></i> Quiet hours</h3>
           <button type="button" class="fb-panel-close" (click)="closePanels()"><i class="fas fa-times"></i></button>
         </div>
         <label class="fb-field">
-          <span>Quiet hours start</span>
+          <span>Don’t message before</span>
           <input type="time" [(ngModel)]="flow.settings.quietHoursStart" (ngModelChange)="queueSave()" />
         </label>
         <label class="fb-field">
-          <span>Quiet hours end</span>
+          <span>Don’t message after</span>
           <input type="time" [(ngModel)]="flow.settings.quietHoursEnd" (ngModelChange)="queueSave()" />
         </label>
         <label class="fb-field">
-          <span>Frequency cap (messages)</span>
+          <span>Max messages per person</span>
           <input type="number" min="0" [(ngModel)]="flow.settings.frequencyCap" (ngModelChange)="queueSave()" />
-          <p class="fb-field__hint">0 = no cap. Max messages per contact in the window below.</p>
+          <p class="fb-field__hint">0 = no limit. How many times this flow can message the same person.</p>
         </label>
         <label class="fb-field">
-          <span>Cap window (days)</span>
+          <span>Within this many days</span>
           <input type="number" min="1" [(ngModel)]="flow.settings.frequencyCapWindowDays" (ngModelChange)="queueSave()" />
         </label>
         <label class="fb-field">
@@ -318,17 +355,17 @@
         <h3>Connection</h3>
         <p class="fb-inspector__type">{{ nodeLabelById(edge.source) }} → {{ nodeLabelById(edge.target) }}</p>
         <label class="fb-field">
-          <span>Branch label</span>
+          <span>When they pick this path</span>
           <input [ngModel]="edge.label" (ngModelChange)="setEdgeLabel(edge, $event)"
-                 placeholder="e.g. yes, no, reply, no_reply" />
+                 placeholder="e.g. Yes, or If they don't reply" />
         </label>
         <div *ngIf="edgeIsBranching(edge)" class="fb-branch-presets">
           <button *ngFor="let preset of edgeBranchPresets" type="button"
                   class="fb-branch-chip" [class.fb-branch-chip--active]="edge.label === preset"
-                  (click)="setEdgeLabel(edge, preset)">{{ preset }}</button>
+                  (click)="setEdgeLabel(edge, preset)">{{ branchPresetLabel(preset) }}</button>
         </div>
         <p class="fb-field__hint" *ngIf="edgeIsBranching(edge)">
-          This connection leaves a branching node — label it so the right path is taken at runtime.
+          Tap a chip so this path is used when they reply, tap a button, or don’t answer.
         </p>
         <button type="button" class="fb-delete-btn" (click)="deleteSelectedEdge()">
           <i class="fas fa-trash mr-1"></i> Remove connection
@@ -339,7 +376,7 @@
       <ng-container *ngIf="!showValidation && !showTest && !showSettings && !selectedEdge">
         <ng-container *ngIf="selectedNode as node; else noSelection">
           <div class="fb-panel-head">
-            <h3>Node settings</h3>
+            <h3>What they see</h3>
             <div class="fb-node-actions">
               <button type="button" class="fb-icon-btn" (click)="toggleNodeDisabled(node)"
                       [title]="isNodeDisabled(node) ? 'Enable node' : 'Disable node'">
@@ -350,24 +387,26 @@
               </button>
             </div>
           </div>
+
+          <ng-container *ngTemplateOutlet="channelPhone; context: { $implicit: false }"></ng-container>
           <label class="fb-field">
-            <span>Label</span>
+            <span>Name on canvas</span>
             <input [(ngModel)]="node.label" (ngModelChange)="onNodeFieldChange()" />
           </label>
-          <p class="fb-inspector__type" [title]="node.type">
-            {{ catalogLabelByType(node.type) }}
+          <p *ngIf="!paletteSimpleMode" class="fb-inspector__type" [title]="node.type">
+            {{ displayNodeKind(node.type) }}
           </p>
 
           <!-- WhatsApp 24-hr window hint for free-form text nodes -->
           <div *ngIf="node.type === 'action.send_text'" class="fb-wa-window-hint">
             <i class="fas fa-clock"></i>
             <span>
-              <strong>24-hr window:</strong> This message only sends within WhatsApp's 24-hour messaging window. For out-of-window contacts, use <em>Send Template</em> instead.
+              <strong>24-hour window:</strong> This text only sends if they messaged you in the last 24 hours. After that, use a WhatsApp template instead.
             </span>
           </div>
 
           <div *ngFor="let fd of selectedNodeFieldDefs; trackBy: trackByFieldKey" class="fb-field">
-            <span>{{ fd.label }}</span>
+            <span>{{ isDurationConfigField(fd.key) ? durationFieldLabel(fd.key, fd.label) : fd.label }}</span>
 
             <!-- string[] → tag/pill editor -->
             <ng-container *ngIf="fd.type === 'string[]'">
@@ -395,7 +434,22 @@
               </select>
             </ng-container>
 
-            <ng-container *ngIf="fd.type === 'number'">
+            <ng-container *ngIf="fd.type === 'number' && isDurationConfigField(fd.key)">
+              <div class="fb-duration">
+                <input type="number" min="0" step="1"
+                       [ngModel]="getDurationAmount(node, fd.key)"
+                       (ngModelChange)="setDurationAmount(node, fd.key, $event)" />
+                <select [ngModel]="getDurationUnit(node, fd.key)"
+                        (ngModelChange)="setDurationUnit(node, fd.key, $event)">
+                  <option value="minutes">minutes</option>
+                  <option value="hours">hours</option>
+                  <option value="days">days</option>
+                  <option value="seconds">seconds</option>
+                </select>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="fd.type === 'number' && !isDurationConfigField(fd.key)">
               <input type="number"
                      [ngModel]="node.config[fd.key]"
                      (ngModelChange)="setConfigValue(node, fd.key, +$event)" />
@@ -427,15 +481,15 @@
                     <label class="fb-field-sm">
                       <span>Type</span>
                       <select [ngModel]="btn.type" (ngModelChange)="setButtonField(node, fd.key, bi, 'type', $event)">
-                        <option value="postback">Postback (Quick Reply)</option>
-                        <option value="web_url">Link (URL)</option>
+                      <option value="postback">Quick reply</option>
+                      <option value="web_url">Open a link</option>
                       </select>
                     </label>
-                    <label *ngIf="btn.type === 'postback'" class="fb-field-sm">
-                      <span>Payload</span>
+                    <label *ngIf="btn.type === 'postback' && !paletteSimpleMode" class="fb-field-sm">
+                      <span>Hidden code</span>
                       <input type="text" [ngModel]="btn.payload"
                              (ngModelChange)="setButtonField(node, fd.key, bi, 'payload', $event)"
-                             placeholder="e.g. CONFIRM_ORDER" />
+                             placeholder="Filled automatically — you can leave this" />
                     </label>
                     <label *ngIf="btn.type === 'web_url'" class="fb-field-sm">
                       <span>URL</span>
@@ -492,7 +546,7 @@
                              (ngModelChange)="setReplyButtonField(node, fd.key, bi, 'title', $event)"
                              placeholder="e.g. Yes" />
                     </label>
-                    <label class="fb-field-sm">
+                    <label class="fb-field-sm" *ngIf="!paletteSimpleMode">
                       <span>Reply id</span>
                       <input type="text" [ngModel]="btn.id"
                              (ngModelChange)="setReplyButtonField(node, fd.key, bi, 'id', $event)"
@@ -537,7 +591,7 @@
                           <input type="text" maxlength="72" [ngModel]="row.description"
                                  (ngModelChange)="setListRowField(node, fd.key, si, ri, 'description', $event)" placeholder="Optional" />
                         </label>
-                        <label class="fb-field-sm">
+                        <label class="fb-field-sm" *ngIf="!paletteSimpleMode">
                           <span>Reply id</span>
                           <input type="text" [ngModel]="row.id"
                                  (ngModelChange)="setListRowField(node, fd.key, si, ri, 'id', $event)" placeholder="e.g. option_1" />
@@ -703,19 +757,137 @@
                      (ngModelChange)="onNodeFieldChange()" />
             </ng-container>
 
-            <p *ngIf="fd.hint" class="fb-field__hint">{{ fd.hint }}</p>
+            <p *ngIf="fd.hint && !isDurationConfigField(fd.key)" class="fb-field__hint">{{ fd.hint }}</p>
+            <p *ngIf="isDurationConfigField(fd.key)" class="fb-field__hint">
+              {{ fd.key === 'timeoutSec'
+                ? 'If they don’t reply in time, connect a “no reply” path from this block.'
+                : 'How long to wait before the next step.' }}
+            </p>
           </div>
 
           <button type="button" class="fb-delete-btn" (click)="deleteSelectedNode()">
             <i class="fas fa-trash mr-1"></i> Remove node
           </button>
-          <div *ngIf="previewMessage" class="fb-preview-rail">
-            <h4>Preview</h4>
-            <div class="fb-preview-rail__bubble">{{ previewMessage }}</div>
-          </div>
         </ng-container>
         <ng-template #noSelection>
-          <p class="fb-inspector__empty">Select a node or connection to edit it, or add nodes from the palette.</p>
+          <h3 class="fb-phone-empty-title">What they see</h3>
+          <ng-container *ngTemplateOutlet="channelPhone; context: { $implicit: true }"></ng-container>
+        </ng-template>
+
+        <ng-template #channelPhone let-idle>
+          <div class="fb-phone" [ngClass]="'fb-phone--' + previewChannel">
+            <div class="fb-phone__device">
+              <div class="fb-phone__status">
+                <span>9:41</span>
+                <span class="fb-phone__island"></span>
+                <span class="fb-phone__sysicons" aria-hidden="true">
+                  <i class="fas fa-signal"></i>
+                  <i class="fas fa-wifi"></i>
+                  <i class="fas fa-battery-full"></i>
+                </span>
+              </div>
+
+              <div class="fb-phone__header">
+                <i class="fas fa-chevron-left fb-phone__back" aria-hidden="true"></i>
+                <div class="fb-phone__avatar" aria-hidden="true">
+                  <span>{{ previewAvatarLetter }}</span>
+                </div>
+                <div class="fb-phone__who">
+                  <span class="fb-phone__name">{{ previewHeaderName }}</span>
+                  <span class="fb-phone__sub">{{ previewHeaderSub }}</span>
+                </div>
+                <div class="fb-phone__header-btns" aria-hidden="true">
+                  <ng-container *ngIf="previewChannel === 'whatsapp'">
+                    <i class="fas fa-video"></i>
+                    <i class="fas fa-phone"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                  </ng-container>
+                  <ng-container *ngIf="previewChannel === 'instagram'">
+                    <i class="fas fa-phone"></i>
+                    <i class="fas fa-video"></i>
+                  </ng-container>
+                  <ng-container *ngIf="previewChannel === 'facebook'">
+                    <i class="fas fa-phone"></i>
+                    <i class="fas fa-video"></i>
+                  </ng-container>
+                </div>
+              </div>
+
+              <div class="fb-phone__chat" [class.fb-phone__chat--idle]="idle">
+                <div class="fb-phone__date">Today</div>
+
+                <ng-container *ngIf="idle">
+                  <div class="fb-msg-row fb-msg-row--in">
+                    <div class="fb-msg fb-msg--in">
+                      <p class="fb-msg__text">Hi</p>
+                      <time class="fb-msg__meta">9:40</time>
+                    </div>
+                  </div>
+                  <div class="fb-msg-row fb-msg-row--out">
+                    <div class="fb-msg fb-msg--out">
+                      <p class="fb-msg__text">Thanks for messaging us — how can we help?</p>
+                      <time class="fb-msg__meta">
+                        9:41
+                        <i *ngIf="previewChannel === 'whatsapp'" class="fas fa-check-double fb-msg__ticks"></i>
+                      </time>
+                    </div>
+                  </div>
+                  <p class="fb-phone__idle-hint">Tap a block on the canvas to preview this chat.</p>
+                </ng-container>
+
+                <ng-container *ngIf="!idle">
+                  <div *ngIf="chatPreview.inbound" class="fb-msg-row fb-msg-row--in">
+                    <div class="fb-msg fb-msg--in">
+                      <p class="fb-msg__text">{{ chatPreview.inbound }}</p>
+                      <time class="fb-msg__meta">9:40</time>
+                    </div>
+                  </div>
+
+                  <div *ngIf="chatPreview.mediaUrl || chatPreview.outbound" class="fb-msg-row fb-msg-row--out">
+                    <div class="fb-msg fb-msg--out" [class.fb-msg--media]="!!chatPreview.mediaUrl">
+                      <img *ngIf="chatPreview.mediaUrl" class="fb-msg__media" [src]="chatPreview.mediaUrl" alt="" />
+                      <p *ngIf="chatPreview.outbound" class="fb-msg__text">{{ chatPreview.outbound }}</p>
+                      <time class="fb-msg__meta">
+                        9:41
+                        <i *ngIf="previewChannel === 'whatsapp'" class="fas fa-check-double fb-msg__ticks"></i>
+                      </time>
+                    </div>
+                    <div *ngIf="chatPreview.buttons?.length" class="fb-quick">
+                      <span *ngFor="let b of chatPreview.buttons">{{ b }}</span>
+                    </div>
+                  </div>
+
+                  <p *ngIf="chatPreview.status" class="fb-phone__sys">{{ chatPreview.status }}</p>
+                </ng-container>
+              </div>
+
+              <div class="fb-phone__composer" aria-hidden="true">
+                <ng-container *ngIf="previewChannel === 'whatsapp'">
+                  <i class="fas fa-plus fb-phone__composer-plus"></i>
+                  <span class="fb-phone__input">
+                    <i class="far fa-smile"></i>
+                    {{ previewComposerPlaceholder }}
+                  </span>
+                  <span class="fb-phone__mic"><i class="fas fa-microphone"></i></span>
+                </ng-container>
+                <ng-container *ngIf="previewChannel === 'instagram'">
+                  <span class="fb-phone__ig-cam"><i class="fas fa-camera"></i></span>
+                  <span class="fb-phone__input">{{ previewComposerPlaceholder }}…</span>
+                  <i class="far fa-image"></i>
+                  <i class="far fa-heart"></i>
+                </ng-container>
+                <ng-container *ngIf="previewChannel === 'facebook'">
+                  <i class="fas fa-plus-circle"></i>
+                  <span class="fb-phone__input">{{ previewComposerPlaceholder }}</span>
+                  <i class="far fa-image"></i>
+                  <i class="far fa-smile"></i>
+                  <i class="fas fa-thumbs-up"></i>
+                </ng-container>
+              </div>
+              <div class="fb-phone__home"></div>
+            </div>
+            <p *ngIf="!idle" class="fb-phone__hint">Updates as you type</p>
+          </div>
         </ng-template>
       </ng-container>
       </div>
@@ -724,15 +896,15 @@
 </div>
 
 <div *ngIf="loading" class="fb-loading">
-  <i class="fas fa-spinner fa-spin"></i> Loading flow builder…
+  <i class="fas fa-spinner fa-spin"></i> Loading…
 </div>
 
 <!-- ── Media picker modal (opened from send_media node inspector) ──────────── -->
 <app-media-selector-modal
-  *ngIf="showMediaPicker"
+  *ngIf="showMediaPicker && mediaPickerTarget"
   [allowMultiple]="false"
-  [mediaType]="mediaLibraryFilter(selectedNode!)"
-  [overlayZIndex]="60"
+  [mediaType]="mediaLibraryFilter(mediaPickerTarget.node)"
+  [overlayZIndex]="mediaPickerOverlayZIndex"
   (close)="closeMediaPicker()"
   (select)="onMediaSelected($event)"
 ></app-media-selector-modal>

@@ -1,153 +1,367 @@
-<!-- Same list shell as Support: card + gradient toolbar + table + app-pagination -->
 <div class="flex flex-col h-full min-h-0 overflow-hidden">
-
-  <div *ngIf="error && !loading"
-       class="mb-4 p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-sm text-red-700 dark:text-red-300 shrink-0">
+  <div *ngIf="error && !loading" class="mb-4 p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 text-sm text-red-700 dark:text-red-300 shrink-0">
     <i class="fas fa-exclamation-circle mr-2"></i>{{ error }}
   </div>
 
   <div class="flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-900/90 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-
-    <!-- Toolbar (matches Support tickets header) -->
-    <div class="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/80 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 shrink-0">
-      <div class="flex flex-col gap-4">
-        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-          <div class="min-w-0">
-            <h2 class="text-lg font-bold text-gray-900 dark:text-rep-white flex items-center">
-              <i class="fas fa-address-book mr-2 text-rep-lime"></i>
-              Contacts
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {{ totalContacts }} {{ totalContacts === 1 ? 'contact' : 'contacts' }}
-            </p>
-          </div>
+    <!-- Header -->
+    <div class="px-4 sm:px-5 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="min-w-0">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-rep-white flex items-center gap-2">
+            <i class="fas fa-address-book text-rep-lime"></i>
+            <span>Contacts</span>
+          </h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+            <span class="font-semibold text-gray-700 dark:text-gray-200">{{ totalContacts | number }}</span>
+            {{ totalContacts === 1 ? 'contact' : 'contacts' }}
+            <span *ngIf="hasActiveFilters()"> · {{ activeFilterCount() }} filter{{ activeFilterCount() === 1 ? '' : 's' }} active</span>
+          </p>
         </div>
 
-        <div class="flex flex-col xl:flex-row gap-3 xl:items-center xl:justify-between">
-          <div class="relative flex-1 min-w-0 max-w-xl">
-            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm pointer-events-none"></i>
-            <input
-              type="search"
-              [(ngModel)]="searchQuery"
-              (input)="onSearchChange()"
-              placeholder="Search by name, phone, email…"
-              class="w-full pl-9 pr-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-rep-black dark:text-rep-white text-sm placeholder-gray-400 dark:placeholder-gray-500 focus:ring-4 focus:ring-rep-lime/20 focus:border-rep-lime transition"
-              autocomplete="off"
-            />
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button
-              *ngFor="let p of platforms"
-              type="button"
-              (click)="onPlatformFilter(p)"
-              [disabled]="isPlatformComingSoon(p)"
-              [attr.title]="platformFilterTitle(p)"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
-              [ngClass]="selectedPlatform === p
-                ? 'bg-rep-lime text-rep-black border-rep-lime shadow-sm'
-                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:border-rep-lime/60'">
-              <i class="fab text-sm" [ngClass]="getPlatformIcon(p)"></i>
-              <span class="capitalize">{{ p }}</span>
-              <span *ngIf="isPlatformComingSoon(p)" class="text-[10px] uppercase tracking-wide opacity-70">Soon</span>
+        <div class="flex items-center gap-2 shrink-0" (click)="$event.stopPropagation()">
+          <button type="button" (click)="createCampaign()"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold bg-rep-lime text-rep-black hover:brightness-95 transition-all">
+            <i class="fas fa-bullhorn text-[11px]"></i>
+            <span>Create campaign</span>
+          </button>
+
+          <div class="relative">
+            <button type="button" (click)="toggleToolsMenu($event)"
+                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    title="More tools"
+                    aria-haspopup="menu"
+                    [attr.aria-expanded]="showToolsMenu">
+              <i class="fas fa-ellipsis-vertical text-sm"></i>
             </button>
+
+            <div *ngIf="showToolsMenu"
+                 class="contacts-dropdown-panel absolute right-0 top-full mt-1.5 w-52 py-1.5 rounded-xl border border-gray-200/80 dark:border-gray-700
+                        bg-white dark:bg-gray-900 shadow-2xl shadow-black/10 dark:shadow-black/50 ring-1 ring-black/5 dark:ring-white/10 z-50"
+                 role="menu">
+              <a routerLink="/app/contacts/segments" (click)="closeMenus()" class="flex items-center gap-2.5 px-2.5 py-2 mx-1 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10 transition-colors" role="menuitem">
+                <i class="fas fa-layer-group w-4 text-center text-gray-400"></i> Segments
+              </a>
+              <a routerLink="/app/contacts/duplicates" (click)="closeMenus()" class="flex items-center gap-2.5 px-2.5 py-2 mx-1 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10 transition-colors" role="menuitem">
+                <i class="fas fa-clone w-4 text-center text-gray-400"></i> Duplicates
+              </a>
+              <a routerLink="/app/campaigns" (click)="closeMenus()" class="flex items-center gap-2.5 px-2.5 py-2 mx-1 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10 transition-colors" role="menuitem">
+                <i class="fas fa-paper-plane w-4 text-center text-gray-400"></i> Campaigns
+              </a>
+              <a routerLink="/app/contacts/fields" (click)="closeMenus()" class="flex items-center gap-2.5 px-2.5 py-2 mx-1 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10 transition-colors" role="menuitem">
+                <i class="fas fa-sliders w-4 text-center text-gray-400"></i> Custom fields
+              </a>
+              <div class="my-1 mx-2 border-t border-gray-100 dark:border-gray-700"></div>
+              <button type="button" (click)="triggerCsvImport($event)"
+                      class="w-[calc(100%-0.5rem)] mx-1 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10 text-left transition-colors"
+                      role="menuitem">
+                <i class="fas fa-file-import w-4 text-center text-gray-400"></i>
+                {{ importing ? 'Importing…' : 'Import CSV' }}
+              </button>
+              <button type="button" (click)="exportCsv(); closeMenus()" class="w-[calc(100%-0.5rem)] mx-1 flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-rep-lime/10 dark:hover:bg-rep-lime/10 text-left transition-colors" role="menuitem">
+                <i class="fas fa-file-export w-4 text-center text-gray-400"></i> Export CSV
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="flex-1 overflow-x-auto overflow-y-auto" style="min-height:200px">
-      <!-- Loading -->
-      <div *ngIf="loading" class="flex flex-col items-center justify-center py-20 px-6">
-        <div class="w-10 h-10 rounded-full border-2 border-gray-200 dark:border-gray-600 border-t-rep-lime animate-spin"></div>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">Loading contacts…</p>
-      </div>
-
-      <!-- Empty -->
-      <div *ngIf="!loading && !error && contacts.length === 0"
-           class="flex flex-col items-center justify-center py-16 sm:py-20 px-6 text-center">
-        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4 border-2 border-gray-200 dark:border-gray-700">
-          <i class="fas fa-users text-2xl sm:text-3xl text-gray-400 dark:text-gray-500"></i>
+    <!-- Search + filter toolbar -->
+    <div class="px-4 sm:px-5 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0 space-y-3">
+      <div class="flex items-center gap-2">
+        <div class="flex-1 min-w-0 flex items-center gap-2 px-3 py-2 rounded-xl border bg-gray-50 dark:bg-gray-800/90 border-gray-200 dark:border-gray-700 transition-colors focus-within:ring-2 focus-within:ring-rep-lime/30 focus-within:border-rep-lime focus-within:bg-white dark:focus-within:bg-gray-800">
+          <i class="fas fa-search text-gray-400 text-sm shrink-0"></i>
+          <input type="search"
+                 [(ngModel)]="searchQuery"
+                 (input)="onSearchChange()"
+                 placeholder="Search name, phone, email, tag…"
+                 aria-label="Search contacts"
+                 class="flex-1 min-w-0 bg-transparent border-none outline-none text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400" />
+          <button *ngIf="searchQuery" type="button" (click)="clearSearch()" class="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Clear search">
+            <i class="fas fa-xmark text-sm"></i>
+          </button>
         </div>
-        <p class="text-lg font-bold text-rep-black dark:text-white">No contacts yet</p>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 mb-2 max-w-md">
-          Contacts are auto-created as customers send you messages across any platform.
-        </p>
+
+        <button *ngIf="hasActiveFilters()" type="button" (click)="clearAllFilters()"
+                class="hidden sm:inline-flex h-9 px-2.5 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors items-center gap-1 shrink-0"
+                title="Clear all filters">
+          <i class="fas fa-xmark text-xs"></i>
+          Clear
+        </button>
+
+        <button type="button" (click)="openFilterHelp($event)"
+                class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-rep-lime dark:hover:text-rep-lime transition-colors"
+                title="How filters work"
+                aria-label="How filters work">
+          <i class="fas fa-circle-info text-sm"></i>
+        </button>
+
+        <button type="button" (click)="toggleFiltersPanel()"
+                class="relative shrink-0 w-9 h-9 rounded-lg flex items-center justify-center border transition-colors"
+                [class.bg-rep-lime]="showFiltersPanel"
+                [class.border-rep-lime]="showFiltersPanel"
+                [class.text-rep-black]="showFiltersPanel"
+                [class.border-gray-200]="!showFiltersPanel"
+                [class.dark:border-gray-700]="!showFiltersPanel"
+                [class.text-gray-500]="!showFiltersPanel"
+                [class.dark:text-gray-400]="!showFiltersPanel"
+                [class.hover:bg-gray-100]="!showFiltersPanel"
+                [class.dark:hover:bg-gray-800]="!showFiltersPanel"
+                [attr.aria-expanded]="showFiltersPanel"
+                [title]="showFiltersPanel ? 'Hide filters' : 'Show filters'">
+          <i class="fas fa-sliders-h text-sm"></i>
+          <span *ngIf="activeFilterCount() > 0"
+                class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rep-lime text-rep-black text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
+            {{ activeFilterCount() }}
+          </span>
+        </button>
       </div>
 
-      <!-- Table -->
-      <table *ngIf="!loading && contacts.length > 0" class="w-full min-w-[720px]">
-        <thead class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
+      <!-- Active filter chips (compact summary when panel collapsed) -->
+      <div *ngIf="hasActiveFilters() && !showFiltersPanel" class="flex flex-wrap items-center gap-1.5">
+        <span class="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 mr-0.5">Active</span>
+        <span *ngIf="searchQuery" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+          Search: {{ searchQuery.length > 18 ? (searchQuery | slice:0:18) + '…' : searchQuery }}
+          <button type="button" (click)="clearSearch()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-xmark text-[10px]"></i></button>
+        </span>
+        <span *ngIf="selectedPlatform" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rep-lime/20 text-gray-800 dark:text-rep-lime capitalize">
+          {{ selectedPlatform }}
+          <button type="button" (click)="clearPlatformFilter()" class="opacity-70 hover:opacity-100"><i class="fas fa-xmark text-[10px]"></i></button>
+        </span>
+        <span *ngIf="selectedTag" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/15 text-blue-700 dark:text-blue-300">
+          #{{ selectedTag }}
+          <button type="button" (click)="clearTagFilter()" class="opacity-70 hover:opacity-100"><i class="fas fa-xmark text-[10px]"></i></button>
+        </span>
+        <span *ngIf="filterQuery.conditions.length" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300">
+          {{ filterQuery.conditions.length }} rule{{ filterQuery.conditions.length === 1 ? '' : 's' }}
+          <button type="button" (click)="clearAdvancedFilters()" class="opacity-70 hover:opacity-100"><i class="fas fa-xmark text-[10px]"></i></button>
+        </span>
+      </div>
+
+      <!-- Collapsible filter panel -->
+      <div *ngIf="showFiltersPanel" class="contacts-filter-panel rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-800/40 p-3 sm:p-4 space-y-4">
+        <!-- Saved views -->
+        <div *ngIf="views.length">
+          <p class="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">Saved views</p>
+          <div class="contacts-chip-scroll flex gap-1.5 overflow-x-auto pb-0.5">
+            <button *ngFor="let v of views" type="button" (click)="applyView(v)"
+                    class="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 hover:border-rep-lime/60 transition-colors">
+              {{ v.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick filters (inbox-style dropdowns) -->
+        <div class="flex flex-wrap gap-3 items-end">
+          <app-premium-select
+            class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
+            label="Platform"
+            [options]="platformFilterOptions"
+            [value]="selectedPlatform"
+            placeholder="Any platform"
+            (valueChange)="onPlatformSelect($event)" />
+          <app-premium-select
+            *ngIf="tagFilterOptions.length > 1"
+            class="min-w-0 flex-1 sm:flex-initial sm:w-[11rem]"
+            label="Tag"
+            [options]="tagFilterOptions"
+            [value]="selectedTag"
+            placeholder="Any tag"
+            (valueChange)="onTagSelect($event)" />
+        </div>
+
+        <!-- Advanced rules -->
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <p class="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">Advanced rules</p>
+            <button type="button" (click)="openFilterHelp($event)"
+                    class="text-gray-400 hover:text-rep-lime transition-colors"
+                    title="Filter help"
+                    aria-label="Filter help">
+              <i class="fas fa-circle-info text-[11px]"></i>
+            </button>
+          </div>
+          <app-filter-builder [value]="filterQuery" (valueChange)="onFiltersChange($event)"></app-filter-builder>
+        </div>
+
+        <!-- Save view -->
+        <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-gray-200/80 dark:border-gray-700/80">
+          <button *ngIf="!showSaveViewForm" type="button" (click)="showSaveViewForm = true"
+                  class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+            <i class="fas fa-bookmark mr-1"></i> Save current filters as view
+          </button>
+          <ng-container *ngIf="showSaveViewForm">
+            <input [(ngModel)]="saveViewName" placeholder="View name" maxlength="60"
+                   class="text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 min-w-[140px]" />
+            <button type="button" (click)="saveView()" [disabled]="!saveViewName.trim()"
+                    class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 disabled:opacity-40">
+              Save
+            </button>
+            <button type="button" (click)="showSaveViewForm = false; saveViewName = ''"
+                    class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+              Cancel
+            </button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk actions bar (only when rows selected) -->
+    <div *ngIf="selected.size > 0" class="relative z-20 px-4 sm:px-5 py-2.5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/90 shrink-0" (click)="$event.stopPropagation()">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-2">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <span class="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-gray-900 dark:bg-rep-lime text-white dark:text-rep-black text-[10px] font-bold">
+            {{ selected.size }}
+          </span>
+          <span class="text-xs text-gray-500 dark:text-gray-400">selected</span>
+          <span class="text-gray-300 dark:text-gray-600 text-xs hidden sm:inline">·</span>
+          <button type="button" (click)="selectAllOnPage()" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline hidden sm:inline">All on page</button>
+          <span class="text-gray-300 dark:text-gray-600 text-xs hidden sm:inline">·</span>
+          <button type="button" (click)="clearSelection()" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">Clear</button>
+        </div>
+
+        <div class="hidden sm:block w-px h-4 bg-gray-200 dark:bg-gray-600 shrink-0"></div>
+
+        <div class="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+          <div class="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1">
+            <i class="fas fa-tag text-[10px] text-gray-400"></i>
+            <input [(ngModel)]="bulkTag" placeholder="Tag name" class="text-xs w-24 sm:w-28 bg-transparent outline-none" />
+            <button type="button" (click)="bulk('add_tag', { tag: bulkTag })" [disabled]="!bulkTag.trim()"
+                    class="text-[11px] font-semibold text-gray-700 dark:text-gray-200 disabled:opacity-40 px-1">Add</button>
+            <span class="text-gray-200 dark:text-gray-600">|</span>
+            <button type="button" (click)="bulk('remove_tag', { tag: bulkTag })" [disabled]="!bulkTag.trim()"
+                    class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 disabled:opacity-40 px-1">Remove</button>
+          </div>
+
+          <app-premium-select
+            *ngIf="ownerSelectOptions.length"
+            size="sm"
+            [fullWidth]="false"
+            class="w-44"
+            leadingIcon="fas fa-user"
+            [options]="ownerSelectOptions"
+            [value]="bulkOwner"
+            placeholder="Assign to…"
+            (valueChange)="onBulkOwnerSelect($event)" />
+
+          <app-premium-select
+            *ngIf="segmentSelectOptions.length"
+            size="sm"
+            [fullWidth]="false"
+            class="w-44"
+            leadingIcon="fas fa-layer-group"
+            [options]="segmentSelectOptions"
+            [value]="bulkSegmentId"
+            placeholder="Add to segment…"
+            (valueChange)="onBulkSegmentSelect($event)" />
+
+          <button type="button" (click)="createCampaign()"
+                  class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <i class="fas fa-bullhorn text-[10px]"></i> Campaign
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="flex-1 overflow-auto">
+      <div *ngIf="loading" class="flex flex-col items-center justify-center py-20">
+        <div class="w-10 h-10 rounded-full border-2 border-gray-200 border-t-rep-lime animate-spin"></div>
+        <p class="text-xs text-gray-500 mt-3">Loading contacts…</p>
+      </div>
+      <div *ngIf="!loading && contacts.length === 0" class="py-16 text-center px-4">
+        <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <i class="fas fa-user-slash text-gray-400"></i>
+        </div>
+        <p class="font-bold text-gray-900 dark:text-gray-100">No contacts match</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
+          Try adjusting your search or filters, or import contacts from CSV.
+        </p>
+        <button *ngIf="hasActiveFilters()" type="button" (click)="clearAllFilters()"
+                class="mt-4 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+          Clear all filters
+        </button>
+      </div>
+      <table *ngIf="!loading && contacts.length" class="w-full min-w-[980px]">
+        <thead class="bg-gray-50 dark:bg-gray-800/60 border-b sticky top-0 z-10">
           <tr>
-            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Contact</th>
-            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Info</th>
-            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Platforms</th>
-            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Sentiment</th>
-            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">Last seen</th>
-            <th class="px-4 sm:px-6 py-3 text-right text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-24">Actions</th>
+            <th class="px-3 py-3 w-10">
+              <label class="theme-checkbox inline-flex" [class.theme-checkbox--checked]="selected.size === contacts.length && contacts.length > 0">
+                <input type="checkbox" class="sr-only"
+                       [checked]="selected.size === contacts.length && contacts.length > 0"
+                       (change)="toggleAll()" aria-label="Select all on page" />
+                <i *ngIf="selected.size === contacts.length && contacts.length > 0" class="fas fa-check text-[10px]"></i>
+              </label>
+            </th>
+            <th class="px-3 py-3 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400 contacts-sort-th"
+                [attr.aria-sort]="sortAriaSort('primaryName')"
+                (click)="toggleSort('primaryName')">
+              <span class="inline-flex items-center gap-1">Contact <i class="fas text-[10px]" [ngClass]="sortIconClass('primaryName')"></i></span>
+            </th>
+            <th class="px-3 py-3 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Platforms</th>
+            <th class="px-3 py-3 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400 contacts-sort-th"
+                [attr.aria-sort]="sortAriaSort('lifecycleStage')"
+                (click)="toggleSort('lifecycleStage')">
+              <span class="inline-flex items-center gap-1">Lifecycle <i class="fas text-[10px]" [ngClass]="sortIconClass('lifecycleStage')"></i></span>
+            </th>
+            <th class="px-3 py-3 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400 contacts-sort-th"
+                [attr.aria-sort]="sortAriaSort('leadScore')"
+                (click)="toggleSort('leadScore')">
+              <span class="inline-flex items-center gap-1">AI status <i class="fas text-[10px]" [ngClass]="sortIconClass('leadScore')"></i></span>
+            </th>
+            <th class="px-3 py-3 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400 contacts-sort-th"
+                [attr.aria-sort]="sortAriaSort('engagementScore')"
+                (click)="toggleSort('engagementScore')">
+              <span class="inline-flex items-center gap-1">Engagement <i class="fas text-[10px]" [ngClass]="sortIconClass('engagementScore')"></i></span>
+            </th>
+            <th class="px-3 py-3 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Owner</th>
+            <th class="px-3 py-3 text-left text-xs font-bold uppercase text-gray-500 dark:text-gray-400 contacts-sort-th"
+                [attr.aria-sort]="sortAriaSort('lastInteractionAt')"
+                (click)="toggleSort('lastInteractionAt')">
+              <span class="inline-flex items-center gap-1">Last activity <i class="fas text-[10px]" [ngClass]="sortIconClass('lastInteractionAt')"></i></span>
+            </th>
+            <th class="px-3 py-3 text-right text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr
-            *ngFor="let contact of contacts"
-            (click)="selectContact(contact)"
-            class="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition cursor-pointer">
-            <td class="px-4 sm:px-6 py-4 align-top">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="relative flex-shrink-0 w-10 h-10 rounded-full overflow-hidden flex items-center justify-center font-bold text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700">
-                  <span>{{ getInitials(contact.primaryName) }}</span>
-                  <ng-container *ngIf="(getContactAvatarUrl$(contact) | async) as avatarUrl">
-                    <img *ngIf="!avatarErrors[contact._id]"
-                         [src]="avatarUrl"
-                         [alt]="contact.primaryName"
-                         referrerpolicy="no-referrer"
-                         (error)="onContactAvatarError(contact._id)"
-                         class="absolute inset-0 w-full h-full object-cover" />
-                  </ng-container>
+          <tr *ngFor="let contact of contacts" (click)="selectContact(contact)"
+              class="hover:bg-gray-50 dark:hover:bg-gray-800/40 cursor-pointer transition-colors"
+              [ngClass]="{ 'bg-rep-lime/5': selected.has(contact._id) }">
+            <td class="px-3 py-3" (click)="$event.stopPropagation()">
+              <label class="theme-checkbox inline-flex" [class.theme-checkbox--checked]="selected.has(contact._id)">
+                <input type="checkbox" class="sr-only"
+                       [checked]="selected.has(contact._id)"
+                       (change)="toggleSelect(contact._id, $event)"
+                       [attr.aria-label]="'Select ' + contact.primaryName" />
+                <i *ngIf="selected.has(contact._id)" class="fas fa-check text-[10px]"></i>
+              </label>
+            </td>
+            <td class="px-3 py-3">
+              <div class="flex items-center gap-3">
+                <div class="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-xs font-bold shrink-0">
+                  {{ getInitials(contact.primaryName) }}
                 </div>
-                <span class="text-sm font-bold text-gray-900 dark:text-rep-white truncate max-w-[200px]">
-                  {{ contact.primaryName }}
-                </span>
+                <div class="min-w-0">
+                  <p class="text-sm font-bold truncate">{{ contact.primaryName }}</p>
+                  <p class="text-xs text-gray-500 truncate">{{ contact.primaryPhone || contact.primaryEmail || contact.company || '—' }}</p>
+                </div>
               </div>
             </td>
-            <td class="px-4 sm:px-6 py-4 align-top text-sm text-gray-600 dark:text-gray-400 truncate max-w-[200px]">
-              {{ contact.primaryPhone || contact.primaryEmail || '—' }}
+            <td class="px-3 py-3">
+              <i *ngFor="let ch of contact.channels.slice(0,5)" class="fab mr-1" [ngClass]="[getPlatformIcon(ch.platform), getPlatformColor(ch.platform)]"></i>
             </td>
-            <td class="px-4 sm:px-6 py-4 align-top whitespace-nowrap">
-              <div class="flex items-center gap-1.5">
-                <i *ngFor="let ch of contact.channels.slice(0, 5)"
-                   class="fab text-base"
-                   [ngClass]="[getPlatformIcon(ch.platform), getPlatformColor(ch.platform)]"
-                   [title]="ch.platform"></i>
-                <span *ngIf="contact.channels.length > 5" class="text-xs text-gray-400 dark:text-gray-500 font-medium">
-                  +{{ contact.channels.length - 5 }}
-                </span>
-              </div>
+            <td class="px-3 py-3 text-xs capitalize">{{ contact.lifecycleStage || 'lead' }}</td>
+            <td class="px-3 py-3 text-xs">{{ aiStatus(contact) }}</td>
+            <td class="px-3 py-3 text-xs">{{ contact.intelligence?.engagementScore ?? '—' }}</td>
+            <td class="px-3 py-3 text-xs">{{ ownerName(contact) }}</td>
+            <td class="px-3 py-3 text-xs whitespace-nowrap">
+              {{ lastActivity(contact) }}
+              <span *ngIf="contact.lastActivityChannel" class="text-gray-400"> · {{ contact.lastActivityChannel }}</span>
             </td>
-            <td class="px-4 sm:px-6 py-4 align-top whitespace-nowrap">
-              <ng-container *ngIf="contact.aiInsights?.sentiment; else noSentiment">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold capitalize"
-                  [ngClass]="{
-                    'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': contact.aiInsights?.sentiment?.toLowerCase() === 'positive',
-                    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': contact.aiInsights?.sentiment?.toLowerCase() === 'negative',
-                    'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': contact.aiInsights?.sentiment?.toLowerCase() === 'neutral'
-                  }">
-                  <i class="fas fa-circle text-[6px]"></i>
-                  {{ contact.aiInsights?.sentiment }}
-                </span>
-              </ng-container>
-              <ng-template #noSentiment>
-                <span class="text-sm text-gray-400">—</span>
-              </ng-template>
-            </td>
-            <td class="px-4 sm:px-6 py-4 align-top whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-              {{ (contact.lastInteractionAt | date:'MMM d, y') || '—' }}
-            </td>
-            <td class="px-4 sm:px-6 py-4 align-top text-right" (click)="$event.stopPropagation()">
-              <button
-                type="button"
-                (click)="selectContact(contact)"
-                title="View contact"
-                class="p-1.5 rounded-lg text-xs transition bg-rep-lime/10 text-rep-black dark:text-rep-lime hover:bg-rep-lime/20">
+            <td class="px-3 py-3 text-right" (click)="$event.stopPropagation()">
+              <button type="button" (click)="selectContact(contact)" title="Open Customer 360"
+                      class="p-1.5 rounded-lg bg-rep-lime/10 text-gray-700 dark:text-rep-lime hover:bg-rep-lime/20 transition-colors">
                 <i class="fas fa-external-link-alt"></i>
               </button>
             </td>
@@ -156,17 +370,92 @@
       </table>
     </div>
 
-    <div *ngIf="!loading && totalContacts > 0" class="px-4 sm:px-6 pb-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
-      <app-pagination
-        [currentPage]="currentPage"
-        [totalPages]="totalPages"
-        [totalItems]="totalContacts"
-        [pageSize]="pageSize"
-        [loading]="loading"
-        (pageChange)="onPageChange($event)"
-        (pageSizeChange)="onPageSizeChange($event)"
-      ></app-pagination>
+    <div *ngIf="!loading && totalContacts > 0" class="px-4 sm:px-5 py-3 border-t border-gray-200 dark:border-gray-700 shrink-0">
+      <app-pagination [currentPage]="currentPage" [totalPages]="totalPages" [totalItems]="totalContacts"
+        [pageSize]="pageSize" [loading]="loading" (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)"></app-pagination>
     </div>
   </div>
 
+  <!-- Filter help modal -->
+  <div *ngIf="showFilterHelp" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
+       role="dialog" aria-modal="true" aria-labelledby="filter-help-title">
+    <div class="absolute inset-0 bg-black/45 dark:bg-black/60 backdrop-blur-sm" (click)="closeFilterHelp()"></div>
+    <div class="contacts-filter-help relative z-10 w-full sm:max-w-xl max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl overflow-hidden"
+         (click)="$event.stopPropagation()">
+      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800/80 dark:to-gray-900 shrink-0">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 id="filter-help-title" class="text-base font-bold text-gray-900 dark:text-rep-white flex items-center gap-2">
+              <i class="fas fa-circle-info text-rep-lime"></i>
+              How contact filters work
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              All filters combine with <span class="font-semibold text-gray-700 dark:text-gray-200">AND</span> — a contact must match every active filter.
+            </p>
+          </div>
+          <button type="button" (click)="closeFilterHelp()"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  aria-label="Close">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4 contacts-filter-help-scroll">
+        <div *ngFor="let section of filterHelpSections" class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 p-3.5">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="w-7 h-7 rounded-lg bg-rep-lime/15 flex items-center justify-center shrink-0">
+              <i class="fas text-rep-lime text-xs" [ngClass]="section.icon"></i>
+            </span>
+            <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ section.title }}</h4>
+          </div>
+          <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed mb-2">{{ section.summary }}</p>
+          <ul class="space-y-1.5">
+            <li *ngFor="let ex of section.examples" class="flex items-start gap-2 text-[11px] text-gray-700 dark:text-gray-300">
+              <i class="fas fa-lightbulb text-amber-500 text-[9px] mt-1 shrink-0"></i>
+              <span>{{ ex }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">Example scenarios</p>
+          <div class="space-y-2">
+            <div *ngFor="let scenario of filterHelpScenarios" class="rounded-xl border border-rep-lime/30 bg-rep-lime/5 dark:bg-rep-lime/10 p-3">
+              <p class="text-xs font-bold text-gray-900 dark:text-gray-100 mb-2">{{ scenario.title }}</p>
+              <ol class="space-y-1">
+                <li *ngFor="let step of scenario.steps; let i = index" class="flex items-start gap-2 text-[11px] text-gray-600 dark:text-gray-400">
+                  <span class="shrink-0 w-4 h-4 rounded-full bg-rep-lime text-rep-black text-[9px] font-bold flex items-center justify-center">{{ i + 1 }}</span>
+                  <span>{{ step }}</span>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 shrink-0 flex flex-wrap gap-2">
+        <button type="button" (click)="showFiltersPanel = true; closeFilterHelp()"
+                class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold bg-rep-lime text-rep-black hover:brightness-95 transition-all">
+          <i class="fas fa-sliders-h text-[10px]"></i>
+          Open filters
+        </button>
+        <button type="button" (click)="closeFilterHelp()"
+                class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-semibold border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          Got it
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <input #csvImportInput type="file" accept=".csv,text/csv" class="hidden" (change)="onImport($event)" />
+
+  <app-contact-import-map
+    [open]="showImportMap"
+    [fileName]="pendingFileName"
+    [csvText]="pendingCsvText"
+    [importing]="importing"
+    [maxRows]="importMaxRows"
+    (closed)="closeImportMap()"
+    (confirmImport)="confirmImport($event)" />
 </div>

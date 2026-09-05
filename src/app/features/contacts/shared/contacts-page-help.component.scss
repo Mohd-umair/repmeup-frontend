@@ -1,0 +1,25 @@
+.contacts-page-help {
+  animation: contactsPageHelpIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes contactsPageHelpIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.contacts-page-help-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contacts-page-help {
+    animation: none;
+  }
+}

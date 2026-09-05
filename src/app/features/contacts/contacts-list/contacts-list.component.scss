@@ -1,0 +1,88 @@
+@keyframes contactsFilterSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.contacts-filter-panel {
+  animation: contactsFilterSlideDown 0.25s ease-out;
+}
+
+.contacts-dropdown-panel {
+  transform-origin: top right;
+  animation: contactsFilterSlideDown 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contacts-filter-panel,
+  .contacts-dropdown-panel {
+    animation: none;
+  }
+}
+
+.contacts-chip-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.contacts-chip-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.contacts-chip-scroll::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.45);
+  border-radius: 9999px;
+}
+
+.contacts-filter-help {
+  animation: contactsFilterHelpIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes contactsFilterHelpIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.contacts-filter-help-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}
+
+.theme-checkbox {
+  @apply relative flex items-center justify-center w-5 h-5 rounded-md border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 cursor-pointer transition-all duration-150;
+}
+
+.theme-checkbox--checked {
+  @apply border-rep-lime bg-rep-lime text-rep-black;
+}
+
+.theme-checkbox i {
+  @apply text-rep-black pointer-events-none;
+}
+
+.contacts-sort-th {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.contacts-sort-th:hover {
+  @apply text-gray-800 dark:text-gray-200;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contacts-filter-help {
+    animation: none;
+  }
+}

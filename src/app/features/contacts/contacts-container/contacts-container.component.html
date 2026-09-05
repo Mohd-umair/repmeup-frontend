@@ -14,14 +14,15 @@
 
     <div class="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"></div>
 
-    <div class="relative z-50 w-full max-w-2xl h-full flex flex-col bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-700 overflow-hidden"
+    <div class="relative z-50 w-full max-w-4xl h-full flex flex-col bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-700 overflow-hidden"
          (click)="$event.stopPropagation()">
-      <app-contact-detail
+      <app-customer-360
         class="flex-1 flex flex-col overflow-hidden"
         [contactId]="selectedContactId"
         (back)="onBack()"
-        (deleted)="onDeleted()">
-      </app-contact-detail>
+        (deleted)="onDeleted()"
+        (profileSaved)="onProfileSaved()">
+      </app-customer-360>
     </div>
   </div>
 
